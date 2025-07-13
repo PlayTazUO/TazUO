@@ -448,6 +448,7 @@ namespace ClassicUO.Configuration
             public string JournalBackgroundColor { get; set; } = "Background color";
             public string JournalStyle { get; set; } = "Journal style";
             public string JournalHideBorders { get; set; } = "Hide borders";
+            public string JournalHideSystemPrefix { get; set; } = "Hide \"System:\" prefix";
             public string HideTimestamp { get; set; } = "Hide timestamp";
             public string JournalAnchor { get; set; } = "Make anchorable";
             #endregion

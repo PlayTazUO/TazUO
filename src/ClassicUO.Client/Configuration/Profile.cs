@@ -507,6 +507,7 @@ namespace ClassicUO.Configuration
         public int MaxJournalEntries { get; set; } = 250;
         public bool HideJournalBorder { get; set; } = false;
         public bool HideJournalTimestamp { get; set; } = false;
+        public bool HideJournalSystemPrefix { get; set; } = false;
 
         public int HealthLineSizeMultiplier { get; set; } = 1;
 

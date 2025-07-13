@@ -241,7 +241,14 @@ namespace ClassicUO.Game.Scenes
 
                     if (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial))
                     {
-                        name = ResGeneral.System;
+                        if (ProfileManager.CurrentProfile.HideJournalSystemPrefix)
+                        {
+                            name = null;
+                        }
+                        else
+                        {
+                            name = ResGeneral.System;
+                        }
                     }
                     else
                     {
@@ -253,15 +260,21 @@ namespace ClassicUO.Game.Scenes
                     break;
 
                 case MessageType.System:
-                    name =
-                        string.IsNullOrEmpty(e.Name)
-                        || string.Equals(
-                            e.Name,
-                            "system",
-                            StringComparison.InvariantCultureIgnoreCase
-                        )
-                            ? ResGeneral.System
-                            : e.Name;
+                    if (string.IsNullOrEmpty(e.Name) || string.Equals(e.Name, "system", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        if (ProfileManager.CurrentProfile.HideJournalSystemPrefix)
+                        {
+                            name = null;
+                        }
+                        else
+                        {
+                            name = ResGeneral.System;
+                        }
+                    }
+                    else
+                    {
+                        name = e.Name;
+                    }
 
                     text = e.Text;
 

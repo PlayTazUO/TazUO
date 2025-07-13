@@ -2844,6 +2844,8 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
             content.AddToRight(c = new CheckboxWithLabel(lang.GetTazUO.HideTimestamp, 0, profile.HideJournalTimestamp, (b) => { profile.HideJournalTimestamp = b; }), true, page);
             content.BlankLine();
+            content.AddToRight(c = new CheckboxWithLabel(lang.GetTazUO.JournalHideSystemPrefix, 0, profile.HideJournalSystemPrefix, (b) => { profile.HideJournalSystemPrefix = b; }), true, page);
+            content.BlankLine();
 
             content.AddToRight
             (

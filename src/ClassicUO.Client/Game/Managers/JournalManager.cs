@@ -84,11 +84,14 @@ namespace ClassicUO.Game.Managers
                 CreateWriter();
             }
 
-            string output = $"[{timeNow:G}]  {name}: {text}";
-
+            string output;
             if (string.IsNullOrWhiteSpace(name))
             {
                 output = $"[{timeNow:G}]  {text}";
+            }
+            else
+            {
+                output = $"[{timeNow:G}]  {name}: {text}";
             }
 
             _fileWriter?.WriteLine(output);
