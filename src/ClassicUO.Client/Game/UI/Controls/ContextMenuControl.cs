@@ -102,11 +102,11 @@ namespace ClassicUO.Game.UI.Controls
             IsSelected = defaultValue;
         }
 
-        public readonly Action Action;
+        public Action Action;
         public readonly bool CanBeSelected;
         public bool IsSelected;
         public List<ContextMenuItemEntry> Items = new List<ContextMenuItemEntry>();
-        public readonly string Text;
+        public string Text;
 
         public void Add(ContextMenuItemEntry subEntry)
         {
