@@ -1966,7 +1966,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
             public bool UseOriginalContainerGump(uint container)
             {
-                bool useOriginalContainer = ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
+                bool useOriginalContainer = ProfileManager.CurrentProfile?.GridContainersDefaultToOldStyleView ?? false;
 
                 XElement thisContainer = rootElement.Element("container_" + container.ToString());
                 if (thisContainer != null)
