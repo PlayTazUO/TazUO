@@ -150,6 +150,12 @@ public class AssistantGump : BaseOptionsGump
         })));
         PositionHelper.BlankLine();
         
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Enable pre-targeting", 0, profile.EnableSpellbarPretargeting, (b) =>
+        {
+            profile.EnableSpellbarPretargeting = b;
+        })));
+        PositionHelper.BlankLine();
+        
         ModernButton b;
         scroll.Add(PositionHelper.PositionControl(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Add row", ThemeSettings.BUTTON_FONT_COLOR)));
         b.MouseUp += (s, e) =>

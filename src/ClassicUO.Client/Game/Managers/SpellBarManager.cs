@@ -16,6 +16,14 @@ public class SpellBarManager
 {
     public static List<SpellBarRow> SpellBarRows = [];
     public static int CurrentRow = 0;
+    
+    public static bool PretargetNextSpell;
+    public static bool PretargetGround;
+    public static uint PretargetSerial;
+    public static ushort PretargetX;
+    public static ushort PretargetY;
+    public static short PretargetZ;
+    public static ushort PretargetGraphic;
 
     private static bool enabled;
     private static string charPath;
@@ -90,6 +98,9 @@ public class SpellBarManager
 
         if (spell == null || spell == SpellDefinition.EmptySpell)
             return;
+        
+        if(ProfileManager.CurrentProfile.EnableSpellbarPretargeting)
+            TargetManager.SetCastPreTargeting();
         
         GameActions.CastSpell(spell.ID);
     }

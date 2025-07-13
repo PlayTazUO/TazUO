@@ -63,6 +63,7 @@ namespace ClassicUO.Game.Managers
         MoveItemContainer,
         Internal,
         SetFavoriteMoveBag,
+        PreCastTarget
     }
 
     public class CursorType
@@ -243,6 +244,16 @@ namespace ClassicUO.Game.Managers
             // to send the last active cursorID, so update cursor data later
 
             _targetCursorId = cursorID;
+        }
+
+        public static void SetCastPreTargeting()
+        {
+            CancelTarget();
+            
+            IsTargeting = true;
+            TargetingState = CursorTarget.PreCastTarget;
+            TargetingType = TargetType.Neutral;
+            _targetCursorId = 0;
         }
 
         public static void CancelTarget()
@@ -486,6 +497,15 @@ namespace ClassicUO.Game.Managers
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;
+                    case CursorTarget.PreCastTarget:
+                        if (SerialHelper.IsMobile(serial) || SerialHelper.IsItem(serial))
+                        {
+                            SpellBarManager.PretargetGround = false;
+                            SpellBarManager.PretargetSerial = serial;
+                            SpellBarManager.PretargetNextSpell = true;
+                        }
+                        ClearTargetingWithoutTargetCancelPacket();
+                        return;
                 }
             }
         }
@@ -520,6 +540,19 @@ namespace ClassicUO.Game.Managers
             }
 
             LastTargetInfo.SetStatic(graphic, x, y, (sbyte)z);
+
+            if (TargetingState == CursorTarget.PreCastTarget)
+            {
+                SpellBarManager.PretargetGround = true;
+                SpellBarManager.PretargetX = x;
+                SpellBarManager.PretargetY = y;
+                SpellBarManager.PretargetZ = z;
+                SpellBarManager.PretargetGraphic = graphic;
+                SpellBarManager.PretargetNextSpell = true;
+                ClearTargetingWithoutTargetCancelPacket();
+
+                return;
+            }
 
             TargetPacket(graphic, x, y, (sbyte)z);
         }

@@ -628,6 +628,7 @@ namespace ClassicUO.Configuration
         public bool EnableScavenger { get; set; } = true;
         public bool CounterGumpLocked { get; set; }
         public bool NearbyLootConcealsContainerOnOpen { get; set; } = true;
+        public bool EnableSpellbarPretargeting { get; set; } = true;
 
         private long lastSave;
         public void Save(string path, bool saveGumps = true)

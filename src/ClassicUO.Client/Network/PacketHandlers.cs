@@ -393,6 +393,18 @@ namespace ClassicUO.Network
                 p.ReadUInt32BE(),
                 (TargetType)p.ReadUInt8()
             );
+            
+            if (SpellBarManager.PretargetNextSpell)
+            {
+                SpellBarManager.PretargetNextSpell = false;
+                
+                if(!SpellBarManager.PretargetGround)
+                    TargetManager.Target(SpellBarManager.PretargetSerial);
+                else
+                    TargetManager.Target(SpellBarManager.PretargetGraphic, SpellBarManager.PretargetX, SpellBarManager.PretargetY, SpellBarManager.PretargetZ);
+                
+                return;
+            }
 
             if (World.Party.PartyHealTimer < Time.Ticks && World.Party.PartyHealTarget != 0)
             {
