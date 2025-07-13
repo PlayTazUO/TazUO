@@ -1612,7 +1612,7 @@ namespace ClassicUO.Game.GameObjects
 
          public bool Walk(Direction direction, bool run)
         {
-            if (!ProfileManager.CurrentProfile.AutoAvoidObstacules)
+            if (!ProfileManager.CurrentProfile.AutoAvoidObstacules || Pathfinder.AutoWalking)
             {
 
                 return WalkNotAvoid(direction, run);
