@@ -406,7 +406,17 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             if (!string.IsNullOrEmpty(journalEntry.Name) && IgnoreManager.IgnoredCharsList.Contains(journalEntry.Name))
                 return;
-            _journalArea.AddEntry($"{journalEntry.Name}: {journalEntry.Text}", journalEntry.Hue, journalEntry.Time, journalEntry.TextType, journalEntry.MessageType);
+
+            string text;
+            if (string.IsNullOrEmpty(journalEntry.Name))
+            {
+                text = journalEntry.Text;
+            }
+            else
+            {
+                text = $"{journalEntry.Name}: {journalEntry.Text}";
+            }
+            _journalArea.AddEntry(text, journalEntry.Hue, journalEntry.Time, journalEntry.TextType, journalEntry.MessageType);
         }
 
         private void InitJournalEntries()
