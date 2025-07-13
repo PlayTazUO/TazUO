@@ -325,6 +325,11 @@ namespace ClassicUO.Game.UI.Gumps
                 OpenOldContainer(LocalSerial);
             }));
 
+            control.Add(new ContextMenuItemEntry("Toggle whether new containers open in grid view", () =>
+            {
+                ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView = !ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
+            }));
+
             control.Add(new ContextMenuItemEntry("Stack similar items in original container", () =>
             {
                 StackNonStackableItems = !StackNonStackableItems;
