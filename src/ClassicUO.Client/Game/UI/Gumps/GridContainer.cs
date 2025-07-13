@@ -319,32 +319,30 @@ namespace ClassicUO.Game.UI.Gumps
         private ContextMenuControl GenContextMenu()
         {
             var control = new ContextMenuControl();
-            control.Add(new ContextMenuItemEntry("Open Original Container", () =>
+            control.Add(new ContextMenuItemEntry("Open Original View", () =>
             {
                 UseOldContainerStyle = true;
                 OpenOldContainer(LocalSerial);
             }));
 
-            string text = ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
-                    ? "Open new containers in the grid view"
-                    : "Open new containers in the old style view";
+            string gridViewText = "Open New Containers in the Grid View";
+            string originalViewText = "Open New Containers in the Original View";
+            string text = ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView ? gridViewText : originalViewText;
             var entry = new ContextMenuItemEntry(text);
             entry.Action = () =>
             {
                 ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView = !ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
-                entry.Text = text = ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
-                    ? "Open new containers in the grid view"
-                    : "Open new containers in the old style view";
+                entry.Text = ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView ? gridViewText : originalViewText;
             };
             control.Add(entry);
 
-            control.Add(new ContextMenuItemEntry("Stack similar items in original container", () =>
+            control.Add(new ContextMenuItemEntry("Stack Similar Items in the Original View", () =>
             {
                 StackNonStackableItems = !StackNonStackableItems;
                 openRegularGump.ContextMenu = GenContextMenu();
             }, true, StackNonStackableItems));
 
-            control.Add(new ContextMenuItemEntry("Open Grid highlight settings", () =>
+            control.Add(new ContextMenuItemEntry("Open Grid View Highlight Settings", () =>
             {
                 GridHighlightMenu.Open();
             }));
