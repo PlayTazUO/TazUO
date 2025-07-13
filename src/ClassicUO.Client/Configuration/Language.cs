@@ -418,7 +418,7 @@ namespace ClassicUO.Configuration
             #region General
             public string GridContainers { get; set; } = "Grid containers";
             public string EnableGridContainers { get; set; } = "Enable grid containers";
-            public string GridContainersDefaultToOldStyleView { get; set; } = "New containers will show the old style view";
+            public string GridContainersDefaultToOldStyleView { get; set; } = "New containers will open in the old style view";
             public string GridContainerScale { get; set; } = "Grid container scale";
             public string AlsoScaleItems { get; set; } = "Also scale items";
             public string GridItemBorderOpacity { get; set; } = "Grid item border opacity";
