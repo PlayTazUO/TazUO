@@ -373,6 +373,7 @@ namespace ClassicUO.Configuration
 
         #region GRID CONTAINER
         public bool UseGridLayoutContainerGumps { get; set; } = true;
+        public bool GridContainersDefaultToOldStyleView { get; set; } = false;
         public int GridContainerSearchMode { get; set; } = 1;
         public bool EnableGridContainerAnchor { get; set; } = false;
         public byte GridBorderAlpha { get; set; } = 75;
@@ -626,7 +627,7 @@ namespace ClassicUO.Configuration
         public bool EnableScavenger { get; set; } = true;
         public bool CounterGumpLocked { get; set; }
         public bool NearbyLootConcealsContainerOnOpen { get; set; } = true;
-        
+
         private long lastSave;
         public void Save(string path, bool saveGumps = true)
         {

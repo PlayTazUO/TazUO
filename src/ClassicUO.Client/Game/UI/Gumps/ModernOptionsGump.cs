@@ -2592,6 +2592,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
+                new CheckboxWithLabel(lang.GetTazUO.GridContainersDefaultToOldStyleView, 0, profile.GridContainersDefaultToOldStyleView, (b) => { profile.GridContainersDefaultToOldStyleView = b; }), true, page
+            );
+
+            content.BlankLine();
+
+            content.AddToRight
+            (
                 new SliderWithLabel
                     (lang.GetTazUO.GridContainerScale, 0, ThemeSettings.SLIDER_WIDTH, 50, 200, profile.GridContainersScale, (i) => { profile.GridContainersScale = (byte)i; }),
                 true, page
