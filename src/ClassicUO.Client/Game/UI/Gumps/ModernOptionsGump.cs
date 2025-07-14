@@ -5467,6 +5467,9 @@ namespace ClassicUO.Game.UI.Gumps
                 PositionHelper.PositionControl(AddCheckbox("Stackable", NameOverheadOptions.Stackable));
                 PositionHelper.PositionExact(AddCheckbox("Locked down", NameOverheadOptions.LockedDown), rightPosX, PositionHelper.LAST_Y);
 
+                PositionHelper.PositionControl(AddCheckbox("Moveable", NameOverheadOptions.Moveable));
+                PositionHelper.PositionExact(AddCheckbox("Immoveable", NameOverheadOptions.Immoveable), rightPosX, PositionHelper.LAST_Y);
+
                 PositionHelper.PositionControl(AddCheckbox("Other items", NameOverheadOptions.Other));
 
 

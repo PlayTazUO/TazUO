@@ -146,6 +146,8 @@ namespace ClassicUO.Game.GameObjects
 
         public bool IsLocked => (Flags & Flags.Movable) == 0 && ItemData.Weight > 90;
 
+        public bool IsMovable => (Flags & Flags.Movable) != 0;
+
         public ushort MultiGraphic { get; private set; }
 
         public bool IsMulti

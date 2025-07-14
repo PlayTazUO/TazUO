@@ -108,6 +108,9 @@ namespace ClassicUO.Game.UI.Controls
             AddCheckbox("Stackable", NameOverheadOptions.Stackable, 0, y);
             AddCheckbox("Locked down", NameOverheadOptions.LockedDown, 150, y);
             y += 22;
+            AddCheckbox("Moveable", NameOverheadOptions.Moveable, 0, y);
+            AddCheckbox("Immoveable", NameOverheadOptions.Immoveable, 150, y);
+            y += 22;
             AddCheckbox("Other items", NameOverheadOptions.Other, 0, y);
             y += 28;
 

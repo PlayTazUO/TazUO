@@ -79,7 +79,11 @@ namespace ClassicUO.Game.Managers
         Murderer = 1 << 18,
         Invulnerable = 1 << 19,
 
-        AllItems = Containers | Gold | Stackable | LockedDown | Other,
+        // Items cont.
+        Moveable = 1 << 20,
+        Immoveable = 1 << 21,
+
+        AllItems = Containers | Gold | Stackable | LockedDown | Moveable | Immoveable | Other,
         AllMobiles = Humanoid | Monster | OwnFollowers | Self,
         MobilesAndCorpses = AllMobiles | MonsterCorpses | HumanoidCorpses,
     }
@@ -195,6 +199,12 @@ namespace ClassicUO.Game.Managers
                 return true;
 
             if (item.IsLocked && ActiveOverheadOptions.HasFlag(NameOverheadOptions.LockedDown))
+                return true;
+
+            if (item.IsMovable && ActiveOverheadOptions.HasFlag(NameOverheadOptions.Moveable))
+                return true;
+
+            if (!item.IsMovable && ActiveOverheadOptions.HasFlag(NameOverheadOptions.Immoveable))
                 return true;
 
             if (ActiveOverheadOptions.HasFlag(NameOverheadOptions.Other))
