@@ -731,6 +731,16 @@ namespace ClassicUO.Game
             return Math.Max(Math.Abs(_endPoint.X - point.X), Math.Abs(_endPoint.Y - point.Y));
         }
 
+        private static int GetTurnPenalty(PathNode parent, int direction)
+        {
+            // The turn penalty prevents unnecessary zig-zagging that takes extra
+            // time (turning pauses movement briefly) and makes the movement look
+            // more natural. The turn penalty could be tweaked to a float value
+            // less than 1, e.g. 0.5, to make the avoidance of turns less
+            // aggressive, if needed.
+            return (parent.Parent != null && parent.Direction != direction) ? 1 : 0;
+        }
+
         private static bool AddNodeToList(int direction, int x, int y, int z, PathNode parent, int cost)
         {
             var coordinate = (x, y, z);
@@ -739,7 +749,18 @@ namespace ClassicUO.Game
                 return false;
             }
 
-            int newDistFromStart = parent.DistFromStartCost + cost + Math.Abs(z - parent.Z);
+            // In terms of the distance (number of tile steps) of the final
+            // reconstructed path, simply adding a turn penalty in this manner
+            // will result in paths no worse than without the turn cost. However,
+            // to guarantee that the minimal number of turns are taken, the open
+            // and closed sets would need to key off of (x, y, z, direction) to
+            // account for arriving at a tile from every direction. Doing this would
+            // be up to an 8x increase in time and space, and this would only be
+            // a problem where the cost of one step varies between tiles e.g. if
+            // walking through mud tiles cost 2 instead of 1, but that's not a
+            // concern here to warrent the 8x cost.
+            int turnPenalty = GetTurnPenalty(parent, direction);
+            int newDistFromStart = parent.DistFromStartCost + cost + Math.Abs(z - parent.Z) + turnPenalty;
 
             var updatedNode = PathNode.Get();
 
