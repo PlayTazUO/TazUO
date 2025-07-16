@@ -166,6 +166,8 @@ namespace ClassicUO.Game.Managers
             long val = 0;
             ushort total_count = 0;
             ushort unique_items = 0;
+            int max_total_items = ProfileManager.CurrentProfile.SellAgentMaxItems;
+            bool limit_total_items = max_total_items > 0;
             int max_unique_items = ProfileManager.CurrentProfile.SellAgentMaxUniques;
 
             foreach (var sellConfig in sellItems)
@@ -179,8 +181,10 @@ namespace ClassicUO.Game.Managers
 
                     if (current_count >= sellConfig.MaxAmount) continue;
 
+                    if (limit_total_items && current_count + total_count >= max_total_items) break;
+
                     //Made it here, add to sell list
-                    if (current_count + item.Amount < sellConfig.MaxAmount)
+                    if (current_count + item.Amount < sellConfig.MaxAmount && (!limit_total_items || current_count + total_count + item.Amount < max_total_items))
                     {
                         sellList.Add(new Tuple<uint, ushort>(item.Serial, item.Amount));
                         current_count += item.Amount;
@@ -189,12 +193,17 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        ushort remainingAmount = (ushort)(sellConfig.MaxAmount - current_count);
+                        int remainingAmount = sellConfig.MaxAmount - current_count;
+                        if (limit_total_items)
+                        {
+                            remainingAmount = Math.Min(remainingAmount, max_total_items - total_count - current_count);
+                        }
+
                         if (remainingAmount > 0)
                         {
-                            sellList.Add(new Tuple<uint, ushort>(item.Serial, remainingAmount));
-                            current_count += remainingAmount;
-                            val += item.Price * remainingAmount;
+                            sellList.Add(new Tuple<uint, ushort>(item.Serial, (ushort)remainingAmount));
+                            current_count += (ushort)remainingAmount;
+                            val += item.Price * (ushort)remainingAmount;
                             unique_items++;
                         }
                     }
