@@ -186,29 +186,18 @@ namespace ClassicUO.Game.Managers
 
                     if (limit_total_items && current_count + total_count >= max_total_items) break;
 
-                    //Made it here, add to sell list
-                    if (current_count + item.Amount < sellConfig.MaxAmount && (!limit_total_items || current_count + total_count + item.Amount < max_total_items))
+                    int amount_sellable = Math.Min(item.Amount, sellConfig.MaxAmount - current_count);
+                    if (limit_total_items)
                     {
-                        sellList.Add(new Tuple<uint, ushort>(item.Serial, item.Amount));
-                        current_count += item.Amount;
-                        val += item.Price * item.Amount;
-                        unique_items++;
+                        amount_sellable = Math.Min(amount_sellable, max_total_items - total_count - current_count);
                     }
-                    else
-                    {
-                        int remainingAmount = sellConfig.MaxAmount - current_count;
-                        if (limit_total_items)
-                        {
-                            remainingAmount = Math.Min(remainingAmount, max_total_items - total_count - current_count);
-                        }
 
-                        if (remainingAmount > 0)
-                        {
-                            sellList.Add(new Tuple<uint, ushort>(item.Serial, (ushort)remainingAmount));
-                            current_count += (ushort)remainingAmount;
-                            val += item.Price * (ushort)remainingAmount;
-                            unique_items++;
-                        }
+                    if (amount_sellable > 0)
+                    {
+                        sellList.Add(new Tuple<uint, ushort>(item.Serial, (ushort)amount_sellable));
+                        current_count += (ushort)amount_sellable;
+                        val += item.Price * (ushort)amount_sellable;
+                        unique_items++;
                     }
                 }
                 total_count += current_count;
