@@ -169,6 +169,7 @@ namespace ClassicUO.Game.Managers
             int max_total_items = ProfileManager.CurrentProfile.SellAgentMaxItems;
             bool limit_total_items = max_total_items > 0;
             int max_unique_items = ProfileManager.CurrentProfile.SellAgentMaxUniques;
+            bool limit_unique_items = max_unique_items > 0;
 
             foreach (var sellConfig in sellItems)
             {
@@ -180,6 +181,8 @@ namespace ClassicUO.Game.Managers
                     if (!sellConfig.IsMatch(item.Graphic, item.Hue)) continue;
 
                     if (current_count >= sellConfig.MaxAmount) continue;
+
+                    if (limit_unique_items && unique_items >= max_unique_items) break;
 
                     if (limit_total_items && current_count + total_count >= max_total_items) break;
 
@@ -209,9 +212,6 @@ namespace ClassicUO.Game.Managers
                     }
                 }
                 total_count += current_count;
-
-                if (max_unique_items > 0 && unique_items >= max_unique_items)
-                    break;
             }
             sellPackets.Remove(vendorSerial);
 
