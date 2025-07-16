@@ -201,7 +201,7 @@ namespace ClassicUO.Game.Managers
                 }
                 total_count += current_count;
 
-                if (unique_items >= max_unique_items)
+                if (max_unique_items > 0 && unique_items >= max_unique_items)
                     break;
             }
             sellPackets.Remove(vendorSerial);

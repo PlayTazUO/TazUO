@@ -592,6 +592,7 @@ namespace ClassicUO.Configuration
             public string AutoSellMenu { get; set; } = "Auto Sell";
             public string AutoSellEnable { get; set; } = "Enable auto sell feature";
             public string AutoSellMaxUniques { get; set; } = "Maximum unique items per transaction";
+            public string AutoSellMaxUniquesTooltip { get; set; } = "This is the maximum number of unique items that will be sold at once. A value of 0 means unlimited. A stack of items counts as one towards this limit. Some servers block transactions that sell too many unique items.";
 
             public string AutoBuyMenu { get; set; } = "Auto Buy";
             public string AutoBuyEnable { get; set; } = "Enable auto buy feature";
