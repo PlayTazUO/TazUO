@@ -85,6 +85,9 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoSellEnable, 0, profile.SellAgentEnabled, b => profile.SellAgentEnabled = b)));
         PositionHelper.BlankLine();
 
+        scroll.Add(PositionHelper.PositionControl(new SliderWithLabel(lang.GetTazUO.AutoSellMaxUniques, 0, ThemeSettings.SLIDER_WIDTH, 1, 100, profile.SellAgentMaxUniques, (r) => { profile.SellAgentMaxUniques = r; })));
+        PositionHelper.BlankLine();
+
         scroll.Add(PositionHelper.PositionControl(new SellAgentConfigs(MainContent.RightWidth - ThemeSettings.SCROLL_BAR_WIDTH - 10)));
     }
 

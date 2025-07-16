@@ -622,6 +622,7 @@ namespace ClassicUO.Configuration
         public float GlobalScale { get; set; } = 1.5f;
         public ushort TurnDelay { get; set; } = 100;
         public bool SellAgentEnabled { get; set; }
+        public int SellAgentMaxUniques { get; set; } = 50;
         public bool BuyAgentEnabled { get; set; }
         public bool DisableTargetingGridContainers { get; set; }
         public bool ControllerEnabled { get; set; } = true;

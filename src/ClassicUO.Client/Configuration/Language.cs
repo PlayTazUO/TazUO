@@ -591,6 +591,7 @@ namespace ClassicUO.Configuration
 
             public string AutoSellMenu { get; set; } = "Auto Sell";
             public string AutoSellEnable { get; set; } = "Enable auto sell feature";
+            public string AutoSellMaxUniques { get; set; } = "Maximum unique items per transaction";
 
             public string AutoBuyMenu { get; set; } = "Auto Buy";
             public string AutoBuyEnable { get; set; } = "Enable auto buy feature";

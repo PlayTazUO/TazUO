@@ -166,6 +166,7 @@ namespace ClassicUO.Game.Managers
             long val = 0;
             ushort total_count = 0;
             ushort unique_items = 0;
+            int max_unique_items = ProfileManager.CurrentProfile.SellAgentMaxUniques;
 
             foreach (var sellConfig in sellItems)
             {
@@ -200,7 +201,7 @@ namespace ClassicUO.Game.Managers
                 }
                 total_count += current_count;
 
-                if (unique_items >= 50)
+                if (unique_items >= max_unique_items)
                     break;
             }
             sellPackets.Remove(vendorSerial);
