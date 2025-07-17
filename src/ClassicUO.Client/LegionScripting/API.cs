@@ -1091,7 +1091,7 @@ namespace ClassicUO.LegionScripting
             (() =>
                 {
                     if (z == int.MinValue)
-                        z = World.Player.Z;
+                        z = World.Map.GetTileZ(x, y);
 
                     return Pathfinder.WalkTo(x, y, z, distance);
                 }
