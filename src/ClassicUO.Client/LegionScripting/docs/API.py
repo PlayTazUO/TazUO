@@ -703,6 +703,17 @@ def CancelPathfinding() -> None:
     """
     pass
 
+def GetPath(x: int, y: int, z: int = 1337, distance: int = 1) -> List[Tuple[int, int, int]]:
+    """
+     Attempt to build a path to a location.  This will fail with large distances.
+     Example:
+     ```py
+     API.GetPath(1414, 1515)
+     ```
+    
+    """
+    pass
+
 def AutoFollow(mobile: int) -> None:
     """
      Automatically follow a mobile. This is different than pathfinding. This will continune to follow the mobile.

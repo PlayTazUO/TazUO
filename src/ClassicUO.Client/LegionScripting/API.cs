@@ -17,6 +17,7 @@ using ClassicUO.Input;
 using ClassicUO.LegionScripting.PyClasses;
 using ClassicUO.Network;
 using FontStashSharp.RichText;
+using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Xna.Framework;
 using Button = ClassicUO.Game.UI.Controls.Button;
@@ -1195,6 +1196,32 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         public void CancelPathfinding() => InvokeOnMainThread(Pathfinder.StopAutoWalk);
+
+        /// <summary>
+        /// Attempt to build a path to a location.  This will fail with large distances.  
+        /// Example:
+        /// ```py
+        /// API.GetPath(1414, 1515)
+        /// ```
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="z"></param>
+        /// <param name="distance">Distance away from goal to stop.</param>
+        /// <returns>Returns a list of positions to reach the goal. Returns null if cannot find path.</returns>
+        public List<PythonTuple> GetPath(int x, int y, int z = int.MinValue, int distance = 1) => InvokeOnMainThread(() =>
+        {
+            if (z == int.MinValue)
+                z = World.Map.GetTileZ(x, y);
+
+            var path = Pathfinder.GetPathTo(x, y, z, distance);
+            if (path is null)
+            {
+                return null;
+            }
+
+            return path.Select(p => new PythonTuple(new object[] { p.X, p.Y, p.Z })).ToList();
+        });
 
         /// <summary>
         /// Automatically follow a mobile. This is different than pathfinding. This will continune to follow the mobile.
