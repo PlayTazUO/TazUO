@@ -1201,7 +1201,12 @@ namespace ClassicUO.LegionScripting
         /// Attempt to build a path to a location.  This will fail with large distances.  
         /// Example:
         /// ```py
-        /// API.GetPath(1414, 1515)
+        /// API.RequestTarget()
+        /// path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))
+        /// if path is not None:
+        ///     for x, y, z in path:
+        ///         tile = API.GetTile(x, y)
+        ///         tile.Hue = 53
         /// ```
         /// </summary>
         /// <param name="x"></param>

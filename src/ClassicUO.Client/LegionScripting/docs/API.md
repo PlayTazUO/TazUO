@@ -1110,7 +1110,12 @@ This was generated on `7/17/25`.
  Attempt to build a path to a location.  This will fail with large distances.  
  Example:  
  ```py  
- API.GetPath(1414, 1515)  
+ API.RequestTarget()
+ path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))
+ if path is not None:
+     for x, y, z in path:
+         tile = API.GetTile(x, y)
+         tile.Hue = 53
  ```  
   
 
@@ -1121,6 +1126,7 @@ This was generated on `7/17/25`.
 | y | int | No |  |
 | z | int | Yes |  |
 | distance | int | Yes | Distance away from goal to stop. |
+
 ---> Return Type: *List[Tuple[int, int, int]]*
 
 </details>
