@@ -1,3 +1,5 @@
+from typing import List, Tuple, Any
+
 class Buff:
     Graphic: int = None
     Text: str = None
