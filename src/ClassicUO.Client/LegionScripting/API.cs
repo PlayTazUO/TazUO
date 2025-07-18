@@ -1209,7 +1209,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="z"></param>
         /// <param name="distance">Distance away from goal to stop.</param>
         /// <returns>Returns a list of positions to reach the goal. Returns null if cannot find path.</returns>
-        public List<PythonTuple> GetPath(int x, int y, int z = int.MinValue, int distance = 1) => InvokeOnMainThread(() =>
+        public PythonList GetPath(int x, int y, int z = int.MinValue, int distance = 1) => InvokeOnMainThread(() =>
         {
             if (z == int.MinValue)
                 z = World.Map.GetTileZ(x, y);
@@ -1220,7 +1220,14 @@ namespace ClassicUO.LegionScripting
                 return null;
             }
 
-            return path.Select(p => new PythonTuple(new object[] { p.X, p.Y, p.Z })).ToList();
+            var pythonList = new PythonList();
+            foreach (var p in path)
+            {
+                var tuple = new PythonTuple(new object[] { p.X, p.Y, p.Z });
+                pythonList.Add(tuple);
+            }
+
+            return pythonList;
         });
 
         /// <summary>
