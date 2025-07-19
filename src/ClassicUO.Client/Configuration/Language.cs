@@ -529,7 +529,8 @@ namespace ClassicUO.Configuration
             public string SOSGumpID { get; set; } = "SOS Gump ID";
             public string UseWASDMovement { get; set; } = "Use WASD movement instead of arrow keys";
             public string BorderCaveTiles { get; set; } = "Apply a border to static item art";
-            public string ToggleHouses { get; set; } = "Toggle houses at Z level";
+            public string ToggleHouses { get; set; } = "Hide Houses at Z-Level";
+            public string EnableHouseToggle { get; set; } = "Enable Hide Houses";
             #endregion
 
             #region Tooltips

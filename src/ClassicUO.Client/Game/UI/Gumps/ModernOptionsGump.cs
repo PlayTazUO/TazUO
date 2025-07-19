@@ -3382,7 +3382,6 @@ namespace ClassicUO.Game.UI.Gumps
                     lang.GetTazUO.ToggleHouses, 0, ThemeSettings.SLIDER_WIDTH, 0, 25, profile.HideHousesAtZLevel, (i) =>
                     {
                         profile.HideHousesAtZLevel = (byte)i;
-                        ResizableJournal.UpdateJournalOptions();
                     }
                 ), true, page
             );
@@ -3393,10 +3392,9 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 c = new CheckboxWithLabel
                 (
-                    lang.GetTazUO.ToggleHouses, 0, profile.ToggleHideHouses, (b) =>
+                    lang.GetTazUO.EnableHouseToggle, 0, profile.ToggleHideHouses, (b) =>
                     {
                         profile.ToggleHideHouses = b;
-                        ResizableJournal.UpdateJournalOptions();
                     }
                 ), true, page
             );
