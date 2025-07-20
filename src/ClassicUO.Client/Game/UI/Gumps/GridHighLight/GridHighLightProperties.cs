@@ -79,11 +79,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
             };
             Label minPropertiesLabel;
-            Add(minPropertiesLabel = new Label("Min. property count", true, 0xffff) { X = minPropertiesInput.X + minPropertiesInput.Width, Y = lastYitem });
+            mainScrollArea.Add(minPropertiesLabel = new Label("Min. property count", true, 0xffff) { X = minPropertiesInput.X + minPropertiesInput.Width, Y = lastYitem });
 
             InputField maxPropertiesInput;
             mainScrollArea.Add(maxPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { X = 180, Y = lastYitem });
-            maxPropertiesInput.SetText(data.MinimumProperty.ToString());
+            maxPropertiesInput.SetText(data.MaximumProperty.ToString());
             maxPropertiesInput.TextChanged += (s, e) =>
             {
                 if (int.TryParse(maxPropertiesInput.Text, out int val))
@@ -96,7 +96,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
             };
             Label maxPropertiesLabel;
-            Add(maxPropertiesLabel = new Label("Max. property count", true, 0xffff) { X = maxPropertiesInput.X + maxPropertiesInput.Width, Y = lastYitem });
+            mainScrollArea.Add(maxPropertiesLabel = new Label("Max. property count", true, 0xffff) { X = maxPropertiesInput.X + maxPropertiesInput.Width, Y = lastYitem });
 
             lastYitem += 20;
 

@@ -219,16 +219,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     return false;
             }
 
-            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
-            {
-                return false;
-            }
-            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
-            {
-                return false;
-            }
-
-            return true;
+            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            return isMatchingPropertyCount;
         }
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
@@ -300,6 +292,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 matchingPropertiesCount++;
             }
 
+            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            return isMatchingPropertyCount;
+        }
+
+        private bool IsMatchingPropertyCount(int matchingPropertiesCount)
+        {
             if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
             {
                 return false;
