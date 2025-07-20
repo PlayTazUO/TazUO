@@ -35,6 +35,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             Add(new AlphaBlendControl(0.85f) { Width = WIDTH, Height = HEIGHT });
 
+            lastYitem = 0;
+
+            // Scroll area
+            Add(mainScrollArea = new ScrollArea(0, 0, WIDTH, HEIGHT, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
+
             // Accept extra properties checkbox
             string acceptExtraPropertiesTooltip =
                 "Highlight items with properties beyond your configuration.\n" +
@@ -42,7 +47,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 "When un-checked: The item must match all configured properties and must not have any extra properties.";
 
             Checkbox acceptExtraPropertiesCheckbox;
-            Add(acceptExtraPropertiesCheckbox = new Checkbox(0x00D2, 0x00D3)
+            mainScrollArea.Add(acceptExtraPropertiesCheckbox = new Checkbox(0x00D2, 0x00D3)
             {
                 X = 0,
                 Y = 0,
@@ -55,10 +60,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             Label acceptExtraPropertiesLabel;
-            Add(acceptExtraPropertiesLabel = new Label("Allow extra properties", true, 0xffff) { X = 20, Y = 0 });
+            mainScrollArea.Add(acceptExtraPropertiesLabel = new Label("Allow extra properties", true, 0xffff) { X = 20, Y = 0 });
+
+            lastYitem += 20;
 
             InputField minPropertiesInput;
-            Add(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { X = 180, Y = 0 });
+            mainScrollArea.Add(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { X = 0, Y = lastYitem });
             minPropertiesInput.SetText(data.MinimumProperty.ToString());
             minPropertiesInput.TextChanged += (s, e) =>
             {
@@ -72,12 +79,26 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
             };
             Label minPropertiesLabel;
-            Add(minPropertiesLabel = new Label("Min. property count", true, 0xffff) { X = minPropertiesInput.X + minPropertiesInput.Width, Y = 0 });
+            Add(minPropertiesLabel = new Label("Min. property count", true, 0xffff) { X = minPropertiesInput.X + minPropertiesInput.Width, Y = lastYitem });
 
-            // Scroll area
-            Add(mainScrollArea = new ScrollArea(0, 20, WIDTH, HEIGHT - 20, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
+            InputField maxPropertiesInput;
+            mainScrollArea.Add(maxPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { X = 180, Y = lastYitem });
+            maxPropertiesInput.SetText(data.MinimumProperty.ToString());
+            maxPropertiesInput.TextChanged += (s, e) =>
+            {
+                if (int.TryParse(maxPropertiesInput.Text, out int val))
+                {
+                    data.MaximumProperty = val;
+                }
+                else
+                {
+                    maxPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                }
+            };
+            Label maxPropertiesLabel;
+            Add(maxPropertiesLabel = new Label("Max. property count", true, 0xffff) { X = maxPropertiesInput.X + maxPropertiesInput.Width, Y = lastYitem });
 
-            lastYitem = 0;
+            lastYitem += 20;
 
             #region Properties
             mainScrollArea.Add(new Label("Property name", true, 0xffff, 120) { X = 0, Y = lastYitem });

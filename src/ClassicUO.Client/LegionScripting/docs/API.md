@@ -7,7 +7,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
   
 [Additional notes](notes.md)  
   
-This was generated on `7/18/25`.
+This was generated on `7-20-25`.
   
 # API  
 

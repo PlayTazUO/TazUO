@@ -60,6 +60,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.MinimumProperty = value;
         }
 
+        public int MaximumProperty
+        {
+            get => _entry.MaximumProperty;
+            set => _entry.MaximumProperty = value;
+        }
+
         public List<string> ExcludeNegatives
         {
             get => _entry.ExcludeNegatives;
@@ -213,7 +219,16 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     return false;
             }
 
-            return matchingPropertiesCount >= MinimumProperty;
+            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
+            {
+                return false;
+            }
+            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
@@ -285,7 +300,16 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 matchingPropertiesCount++;
             }
 
-            return matchingPropertiesCount >= MinimumProperty;
+            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
+            {
+                return false;
+            }
+            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private string Normalize(string input)
