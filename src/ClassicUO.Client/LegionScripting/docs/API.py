@@ -1,5 +1,3 @@
-from typing import List, Tuple, Any
-
 class Buff:
     Graphic: int = None
     Text: str = None
@@ -700,17 +698,6 @@ def CancelPathfinding() -> None:
      ```py
      if API.Pathfinding():
        API.CancelPathfinding()
-     ```
-    
-    """
-    pass
-
-def GetPath(x: int, y: int, z: int = 1337, distance: int = 1) -> List[Tuple[int, int, int]]:
-    """
-     Attempt to build a path to a location.  This will fail with large distances.
-     Example:
-     ```py
-     API.GetPath(1414, 1515)
      ```
     
     """
