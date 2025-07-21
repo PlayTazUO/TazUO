@@ -37,13 +37,40 @@ namespace ClassicUO.Renderer.Arts
 
             if (spriteInfo.Texture == null)
             {
-                ArtInfo artInfo = PNGLoader.Instance.LoadArtTexture(idx);
+                ArtInfo artInfo;
 
-                if (artInfo.Pixels == null || artInfo.Pixels.IsEmpty)
+                if (idx < 0x4000)
                 {
-                    artInfo = ArtLoader.Instance.GetArt(idx);
+                    // LAND: Try PNG terrain override first
+                    var terrainInfo = PNGLoader.Instance.LoadTerrainTexture(idx);
+
+                    if (terrainInfo.Pixels != null && terrainInfo.Pixels.Length > 0)
+                    {
+                        artInfo = new ArtInfo()
+                        {
+                            Pixels = terrainInfo.Pixels,
+                            Width = terrainInfo.Width,
+                            Height = terrainInfo.Height
+                        };
+                    }
+                    else
+                    {
+                        // Fall back to PNG art override, then MUL/UOP
+                        artInfo = PNGLoader.Instance.LoadArtTexture(idx);
+
+                        if (artInfo.Pixels == null || artInfo.Pixels.IsEmpty)
+                            artInfo = ArtLoader.Instance.GetArt(idx);
+                    }
                 }
-                
+                else
+                {
+                    // STATIC: Try PNG art override, then MUL/UOP
+                    artInfo = PNGLoader.Instance.LoadArtTexture(idx);
+
+                    if (artInfo.Pixels == null || artInfo.Pixels.IsEmpty)
+                        artInfo = ArtLoader.Instance.GetArt(idx);
+                }
+
                 if (artInfo.Pixels.IsEmpty && idx > 0)
                 {
                     // Trying to load a texture that does not exist in the client MULs
@@ -53,7 +80,7 @@ namespace ClassicUO.Renderer.Arts
                     );
                     return ref Get(0); // ItemID of "UNUSED" placeholder
                 }
-                
+
                 if (!artInfo.Pixels.IsEmpty)
                 {
                     spriteInfo.Texture = _atlas.AddSprite(
@@ -65,8 +92,8 @@ namespace ClassicUO.Renderer.Arts
 
                     if (idx > 0x4000)
                     {
-                        idx -= 0x4000;
-                        _picker.Set(idx, artInfo.Width, artInfo.Height, artInfo.Pixels);
+                        uint staticIdx = idx - 0x4000;
+                        _picker.Set(staticIdx, artInfo.Width, artInfo.Height, artInfo.Pixels);
 
                         var pos1 = 0;
                         int minX = artInfo.Width,
@@ -88,7 +115,7 @@ namespace ClassicUO.Renderer.Arts
                             }
                         }
 
-                        _realArtBounds[idx] = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+                        _realArtBounds[staticIdx] = new Rectangle(minX, minY, maxX - minX, maxY - minY);
                     }
                 }
             }

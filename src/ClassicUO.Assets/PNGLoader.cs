@@ -9,7 +9,7 @@ namespace ClassicUO.Assets
 {
     public class PNGLoader
     {
-        private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art";
+        private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art", TERRAIN_EXTERNAL_FOLDER = "terrain";
 
         private string exePath;
 
@@ -20,6 +20,9 @@ namespace ClassicUO.Assets
 
         private uint[] art_availableIDs;
         private Dictionary<uint, Texture2D> art_textureCache = new Dictionary<uint, Texture2D>();
+
+        private uint[] terrain_availableIDs;
+        private Dictionary<uint, Texture2D> terrain_textureCache = new Dictionary<uint, Texture2D>();
 
         public GraphicsDevice GraphicsDevice { set; get; }
 
@@ -126,6 +129,64 @@ namespace ClassicUO.Assets
             };
         }
 
+        public TerrainInfo LoadTerrainTexture(uint tileId)
+        {
+            Texture2D texture;
+
+            if (terrain_availableIDs == null)
+                return new TerrainInfo();
+
+            int index = Array.IndexOf(terrain_availableIDs, tileId);
+            if (index == -1) return new TerrainInfo();
+
+            terrain_textureCache.TryGetValue(tileId, out texture);
+
+            if (exePath != null && texture == null && GraphicsDevice != null)
+            {
+                string fullImagePath = Path.Combine(exePath, IMAGES_FOLDER, TERRAIN_EXTERNAL_FOLDER, tileId.ToString() + ".png");
+                Console.WriteLine($"fullImagePath: {fullImagePath}");
+
+                if (File.Exists(fullImagePath))
+                {
+                    FileStream stream = File.OpenRead(fullImagePath);
+                    texture = Texture2D.FromStream(GraphicsDevice, stream);
+                    stream.Close();
+                    // Alpha fix (if needed, else comment out if not required for terrain)
+                    Color[] buffer = new Color[texture.Width * texture.Height];
+                    texture.GetData(buffer);
+                    for (int i = 0; i < buffer.Length; i++)
+                        buffer[i] = Color.FromNonPremultiplied(buffer[i].R, buffer[i].G, buffer[i].B, buffer[i].A);
+                    texture.SetData(buffer);
+
+                    terrain_textureCache.Add(tileId, texture);
+                }
+            }
+
+            if (texture == null)
+                return new TerrainInfo();
+
+            return new TerrainInfo()
+            {
+                Pixels = GetPixels(texture),
+                Width = texture.Width,
+                Height = texture.Height
+            };
+        }
+
+        public class TerrainInfo
+        {
+            public uint[] Pixels { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public TerrainInfo()
+            {
+                Pixels = Array.Empty<uint>();
+                Width = 0;
+                Height = 0;
+            }
+        }
+
+
         private uint[] GetPixels(Texture2D texture)
         {
             if (texture == null)
@@ -182,6 +243,22 @@ namespace ClassicUO.Assets
                             if (uint.TryParse(fname.Substring(0, fname.Length - 4), out uint gfx))
                             {
                                 art_availableIDs[i] = gfx + 0x4000;
+                            }
+                        }
+                    }
+
+                    string terrainPath = Path.Combine(exePath, IMAGES_FOLDER, TERRAIN_EXTERNAL_FOLDER);
+                    if (Directory.Exists(terrainPath))
+                    {
+                        string[] files = Directory.GetFiles(terrainPath, "*.png", SearchOption.TopDirectoryOnly);
+                        terrain_availableIDs = new uint[files.Length];
+
+                        for (int i = 0; i < files.Length; i++)
+                        {
+                            string fname = Path.GetFileName(files[i]);
+                            if (uint.TryParse(fname.Substring(0, fname.Length - 4), out uint id))
+                            {
+                                terrain_availableIDs[i] = id;
                             }
                         }
                     }
