@@ -246,6 +246,10 @@ namespace ClassicUO.Assets
                             }
                         }
                     }
+                    else
+                    {
+                        Directory.CreateDirectory(artPath);
+                    }
 
                     string terrainPath = Path.Combine(exePath, IMAGES_FOLDER, TERRAIN_EXTERNAL_FOLDER);
                     if (Directory.Exists(terrainPath))
@@ -264,7 +268,7 @@ namespace ClassicUO.Assets
                     }
                     else
                     {
-                        Directory.CreateDirectory(artPath);
+                        Directory.CreateDirectory(terrainPath);
                     }
                 });
         }
