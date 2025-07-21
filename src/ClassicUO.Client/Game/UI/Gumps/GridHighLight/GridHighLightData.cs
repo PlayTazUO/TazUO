@@ -60,6 +60,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.MinimumProperty = value;
         }
 
+        public int MaximumProperty
+        {
+            get => _entry.MaximumProperty;
+            set => _entry.MaximumProperty = value;
+        }
+
         public List<string> ExcludeNegatives
         {
             get => _entry.ExcludeNegatives;
@@ -98,6 +104,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public void Delete()
         {
             ProfileManager.CurrentProfile.GridHighlightSetup.Remove(_entry);
+            allConfigs = null;
         }
 
         public static void ProcessItemOpl(uint value)
@@ -213,7 +220,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     return false;
             }
 
-            return matchingPropertiesCount >= MinimumProperty;
+            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            return isMatchingPropertyCount;
         }
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
@@ -285,7 +293,22 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 matchingPropertiesCount++;
             }
 
-            return matchingPropertiesCount >= MinimumProperty;
+            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            return isMatchingPropertyCount;
+        }
+
+        private bool IsMatchingPropertyCount(int matchingPropertiesCount)
+        {
+            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
+            {
+                return false;
+            }
+            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private string Normalize(string input)

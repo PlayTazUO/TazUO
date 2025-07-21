@@ -172,7 +172,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 "Poison Eater",
                 "Energy Eater",
                 "Kinetic Eater",
-                "Damage Eater",
             };
 
         public static HashSet<string> Resistances =>

@@ -163,11 +163,11 @@ namespace ClassicUO.Game.UI
                 ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses = !ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses;
                 RequestUpdateContents();
             }, true, ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses));
-            
+
             c.Add(new ContextMenuItemEntry("Hide containers when opening corpses?", () =>
             {
-               ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen = !ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen; 
-            }, true, ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen));;
+               ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen = !ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen;
+            }, true, ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen));
 
             return c;
         }
@@ -211,7 +211,7 @@ namespace ClassicUO.Game.UI
             if (corpse.Items != null)
             {
                 corpse.Hue = 53;
-                
+
                 if (_corpsesRequested.Contains(corpse))
                     _corpsesRequested.Remove(corpse);
 
@@ -219,10 +219,10 @@ namespace ClassicUO.Game.UI
                 for (LinkedObject i = corpse.Items; i != null; i = i.Next)
                 {
                     Item item = (Item)i;
-                    
+
                     if (item.IsCorpse)
                         ProcessCorpse(item, ref itemList);
-                    
+
                     if (item.Graphic == 0 || !item.IsLootable)
                         continue;
 

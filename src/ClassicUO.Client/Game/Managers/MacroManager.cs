@@ -2,7 +2,7 @@
 
 // Copyright (c) 2024, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -243,7 +243,7 @@ namespace ClassicUO.Game.Managers
                     }
                 }
             );
-            
+
             PushToBack
             (
                 new Macro
@@ -258,7 +258,7 @@ namespace ClassicUO.Game.Managers
                     Items = new MacroObject(MacroType.LastObject, MacroSubType.Overview)
                 }
             );
-            
+
             PushToBack
             (
                 new Macro
@@ -1089,32 +1089,36 @@ namespace ClassicUO.Game.Managers
                         GameActions.OpenNearbyLootGump();
 
                     break;
-                
+
                 case MacroType.ToggleLegionScripting:
                     if (!GameActions.CloseLegionScriptingGump())
                         GameActions.OpenLegionScriptingGump();
 
                     break;
-                
+
                 case MacroType.SpellBarRowUp:
                     SpellBar.Instance?.ChangeRow(true);
 
                     break;
-                
+
                 case MacroType.SpellBarRowDown:
                     SpellBar.Instance?.ChangeRow(false);
 
                     break;
-                
-                case MacroType.SetSpellBarRow: 
+
+                case MacroType.SetSpellBarRow:
                     string spellRow = ((MacroObjectString)macro).Text;
 
                     if (int.TryParse(spellRow, out int row))
                     {
                         SpellBar.Instance?.SetRow(row);
                     }
+                    else
+                    {
+                        GameActions.Print("That is not a valid row.", 32);
+                    }
                     break;
-                
+
                 case MacroType.Dismount:
                     var m = World.Player.FindItemByLayer(Layer.Mount);
                     if (m != null)
@@ -1253,7 +1257,7 @@ namespace ClassicUO.Game.Managers
                         //{
                         //    TargetManager.TargetGameObject(TargetManager.LastGameObject);
                         //}
-                        //else 
+                        //else
 
                         if (TargetManager.TargetingState != CursorTarget.Object && !TargetManager.LastTargetInfo.IsEntity)
                         {

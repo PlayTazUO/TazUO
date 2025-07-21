@@ -8,7 +8,10 @@ namespace ClassicUO.Game.UI.Gumps
     internal class VersionHistory : Gump
     {
         private static string[] updateTexts = {
-            "/c[white][3.33.0]/cd\n" +
+            "/c[white][4.0.1]/cd\n" +
+            "\n",
+
+            "/c[white][4.0.0]/cd\n" +
             "- Prevent autoloot, move item queue from moving items while you are holding something.\n" +
             "- Change multi item move to use shared move item queue\n" +
             "- Prevent closing containers when changing facets\n" +
@@ -21,7 +24,7 @@ namespace ClassicUO.Game.UI.Gumps
             "- Minor bug fixes\n" +
             "- Spellbar!\n" +
             "- Implemented Async networking\n",
-            
+
             "/c[white][3.32.0]/cd\n" +
             "- Added simple progress bar control for Python API gumps.\n" +
             "- Generate user friendly html crash logs and open them on crash\n" +
@@ -32,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
             "- XML Gumps save locked status now(Ctrl + Alt + Click to lock)\n" +
             "- Python API created gumps will automatically close when the script stops, unless marked keep open." +
             "- Various bug fixes\n",
-            
+
             "/c[white][3.31.0]/cd\n" +
             "- Fix for Python API EquipItem\n" +
             "- Fix for legion scripting useability commands\n" +
@@ -41,13 +44,13 @@ namespace ClassicUO.Game.UI.Gumps
             "- Combine duplicate system messages\n" +
             "- Default visual spell indicator setup embedded now\n" +
             "- Various bug fixes\n",
-            
+
             "/c[white][3.30.0]/cd\n" +
             "- Implementing Discord Social features\n" +
             "- Added more python API methods\n" +
             "- Better python API error handling\n" +
             "- Other minor bug fixes",
-            
+
             "/c[white][3.29.0]/cd\n" +
                 "- Moved tooltip override options into main menu\n"+
                 "- Expanded Python API\n"+
@@ -59,7 +62,7 @@ namespace ClassicUO.Game.UI.Gumps
                 "- Added some new fonts in\n" +
                 "- Added option to disable controller\n" +
                 "- Added some standard python libs in for python scripting\n" +
-                
+
                 "- Various bug fixes\n",
 
             "/c[white][3.28.0]/cd\n" +
@@ -260,16 +263,6 @@ namespace ClassicUO.Game.UI.Gumps
                 "- Upgraded item comparisons, see wiki on tooltip overrides for more info\n" +
                 "- Spell indicators can now be overridden with a per-character config",
 
-            "/c[white][3.9.0]/cd\n" +
-                "- Added missing race change gump\n" +
-                "- If no server is set in settings.json user will get a request to type one in\n" +
-                "- When opening TUO with a uo directory that is not valid a folder selection prompt will open\n" +
-                "- Spell indicator system, see wiki for more details\n" +
-                "- The /c[green]-marktile/cd command works on static locations also now\n" +
-                "- The 'Items Only' option for nameplates will no longer include corpses\n" +
-                "- Bug fix for object highlighting\n" +
-                "- Bug fix for <BR> tag in tooltips",
-
             "\n\n/c[white]For further history please visit our discord."
         };
 
@@ -323,13 +316,13 @@ namespace ClassicUO.Game.UI.Gumps
             _.X = 25;
             _.Y = Height - 20;
             Add(_);
-            
+
             Add(_hit = new HitBox(_.X, _.Y, _.MeasuredSize.X, _.MeasuredSize.Y));
             _hit.MouseUp += (s, e) =>
             {
                 Utility.Platforms.PlatformHelper.LaunchBrowser("https://github.com/bittiez/TazUO/wiki");
             };
-            
+
             _ = TextBox.GetOne(Language.Instance.TazUODiscord, TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(200));
             _.X = 280;
             _.Y = Height - 20;
