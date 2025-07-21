@@ -84,12 +84,20 @@ namespace ClassicUO.Game.GameObjects
             int losMinZ = Math.Min(observerEyeZ, targetEyeZ);
             int losMaxZ = Math.Max(observerEyeZ, targetEyeZ);
 
-            foreach (var obj in Pathfinder.GetAllObjectsAt(x, y))
+            var objects = Pathfinder.GetAllObjectsAt(x, y);
+            try
             {
-                if (Pathfinder.ObjectBlocksLOS(obj, losMinZ, losMaxZ))
-                    return false;
+                foreach (var obj in objects)
+                {
+                    if (Pathfinder.ObjectBlocksLOS(obj, losMinZ, losMaxZ))
+                        return false;
+                }
+                return true;
             }
-            return true;
+            finally
+            {
+                Pathfinder._listPool.Return(objects);
+            }
         }
 
         private static int GetLandZ(int x, int y)
@@ -142,9 +150,9 @@ namespace ClassicUO.Game.GameObjects
             return true;
         }
 
-        private struct Point3D
+        private readonly struct Point3D
         {
-            public int X, Y, Z;
+            public readonly int X, Y, Z;
             public Point3D(int x, int y, int z)
             {
                 X = x; Y = y; Z = z;

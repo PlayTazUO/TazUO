@@ -84,7 +84,7 @@ namespace ClassicUO.Game
 
         public static bool FastRotation { get; set; }
 
-        public static bool ObjectBlocksLOS(GameObject obj, int observerZ, int targetZ)
+        public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
         {
             int objZ = obj.Z;
             int objHeight = 0;
@@ -118,20 +118,24 @@ namespace ClassicUO.Game
 
             int objTop = objZ + objHeight;
 
-            // The vertical LOS ray runs from observerZ to targetZ.
-            int losMin = Math.Min(observerZ, targetZ);
-            int losMax = Math.Max(observerZ, targetZ);
+            int losMin = Math.Min(losMinZ, losMaxZ);
+            int losMax = Math.Max(losMinZ, losMaxZ);
 
-            // If any part of the object is within the LOS Z range, it's a blocker.
             if (objTop > losMin && objZ < losMax)
                 return true;
 
             return false;
         }
 
+        public static readonly ObjectPool<List<GameObject>> _listPool = new ObjectPool<List<GameObject>>(
+            () => new List<GameObject>(),
+            list => list.Clear(),
+            100
+        );
+
         public static List<GameObject> GetAllObjectsAt(int x, int y)
         {
-            var result = new List<GameObject>();
+            var result = _listPool.Get();
             GameObject tile = World.Map.GetTile(x, y, false);
             if (tile == null)
                 return result;

@@ -269,7 +269,7 @@ namespace ClassicUO.Game.UI.Gumps
             dict["Distance"] = obj.Distance.ToString();
             dict["AllowedToDraw"] = obj.AllowedToDraw.ToString();
             dict["AlphaHue"] = obj.AlphaHue.ToString();
-            dict["LineOfSight"] = obj.LineOfSight.ToString();
+            dict["HasLineOfSightFromPlayer"] = obj.HasLineOfSightFrom().ToString();
 
             switch (obj)
             {
