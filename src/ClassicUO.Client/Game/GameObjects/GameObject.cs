@@ -55,14 +55,18 @@ namespace ClassicUO.Game.GameObjects
 
         private AverageOverTime _averageOverTime;
 
-        public bool LineOfSight
+        public bool IsVisibleToPlayer()
         {
-            get
-            {
-                if (World.Player == null)
-                    return false;
-                return LineOfSightHelper.IsVisible(World.Player, this);
-            }
+            if (World.Player == null)
+                return false;
+            return LineOfSightHelper.IsVisible(World.Player, this);
+        }
+
+        public bool IsVisibleFrom(GameObject observer)
+        {
+            if (observer == null)
+                return false;
+            return LineOfSightHelper.IsVisible(observer, this);
         }
 
         public int Distance

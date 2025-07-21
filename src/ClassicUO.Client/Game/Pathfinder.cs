@@ -109,6 +109,8 @@ namespace ClassicUO.Game
                     objHeight = m.ItemData.Height;
                     isBlocker = m.ItemData.IsImpassable;
                     break;
+                default:
+                    return false;
             }
 
             if (!isBlocker)
