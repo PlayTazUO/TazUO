@@ -84,6 +84,64 @@ namespace ClassicUO.Game
 
         public static bool FastRotation { get; set; }
 
+        public static bool ObjectBlocksLOS(GameObject obj, int observerZ, int targetZ)
+        {
+            int objZ = obj.Z;
+            int objHeight = 0;
+            bool isBlocker = false;
+
+            switch (obj)
+            {
+                case Land land:
+                    objHeight = 1;
+                    isBlocker = land.TileData.IsImpassable;
+                    break;
+                case Static s:
+                    ref StaticTiles staticData = ref TileDataLoader.Instance.StaticData[s.OriginalGraphic];
+                    objHeight = staticData.Height;
+                    isBlocker = staticData.IsImpassable || staticData.IsWall;
+                    break;
+                case Item i:
+                    objHeight = i.ItemData.Height;
+                    isBlocker = i.ItemData.IsImpassable;
+                    break;
+                case Multi m:
+                    objHeight = m.ItemData.Height;
+                    isBlocker = m.ItemData.IsImpassable;
+                    break;
+            }
+
+            if (!isBlocker)
+                return false;
+
+            int objTop = objZ + objHeight;
+
+            // The vertical LOS ray runs from observerZ to targetZ.
+            int losMin = Math.Min(observerZ, targetZ);
+            int losMax = Math.Max(observerZ, targetZ);
+
+            // If any part of the object is within the LOS Z range, it's a blocker.
+            if (objTop > losMin && objZ < losMax)
+                return true;
+
+            return false;
+        }
+
+        public static List<GameObject> GetAllObjectsAt(int x, int y)
+        {
+            var result = new List<GameObject>();
+            GameObject tile = World.Map.GetTile(x, y, false);
+            if (tile == null)
+                return result;
+
+            GameObject obj = tile;
+            while (obj.TPrevious != null)
+                obj = obj.TPrevious;
+            for (; obj != null; obj = obj.TNext)
+                result.Add(obj);
+
+            return result;
+        }
 
         private static bool CreateItemList(List<PathObject> list, int x, int y, int stepState)
         {

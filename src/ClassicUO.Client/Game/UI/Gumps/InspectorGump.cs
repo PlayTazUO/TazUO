@@ -33,6 +33,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Assets;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -268,6 +269,7 @@ namespace ClassicUO.Game.UI.Gumps
             dict["Distance"] = obj.Distance.ToString();
             dict["AllowedToDraw"] = obj.AllowedToDraw.ToString();
             dict["AlphaHue"] = obj.AlphaHue.ToString();
+            dict["LineOfSight"] = obj.LineOfSight.ToString();
 
             switch (obj)
             {
@@ -306,13 +308,16 @@ namespace ClassicUO.Game.UI.Gumps
                     dict["Direction"] = it.Direction.ToString();
                     dict["IsMulti"] = it.IsMulti.ToString();
                     dict["MultiGraphic"] = $"0x{it.MultiGraphic:X4}";
+                    dict["IsImpassable"] = it.ItemData.IsImpassable.ToString();
 
                     break;
 
                 case Static st:
-
+                    ref StaticTiles staticData = ref TileDataLoader.Instance.StaticData[st.OriginalGraphic];
                     dict["Type"] = "Static";
                     dict["IsVegetation"] = st.IsVegetation.ToString();
+                    dict["IsWall"] = staticData.IsWall.ToString();
+                    dict["IsImpassable"] = staticData.IsImpassable.ToString();
 
                     break;
 
@@ -321,6 +326,8 @@ namespace ClassicUO.Game.UI.Gumps
                     dict["Type"] = "Multi";
                     dict["State"] = multi.State.ToString();
                     dict["IsMovable"] = multi.IsMovable.ToString();
+                    dict["IsImpassable"] = multi.ItemData.IsImpassable.ToString();
+                    dict["IsWall"] = multi.ItemData.IsWall.ToString();
 
                     break;
 
@@ -335,6 +342,7 @@ namespace ClassicUO.Game.UI.Gumps
                     dict["MinZ"] = land.MinZ.ToString();
                     dict["AvgZ"] = land.AverageZ.ToString();
                     dict["YOffsets"] = land.YOffsets.ToString();
+                    dict["IsImpassable"] = land.TileData.IsImpassable.ToString();
 
                     break;
             }
