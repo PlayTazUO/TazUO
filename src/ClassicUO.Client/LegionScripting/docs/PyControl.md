@@ -22,6 +22,7 @@ _No enums found._
 | y | int | No |  |
 | w | int | No |  |
 | h | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -38,6 +39,7 @@ _No enums found._
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | width | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -54,6 +56,7 @@ _No enums found._
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | height | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -70,6 +73,7 @@ _No enums found._
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | x | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -86,6 +90,7 @@ _No enums found._
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | y | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -103,6 +108,7 @@ _No enums found._
 | --- | --- | --- | --- |
 | x | int | No |  |
 | y | int | No |  |
+
 ---> Return Type: *Control*
 
 </details>

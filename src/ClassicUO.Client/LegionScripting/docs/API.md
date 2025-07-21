@@ -7,7 +7,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
   
 [Additional notes](notes.md)  
   
-This was generated on `7/18/25`.
+This was generated on `7/20/25`.
   
 # API  
 
@@ -43,9 +43,9 @@ This was generated on `7/18/25`.
 - **Found** (*uint*)
   -  The serial of the last item or mobile from the various findtype/mobile methods
 
+
 - **PyProfile** (*PyProfile*)
   -  Access useful player settings.
-
 
 
 ## Enums
@@ -113,6 +113,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | name | string | No | Name of the var |
 | value | object | No | Value, can be a number, text, or *most* other objects too. |
+
 ---> Does not return anything
 
 </details>
@@ -135,6 +136,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | name | string | No | Name of the var |
+
 ---> Return Type: *object*
 
 </details>
@@ -155,6 +157,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | name | string | No | Name of the var |
+
 ---> Does not return anything
 
 </details>
@@ -205,6 +208,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -285,6 +289,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No | Serial, or item/mobile reference |
+
 ---> Does not return anything
 
 </details>
@@ -306,6 +311,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | serial | uint | No | The serial |
 | skipQueue | bool | Yes | Defaults true, set to false to use a double click queue |
+
 ---> Does not return anything
 
 </details>
@@ -328,6 +334,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Return Type: *int*
 
 </details>
@@ -350,6 +357,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | serial | uint | No |  |
 | entry | ushort | No | Entries start at 0, the top entry will be 0, then 1, 2, etc. (Usually) |
+
 ---> Does not return anything
 
 </details>
@@ -372,6 +380,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -419,6 +428,7 @@ This was generated on `7/18/25`.
 | amt | ushort | Yes | Amount to move |
 | x | int | Yes | X coordinate inside a container |
 | y | int | Yes | Y coordinate inside a container |
+
 ---> Does not return anything
 
 </details>
@@ -455,6 +465,7 @@ This was generated on `7/18/25`.
 | amt | int | Yes | Amount to move |
 | x | int | Yes | X coordinate inside a container |
 | y | int | Yes | Y coordinate inside a container |
+
 ---> Does not return anything
 
 </details>
@@ -482,6 +493,7 @@ This was generated on `7/18/25`.
 | y | int | Yes | Offset from your location |
 | z | int | Yes | Offset from your location. Leave blank in most cases |
 | OSI | bool | Yes | True if you are playing OSI |
+
 ---> Does not return anything
 
 </details>
@@ -510,6 +522,7 @@ This was generated on `7/18/25`.
 | y | int | Yes | Offset from your location |
 | z | int | Yes | Offset from your location. Leave blank in most cases |
 | OSI | bool | Yes | True if you are playing OSI |
+
 ---> Does not return anything
 
 </details>
@@ -531,6 +544,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | skillName | string | No | Can be a partial match. Will match the first skill containing this text. |
+
 ---> Does not return anything
 
 </details>
@@ -553,6 +567,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | spellName | string | No | This can be a partial match. Fireba will cast Fireball. |
+
 ---> Does not return anything
 
 </details>
@@ -574,6 +589,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | buffName | string | No | The name/title of the buff |
+
 ---> Return Type: *bool*
 
 </details>
@@ -615,6 +631,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | message | string | No | Message |
 | hue | ushort | Yes | Color of the message |
+
 ---> Does not return anything
 
 </details>
@@ -635,6 +652,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No | The message to say |
+
 ---> Does not return anything
 
 </details>
@@ -657,6 +675,7 @@ This was generated on `7/18/25`.
 | message | string | No | The message |
 | serial | uint | No | The item or mobile |
 | hue | ushort | Yes | Message hue |
+
 ---> Does not return anything
 
 </details>
@@ -677,6 +696,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No | The message |
+
 ---> Does not return anything
 
 </details>
@@ -697,6 +717,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -717,6 +738,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -737,6 +759,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -757,6 +780,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -777,6 +801,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | message | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -802,6 +827,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No | The serial |
+
 ---> Return Type: *Item*
 
 </details>
@@ -830,6 +856,7 @@ This was generated on `7/18/25`.
 | range | ushort | Yes | Max range of item |
 | hue | ushort | Yes | Hue of item |
 | minamount | ushort | Yes | Only match if item stack is at least this much |
+
 ---> Return Type: *Item*
 
 </details>
@@ -856,6 +883,7 @@ This was generated on `7/18/25`.
 | range | ushort | Yes | Max range of item(if on ground) |
 | hue | ushort | Yes | Hue of item |
 | minamount | ushort | Yes | Only match if item stack is at least this much |
+
 ---> Return Type: *Item[]*
 
 </details>
@@ -880,6 +908,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | layer | string | No | The layer to check, see https://github.com/bittiez/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs |
 | serial | uint | Yes | Optional, if not set it will check yourself, otherwise it will check the mobile requested |
+
 ---> Return Type: *Item*
 
 </details>
@@ -906,6 +935,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | container | uint | No |  |
 | recursive | bool | Yes | Search sub containers also? |
+
 ---> Return Type: *Item[]*
 
 </details>
@@ -931,6 +961,7 @@ This was generated on `7/18/25`.
 | hue | ushort | Yes | Hue of item |
 | container | uint | Yes | Parent container |
 | skipQueue | bool | Yes | Defaults to true, set to false to queue the double click |
+
 ---> Does not return anything
 
 </details>
@@ -953,6 +984,7 @@ This was generated on `7/18/25`.
 | seconds | double | No | Duration in seconds for the cooldown bar |
 | text | string | No | Text on the cooldown bar |
 | hue | ushort | No | Hue to color the cooldown bar |
+
 ---> Does not return anything
 
 </details>
@@ -976,6 +1008,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No | The item/mobile serial |
+
 ---> Does not return anything
 
 </details>
@@ -1013,6 +1046,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1038,6 +1072,7 @@ This was generated on `7/18/25`.
 | distance | int | Yes | Distance away from goal to stop. |
 | wait | bool | Yes | True/False if you want to wait for pathfinding to complete or time out |
 | timeout | int | Yes | Seconds to wait before cancelling waiting |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1063,6 +1098,7 @@ This was generated on `7/18/25`.
 | distance | int | Yes | Distance to stop from goal |
 | wait | bool | Yes | True/False if you want to wait for pathfinding to complete or time out |
 | timeout | int | Yes | Seconds to wait before cancelling waiting |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1105,6 +1141,34 @@ This was generated on `7/18/25`.
 ***
 
 
+<details><summary><h3>GetPath(x, y, z, distance)</h3></summary>
+
+ Attempt to build a path to a location.  This will fail with large distances.  
+ Example:  
+ ```py  
+ API.RequestTarget()  
+ path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))  
+ if path is not None:  
+     for x, y, z in path:  
+         tile = API.GetTile(x, y)  
+         tile.Hue = 53  
+ ```  
+  
+
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| x | int | No |  |
+| y | int | No |  |
+| z | int | Yes |  |
+| distance | int | Yes | Distance away from goal to stop. |
+---> Return Type: *PythonList*
+
+</details>
+
+***
+
+
 <details><summary><h3>AutoFollow(mobile)</h3></summary>
 
  Automatically follow a mobile. This is different than pathfinding. This will continune to follow the mobile.  
@@ -1120,6 +1184,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | mobile | uint | No | The mobile |
+
 ---> Does not return anything
 
 </details>
@@ -1157,6 +1222,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | direction | string | No | north/northeast/south/west/etc |
+
 ---> Does not return anything
 
 </details>
@@ -1177,6 +1243,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | direction | string | No | north/northeast/south/west/etc |
+
 ---> Does not return anything
 
 </details>
@@ -1197,6 +1264,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | direction | string | No | north, northeast, etc |
+
 ---> Does not return anything
 
 </details>
@@ -1218,6 +1286,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | serial | uint | No | Serial of the mobile to rename |
 | name | string | No | The new name |
+
 ---> Does not return anything
 
 </details>
@@ -1254,6 +1323,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -1275,6 +1345,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | targetType | string | Yes | neutral/harmful/beneficial/any/harm/ben |
 | timeout | double | Yes | Max duration in seconds to wait |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1296,6 +1367,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No | Serial of the item/mobile to target |
+
 ---> Does not return anything
 
 </details>
@@ -1320,6 +1392,7 @@ This was generated on `7/18/25`.
 | y | ushort | No |  |
 | z | short | No |  |
 | graphic | ushort | Yes | Graphic of the static to target |
+
 ---> Does not return anything
 
 </details>
@@ -1342,6 +1415,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | timeout | double | Yes | Mac duration to wait for them to target something. |
+
 ---> Return Type: *uint*
 
 </details>
@@ -1380,6 +1454,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | xOffset | int | No | X from your position |
 | yOffset | int | No | Y from your position |
+
 ---> Does not return anything
 
 </details>
@@ -1403,6 +1478,7 @@ This was generated on `7/18/25`.
 | xOffset | int | No | X Offset from your position |
 | yOffset | int | No | Y Offset from your position |
 | graphic | ushort | Yes | Optional graphic, will try to use the graphic of the tile at that location if left empty. |
+
 ---> Does not return anything
 
 </details>
@@ -1442,6 +1518,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | targetType | string | Yes | neutral/harmful/beneficial/any/harm/ben |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1482,6 +1559,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | skill | string | No | The skill name, can be partia; |
 | up_down_locked | string | No | up/down/locked |
+
 ---> Does not return anything
 
 </details>
@@ -1503,6 +1581,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | stat | string | No | The stat name, str, dex, int; Defaults to str. |
 | up_down_locked | string | No | up/down/locked |
+
 ---> Does not return anything
 
 </details>
@@ -1546,6 +1625,7 @@ This was generated on `7/18/25`.
 | serial | uint | No |  |
 | wait | bool | Yes | True or false to wait for name and props |
 | timeout | int | Yes | Timeout in seconds |
+
 ---> Return Type: *string*
 
 </details>
@@ -1567,6 +1647,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | ID | uint | Yes | Skip to check if player has any gump from server. |
+
 ---> Return Type: *uint*
 
 </details>
@@ -1588,6 +1669,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | button | int | No | Button ID |
 | gump | uint | Yes | Gump ID, leave blank to reply to last gump |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1608,6 +1690,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | ID | uint | Yes | Gump ID |
+
 ---> Does not return anything
 
 </details>
@@ -1630,6 +1713,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | text | string | No | Can be regex if you start with $, otherwise it's just regular search. Case Sensitive. |
 | ID | uint | Yes | Gump ID, blank to use the last gump. |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1653,6 +1737,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | ID | uint | Yes | Leabe blank to use last gump opened from server |
+
 ---> Return Type: *Gump*
 
 </details>
@@ -1690,6 +1775,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | ability | string | No | primary/secondary/stun/disarm |
+
 ---> Does not return anything
 
 </details>
@@ -1745,6 +1831,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | msg | string | No | The message to check for. Can be regex, prepend your msg with $ |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1767,6 +1854,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | msgs | IList<string> | No |  |
+
 ---> Return Type: *bool*
 
 </details>
@@ -1803,6 +1891,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | seconds | double | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -1857,6 +1946,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | container | uint | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -1877,6 +1967,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | virtue | string | No | honor/sacrifice/valor |
+
 ---> Does not return anything
 
 </details>
@@ -1903,6 +1994,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | scanType | ScanType | No |  |
 | maxDistance | int | Yes |  |
+
 ---> Return Type: *Entity*
 
 </details>
@@ -1929,6 +2021,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | notoriety | IList<Notoriety> | No | List of notorieties |
 | maxDistance | int | Yes |  |
+
 ---> Return Type: *Mobile*
 
 </details>
@@ -1953,6 +2046,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | distance | int | Yes |  |
+
 ---> Return Type: *Item*
 
 </details>
@@ -1978,6 +2072,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | notoriety | IList<Notoriety> | No | List of notorieties |
 | maxDistance | int | Yes |  |
+
 ---> Return Type: *Mobile[]*
 
 </details>
@@ -2002,6 +2097,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+
 ---> Return Type: *Mobile*
 
 </details>
@@ -2046,6 +2142,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | x | int | No |  |
 | y | int | No |  |
+
 ---> Return Type: *GameObject*
 
 </details>
@@ -2071,6 +2168,7 @@ This was generated on `7/18/25`.
 | acceptMouseInput | bool | Yes | Allow clicking the gump |
 | canMove | bool | Yes | Allow the player to move this gump |
 | keepOpen | bool | Yes | If true, the gump won't be closed if the script stops. Otherwise, it will be closed when the script is stopped. Defaults to false. |
+
 ---> Return Type: *Gump*
 
 </details>
@@ -2094,6 +2192,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | g | Gump | No | The gump to add |
+
 ---> Does not return anything
 
 </details>
@@ -2122,6 +2221,7 @@ This was generated on `7/18/25`.
 | text | string | Yes | Optional text label |
 | hue | ushort | Yes | Optional hue |
 | isChecked | bool | Yes | Default false, set to true if you want this checkbox checked on creation |
+
 ---> Return Type: *Checkbox*
 
 </details>
@@ -2146,6 +2246,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | text | string | No | The text |
 | hue | ushort | Yes | The hue of the text |
+
 ---> Return Type: *Label*
 
 </details>
@@ -2173,6 +2274,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | opacity | float | Yes | 0.5 = 50% |
 | color | string | Yes | Html color code like #000000 |
+
 ---> Return Type: *AlphaBlendControl*
 
 </details>
@@ -2198,6 +2300,7 @@ This was generated on `7/18/25`.
 | graphic | uint | No |  |
 | width | int | No |  |
 | height | int | No |  |
+
 ---> Return Type: *ResizableStaticPic*
 
 </details>
@@ -2231,6 +2334,7 @@ This was generated on `7/18/25`.
 | normal | ushort | Yes | Graphic when not clicked or hovering |
 | pressed | ushort | Yes | Graphic when pressed |
 | hover | ushort | Yes | Graphic on hover |
+
 ---> Return Type: *Button*
 
 </details>
@@ -2257,6 +2361,7 @@ This was generated on `7/18/25`.
 | text | string | No |  |
 | width | int | No |  |
 | height | int | No |  |
+
 ---> Return Type: *NiceButton*
 
 </details>
@@ -2287,6 +2392,7 @@ This was generated on `7/18/25`.
 | active | ushort | Yes | Checked graphic |
 | hue | ushort | Yes | Text color |
 | isChecked | bool | Yes | Defaults false, set to true if you want this button checked by default. |
+
 ---> Return Type: *RadioButton*
 
 </details>
@@ -2329,6 +2435,7 @@ This was generated on `7/18/25`.
 | width | int | Yes |  |
 | height | int | Yes |  |
 | multiline | bool | Yes |  |
+
 ---> Return Type: *TTFTextInputField*
 
 </details>
@@ -2362,6 +2469,7 @@ This was generated on `7/18/25`.
 | aligned | string | Yes | left/center/right. Must set a max width for this to work. |
 | maxWidth | int | Yes | Max width before going to the next line |
 | applyStroke | bool | Yes | Uses players stroke settings, this turns it on or off |
+
 ---> Return Type: *TextBox*
 
 </details>
@@ -2403,6 +2511,7 @@ This was generated on `7/18/25`.
 | foregroundColor | string | Yes | The foreground color(Hex color like #212121) |
 | value | int | Yes | The current value, for example 70 |
 | max | int | Yes | The max value(or what would be 100%), for example 100 |
+
 ---> Return Type: *SimpleProgressBar*
 
 </details>
@@ -2432,6 +2541,7 @@ This was generated on `7/18/25`.
 | y | int | No |  |
 | width | int | No |  |
 | height | int | No |  |
+
 ---> Return Type: *ScrollArea*
 
 </details>
@@ -2455,6 +2565,7 @@ This was generated on `7/18/25`.
 | x | int | Yes |  |
 | y | int | Yes |  |
 | hue | ushort | Yes |  |
+
 ---> Return Type: *GumpPic*
 
 </details>
@@ -2482,6 +2593,7 @@ This was generated on `7/18/25`.
 | control | Control | No | The control listening for clicks |
 | onClick | object | No | The callback function |
 | leftOnly | bool | Yes | Only accept left mouse clicks? |
+
 ---> Return Type: *Control*
 
 </details>
@@ -2512,6 +2624,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | control | Control | No |  |
 | onDispose | object | No |  |
+
 ---> Return Type: *Control*
 
 </details>
@@ -2537,6 +2650,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | skill | string | No | Skill name, case-sensitive |
+
 ---> Return Type: *Skill*
 
 </details>
@@ -2558,6 +2672,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | distance | ushort | No | Distance from the player |
 | hue | ushort | Yes | The color to change the tiles at that distance |
+
 ---> Does not return anything
 
 </details>
@@ -2578,6 +2693,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | scriptName | string | No | Full name including extension. Can be .py or .lscript. |
+
 ---> Does not return anything
 
 </details>
@@ -2594,6 +2710,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | scriptName | string | No | This is the file name including extension. |
+
 ---> Does not return anything
 
 </details>
@@ -2610,6 +2727,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | scriptName | string | No | This is the file name including extension. |
+
 ---> Does not return anything
 
 </details>
@@ -2634,6 +2752,7 @@ This was generated on `7/18/25`.
 | y | int | Yes | Defaults to current player Y. |
 | map | int | Yes | Defaults to current map. |
 | color | string | Yes | red/green/blue/purple/black/yellow/white. Default purple. |
+
 ---> Does not return anything
 
 </details>
@@ -2654,6 +2773,7 @@ This was generated on `7/18/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | name | string | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -2693,6 +2813,7 @@ This was generated on `7/18/25`.
 | name | string | No |  |
 | value | string | No |  |
 | scope | PersistentVar | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -2714,6 +2835,7 @@ This was generated on `7/18/25`.
 | --- | --- | --- | --- |
 | name | string | No |  |
 | scope | PersistentVar | No |  |
+
 ---> Does not return anything
 
 </details>
@@ -2736,6 +2858,7 @@ This was generated on `7/18/25`.
 | name | string | No |  |
 | defaultValue | string | No | The value returned if no value was saved |
 | scope | PersistentVar | No |  |
+
 ---> Return Type: *string*
 
 </details>

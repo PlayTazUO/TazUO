@@ -53,7 +53,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 CancellationTokenSource cts = new CancellationTokenSource();
                 propertiesPropInput.TextChanged += async (s, e) =>
                 {
-                    cts.Cancel();
+                    CancellationTokenSource oldToken = cts;
+                    oldToken?.Cancel();
                     cts = new CancellationTokenSource();
                     var token = cts.Token;
 
@@ -76,8 +77,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                         }
                     }
                     catch (TaskCanceledException) { }
+                    oldToken?.Dispose();
                 };
-                
+
                 lastXitem += 175 + 2;
             }
         }

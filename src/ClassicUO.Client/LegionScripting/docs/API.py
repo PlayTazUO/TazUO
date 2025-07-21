@@ -703,6 +703,22 @@ def CancelPathfinding() -> None:
     """
     pass
 
+def GetPath(x: int, y: int, z: int = 1337, distance: int = 1) -> Any:
+    """
+     Attempt to build a path to a location.  This will fail with large distances.
+     Example:
+     ```py
+     API.RequestTarget()
+     path = API.GetPath(int(API.LastTargetPos.X), int(API.LastTargetPos.Y))
+     if path is not None:
+         for x, y, z in path:
+             tile = API.GetTile(x, y)
+             tile.Hue = 53
+     ```
+    
+    """
+    pass
+
 def AutoFollow(mobile: int) -> None:
     """
      Automatically follow a mobile. This is different than pathfinding. This will continune to follow the mobile.

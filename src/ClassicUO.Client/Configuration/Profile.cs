@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -497,10 +497,10 @@ namespace ClassicUO.Configuration
 
         public string NamePlateFont { get; set; } = "avadonian";
         public int NamePlateFontSize { get; set; } = 20;
-        
+
         public string OptionsFont { get; set; } = "Roboto-Regular";
         public int OptionsFontSize { get; set; } = 18;
-        
+
         public int TextBorderSize { get; set; } = 1;
 
         public bool UseModernShopGump { get; set; } = false;
@@ -630,13 +630,14 @@ namespace ClassicUO.Configuration
         public bool EnableScavenger { get; set; } = true;
         public bool CounterGumpLocked { get; set; }
         public bool NearbyLootConcealsContainerOnOpen { get; set; } = true;
+        public bool SpellBar_ShowHotkeys { get; set; } = true;
 
         private long lastSave;
         public void Save(string path, bool saveGumps = true)
         {
             if (Time.Ticks - lastSave < 10) //Don't save if saved in the last 10 ms, prevent duplcate saving when exiting game with options menu open
                 return;
-            
+
             Log.Trace($"Saving path:\t\t{path}");
 
             // Save profile settings

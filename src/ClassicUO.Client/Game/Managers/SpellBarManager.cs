@@ -35,6 +35,20 @@ public class SpellBarManager
         return SpellBarRows[row].SpellSlot[col];
     }
 
+    public static string GetControllerButtonsName(int slot)
+    {
+        if(spellBarSettings.ControllerButtons.Length <= slot || slot < 0) return string.Empty;
+        return Controller.GetButtonNames(spellBarSettings.ControllerButtons[slot].Select(i => (SDL.SDL_GameControllerButton)i).ToArray());
+    }
+
+    public static string GetKetNames(int slot)
+    {
+        var hotKey = (SDL.SDL_Keycode)spellBarSettings.HotKeys[slot];
+        var hotMod = (SDL.SDL_Keymod)spellBarSettings.KeyMod[slot];
+        
+        return KeysTranslator.TryGetKey(hotKey, hotMod);
+    }
+    
     public static void ControllerInput(SDL.SDL_GameControllerButton button)
     {
         if (!enabled || !spellBarSettings.Enabled)

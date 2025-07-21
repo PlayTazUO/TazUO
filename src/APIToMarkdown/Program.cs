@@ -15,7 +15,7 @@ public static class GenDoc
         var root = (CompilationUnitSyntax)tree.GetRoot();
 
         var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-        
+
         foreach (var classDeclaration in classes)
         {
             var className = classDeclaration.Identifier.Text;
@@ -23,7 +23,7 @@ public static class GenDoc
             classesDict.TryAdd(className, new Tuple<StringBuilder, StringBuilder>(new StringBuilder(), new StringBuilder()));
             var sb = classesDict[className].Item1;
             var python = classesDict[className].Item2;
-            
+
             if(isMainAPI)
                 GenUniversalMdHeader(sb);
             GenClassHeader(sb, python, classDeclaration);
@@ -32,7 +32,7 @@ public static class GenDoc
             GenClassEnums(sb, python, classDeclaration);
             GenClassMethods(sb, python, classDeclaration);
         }
-        
+
         return classesDict;
     }
 
@@ -99,7 +99,7 @@ public static class GenDoc
 
                 if (!string.IsNullOrEmpty(pyType))
                     pyType = ": " + pyType;
-                
+
                 python.AppendLine($"{space}{property.Identifier.Text}{pyType} = None");
             }
         }
@@ -123,7 +123,7 @@ public static class GenDoc
                 {
                     if (!property.Modifiers.Any(SyntaxKind.PublicKeyword))
                         continue;
-                    
+
                     if(fieldVar.Identifier.Text == "QueuedPythonActions")
                         continue;
 
@@ -139,7 +139,7 @@ public static class GenDoc
 
                     if (!isMainAPI)
                         space = "    ";
-                    
+
                     var pyType = MapCSharpTypeToPython(typeName, "");
 
                     if (!string.IsNullOrEmpty(pyType))
@@ -169,7 +169,7 @@ public static class GenDoc
                     continue;
 
                 string pySpace = isMainAPI ? string.Empty : "    ";
-                
+
                 python.AppendLine();
                 python.AppendLine($"{pySpace}class {enumDeclaration.Identifier.Text}:");
 
@@ -253,7 +253,7 @@ public static class GenDoc
 
                     if (pyReturn == classDeclaration.Identifier.Text)
                         pyReturn = $"\"{pyReturn}\"";
-                    
+
                     python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters)})"
                      + $" -> {pyReturn}:");
                     if (!string.IsNullOrWhiteSpace(methodSummary))
@@ -274,7 +274,7 @@ public static class GenDoc
                 sb.AppendLine("_No methods found._");
             }
     }
-    
+
     private static string GetXmlSummary(SyntaxNode node)
     {
         var trivia = node.GetLeadingTrivia()
@@ -338,6 +338,8 @@ public static class GenDoc
             var paramSummary = GetXmlParamSummary(methodNode, param.Identifier.Text);
             sb.AppendLine($"| {param.Identifier.Text} | {param.Type} | {isOptional} | {paramSummary} |");
         }
+
+        sb.AppendLine();
     }
 
     private static string GetXmlParamSummary(SyntaxNode methodNode, string paramName)
@@ -541,17 +543,17 @@ class Program
     {
         if (args.Length == 0)
             return;
-        
+
         string docsDir = args[0];
 
         var pyFilePath = Path.Combine(docsDir, "API.py");
         if(File.Exists(pyFilePath))
             File.Delete(pyFilePath);
-        
+
         foreach (var filePath in args.Skip(1))
         {
             Console.WriteLine("Processing file: " + filePath);
-            
+
             if (string.IsNullOrEmpty(filePath))
                 continue;
 
@@ -560,7 +562,7 @@ class Program
 
             var gen = GenDoc.GenerateMarkdown(filePath);
             Console.WriteLine($"Generation complete for [{filePath}].");
-            
+
             string path = Path.GetDirectoryName(filePath)!;
 
             foreach (var kvp in gen)

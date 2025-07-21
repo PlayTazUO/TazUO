@@ -1,5 +1,6 @@
 using System;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -12,11 +13,11 @@ namespace ClassicUO.Game.UI.Gumps.SpellBar;
 public class SpellBar : Gump
 {
     public static SpellBar Instance { get; private set; }
-    
+
     private SpellEntry[] spellEntries = new SpellEntry[10];
     private TextBox rowLabel;
     private AlphaBlendControl background;
-    
+
     public SpellBar() : base(0, 0)
     {
         Instance?.Dispose();
@@ -28,12 +29,12 @@ public class SpellBar : Gump
 
         Width = 515;
         Height = 48;
-        
+
         CenterXInViewPort();
         CenterYInViewPort();
-        
+
         Build();
-        
+
         EventSink.SpellCastBegin += EventSinkOnSpellCastBegin;
     }
 
@@ -63,20 +64,20 @@ public class SpellBar : Gump
     public void SetRow(int row)
     {
         SpellBarManager.CurrentRow = row;
-        
+
         if (SpellBarManager.CurrentRow < 0)
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
 
         if (SpellBarManager.CurrentRow >= SpellBarManager.SpellBarRows.Count)
             SpellBarManager.CurrentRow = 0;
-        
+
         rowLabel.SetText(SpellBarManager.CurrentRow.ToString());
-        
+
         for (int s = 0; s < spellEntries.Length; s++)
         {
             spellEntries[s].SetSpell(SpellBarManager.GetSpell(SpellBarManager.CurrentRow, s), SpellBarManager.CurrentRow, s);
         }
-        
+
         background.Hue = SpellBarManager.SpellBarRows[SpellBarManager.CurrentRow].RowHue;
     }
 
@@ -91,16 +92,16 @@ public class SpellBar : Gump
     public void Build()
     {
         Clear();
-        
+
         Add(background = new AlphaBlendControl() { Width = Width, Height = Height });
 
         int x = 2;
-        
+
         if(SpellBarManager.CurrentRow > SpellBarManager.SpellBarRows.Count - 1)
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
 
         background.Hue = SpellBarManager.SpellBarRows[SpellBarManager.CurrentRow].RowHue;
-        
+
         for (int i = 0; i < spellEntries.Length; i++)
         {
             Add(spellEntries[i] = new SpellEntry().SetSpell(SpellBarManager.GetSpell(SpellBarManager.CurrentRow, i), SpellBarManager.CurrentRow, i));
@@ -108,24 +109,24 @@ public class SpellBar : Gump
             spellEntries[i].Y = 1;
             x += 46 + 2;
         }
-        
+
         rowLabel = TextBox.GetOne(SpellBarManager.CurrentRow.ToString(), TrueTypeLoader.EMBEDDED_FONT, 12, Color.White, TextBox.RTLOptions.DefaultCentered(16));
         rowLabel.X = 482;
         rowLabel.Y = (Height - rowLabel.Height) >> 1;
         Add(rowLabel);
-        
+
         var up = new EmbeddedGumpPic(Width - 31, 0, PNGLoader.Instance.EmbeddedArt["upicon.png"], 148);
         up.MouseUp += (sender, e) => { ChangeRow(false); };
         var down = new EmbeddedGumpPic(Width - 31, Height - 16, PNGLoader.Instance.EmbeddedArt["downicon.png"], 148);
         down.MouseUp += (sender, e) => { ChangeRow(true); };
-        
+
         Add(up);
         Add(down);
 
         NiceButton menu = new (Width - 15, 0, 15, Height, ButtonAction.Default, "+");
 
         ContextMenuItemEntry import = new ("Import preset");
-        
+
         menu.MouseUp += (sender, e) =>
         {
             if (e.Button == MouseButtonType.Left)
@@ -135,7 +136,7 @@ public class SpellBar : Gump
                 menu.ContextMenu?.Show();
             }
         };
-        
+
         menu.ContextMenu = new ContextMenuControl();
         menu.ContextMenu.Add(new ContextMenuItemEntry("Save preset", () =>
         {
@@ -199,7 +200,7 @@ public class SpellBar : Gump
             }));
         }
     }
-    
+
     protected override void OnMouseUp(int x, int y, MouseButtonType button)
     {
         base.OnMouseUp(x, y, button);
@@ -217,6 +218,14 @@ public class SpellBar : Gump
         }
     }
 
+    public void SetupHotkeyLabels()
+    {
+        foreach (SpellEntry entry in spellEntries)
+        {
+            entry.BuildHotkeyLabel();
+        }
+    }
+
     public override void Dispose()
     {
         base.Dispose();
@@ -227,7 +236,7 @@ public class SpellBar : Gump
     {
         if (!base.Draw(batcher, x, y))
             return false;
-        
+
         if (Keyboard.Alt)
         {
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
@@ -257,12 +266,13 @@ public class SpellBar : Gump
     public class SpellEntry : Control
     {
         public int CurrentSpellID => spell?.ID ?? -1;
-        
+
         private GumpPic icon;
         private SpellDefinition spell;
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
+        private TextBox hotkeyLabel;
         public SpellEntry()
         {
             CanMove = true;
@@ -273,7 +283,7 @@ public class SpellBar : Gump
             Height = 46;
             Build();
         }
-        
+
         public SpellEntry SetSpell(SpellDefinition spell, int row, int col)
         {
             this.spell = spell;
@@ -285,9 +295,9 @@ public class SpellBar : Gump
             {
                 icon.Graphic = (ushort)spell.GumpIconSmallID;
                 icon.IsVisible = true;
-                
+
                 int cliloc = GetSpellTooltip(spell.ID);
-                
+
                 if (cliloc != 0)
                     SetTooltip(ClilocLoader.Instance.GetString(cliloc), 80);
                 else
@@ -299,7 +309,26 @@ public class SpellBar : Gump
                 icon.IsVisible = false;
             }
 
+            SetHotkeyText(col);
+
             return this;
+        }
+
+        private void SetHotkeyText(int slot)
+        {
+            if (!ProfileManager.CurrentProfile.SpellBar_ShowHotkeys) return;
+            if (hotkeyLabel == null) return;
+            if (spell == null || spell == SpellDefinition.EmptySpell)
+            {
+                hotkeyLabel.SetText(string.Empty);
+                return;
+            }
+
+            var keys = SpellBarManager.GetKetNames(slot);
+            if (string.IsNullOrEmpty(keys))
+                keys = SpellBarManager.GetControllerButtonsName(slot);
+
+            hotkeyLabel.SetText(keys);
         }
 
         /// <summary>
@@ -328,11 +357,23 @@ public class SpellBar : Gump
                 Cast();
             }
         }
-        
+
+        public void BuildHotkeyLabel()
+        {
+            hotkeyLabel?.Dispose();
+            if (ProfileManager.CurrentProfile.SpellBar_ShowHotkeys)
+            {
+                Add(hotkeyLabel = TextBox.GetOne(string.Empty, "uo-unicode-1", 18, Color.White, TextBox.RTLOptions.DefaultCenterStroked(44)));;
+                hotkeyLabel.Y = 46;
+                SetHotkeyText(col);
+            }
+        }
+
         private void Build()
         {
             Add(background = new AlphaBlendControl() { Width = 44, Height = 44, X = 1, Y = 1 });
             Add(icon = new GumpPic(1, 1, 0x5000, 0) {IsVisible = false, AcceptMouseInput = false});
+            BuildHotkeyLabel();
 
             ContextMenu = new();
             ContextMenu.Add(new ContextMenuItemEntry("Set spell", () =>
@@ -367,7 +408,7 @@ public class SpellBar : Gump
 
                     return true;
                 }
-                
+
                 SpellVisualRangeManager.SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
 
                 if (i == null)
@@ -375,7 +416,7 @@ public class SpellBar : Gump
                     trackCasting = false;
                     return true;
                 }
-                
+
 
                 if (i.CastTime > 0)
                 {
@@ -385,7 +426,7 @@ public class SpellBar : Gump
 
                     if (percent > 1)
                         percent = 1;
-                    
+
                     int filledHeight = (int)(Height * percent);
                     int yb = Height - filledHeight; // This shifts the rect up as it grows
 
@@ -398,7 +439,7 @@ public class SpellBar : Gump
                 }
 
             }
-            
+
             return true;
         }
 

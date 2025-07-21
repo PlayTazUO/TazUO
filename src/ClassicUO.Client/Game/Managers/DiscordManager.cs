@@ -79,7 +79,7 @@ public class DiscordManager
         LoadDiscordSettings();
 
         client = new DClient();
-        
+
         client.AddLogCallback(OnLog, LoggingSeverity.Error);
         client.SetStatusChangedCallback(OnStatusChanged);
         client.SetMessageCreatedCallback(OnMessageCreated);
@@ -104,6 +104,7 @@ public class DiscordManager
         if (!connected)
             return;
 
+        richPresenceTimer?.Dispose();
         Log.Debug("Discord disconnecting..");
 
         if (noreconnect)
@@ -236,7 +237,7 @@ public class DiscordManager
     {
         return client.GetCall(channelId);
     }
-    
+
     private void AddMsgHistory(ulong id, MessageHandle msg)
     {
         if (!messageHistory.ContainsKey(id))
@@ -274,7 +275,7 @@ public class DiscordManager
         OnConnected?.Invoke();
 
         RunLater(JoinGlobalLobby);
-        
+
         richPresenceTimer = new Timer(_=>PeriodicChecks(), null, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
     }
 
@@ -431,7 +432,7 @@ public class DiscordManager
     {
         //Do nothing
     }
-    
+
     private void SendUserMessageCallback(ClientResult result, ulong messageId)
     {
         if (!result.Successful())
@@ -449,7 +450,7 @@ public class DiscordManager
     }
 
     private void JoinGlobalLobby()
-    { 
+    {
         client.CreateOrJoinLobbyWithMetadata(TUOLOBBY, TUOMETA, new Dictionary<string, string>(), GameGameJoinCallback);
     }
     private void JoinGameLobby()
@@ -482,16 +483,16 @@ public class DiscordManager
     private void OnLobbyDeletedCallback(ulong lobbyId)
     {
         currentLobbies.Remove(lobbyId);
-        
+
         if(!noreconnect)
         {
             if(connected)
-            { 
+            {
                 RunLater(JoinGlobalLobby);
                 RunLater(JoinGameLobby);
             }
         }
-        
+
         OnLobbyDeleted?.Invoke(lobbyId);
     }
 

@@ -232,8 +232,11 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
 
-            int newX = (int)MathHelper.Clamp(X, 0, windowBounds.Width - Width);
-            int newY = (int)MathHelper.Clamp(Y, 0, windowBounds.Height - Height);
+            int halfWidth = Width / 2;
+            int halfHeight = Height / 2;
+
+            int newX = (int)MathHelper.Clamp(X, -halfWidth, windowBounds.Width - halfWidth);
+            int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowBounds.Height - halfHeight);
 
             X = newX;
             Y = newY;

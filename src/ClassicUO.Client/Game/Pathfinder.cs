@@ -923,7 +923,7 @@ namespace ClassicUO.Game
             return null;
         }
 
-        private static bool FindPath(int maxNodes)
+        private static bool FindPath(int maxNodes, bool ignoreAutowalkState)
         {
             var startNode = PathNode.Get();
 
@@ -946,7 +946,7 @@ namespace ClassicUO.Game
                 _run = true;
             }
 
-            while (AutoWalking)
+            while (ignoreAutowalkState || AutoWalking)
             {
                 var currentNode = FindCheapestNode();
 
@@ -1010,6 +1010,34 @@ namespace ClassicUO.Game
             }
         }
 
+        public static List<(int X, int Y, int Z)> GetPathTo(int x, int y, int z, int distance)
+        {
+            CleanupPathfinding();
+            _pointIndex = 0;
+            _goalNode = null;
+            _run = false;
+            _startPoint.X = World.Player.X;
+            _startPoint.Y = World.Player.Y;
+            _endPoint.X = x;
+            _endPoint.Y = y;
+            _endPointZ = z;
+            _pathfindDistance = distance;
+
+            if (!FindPath(PATHFINDER_MAX_NODES, ignoreAutowalkState: true))
+            {
+                return null;
+            }
+
+            var result = new List<(int X, int Y, int Z)>(_path.Count);
+
+            foreach (var node in _path)
+            {
+                result.Add((node.X, node.Y, node.Z));
+            }
+            
+            return result;
+        }
+
         public static bool WalkTo(int x, int y, int z, int distance)
         {
             if (World.Player == null /*|| World.Player.Stamina == 0*/ || World.Player.IsParalyzed)
@@ -1031,7 +1059,7 @@ namespace ClassicUO.Game
             _pathfindDistance = distance;
             AutoWalking = true;
 
-            if (FindPath(PATHFINDER_MAX_NODES))
+            if (FindPath(PATHFINDER_MAX_NODES, ignoreAutowalkState: false))
             {
                 _pointIndex = 1;
                 ProcessAutoWalk();
