@@ -68,10 +68,8 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            if (ProfileManager.CurrentProfile.ToggleHideHouses)
-            {
-                if ((Z - World.Player.Z) > ProfileManager.CurrentProfile.HideHousesAtZLevel) return false;
-            }
+            if (ForceTransparentHouse)
+                AlphaHue = ForcedTransparency;
 
             ushort hue = Hue;
 

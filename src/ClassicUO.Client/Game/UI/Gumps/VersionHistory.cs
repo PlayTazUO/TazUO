@@ -9,6 +9,7 @@ namespace ClassicUO.Game.UI.Gumps
     {
         private static string[] updateTexts = {
             "/c[white][4.0.1]/cd\n" +
+            "- Added hud toggle to macros and assistant menu\n" +
             "\n",
 
             "/c[white][4.0.0]/cd\n" +

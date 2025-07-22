@@ -1410,7 +1410,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.ToggleHouses:
-                    ProfileManager.CurrentProfile.ToggleHideHouses = !ProfileManager.CurrentProfile.ToggleHideHouses;
+                    ProfileManager.CurrentProfile.ForceHouseTransparency = !ProfileManager.CurrentProfile.ForceHouseTransparency;
 
                     break;
 
@@ -2057,6 +2057,10 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ShowNearbyItems:
                     UIManager.Add(new NearbyItems());
                     break;
+
+                case MacroType.ToggleHudVisible:
+                    HideHudManager.ToggleHidden(ProfileManager.CurrentProfile.HideHudFlags);
+                    break;
             }
 
             return result;
@@ -2683,6 +2687,7 @@ namespace ClassicUO.Game.Managers
         SpellBarRowDown,
         Dismount,
         ToggleHouses,
+        ToggleHudVisible
     }
 
     public enum MacroSubType

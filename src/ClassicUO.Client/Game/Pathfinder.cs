@@ -84,6 +84,70 @@ namespace ClassicUO.Game
 
         public static bool FastRotation { get; set; }
 
+        public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
+        {
+            int objZ = obj.Z;
+            int objHeight = 0;
+            bool isBlocker = false;
+
+            switch (obj)
+            {
+                case Land land:
+                    objHeight = 1;
+                    isBlocker = land.TileData.IsImpassable;
+                    break;
+                case Static s:
+                    ref StaticTiles staticData = ref TileDataLoader.Instance.StaticData[s.OriginalGraphic];
+                    objHeight = staticData.Height;
+                    isBlocker = staticData.IsImpassable || staticData.IsWall;
+                    break;
+                case Item i:
+                    objHeight = i.ItemData.Height;
+                    isBlocker = i.ItemData.IsImpassable;
+                    break;
+                case Multi m:
+                    objHeight = m.ItemData.Height;
+                    isBlocker = m.ItemData.IsImpassable;
+                    break;
+                default:
+                    return false;
+            }
+
+            if (!isBlocker)
+                return false;
+
+            int objTop = objZ + objHeight;
+
+            int losMin = Math.Min(losMinZ, losMaxZ);
+            int losMax = Math.Max(losMinZ, losMaxZ);
+
+            if (objTop > losMin && objZ < losMax)
+                return true;
+
+            return false;
+        }
+
+        public static readonly ObjectPool<List<GameObject>> _listPool = new ObjectPool<List<GameObject>>(
+            () => new List<GameObject>(),
+            list => list.Clear(),
+            100
+        );
+
+        public static List<GameObject> GetAllObjectsAt(int x, int y)
+        {
+            var result = _listPool.Get();
+            GameObject tile = World.Map.GetTile(x, y, false);
+            if (tile == null)
+                return result;
+
+            GameObject obj = tile;
+            while (obj.TPrevious != null)
+                obj = obj.TPrevious;
+            for (; obj != null; obj = obj.TNext)
+                result.Add(obj);
+
+            return result;
+        }
 
         private static bool CreateItemList(List<PathObject> list, int x, int y, int stepState)
         {

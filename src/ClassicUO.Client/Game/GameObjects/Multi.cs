@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -33,6 +33,7 @@
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 
@@ -54,6 +55,7 @@ namespace ClassicUO.Game.GameObjects
                 m.State = 0;
                 m.IsMovable = false;
                 m.Offset = Vector3.Zero;
+                m.ForceTransparentHouse = false;
             }
         );
         private ushort _originalGraphic;
@@ -69,6 +71,8 @@ namespace ClassicUO.Game.GameObjects
         public int MultiOffsetZ;
         public bool IsMovable;
         public CUSTOM_HOUSE_MULTI_OBJECT_FLAGS State = 0;
+        public bool ForceTransparentHouse;
+        public static byte ForcedTransparency = 40;
 
 
         public static Multi Create(ushort graphic)
@@ -93,6 +97,12 @@ namespace ClassicUO.Game.GameObjects
             else
             {
                 m._canBeTransparent = 0;
+            }
+
+            if (ProfileManager.CurrentProfile.ForceHouseTransparency)
+            {
+                ForcedTransparency = ProfileManager.CurrentProfile.ForcedHouseTransparency;
+                m.ForceTransparentHouse = true;
             }
 
             return m;

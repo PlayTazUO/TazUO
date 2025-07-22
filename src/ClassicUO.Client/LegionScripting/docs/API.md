@@ -7,7 +7,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
   
 [Additional notes](notes.md)  
   
-This was generated on `7/20/25`.
+This was generated on `7/22/25`.
   
 # API  
 
@@ -1162,6 +1162,7 @@ This was generated on `7/20/25`.
 | y | int | No |  |
 | z | int | Yes |  |
 | distance | int | Yes | Distance away from goal to stop. |
+
 ---> Return Type: *PythonList*
 
 </details>

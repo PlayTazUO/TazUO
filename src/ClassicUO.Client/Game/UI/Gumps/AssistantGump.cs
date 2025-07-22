@@ -1,7 +1,10 @@
+using System;
 using System.Globalization;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps;
 
@@ -27,6 +30,7 @@ public class AssistantGump : BaseOptionsGump
         BuildAutoBuy();
         BuildMobileGraphicFilter();
         BuildSpellBar();
+        BuildHUD();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -213,6 +217,38 @@ public class AssistantGump : BaseOptionsGump
         }
     }
 
+    private void BuildHUD()
+    {
+        var page = (int)PAGE.HUD;
+        MainContent.AddToLeft(CategoryButton("HUD", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
+        MainContent.AddToRight(scroll, false, page);
+        PositionHelper.Reset();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Check the types of gumps you would like to toggle visibility when using the Toggle Hud Visible macro.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(scroll.Width - 10))));
+        PositionHelper.BlankLine();
+
+        foreach (byte hud in Enum.GetValues(typeof(HideHudFlags)))
+        {
+            if (hud == (byte)HideHudFlags.None) continue;
+
+            scroll.Add(PositionHelper.PositionControl(GenHudOption(HideHudManager.GetFlagName((HideHudFlags)hud), hud)));
+        }
+
+        Control GenHudOption(string name, byte flag)
+        {
+            return new CheckboxWithLabel(name, 0, ByteFlagHelper.HasFlag(profile.HideHudFlags, flag), b =>
+            {
+                if (b)
+                    profile.HideHudFlags = ByteFlagHelper.AddFlag(profile.HideHudFlags, flag);
+                else
+                    profile.HideHudFlags = ByteFlagHelper.RemoveFlag(profile.HideHudFlags, flag);
+            });
+        }
+    }
+
     public enum PAGE
     {
         None,
@@ -220,7 +256,8 @@ public class AssistantGump : BaseOptionsGump
         AutoSell,
         AutoBuy,
         MobileGraphicFilter,
-        SpellBar
+        SpellBar,
+        HUD
     }
 
     #region CustomControls
