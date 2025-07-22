@@ -1013,7 +1013,7 @@ Time left: {1:00}:{2:00}:{3:00}</value>
     <value>Real</value>
   </data>
   <data name="Base" xml:space="preserve">
-    <value>Base</value>
+    <value>Total</value>
   </data>
   <data name="Cap" xml:space="preserve">
     <value>Cap</value>
