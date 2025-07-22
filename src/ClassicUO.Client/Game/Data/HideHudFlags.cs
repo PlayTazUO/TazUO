@@ -9,5 +9,11 @@ public enum HideHudFlags : byte
     Containers,
     Healthbars,
     StatusBar,
-    SpellBar
+    SpellBar,
+    Journal,
+    XMLGumps,
+    NearbyCorpseLoot,
+    MacroButtons,
+    SkillButtons,
+    SkillsMenus
 }

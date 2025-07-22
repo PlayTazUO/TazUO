@@ -1,5 +1,6 @@
 using System;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Utility;
@@ -24,7 +25,7 @@ public static class HideHudManager
             if (gump == null)
                 continue;
 
-            if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Paperdoll) && gump is PaperDollGump)
+            if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Paperdoll) && (gump is PaperDollGump || gump is ModernPaperdoll))
                 gump.IsVisible = isVisible;
             else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.WorldMap) && gump is WorldMapGump)
                 gump.IsVisible = isVisible;
@@ -37,6 +38,18 @@ public static class HideHudManager
             else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.StatusBar) && gump is StatusGumpBase)
                 gump.IsVisible = isVisible;
             else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SpellBar) && gump is SpellBar)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Journal) && gump is ResizableJournal)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.XMLGumps) && gump is XmlGump)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.NearbyCorpseLoot) && gump is NearbyLootGump)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.MacroButtons) && gump is MacroButtonGump)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SkillButtons) && gump is SkillButtonGump)
+                gump.IsVisible = isVisible;
+            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SkillsMenus) && (gump is StandardSkillsGump || gump is SkillGumpAdvanced))
                 gump.IsVisible = isVisible;
         }
     }
