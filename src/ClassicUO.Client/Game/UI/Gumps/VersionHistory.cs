@@ -10,6 +10,8 @@ namespace ClassicUO.Game.UI.Gumps
         private static string[] updateTexts = {
             "/c[white][4.0.1]/cd\n" +
             "- Added hud toggle to macros and assistant menu\n" +
+            "- Added resync macro\n" +
+            "- Added a new macro type to toggle forced house transparency\n" +
             "\n",
 
             "/c[white][4.0.0]/cd\n" +

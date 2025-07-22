@@ -230,21 +230,21 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Check the types of gumps you would like to toggle visibility when using the Toggle Hud Visible macro.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(scroll.Width - 10))));
         PositionHelper.BlankLine();
 
-        foreach (byte hud in Enum.GetValues(typeof(HideHudFlags)))
+        foreach (ulong hud in Enum.GetValues(typeof(HideHudFlags)))
         {
-            if (hud == (byte)HideHudFlags.None) continue;
+            if (hud == (ulong)HideHudFlags.None) continue;
 
             scroll.Add(PositionHelper.PositionControl(GenHudOption(HideHudManager.GetFlagName((HideHudFlags)hud), hud)));
         }
 
-        Control GenHudOption(string name, byte flag)
+        Control GenHudOption(string name, ulong flag)
         {
-            return new CheckboxWithLabel(name, 0, ByteFlagHelper.HasFlag(profile.HideHudFlags, flag), b =>
+            return new CheckboxWithLabel(name, 0, ByteFlagHelper.HasFlag(profile.HideHudGumpFlags, flag), b =>
             {
                 if (b)
-                    profile.HideHudFlags = ByteFlagHelper.AddFlag(profile.HideHudFlags, flag);
+                    profile.HideHudGumpFlags = ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, flag);
                 else
-                    profile.HideHudFlags = ByteFlagHelper.RemoveFlag(profile.HideHudFlags, flag);
+                    profile.HideHudGumpFlags = ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, flag);
             });
         }
     }

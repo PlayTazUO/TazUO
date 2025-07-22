@@ -633,7 +633,7 @@ namespace ClassicUO.Configuration
         public bool SpellBar_ShowHotkeys { get; set; } = true;
         public byte ForcedHouseTransparency { get;  set; } = 40;
         public bool ForceHouseTransparency { get; set; }
-        public byte HideHudFlags { get; set; }
+        public ulong HideHudGumpFlags { get; set; }
 
         private long lastSave;
         public void Save(string path, bool saveGumps = true)

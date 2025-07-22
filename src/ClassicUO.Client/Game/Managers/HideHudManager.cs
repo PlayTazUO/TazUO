@@ -16,7 +16,7 @@ public static class HideHudManager
         return StringHelper.AddSpaceBeforeCapital(name);
     }
 
-    public static void ToggleHidden(byte flags)
+    public static void ToggleHidden(ulong flags)
     {
         isVisible = !isVisible;
 
@@ -25,31 +25,31 @@ public static class HideHudManager
             if (gump == null)
                 continue;
 
-            if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Paperdoll) && (gump is PaperDollGump || gump is ModernPaperdoll))
+            if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Paperdoll) && (gump is PaperDollGump || gump is ModernPaperdoll))
                 gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.WorldMap) && gump is WorldMapGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.WorldMap) && gump is WorldMapGump)
                 gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.GridContainers) && gump is GridContainer)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.GridContainers) && gump is GridContainer)
                 gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Containers) && gump is ContainerGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Containers) && gump is ContainerGump)
                 gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Healthbars) && gump is BaseHealthBarGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Healthbars) && gump is BaseHealthBarGump)
                 gump.IsVisible = isVisible;
-            else if (ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.StatusBar) && gump is StatusGumpBase)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.StatusBar) && gump is StatusGumpBase)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SpellBar) && gump is SpellBar)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SpellBar) && gump is SpellBar)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.Journal) && gump is ResizableJournal)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Journal) && gump is ResizableJournal)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.XMLGumps) && gump is XmlGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.XMLGumps) && gump is XmlGump)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.NearbyCorpseLoot) && gump is NearbyLootGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.NearbyCorpseLoot) && gump is NearbyLootGump)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.MacroButtons) && gump is MacroButtonGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.MacroButtons) && gump is MacroButtonGump)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SkillButtons) && gump is SkillButtonGump)
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SkillButtons) && gump is SkillButtonGump)
                 gump.IsVisible = isVisible;
-            else if(ByteFlagHelper.HasFlag(flags, (byte)HideHudFlags.SkillsMenus) && (gump is StandardSkillsGump || gump is SkillGumpAdvanced))
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SkillsMenus) && (gump is StandardSkillsGump || gump is SkillGumpAdvanced))
                 gump.IsVisible = isVisible;
         }
     }
