@@ -92,8 +92,8 @@ namespace ClassicUO.Renderer.Arts
 
                     if (idx > 0x4000)
                     {
-                        uint staticIdx = idx - 0x4000;
-                        _picker.Set(staticIdx, artInfo.Width, artInfo.Height, artInfo.Pixels);
+                        idx -= 0x4000;
+                        _picker.Set(idx, artInfo.Width, artInfo.Height, artInfo.Pixels);
 
                         var pos1 = 0;
                         int minX = artInfo.Width,
@@ -115,7 +115,7 @@ namespace ClassicUO.Renderer.Arts
                             }
                         }
 
-                        _realArtBounds[staticIdx] = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+                        _realArtBounds[idx] = new Rectangle(minX, minY, maxX - minX, maxY - minY);
                     }
                 }
             }

@@ -129,15 +129,15 @@ namespace ClassicUO.Assets
             };
         }
 
-        public TerrainInfo LoadTerrainTexture(uint tileId)
+        public ArtInfo LoadTerrainTexture(uint tileId)
         {
             Texture2D texture;
 
             if (terrain_availableIDs == null)
-                return new TerrainInfo();
+                return new ArtInfo();
 
             int index = Array.IndexOf(terrain_availableIDs, tileId);
-            if (index == -1) return new TerrainInfo();
+            if (index == -1) return new ArtInfo();
 
             terrain_textureCache.TryGetValue(tileId, out texture);
 
@@ -163,29 +163,15 @@ namespace ClassicUO.Assets
             }
 
             if (texture == null)
-                return new TerrainInfo();
+                return new ArtInfo();
 
-            return new TerrainInfo()
+            return new ArtInfo()
             {
                 Pixels = GetPixels(texture),
                 Width = texture.Width,
                 Height = texture.Height
             };
         }
-
-        public class TerrainInfo
-        {
-            public uint[] Pixels { get; set; }
-            public int Width { get; set; }
-            public int Height { get; set; }
-            public TerrainInfo()
-            {
-                Pixels = Array.Empty<uint>();
-                Width = 0;
-                Height = 0;
-            }
-        }
-
 
         private uint[] GetPixels(Texture2D texture)
         {
