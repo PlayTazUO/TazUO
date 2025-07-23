@@ -33,7 +33,6 @@
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Assets;
-using ClassicUO.Configuration;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 
@@ -97,12 +96,6 @@ namespace ClassicUO.Game.GameObjects
             else
             {
                 m._canBeTransparent = 0;
-            }
-
-            if (ProfileManager.CurrentProfile.ForceHouseTransparency)
-            {
-                ForcedTransparency = ProfileManager.CurrentProfile.ForcedHouseTransparency;
-                m.ForceTransparentHouse = true;
             }
 
             return m;

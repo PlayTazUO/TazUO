@@ -225,16 +225,20 @@ public class AssistantGump : BaseOptionsGump
 
         ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
         MainContent.AddToRight(scroll, false, page);
+
+        TableContainer table = new(scroll.Width - 20, 2, (scroll.Width - 21) / 2);
         PositionHelper.Reset();
 
         scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Check the types of gumps you would like to toggle visibility when using the Toggle Hud Visible macro.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(scroll.Width - 10))));
         PositionHelper.BlankLine();
 
+        scroll.Add(PositionHelper.PositionControl(table));
+
         foreach (ulong hud in Enum.GetValues(typeof(HideHudFlags)))
         {
             if (hud == (ulong)HideHudFlags.None) continue;
 
-            scroll.Add(PositionHelper.PositionControl(GenHudOption(HideHudManager.GetFlagName((HideHudFlags)hud), hud)));
+            table.Add(GenHudOption(HideHudManager.GetFlagName((HideHudFlags)hud), hud));
         }
 
         Control GenHudOption(string name, ulong flag)

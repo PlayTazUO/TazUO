@@ -51,6 +51,18 @@ public static class HideHudManager
                 gump.IsVisible = isVisible;
             else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SkillsMenus) && (gump is StandardSkillsGump || gump is SkillGumpAdvanced))
                 gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.TopMenuBar) && gump is TopBarGump)
+                gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.DurabilityTracker) && (gump is DurabilitysGump || gump is DurabilityGumpMinimized))
+                gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.BuffBar) && (gump is BuffGump || gump is ImprovedBuffGump))
+                gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.CounterBar) && gump is CounterBarGump)
+                gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.InfoBar) && gump is InfoBarGump)
+                gump.IsVisible = isVisible;
+            else if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.SpellIcons) && (gump is UseSpellButtonGump))
+                gump.IsVisible = isVisible;
         }
     }
 }

@@ -16,7 +16,13 @@ public enum HideHudFlags : ulong //Up to 64 gump types for ulong
     Journal = 1 << 7,
     XMLGumps = 1 << 8,
     NearbyCorpseLoot = 1 << 9,
-    MacroButtons = 1 << 10, 
+    MacroButtons = 1 << 10,
     SkillButtons = 1 << 11,
-    SkillsMenus = 1 << 12
+    SkillsMenus = 1 << 12,
+    TopMenuBar = 1 << 13,
+    DurabilityTracker = 1 << 14,
+    BuffBar = 1 << 15,
+    CounterBar = 1 << 16,
+    InfoBar = 1 << 17,
+    SpellIcons = 1 << 18
 }
