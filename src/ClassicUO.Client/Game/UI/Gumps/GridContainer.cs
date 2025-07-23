@@ -900,6 +900,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return;
 
                 if (!Keyboard.Ctrl &&
+                    !Keyboard.Alt &&
                     ProfileManager.CurrentProfile.DoubleClickToLootInsideContainers &&
                     gridContainer.isCorpse &&
                     !_item.IsDestroyed &&
@@ -907,9 +908,34 @@ namespace ClassicUO.Game.UI.Gumps
                     container != World.Player.FindItemByLayer(Layer.Backpack) &&
                     !_item.IsLocked &&
                     _item.IsLootable)
+                {
                     GameActions.GrabItem(_item, _item.Amount);
+                }
+                else if (Keyboard.Alt && Mouse.LButtonPressed && _item != null)
+                {
+                    var graphic = _item.Graphic;
+                    var hue = _item.Hue;
+                    foreach (var gridItem in gridContainer.gridSlotManager.GridSlots.Values)
+                    {
+                        var item = gridItem?._item;
+                        if (item is null ||
+                            graphic != item.Graphic ||
+                            hue != item.Hue ||
+                            MultiItemMoveGump.MoveItems.Contains(item))
+                        {
+                            continue;
+                        }
+
+                        MultiItemMoveGump.MoveItems.Enqueue(item);
+                        gridItem.SelectHighlight = true;
+                    }
+
+                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
+                }
                 else
+                {
                     GameActions.DoubleClick(LocalSerial);
+                }
 
                 e.Result = true;
             }
@@ -967,7 +993,6 @@ namespace ClassicUO.Game.UI.Gumps
                             MultiItemMoveGump.MoveItems.Enqueue(_item);
                         MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
                         SelectHighlight = true;
-                        Mouse.CancelDoubleClick = true;
                     }
                     else if (Keyboard.Shift && _item != null && ProfileManager.CurrentProfile.EnableAutoLoot && !ProfileManager.CurrentProfile.HoldShiftForContext && !ProfileManager.CurrentProfile.HoldShiftToSplitStack)
                     {
