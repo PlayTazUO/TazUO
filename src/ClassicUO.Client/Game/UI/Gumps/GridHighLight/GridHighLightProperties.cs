@@ -101,6 +101,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             lastYitem += 20;
 
             #region Name
+            AddSectionDivider();
             mainScrollArea.Add(new Label("Item name", true, 0xffff, 120) { X = 0, Y = lastYitem });
 
             lastYitem += 20;
@@ -127,6 +128,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             #endregion
 
             #region Properties
+            AddSectionDivider();
             mainScrollArea.Add(new Label("Property name", true, 0xffff, 120) { X = 0, Y = lastYitem });
             mainScrollArea.Add(new Label("Min value", true, 0xffff, 120) { X = 180, Y = lastYitem });
             mainScrollArea.Add(new Label("Optional", true, 0xffff, 120) { X = 255, Y = lastYitem });
@@ -159,6 +161,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             lastYitem += 30;
 
             #region Equipment slot
+            AddSectionDivider();
             string[] slotNames = new[]
             {
                 "Talisman", "RightHand", "LeftHand",
@@ -233,6 +236,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             lastYitem += ((slotNames.Length + colCount - 1) / colCount) * checkboxHeight + 10;
 
             #region Negative
+            AddSectionDivider();
             mainScrollArea.Add(new Label("Disqualifying Properties", true, 0xffff) { X = 0, Y = lastYitem });
             Checkbox weightCheckbox;
             mainScrollArea.Add(weightCheckbox = new Checkbox(0x00D2, 0x00D3)
@@ -272,6 +276,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             lastYitem += 30;
 
             #region Rarity
+            AddSectionDivider();
             mainScrollArea.Add(new Label("Item Rarity Filters", true, 0xffff) { X = 0, Y = lastYitem });
             lastYitem += 20;
             mainScrollArea.Add(new Label("Only items with at least one of these rarities will match", true, 0xffff) { X = 0, Y = lastYitem });
@@ -298,6 +303,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             this.keyLoc = keyLoc;
         }
+
+    private void AddSectionDivider()
+    {
+        lastYitem += 5;
+
+        mainScrollArea.Add(new Line(0, lastYitem, WIDTH, 1, Color.Gray.PackedValue));
+
+        lastYitem += 5;
+    }
 
         private string SplitCamelCase(string input)
         {
