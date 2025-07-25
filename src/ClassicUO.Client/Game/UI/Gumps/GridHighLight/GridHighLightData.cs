@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using IronPython.Runtime.Operations;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -38,6 +39,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             get => _entry.Name;
             set => _entry.Name = value;
+        }
+
+        public List<string> ItemNames
+        {
+            get => _entry.ItemNames;
+            set => _entry.ItemNames = value;
         }
 
         public ushort Hue
@@ -169,8 +176,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool IsMatchFromProperties(ItemPropertiesData itemData)
         {
-            if (!MatchesSlot(itemData.item.ItemData.Layer))
+            if (!IsItemNameMatch(itemData.item.Name))
                 return false;
+
+            if (!MatchesSlot(itemData.item.ItemData.Layer))
+                    return false;
 
             if (Overweight && itemData.singlePropertyData.Any(prop =>
                     Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
@@ -226,6 +236,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
         {
+            if (!IsItemNameMatch(itemData.item.Name))
+                return false;
+
             if (!MatchesSlot(itemData.item.ItemData.Layer))
                 return false;
 
@@ -326,8 +339,25 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return result;
         }
 
+        private bool IsItemNameMatch(string itemName)
+        {
+            if (ItemNames.Count == 0)
+                return true;
+
+            string cleanedUpItemName = Regex.Replace(itemName, @"^\d+\s+", "", RegexOptions.Compiled | RegexOptions.CultureInvariant)
+                                            .Trim()
+                                            .ToLowerInvariant();
+
+            return ItemNames.Any(name => cleanedUpItemName == name.Trim().ToLowerInvariant());
+        }
+
         private bool MatchesSlot(byte layer)
         {
+            bool isOtherChecked = (bool)typeof(GridHighlightSlot).GetProperty("Other").GetValue(EquipmentSlots);
+            if (isOtherChecked) {
+                return true;
+            }
+
             return layer switch
             {
                 (byte)Layer.Talisman => EquipmentSlots.Talisman,

@@ -100,6 +100,32 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             lastYitem += 20;
 
+            #region Name
+            mainScrollArea.Add(new Label("Item name", true, 0xffff, 120) { X = 0, Y = lastYitem });
+
+            lastYitem += 20;
+
+            for (int i = 0; i < data.ItemNames.Count; i++)
+            {
+                AddOther(data.ItemNames, i, lastYitem);
+                lastYitem += 25;
+            }
+
+            NiceButton addItemNameBtn;
+            mainScrollArea.Add(addItemNameBtn = new NiceButton(0, lastYitem, 180, 20, ButtonAction.Activate, "Add Item Name") { IsSelectable = false });
+            addItemNameBtn.MouseUp += (s, e) =>
+            {
+                if (e.Button == Input.MouseButtonType.Left)
+                {
+                    data.ItemNames.Add("");
+                    Dispose();
+                    UIManager.Add(new GridHighlightProperties(keyLoc, X, Y));
+                }
+            };
+
+            lastYitem += 30;
+            #endregion
+
             #region Properties
             mainScrollArea.Add(new Label("Property name", true, 0xffff, 120) { X = 0, Y = lastYitem });
             mainScrollArea.Add(new Label("Min value", true, 0xffff, 120) { X = 180, Y = lastYitem });
@@ -231,9 +257,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 lastYitem += 25;
             }
 
-            NiceButton addNegBtn;
-            mainScrollArea.Add(addNegBtn = new NiceButton(0, lastYitem, 180, 20, ButtonAction.Activate, "Add Disqualifying Property") { IsSelectable = false });
-            addNegBtn.MouseUp += (s, e) =>
+            mainScrollArea.Add(addItemNameBtn = new NiceButton(0, lastYitem, 180, 20, ButtonAction.Activate, "Add Disqualifying Property") { IsSelectable = false });
+            addItemNameBtn.MouseUp += (s, e) =>
             {
                 if (e.Button == Input.MouseButtonType.Left)
                 {
@@ -279,25 +304,28 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
         }
 
-        private void AddOther(List<string> others, int index, int y, HashSet<string>[] propertySets)
+        private void AddOther(List<string> others, int index, int y, HashSet<string>[] propertySets = null)
         {
             while (others.Count <= index)
             {
                 others.Add("");
             }
 
-            Combobox propCombobox;
             InputField propInput;
             propInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 157, 25) { Y = y };
-            string[] values = GridHighlightRules.FlattenAndDistinctParameters(propertySets);
-            mainScrollArea.Add(propCombobox = new Combobox(0, lastYitem, 175, values, 0, 200, true) { });
-            propCombobox.OnOptionSelected += (s, e) =>
+            if (propertySets != null)
             {
-                var tVal = propCombobox.SelectedIndex;
+                string[] values = GridHighlightRules.FlattenAndDistinctParameters(propertySets);
+                Combobox propCombobox;
+                mainScrollArea.Add(propCombobox = new Combobox(0, lastYitem, 175, values, 0, 200, true) { });
+                propCombobox.OnOptionSelected += (s, e) =>
+                    {
+                        var tVal = propCombobox.SelectedIndex;
 
-                string v = values[tVal];
-                propInput.SetText(v);
-            };
+                        string v = values[tVal];
+                        propInput.SetText(v);
+                    };
+            }
 
             mainScrollArea.Add(propInput);
             propInput.SetText(others[index]);
