@@ -3136,6 +3136,8 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
             content.AddToRight(new CheckboxWithLabel(lang.GetGeneral.IgnoreStaminaCheck, 0, profile.IgnoreStaminaCheck, (b) => profile.IgnoreStaminaCheck = b), true, page);
 
+            content.BlankLine();
+            content.AddToRight(new CheckboxWithLabel(lang.GetGeneral.DisableGrayEnemies, 0, profile.DisableGrayEnemies, (b) => profile.DisableGrayEnemies = b), true, page);;
             #endregion
 
             #region Misc

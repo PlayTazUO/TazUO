@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -43,14 +43,16 @@ namespace ClassicUO.Game.Managers
 {
     public class WMapEntity
     {
+        private static Dictionary<uint, string> _mobileNameCache = new();
+
         public WMapEntity(uint serial)
         {
             Serial = serial;
 
-            //var mob = World.Mobiles.Get(serial);
+            var mob = World.Mobiles.Get(serial);
 
-            //if (mob != null)
-            //    GetName();
+            if (mob != null)
+                GetName();
         }
 
         public bool IsGuild;
@@ -59,17 +61,18 @@ namespace ClassicUO.Game.Managers
         public readonly uint Serial;
         public int X, Y, HP, Map;
 
-        //public string GetName()
-        //{
-        //    Entity e = World.Get(Serial);
+        public string GetName()
+        {
+            Entity e = World.Get(Serial);
 
-        //    if (e != null && !e.IsDestroyed && !string.IsNullOrEmpty(e.Name) && Name != e.Name)
-        //    {
-        //        Name = e.Name;
-        //    }
+            if (e != null && !e.IsDestroyed && !string.IsNullOrEmpty(e.Name) && Name != e.Name)
+            {
+                Name = e.Name;
+                _mobileNameCache[Serial] = Name;
+            }
 
-        //    return string.IsNullOrEmpty(Name) ? "<out of range>" : Name;
-        //}
+            return string.IsNullOrEmpty(Name) && !_mobileNameCache.TryGetValue(Serial, out Name) ? "<out of range>" : Name;
+        }
     }
 
     public class WorldMapEntityManager
@@ -85,7 +88,7 @@ namespace ClassicUO.Game.Managers
             {
                 return ((World.ClientFeatures.Flags & CharacterListFlags.CLF_NEW_MOVEMENT_SYSTEM) == 0 || _ackReceived) &&
                         EncryptionHelper.Type == 0 &&
-                        ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.WorldMapShowParty && 
+                        ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.WorldMapShowParty &&
                         UIManager.GetGump<WorldMapGump>() != null; // horrible, but works
             }
         }

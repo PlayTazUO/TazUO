@@ -1325,12 +1325,17 @@ namespace ClassicUO.LegionScripting
         /// API.Dismount()
         /// ```
         /// </summary>
-        public void Dismount() => InvokeOnMainThread
+        /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
+        public void Dismount(bool skipQueue = true) => InvokeOnMainThread
         (() =>
             {
                 if (World.Player.FindItemByLayer(Layer.Mount) != null)
-                    GameActions.DoubleClick(World.Player);
-
+                {
+                    if (skipQueue)
+                        GameActions.DoubleClick(World.Player);
+                    else
+                        GameActions.DoubleClickQueued(World.Player);
+                }
             }
         );
 
@@ -1342,7 +1347,16 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serial"></param>
-        public void Mount(uint serial) => InvokeOnMainThread(() => { GameActions.DoubleClick(serial); });
+        /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
+        public void Mount(uint serial, bool skipQueue = true) => InvokeOnMainThread
+        (() =>
+            {
+                if (skipQueue)
+                    GameActions.DoubleClick(serial);
+                else
+                    GameActions.DoubleClickQueued(serial);
+            }
+        );
 
         /// <summary>
         /// Wait for a target cursor.
