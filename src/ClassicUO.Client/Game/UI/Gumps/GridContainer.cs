@@ -214,6 +214,7 @@ namespace ClassicUO.Game.UI.Gumps
                 "/c[orange]Grid Container Controls:/cd\n" +
                 "Ctrl + Click to lock an item in place\n" +
                 "Alt + Click to add an item to the quick move queue\n" +
+                "Alt + Double Click to add all similar items to the quick move queue\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
                 "Sort and single click looting can be enabled with the icons on the right side");
 
