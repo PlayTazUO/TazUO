@@ -61,11 +61,6 @@ namespace ClassicUO.Game.Managers
 
                 if (World.Get(serial) != null)
                 {
-                    if (SerialHelper.IsMobile(serial))
-                    {
-                        serial |= 0x8000_0000;
-                    }
-
                     GameActions.DoubleClick(serial);
                 }
             }
