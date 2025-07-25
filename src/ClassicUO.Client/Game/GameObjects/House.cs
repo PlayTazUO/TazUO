@@ -90,7 +90,7 @@ namespace ClassicUO.Game.GameObjects
             if (ProfileManager.CurrentProfile.ForceHouseTransparency)
             {
                 var tile = World.Map.GetTile(x, y);
-                tile.Hue = 32;
+                tile.Hue = ProfileManager.CurrentProfile.ForcedTransparencyHouseTileHue;
                 Multi.ForcedTransparency = ProfileManager.CurrentProfile.ForcedHouseTransparency;
                 m.ForceTransparentHouse = true;
             }

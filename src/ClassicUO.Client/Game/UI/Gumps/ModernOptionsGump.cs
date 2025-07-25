@@ -3390,6 +3390,15 @@ namespace ClassicUO.Game.UI.Gumps
             content.Indent();
             content.AddToRight
             (
+                new ModernColorPickerWithLabel(lang.GetTazUO.HouseTransparencyTileHue, profile.ForcedTransparencyHouseTileHue, (h) => { profile.ForcedTransparencyHouseTileHue = h; }), true, page
+            );
+            content.RemoveIndent();
+
+            content.BlankLine();
+            content.Indent();
+
+            content.AddToRight
+            (
                 new SliderWithLabel
                 (
                     lang.GetTazUO.ForcedHouseTransparencyLevel, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.ForcedHouseTransparency, (i) =>
@@ -3398,7 +3407,6 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 ), true, page
             );
-            content.RemoveIndent();
             #endregion
 
 
