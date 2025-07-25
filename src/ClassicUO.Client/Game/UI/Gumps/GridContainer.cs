@@ -912,7 +912,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     GameActions.GrabItem(_item, _item.Amount);
                 }
-                else if (Keyboard.Alt && Mouse.LButtonPressed && _item != null)
+                else if (Keyboard.Alt && _item != null)
                 {
                     var graphic = _item.Graphic;
                     var hue = _item.Hue;
