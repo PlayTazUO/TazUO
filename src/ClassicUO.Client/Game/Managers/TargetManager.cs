@@ -92,50 +92,66 @@ namespace ClassicUO.Game.Managers
         public readonly ushort XOff, YOff, ZOff, Model, Hue;
     }
 
+    public readonly struct Vector3Int
+    {
+        public readonly int X;
+        public readonly int Y;
+        public readonly int Z;
+
+        public Vector3Int(int x, int y, int z) => (X, Y, Z) = (x, y, z);
+        public override string ToString() => $"({X}, {Y}, {Z})";
+    }
+
     public class LastTargetInfo
     {
-        public bool IsEntity => SerialHelper.IsValid(Serial);
-        public bool IsStatic => !IsEntity && Graphic != 0 && Graphic != 0xFFFF;
-        public bool IsLand => !IsStatic;
-        public ushort Graphic;
-        public uint Serial;
-        public ushort X, Y;
-        public sbyte Z;
-        public Vector3 Position => new Vector3(X, Y, Z);
+        public bool IsEntity => IsSet && SerialHelper.IsValid(Serial);
+        public bool IsStatic => IsSet && !IsEntity && Graphic != 0 && Graphic != 0xFFFF;
+        public bool IsLand => IsSet && !IsStatic;
+        public Vector3Int Position => new Vector3Int(X, Y, Z);
 
+        public ushort Graphic { get; internal set; }
+        public uint Serial { get; internal set; }
+        public ushort X { get; internal set; }
+        public ushort Y { get; internal set; }
+        public sbyte Z { get; internal set; }
+        public bool IsSet { get; internal set; }
 
-        public void SetEntity(uint serial)
+        internal void SetEntity(uint serial)
         {
             Serial = serial;
             Graphic = 0xFFFF;
             X = Y = 0xFFFF;
             Z = sbyte.MinValue;
+            IsSet = true;
         }
 
-        public void SetStatic(ushort graphic, ushort x, ushort y, sbyte z)
+        internal void SetStatic(ushort graphic, ushort x, ushort y, sbyte z)
         {
             Serial = 0;
             Graphic = graphic;
             X = x;
             Y = y;
             Z = z;
+            IsSet = true;
         }
 
-        public void SetLand(ushort x, ushort y, sbyte z)
+        internal void SetLand(ushort x, ushort y, sbyte z)
         {
             Serial = 0;
             Graphic = 0xFFFF;
             X = x;
             Y = y;
             Z = z;
+            IsSet = true;
         }
 
-        public void Clear()
+        internal void Clear()
         {
             Serial = 0;
             Graphic = 0xFFFF;
             X = Y = 0xFFFF;
             Z = sbyte.MinValue;
+            IsSet = false;
         }
     }
 

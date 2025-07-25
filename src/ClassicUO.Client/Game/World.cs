@@ -385,6 +385,33 @@ namespace ClassicUO.Game
             return SerialHelper.IsMobile(serial) && Mobiles.Contains(serial);
         }
 
+        public static GameObject GetStaticOrMulti(ushort graphic, ushort x, ushort y, sbyte z)
+        {
+            if (Map.GetTile(x, y) is not Land land)
+            {
+                return null;
+            }
+
+            GameObject i = land.TNext;
+            while (i is not null)
+            {
+                if (i is Static s)
+                {
+                    if (s.Graphic == graphic && s.X == x && s.Y == y && s.Z == z)
+                        return s;
+                }
+                else if (i is Multi m)
+                {
+                    if (m.Graphic == graphic && m.X == x && m.Y == y && m.Z == z)
+                        return m;
+                }
+
+                i = i.TNext;
+            }
+
+            return null;
+        }
+
         public static Entity Get(uint serial)
         {
             Entity ent;

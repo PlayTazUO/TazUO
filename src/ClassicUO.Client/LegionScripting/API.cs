@@ -194,7 +194,7 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// The last target's position
         /// </summary>
-        public Vector3 LastTargetPos => InvokeOnMainThread(() => TargetManager.LastTargetInfo.Position);
+        public Vector3Int LastTargetPos => InvokeOnMainThread(() => TargetManager.LastTargetInfo.Position);
 
         /// <summary>
         /// The graphic of the last targeting object
@@ -1451,6 +1451,48 @@ namespace ClassicUO.LegionScripting
             InvokeOnMainThread(() => TargetManager.Reset());
 
             return 0;
+        }
+
+        /// <summary>
+        /// Request the player to target anything, Item, Mobile, Land, Static, or Multi.
+        /// Example:
+        /// ```py
+        /// target = API.RequestAnyTarget()
+        /// if target:
+        ///   API.SysMsg(f"Targeted GameObject: {target}")
+        /// ```
+        /// </summary>
+        /// <param name="timeout">Max duration to wait for player to target something.</param>
+        /// <returns>If nothing was targeted, returns None. Otherwise, returns the targeted Item, Mobile, Land, Static, or Multi.</returns>
+        public GameObject RequestAnyTarget(double timeout = 5)
+        {
+            var expire = DateTime.Now.AddSeconds(timeout);
+            InvokeOnMainThread(() => TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
+
+            while (DateTime.Now < expire)
+                if (!InvokeOnMainThread(() => TargetManager.IsTargeting))
+                {
+                    var info = TargetManager.LastTargetInfo;
+                    if (info.IsEntity)
+                    {
+                        if (SerialHelper.IsMobile(info.Serial))
+                            return World.Mobiles.Get(info.Serial);
+                        else
+                            return World.Items.Get(info.Serial);
+                    }
+
+                    if (info.IsStatic)
+                        return World.GetStaticOrMulti(info.Graphic, info.X, info.Y, info.Z);
+
+                    if (info.IsLand)
+                        return World.Map.GetTile(info.X, info.Y);
+
+                    return null;
+                }
+
+            InvokeOnMainThread(() => TargetManager.Reset());
+
+            return null;
         }
 
         /// <summary>
