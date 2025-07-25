@@ -931,7 +931,8 @@ namespace ClassicUO.Game.UI.Gumps
                         gridItem.SelectHighlight = true;
                     }
 
-                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
+                    int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
+                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
                 }
                 else
                 {
@@ -992,7 +993,8 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         if (!MultiItemMoveGump.MoveItems.Contains(_item))
                             MultiItemMoveGump.MoveItems.Enqueue(_item);
-                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
+                        int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
+                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
                         SelectHighlight = true;
                     }
                     else if (Keyboard.Shift && _item != null && ProfileManager.CurrentProfile.EnableAutoLoot && !ProfileManager.CurrentProfile.HoldShiftForContext && !ProfileManager.CurrentProfile.HoldShiftToSplitStack)
@@ -1078,7 +1080,8 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (!MultiItemMoveGump.MoveItems.Contains(_item))
                         MultiItemMoveGump.MoveItems.Enqueue(_item);
-                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
+                    int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
+                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
                     SelectHighlight = true;
                 }
 
@@ -1109,7 +1112,8 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         if (!MultiItemMoveGump.MoveItems.Contains(_item))
                             MultiItemMoveGump.MoveItems.Enqueue(_item);
-                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(gridContainer.X - 200, gridContainer.Y);
+                        int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
+                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
                         SelectHighlight = true;
                     }
 
