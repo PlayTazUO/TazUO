@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using IronPython.Runtime.Operations;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -353,8 +352,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool MatchesSlot(byte layer)
         {
-            bool isOtherChecked = (bool)typeof(GridHighlightSlot).GetProperty("Other").GetValue(EquipmentSlots);
-            if (isOtherChecked) {
+            if (EquipmentSlots.Other) {
                 return true;
             }
 
