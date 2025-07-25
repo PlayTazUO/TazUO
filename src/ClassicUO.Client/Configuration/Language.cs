@@ -532,6 +532,7 @@ namespace ClassicUO.Configuration
             public string BorderCaveTiles { get; set; } = "Apply a border to static item art";
             public string ForcedHouseTransparencyLevel { get; set; } = "Forced house transparency";
             public string EnableHouseTransparency { get; set; } = "Enable forced house transparency";
+            public string HouseTransparencyTileHue { get; set; } = "House transparency tile hue";
             #endregion
 
             #region Tooltips
