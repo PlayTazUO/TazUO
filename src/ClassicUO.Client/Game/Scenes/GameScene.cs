@@ -856,6 +856,19 @@ namespace ClassicUO.Game.Scenes
             BoatMovingManager.Update();
             Pathfinder.ProcessAutoWalk();
             DelayedObjectClickManager.Update();
+
+            if (
+                (currentProfile.CorpseOpenOptions == 1 || currentProfile.CorpseOpenOptions == 3)
+                    && TargetManager.IsTargeting
+                || (currentProfile.CorpseOpenOptions == 2 || currentProfile.CorpseOpenOptions == 3)
+                    && World.Player.IsHidden
+            )
+            {
+                _useItemQueue.ClearCorpses();
+            }
+
+            _useItemQueue.Update();
+
             AutoLootManager.Instance.Update();
             _moveItemQueue.ProcessQueue();
             GridHighlightData.ProcessQueue();
@@ -902,18 +915,6 @@ namespace ClassicUO.Game.Scenes
             }
 
             Macros.Update();
-
-            if (
-                (currentProfile.CorpseOpenOptions == 1 || currentProfile.CorpseOpenOptions == 3)
-                    && TargetManager.IsTargeting
-                || (currentProfile.CorpseOpenOptions == 2 || currentProfile.CorpseOpenOptions == 3)
-                    && World.Player.IsHidden
-            )
-            {
-                _useItemQueue.ClearCorpses();
-            }
-
-            _useItemQueue.Update();
 
             if (Time.Ticks > _nextProfileSave)
             {
