@@ -58,11 +58,7 @@ namespace ClassicUO.Game.Managers
                 }
 
                 uint serial = _actions.RemoveFromFront();
-
-                if (World.Get(serial) != null)
-                {
-                    GameActions.DoubleClick(serial);
-                }
+                GameActions.DoubleClick(serial);
             }
         }
 

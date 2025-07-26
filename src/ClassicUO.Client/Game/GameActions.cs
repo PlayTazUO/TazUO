@@ -190,7 +190,9 @@ namespace ClassicUO.Game
 
                 if (paperDollGump == null)
                 {
-                    DoubleClick(serial | 0x80000000);
+                    // Bitwish ORing 0x8000_0000 signals to the server to send the
+                    // OpenPaperdoll packet for the player specifically.
+                    DoubleClickQueued(serial | 0x8000_0000);
                 }
                 else
                 {
