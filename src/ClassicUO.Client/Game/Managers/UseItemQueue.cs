@@ -38,6 +38,8 @@ namespace ClassicUO.Game.Managers
 {
     internal class UseItemQueue
     {
+        public static UseItemQueue Instance { get; private set; }
+        public bool IsEmpty => _actions.Count == 0;
         private readonly Deque<uint> _actions = new Deque<uint>();
         private long _timer;
         private static long _delay = 1000;
@@ -46,6 +48,7 @@ namespace ClassicUO.Game.Managers
         {
             _delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay;
             _timer = Time.Ticks + _delay;
+            Instance = this;
         }
 
         public void Update()

@@ -2849,6 +2849,17 @@ namespace ClassicUO.LegionScripting
         public bool IsProcessingMoveQue() => InvokeOnMainThread(() => !MoveItemQueue.Instance.IsEmpty);
 
         /// <summary>
+        /// Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
+        /// Example:
+        /// ```py
+        /// if API.IsProcessingUseItemQueue():
+        ///   API.Pause(0.5)
+        /// ```
+        /// </summary>
+        /// <returns></returns>
+        public bool IsProcessingUseItemQueue() => InvokeOnMainThread(() => !UseItemQueue.Instance.IsEmpty);
+
+        /// <summary>
         /// Save a variable that persists between sessions and scripts.
         /// Example:
         /// ```py
