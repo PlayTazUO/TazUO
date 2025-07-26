@@ -12,13 +12,10 @@ namespace ClassicUO.Game.Managers
         
         public bool IsEmpty => _queue.IsEmpty;
         
-        private static long delay = 1000;
         private readonly ConcurrentQueue<MoveRequest> _queue = new();
-        private long nextMove;
 
         public MoveItemQueue()
         {
-            delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay;
             Instance = this;
         }
 
@@ -50,7 +47,7 @@ namespace ClassicUO.Game.Managers
 
         public void ProcessQueue()
         {
-            if (Time.Ticks < nextMove)
+            if (GlobalActionCooldown.IsOnCooldown)
                 return;
             
             if (Client.Game.GameCursor.ItemHold.Enabled)
@@ -62,7 +59,7 @@ namespace ClassicUO.Game.Managers
             GameActions.PickUp(request.Serial, 0, 0, request.Amount);
             GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
             
-            nextMove = Time.Ticks + delay;
+            GlobalActionCooldown.ResetCooldown();
         }
 
         public void Clear()

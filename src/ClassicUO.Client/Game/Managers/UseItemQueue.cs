@@ -40,31 +40,23 @@ namespace ClassicUO.Game.Managers
     {
         public static UseItemQueue Instance { get; private set; }
         public bool IsEmpty => _actions.Count == 0;
+
         private readonly Deque<uint> _actions = new Deque<uint>();
-        private long _timer;
-        private static long _delay = 1000;
 
         public UseItemQueue()
         {
-            _delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay;
-            _timer = Time.Ticks + _delay;
             Instance = this;
         }
 
         public void Update()
         {
-            if (_timer < Time.Ticks)
-            {
-                _timer = Time.Ticks + _delay;
+            if (GlobalActionCooldown.IsOnCooldown) return;
+            if (_actions.Count == 0) return;
 
-                if (_actions.Count == 0)
-                {
-                    return;
-                }
+            uint serial = _actions.RemoveFromFront();
+            GameActions.DoubleClick(serial);
 
-                uint serial = _actions.RemoveFromFront();
-                GameActions.DoubleClick(serial);
-            }
+            GlobalActionCooldown.ResetCooldown();
         }
 
         public void Add(uint serial)
