@@ -787,6 +787,7 @@ namespace ClassicUO.Configuration
         public List<Gump> ReadGumps(string path)
         {
             List<Gump> gumps = new List<Gump>();
+            List<(Gump gump, GumpType type, int x, int y, uint serial, uint parent, XmlElement xml)> nestedGumps = new();
 
             // load skillsgroup
             SkillsGroupManager.Load();
@@ -828,6 +829,7 @@ namespace ClassicUO.Configuration
                             int x = int.Parse(xml.GetAttribute(nameof(x)));
                             int y = int.Parse(xml.GetAttribute(nameof(y)));
                             uint serial = uint.Parse(xml.GetAttribute(nameof(serial)));
+                            uint? parent = uint.TryParse(xml.GetAttribute(nameof(parent)), out var result) ? result : null;
 
                             if (uint.TryParse(xml.GetAttribute("serverSerial"), out uint serverSerial))
                             {
@@ -1004,6 +1006,12 @@ namespace ClassicUO.Configuration
                                 continue;
                             }
 
+                            if (parent.HasValue)
+                            {
+                                nestedGumps.Add((gump, type, x, y, serial, parent.Value, xml));
+                                continue;
+                            }
+
                             gump.LocalSerial = serial;
                             gump.Restore(xml);
                             gump.X = x;
@@ -1022,6 +1030,50 @@ namespace ClassicUO.Configuration
                         catch (Exception ex)
                         {
                             Log.Error(ex.ToString());
+                        }
+                    }
+
+                    HashSet<uint> processedSerials = new();
+                    while (nestedGumps.Count != 0)
+                    {
+                        int initialCount = nestedGumps.Count;
+                        foreach (var entry in nestedGumps.ToList())
+                        {
+                            var (gump, type, x, y, serial, parent, xml) = entry;
+                            bool parentIsInList = nestedGumps.Any(g => parent == g.serial);
+                            if (parentIsInList)
+                            {
+                                continue;
+                            }
+
+                            if (!processedSerials.Contains(parent) && World.Get(parent) is null)
+                            {
+                                continue;
+                            }
+
+                            processedSerials.Add(serial);
+                            nestedGumps.Remove(entry);
+
+                            gump.LocalSerial = serial;
+                            gump.Restore(xml);
+                            gump.X = x;
+                            gump.Y = y;
+
+                            if (gump.LocalSerial != 0)
+                            {
+                                UIManager.SavePosition(gump.LocalSerial, new Point(x, y));
+                            }
+
+                            if (!gump.IsDisposed)
+                            {
+                                gumps.Add(gump);
+                            }
+                        }
+
+                        if (initialCount == nestedGumps.Count)
+                        {
+                            Log.Warn($"[Profile.ReadGumps] Skipping nested gumps: {string.Join(", ", nestedGumps)}");
+                            break;
                         }
                     }
 

@@ -568,6 +568,12 @@ namespace ClassicUO.Game.UI.Gumps
             base.Save(writer);
             writer.WriteAttributeString("graphic", Graphic.ToString());
             writer.WriteAttributeString("isminimized", IsMinimized.ToString());
+
+            var item = World.Items.Get(LocalSerial);
+            if (item is not null)
+            {
+                writer.WriteAttributeString("parent", item.Container.ToString());
+            }
         }
 
         public override void Restore(XmlElement xml)

@@ -386,6 +386,12 @@ namespace ClassicUO.Game.UI.Gumps
                 ProfileManager.CurrentProfile.BackpackGridSize = new Point(Width, Height);
             }
 
+            var item = World.Items.Get(LocalSerial);
+            if (item is not null)
+            {
+                writer.WriteAttributeString("parent", item.Container.ToString());
+            }
+
             writer.WriteAttributeString("ogContainer", originalContainerItemGraphic.ToString());
         }
         public override void Restore(XmlElement xml)
