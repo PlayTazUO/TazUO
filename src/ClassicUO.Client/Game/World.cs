@@ -387,6 +387,12 @@ namespace ClassicUO.Game
 
         public static GameObject GetStaticOrMulti(ushort graphic, ushort x, ushort y, sbyte z)
         {
+            if (Map is null)
+            {
+                Log.Error("World.GetStaticOrMulti called without a valid map.");
+                return null;
+            }
+
             if (Map.GetTile(x, y) is not Land land)
             {
                 return null;
