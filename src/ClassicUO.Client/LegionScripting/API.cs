@@ -1488,7 +1488,13 @@ namespace ClassicUO.LegionScripting
             InvokeOnMainThread(() => TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
 
             while (DateTime.Now < expire)
-                if (!InvokeOnMainThread(() => TargetManager.IsTargeting))
+            {
+                if (InvokeOnMainThread(() => TargetManager.IsTargeting))
+                {
+                    continue;
+                }
+
+                return InvokeOnMainThread<PyGameObject>(static () =>
                 {
                     var info = TargetManager.LastTargetInfo;
                     if (info.IsEntity)
@@ -1522,7 +1528,8 @@ namespace ClassicUO.LegionScripting
                     }
 
                     return null;
-                }
+                });
+            }
 
             InvokeOnMainThread(() => TargetManager.Reset());
 
