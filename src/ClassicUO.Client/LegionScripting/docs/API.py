@@ -124,6 +124,7 @@ class PyMobile:
     Stamina: int = None
     ManaMax: int = None
     Mana: int = None
+    IsRenamable: bool = None
     __class__: str = None
 
 class PyMulti:
