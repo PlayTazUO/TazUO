@@ -58,12 +58,13 @@ public class GridContainerSaveData
 
     public void Save()
     {
+        string tPath = null;
         try
         {
             var output = JsonSerializer.Serialize(_entries.Values.ToArray(),
                 GridContainerSerializerContext.Default.GridContainerEntryArray);
 
-            var tPath = Path.GetTempFileName();
+            tPath = Path.GetTempFileName();
             File.WriteAllText(tPath, output);
 
             // Rotate backups: backup2 -> backup3, backup1 -> backup2, main -> backup1
@@ -88,10 +89,18 @@ public class GridContainerSaveData
 
             // Move temp file to main
             File.Move(tPath, _savePath);
+            tPath = null;
         }
         catch (Exception e)
         {
             Log.Error(e.ToString());
+        }
+
+        // Clean up temp file if it still exists
+        if (tPath != null && File.Exists(tPath))
+        {
+            try { File.Delete(tPath); }
+            catch { }
         }
     }
 
@@ -244,7 +253,7 @@ public class GridContainerSaveData
 
     public GridContainerEntry CreateEntry(uint serial)
     {
-        var entry = new GridContainerEntry(){Serial = serial};
+        var entry = new GridContainerEntry() { Serial = serial };
         _entries[serial] = entry;
         return entry;
     }
