@@ -32,6 +32,16 @@ public abstract class PyEntity : PyGameObject
     }
 
     /// <summary>
+    /// Implicitly converts a <see cref="PyEntity"/> to its underlying <see cref="uint"/> serial.
+    /// </summary>
+    /// <param name="entity">The <see cref="PyEntity"/> instance to convert.</param>
+    /// <returns>The <see cref="Serial"/> value of the entity.</returns>
+    public static implicit operator uint(PyEntity entity)
+    {
+        return entity.Serial;
+    }
+
+    /// <summary>
     /// The Python-visible class name of this object.
     /// Accessible in Python as <c>obj.__class__</c>.
     /// </summary>
