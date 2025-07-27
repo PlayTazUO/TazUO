@@ -106,6 +106,7 @@ class PyGameObject:
 class PyItem:
     Amount: int = None
     IsCorpse: bool = None
+    Opened: bool = None
     __class__: str = None
 
 class PyLand:
