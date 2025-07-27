@@ -330,12 +330,41 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (_normalizeCache.TryGetValue(input, out var cached))
                 return cached;
 
-            var result = string.IsNullOrWhiteSpace(input)
-                ? string.Empty
-                : HtmlTagRegex.Replace(input, string.Empty).Trim();
-
+            var result = StripHtmlTags(input).Trim();
             _normalizeCache[input] = result;
             return result;
+        }
+
+        private string CleanItemName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return string.Empty;
+
+            int index = 0;
+            // Skip leading digits
+            while (index < name.Length && char.IsDigit(name[index])) index++;
+
+            // Skip following whitespace
+            while (index < name.Length && char.IsWhiteSpace(name[index])) index++;
+
+            return name.Substring(index).Trim().ToLowerInvariant();
+        }
+
+        private string StripHtmlTags(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            var output = new char[input.Length];
+            int outputIndex = 0;
+            bool insideTag = false;
+
+            foreach (char c in input)
+            {
+                if (c == '<') { insideTag = true; continue; }
+                if (c == '>') { insideTag = false; continue; }
+                if (!insideTag) output[outputIndex++] = c;
+            }
+
+            return new string(output, 0, outputIndex);
         }
 
         private bool IsItemNameMatch(string itemName)
@@ -343,11 +372,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (ItemNames.Count == 0)
                 return true;
 
-            string cleanedUpItemName = Regex.Replace(itemName, @"^\d+\s+", "", RegexOptions.Compiled | RegexOptions.CultureInvariant)
-                                            .Trim()
-                                            .ToLowerInvariant();
-
-            return ItemNames.Any(name => cleanedUpItemName == name.Trim().ToLowerInvariant());
+            string cleanedUpItemName = CleanItemName(itemName);
+            return ItemNames.Any(name => string.Equals(cleanedUpItemName, name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         private bool MatchesSlot(byte layer)
