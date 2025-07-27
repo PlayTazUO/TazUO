@@ -133,6 +133,7 @@ class PyMobile:
     ManaMax: int = None
     Mana: int = None
     IsRenamable: bool = None
+    IsHuman: bool = None
     __class__: str = None
 
 class PyMulti:
