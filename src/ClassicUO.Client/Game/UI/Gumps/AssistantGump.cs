@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Resources;
 using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps;
@@ -47,8 +48,17 @@ public class AssistantGump : BaseOptionsGump
         PositionHelper.Reset();
 
         scroll.Add
-            (PositionHelper.PositionControl(new HttpClickableLink("Autoloot Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Simple-Auto-Loot", ThemeSettings.TEXT_FONT_COLOR)));
+            (PositionHelper.PositionControl(new HttpClickableLink("Autoloot Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Simple-Auto-Loot", ThemeSettings.TEXT_FONT_COLOR)));
 
+        PositionHelper.BlankLine();
+
+        ModernButton b;
+        scroll.Add(PositionHelper.PositionControl(b = new ModernButton(0, 0, 200, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Set grab bag", ThemeSettings.BUTTON_FONT_COLOR)));
+        b.MouseUp += (s, e) =>
+        {
+            GameActions.Print(ResGumps.TargetContainerToGrabItemsInto);
+            TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
+        };
         PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoLootEnable, 0, profile.EnableAutoLoot, b => profile.EnableAutoLoot = b)));
@@ -84,7 +94,7 @@ public class AssistantGump : BaseOptionsGump
         MainContent.AddToRight(scroll, false, page);
         PositionHelper.Reset();
 
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Auto Sell Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Auto-Sell-Agent", ThemeSettings.TEXT_FONT_COLOR)));
+        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Auto Sell Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Auto-Sell-Agent", ThemeSettings.TEXT_FONT_COLOR)));
         PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoSellEnable, 0, profile.SellAgentEnabled, b => profile.SellAgentEnabled = b)));
@@ -111,7 +121,7 @@ public class AssistantGump : BaseOptionsGump
         MainContent.AddToRight(scroll, false, page);
         PositionHelper.Reset();
 
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Auto Buy Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Auto-Buy-Agent", ThemeSettings.TEXT_FONT_COLOR)));
+        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Auto Buy Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Auto-Buy-Agent", ThemeSettings.TEXT_FONT_COLOR)));
         PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoBuyEnable, 0, profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b)));
@@ -130,7 +140,7 @@ public class AssistantGump : BaseOptionsGump
         MainContent.AddToRight(scroll, false, page);
         PositionHelper.Reset();
 
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Mobile Graphic Filter Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Mobile-Graphics-Filter", ThemeSettings.TEXT_FONT_COLOR)));
+        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Mobile Graphic Filter Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Mobile-Graphics-Filter", ThemeSettings.TEXT_FONT_COLOR)));
         scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("This can be used to replace graphics of mobiles with other graphics(For example if dragons are too big, replace them with wyverns).", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
         PositionHelper.BlankLine();
         scroll.Add(PositionHelper.PositionControl(new GraphicFilterConfigs(MainContent.RightWidth - ThemeSettings.SCROLL_BAR_WIDTH - 10)));
@@ -146,7 +156,7 @@ public class AssistantGump : BaseOptionsGump
         MainContent.AddToRight(scroll, false, page);
         PositionHelper.Reset();
 
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("SpellBar Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.SpellBar", ThemeSettings.TEXT_FONT_COLOR)));
+        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("SpellBar Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.SpellBar", ThemeSettings.TEXT_FONT_COLOR)));
         PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Enable spellbar", 0, SpellBarManager.IsEnabled(), (b) =>

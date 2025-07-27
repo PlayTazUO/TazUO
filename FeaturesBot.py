@@ -5,13 +5,21 @@ import os
 motd = [
 """
 ```ini
+[ Profile backups ]
+```
+> TazUO backs up your profiles 3 times, just in-case. \n
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Profile-Backups>
+""",
+
+"""
+```ini
 [ Toggle hud visibility ]
 ```
 > You can quickly hide/show your gumps on screen to keep your screen de-cluttered. \n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hide-Hud>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Hide-Hud>
 """,
 
-    """
+"""
 ```ini
 [ Damage numbers in your journal ]
 ```
@@ -23,7 +31,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hide-Hud>
 [ Spell bar ]
 ```
 > TazUO added a spell bar to easily manage, store, and cast spells via hotkey or click. \n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.SpellBar>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.SpellBar>
 """,
 
 """
@@ -39,7 +47,7 @@ Top Menu -> More -> Tools -> Quick spell cast
 [ Python Scripting ]
 ```
 > TazUO added built-in pthon scripting to the client. \n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Legion-Scripting>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Legion-Scripting>
 """,
 
 """
@@ -47,7 +55,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Legion-Scripting>
 [ Legion Scripting ]
 ```
 > TazUO added a custom scripting language similar to UOSteam built directly into the client. \n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Legion-Scripting>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Legion-Scripting>
 """,
 
 """
@@ -97,7 +105,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Legion-Scripting>
 [ Advance nameplate options ]
 ```
 > TUO added a very customizable nameplate system.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Nameplate-options>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Nameplate-options>
 """,
 
 """
@@ -105,7 +113,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Nameplate-options>
 [ Spell casting indicators ]
 ```
 > TUO added a very customizable spell casting indicator system, including displaying range, cast time, and area size.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Spell-Indicators>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Spell-Indicators>
 """,
 
 """
@@ -120,7 +128,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Spell-Indicators>
 [ Simple auto loot ]
 ```
 > TUO added a simple auto loot feature in `3.10.0`, check out the wiki for more info.\n
-`Options->TazUO->Misc` | <https://github.com/bittiez/TazUO/wiki/TazUO.Simple-Auto-Loot>
+`Options->TazUO->Misc` | <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Simple-Auto-Loot>
 """,
 
 """
@@ -128,7 +136,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Spell-Indicators>
 [ Health indicator ]
 ```
 > TUO added a simple health indicator(red border around the window) to more easily notice when your health drops.\n
-`Options->TazUO->Misc` | <https://github.com/bittiez/TazUO/wiki/TazUO.Miscellaneous#health-indicator>
+`Options->TazUO->Misc` | <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Miscellaneous#health-indicator>
 """,
 
 """
@@ -152,7 +160,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Spell-Indicators>
 [ Journal Entries ]
 ```
 > TUO allows you to adjust how many journal entries to save, from 200-2000.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Journal>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Journal>
 """,
 
 """
@@ -160,7 +168,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Journal>
 [ Sound overrides ]
 ```
 > TUO allows you to easily override sounds without modifying your client.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TUO.Sound-Override>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TUO.Sound-Override>
 """,
 
 """
@@ -168,7 +176,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TUO.Sound-Override>
 [ -colorpicker command ]
 ```
 > TUO added an easy way to browse colors in your UO install, try it out.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-colorpicker>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Commands#-colorpicker>
 """,
 
 """
@@ -176,7 +184,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-colorpicker>
 [ -radius command ]
 ```
 > TUO added an easy way to see a precise radius around you, see the wiki for screenshots and instructions.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-radius>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Commands#-radius>
 """,
 
 """
@@ -184,7 +192,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-radius>
 [ Skill progress bar ]
 ```
 > TUO added progress bars when your skills increase or decrease.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Skill-Progress-Bar>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Skill-Progress-Bar>
 """,
 
 """
@@ -192,7 +200,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Skill-Progress-Bar>
 [ Account selector ]
 ```
 > A simple right-click on the account input of the login screen will bring up an option to select other accounts you have logged into.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Account-Selector>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Account-Selector>
 """,
 
 """
@@ -200,7 +208,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Account-Selector>
 [ Alternate paperdoll ]
 ```
 > TUO has a more mordern alternative to the original paperdoll gump.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Alternate-Paperdoll>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Alternate-Paperdoll>
 """,
 
 """
@@ -208,7 +216,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Alternate-Paperdoll>
 [ Improved buff bar ]
 ```
 > TUO has an improved buff bar with a customizable progress bar letting you easily see when that buff will expire.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Buff-Bars>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Buff-Bars>
 """,
 
 """
@@ -216,7 +224,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Buff-Bars>
 [ Circle of transparency ]
 ```
 > TUO has added a new type of circle of transparency and increased the max radius from 200 -> 1000.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Circle-of-transparency>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Circle-of-transparency>
 """,
 
 """
@@ -224,7 +232,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Circle-of-transparency>
 [ Cast command ]
 ```
 > TUO added a `-cast SPELLNAME` command to easily cast spells.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-cast-spellname>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Commands#-cast-spellname>
 """,
 
 """
@@ -232,7 +240,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-cast-spellnam
 [ Skill command ]
 ```
 > TUO added a `-skill SKILLNAME` command to easily use skills.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-skill-skillname>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Commands#-skill-skillname>
 """,
 
 """
@@ -240,7 +248,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-skill-skillna
 [ Marktile command ]
 ```
 > TUO added a `-marktile` command to highlight specific places in game on the ground. Screenshots and more details available on the wiki.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-marktile>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Commands#-marktile>
 """,
 
 """
@@ -248,7 +256,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Commands#-marktile>
 [ Customizable cooldown bars ]
 ```
 > TUO added customizable cool down bars that can be triggered on the text of your choosing, be sure to see the wiki for screenshots and instructions.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Cooldown-bars>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Cooldown-bars>
 """,
 
 """
@@ -256,7 +264,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Cooldown-bars>
 [ Custom healthbar additions ]
 ```
 > TUO further enhanced the custom healthbars with distance indicators, see the wiki for screenshots and more details.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Custom-Health-Bar>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Custom-Health-Bar>
 """,
 
 """
@@ -264,7 +272,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Custom-Health-Bar>
 [ Damage number hues ]
 ```
 > In TUO you can customize the colors for different types of damage numbers on screen.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Damage-number-hues>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Damage-number-hues>
 """,
 
 """
@@ -272,7 +280,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Damage-number-hues>
 [ Drag select modifiers ]
 ```
 > TUO added a few optional key modifiers to the drag select(for opening many healthbars at once). See the wiki for a more detailed explanation.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Drag-Select-Modifiers>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Drag-Select-Modifiers>
 """,
 
 """
@@ -280,7 +288,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Drag-Select-Modifiers>
 [ Durability gump ]
 ```
 > TUO added a new durability gump to easily track durability of items, see the wiki for screenshots and more details.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Durability-Gump>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Durability-Gump>
 """,
 
 """
@@ -288,7 +296,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Durability-Gump>
 [ Follow mode ]
 ```
 > TUO modified the `alt + left click` to follow a player or npc, now you can adjust the follow distance and alt clicking their healthbar instead of the mobile themselves.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Follow-mode>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Follow-mode>
 """,
 
 """
@@ -296,7 +304,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Follow-mode>
 [ Grid highlighting based on item properties ]
 ```
 > TUO allows you to set up custom rules to highlight specific items in a grid container, allowing you to easily see the items that hold value to you.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Grid-highlighting-based-on-item-properties>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Grid-highlighting-based-on-item-properties>
 """,
 
 """
@@ -304,7 +312,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Grid-highlighting-based
 [ Health Lines ]
 ```
 > TUO added the option to scale the size of health lines underneath mobiles.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Health-Lines>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Health-Lines>
 """,
 
 """
@@ -312,7 +320,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Health-Lines>
 [ Hidden Characters ]
 ```
 > TUO added the option to customize what you look like while hidden with colors and opacity.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Characters>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Hidden-Characters>
 """,
 
 """
@@ -320,7 +328,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Characters>
 [ Hidden gump lock ]
 ```
 > Most gumps can be locked in place to prevent accidental movement or closing by `Ctrl + Alt + Left Click` the gump.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Gump-Features#hidden-gump-lock>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Hidden-Gump-Features#hidden-gump-lock>
 """,
 
 """
@@ -328,7 +336,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Gump-Features#hi
 [ Hidden gump opacity ]
 ```
 > Most gumps can have their opacity adjusted by holding `Ctrl + Alt` while scrolling over them.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Gump-Features#ctrl--alt--mouse-wheel-opacity-adjustment>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Hidden-Gump-Features#ctrl--alt--mouse-wheel-opacity-adjustment>
 """,
 
 """
@@ -336,7 +344,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Hidden-Gump-Features#ct
 [ Info bar ]
 ```
 > TUO added the ability to use text or built-in graphics for the info bar along with customizable font and size, see the wiki for screenshots and more details.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Info-Bar>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Info-Bar>
 """,
 
 """
@@ -344,7 +352,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Info-Bar>
 [ Item tooltip comparisons ]
 ```
 > TUO added the ability to compare an item in a container to the item you have equiped in that slot by pressing `Ctrl` while hovering over the item.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Item-Comparison>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Item-Comparison>
 """,
 
 """
@@ -352,7 +360,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Item-Comparison>
 [ Modern Journal ]
 ```
 > TUO added a much more modern and advanced journal that replaced the original.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Journal>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Journal>
 """,
 
 """
@@ -360,7 +368,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Journal>
 [ Grid containers ]
 ```
 > TUO added a small feature called grid containers. Not related to grid loot built into CUO. Check out all the features of this in the wiki.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Grid-Containers>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Grid-Containers>
 """,
 
 """
@@ -368,7 +376,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Grid-Containers>
 [ Macro buttons ]
 ```
 > TUO added the ability to customize buttons with size, color and graphics for your macro buttons.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Macro-Button-Editor>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Macro-Button-Editor>
 """,
 
 """
@@ -376,7 +384,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Macro-Button-Editor>
 [ Spell icons ]
 ```
 > TUO allows you to scale spell icons, and display linked hotkeys. See the wiki for details and instructions.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Miscellaneous#spell-icons>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Miscellaneous#spell-icons>
 """,
 
 """
@@ -384,7 +392,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Miscellaneous#spell-ico
 [ Nameplate healthbars ]
 ```
 > TUO allows nameplates to be used as healthbars. More details on the wiki.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Nameplate-Healthbars>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Nameplate-Healthbars>
 """,
 
 """
@@ -392,7 +400,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Nameplate-Healthbars>
 [ PNG replacer ]
 ```
 > TUO added the ability to replace in-game artwork with your own by using simple png files, no client modifications required.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.PNG-Replacer>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.PNG-Replacer>
 """,
 
 """
@@ -400,7 +408,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.PNG-Replacer>
 [ Server owners and utilizing the chat tab ]
 ```
 > TUO added a seperate tab in the journal for built in global chat(osi friendly, works on ServUO but most servers leave it disabled). See more about how to use this simple feature on your server.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Server-Owners>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Server-Owners>
 """,
 
 """
@@ -408,7 +416,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Server-Owners>
 [ SOS locator ]
 ```
 > TUO made it easy to sail the seas by decoding those cryptic coords given when opening an SOS.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.SOS-Locator>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.SOS-Locator>
 """,
 
 """
@@ -416,7 +424,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.SOS-Locator>
 [ Status Gumps ]
 ```
 > TUO made it so you can have your status gump and healthbar gump open at the same time!\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Status-Gump>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Status-Gump>
 """,
 
 """
@@ -424,7 +432,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Status-Gump>
 [ Tooltip overrides ]
 ```
 > TUO added the ability to customize tooltips in almost any way you desire, make them easy to read specific to you!\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Tooltip-Override>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override>
 """,
 
 """
@@ -432,7 +440,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Tooltip-Override>
 [ Treasure map locator ]
 ```
 > TUO made it easier than ever to locate treasure via treasure maps, see how on the wiki.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Treasure-Maps-&-SOS>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Treasure-Maps-&-SOS>
 """,
 
 """
@@ -440,7 +448,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Treasure-Maps-&-SOS>
 [ Modern fonts! ]
 ```
 > TUO has made it possible to use your own fonts in many places in the game, see more in wiki.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.TTF-Fonts>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.TTF-Fonts>
 """,
 
 """
@@ -448,7 +456,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.TTF-Fonts>
 [ Launcher ]
 ```
 > TUO has a launcher available to easily manage multiple profiles and check for updates to TazUO for you.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Updater-Launcher>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Updater-Launcher>
 """,
 
 """
@@ -456,7 +464,7 @@ See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Updater-Launcher>
 [ Quick move ]
 ```
 > TUO allows you to select multiple items and move them quickly and easily with `Alt + Left Click`.\n
-See more -> <https://github.com/bittiez/TazUO/wiki/TazUO.Grid-Containers#quick-move>
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/TazUO.Grid-Containers#quick-move>
 """,
 ]
 

@@ -78,9 +78,6 @@ namespace ClassicUO.Game.GameObjects
                 hue = SpellVisualRangeManager.Instance.ProcessHueForTile(hue, this);
             }
 
-            if (TileMarkerManager.Instance.IsTileMarked(X, Y, World.Map.Index, out var nhue))
-                hue = nhue;
-
             if (ProfileManager.CurrentProfile.DisplayRadius && Distance == ProfileManager.CurrentProfile.DisplayRadiusDistance)
                 hue = ProfileManager.CurrentProfile.DisplayRadiusHue;
 

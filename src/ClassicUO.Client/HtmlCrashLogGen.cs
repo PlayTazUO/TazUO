@@ -22,23 +22,23 @@ public static class HtmlCrashLogGen
                                       color: #e0e0e0;
                                       padding: 2rem;
                                     }
-                                
+
                                     h1 {
                                       font-size: 1.8rem;
                                       color: #ff8c42; /* dark orange */
                                       margin-bottom: 1rem;
                                     }
-                                    
-                                    
+
+
                                     a {
                                       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
                                       color: #ff8c42;
                                     }
-                                
+
                                     p {
                                       margin-bottom: 1rem;
                                     }
-                                
+
                                     pre {
                                       background-color: #2b2b2b;
                                       color: #f8f8f2;
@@ -49,7 +49,7 @@ public static class HtmlCrashLogGen
                                       word-break: break-word;
                                       overflow-x: auto;
                                     }
-                                
+
                                     button {
                                       margin-top: 1rem;
                                       padding: 0.5rem 1.2rem;
@@ -62,7 +62,7 @@ public static class HtmlCrashLogGen
                                       border: 1px solid #444;
                                       transition: background-color 0.2s, border-color 0.2s;
                                     }
-                                
+
                                     button:hover {
                                       background-color: #ff8c42;
                                       color: #000;
@@ -72,14 +72,14 @@ public static class HtmlCrashLogGen
                                 </head>
                                 <body>
                                   <h1>[TITLE]</h1>
-                                  <p>[DESCRIPTION]<br>If you'd like support for this please copy and send this to our <a href="https://github.com/bittiez/TazUO/issues">GitHub</a> or <a href="https://discord.gg/QvqzkB95G4">Discord</a>:</p>
+                                  <p>[DESCRIPTION]<br>If you'd like support for this please copy and send this to our <a href="https://github.com/PlayTazUO/TazUO/issues">GitHub</a> or <a href="https://discord.gg/QvqzkB95G4">Discord</a>:</p>
                                   <pre id="stackTrace">
                                 ```
                                 [STACK TRACE]
                                 ```
                                   </pre>
                                   <button onclick="copyStack()">Copy to Clipboard</button>
-                                
+
                                   <script>
                                     function copyStack() {
                                       const text = document.getElementById('stackTrace').textContent;
@@ -91,7 +91,7 @@ public static class HtmlCrashLogGen
                                 </body>
                                 </html>
                                 """;
-        
+        stackTrace = stackTrace.Trim();
         string html = TEMPLATE.Replace("[STACK TRACE]", System.Net.WebUtility.HtmlEncode(stackTrace));
         html = html.Replace("[TITLE]", title);
         html = html.Replace("[DESCRIPTION]", description);
