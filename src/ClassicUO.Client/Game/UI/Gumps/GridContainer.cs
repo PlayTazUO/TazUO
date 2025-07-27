@@ -48,7 +48,6 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using ClassicUO.Game.Scenes;
-using static ClassicUO.Game.UI.Gumps.GridHighLight.GridHighlightMenu;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -82,7 +81,7 @@ namespace ClassicUO.Game.UI.Gumps
         private float lastGridItemScale = (ProfileManager.CurrentProfile.GridContainersScale / 100f);
         private int lastWidth = GetWidth(), lastHeight = GetHeight();
         private bool quickLootThisContainer = false;
-        private bool? UseOldContainerStyle = null;
+        public bool? UseOldContainerStyle = null;
         private bool autoSortContainer = false;
 
         private bool skipSave = false;
@@ -113,11 +112,15 @@ namespace ClassicUO.Game.UI.Gumps
                 return $"Sort this container.<br>Alt + Click to enable auto sort<br>Auto sort currently {status}";
             }
         }
+
+        private GridContainerEntry gridContainerEntry;
         #endregion
 
         #region public vars
+        public GridContainerEntry GridContainerEntry => gridContainerEntry;
         public readonly bool IsPlayerBackpack = false;
         public bool StackNonStackableItems = false;
+        public bool AutoSortContainer { get { return autoSortContainer; } }
         #endregion
 
         public GridContainer(uint local, ushort originalContainerGraphic, bool? useGridStyle = null) : base(GetWidth(), GetHeight(), GetWidth(2), GetHeight(1), local, 0)
@@ -135,11 +138,25 @@ namespace ClassicUO.Game.UI.Gumps
 
             IsPlayerBackpack = LocalSerial == World.Player.FindItemByLayer(Layer.Backpack).Serial;
 
-            autoSortContainer = GridSaveSystem.Instance.AutoSortContainer(LocalSerial);
-            StackNonStackableItems = GridSaveSystem.Instance.StackNonStackables(LocalSerial);
+            gridContainerEntry = GridContainerSaveData.Instance.GetContainer(local);
 
-            Point lastPos = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridPosition : GridSaveSystem.Instance.GetLastPosition(LocalSerial);
-            Point savedSize = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridSize : GridSaveSystem.Instance.GetLastSize(LocalSerial);
+            autoSortContainer = gridContainerEntry.AutoSort;
+            StackNonStackableItems = gridContainerEntry.VisuallyStackNonStackables;
+
+            Point lastPos = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridPosition : gridContainerEntry.GetPosition();
+            if (lastPos == Point.Zero)
+            {
+                lastPos.X = lastX;
+                lastPos.Y = lastY;
+            }
+
+            Point savedSize = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridSize : gridContainerEntry.GetSize();
+            if (savedSize == Point.Zero)
+            {
+                savedSize.X = GetWidth();
+                savedSize.Y = GetHeight();
+            }
+
             IsLocked = IsPlayerBackpack && ProfileManager.CurrentProfile.BackPackLocked;
 
             lastWidth = Width = savedSize.X;
@@ -304,7 +321,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             gridSlotManager = new GridSlotManager(LocalSerial, this, scrollArea); //Must come after scroll area
 
-            if (GridSaveSystem.Instance.UseOriginalContainerGump(LocalSerial) && (UseOldContainerStyle == null || UseOldContainerStyle == true))
+            if (gridContainerEntry.UseOriginalContainer && (UseOldContainerStyle == null || UseOldContainerStyle == true))
             {
                 skipSave = true; //Avoid unsaving item slots because they have not be set up yet
                 OpenOldContainer(local);
@@ -377,7 +394,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (!skipSave)
             {
-                GridSaveSystem.Instance?.SaveContainer(this);
+                gridContainerEntry.UpdateSaveDataEntry(this);
             }
 
             if (IsPlayerBackpack && ProfileManager.CurrentProfile != null)
@@ -540,7 +557,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             if (gridSlotManager != null && !skipSave && gridSlotManager.ItemPositions.Count > 0 && !isCorpse)
-                GridSaveSystem.Instance.SaveContainer(this);
+                gridContainerEntry.UpdateSaveDataEntry(this);
 
             base.Dispose();
         }
@@ -761,7 +778,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void ClearInstance()
         {
-            GridSaveSystem.Instance.Clear();
+            GridContainerSaveData.Instance.Save();
+            GridContainerSaveData.Reset();
         }
 
         public class GridItem : Control
@@ -992,7 +1010,8 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else if (Keyboard.Ctrl)
                     {
-                        gridContainer.gridSlotManager.SetLockedSlot(slot, !ItemGridLocked);
+                        if(_item != null)
+                            gridContainer.gridSlotManager.SetLockedSlot(slot, !ItemGridLocked, gridContainer.gridContainerEntry.GetSlot(_item.Serial));
                         Mouse.CancelDoubleClick = true;
                     }
                     else if (Keyboard.Alt && _item != null)
@@ -1341,6 +1360,7 @@ namespace ClassicUO.Game.UI.Gumps
             private Control area;
             private Dictionary<int, uint> itemPositions = new Dictionary<int, uint>();
             private List<uint> itemLocks = new List<uint>();
+            private GridContainer gridContainer;
 
             public Dictionary<int, GridItem> GridSlots { get { return gridSlots; } }
             public List<Item> ContainerContents { get { return containerContents; } }
@@ -1355,14 +1375,15 @@ namespace ClassicUO.Game.UI.Gumps
             public GridSlotManager(uint thisContainer, GridContainer gridContainer, Control controlArea)
             {
                 #region VARS
+                this.gridContainer = gridContainer;
                 area = controlArea;
-                foreach (GridSaveSystem.GridItemSlotSaveData item in GridSaveSystem.Instance.GetItemSlots(thisContainer))
+                foreach (var item in gridContainer.gridContainerEntry.Slots.Values)
                 {
                     ItemPositions.Add(item.Slot, item.Serial);
-                    if (item.IsLocked)
+                    if (item.Locked)
                         itemLocks.Add(item.Serial);
-
                 }
+
                 container = World.Items.Get(thisContainer);
                 UpdateItems();
                 if (containerContents.Count > 125)
@@ -1379,6 +1400,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void AddLockedItemSlot(uint serial, int specificSlot)
             {
+                gridContainer.gridContainerEntry.GetSlot(serial).Slot = specificSlot;
+
                 if (ItemPositions.Values.Contains(serial)) //Is this item already locked? Lets remove it from lock status for now
                 {
                     int removeSlot = ItemPositions.First((x) => x.Value == serial).Key;
@@ -1453,15 +1476,21 @@ namespace ClassicUO.Game.UI.Gumps
                 SetGridPositions();
             }
 
-            public void SetLockedSlot(int slot, bool locked)
+            public void SetLockedSlot(int slot, bool locked, GridContainerSlotEntry saveEntry)
             {
+                saveEntry.Locked = locked;
+
                 if (gridSlots[slot].SlotItem == null)
                     return;
                 gridSlots[slot].ItemGridLocked = locked;
                 if (!locked)
+                {
                     itemLocks.Remove(gridSlots[slot].SlotItem);
+                }
                 else
+                {
                     itemLocks.Add(gridSlots[slot].SlotItem);
+                }
             }
 
             /// <summary>
@@ -1848,285 +1877,6 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 base.Update();
-            }
-        }
-
-        private class GridSaveSystem
-        {
-            /// <summary>
-            /// Time cutoff in seconds
-            /// 60*60 = 1 hour
-            ///      * 24 = 1 day
-            ///          * 60 = ~2 month
-            /// </summary>
-            private const long TIME_CUTOFF = ((60 * 60) * 24) * 60;
-            private string gridSavePath = Path.Combine(ProfileManager.ProfilePath, "GridContainers.xml");
-            private XDocument saveDocument;
-            private XElement rootElement;
-            private bool enabled = false;
-
-            private static GridSaveSystem instance;
-            public static GridSaveSystem Instance
-            {
-                get
-                {
-                    return instance ??= new GridSaveSystem();
-                }
-            }
-
-            private GridSaveSystem()
-            {
-                if (!SaveFileCheck())
-                {
-                    enabled = false;
-                    return;
-                }
-
-                try
-                {
-                    saveDocument = XDocument.Load(gridSavePath);
-                }
-                catch
-                {
-                    saveDocument = new XDocument();
-                }
-
-                rootElement = saveDocument.Element("grid_gumps");
-                if (rootElement == null)
-                {
-                    saveDocument.Add(new XElement("grid_gumps"));
-                    rootElement = saveDocument.Root;
-                }
-                enabled = true;
-            }
-            public bool SaveContainer(GridContainer container)
-            {
-                if (!enabled) return false;
-
-                XElement thisContainer = rootElement.Element("container_" + container.LocalSerial.ToString());
-                if (thisContainer == null)
-                {
-                    thisContainer = new XElement("container_" + container.LocalSerial.ToString());
-                    rootElement.Add(thisContainer);
-                }
-                else
-                    thisContainer.RemoveNodes();
-
-                thisContainer.SetAttributeValue("last_opened", DateTimeOffset.Now.ToUnixTimeSeconds().ToString());
-                thisContainer.SetAttributeValue("width", container.Width.ToString());
-                thisContainer.SetAttributeValue("height", container.Height.ToString());
-                thisContainer.SetAttributeValue("lastX", container.X.ToString());
-                thisContainer.SetAttributeValue("lastY", container.Y.ToString());
-                thisContainer.SetAttributeValue("useOriginalContainer", container.UseOldContainerStyle == null ? false.ToString() : container.UseOldContainerStyle.ToString());
-                thisContainer.SetAttributeValue("autoSort", container.autoSortContainer.ToString());
-                thisContainer.SetAttributeValue("stacknonstackables", container.StackNonStackableItems.ToString());
-
-                foreach (var slot in container.gridSlotManager.GridSlots)
-                {
-                    if (slot.Value.SlotItem == null)
-                        continue;
-                    XElement item_slot = new XElement("item");
-                    item_slot.SetAttributeValue("serial", slot.Value.SlotItem.Serial.ToString());
-                    item_slot.SetAttributeValue("locked", slot.Value.ItemGridLocked.ToString());
-                    item_slot.SetAttributeValue("slot", slot.Key.ToString());
-                    thisContainer.Add(item_slot);
-                }
-                RemoveOldContainers();
-
-                saveDocument.Save(gridSavePath);
-
-                return true;
-            }
-            public List<GridItemSlotSaveData> GetItemSlots(uint container)
-            {
-                List<GridItemSlotSaveData> items = new List<GridItemSlotSaveData>();
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    foreach (XElement itemSlot in thisContainer.Elements("item"))
-                    {
-                        XAttribute slot, serial, isLockedAttribute;
-                        slot = itemSlot.Attribute("slot");
-                        serial = itemSlot.Attribute("serial");
-                        isLockedAttribute = itemSlot.Attribute("locked");
-                        if (slot != null && serial != null)
-                        {
-                            if (int.TryParse(slot.Value, out int slotV))
-                                if (uint.TryParse(serial.Value, out uint serialV))
-                                {
-                                    if (isLockedAttribute != null && bool.TryParse(isLockedAttribute.Value, out bool isLocked))
-                                        items.Add(new GridItemSlotSaveData(slotV, serialV, isLocked));
-                                    else
-                                        items.Add(new GridItemSlotSaveData(slotV, serialV, false));
-                                }
-                        }
-                    }
-                }
-
-                return items;
-            }
-            public class GridItemSlotSaveData
-            {
-                public readonly int Slot;
-                public readonly uint Serial;
-                public readonly bool IsLocked;
-
-                public GridItemSlotSaveData(int slot, uint serial, bool isLocked)
-                {
-                    this.Slot = slot;
-                    this.Serial = serial;
-                    this.IsLocked = isLocked;
-                }
-            }
-            public Point GetLastSize(uint container)
-            {
-                Point lastSize = new Point(GetWidth(), GetHeight());
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    XAttribute width, height;
-                    width = thisContainer.Attribute("width");
-                    height = thisContainer.Attribute("height");
-                    if (width != null && height != null)
-                    {
-                        int.TryParse(width.Value, out lastSize.X);
-                        int.TryParse(height.Value, out lastSize.Y);
-                    }
-                }
-
-                return lastSize;
-            }
-            public Point GetLastPosition(uint container)
-            {
-                Point LastPos = new Point(GridContainer.lastX, GridContainer.lastY);
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    XAttribute lastX, lastY;
-                    lastX = thisContainer.Attribute("lastX");
-                    lastY = thisContainer.Attribute("lastY");
-                    if (lastX != null && lastY != null)
-                    {
-                        int.TryParse(lastX.Value, out LastPos.X);
-                        int.TryParse(lastY.Value, out LastPos.Y);
-                    }
-                }
-
-                return LastPos;
-            }
-            public bool UseOriginalContainerGump(uint container)
-            {
-                bool useOriginalContainer = ProfileManager.CurrentProfile?.GridContainersDefaultToOldStyleView ?? false;
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    XAttribute useOriginal;
-                    useOriginal = thisContainer.Attribute("useOriginalContainer");
-                    if (useOriginal != null)
-                    {
-                        bool.TryParse(useOriginal.Value, out useOriginalContainer);
-                    }
-                }
-
-                return useOriginalContainer;
-            }
-            public bool AutoSortContainer(uint container)
-            {
-                bool autoSort = false;
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    XAttribute attribute = thisContainer.Attribute("autoSort");
-                    if (attribute != null)
-                    {
-                        bool.TryParse(attribute.Value, out autoSort);
-                    }
-                }
-
-                return autoSort;
-            }
-            public bool StackNonStackables(uint container)
-            {
-                bool stacknoners = false;
-
-                XElement thisContainer = rootElement.Element("container_" + container.ToString());
-                if (thisContainer != null)
-                {
-                    XAttribute attribute = thisContainer.Attribute("stacknonstackables");
-                    if (attribute != null)
-                    {
-                        bool.TryParse(attribute.Value, out stacknoners);
-                    }
-                }
-
-                return stacknoners;
-            }
-            private void RemoveOldContainers()
-            {
-                long cutOffTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds() - TIME_CUTOFF;
-
-                foreach (var container in rootElement.Elements().ToList())
-                {
-                    if (long.TryParse(container.Attribute("last_opened")?.Value, out long lastOpened) && lastOpened < cutOffTime)
-                    {
-                        container.Remove();
-                    }
-                }
-            }
-            private bool SaveFileCheck()
-            {
-                try
-                {
-                    if (!File.Exists(gridSavePath))
-                        File.Create(gridSavePath).Dispose();
-                }
-                catch (Exception e)
-                {
-                    Log.Error("Could not create file: " + gridSavePath);
-                    System.Text.StringBuilder sb = new System.Text.StringBuilder();
-                    sb.AppendLine("######################## [START LOG] ########################");
-
-                    sb.AppendLine($"TazUO - {CUOEnviroment.Version} - {DateTime.Now}");
-
-                    sb.AppendLine
-                        ($"OS: {Environment.OSVersion.Platform} {(Environment.Is64BitOperatingSystem ? "x64" : "x86")}");
-
-                    sb.AppendLine();
-
-                    if (Settings.GlobalSettings != null)
-                    {
-                        sb.AppendLine($"Shard: {Settings.GlobalSettings.IP}");
-                        sb.AppendLine($"ClientVersion: {Settings.GlobalSettings.ClientVersion}");
-                        sb.AppendLine();
-                    }
-
-                    sb.AppendFormat("Exception:\n{0}\n", e);
-                    sb.AppendLine("######################## [END LOG] ########################");
-                    sb.AppendLine();
-                    sb.AppendLine();
-
-                    Log.Panic(e.ToString());
-                    string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
-
-                    if (!Directory.Exists(path))
-                        Directory.CreateDirectory(path);
-
-                    using (LogFile crashfile = new LogFile(path, "crash.txt"))
-                    {
-                        crashfile.WriteAsync(sb.ToString()).RunSynchronously();
-                    }
-                    return false;
-                }
-                return true;
-            }
-            public void Clear()
-            {
-                instance = null;
             }
         }
     }
