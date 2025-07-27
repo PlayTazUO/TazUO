@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -334,7 +334,7 @@ namespace ClassicUO.Game.UI.Gumps
                     openRegularGump.ContextMenu = GenContextMenu();
                 }, true, ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
             ));
-            
+
             control.Add(new ContextMenuItemEntry("Stack Similar Items in the Original View", () =>
             {
                 StackNonStackableItems = !StackNonStackableItems;
@@ -384,6 +384,12 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 ProfileManager.CurrentProfile.BackpackGridPosition = Location;
                 ProfileManager.CurrentProfile.BackpackGridSize = new Point(Width, Height);
+            }
+
+            var item = World.Items.Get(LocalSerial);
+            if (item is not null)
+            {
+                writer.WriteAttributeString("parent", item.Container.ToString());
             }
 
             writer.WriteAttributeString("ogContainer", originalContainerItemGraphic.ToString());
@@ -958,7 +964,7 @@ namespace ClassicUO.Game.UI.Gumps
                         {
                             GameActions.DropItem(Client.Game.GameCursor.ItemHold.Serial, _item.X, _item.Y, 0, _item.Serial);
                             Mouse.CancelDoubleClick = true;
-                            mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item                        
+                            mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
                         }
                         else
                         {
@@ -967,7 +973,7 @@ namespace ClassicUO.Game.UI.Gumps
                             var pos = GetBoxPosition(slot, Client.Game.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
                             GameActions.DropItem(Client.Game.GameCursor.ItemHold.Serial, pos.X, pos.Y, 0, container.Serial);
                             Mouse.CancelDoubleClick = true;
-                            mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item                        
+                            mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
                         }
                     }
                     else if (TargetManager.IsTargeting)
@@ -1340,6 +1346,11 @@ namespace ClassicUO.Game.UI.Gumps
             public List<Item> ContainerContents { get { return containerContents; } }
             public Dictionary<int, uint> ItemPositions { get { return itemPositions; } }
 
+            /// <summary>
+            /// Get the GridItem of a serial if it exists
+            /// </summary>
+            public Dictionary<uint, GridItem> GridItems { get; } = new();
+
 
             public GridSlotManager(uint thisContainer, GridContainer gridContainer, Control controlArea)
             {
@@ -1381,9 +1392,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             public GridItem FindItem(uint serial)
             {
-                foreach (var slot in gridSlots)
-                    if (slot.Value.LocalSerial == serial)
-                        return slot.Value;
+                if (GridItems.TryGetValue(serial, out GridItem item))
+                    return item;
+
                 return null;
             }
 
@@ -1424,11 +1435,14 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
+                GridItems.Clear();
+
                 foreach (var slot in gridSlots)
                 {
                     slot.Value.IsVisible = !(!string.IsNullOrWhiteSpace(searchText) && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
                     if (slot.Value.SlotItem != null && !string.IsNullOrWhiteSpace(searchText))
                     {
+                        GridItems[slot.Value.SlotItem.Serial] = slot.Value;
                         if (SearchItemNameAndProps(searchText, slot.Value.SlotItem))
                         {
                             slot.Value.Highlight = ProfileManager.CurrentProfile.GridContainerSearchMode == 1;
@@ -1475,7 +1489,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             /// <summary>
-            /// 
+            ///
             /// </summary>
             /// <param name="search"></param>
             /// <returns>List of items matching the search result, or all items if search is blank/profile does has hide search mode disabled</returns>

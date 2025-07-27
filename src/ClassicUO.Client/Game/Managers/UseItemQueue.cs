@@ -31,6 +31,7 @@
 #endregion
 
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Configuration;
 using ClassicUO.Utility.Collections;
 
 namespace ClassicUO.Game.Managers
@@ -39,18 +40,19 @@ namespace ClassicUO.Game.Managers
     {
         private readonly Deque<uint> _actions = new Deque<uint>();
         private long _timer;
-
+        private static long _delay = 1000;
 
         public UseItemQueue()
         {
-            _timer = Time.Ticks + 1000;
+            _delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay;
+            _timer = Time.Ticks + _delay;
         }
 
         public void Update()
         {
             if (_timer < Time.Ticks)
             {
-                _timer = Time.Ticks + 1000;
+                _timer = Time.Ticks + _delay;
 
                 if (_actions.Count == 0)
                 {
@@ -58,11 +60,7 @@ namespace ClassicUO.Game.Managers
                 }
 
                 uint serial = _actions.RemoveFromFront();
-
-                if (World.Get(serial) != null)
-                {
-                    GameActions.DoubleClick(serial);
-                }
+                GameActions.DoubleClick(serial);
             }
         }
 

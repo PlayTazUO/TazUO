@@ -382,10 +382,6 @@ namespace ClassicUO.LegionScripting
 
             SaveScriptSettings();
 
-            while (API.QueuedPythonActions.TryDequeue(out var action)) //Clear any queued actions
-            {
-            }
-
             _enabled = false;
         }
 
@@ -418,9 +414,6 @@ namespace ClassicUO.LegionScripting
 
                 removeRunningScripts.Clear();
             }
-
-            while (API.QueuedPythonActions.TryDequeue(out var action))
-                action();
         }
 
         public static void PlayScript(ScriptFile script)
@@ -482,7 +475,7 @@ namespace ClassicUO.LegionScripting
             }
 
             //script.PythonScriptStopped();
-            API.QueuedPythonActions.Enqueue(() => { StopScript(script); });
+            MainThreadQueue.EnqueueAction(() => { StopScript(script); });
         }
 
         public static void StopScript(ScriptFile script)
@@ -720,13 +713,13 @@ namespace ClassicUO.LegionScripting
                     try
                     {
                         var client = new System.Net.WebClient();
-                        var api = client.DownloadString(new Uri("https://raw.githubusercontent.com/bittiez/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
+                        var api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
                         File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "API.py"), api);
-                        API.QueuedPythonActions.Enqueue(() => { GameActions.Print("Updated API!"); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print("Updated API!"); });
                     }
                     catch (Exception ex)
                     {
-                        API.QueuedPythonActions.Enqueue(() => { GameActions.Print("Failed to update the API..", 32); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print("Failed to update the API..", 32); });
                         Log.Error(ex.ToString());
                     }
 
@@ -766,7 +759,7 @@ namespace ClassicUO.LegionScripting
         public ScriptEngine pythonEngine;
         public ScriptScope pythonScope;
         public API scopedAPI;
-        
+
         public bool IsPlaying
         {
             get
@@ -870,7 +863,7 @@ namespace ClassicUO.LegionScripting
 
             pythonEngine = Python.CreateEngine();
 
-            string dir = System.IO.Path.GetDirectoryName(FullPath);                       
+            string dir = System.IO.Path.GetDirectoryName(FullPath);
             ICollection<string> paths = pythonEngine.GetSearchPaths();
             paths.Add(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "iplib"));
             paths.Add(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts"));

@@ -2579,7 +2579,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.GridContainers, page, content.LeftWidth));
 
             content.AddToRight
-                (new HttpClickableLink("Grid Containers Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Grid-Containers", ThemeSettings.TEXT_FONT_COLOR), true, page);
+                (new HttpClickableLink("Grid Containers Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Grid-Containers", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.BlankLine();
 
@@ -2746,7 +2746,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new HttpClickableLink
-                    ("Grid Highlighting Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Grid-highlighting-based-on-item-properties", ThemeSettings.TEXT_FONT_COLOR), true, page
+                    ("Grid Highlighting Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Grid-highlighting-based-on-item-properties", ThemeSettings.TEXT_FONT_COLOR), true, page
             );
 
             content.AddToRight
@@ -2780,7 +2780,7 @@ namespace ClassicUO.Game.UI.Gumps
             page = ((int)PAGE.TUOOptions + 1001);
             content.ResetRightSide();
 
-            content.AddToRight(new HttpClickableLink("Journal Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Journal", ThemeSettings.TEXT_FONT_COLOR), true, page);
+            content.AddToRight(new HttpClickableLink("Journal Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Journal", ThemeSettings.TEXT_FONT_COLOR), true, page);
             content.BlankLine();
 
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.Journal, page, content.LeftWidth));
@@ -2875,7 +2875,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.ResetRightSide();
 
             content.AddToRight
-                (new HttpClickableLink("Modern Paperdoll Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Alternate-Paperdoll", ThemeSettings.TEXT_FONT_COLOR), true, page);
+                (new HttpClickableLink("Modern Paperdoll Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Alternate-Paperdoll", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.BlankLine();
 
@@ -2946,7 +2946,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.ResetRightSide();
 
             content.AddToRight
-                (new HttpClickableLink("Nameplates Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Nameplate-options", ThemeSettings.TEXT_FONT_COLOR), true, page);
+                (new HttpClickableLink("Nameplates Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Nameplate-options", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.BlankLine();
 
@@ -3146,7 +3146,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.Misc, page, content.LeftWidth));
             content.ResetRightSide();
 
-            content.AddToRight(new HttpClickableLink("Misc Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Miscellaneous", ThemeSettings.TEXT_FONT_COLOR), true, page);
+            content.AddToRight(new HttpClickableLink("Misc Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Miscellaneous", ThemeSettings.TEXT_FONT_COLOR), true, page);
             content.BlankLine();
 
             content.AddToRight(new CheckboxWithLabel(lang.GetTazUO.DisableSystemChat, 0, profile.DisableSystemChat, (b) => { profile.DisableSystemChat = b; }), true, page);
@@ -3298,7 +3298,7 @@ namespace ClassicUO.Game.UI.Gumps
                                         );
                                     }
                                 }
-                            }, "https://github.com/bittiez/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
+                            }, "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
                         )
                         {
                             X = (Client.Game.Window.ClientBounds.Width >> 1) - 50,
@@ -3374,7 +3374,7 @@ namespace ClassicUO.Game.UI.Gumps
             #region HideHouses
             content.BlankLine();
 
-            content.AddToRight(new HttpClickableLink("Houses Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.HideHouses", ThemeSettings.TEXT_FONT_COLOR), true, page);
+            content.AddToRight(new HttpClickableLink("Houses Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.HideHouses", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.BlankLine();
             content.AddToRight
@@ -3457,7 +3457,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-                (new HttpClickableLink("Tooltip Overrides Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Tooltip-Override", ThemeSettings.TEXT_FONT_COLOR), true, page);
+                (new HttpClickableLink("Tooltip Overrides Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.AddToRight(new ToolTipOverrideConfigs(content.RightWidth - 15), true, page);
 
@@ -3471,7 +3471,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.FontSettings, page, content.LeftWidth));
             content.ResetRightSide();
 
-            content.AddToRight(new HttpClickableLink("TTF Fonts Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.TTF-Fonts", ThemeSettings.TEXT_FONT_COLOR), true, page);
+            content.AddToRight(new HttpClickableLink("TTF Fonts Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.TTF-Fonts", ThemeSettings.TEXT_FONT_COLOR), true, page);
             content.BlankLine();
 
             content.AddToRight
@@ -3626,7 +3626,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-                (new HttpClickableLink("Controller Support Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Controller-Support", ThemeSettings.TEXT_FONT_COLOR), true, page);
+                (new HttpClickableLink("Controller Support Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Controller-Support", ThemeSettings.TEXT_FONT_COLOR), true, page);
 
             content.BlankLine();
 
@@ -3756,7 +3756,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.GumpScaling, page, content.LeftWidth));
             content.ResetRightSide();
 
-            content.AddToRight(new HttpClickableLink("Scaling Wiki", "https://github.com/bittiez/TazUO/wiki/TazUO.Global-Scaling", ThemeSettings.TEXT_FONT_COLOR), true, page);
+            content.AddToRight(new HttpClickableLink("Scaling Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Global-Scaling", ThemeSettings.TEXT_FONT_COLOR), true, page);
             content.BlankLine();
 
             content.AddToRight

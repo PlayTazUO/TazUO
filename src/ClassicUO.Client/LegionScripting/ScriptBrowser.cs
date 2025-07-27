@@ -21,7 +21,7 @@ namespace ClassicUO.LegionScripting
         private static ConcurrentQueue<Action> _mainThreadActions = new();
         private const int WIDTH = 400;
         private const int HEIGHT = 600;
-        private const string REPO = "bittiez/PublicLegionScripts";
+        private const string REPO = "PlayTazUO/PublicLegionScripts";
 
         private ScrollArea scrollArea;
         private readonly GitHubContentCache cache;
@@ -74,7 +74,7 @@ namespace ClassicUO.LegionScripting
         {
             if (isLoading) return;
             isLoading = true;
-            
+
             try
             {
                 var files = await cache.GetDirectoryContentsAsync(currentPath);
@@ -105,7 +105,7 @@ namespace ClassicUO.LegionScripting
         public override void Update()
         {
             base.Update();
-            
+
             // Process main thread actions
             int processedCount = 0;
             while(_mainThreadActions.TryDequeue(out var action) && processedCount < 10) // Limit to prevent frame drops
@@ -140,11 +140,11 @@ namespace ClassicUO.LegionScripting
             if (!string.IsNullOrEmpty(currentPath))
             {
                 var parentPath = Path.GetDirectoryName(currentPath)?.Replace('\\', '/') ?? "";
-                var backItem = new GHFileObject() 
-                { 
-                    type = "dir", 
-                    name = $"<- Back{(string.IsNullOrEmpty(parentPath) ? "" : $" ({parentPath})")}", 
-                    path = parentPath 
+                var backItem = new GHFileObject()
+                {
+                    type = "dir",
+                    name = $"<- Back{(string.IsNullOrEmpty(parentPath) ? "" : $" ({parentPath})")}",
+                    path = parentPath
                 };
                 scrollArea.Add(new ItemControl(backItem, this, true));
             }
@@ -186,7 +186,7 @@ namespace ClassicUO.LegionScripting
             }
 
             currentPath = path ?? ""; // Ensure path is never null
-            
+
             // Show loading state
             ClearScrollArea();
             loadingText = GenTextBox("Loading...", 16);
@@ -289,14 +289,14 @@ namespace ClassicUO.LegionScripting
 
                                 // Create the full file path
                                 var filePath = Path.Combine(LegionScripting.ScriptPath, GHFileObject.name);
-                                
+
                                 // Write the content to disk
                                 File.WriteAllText(filePath, content, Encoding.UTF8);
-                                
+
                                 // Create ScriptFile object pointing to the saved file
                                 ScriptFile f = new ScriptFile(LegionScripting.ScriptPath, GHFileObject.name);
                                 UIManager.Add(new ScriptEditor(f));
-                                
+
                                 GameActions.Print($"Downloaded script: {GHFileObject.name}");
                             }
                             catch (Exception ex)
@@ -393,8 +393,8 @@ namespace ClassicUO.LegionScripting
             var cacheKey = string.IsNullOrEmpty(path) ? "ROOT" : path;
 
             // Check if we have cached data that's still valid
-            if (directoryCache.ContainsKey(cacheKey) && 
-                cacheTimestamps.ContainsKey(cacheKey) && 
+            if (directoryCache.ContainsKey(cacheKey) &&
+                cacheTimestamps.ContainsKey(cacheKey) &&
                 DateTime.Now - cacheTimestamps[cacheKey] < cacheExpiration)
             {
                 return directoryCache[cacheKey];
@@ -402,7 +402,7 @@ namespace ClassicUO.LegionScripting
 
             // Fetch from API
             var contents = await FetchDirectoryFromApi(path);
-            
+
             // Cache the results
             directoryCache[cacheKey] = contents;
             cacheTimestamps[cacheKey] = DateTime.Now;
@@ -442,7 +442,7 @@ namespace ClassicUO.LegionScripting
 
             var content = await DownloadStringAsync(downloadUrl);
             fileContentCache[downloadUrl] = content;
-            
+
             return content;
         }
 
@@ -455,7 +455,7 @@ namespace ClassicUO.LegionScripting
             {
                 var url = string.IsNullOrEmpty(path) ? baseUrl : $"{baseUrl}/{path}";
                 var response = await DownloadStringAsync(url);
-                
+
                 if (string.IsNullOrEmpty(response))
                 {
                     return new List<ScriptBrowser.GHFileObject>();
@@ -491,7 +491,7 @@ namespace ClassicUO.LegionScripting
         private Task<string> DownloadStringAsync(string url)
         {
             var tcs = new TaskCompletionSource<string>();
-            
+
             var webClient = new WebClient();
             webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
             webClient.Encoding = Encoding.UTF8;
@@ -579,7 +579,7 @@ namespace ClassicUO.LegionScripting
         {
             var now = DateTime.Now;
             var expired = cacheTimestamps.Count(kvp => now - kvp.Value >= cacheExpiration);
-            
+
             return (directoryCache.Count, fileContentCache.Count, expired);
         }
 

@@ -41,43 +41,6 @@ namespace ClassicUO.LegionScripting
 
         private ConcurrentBag<Gump> gumps = new();
 
-        #region Python C# Queue
-
-        public static readonly ConcurrentQueue<Action> QueuedPythonActions = new();
-
-        private static T InvokeOnMainThread<T>(Func<T> func)
-        {
-            var resultEvent = new ManualResetEvent(false);
-            T result = default;
-
-            void action()
-            {
-                result = func();
-                resultEvent.Set();
-            }
-
-            QueuedPythonActions.Enqueue(action);
-            resultEvent.WaitOne(); // Wait for the main thread to complete the operation
-
-            return result;
-        }
-
-        private static void InvokeOnMainThread(Action action)
-        {
-            var resultEvent = new ManualResetEvent(false);
-
-            void wrappedAction()
-            {
-                action();
-                resultEvent.Set();
-            }
-
-            QueuedPythonActions.Enqueue(wrappedAction);
-            resultEvent.WaitOne();
-        }
-
-        #endregion
-
         #region Python Callback Queue
 
         private readonly Queue<Action> scheduledCallbacks = new();
@@ -147,7 +110,7 @@ namespace ClassicUO.LegionScripting
             get
             {
                 if (backpack == null)
-                    backpack = InvokeOnMainThread(() => World.Player.FindItemByLayer(Game.Data.Layer.Backpack));
+                    backpack = MainThreadQueue.InvokeOnMainThread(() => World.Player.FindItemByLayer(Game.Data.Layer.Backpack));
 
                 return backpack;
             }
@@ -162,7 +125,7 @@ namespace ClassicUO.LegionScripting
             get
             {
                 if (player == null)
-                    player = InvokeOnMainThread(() => World.Player);
+                    player = MainThreadQueue.InvokeOnMainThread(() => World.Player);
 
                 return player;
             }
@@ -174,7 +137,7 @@ namespace ClassicUO.LegionScripting
         public uint Bank {
             get
             {
-                var i = InvokeOnMainThread(()=>World.Player.FindItemByLayer(Layer.Bank));
+                var i = MainThreadQueue.InvokeOnMainThread(()=>World.Player.FindItemByLayer(Layer.Bank));
                 return i != null ? i.Serial : 0;
             }
         }
@@ -189,17 +152,17 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// The serial of the last target, if it has a serial.
         /// </summary>
-        public uint LastTargetSerial => InvokeOnMainThread(() => TargetManager.LastTargetInfo.Serial);
+        public uint LastTargetSerial => MainThreadQueue.InvokeOnMainThread(() => TargetManager.LastTargetInfo.Serial);
 
         /// <summary>
         /// The last target's position
         /// </summary>
-        public Vector3 LastTargetPos => InvokeOnMainThread(() => TargetManager.LastTargetInfo.Position);
+        public Vector3Int LastTargetPos => MainThreadQueue.InvokeOnMainThread(() => TargetManager.LastTargetInfo.Position);
 
         /// <summary>
         /// The graphic of the last targeting object
         /// </summary>
-        public ushort LastTargetGraphic => InvokeOnMainThread(() => TargetManager.LastTargetInfo.Graphic);
+        public ushort LastTargetGraphic => MainThreadQueue.InvokeOnMainThread(() => TargetManager.LastTargetInfo.Graphic);
 
         /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
@@ -314,7 +277,7 @@ namespace ClassicUO.LegionScripting
             while (gumps.TryTake(out var g))
             {
                 if (g is { IsDisposed: false })
-                    QueuedPythonActions.Enqueue(() => g?.Dispose());
+                    MainThreadQueue.EnqueueAction(() => g?.Dispose());
 
                 c++;
 
@@ -333,7 +296,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serial"></param>
-        public void Attack(uint serial) => InvokeOnMainThread(() => GameActions.Attack(serial));
+        public void Attack(uint serial) => MainThreadQueue.InvokeOnMainThread(() => GameActions.Attack(serial));
 
         /// <summary>
         /// Attempt to bandage yourself. Older clients this will not work, you will need to find a bandage, use it, and target yourself.
@@ -349,7 +312,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns>True if bandages found and used</returns>
-        public bool BandageSelf() => InvokeOnMainThread(GameActions.BandageSelf);
+        public bool BandageSelf() => MainThreadQueue.InvokeOnMainThread(GameActions.BandageSelf);
 
         /// <summary>
         /// If you have an item in your left hand, move it to your backpack
@@ -361,8 +324,8 @@ namespace ClassicUO.LegionScripting
         ///   API.SysMsg("Cleared left hand: " + leftHand.Name)
         /// ```
         /// </summary>
-        /// <returns>The item serial that was in your hand</returns>
-        public uint ClearLeftHand() => InvokeOnMainThread<uint>
+        /// <returns>The item that was in your hand</returns>
+        public PyItem ClearLeftHand() => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Item i = World.Player.FindItemByLayer(Layer.OneHanded);
@@ -372,11 +335,11 @@ namespace ClassicUO.LegionScripting
                     var bp = World.Player.FindItemByLayer(Layer.Backpack);
                     MoveItemQueue.Instance.Enqueue(i, bp);
                     Found = i.Serial;
-                    return i;
+                    return new PyItem(i);
                 }
 
                 Found = 0;
-                return 0;
+                return null;
             }
         );
 
@@ -390,8 +353,8 @@ namespace ClassicUO.LegionScripting
         ///   API.SysMsg("Cleared right hand: " + rightHand.Name)
         ///  ```
         /// </summary>
-        /// <returns>The item serial that was in your hand</returns>
-        public uint ClearRightHand() => InvokeOnMainThread<uint>
+        /// <returns>The item that was in your hand</returns>
+        public PyItem ClearRightHand() => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Item i = World.Player.FindItemByLayer(Layer.TwoHanded);
@@ -401,11 +364,11 @@ namespace ClassicUO.LegionScripting
                     var bp = World.Player.FindItemByLayer(Layer.Backpack);
                     MoveItemQueue.Instance.Enqueue(i, bp);
                     Found = i.Serial;
-                    return i;
+                    return new PyItem(i);
                 }
 
                 Found = 0;
-                return 0;
+                return null;
             }
         );
 
@@ -417,7 +380,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serial">Serial, or item/mobile reference</param>
-        public void ClickObject(uint serial) => InvokeOnMainThread(() => GameActions.SingleClick(serial));
+        public void ClickObject(uint serial) => MainThreadQueue.InvokeOnMainThread(() => GameActions.SingleClick(serial));
 
         /// <summary>
         /// Attempt to use(double click) an object.
@@ -428,7 +391,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial">The serial</param>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
-        public void UseObject(uint serial, bool skipQueue = true) => InvokeOnMainThread
+        public void UseObject(uint serial, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (skipQueue)
@@ -449,7 +412,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial"></param>
         /// <returns>The amount of items in a container. Does **not** include sub-containers, or item amounts. (100 Gold = 1 item if it's in a single stack)</returns>
-        public int Contents(uint serial) => InvokeOnMainThread<int>
+        public int Contents(uint serial) => MainThreadQueue.InvokeOnMainThread<int>
         (() =>
             {
                 Item i = World.Items.Get(serial);
@@ -471,7 +434,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial"></param>
         /// <param name="entry">Entries start at 0, the top entry will be 0, then 1, 2, etc. (Usually)</param>
-        public void ContextMenu(uint serial, ushort entry) => InvokeOnMainThread
+        public void ContextMenu(uint serial, ushort entry) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 PopupMenuGump.CloseNext = serial;
@@ -490,7 +453,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serial"></param>
-        public void EquipItem(uint serial) => InvokeOnMainThread
+        public void EquipItem(uint serial) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 GameActions.PickUp(serial, 0, 0, 1);
@@ -501,7 +464,7 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Clear the move item que of all items.
         /// </summary>
-        public void ClearMoveQueue() => InvokeOnMainThread(() => Client.Game.GetScene<GameScene>()?.MoveItemQueue.Clear());
+        public void ClearMoveQueue() => MainThreadQueue.InvokeOnMainThread(() => Client.Game.GetScene<GameScene>()?.MoveItemQueue.Clear());
 
         /// <summary>
         /// Move an item to another container.
@@ -526,7 +489,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="amt">Amount to move</param>
         /// <param name="x">X coordinate inside a container</param>
         /// <param name="y">Y coordinate inside a container</param>
-        public void QueMoveItem(uint serial, uint destination, ushort amt = 0, int x = 0xFFFF, int y = 0xFFFF) => InvokeOnMainThread
+        public void QueMoveItem(uint serial, uint destination, ushort amt = 0, int x = 0xFFFF, int y = 0xFFFF) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Client.Game.GetScene<GameScene>()?.MoveItemQueue.Enqueue(serial, destination, amt, x, y);
@@ -557,7 +520,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="amt">Amount to move</param>
         /// <param name="x">X coordinate inside a container</param>
         /// <param name="y">Y coordinate inside a container</param>
-        public void MoveItem(uint serial, uint destination, int amt = 0, int x = 0xFFFF, int y = 0xFFFF) => InvokeOnMainThread
+        public void MoveItem(uint serial, uint destination, int amt = 0, int x = 0xFFFF, int y = 0xFFFF) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 GameActions.PickUp(serial, 0, 0, amt);
@@ -580,7 +543,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="y">Offset from your location</param>
         /// <param name="z">Offset from your location. Leave blank in most cases</param>
         /// <param name="OSI">True if you are playing OSI</param>
-        public void QueMoveItemOffset(uint serial, ushort amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => InvokeOnMainThread
+        public void QueMoveItemOffset(uint serial, ushort amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
@@ -621,7 +584,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="y">Offset from your location</param>
         /// <param name="z">Offset from your location. Leave blank in most cases</param>
         /// <param name="OSI">True if you are playing OSI</param>
-        public void MoveItemOffset(uint serial, int amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => InvokeOnMainThread
+        public void MoveItemOffset(uint serial, int amt = 0, int x = 0, int y = 0, int z = 0, bool OSI = false) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 World.Map.GetMapZ(World.Player.X + x, World.Player.Y + y, out sbyte gz, out sbyte gz2);
@@ -656,7 +619,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="skillName">Can be a partial match. Will match the first skill containing this text.</param>
-        public void UseSkill(string skillName) => InvokeOnMainThread
+        public void UseSkill(string skillName) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (skillName.Length > 0)
@@ -684,7 +647,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="spellName">This can be a partial match. Fireba will cast Fireball.</param>
-        public void CastSpell(string spellName) => InvokeOnMainThread(() => { GameActions.CastSpellByName(spellName); });
+        public void CastSpell(string spellName) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.CastSpellByName(spellName); });
 
         /// <summary>
         /// Check if a buff is active.
@@ -696,7 +659,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="buffName">The name/title of the buff</param>
         /// <returns></returns>
-        public bool BuffExists(string buffName) => InvokeOnMainThread
+        public bool BuffExists(string buffName) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 foreach (BuffIcon buff in World.Player.BuffIcons.Values)
@@ -721,7 +684,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns></returns>
-        public Buff[] ActiveBuffs() => InvokeOnMainThread(() =>
+        public Buff[] ActiveBuffs() => MainThreadQueue.InvokeOnMainThread(() =>
         {
             List<Buff> buffs = new();
 
@@ -742,7 +705,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="message">Message</param>
         /// <param name="hue">Color of the message</param>
-        public void SysMsg(string message, ushort hue = 946) => InvokeOnMainThread(() => GameActions.Print(message, hue));
+        public void SysMsg(string message, ushort hue = 946) => MainThreadQueue.InvokeOnMainThread(() => GameActions.Print(message, hue));
 
         /// <summary>
         /// Say a message outloud.
@@ -752,7 +715,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message">The message to say</param>
-        public void Msg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.SpeechHue); });
+        public void Msg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.SpeechHue); });
 
         /// <summary>
         /// Show a message above a mobile or item, this is only visible to you.
@@ -764,7 +727,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message">The message</param>
         /// <param name="serial">The item or mobile</param>
         /// <param name="hue">Message hue</param>
-        public void HeadMsg(string message, uint serial, ushort hue = ushort.MaxValue) => InvokeOnMainThread
+        public void HeadMsg(string message, uint serial, ushort hue = ushort.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Entity e = World.Get(serial);
@@ -787,7 +750,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message">The message</param>
-        public void PartyMsg(string message) => InvokeOnMainThread(() => { GameActions.SayParty(message); });
+        public void PartyMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.SayParty(message); });
 
         /// <summary>
         /// Send your guild a message.
@@ -797,7 +760,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message"></param>
-        public void GuildMsg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.GuildMessageHue, MessageType.Guild); });
+        public void GuildMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.GuildMessageHue, MessageType.Guild); });
 
         /// <summary>
         /// Send a message to your alliance.
@@ -807,7 +770,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message"></param>
-        public void AllyMsg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.AllyMessageHue, MessageType.Alliance); });
+        public void AllyMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.AllyMessageHue, MessageType.Alliance); });
 
         /// <summary>
         /// Whisper a message.
@@ -817,7 +780,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message"></param>
-        public void WhisperMsg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.WhisperHue, MessageType.Whisper); });
+        public void WhisperMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.WhisperHue, MessageType.Whisper); });
 
         /// <summary>
         /// Yell a message.
@@ -827,7 +790,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message"></param>
-        public void YellMsg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.YellHue, MessageType.Yell); });
+        public void YellMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.YellHue, MessageType.Yell); });
 
         /// <summary>
         /// Emote a message.
@@ -837,7 +800,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="message"></param>
-        public void EmoteMsg(string message) => InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote); });
+        public void EmoteMsg(string message) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote); });
 
         /// <summary>
         /// Try to get an item by its serial.
@@ -853,13 +816,13 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial">The serial</param>
         /// <returns>The item object</returns>
-        public Item FindItem(uint serial) => InvokeOnMainThread(() =>
+        public PyItem FindItem(uint serial) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             Item i = World.Items.Get(serial);
 
             Found = i != null ? i.Serial : 0;
 
-            return i;
+            return new PyItem(i);
         });
 
         /// <summary>
@@ -879,8 +842,8 @@ namespace ClassicUO.LegionScripting
         /// <param name="hue">Hue of item</param>
         /// <param name="minamount">Only match if item stack is at least this much</param>
         /// <returns>Returns the first item found that matches</returns>
-        public Item FindType(uint graphic, uint container = uint.MaxValue, ushort range = ushort.MaxValue, ushort hue = ushort.MaxValue, ushort minamount = 0) =>
-            InvokeOnMainThread
+        public PyItem FindType(uint graphic, uint container = uint.MaxValue, ushort range = ushort.MaxValue, ushort hue = ushort.MaxValue, ushort minamount = 0) =>
+            MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     List<Item> result = Utility.FindItems(graphic, uint.MaxValue, uint.MaxValue, container, hue, range);
@@ -890,7 +853,7 @@ namespace ClassicUO.LegionScripting
                         if (i.Amount >= minamount && !ignoreList.Contains(i))
                         {
                             Found = i.Serial;
-                            return i;
+                            return new PyItem(i);
                         }
                     }
 
@@ -914,9 +877,21 @@ namespace ClassicUO.LegionScripting
         /// <param name="hue">Hue of item</param>
         /// <param name="minamount">Only match if item stack is at least this much</param>
         /// <returns></returns>
-        public Item[] FindTypeAll(uint graphic, uint container = uint.MaxValue, ushort range = ushort.MaxValue, ushort hue = ushort.MaxValue, ushort minamount = 0) =>
-            InvokeOnMainThread
-                (() => Utility.FindItems(graphic, uint.MaxValue, uint.MaxValue, container, hue, range).Where(i => !OnIgnoreList(i) && i.Amount >= minamount).ToArray());
+        public PyItem[] FindTypeAll(uint graphic, uint container = uint.MaxValue, ushort range = ushort.MaxValue, ushort hue = ushort.MaxValue, ushort minamount = 0) =>
+            MainThreadQueue.InvokeOnMainThread
+                (() =>
+                {
+                    var list = Utility.FindItems(graphic, uint.MaxValue, uint.MaxValue, container, hue, range)
+                        .Where(i => !OnIgnoreList(i) && i.Amount >= minamount).ToArray();
+
+                    List<PyItem> result = new();
+                    foreach (var item in list)
+                    {
+                        result.Add(new PyItem(item));
+                    }
+
+                    return result.ToArray();
+                });
 
         /// <summary>
         /// Attempt to find an item on a layer.
@@ -928,10 +903,10 @@ namespace ClassicUO.LegionScripting
         ///   API.SysMsg("Wearing a helmet!")
         /// ```
         /// </summary>
-        /// <param name="layer">The layer to check, see https://github.com/bittiez/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs</param>
+        /// <param name="layer">The layer to check, see https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs</param>
         /// <param name="serial">Optional, if not set it will check yourself, otherwise it will check the mobile requested</param>
         /// <returns>The item if it exists</returns>
-        public Item FindLayer(string layer, uint serial = uint.MaxValue) => InvokeOnMainThread
+        public PyItem FindLayer(string layer, uint serial = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Found = 0;
@@ -945,7 +920,7 @@ namespace ClassicUO.LegionScripting
                     if (item != null)
                         Found = item.Serial;
 
-                    return item;
+                    return new PyItem(item);
                 }
 
                 return null;
@@ -967,12 +942,20 @@ namespace ClassicUO.LegionScripting
         /// <param name="container"></param>
         /// <param name="recursive">Search sub containers also?</param>
         /// <returns>A list of items in the container</returns>
-        public Item[] ItemsInContainer(uint container, bool recursive = false) => InvokeOnMainThread(() =>
+        public PyItem[] ItemsInContainer(uint container, bool recursive = false) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             if (!recursive)
-                return Utility.FindItems(parentContainer: container).ToArray();
+            {
+                var list = Utility.FindItems(parentContainer: container).ToArray();
+                List<PyItem> result = new();
+                foreach (var item in list)
+                {
+                    result.Add(new PyItem(item));
+                }
+                return result.ToArray();
+            }
 
-            List<Item> results = new();
+            List<PyItem> results = new();
             Stack<uint> containers = new();
             containers.Push(container);
 
@@ -982,7 +965,7 @@ namespace ClassicUO.LegionScripting
 
                 foreach (var item in Utility.FindItems(parentContainer: current))
                 {
-                    results.Add(item);
+                    results.Add(new PyItem(item));
                     containers.Push(item.Serial);
                 }
             }
@@ -1003,7 +986,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="hue">Hue of item</param>
         /// <param name="container">Parent container</param>
         /// <param name="skipQueue">Defaults to true, set to false to queue the double click</param>
-        public void UseType(uint graphic, ushort hue = ushort.MaxValue, uint container = uint.MaxValue, bool skipQueue = true) => InvokeOnMainThread
+        public void UseType(uint graphic, ushort hue = ushort.MaxValue, uint container = uint.MaxValue, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 var result = Utility.FindItems(graphic, hue: hue, parentContainer: container);
@@ -1033,7 +1016,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="seconds">Duration in seconds for the cooldown bar</param>
         /// <param name="text">Text on the cooldown bar</param>
         /// <param name="hue">Hue to color the cooldown bar</param>
-        public void CreateCooldownBar(double seconds, string text, ushort hue) => InvokeOnMainThread
+        public void CreateCooldownBar(double seconds, string text, ushort hue) => MainThreadQueue.InvokeOnMainThread
             (() => { Game.Managers.CoolDownBarManager.AddCoolDownBar(TimeSpan.FromSeconds(seconds), text, hue, false); });
 
         /// <summary>
@@ -1086,7 +1069,7 @@ namespace ClassicUO.LegionScripting
         /// <returns>true/false if a path was generated</returns>
         public bool Pathfind(int x, int y, int z = int.MinValue, int distance = 1, bool wait = false, int timeout = 10)
         {
-            var pathFindStatus = InvokeOnMainThread
+            var pathFindStatus = MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     if (z == int.MinValue)
@@ -1104,18 +1087,18 @@ namespace ClassicUO.LegionScripting
 
             var expire = DateTime.Now.AddSeconds(timeout);
 
-            while (InvokeOnMainThread(()=>Pathfinder.AutoWalking))
+            while (MainThreadQueue.InvokeOnMainThread(()=>Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    InvokeOnMainThread(Pathfinder.StopAutoWalk);
+                    MainThreadQueue.InvokeOnMainThread(Pathfinder.StopAutoWalk);
                     return false;
                 }
             }
 
-            InvokeOnMainThread(Pathfinder.StopAutoWalk);
+            MainThreadQueue.InvokeOnMainThread(Pathfinder.StopAutoWalk);
 
-            return InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            return MainThreadQueue.InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -1135,7 +1118,7 @@ namespace ClassicUO.LegionScripting
         public bool PathfindEntity(uint entity, int distance = 1, bool wait = false, int timeout = 10)
         {
             int x = 0, y = 0, z = 0;
-            var pathFindStatus = InvokeOnMainThread
+            var pathFindStatus = MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     var mob = World.Get(entity);
@@ -1159,18 +1142,18 @@ namespace ClassicUO.LegionScripting
 
             var expire = DateTime.Now.AddSeconds(timeout);
 
-            while (InvokeOnMainThread(()=>Pathfinder.AutoWalking))
+            while (MainThreadQueue.InvokeOnMainThread(()=>Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    InvokeOnMainThread(Pathfinder.StopAutoWalk);
+                    MainThreadQueue.InvokeOnMainThread(Pathfinder.StopAutoWalk);
                     return false;
                 }
             }
 
-            InvokeOnMainThread(Pathfinder.StopAutoWalk);
+            MainThreadQueue.InvokeOnMainThread(Pathfinder.StopAutoWalk);
 
-            return InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            return MainThreadQueue.InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -1183,7 +1166,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns>true/false</returns>
-        public bool Pathfinding() => InvokeOnMainThread(() => Pathfinder.AutoWalking);
+        public bool Pathfinding() => MainThreadQueue.InvokeOnMainThread(() => Pathfinder.AutoWalking);
 
         /// <summary>
         /// Cancel pathfinding.
@@ -1193,10 +1176,10 @@ namespace ClassicUO.LegionScripting
         ///   API.CancelPathfinding()
         /// ```
         /// </summary>
-        public void CancelPathfinding() => InvokeOnMainThread(Pathfinder.StopAutoWalk);
+        public void CancelPathfinding() => MainThreadQueue.InvokeOnMainThread(Pathfinder.StopAutoWalk);
 
         /// <summary>
-        /// Attempt to build a path to a location.  This will fail with large distances.  
+        /// Attempt to build a path to a location.  This will fail with large distances.
         /// Example:
         /// ```py
         /// API.RequestTarget()
@@ -1212,7 +1195,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="z"></param>
         /// <param name="distance">Distance away from goal to stop.</param>
         /// <returns>Returns a list of positions to reach the goal. Returns null if cannot find path.</returns>
-        public PythonList GetPath(int x, int y, int z = int.MinValue, int distance = 1) => InvokeOnMainThread(() =>
+        public PythonList GetPath(int x, int y, int z = int.MinValue, int distance = 1) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             if (z == int.MinValue)
                 z = World.Map.GetTileZ(x, y);
@@ -1243,7 +1226,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="mobile">The mobile</param>
-        public void AutoFollow(uint mobile) => InvokeOnMainThread
+        public void AutoFollow(uint mobile) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 ProfileManager.CurrentProfile.FollowingMode = true;
@@ -1259,7 +1242,7 @@ namespace ClassicUO.LegionScripting
         ///   API.CancelAutoFollow()
         /// ```
         /// </summary>
-        public void CancelAutoFollow() => InvokeOnMainThread(() => ProfileManager.CurrentProfile.FollowingMode = false);
+        public void CancelAutoFollow() => MainThreadQueue.InvokeOnMainThread(() => ProfileManager.CurrentProfile.FollowingMode = false);
 
         /// <summary>
         /// Run in a direction.
@@ -1272,7 +1255,7 @@ namespace ClassicUO.LegionScripting
         public void Run(string direction)
         {
             Direction d = Utility.GetDirection(direction);
-            InvokeOnMainThread(() => World.Player.Walk(d, true));
+            MainThreadQueue.InvokeOnMainThread(() => World.Player.Walk(d, true));
         }
 
         /// <summary>
@@ -1286,7 +1269,7 @@ namespace ClassicUO.LegionScripting
         public void Walk(string direction)
         {
             Direction d = Utility.GetDirection(direction);
-            InvokeOnMainThread(() => World.Player.Walk(d, false));
+            MainThreadQueue.InvokeOnMainThread(() => World.Player.Walk(d, false));
         }
 
         /// <summary>
@@ -1297,7 +1280,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="direction">north, northeast, etc</param>
-        public void Turn(string direction) => InvokeOnMainThread
+        public void Turn(string direction) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Direction d = Utility.GetDirection(direction);
@@ -1316,7 +1299,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial">Serial of the mobile to rename</param>
         /// <param name="name">The new name</param>
-        public void Rename(uint serial, string name) => InvokeOnMainThread(() => { GameActions.Rename(serial, name); });
+        public void Rename(uint serial, string name) => MainThreadQueue.InvokeOnMainThread(() => { GameActions.Rename(serial, name); });
 
         /// <summary>
         /// Attempt to dismount if mounted.
@@ -1326,7 +1309,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
-        public void Dismount(bool skipQueue = true) => InvokeOnMainThread
+        public void Dismount(bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (World.Player.FindItemByLayer(Layer.Mount) != null)
@@ -1348,7 +1331,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial"></param>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
-        public void Mount(uint serial, bool skipQueue = true) => InvokeOnMainThread
+        public void Mount(uint serial, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (skipQueue)
@@ -1382,7 +1365,7 @@ namespace ClassicUO.LegionScripting
                 case "beneficial" or "ben": targetT = TargetType.Beneficial; break;
             }
 
-            while (!InvokeOnMainThread(() => { return TargetManager.IsTargeting && (TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); }))
+            while (!MainThreadQueue.InvokeOnMainThread(() => { return TargetManager.IsTargeting && (TargetManager.TargetingType == targetT || targetType.ToLower() == "any"); }))
             {
                 if (DateTime.UtcNow > expire)
                     return false;
@@ -1400,7 +1383,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serial">Serial of the item/mobile to target</param>
-        public void Target(uint serial) => InvokeOnMainThread(() => TargetManager.Target(serial));
+        public void Target(uint serial) => MainThreadQueue.InvokeOnMainThread(() => TargetManager.Target(serial));
 
         /// <summary>
         /// Target a location. Include graphic if targeting a static.
@@ -1414,7 +1397,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="y"></param>
         /// <param name="z"></param>
         /// <param name="graphic">Graphic of the static to target</param>
-        public void Target(ushort x, ushort y, short z, ushort graphic = ushort.MaxValue) => InvokeOnMainThread
+        public void Target(ushort x, ushort y, short z, ushort graphic = ushort.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (graphic == ushort.MaxValue)
@@ -1442,15 +1425,98 @@ namespace ClassicUO.LegionScripting
         public uint RequestTarget(double timeout = 5)
         {
             var expire = DateTime.Now.AddSeconds(timeout);
-            InvokeOnMainThread(() => TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
+            MainThreadQueue.InvokeOnMainThread(() => TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
 
             while (DateTime.Now < expire)
-                if (!InvokeOnMainThread(() => TargetManager.IsTargeting))
+                if (!MainThreadQueue.InvokeOnMainThread(() => TargetManager.IsTargeting))
                     return TargetManager.LastTargetInfo.Serial;
 
-            InvokeOnMainThread(() => TargetManager.Reset());
+            MainThreadQueue.InvokeOnMainThread(() => TargetManager.Reset());
 
             return 0;
+        }
+
+        /// <summary>
+        /// Prompts the player to target any object in the game world, including an <c>Item</c>, <c>Mobile</c>, <c>Land</c> tile, <c>Static</c>, or <c>Multi</c>.
+        /// Waits for the player to select a target within a given timeout period.
+        /// </summary>
+        /// <param name="timeout">
+        /// The maximum time, in seconds, to wait for a valid target selection.
+        /// If the timeout expires without a selection, the method returns <c>null</c>.
+        /// </param>
+        /// <returns>
+        /// Returns a Python wrapper (<see cref="PyGameObject"/>) for the selected target:
+        /// <list type="bullet">
+        ///   <item><description><see cref="PyMobile"/> if a mobile (e.g. NPC, player) is targeted</description></item>
+        ///   <item><description><see cref="PyItem"/> if an item is targeted</description></item>
+        ///   <item><description><see cref="PyStatic"/> if a static tile (e.g. tree, building) is targeted</description></item>
+        ///   <item><description><see cref="PyMulti"/> if a multi tile (e.g. a player house, boat) is targeted</description></item>
+        ///   <item><description><see cref="PyLand"/> if a land tile (e.g. a base map tile at a coordinate) is targeted</description></item>
+        ///   <item><description><c>null</c> if no valid target was selected within the timeout</description></item>
+        /// </list>
+        /// </returns>
+        /// <example>
+        /// Example usage in Python:
+        /// <code>
+        /// target = API.RequestAnyTarget()
+        /// if target:
+        ///     API.SysMsg(f"Targeted GameObject: {target}")
+        /// else:
+        ///     API.SysMsg("No target selected.")
+        /// </code>
+        /// </example>
+        public PyGameObject RequestAnyTarget(double timeout = 5)
+        {
+            var expire = DateTime.Now.AddSeconds(timeout);
+            MainThreadQueue.InvokeOnMainThread(() => TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
+
+            while (DateTime.Now < expire)
+            {
+                if (MainThreadQueue.InvokeOnMainThread(() => TargetManager.IsTargeting))
+                {
+                    continue;
+                }
+
+                return MainThreadQueue.InvokeOnMainThread<PyGameObject>(static () =>
+                {
+                    var info = TargetManager.LastTargetInfo;
+                    if (info.IsEntity)
+                    {
+                        if (SerialHelper.IsMobile(info.Serial))
+                        {
+                            var mobile = World.Mobiles.Get(info.Serial);
+                            return mobile is null ? null : new PyMobile(mobile);
+                        }
+                        else
+                        {
+                            var item = World.Items.Get(info.Serial);
+                            return item is null ? null : new PyItem(item);
+                        }
+                    }
+
+                    if (info.IsStatic)
+                    {
+                        return World.GetStaticOrMulti(info.Graphic, info.X, info.Y, info.Z) switch
+                        {
+                            Static @static => new PyStatic(@static),
+                            Multi multi => new PyMulti(multi),
+                            _ => null
+                        };
+                    }
+
+                    if (info.IsLand)
+                    {
+                        var land = World.Map.GetTile(info.X, info.Y) as Land;
+                        return land is null ? null : new PyLand(land);
+                    }
+
+                    return null;
+                });
+            }
+
+            MainThreadQueue.InvokeOnMainThread(() => TargetManager.Reset());
+
+            return null;
         }
 
         /// <summary>
@@ -1460,7 +1526,7 @@ namespace ClassicUO.LegionScripting
         /// API.TargetSelf()
         /// ```
         /// </summary>
-        public void TargetSelf() => InvokeOnMainThread(() => TargetManager.Target(World.Player.Serial));
+        public void TargetSelf() => MainThreadQueue.InvokeOnMainThread(() => TargetManager.Target(World.Player.Serial));
 
         /// <summary>
         /// Target a land tile relative to your position.
@@ -1472,7 +1538,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="xOffset">X from your position</param>
         /// <param name="yOffset">Y from your position</param>
-        public void TargetLandRel(int xOffset, int yOffset) => InvokeOnMainThread
+        public void TargetLandRel(int xOffset, int yOffset) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (!TargetManager.IsTargeting)
@@ -1497,7 +1563,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="xOffset">X Offset from your position</param>
         /// <param name="yOffset">Y Offset from your position</param>
         /// <param name="graphic">Optional graphic, will try to use the graphic of the tile at that location if left empty.</param>
-        public void TargetTileRel(int xOffset, int yOffset, ushort graphic = ushort.MaxValue) => InvokeOnMainThread
+        public void TargetTileRel(int xOffset, int yOffset, ushort graphic = ushort.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (!TargetManager.IsTargeting)
@@ -1527,7 +1593,7 @@ namespace ClassicUO.LegionScripting
         ///   API.SysMsg("Targeting cancelled, april fools made you target something!")
         /// ```
         /// </summary>
-        public void CancelTarget() => InvokeOnMainThread(TargetManager.CancelTarget);
+        public void CancelTarget() => MainThreadQueue.InvokeOnMainThread(TargetManager.CancelTarget);
 
         /// <summary>
         /// Check if the player has a target cursor.
@@ -1539,7 +1605,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="targetType">neutral/harmful/beneficial/any/harm/ben</param>
         /// <returns></returns>
-        public bool HasTarget(string targetType = "any") => InvokeOnMainThread
+        public bool HasTarget(string targetType = "any") => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 TargetType targetT = TargetType.Neutral;
@@ -1565,7 +1631,7 @@ namespace ClassicUO.LegionScripting
         /// 5 = TerMur
         /// </summary>
         /// <returns></returns>
-        public int GetMap() => InvokeOnMainThread(() => World.MapIndex);
+        public int GetMap() => MainThreadQueue.InvokeOnMainThread(() => World.MapIndex);
 
         /// <summary>
         /// Set a skills lock status.
@@ -1576,7 +1642,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="skill">The skill name, can be partia;</param>
         /// <param name="up_down_locked">up/down/locked</param>
-        public void SetSkillLock(string skill, string up_down_locked) => InvokeOnMainThread
+        public void SetSkillLock(string skill, string up_down_locked) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 skill = skill.ToLower();
@@ -1609,7 +1675,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="stat">The stat name, str, dex, int; Defaults to str.</param>
         /// <param name="up_down_locked">up/down/locked</param>
-        public void SetStatLock(string stat, string up_down_locked) => InvokeOnMainThread
+        public void SetStatLock(string stat, string up_down_locked) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 stat = stat.ToLower();
@@ -1640,7 +1706,7 @@ namespace ClassicUO.LegionScripting
         /// API.Logout()
         /// ```
         /// </summary>
-        public void Logout() => InvokeOnMainThread(() => GameActions.Logout());
+        public void Logout() => MainThreadQueue.InvokeOnMainThread(() => GameActions.Logout());
 
         /// <summary>
         /// Gets item name and properties.
@@ -1664,13 +1730,13 @@ namespace ClassicUO.LegionScripting
             {
                 var expire = DateTime.UtcNow.AddSeconds(timeout);
 
-                while (!InvokeOnMainThread(() => World.OPL.Contains(serial)) && DateTime.UtcNow < expire)
+                while (!MainThreadQueue.InvokeOnMainThread(() => World.OPL.Contains(serial)) && DateTime.UtcNow < expire)
                 {
                     Thread.Sleep(100);
                 }
             }
 
-            return InvokeOnMainThread
+            return MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     if (World.OPL.TryGetNameAndData(serial, out string n, out string d))
@@ -1693,7 +1759,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="ID">Skip to check if player has any gump from server.</param>
         /// <returns>Returns gump id if found</returns>
-        public uint HasGump(uint ID = uint.MaxValue) => InvokeOnMainThread<uint>
+        public uint HasGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread<uint>
         (() =>
             {
                 if (World.Player.HasGump && (World.Player.LastGumpID == ID || ID == uint.MaxValue))
@@ -1715,7 +1781,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="button">Button ID</param>
         /// <param name="gump">Gump ID, leave blank to reply to last gump</param>
         /// <returns>True if gump was found, false if not</returns>
-        public bool ReplyGump(int button, uint gump = uint.MaxValue) => InvokeOnMainThread
+        public bool ReplyGump(int button, uint gump = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Gump g = UIManager.GetGumpServer(gump == uint.MaxValue ? World.Player.LastGumpID : gump);
@@ -1740,7 +1806,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="ID">Gump ID</param>
-        public void CloseGump(uint ID = uint.MaxValue) => InvokeOnMainThread
+        public void CloseGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 uint gump = ID != uint.MaxValue ? ID : World.Player.LastGumpID;
@@ -1759,7 +1825,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="text">Can be regex if you start with $, otherwise it's just regular search. Case Sensitive.</param>
         /// <param name="ID">Gump ID, blank to use the last gump.</param>
         /// <returns></returns>
-        public bool GumpContains(string text, uint ID = uint.MaxValue) => InvokeOnMainThread
+        public bool GumpContains(string text, uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Gump g = UIManager.GetGumpServer(ID == uint.MaxValue ? World.Player.LastGumpID : ID);
@@ -1801,7 +1867,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="ID">Leabe blank to use last gump opened from server</param>
         /// <returns></returns>
-        public Gump GetGump(uint ID = uint.MaxValue) => InvokeOnMainThread
+        public Gump GetGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Gump g = UIManager.GetGumpServer(ID == uint.MaxValue ? World.Player.LastGumpID : ID);
@@ -1817,7 +1883,7 @@ namespace ClassicUO.LegionScripting
         /// API.ToggleFly()
         /// ```
         /// </summary>
-        public void ToggleFly() => InvokeOnMainThread
+        public void ToggleFly() => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (World.Player.Race == RaceType.GARGOYLE)
@@ -1835,7 +1901,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="ability">primary/secondary/stun/disarm</param>
         public void ToggleAbility(string ability) =>
-            InvokeOnMainThread
+            MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     switch (ability.ToLower())
@@ -1972,7 +2038,7 @@ namespace ClassicUO.LegionScripting
         {
             int t = Thread.CurrentThread.ManagedThreadId;
 
-            InvokeOnMainThread
+            MainThreadQueue.InvokeOnMainThread
             (() =>
                 {
                     if (LegionScripting.PyThreads.TryGetValue(t, out var s))
@@ -1988,7 +2054,7 @@ namespace ClassicUO.LegionScripting
         /// API.ToggleAutoLoot()
         /// ```
         /// </summary>
-        public void ToggleAutoLoot() => InvokeOnMainThread(() => { ProfileManager.CurrentProfile.EnableAutoLoot ^= true; });
+        public void ToggleAutoLoot() => MainThreadQueue.InvokeOnMainThread(() => { ProfileManager.CurrentProfile.EnableAutoLoot ^= true; });
 
         /// <summary>
         /// Use autoloot on a specific container.
@@ -2000,7 +2066,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="container"></param>
-        public void AutoLootContainer(uint container) => InvokeOnMainThread(() =>
+        public void AutoLootContainer(uint container) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             AutoLootManager.Instance?.ForceLootContainer(container);
         });
@@ -2017,9 +2083,9 @@ namespace ClassicUO.LegionScripting
         {
             switch (virtue.ToLower())
             {
-                case "honor": InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x01); }); break;
-                case "sacrifice": InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x02); }); break;
-                case "valor": InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x03); }); break;
+                case "honor": MainThreadQueue.InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x01); }); break;
+                case "sacrifice": MainThreadQueue.InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x02); }); break;
+                case "valor": MainThreadQueue.InvokeOnMainThread(() => { NetClient.Socket.Send_InvokeVirtueRequest(0x03); }); break;
             }
         }
 
@@ -2038,7 +2104,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="scanType"></param>
         /// <param name="maxDistance"></param>
         /// <returns></returns>
-        public Entity NearestEntity(ScanType scanType, int maxDistance = 10) => InvokeOnMainThread
+        public PyEntity NearestEntity(ScanType scanType, int maxDistance = 10) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Found = 0;
@@ -2049,7 +2115,7 @@ namespace ClassicUO.LegionScripting
                 if (e != null && e.Distance <= maxDistance)
                 {
                     Found = e.Serial;
-                    return e;
+                    return new PyEntity(e);
                 }
 
                 return null;
@@ -2071,7 +2137,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="notoriety">List of notorieties</param>
         /// <param name="maxDistance"></param>
         /// <returns></returns>
-        public Mobile NearestMobile(IList<Notoriety> notoriety, int maxDistance = 10) => InvokeOnMainThread
+        public PyMobile NearestMobile(IList<Notoriety> notoriety, int maxDistance = 10) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 Found = 0;
@@ -2084,9 +2150,12 @@ namespace ClassicUO.LegionScripting
                 ).OrderBy(m => m.Distance).FirstOrDefault();
 
                 if(mob != null)
+                {
                     Found = mob.Serial;
+                    return new PyMobile(mob);
+                }
 
-                return mob;
+                return null;
             }
         );
 
@@ -2103,7 +2172,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="distance"></param>
         /// <returns></returns>
-        public Item NearestCorpse(int distance = 3) => InvokeOnMainThread(() =>
+        public PyItem NearestCorpse(int distance = 3) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             Found = 0;
             var c = Utility.FindNearestCorpsePython(distance, this);
@@ -2111,7 +2180,7 @@ namespace ClassicUO.LegionScripting
             if(c != null)
                 Found = c.Serial;
 
-            return c;
+            return new PyItem(c);
         });
 
         /// <summary>
@@ -2128,16 +2197,18 @@ namespace ClassicUO.LegionScripting
         /// <param name="notoriety">List of notorieties</param>
         /// <param name="maxDistance"></param>
         /// <returns></returns>
-        public Mobile[] NearestMobiles(IList<Notoriety> notoriety, int maxDistance = 10) => InvokeOnMainThread<Mobile[]>
+        public PyMobile[] NearestMobiles(IList<Notoriety> notoriety, int maxDistance = 10) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (notoriety == null || notoriety.Count == 0)
                     return null;
 
-                return World.Mobiles.Values.Where
+                var list = World.Mobiles.Values.Where
                 (m => !m.IsDestroyed && !m.IsDead && m.Serial != World.Player.Serial && notoriety.Contains
                      ((Notoriety)(byte)m.NotorietyFlag) && m.Distance <= maxDistance && !OnIgnoreList(m)
                 ).OrderBy(m => m.Distance).ToArray();
+
+                return list.Select(m => new PyMobile(m)).ToArray();
             }
         );
 
@@ -2154,14 +2225,19 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serial"></param>
         /// <returns>The mobile or null</returns>
-        public Mobile FindMobile(uint serial) => InvokeOnMainThread(() =>
+        public PyMobile FindMobile(uint serial) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             Found = 0;
-            var mob = World.Mobiles.Get(serial);
-            if(mob != null)
-                Found = mob.Serial;
 
-            return mob;
+            var mob = World.Mobiles.Get(serial);
+
+            if(mob != null)
+            {
+                Found = mob.Serial;
+                return new PyMobile(mob);
+            }
+
+            return null;
         });
 
         /// <summary>
@@ -2177,7 +2253,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns></returns>
-        public Mobile[] GetAllMobiles() => InvokeOnMainThread(() => { return World.Mobiles.Values.ToArray(); });
+        public PyMobile[] GetAllMobiles() => MainThreadQueue.InvokeOnMainThread(() => { return World.Mobiles.Values.Select(m=>new PyMobile(m)).ToArray(); });
 
         /// <summary>
         /// Get the tile at a location.
@@ -2191,7 +2267,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns>A GameObject of that location.</returns>
-        public GameObject GetTile(int x, int y) => InvokeOnMainThread(() => { return World.Map.GetTile(x, y); });
+        public PyGameObject GetTile(int x, int y) => MainThreadQueue.InvokeOnMainThread(() => { return new PyGameObject(World.Map.GetTile(x, y)); });
 
         #region Gumps
 
@@ -2235,7 +2311,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="g">The gump to add</param>
-        public void AddGump(Gump g) => InvokeOnMainThread(() => { UIManager.Add(g); });
+        public void AddGump(Gump g) => MainThreadQueue.InvokeOnMainThread(() => { UIManager.Add(g); });
 
         /// <summary>
         /// Create a checkbox for gumps.
@@ -2660,7 +2736,7 @@ namespace ClassicUO.LegionScripting
         #endregion
 
         /// <summary>
-        /// Get a skill from the player. See the Skill class for what properties are available: https://github.com/bittiez/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
+        /// Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs
         /// Example:
         /// ```py
         /// skill = API.GetSkill("Hiding")
@@ -2673,7 +2749,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="skill">Skill name, case-sensitive</param>
         /// <returns></returns>
-        public Skill GetSkill(string skill) => InvokeOnMainThread
+        public Skill GetSkill(string skill) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (string.IsNullOrEmpty(skill))
@@ -2698,7 +2774,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="distance">Distance from the player</param>
         /// <param name="hue">The color to change the tiles at that distance</param>
-        public void DisplayRange(ushort distance, ushort hue = 22) => InvokeOnMainThread
+        public void DisplayRange(ushort distance, ushort hue = 22) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (distance == 0)
@@ -2723,7 +2799,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="scriptName">Full name including extension. Can be .py or .lscript.</param>
         /// <exception cref="Exception"></exception>
-        public void ToggleScript(string scriptName) => InvokeOnMainThread
+        public void ToggleScript(string scriptName) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (string.IsNullOrEmpty(scriptName))
@@ -2748,7 +2824,7 @@ namespace ClassicUO.LegionScripting
         /// Play a legion script.
         /// </summary>
         /// <param name="scriptName">This is the file name including extension.</param>
-        public void PlayScript(string scriptName) => InvokeOnMainThread
+        public void PlayScript(string scriptName) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (string.IsNullOrEmpty(scriptName))
@@ -2769,7 +2845,7 @@ namespace ClassicUO.LegionScripting
         /// Stop a legion script.
         /// </summary>
         /// <param name="scriptName">This is the file name including extension.</param>
-        public void StopScript(string scriptName) => InvokeOnMainThread
+        public void StopScript(string scriptName) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 if (string.IsNullOrEmpty(scriptName))
@@ -2798,7 +2874,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="y">Defaults to current player Y.</param>
         /// <param name="map">Defaults to current map.</param>
         /// <param name="color">red/green/blue/purple/black/yellow/white. Default purple.</param>
-        public void AddMapMarker(string name, int x = int.MaxValue, int y = int.MaxValue, int map = int.MaxValue, string color = "purple") => InvokeOnMainThread
+        public void AddMapMarker(string name, int x = int.MaxValue, int y = int.MaxValue, int map = int.MaxValue, string color = "purple") => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
                 WorldMapGump wmap = UIManager.GetGump<WorldMapGump>();
@@ -2827,7 +2903,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="name"></param>
-        public void RemoveMapMarker(string name) => InvokeOnMainThread
+        public void RemoveMapMarker(string name) => MainThreadQueue.InvokeOnMainThread
         (() => {
             WorldMapGump wmap = UIManager.GetGump<WorldMapGump>();
 
@@ -2846,7 +2922,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns></returns>
-        public bool IsProcessingMoveQue() => InvokeOnMainThread(() => !MoveItemQueue.Instance.IsEmpty);
+        public bool IsProcessingMoveQue() => MainThreadQueue.InvokeOnMainThread(() => !MoveItemQueue.Instance.IsEmpty);
 
         /// <summary>
         /// Save a variable that persists between sessions and scripts.
