@@ -34,12 +34,26 @@ public class PyGameObject
     public ushort Hue;
 
     /// <summary>
+    /// Determines if there is line of sight from the specified observer to this object.
+    /// If no observer is specified, it defaults to the player.
+    /// </summary>
+    /// <param name="observer">The observing GameObject (optional).</param>
+    /// <returns>True if the observer has line of sight to this object; otherwise, false.</returns>
+    public bool HasLineOfSightFrom(PyGameObject observer = null)
+    {
+        GameObject observerObj = observer?._gameObject;
+        return _gameObject?.HasLineOfSightFrom(observerObj) ?? false;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="PyGameObject"/> class from a <see cref="GameObject"/>.
     /// </summary>
     /// <param name="gameObject">The game object to wrap.</param>
     internal PyGameObject(GameObject gameObject)
     {
         if (gameObject == null) return; //Prevent crashes for invalid objects.
+
+        _gameObject = gameObject;
 
         X = gameObject.X;
         Y = gameObject.Y;
@@ -69,4 +83,6 @@ public class PyGameObject
     /// </summary>
     /// <returns>A string suitable for debugging and inspection in Python.</returns>
     public virtual string __repr__() => ToString();
+
+    private readonly GameObject _gameObject;
 }

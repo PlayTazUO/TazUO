@@ -12,6 +12,7 @@ public class PyItem : PyEntity
 {
     public int Amount => GetItem()?.Amount ?? 0;
     public bool IsCorpse => GetItem()?.IsCorpse ?? false;
+    public bool Opened => GetItem()?.Opened ?? false;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyItem"/> class from an <see cref="Item"/>.

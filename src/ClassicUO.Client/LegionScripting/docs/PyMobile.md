@@ -17,6 +17,8 @@
 - **Stamina** (*int*)
 - **ManaMax** (*int*)
 - **Mana** (*int*)
+- **IsRenamable** (*bool*)
+- **IsHuman** (*bool*)
 - **__class__** (*string*)
   -  The Python-visible class name of this object.
  Accessible in Python as <c>obj.__class__</c> .

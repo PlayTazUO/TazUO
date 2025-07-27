@@ -87,6 +87,14 @@ class PyGameObject:
     Graphic: int = None
     Hue: int = None
 
+    def HasLineOfSightFrom(observer: "PyGameObject" = None) -> bool:
+        """
+         Determines if there is line of sight from the specified observer to this object.
+         If no observer is specified, it defaults to the player.
+        
+        """
+        pass
+
     def ToString() -> str:
         """
          Returns a readable string representation of the game object.
@@ -106,6 +114,7 @@ class PyGameObject:
 class PyItem:
     Amount: int = None
     IsCorpse: bool = None
+    Opened: bool = None
     __class__: str = None
 
 class PyLand:
@@ -123,6 +132,8 @@ class PyMobile:
     Stamina: int = None
     ManaMax: int = None
     Mana: int = None
+    IsRenamable: bool = None
+    IsHuman: bool = None
     __class__: str = None
 
 class PyMulti:

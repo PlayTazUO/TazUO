@@ -40,6 +40,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.Name = value;
         }
 
+        public List<string> ItemNames
+        {
+            get => _entry.ItemNames;
+            set => _entry.ItemNames = value;
+        }
+
         public ushort Hue
         {
             get => _entry.Hue;
@@ -169,8 +175,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool IsMatchFromProperties(ItemPropertiesData itemData)
         {
-            if (!MatchesSlot(itemData.item.ItemData.Layer))
+            if (!IsItemNameMatch(itemData.item.Name))
                 return false;
+
+            if (!MatchesSlot(itemData.item.ItemData.Layer))
+                    return false;
 
             if (Overweight && itemData.singlePropertyData.Any(prop =>
                     Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
@@ -226,6 +235,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
         {
+            if (!IsItemNameMatch(itemData.item.Name))
+                return false;
+
             if (!MatchesSlot(itemData.item.ItemData.Layer))
                 return false;
 
@@ -318,16 +330,58 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (_normalizeCache.TryGetValue(input, out var cached))
                 return cached;
 
-            var result = string.IsNullOrWhiteSpace(input)
-                ? string.Empty
-                : HtmlTagRegex.Replace(input, string.Empty).Trim();
-
+            var result = StripHtmlTags(input).Trim();
             _normalizeCache[input] = result;
             return result;
         }
 
+        private string CleanItemName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return string.Empty;
+
+            int index = 0;
+            // Skip leading digits
+            while (index < name.Length && char.IsDigit(name[index])) index++;
+
+            // Skip following whitespace
+            while (index < name.Length && char.IsWhiteSpace(name[index])) index++;
+
+            return name.Substring(index).Trim().ToLowerInvariant();
+        }
+
+        private string StripHtmlTags(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            var output = new char[input.Length];
+            int outputIndex = 0;
+            bool insideTag = false;
+
+            foreach (char c in input)
+            {
+                if (c == '<') { insideTag = true; continue; }
+                if (c == '>') { insideTag = false; continue; }
+                if (!insideTag) output[outputIndex++] = c;
+            }
+
+            return new string(output, 0, outputIndex);
+        }
+
+        private bool IsItemNameMatch(string itemName)
+        {
+            if (ItemNames.Count == 0)
+                return true;
+
+            string cleanedUpItemName = CleanItemName(itemName);
+            return ItemNames.Any(name => string.Equals(cleanedUpItemName, name.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
         private bool MatchesSlot(byte layer)
         {
+            if (EquipmentSlots.Other) {
+                return true;
+            }
+
             return layer switch
             {
                 (byte)Layer.Talisman => EquipmentSlots.Talisman,
