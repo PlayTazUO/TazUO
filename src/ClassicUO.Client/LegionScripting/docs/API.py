@@ -87,6 +87,14 @@ class PyGameObject:
     Graphic: int = None
     Hue: int = None
 
+    def HasLineOfSightFrom(observer: Any = None) -> bool:
+        """
+         Determines if there is line of sight from the specified observer to this object.
+         If no observer is specified, it defaults to the player.
+        
+        """
+        pass
+
     def ToString() -> str:
         """
          Returns a readable string representation of the game object.
