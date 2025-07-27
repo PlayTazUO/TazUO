@@ -56,21 +56,23 @@ public class GridContainerSaveData
         }
     }
 
+    private string GetBackupSavePath(ushort index) => _savePath + ".backup" + index;
+
     public void Save()
     {
-        string tPath = null;
+        string tempPath = null;
         try
         {
             var output = JsonSerializer.Serialize(_entries.Values.ToArray(),
                 GridContainerSerializerContext.Default.GridContainerEntryArray);
 
-            tPath = Path.GetTempFileName();
-            File.WriteAllText(tPath, output);
+            tempPath = Path.GetTempFileName();
+            File.WriteAllText(tempPath, output);
 
             // Rotate backups: backup2 -> backup3, backup1 -> backup2, main -> backup1
-            var backup3Path = _savePath + ".backup3";
-            var backup2Path = _savePath + ".backup2";
-            var backup1Path = _savePath + ".backup1";
+            var backup3Path = GetBackupSavePath(3);
+            var backup2Path = GetBackupSavePath(2);
+            var backup1Path = GetBackupSavePath(1);
 
             // Remove oldest backup
             if (File.Exists(backup3Path))
@@ -88,8 +90,8 @@ public class GridContainerSaveData
                 File.Move(_savePath, backup1Path);
 
             // Move temp file to main
-            File.Move(tPath, _savePath);
-            tPath = null;
+            File.Move(tempPath, _savePath);
+            tempPath = null;
         }
         catch (Exception e)
         {
@@ -97,9 +99,9 @@ public class GridContainerSaveData
         }
 
         // Clean up temp file if it still exists
-        if (tPath != null && File.Exists(tPath))
+        if (tempPath != null && File.Exists(tempPath))
         {
-            try { File.Delete(tPath); }
+            try { File.Delete(tempPath); }
             catch { }
         }
     }
@@ -109,7 +111,7 @@ public class GridContainerSaveData
     /// </summary>
     public void Load()
     {
-        var filesToTry = new[] { _savePath, _savePath + ".backup1", _savePath + ".backup2", _savePath + ".backup3" };
+        var filesToTry = new[] { _savePath, GetBackupSavePath(1), GetBackupSavePath(2), GetBackupSavePath(3) };
 
         foreach (var filePath in filesToTry)
         {
