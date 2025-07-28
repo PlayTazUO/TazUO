@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ClassicUO.Game.UI.Controls;
 
 namespace ClassicUO.Game.UI;
@@ -21,6 +22,7 @@ public class Positioner
     private int _columnWidth;
     private int _columnPadding;
     private int _maxRowHeight = 0;
+    private Dictionary<int, TableColumnAlignment> _tableColumnAlignments = new();
 
     public Positioner(int leftPadding = 2, int topPadding = 5, int blankLineHeight = 20, int indentation = 40)
     {
@@ -77,6 +79,13 @@ public class Positioner
         _maxRowHeight = 0;
     }
 
+    public void SetColumnAlignment(int column, TableColumnAlignment alignment)
+    {
+        if (!_tableMode) return;
+
+        _tableColumnAlignments[column] = alignment;
+    }
+
     /// <summary>
     /// End table positioning mode and return to normal positioning
     /// </summary>
@@ -99,6 +108,7 @@ public class Positioner
         _tableColumns = 0;
         _currentColumn = 0;
         _maxRowHeight = 0;
+        _tableColumnAlignments.Clear();
     }
 
     /// <summary>
@@ -134,11 +144,28 @@ public class Positioner
     private Control PositionInTable(Control c)
     {
         // Calculate column position
-        int columnX = _tableStartX + (_currentColumn * (_columnWidth + _columnPadding));
+        int columnX;
+        int alignedX = columnX = _tableStartX + (_currentColumn * (_columnWidth + _columnPadding));
 
         // If using auto-width, we can't pre-calculate positions perfectly
         // This is a simple implementation that assumes uniform spacing
-        c.X = columnX;
+
+        if (_tableColumnAlignments.TryGetValue(_currentColumn, out TableColumnAlignment align))
+        {
+            switch (align)
+            {
+                case TableColumnAlignment.Left:
+                    break;
+                case TableColumnAlignment.Center:
+                    alignedX += (_columnWidth - c.Width) / 2;
+                    break;
+                case TableColumnAlignment.Right:
+                    alignedX += _columnWidth - c.Width;
+                    break;
+            }
+        }
+
+        c.X = alignedX;
         c.Y = _tableStartY;
 
         // Track the maximum height in this row
@@ -226,4 +253,11 @@ public class Positioner
         int currentRow = _tableStartY == Y ? 0 : (_tableStartY - Y) / (_maxRowHeight + TopPadding);
         return (_tableColumns, _currentColumn, currentRow);
     }
+}
+
+public enum TableColumnAlignment
+{
+    Left,
+    Center,
+    Right
 }

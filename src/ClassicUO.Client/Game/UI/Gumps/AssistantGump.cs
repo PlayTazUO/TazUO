@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -32,6 +33,7 @@ public class AssistantGump : BaseOptionsGump
         BuildMobileGraphicFilter();
         BuildSpellBar();
         BuildHUD();
+        BuildSpellIndicator();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -263,6 +265,34 @@ public class AssistantGump : BaseOptionsGump
         }
     }
 
+    private void BuildSpellIndicator()
+    {
+        var page = (int)PAGE.SpellIndicator;
+        MainContent.AddToLeft(CategoryButton("Spell Indicators", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
+        MainContent.AddToRight(scroll, false, page);
+
+        PositionHelper.Reset();
+
+        SpellRangeEditor editor = new (scroll.Width - 20);
+
+        InputFieldWithLabel search = new ("Spell search", ThemeSettings.INPUT_WIDTH, string.Empty, false, (s, e) =>
+        {
+            if (SpellDefinition.TryGetSpellFromName(((BaseOptionsGump.InputField.StbTextBox)s).Text, out SpellDefinition spell))
+            {
+                if(SpellVisualRangeManager.Instance.SpellRangeCache.TryGetValue(spell.ID, out SpellVisualRangeManager.SpellRangeInfo info))
+                    editor.SetSpellRangeInfo(info);
+            }
+        });
+
+        scroll.Add(PositionHelper.PositionControl(search));
+        PositionHelper.BlankLine();
+        PositionHelper.BlankLine();
+        scroll.Add(PositionHelper.PositionControl(editor));
+    }
+
     public enum PAGE
     {
         None,
@@ -271,11 +301,131 @@ public class AssistantGump : BaseOptionsGump
         AutoBuy,
         MobileGraphicFilter,
         SpellBar,
-        HUD
+        HUD,
+        SpellIndicator,
     }
 
     #region CustomControls
 
+    private class SpellRangeEditor : Control
+    {
+        private int id = -1;
+        private SpellVisualRangeManager.SpellRangeInfo spellRangeInfo;
+        private InputFieldWithLabel name, powerwords, cursorsize, castrange, maxduration, casttime;
+        private CheckboxWithLabel islinear, showrangeduringcast, freezewhilecasting, targetcursorexpected;
+        private ModernColorPickerWithLabel cursorhue, hue;
+        public SpellRangeEditor(int width)
+        {
+            CanMove = true;
+            AcceptMouseInput = true;
+            Width = width;
+            Build();
+        }
+
+        private void Build()
+        {
+            Positioner pos = new Positioner();
+            pos.StartTable(2, (Width-40) / 2);
+            pos.SetColumnAlignment(0, TableColumnAlignment.Right);
+            pos.SetColumnAlignment(1, TableColumnAlignment.Right);
+
+            Add(pos.Position(name = new InputFieldWithLabel("Name", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
+            Add(pos.Position(powerwords = new InputFieldWithLabel("Power Words", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
+            powerwords.SetTooltip("Power words must be exact, this is the best way we can detect spells.");
+
+            Add(pos.Position(cursorsize = new InputFieldWithLabel("Cursor Size", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            cursorsize.SetTooltip("This is the area to show around the cursor, intended for area spells that affect the area near your target.");
+            Add(pos.Position(castrange = new InputFieldWithLabel("Cast Range", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            Add(pos.Position(casttime = new InputFieldWithLabel("Cast Time", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
+            Add(pos.Position(maxduration = new InputFieldWithLabel("Max Duration", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            maxduration.SetTooltip("This is a fallback in-case the spell detection fails.");
+
+            pos.SetColumnAlignment(0, TableColumnAlignment.Left);
+            pos.SetColumnAlignment(1, TableColumnAlignment.Left);
+
+            Add(pos.Position(cursorhue = new ModernColorPickerWithLabel("Cursor Hue", 0, onHueSelected)));
+            Add(pos.Position(hue = new ModernColorPickerWithLabel("Range Hue", 0, onHueSelected)));
+
+            Add(pos.Position(islinear = new CheckboxWithLabel("Is linear", 0, false, onCheckBoxChanged)));
+            islinear.SetTooltip("Used for spells like wall of stone that create a line.");
+
+            Add(pos.Position(showrangeduringcast = new CheckboxWithLabel("Show range while casting", 0, false, onCheckBoxChanged)));
+            Add(pos.Position(freezewhilecasting = new CheckboxWithLabel("Freeze yourself while casting", 0, false, onCheckBoxChanged)));
+            freezewhilecasting.SetTooltip("Prevent yourself from moving and disrupting your spell.");
+
+            Add(pos.Position(targetcursorexpected = new CheckboxWithLabel("Spell should create a target cursor", 0, false, onCheckBoxChanged)));
+        }
+
+        public void SetSpellRangeInfo(SpellVisualRangeManager.SpellRangeInfo info)
+        {
+            id = -1;
+            spellRangeInfo = null;
+            if (info == null)
+                return;
+
+            name.SetText(info.Name);
+            powerwords.SetText(info.PowerWords);
+            cursorsize.SetText(info.CursorSize.ToString());
+            cursorhue.Hue = info.CursorHue;
+            castrange.SetText(info.CastRange.ToString());
+            hue.Hue = info.Hue;
+            casttime.SetText(info.CastTime.ToString());
+            maxduration.SetText(info.MaxDuration.ToString());
+            islinear.IsChecked = info.IsLinear;
+            showrangeduringcast.IsChecked = info.ShowCastRangeDuringCasting;
+            freezewhilecasting.IsChecked = info.FreezeCharacterWhileCasting;
+            targetcursorexpected.IsChecked = info.ExpectTargetCursor;
+
+            //Set these at the end to prevent the input saving being triggered via SetText
+            id = info.ID;
+            spellRangeInfo = info;
+        }
+        private void onHueSelected(ushort _)
+        {
+            Save();
+        }
+
+        private void onCheckBoxChanged(bool _)
+        {
+            Save();
+        }
+
+        private void onInputChanged(object _, EventArgs __)
+        {
+            Save();
+        }
+
+        private void Save()
+        {
+            if(id < 0 || spellRangeInfo == null)
+                return;
+
+            spellRangeInfo.Name = name.Text;
+            spellRangeInfo.PowerWords = powerwords.Text;
+
+            if (int.TryParse(cursorsize.Text, out int ri))
+                spellRangeInfo.CursorSize = ri;
+
+            spellRangeInfo.CursorHue = cursorhue.Hue;
+
+            if(int.TryParse(castrange.Text, out ri))
+                spellRangeInfo.CastRange = ri;
+
+            spellRangeInfo.Hue = hue.Hue;
+
+            if(double.TryParse(casttime.Text, out double d))
+                spellRangeInfo.CastTime = d;
+
+            if(int.TryParse(maxduration.Text, out ri))
+                spellRangeInfo.MaxDuration = ri;
+
+            spellRangeInfo.IsLinear = islinear.IsChecked;
+            spellRangeInfo.ShowCastRangeDuringCasting = showrangeduringcast.IsChecked;
+            spellRangeInfo.FreezeCharacterWhileCasting = freezewhilecasting.IsChecked;
+            spellRangeInfo.ExpectTargetCursor = targetcursorexpected.IsChecked;
+            SpellVisualRangeManager.Instance.Save();
+        }
+    }
     private class AutoLootConfigs : Control
     {
         private DataBox _dataBox;

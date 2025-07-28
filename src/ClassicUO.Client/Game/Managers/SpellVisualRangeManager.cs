@@ -22,13 +22,14 @@ namespace ClassicUO.Game.Managers
     public partial class SpellVisualRangeJsonContext : JsonSerializerContext
     {
     }
-    
+
     public class SpellVisualRangeManager
     {
         public static SpellVisualRangeManager Instance => instance ??= new SpellVisualRangeManager();
 
         public Vector2 LastCursorTileLoc { get; set; } = Vector2.Zero;
         public DateTime LastSpellTime { get; private set; } = DateTime.Now;
+        public Dictionary<int, SpellRangeInfo> SpellRangeCache => spellRangeCache;
 
         private string savePath = Path.Combine(CUOEnviroment.ExecutablePath ?? "", "Data", "Profiles", "SpellVisualRange.json");
         private string overridePath = Path.Combine(ProfileManager.ProfilePath ?? "", "SpellVisualRange.json");
