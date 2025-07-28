@@ -216,6 +216,7 @@ namespace ClassicUO.Game.UI.Gumps
             int.TryParse(xml.GetAttribute("lastY"), out Y);
             int.TryParse(xml.GetAttribute("lastWidth"), out Width);
             int.TryParse(xml.GetAttribute("lastHeight"), out Height);
+            Build();
         }
     }
 }
