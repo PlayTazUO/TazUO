@@ -11,6 +11,8 @@ public class NineSliceGump : Gump
     private Texture2D _customTexture;
     private Rectangle[] _slices = new Rectangle[9];
     private bool _resizable;
+    private readonly int _minWidth;
+    private readonly int _minHeight;
     private int _borderSize;
     private bool _isDragging;
     private Point _dragStartMousePos;
@@ -65,7 +67,9 @@ public class NineSliceGump : Gump
     /// <param name="texture">Texture to 9-slice (does not dispose, handle elsewhere)</param>
     /// <param name="borderSize">Size of the border slices</param>
     /// <param name="resizable">Whether the control can be resized by dragging corners</param>
-    public NineSliceGump(int x, int y, int width, int height, Texture2D texture, int borderSize, bool resizable = true) : base(0, 0)
+    /// <param name="minWidth"></param>
+    /// <param name="minHeight"></param>
+    public NineSliceGump(int x, int y, int width, int height, Texture2D texture, int borderSize, bool resizable = true, int minWidth = 50, int minHeight = 50) : base(0, 0)
     {
         X = x;
         Y = y;
@@ -74,6 +78,8 @@ public class NineSliceGump : Gump
         _customTexture = texture;
         _borderSize = borderSize;
         _resizable = resizable;
+        _minWidth = minWidth;
+        _minHeight = minHeight;
 
         CalculateSlices();
         AcceptMouseInput = true;
@@ -252,7 +258,7 @@ public class NineSliceGump : Gump
             }
 
             // Apply changes
-            if (newWidth != Width || newHeight != Height || newX != X || newY != Y)
+            if ((newWidth != Width || newHeight != Height || newX != X || newY != Y) && newWidth >= _minWidth && newHeight >= _minHeight)
             {
                 X = newX;
                 Y = newY;

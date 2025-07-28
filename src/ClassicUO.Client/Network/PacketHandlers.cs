@@ -2329,12 +2329,10 @@ namespace ClassicUO.Network
                 var scene = new GameScene();
                 Client.Game.SetScene(scene);
 
-                //GameActions.OpenPaperdoll(World.Player);
                 GameActions.RequestMobileStatus(World.Player);
                 NetClient.Socket.Send_OpenChat("");
 
                 NetClient.Socket.Send_SkillsRequest(World.Player);
-                scene.DoubleClickDelayed(World.Player);
 
                 if (Client.Version >= Utility.ClientVersion.CV_306E)
                 {

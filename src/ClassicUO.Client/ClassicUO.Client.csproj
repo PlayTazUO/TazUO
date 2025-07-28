@@ -5,9 +5,9 @@
     <ApplicationIcon>cuoicon.ico</ApplicationIcon>
     <AssemblyName>ClassicUO</AssemblyName>
     <RootNamespace>ClassicUO</RootNamespace>
-    <AssemblyVersion>4.2.2</AssemblyVersion>
-    <FileVersion>4.2.2</FileVersion>
-    <PackageProjectUrl>https://github.com/bittiez/TazUO</PackageProjectUrl>
+    <AssemblyVersion>4.2.9</AssemblyVersion>
+    <FileVersion>4.2.9</FileVersion>
+    <PackageProjectUrl>https://github.com/PlayTazUO/TazUO</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -111,11 +111,11 @@
       <HintPath>..\..\..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2\System.Windows.Forms.dll</HintPath>
     </Reference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Update="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <DocSourceFiles Include="$(ProjectDir)/LegionScripting/PyClasses/*.cs" />
     <DocSourceFiles Include="$(ProjectDir)/LegionScripting/API.cs" />
@@ -130,7 +130,7 @@
     <Message Text="Running: dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj $(DocFileArgs)" />
     <Exec Command='dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj "$(ProjectDir)/LegionScripting/docs" $(DocFileArgs)' />
   </Target>
-  
+
   <Target Name="CopyExternalDeps_build" AfterTargets="Build">
     <ItemGroup>
       <MonockickstartPath Include="$(ProjectDir)..\..\tools\monokickstart\*.*" />

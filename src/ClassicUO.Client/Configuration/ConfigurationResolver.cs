@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -75,9 +75,29 @@ namespace ClassicUO.Configuration
                 {
                     fileInfo.Directory.Create();
                 }
-                
-                var json = JsonSerializer.Serialize(obj, typeof(T), ctx);
-                File.WriteAllText(file, json);
+
+                // Create temporary file in system temp directory
+                var tempFile = Path.GetTempFileName();
+
+                try
+                {
+                    var json = JsonSerializer.Serialize(obj, typeof(T), ctx);
+                    File.WriteAllText(tempFile, json);
+
+                    if (File.Exists(file))
+                        File.Delete(file);
+
+                    File.Move(tempFile, file);
+                }
+                catch
+                {
+                    // Clean up temp file if it exists
+                    if (File.Exists(tempFile))
+                    {
+                        File.Delete(tempFile);
+                    }
+                    throw; // Re-throw the original exception
+                }
             }
             catch (IOException e)
             {

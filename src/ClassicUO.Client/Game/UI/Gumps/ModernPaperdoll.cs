@@ -193,6 +193,17 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        public void HandleObjectMessage(Entity parent, string text, ushort hue)
+        {
+            if (parent != null)
+                foreach (var layerSlot in itemLayerSlots.Values)
+                    if (layerSlot.Item != null && layerSlot.Item.Serial == parent.Serial)
+                    {
+                        layerSlot.AddText(text, hue);
+                        return;
+                    }
+        }
+
         protected override void UpdateContents()
         {
             base.UpdateContents();
@@ -317,10 +328,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class ItemSlot : Control
         {
+            public Item Item;
             public readonly Layer[] layers;
-            private Area itemArea;
 
+            private Area itemArea;
             private AlphaBlendControl durablityBar;
+            private readonly List<SimpleTimedTextGump> timedTexts = new();
 
             public ItemSlot(int width, int height, Layer[] layers)
             {
@@ -342,6 +355,25 @@ namespace ClassicUO.Game.UI.Gumps
                 this.layers = layers;
             }
 
+            public void AddText(string text, ushort hue)
+            {
+                var timedText = new SimpleTimedTextGump(text, (uint)hue, TimeSpan.FromSeconds(2), 200)
+                {
+                    X = ScreenCoordinateX,
+                    Y = ScreenCoordinateY
+                };
+
+                // Remove disposed timed texts
+                timedTexts.RemoveAll(tt => tt == null || tt.IsDisposed);
+
+                // Adjust the Y position of existing timed texts
+                foreach (var tt in timedTexts)
+                    tt.Y -= timedText.Height + 5;
+
+                timedTexts.Add(timedText);
+                UIManager.Add(timedText);
+            }
+
             public void UpdateOptions()
             {
                 durablityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
@@ -349,6 +381,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void AddItem(Item item)
             {
+                Item = item;
                 itemArea.Add(new ItemGumpFixed(item, Width, Height) { HighlightOnMouseOver = false });
                 UpdateDurability(item);
             }
@@ -383,6 +416,8 @@ namespace ClassicUO.Game.UI.Gumps
             public void ClearItems()
             {
                 itemArea.Children.Clear();
+                UpdateDurability(null);
+                Item = null;
             }
 
             protected override void OnMouseUp(int x, int y, MouseButtonType button)

@@ -7,7 +7,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
   
 [Additional notes](notes.md)  
   
-This was generated on `7/22/25`.
+This was generated on `7/27/25`.
   
 # API  
 
@@ -34,7 +34,7 @@ This was generated on `7/22/25`.
 - **LastTargetSerial** (*uint*)
   -  The serial of the last target, if it has a serial.
 
-- **LastTargetPos** (*Vector3*)
+- **LastTargetPos** (*Vector3Int*)
   -  The last target's position
 
 - **LastTargetGraphic** (*ushort*)
@@ -250,7 +250,7 @@ This was generated on `7/22/25`.
  ```  
   
 
----> Return Type: *uint*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -269,7 +269,7 @@ This was generated on `7/22/25`.
   ```  
   
 
----> Return Type: *uint*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -828,7 +828,7 @@ This was generated on `7/22/25`.
 | --- | --- | --- | --- |
 | serial | uint | No | The serial |
 
----> Return Type: *Item*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -857,7 +857,7 @@ This was generated on `7/22/25`.
 | hue | ushort | Yes | Hue of item |
 | minamount | ushort | Yes | Only match if item stack is at least this much |
 
----> Return Type: *Item*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -884,7 +884,7 @@ This was generated on `7/22/25`.
 | hue | ushort | Yes | Hue of item |
 | minamount | ushort | Yes | Only match if item stack is at least this much |
 
----> Return Type: *Item[]*
+---> Return Type: *PyItem[]*
 
 </details>
 
@@ -906,10 +906,10 @@ This was generated on `7/22/25`.
 **Parameters**  
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| layer | string | No | The layer to check, see https://github.com/bittiez/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs |
+| layer | string | No | The layer to check, see https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Layers.cs |
 | serial | uint | Yes | Optional, if not set it will check yourself, otherwise it will check the mobile requested |
 
----> Return Type: *Item*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -936,7 +936,7 @@ This was generated on `7/22/25`.
 | container | uint | No |  |
 | recursive | bool | Yes | Search sub containers also? |
 
----> Return Type: *Item[]*
+---> Return Type: *PyItem[]*
 
 </details>
 
@@ -1295,7 +1295,7 @@ This was generated on `7/22/25`.
 ***
 
 
-<details><summary><h3>Dismount()</h3></summary>
+<details><summary><h3>Dismount(skipQueue)</h3></summary>
 
  Attempt to dismount if mounted.  
  Example:  
@@ -1304,6 +1304,11 @@ This was generated on `7/22/25`.
  ```  
   
 
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| skipQueue | bool | Yes | Defaults true, set to false to use a double click queue |
+
 ---> Does not return anything
 
 </details>
@@ -1311,7 +1316,7 @@ This was generated on `7/22/25`.
 ***
 
 
-<details><summary><h3>Mount(serial)</h3></summary>
+<details><summary><h3>Mount(serial, skipQueue)</h3></summary>
 
  Attempt to mount(double click)  
  Example:  
@@ -1324,6 +1329,7 @@ This was generated on `7/22/25`.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | serial | uint | No |  |
+| skipQueue | bool | Yes | Defaults true, set to false to use a double click queue |
 
 ---> Does not return anything
 
@@ -1418,6 +1424,25 @@ This was generated on `7/22/25`.
 | timeout | double | Yes | Mac duration to wait for them to target something. |
 
 ---> Return Type: *uint*
+
+</details>
+
+***
+
+
+<details><summary><h3>RequestAnyTarget(timeout)</h3></summary>
+
+ Prompts the player to target any object in the game world, including an <c>Item</c> , <c>Mobile</c> , <c>Land</c> tile, <c>Static</c> , or <c>Multi</c> .  
+ Waits for the player to select a target within a given timeout period.  
+  
+
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| timeout | double | Yes | The maximum time, in seconds, to wait for a valid target selection.  
+         If the timeout expires without a selection, the method returns <c>null</c> . |
+
+---> Return Type: *PyGameObject*
 
 </details>
 
@@ -1996,7 +2021,7 @@ This was generated on `7/22/25`.
 | scanType | ScanType | No |  |
 | maxDistance | int | Yes |  |
 
----> Return Type: *Entity*
+---> Return Type: *PyEntity*
 
 </details>
 
@@ -2023,7 +2048,7 @@ This was generated on `7/22/25`.
 | notoriety | IList<Notoriety> | No | List of notorieties |
 | maxDistance | int | Yes |  |
 
----> Return Type: *Mobile*
+---> Return Type: *PyMobile*
 
 </details>
 
@@ -2048,7 +2073,7 @@ This was generated on `7/22/25`.
 | --- | --- | --- | --- |
 | distance | int | Yes |  |
 
----> Return Type: *Item*
+---> Return Type: *PyItem*
 
 </details>
 
@@ -2074,7 +2099,7 @@ This was generated on `7/22/25`.
 | notoriety | IList<Notoriety> | No | List of notorieties |
 | maxDistance | int | Yes |  |
 
----> Return Type: *Mobile[]*
+---> Return Type: *PyMobile[]*
 
 </details>
 
@@ -2099,7 +2124,7 @@ This was generated on `7/22/25`.
 | --- | --- | --- | --- |
 | serial | uint | No |  |
 
----> Return Type: *Mobile*
+---> Return Type: *PyMobile*
 
 </details>
 
@@ -2120,7 +2145,7 @@ This was generated on `7/22/25`.
  ```  
   
 
----> Return Type: *Mobile[]*
+---> Return Type: *PyMobile[]*
 
 </details>
 
@@ -2144,7 +2169,7 @@ This was generated on `7/22/25`.
 | x | int | No |  |
 | y | int | No |  |
 
----> Return Type: *GameObject*
+---> Return Type: *PyGameObject*
 
 </details>
 
@@ -2635,7 +2660,7 @@ This was generated on `7/22/25`.
 
 <details><summary><h3>GetSkill(skill)</h3></summary>
 
- Get a skill from the player. See the Skill class for what properties are available: https://github.com/bittiez/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs  
+ Get a skill from the player. See the Skill class for what properties are available: https://github.com/PlayTazUO/TazUO/blob/main/src/ClassicUO.Client/Game/Data/Skill.cs  
  Example:  
  ```py  
  skill = API.GetSkill("Hiding")  

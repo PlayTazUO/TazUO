@@ -217,9 +217,9 @@ namespace ClassicUO.LegionScripting
 
             private const string SCRIPT_HEADER =
             "# See examples at" +
-            "\n#   https://github.com/bittiez/PublicLegionScripts/" +
+            "\n#   https://github.com/PlayTazUO/PublicLegionScripts/" +
             "\n# Or documentation at" +
-            "\n#   https://github.com/bittiez/TazUO/wiki/TazUO.Legion-Scripting";
+            "\n#   https://github.com/PlayTazUO/TazUO/wiki/TazUO.Legion-Scripting";
             private const string EXAMPLE_LSCRIPT =
             SCRIPT_HEADER +
             @"
@@ -514,7 +514,7 @@ while True:
                         Macro mac = new (script.FileName);
                         mac.Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, "togglelscript " + script.FileName);
                         mm.PushToBack(mac);
-                        
+
                         MacroButtonGump bg = new(mac, Mouse.Position.X, Mouse.Position.Y);
                         UIManager.Add(bg);
                     }

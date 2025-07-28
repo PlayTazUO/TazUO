@@ -118,7 +118,7 @@ namespace ClassicUO.Game.Scenes
         private bool MoveCharByController()
         {
             if(ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled) return false;
-            
+
             const float THRESHOLD = 0.3f;
 
             Microsoft.Xna.Framework.Input.GamePadState gamePadState = Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One);
@@ -272,7 +272,7 @@ namespace ClassicUO.Game.Scenes
                 if ((
                         (ProfileManager.CurrentProfile.DragSelect_PlayersModifier == 1 && ctrl) ||
                         (ProfileManager.CurrentProfile.DragSelect_PlayersModifier == 2 && shift) ||
-                        (ProfileManager.CurrentProfile.DragSelect_PlayersModifier == 2 && alt)
+                        (ProfileManager.CurrentProfile.DragSelect_PlayersModifier == 3 && alt)
                     ) && !(mobile.IsHuman || mobile.IsGargoyle))
                     continue;
                 if ((
@@ -289,14 +289,16 @@ namespace ClassicUO.Game.Scenes
                         (ProfileManager.CurrentProfile.DragSelect_NameplateModifier == 3 && alt)
                     ))
                 {
-                    bool _skip = true;
+                    bool hasNameplate = false;
                     foreach (NameOverheadGump g in UIManager.Gumps.OfType<NameOverheadGump>())
-                        if (g.LocalSerial == mobile.Serial)
+                    {
+                        if (g.IsVisible && g.LocalSerial == mobile.Serial)
                         {
-                            _skip = false;
-                            continue;
+                            hasNameplate = true;
+                            break;
                         }
-                    skip = _skip;
+                    }
+                    skip = !hasNameplate;
                 }
 
                 if (skip) continue;
@@ -1328,7 +1330,7 @@ namespace ClassicUO.Game.Scenes
             {
                 return;
             }
-            
+
             SpellBarManager.KeyPress(e.keysym.sym, e.keysym.mod);
 
             if (e.keysym.sym == SDL.SDL_Keycode.SDLK_ESCAPE && TargetManager.IsTargeting)
@@ -1704,7 +1706,7 @@ namespace ClassicUO.Game.Scenes
         internal override void OnControllerButtonDown(SDL.SDL_ControllerButtonEvent e)
         {
             base.OnControllerButtonDown(e);
-            
+
             SpellBarManager.ControllerInput((SDL.SDL_GameControllerButton)e.button);
 
             if (World.InGame && (UIManager.KeyboardFocusControl == UIManager.SystemChat.TextBoxControl || UIManager.KeyboardFocusControl == null))

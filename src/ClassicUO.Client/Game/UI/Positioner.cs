@@ -10,7 +10,7 @@ public class Positioner
     public int BlankLineHeight;
     public int IndentWidth;
 
-    public int X, Y, LastY;
+    public int X, Y, LastY, LastHeight;
 
     // Table positioning properties
     private bool _tableMode = false;
@@ -127,6 +127,7 @@ public class Positioner
 
         LastY = Y;
         Y += c.Height + TopPadding;
+        LastHeight = c.Height;
 
         return c;
     }
