@@ -522,13 +522,13 @@ public static class GenDoc
             "Control" or "ScrollArea" or "SimpleProgressBar" or "TextBox" or "TTFTextInputField" or "GumpPic" => "PyControl",
             "RadioButton" or "NiceButton" or "Button" or "ResizableStaticPic" or "AlphaBlendControl" => "PyControl",
             "Label" or "Checkbox" => "PyControl",
-            "Item" => "Item",
-            "Mobile" => "Mobile",
+            "Item" or "PyItem" => "PyItem",
+            "Mobile" or "PyMobile" => "PyMobile",
             "Skill" => "Skill",
             "Buff" => "Buff",
             "ScanType" => "ScanType",
             "Notoriety" => "Notoriety",
-            "GameObject" => "GameObject",
+            "GameObject" or "PyGameObject" => "PyGameObject",
             "PyProfile" => "PyProfile",
 
             // Fallback for unknown types

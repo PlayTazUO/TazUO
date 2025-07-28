@@ -16,6 +16,7 @@ public class PyEntity : PyGameObject
     public readonly uint Serial;
 
     public int Distance => GetEntity()?.Distance ?? 0;
+    public string Name => GetEntity()?.Name ?? "";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyEntity"/> class from an <see cref="Entity"/>.

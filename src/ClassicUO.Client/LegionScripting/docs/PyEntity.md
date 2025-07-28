@@ -7,6 +7,7 @@
 
 ## Properties
 - **Distance** (*int*)
+- **Name** (*string*)
 - **__class__** (*string*)
   -  The Python-visible class name of this object.
  Accessible in Python as <c>obj.__class__</c> .

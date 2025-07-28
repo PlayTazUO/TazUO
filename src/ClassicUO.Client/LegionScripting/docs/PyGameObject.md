@@ -32,6 +32,24 @@ _No enums found._
 
 ## Methods
 
+<details><summary><h3>HasLineOfSightFrom(observer)</h3></summary>
+
+ Determines if there is line of sight from the specified observer to this object.  
+ If no observer is specified, it defaults to the player.  
+  
+
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| observer | PyGameObject | Yes | The observing GameObject (optional). |
+
+---> Return Type: *bool*
+
+</details>
+
+***
+
+
 <details><summary><h3>ToString()</h3></summary>
 
  Returns a readable string representation of the game object.  

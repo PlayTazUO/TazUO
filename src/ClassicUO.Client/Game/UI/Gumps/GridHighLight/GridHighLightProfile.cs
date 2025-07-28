@@ -11,6 +11,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
     public class GridHighlightSetupEntry
     {
         public string Name { get; set; }
+        public List<string> ItemNames { get; set; } = new();
         public ushort Hue { get; set; }
         public List<GridHighlightProperty> Properties { get; set; } = new();
         public bool AcceptExtraProperties { get; set; } = true;
