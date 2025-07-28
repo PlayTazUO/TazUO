@@ -2985,6 +2985,36 @@ namespace ClassicUO.LegionScripting
 
             return PersistentVars.GetVar(scope, name, defaultValue);
         }
+
+        /// <summary>
+        /// Mark a tile with a specific hue.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="hue"></param>
+        /// <param name="map">Defaults to current map</param>
+        public void MarkTile(int x, int y, ushort hue, int map = -1) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if(map < 0)
+                map = World.Map.Index;
+
+            TileMarkerManager.Instance.AddTile(x, y, map, hue);
+        });
+
+        /// <summary>
+        /// Remove a marked tile. See MarkTile for more info.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
+        public void RemoveMarkedTile(int x, int y, int map = -1) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (map < 0)
+                map = World.Map.Index;
+            
+            TileMarkerManager.Instance.RemoveTile(x, y, map);
+        });
+
         #endregion
     }
 }

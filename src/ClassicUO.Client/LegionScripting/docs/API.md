@@ -7,7 +7,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
   
 [Additional notes](notes.md)  
   
-This was generated on `7/27/25`.
+This was generated on `7/28/25`.
   
 # API  
 
@@ -2886,6 +2886,45 @@ This was generated on `7/27/25`.
 | scope | PersistentVar | No |  |
 
 ---> Return Type: *string*
+
+</details>
+
+***
+
+
+<details><summary><h3>MarkTile(x, y, hue, map)</h3></summary>
+
+ Mark a tile with a specific hue.  
+  
+
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| x | int | No |  |
+| y | int | No |  |
+| hue | ushort | No |  |
+| map | int | Yes | Defaults to current map |
+
+---> Does not return anything
+
+</details>
+
+***
+
+
+<details><summary><h3>RemoveMarkedTile(x, y, map)</h3></summary>
+
+ Remove a marked tile. See MarkTile for more info.  
+  
+
+**Parameters**  
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| x | int | No |  |
+| y | int | No |  |
+| map | int | Yes |  |
+
+---> Does not return anything
 
 </details>
 
