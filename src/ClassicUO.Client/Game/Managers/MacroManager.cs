@@ -2018,7 +2018,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.BorderCaveTiles:
-                    StaticFilters.ApplyStaticBorder();
+                    StaticFilters.ApplyCaveTileBorder();
                     ProfileManager.CurrentProfile.EnableCaveBorder = !ProfileManager.CurrentProfile.EnableCaveBorder;
 
                     break;

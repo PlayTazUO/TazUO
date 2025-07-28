@@ -3368,8 +3368,21 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new CheckboxWithLabel(lang.GetTazUO.UseWASDMovement, isChecked: profile.UseWASDInsteadArrowKeys, valueChanged: (e) => { profile.UseWASDInsteadArrowKeys = e; }),
                 true, page
             );
-
             c.SetTooltip("This only works if you have enable chat by pressing enter, and chat disabled. Otherwise you will still be typing into your chatbar.");
+
+            content.BlankLine();
+
+            content.AddToRight
+            (
+                c = new CheckboxWithLabel(lang.GetTazUO.ApplyBorderCaveTiles, isChecked: profile.EnableCaveBorder, valueChanged: (e) =>
+                {
+                    profile.EnableCaveBorder = e;
+                    if(e)
+                        StaticFilters.ApplyCaveTileBorder();
+                }),
+                true, page
+            );
+            c.SetTooltip("After disabling, you need to restart the client to revert to no borders.");
 
             #region HideHouses
             content.BlankLine();

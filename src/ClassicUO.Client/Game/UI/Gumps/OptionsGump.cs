@@ -5308,7 +5308,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (_currentProfile.EnableCaveBorder != _enableCaveBorder.IsChecked)
             {
-                StaticFilters.ApplyStaticBorder();
+                StaticFilters.ApplyCaveTileBorder();
                 _currentProfile.EnableCaveBorder = _enableCaveBorder.IsChecked;
             }
 

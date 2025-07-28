@@ -212,12 +212,14 @@ namespace ClassicUO.Game.Scenes
             {
                 XmlGumpHandler.TryAutoOpenByName(xml);
             }
-            
+
             PersistentVars.Load();
             LegionScripting.LegionScripting.Init();
             BuySellAgent.Load();
             GraphicsReplacement.Load();
             SpellBarManager.Load();
+            if(ProfileManager.CurrentProfile.EnableCaveBorder)
+                StaticFilters.ApplyCaveTileBorder();
         }
 
         private void ChatOnMessageReceived(object sender, MessageEventArgs e)
@@ -369,7 +371,7 @@ namespace ClassicUO.Game.Scenes
             {
                 return;
             }
-            
+
             SpellBarManager.Unload();
             _moveItemQueue.Clear();
 
