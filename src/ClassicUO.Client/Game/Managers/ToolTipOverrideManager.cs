@@ -3,6 +3,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
@@ -244,89 +245,123 @@ namespace ClassicUO.Game.Managers
             return input;
         }
 
+        private static IEnumerable<ToolTipOverrideData> FilteredOverrides(
+            ToolTipOverrideData[] all, byte itemLayer)
+        {
+            foreach (var data in all)
+            {
+                if (data == null)
+                    continue;
+
+                if (!CheckLayers(data.ItemLayer, itemLayer))
+                    continue;
+
+                yield return data;
+            }
+        }
+
         public static string ProcessTooltipText(uint serial, uint compareTo = uint.MinValue)
         {
             string tooltip = "";
             ItemPropertiesData itemPropertiesData;
 
             if (compareTo != uint.MinValue)
-            {
                 itemPropertiesData = new ItemPropertiesData(World.Items.Get(serial), World.Items.Get(compareTo));
-            }
             else
-            {
                 itemPropertiesData = new ItemPropertiesData(World.Items.Get(serial));
-            }
+
+            if (!itemPropertiesData.HasData)
+                return null;
 
             ToolTipOverrideData[] result = GetAllToolTipOverrides();
 
-            if (itemPropertiesData.HasData)
+            // Event hook before processing
+            EventSink.PreProcessTooltip?.Invoke(ref itemPropertiesData);
+
+            // --------------------------------
+            // Apply header override (item name)
+            // --------------------------------
+            bool headerHandled = false;
+
+            foreach (var overrideData in FilteredOverrides(result, itemPropertiesData.item.ItemData.Layer))
             {
-                if (EventSink.PreProcessTooltip != null)
+                if (MatchItemName(itemPropertiesData.Name, overrideData.SearchText))
                 {
-                    EventSink.PreProcessTooltip(ref itemPropertiesData);
+                    tooltip += string.Format(
+                        overrideData.FormattedText,
+                        itemPropertiesData.Name, "", "", "", "", ""
+                    ) + "\n";
+
+                    headerHandled = true;
+                    break;
                 }
-
-                tooltip += ProfileManager.CurrentProfile == null ? $"/c[yellow]{itemPropertiesData.Name}\n" : string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat + "\n", itemPropertiesData.Name);
-
-                //Loop through each item property
-                foreach (ItemPropertiesData.SinglePropertyData property in itemPropertiesData.singlePropertyData)
-                {
-                    bool handled = false;
-                    //Loop though each override setting player created
-                    foreach (ToolTipOverrideData overrideData in result)
-                    {
-                        if (overrideData == null)
-                            continue;
-
-                        if (!CheckLayers(overrideData.ItemLayer, itemPropertiesData.item.ItemData.Layer))
-                            continue;
-
-                        if (!MatchPropertyName(property.OriginalString, overrideData.SearchText))
-                            continue;
-
-                        if (property.FirstValue == double.MinValue || (property.FirstValue >= overrideData.Min1 && property.FirstValue <= overrideData.Max1))
-                            if (property.SecondValue == double.MinValue || (property.SecondValue >= overrideData.Min2 && property.SecondValue <= overrideData.Max2))
-                            {
-                                try
-                                {
-                                    if (compareTo != uint.MinValue)
-                                    {
-                                        tooltip += string.Format(
-                                            overrideData.FormattedText,
-                                            property.Name,
-                                            property.FirstValue.ToString(),
-                                            property.SecondValue.ToString(),
-                                            property.OriginalString,
-                                            property.FirstDiff != 0 ? "(" + property.FirstDiff.ToString() + ")" : "",
-                                            property.SecondDiff != 0 ? "(" + property.SecondDiff.ToString() + ")" : ""
-                                            ) + "\n";
-                                    }
-                                    else
-                                    {
-                                        tooltip += string.Format(
-                                            overrideData.FormattedText,
-                                            property.Name,
-                                            property.FirstValue.ToString(),
-                                            property.SecondValue.ToString(),
-                                            property.OriginalString, "", ""
-                                            ) + "\n";
-                                    }
-                                    handled = true;
-                                    break;
-                                }
-                                catch (FormatException e) { Console.WriteLine(e.ToString()); }
-                            }
-                    }
-                    if (!handled) //Did not find a matching override, need to add the plain tooltip line still
-                        tooltip += $"{property.OriginalString}\n";
-                }
-
-                EventSink.PostProcessTooltip?.Invoke(ref tooltip);
-
-                return tooltip;
             }
-            return null;
+
+            if (!headerHandled)
+            {
+                tooltip += ProfileManager.CurrentProfile == null
+                    ? $"/c[yellow]{itemPropertiesData.Name}\n"
+                    : string.Format(ProfileManager.CurrentProfile.TooltipHeaderFormat + "\n", itemPropertiesData.Name);
+            }
+
+            // --------------------------
+            // Apply property line overrides
+            // --------------------------
+            foreach (var property in itemPropertiesData.singlePropertyData)
+            {
+                bool handled = false;
+
+                foreach (var overrideData in FilteredOverrides(result, itemPropertiesData.item.ItemData.Layer))
+                {
+                    // Skip name-based overrides — they should never apply to properties
+                    if (!MatchPropertyName(property.OriginalString, overrideData.SearchText))
+                        continue;
+
+                    // Check value bounds
+                    if ((property.FirstValue == double.MinValue || (property.FirstValue >= overrideData.Min1 && property.FirstValue <= overrideData.Max1)) &&
+                        (property.SecondValue == double.MinValue || (property.SecondValue >= overrideData.Min2 && property.SecondValue <= overrideData.Max2)))
+                    {
+                        try
+                        {
+                            tooltip += (compareTo != uint.MinValue)
+                                ? string.Format(
+                                    overrideData.FormattedText,
+                                    property.Name,
+                                    property.FirstValue.ToString(),
+                                    property.SecondValue.ToString(),
+                                    property.OriginalString,
+                                    property.FirstDiff != 0 ? $"({property.FirstDiff})" : "",
+                                    property.SecondDiff != 0 ? $"({property.SecondDiff})" : ""
+                                )
+                                : string.Format(
+                                    overrideData.FormattedText,
+                                    property.Name,
+                                    property.FirstValue.ToString(),
+                                    property.SecondValue.ToString(),
+                                    property.OriginalString, "", ""
+                                );
+
+                            tooltip += "\n";
+                            handled = true;
+                            break;
+                        }
+                        catch (FormatException e)
+                        {
+                            GameActions.Print($"Invalid format string in tooltip override: {overrideData.FormattedText}", 32);
+                        }
+                    }
+                }
+
+                if (!handled)
+                {
+                    tooltip += property.OriginalString + "\n";
+                }
+            }
+
+            // Final hook
+            EventSink.PostProcessTooltip?.Invoke(ref tooltip);
+
+            return tooltip;
         }
 
         public static string ProcessTooltipText(string text)
@@ -400,6 +435,33 @@ namespace ClassicUO.Game.Managers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Check if the item name matches the search text
+        /// </summary>
+        /// <param name="itemName"></param>
+        /// <param name="match">If prepended with $, regex will be applied</param>
+        /// <returns></returns>
+        private static bool MatchItemName(string itemName, string match)
+        {
+            if (string.IsNullOrEmpty(match))
+                return false;
+
+            if (match.StartsWith("$") && match.Length > 1)
+            {
+                try
+                {
+                    return Regex.IsMatch(itemName, match.Substring(1));
+                }
+                catch
+                {
+                    GameActions.Print($"Invalid regex pattern: {match.Substring(1)}");
+                    return false;
+                }
+            }
+
+            return itemName.IndexOf(match, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         /// <summary>
