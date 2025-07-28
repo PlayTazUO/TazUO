@@ -144,13 +144,12 @@ public class Positioner
     private Control PositionInTable(Control c)
     {
         // Calculate column position
-        int columnX;
-        int alignedX = columnX = _tableStartX + (_currentColumn * (_columnWidth + _columnPadding));
+        int alignedX = _tableStartX + (_currentColumn * (_columnWidth + _columnPadding));
 
         // If using auto-width, we can't pre-calculate positions perfectly
         // This is a simple implementation that assumes uniform spacing
 
-        if (_tableColumnAlignments.TryGetValue(_currentColumn, out TableColumnAlignment align))
+        if (_columnWidth > 0 && _tableColumnAlignments.TryGetValue(_currentColumn, out TableColumnAlignment align))
         {
             switch (align)
             {

@@ -423,7 +423,7 @@ public class AssistantGump : BaseOptionsGump
             spellRangeInfo.ShowCastRangeDuringCasting = showrangeduringcast.IsChecked;
             spellRangeInfo.FreezeCharacterWhileCasting = freezewhilecasting.IsChecked;
             spellRangeInfo.ExpectTargetCursor = targetcursorexpected.IsChecked;
-            SpellVisualRangeManager.Instance.Save();
+            SpellVisualRangeManager.Instance.DelayedSave();
         }
     }
     private class AutoLootConfigs : Control
