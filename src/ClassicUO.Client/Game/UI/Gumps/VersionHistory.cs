@@ -1,11 +1,12 @@
 ﻿using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Controls;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    internal class VersionHistory : Gump
+    internal class VersionHistory : NineSliceGump
     {
         private static string[] updateTexts = {
             "/c[white][4.3.0]/cd\n" +
@@ -272,77 +273,49 @@ namespace ClassicUO.Game.UI.Gumps
 
             "\n\n/c[white]For further history please visit our discord."
         };
+        private ScrollArea _scrollArea;
+        private VBoxContainer _vBoxContainer;
 
-        public VersionHistory() : base(0, 0)
+        public VersionHistory() : base(0, 0, 400, 500, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, 200, 200)
         {
-            Width = 400;
-            Height = 500;
             CanCloseWithRightClick = true;
             CanMove = true;
 
-            BorderControl bc = new BorderControl(0, 0, Width, Height, 36);
-            bc.T_Left = 39925;
-            bc.H_Border = 39926;
-            bc.T_Right = 39927;
-            bc.V_Border = 39928;
-            bc.V_Right_Border = 39930;
-            bc.B_Left = 39931;
-            bc.B_Right = 39933;
-            bc.H_Bottom_Border = 39932;
-
-            Add(new GumpPicTiled(39929) { X = bc.BorderSize, Y = bc.BorderSize, Width = Width - (bc.BorderSize * 2), Height = Height - (bc.BorderSize * 2) });
-
-            Add(bc);
-
-            TextBox _;
-            Add(_ = TextBox.GetOne(Language.Instance.TazuoVersionHistory, TrueTypeLoader.EMBEDDED_FONT, 30, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
-            _.Y = 5;
-
-            int y = _.Y + _.Height + 5;
-            Add(_ = TextBox.GetOne(Language.Instance.CurrentVersion + CUOEnviroment.Version.ToString(), TrueTypeLoader.EMBEDDED_FONT, 20, Color.Orange, TextBox.RTLOptions.DefaultCentered(Width)));
-            _.Y = y;
-
-            ScrollArea scroll = new ScrollArea(10, _.Y + _.Height, Width - 20, Height - (_.Y + _.Height) - 20, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways };
-
-            Add(new AlphaBlendControl(0.45f) { Width = scroll.Width, Height = scroll.Height, X = scroll.X, Y = scroll.Y });
-
-            y = 0;
-            foreach (string s in updateTexts)
-            {
-                scroll.Add(_ = TextBox.GetOne(s, TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(scroll.Width - scroll.ScrollBarWidth())));
-                _.Y = y;
-                _.AcceptMouseInput = false;
-                y += _.Height + 10;
-            }
-
-            Add(scroll);
-
-
-            HitBox _hit;
-            _ = TextBox.GetOne(Language.Instance.TazUOWiki, TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(200));
-            _.X = 25;
-            _.Y = Height - 20;
-            Add(_);
-
-            Add(_hit = new HitBox(_.X, _.Y, _.MeasuredSize.X, _.MeasuredSize.Y));
-            _hit.MouseUp += (s, e) =>
-            {
-                Utility.Platforms.PlatformHelper.LaunchBrowser("https://github.com/PlayTazUO/TazUO/wiki");
-            };
-
-            _ = TextBox.GetOne(Language.Instance.TazUODiscord, TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(200));
-            _.X = 280;
-            _.Y = Height - 20;
-            Add(_);
-
-            Add(_hit = new HitBox(_.X, _.Y, _.MeasuredSize.X, _.MeasuredSize.Y));
-            _hit.MouseUp += (s, e) =>
-            {
-                Utility.Platforms.PlatformHelper.LaunchBrowser("https://discord.gg/QvqzkB95G4");
-            };
+            Build();
 
             CenterXInViewPort();
             CenterYInViewPort();
+        }
+
+        private void Build()
+        {
+            Clear();
+
+            var pos = new Positioner(13, 13);
+
+            Add(pos.Position(TextBox.GetOne(Language.Instance.TazuoVersionHistory, TrueTypeLoader.EMBEDDED_FONT, 30, Color.White, TextBox.RTLOptions.DefaultCentered(Width))));
+
+            Add(pos.Position(TextBox.GetOne(Language.Instance.CurrentVersion + CUOEnviroment.Version.ToString(), TrueTypeLoader.EMBEDDED_FONT, 20, Color.Orange, TextBox.RTLOptions.DefaultCentered(Width))));
+
+            _scrollArea = new ScrollArea(0, 0, Width - 26, Height - (pos.LastY + pos.LastHeight) - 32, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways };
+            _vBoxContainer = new VBoxContainer(_scrollArea.Width - _scrollArea.ScrollBarWidth());
+            _scrollArea.Add(_vBoxContainer);
+
+            foreach (string s in updateTexts)
+            {
+                _vBoxContainer.Add(TextBox.GetOne(s, TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(_scrollArea.Width - _scrollArea.ScrollBarWidth())));
+            }
+
+            Add(pos.Position(_scrollArea));
+
+            Add(pos.PositionExact(new HttpClickableLink(Language.Instance.TazUOWiki, "https://github.com/PlayTazUO/TazUO/wiki", Color.Orange, 15), 25, Height - 20));;
+            Add(pos.PositionExact(new HttpClickableLink(Language.Instance.TazUODiscord, "https://discord.gg/QvqzkB95G4", Color.Orange, 15), Width - 110, Height - 20));;
+        }
+
+        protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
+        {
+            base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
+            Build();
         }
     }
 }
