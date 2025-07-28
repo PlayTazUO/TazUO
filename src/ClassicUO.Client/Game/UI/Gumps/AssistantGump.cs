@@ -311,9 +311,9 @@ public class AssistantGump : BaseOptionsGump
     {
         private int id = -1;
         private SpellVisualRangeManager.SpellRangeInfo spellRangeInfo;
-        private InputFieldWithLabel name, powerwords, cursorsize, castrange, maxduration, casttime;
-        private CheckboxWithLabel islinear, showrangeduringcast, freezewhilecasting, targetcursorexpected;
-        private ModernColorPickerWithLabel cursorhue, hue;
+        private InputFieldWithLabel name, powerWords, cursorSize, castRange, maxDuration, castTime;
+        private CheckboxWithLabel islinear, showRangeDuringCast, freezeWhileCasting, targetCursorExpected;
+        private ModernColorPickerWithLabel cursorHue, hue;
         public SpellRangeEditor(int width)
         {
             CanMove = true;
@@ -330,30 +330,30 @@ public class AssistantGump : BaseOptionsGump
             pos.SetColumnAlignment(1, TableColumnAlignment.Right);
 
             Add(pos.Position(name = new InputFieldWithLabel("Name", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
-            Add(pos.Position(powerwords = new InputFieldWithLabel("Power Words", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
-            powerwords.SetTooltip("Power words must be exact, this is the best way we can detect spells.");
+            Add(pos.Position(powerWords = new InputFieldWithLabel("Power Words", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
+            powerWords.SetTooltip("Power words must be exact, this is the best way we can detect spells.");
 
-            Add(pos.Position(cursorsize = new InputFieldWithLabel("Cursor Size", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
-            cursorsize.SetTooltip("This is the area to show around the cursor, intended for area spells that affect the area near your target.");
-            Add(pos.Position(castrange = new InputFieldWithLabel("Cast Range", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
-            Add(pos.Position(casttime = new InputFieldWithLabel("Cast Time", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
-            Add(pos.Position(maxduration = new InputFieldWithLabel("Max Duration", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
-            maxduration.SetTooltip("This is a fallback in-case the spell detection fails.");
+            Add(pos.Position(cursorSize = new InputFieldWithLabel("Cursor Size", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            cursorSize.SetTooltip("This is the area to show around the cursor, intended for area spells that affect the area near your target.");
+            Add(pos.Position(castRange = new InputFieldWithLabel("Cast Range", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            Add(pos.Position(castTime = new InputFieldWithLabel("Cast Time", ThemeSettings.INPUT_WIDTH, string.Empty, false, onInputChanged)));
+            Add(pos.Position(maxDuration = new InputFieldWithLabel("Max Duration", ThemeSettings.INPUT_WIDTH, string.Empty, true, onInputChanged)));
+            maxDuration.SetTooltip("This is a fallback in-case the spell detection fails.");
 
             pos.SetColumnAlignment(0, TableColumnAlignment.Left);
             pos.SetColumnAlignment(1, TableColumnAlignment.Left);
 
-            Add(pos.Position(cursorhue = new ModernColorPickerWithLabel("Cursor Hue", 0, onHueSelected)));
+            Add(pos.Position(cursorHue = new ModernColorPickerWithLabel("Cursor Hue", 0, onHueSelected)));
             Add(pos.Position(hue = new ModernColorPickerWithLabel("Range Hue", 0, onHueSelected)));
 
             Add(pos.Position(islinear = new CheckboxWithLabel("Is linear", 0, false, onCheckBoxChanged)));
             islinear.SetTooltip("Used for spells like wall of stone that create a line.");
 
-            Add(pos.Position(showrangeduringcast = new CheckboxWithLabel("Show range while casting", 0, false, onCheckBoxChanged)));
-            Add(pos.Position(freezewhilecasting = new CheckboxWithLabel("Freeze yourself while casting", 0, false, onCheckBoxChanged)));
-            freezewhilecasting.SetTooltip("Prevent yourself from moving and disrupting your spell.");
+            Add(pos.Position(showRangeDuringCast = new CheckboxWithLabel("Show range while casting", 0, false, onCheckBoxChanged)));
+            Add(pos.Position(freezeWhileCasting = new CheckboxWithLabel("Freeze yourself while casting", 0, false, onCheckBoxChanged)));
+            freezeWhileCasting.SetTooltip("Prevent yourself from moving and disrupting your spell.");
 
-            Add(pos.Position(targetcursorexpected = new CheckboxWithLabel("Spell should create a target cursor", 0, false, onCheckBoxChanged)));
+            Add(pos.Position(targetCursorExpected = new CheckboxWithLabel("Spell should create a target cursor", 0, false, onCheckBoxChanged)));
         }
 
         public void SetSpellRangeInfo(SpellVisualRangeManager.SpellRangeInfo info)
@@ -364,17 +364,17 @@ public class AssistantGump : BaseOptionsGump
                 return;
 
             name.SetText(info.Name);
-            powerwords.SetText(info.PowerWords);
-            cursorsize.SetText(info.CursorSize.ToString());
-            cursorhue.Hue = info.CursorHue;
-            castrange.SetText(info.CastRange.ToString());
+            powerWords.SetText(info.PowerWords);
+            cursorSize.SetText(info.CursorSize.ToString());
+            cursorHue.Hue = info.CursorHue;
+            castRange.SetText(info.CastRange.ToString());
             hue.Hue = info.Hue;
-            casttime.SetText(info.CastTime.ToString());
-            maxduration.SetText(info.MaxDuration.ToString());
+            castTime.SetText(info.CastTime.ToString());
+            maxDuration.SetText(info.MaxDuration.ToString());
             islinear.IsChecked = info.IsLinear;
-            showrangeduringcast.IsChecked = info.ShowCastRangeDuringCasting;
-            freezewhilecasting.IsChecked = info.FreezeCharacterWhileCasting;
-            targetcursorexpected.IsChecked = info.ExpectTargetCursor;
+            showRangeDuringCast.IsChecked = info.ShowCastRangeDuringCasting;
+            freezeWhileCasting.IsChecked = info.FreezeCharacterWhileCasting;
+            targetCursorExpected.IsChecked = info.ExpectTargetCursor;
 
             //Set these at the end to prevent the input saving being triggered via SetText
             id = info.ID;
@@ -401,28 +401,28 @@ public class AssistantGump : BaseOptionsGump
                 return;
 
             spellRangeInfo.Name = name.Text;
-            spellRangeInfo.PowerWords = powerwords.Text;
+            spellRangeInfo.PowerWords = powerWords.Text;
 
-            if (int.TryParse(cursorsize.Text, out int ri))
+            if (int.TryParse(cursorSize.Text, out int ri))
                 spellRangeInfo.CursorSize = ri;
 
-            spellRangeInfo.CursorHue = cursorhue.Hue;
+            spellRangeInfo.CursorHue = cursorHue.Hue;
 
-            if(int.TryParse(castrange.Text, out ri))
+            if(int.TryParse(castRange.Text, out ri))
                 spellRangeInfo.CastRange = ri;
 
             spellRangeInfo.Hue = hue.Hue;
 
-            if(double.TryParse(casttime.Text, out double d))
+            if(double.TryParse(castTime.Text, out double d))
                 spellRangeInfo.CastTime = d;
 
-            if(int.TryParse(maxduration.Text, out ri))
+            if(int.TryParse(maxDuration.Text, out ri))
                 spellRangeInfo.MaxDuration = ri;
 
             spellRangeInfo.IsLinear = islinear.IsChecked;
-            spellRangeInfo.ShowCastRangeDuringCasting = showrangeduringcast.IsChecked;
-            spellRangeInfo.FreezeCharacterWhileCasting = freezewhilecasting.IsChecked;
-            spellRangeInfo.ExpectTargetCursor = targetcursorexpected.IsChecked;
+            spellRangeInfo.ShowCastRangeDuringCasting = showRangeDuringCast.IsChecked;
+            spellRangeInfo.FreezeCharacterWhileCasting = freezeWhileCasting.IsChecked;
+            spellRangeInfo.ExpectTargetCursor = targetCursorExpected.IsChecked;
             SpellVisualRangeManager.Instance.DelayedSave();
         }
     }
