@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using ClassicUO.Assets;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using Discord.Sdk;
 using Microsoft.Xna.Framework;
@@ -62,6 +63,25 @@ public class DiscordChatAreaControl : Control
 
         _chatInput.EnterPressed += ChatInputOnEnterPressed;
         Add(_chatInput);
+
+        NiceButton button = new NiceButton(Width - 150, 0, 125, 25, ButtonAction.Default, "Share Item");
+        button.IsSelected = true;
+        button.MouseUp += (sender, args) =>
+        {
+            if (_selectedChannel == 0) return;
+
+            TargetHelper.TargetObject((e) =>
+            {
+                if (e == null) return;
+
+                if (SerialHelper.IsItem(e.Serial))
+                {
+                    Item item = World.Items.Get(e.Serial);
+                    DiscordManager.Instance.SendChannelItem(_selectedChannel, item, isDM);
+                }
+            });
+        };
+        Add(button);
     }
 
     private void ChatInputOnEnterPressed(object sender, EventArgs e)

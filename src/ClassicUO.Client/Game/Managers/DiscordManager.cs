@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Discord.Sdk;
@@ -223,6 +224,32 @@ public class DiscordManager
         client.SendLobbyMessage(channelId, message, SendUserMessageCallback);
     }
 
+    public void SendChannelItem(ulong channelId, Item item, bool isDM)
+    {
+        if (item == null)
+            return;
+
+        Dictionary<string, string> metadata = new();
+
+        metadata["graphic"] = item.Graphic.ToString();
+        metadata["hue"] = item.Hue.ToString();
+
+        if (World.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
+        {
+            metadata["name"] = name;
+            metadata["data"] = data;
+        }
+        else
+        {
+            metadata["name"] = item.Name;
+        }
+
+        if(isDM)
+            client.SendUserMessageWithMetadata(channelId, string.IsNullOrEmpty(metadata["name"]) ? "Checkout this item!" : metadata["name"], metadata, SendUserMessageCallback);
+        else
+            client.SendLobbyMessageWithMetadata(channelId, string.IsNullOrEmpty(metadata["name"]) ? "Checkout this item!" : metadata["name"], metadata, SendUserMessageCallback);
+    }
+
     public void StartCall(ulong channel)
     {
         client.StartCall(channel);
@@ -301,7 +328,7 @@ public class DiscordManager
 
     private static long furthestAction;
 
-    private static async void RunLater(Action action)
+    private static async void RunLater(Action action, long minDuration = 2000)
     {
         long now = Time.Ticks;
 
@@ -309,7 +336,7 @@ public class DiscordManager
         if (now > furthestAction)
             furthestAction = now;
 
-        furthestAction += 2000; // push it forward by 1 second per action
+        furthestAction += minDuration;
 
         int delayMs = (int)(furthestAction - now);
         await Task.Delay(delayMs);
@@ -463,20 +490,14 @@ public class DiscordManager
     {
         if (!result.Successful())
         {
-            long now = Time.Ticks;
-            furthestAction = Math.Max(furthestAction, now);
-            furthestAction += 500 + (long)(result.RetryAfter()*1000);
-            RunLater(JoinGameLobby);
+            RunLater(JoinGameLobby, 500 + (long)(result.RetryAfter()*1000));
         }
     }
     private void GameLobbyJoinCallback(ClientResult result, ulong lobbyId)
     {
         if (!result.Successful())
         {
-            long now = Time.Ticks;
-            furthestAction = Math.Max(furthestAction, now);
-            furthestAction += 500 + (long)(result.RetryAfter()*1000);
-            RunLater(JoinGameLobby);
+            RunLater(JoinGameLobby, 500 + (long)(result.RetryAfter()*1000));
         }
     }
 
