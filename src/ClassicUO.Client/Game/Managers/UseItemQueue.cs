@@ -31,7 +31,6 @@
 #endregion
 
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Configuration;
 using ClassicUO.Utility.Collections;
 
 namespace ClassicUO.Game.Managers
@@ -39,8 +38,9 @@ namespace ClassicUO.Game.Managers
     internal class UseItemQueue
     {
         public static UseItemQueue Instance { get; private set; }
-        public bool IsEmpty => _actions.Count == 0;
+        public bool IsEmpty => _isEmpty;
 
+        private bool _isEmpty = true;
         private readonly Deque<uint> _actions = new Deque<uint>();
 
         public UseItemQueue()
@@ -57,6 +57,7 @@ namespace ClassicUO.Game.Managers
             GameActions.DoubleClick(serial);
 
             GlobalActionCooldown.BeginCooldown();
+            _isEmpty = _actions.Count == 0;
         }
 
         public void Add(uint serial)
@@ -70,11 +71,13 @@ namespace ClassicUO.Game.Managers
             }
 
             _actions.AddToBack(serial);
+            _isEmpty = false;
         }
 
         public void Clear()
         {
             _actions.Clear();
+            _isEmpty = true;
         }
 
         public void ClearCorpses()
@@ -93,6 +96,7 @@ namespace ClassicUO.Game.Managers
                     _actions.RemoveAt(i--);
                 }
             }
+            _isEmpty = _actions.Count == 0;
         }
     }
 }
