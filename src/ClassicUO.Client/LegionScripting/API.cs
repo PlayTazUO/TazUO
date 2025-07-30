@@ -2933,7 +2933,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns></returns>
-        public bool IsProcessingUseItemQueue() => InvokeOnMainThread(() => !UseItemQueue.Instance.IsEmpty);
+        public bool IsProcessingUseItemQueue() => MainThreadQueue.InvokeOnMainThread(() => !UseItemQueue.Instance.IsEmpty);
 
         /// <summary>
         /// Check if the global cooldown is currently active. This applies to actions like moving or using items,
@@ -2946,7 +2946,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns>True if the global cooldown is active; otherwise, false.</returns>
-        public bool IsGlobalCooldownActive() => InvokeOnMainThread(() => GlobalActionCooldown.IsOnCooldown);
+        public bool IsGlobalCooldownActive() => MainThreadQueue.InvokeOnMainThread(() => GlobalActionCooldown.IsOnCooldown);
 
         /// <summary>
         /// Save a variable that persists between sessions and scripts.
