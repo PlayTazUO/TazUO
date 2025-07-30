@@ -48,6 +48,9 @@ namespace ClassicUO.Game.Managers
 
         public void ProcessQueue()
         {
+            if (_isEmpty)
+                return;
+
             if (GlobalActionCooldown.IsOnCooldown)
                 return;
 

@@ -50,8 +50,8 @@ namespace ClassicUO.Game.Managers
 
         public void Update()
         {
+            if (_isEmpty) return;
             if (GlobalActionCooldown.IsOnCooldown) return;
-            if (_actions.Count == 0) return;
 
             uint serial = _actions.RemoveFromFront();
             GameActions.DoubleClick(serial);
