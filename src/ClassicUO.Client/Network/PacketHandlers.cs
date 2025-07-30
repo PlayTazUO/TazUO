@@ -2347,7 +2347,7 @@ namespace ClassicUO.Network
                 // Reset the global action cooldown here because, for some reason, immediately
                 // sending multiple actions (e.g. reopening paperdoll and reopening containers)
                 // results in the server telling the client it must wait to perform actions.
-                GlobalActionCooldown.ResetCooldown();
+                GlobalActionCooldown.BeginCooldown();
                 List<Gump> gumps = ProfileManager.CurrentProfile.ReadGumps(
                     ProfileManager.ProfilePath
                 );

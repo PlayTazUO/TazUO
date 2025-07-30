@@ -56,7 +56,7 @@ namespace ClassicUO.Game.Managers
             uint serial = _actions.RemoveFromFront();
             GameActions.DoubleClick(serial);
 
-            GlobalActionCooldown.ResetCooldown();
+            GlobalActionCooldown.BeginCooldown();
         }
 
         public void Add(uint serial)

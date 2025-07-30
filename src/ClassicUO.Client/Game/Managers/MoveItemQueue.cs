@@ -59,7 +59,7 @@ namespace ClassicUO.Game.Managers
             GameActions.PickUp(request.Serial, 0, 0, request.Amount);
             GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
             
-            GlobalActionCooldown.ResetCooldown();
+            GlobalActionCooldown.BeginCooldown();
         }
 
         public void Clear()
