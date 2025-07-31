@@ -1,5 +1,9 @@
-# Additional notes
-These are additional notes and information regarding the Python scripting API. This is for information not automatically generated in the [API docs](API.md)
+---
+title: Additional notes
+description: Additional notes and information regarding the Python scripting API.
+---
+
+These are additional notes and information regarding the Python scripting API. This is for information not automatically generated in the [API docs](../api/)
 
 ## Misc
 - Adding `_` to the beggining of python script file names will make them not show in-game. (For example: `_test.py`)
