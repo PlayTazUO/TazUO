@@ -79,6 +79,8 @@ namespace ClassicUO.Game.UI.Gumps
             Add(next = new NiceButton(WIDTH - borderSize - 20, HEIGHT - borderSize - 20, 20, 20, ButtonAction.Activate, ">") { IsSelectable = false });
             next.MouseUp += (sender, e) => { if (e.Button == Input.MouseButtonType.Left) { cPage++; FillHueDisplays(cPage); page.Text = (cPage + 1).ToString(); } };
 
+            CenterXInViewPort();
+            CenterYInViewPort();
         }
 
         private void FillHueDisplays(int page = 0)
@@ -160,7 +162,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (isClickable)
                     {
                         UIManager.GetGump<ModernColorPicker>()?.Dispose();
-                        UIManager.Add(new ModernColorPicker(s => Hue = s) { X = 100, Y = 100 });
+                        UIManager.Add(new ModernColorPicker(s => Hue = s));
                     }
                     else
                     {

@@ -14,7 +14,14 @@ namespace ClassicUO.Game.Managers;
 
 public class GridContainerSaveData
 {
-    public static GridContainerSaveData Instance { get; private set; } = new GridContainerSaveData();
+    private static GridContainerSaveData _instance;
+    public static GridContainerSaveData Instance { get
+    {
+        if (_instance == null)
+            _instance = new();
+        return _instance;
+    }
+    }
 
     private static TimeSpan INACTIVE_CUTOFF = TimeSpan.FromDays(120);
 
@@ -30,9 +37,6 @@ public class GridContainerSaveData
     private void Init()
     {
         if (ConvertOldXMLSave()) return;
-
-        if (!File.Exists(_savePath)) //No save file, use empty default list.
-            return;
 
         Load();
         RemoveOldContainers();
@@ -60,6 +64,7 @@ public class GridContainerSaveData
 
     public void Save()
     {
+        Log.Debug($"Saving {_entries.Count} grid containers");
         string tempPath = null;
         try
         {
@@ -124,16 +129,13 @@ public class GridContainerSaveData
                 var entries = JsonSerializer.Deserialize(json,
                     GridContainerSerializerContext.Default.GridContainerEntryArray);
 
-                if (entries != null)
+                _entries?.Clear();
+                _entries = new();
+                foreach (var entry in entries)
                 {
-                    _entries.Clear();
-                    foreach (var entry in entries)
-                    {
-                        _entries[entry.Serial] = entry;
-                    }
-
-                    return;
+                    _entries[entry.Serial] = entry;
                 }
+
             }
             catch (Exception e)
             {
@@ -250,7 +252,7 @@ public class GridContainerSaveData
     /// </summary>
     public static void Reset()
     {
-        Instance = new();
+        _instance = null;
     }
 
     public GridContainerEntry CreateEntry(uint serial)

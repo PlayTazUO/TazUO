@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using Timer = System.Timers.Timer;
 
 namespace ClassicUO.Game.Managers
 {
@@ -22,13 +24,14 @@ namespace ClassicUO.Game.Managers
     public partial class SpellVisualRangeJsonContext : JsonSerializerContext
     {
     }
-    
+
     public class SpellVisualRangeManager
     {
         public static SpellVisualRangeManager Instance => instance ??= new SpellVisualRangeManager();
 
         public Vector2 LastCursorTileLoc { get; set; } = Vector2.Zero;
         public DateTime LastSpellTime { get; private set; } = DateTime.Now;
+        public Dictionary<int, SpellRangeInfo> SpellRangeCache => spellRangeCache;
 
         private string savePath = Path.Combine(CUOEnviroment.ExecutablePath ?? "", "Data", "Profiles", "SpellVisualRange.json");
         private string overridePath = Path.Combine(ProfileManager.ProfilePath ?? "", "SpellVisualRange.json");
@@ -234,6 +237,9 @@ namespace ClassicUO.Game.Managers
         }
 
         #region Save and load
+        private Timer saveTimer;
+        private readonly object saveLock = new object();
+        private volatile bool hasPendingChanges = false;
         private void Load()
         {
             spellRangeCache.Clear();
@@ -282,7 +288,6 @@ namespace ClassicUO.Game.Managers
                         CreateAndLoadDataFile();
                         AfterLoad();
                         loaded = true;
-                        Save();
                     }
 
                 }
@@ -433,15 +438,64 @@ namespace ClassicUO.Game.Managers
             });
         }
 
-        public void Save()
+        public void DelayedSave()
         {
+            lock (saveLock)
+            {
+                hasPendingChanges = true;
+
+                // Cancel existing timer if it's running
+                saveTimer?.Dispose();
+
+                saveTimer = new Timer();
+                saveTimer.Interval = 500;
+                saveTimer.Elapsed += (_,_) => { PerformSave(); };
+            }
+        }
+
+        private void PerformSave()
+        {
+            lock (saveLock)
+            {
+                if (!hasPendingChanges)
+                    return;
+
+                hasPendingChanges = false;
+            }
+
+            string tempPath = null;
             try
             {
+                tempPath = Path.GetTempFileName();
                 var options = new JsonSerializerOptions() { WriteIndented = true };
                 string fileData = JsonSerializer.Serialize(spellRangeCache.Values.ToArray(), options);
-                File.WriteAllText(savePath, fileData);
+                File.WriteAllText(tempPath, fileData);
+
+                if (File.Exists(savePath))
+                    File.Delete(savePath);
+                File.Move(tempPath, savePath);
             }
-            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            catch (Exception e)
+            {
+                Log.Error($"Save failed: {e}");
+            }
+            finally
+            {
+                if (tempPath != null && File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        public void Save()
+        {
+            lock (saveLock)
+            {
+                saveTimer?.Dispose();
+                if (hasPendingChanges)
+                {
+                    PerformSave();
+                }
+            }
         }
         #endregion
 

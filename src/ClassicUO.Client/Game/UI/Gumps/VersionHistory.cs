@@ -18,6 +18,11 @@ namespace ClassicUO.Game.UI.Gumps
             "- Added option to not make enemies gray\n" +
             "- Reopening sub container on login should work now\n" +
             "- Better profile and grid container save systems with backups\n" +
+            "- Improved draw times slightly\n" +
+            "- Discord item sharing\n" +
+            "- Extended grid highlighting system\n" +
+            "- Extended python api\n" +
+            "- Other small changes" +
             "\n",
             "/c[white][4.0.0]/cd\n" +
             "- Prevent autoloot, move item queue from moving items while you are holding something.\n" +

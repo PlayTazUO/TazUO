@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Game.Scenes;
 
 namespace ClassicUO.Game.Managers
 {
@@ -10,21 +9,20 @@ namespace ClassicUO.Game.Managers
     {
         public static MoveItemQueue Instance { get; private set; }
         
-        public bool IsEmpty => _queue.IsEmpty;
+        public bool IsEmpty => _isEmpty;
         
-        private static long delay = 1000;
+        private bool _isEmpty = true;
         private readonly ConcurrentQueue<MoveRequest> _queue = new();
-        private long nextMove;
 
         public MoveItemQueue()
         {
-            delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay;
             Instance = this;
         }
 
         public void Enqueue(uint serial, uint destination, ushort amt = 0, int x = 0xFFFF, int y = 0xFFFF, int z = 0)
         {
             _queue.Enqueue(new MoveRequest(serial, destination, amt, x, y, z));
+            _isEmpty = false;
         }
 
         public void EnqueueQuick(Item item)
@@ -50,9 +48,12 @@ namespace ClassicUO.Game.Managers
 
         public void ProcessQueue()
         {
-            if (Time.Ticks < nextMove)
+            if (_isEmpty)
                 return;
-            
+
+            if (GlobalActionCooldown.IsOnCooldown)
+                return;
+
             if (Client.Game.GameCursor.ItemHold.Enabled)
                 return;
 
@@ -61,8 +62,9 @@ namespace ClassicUO.Game.Managers
 
             GameActions.PickUp(request.Serial, 0, 0, request.Amount);
             GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
-            
-            nextMove = Time.Ticks + delay;
+
+            GlobalActionCooldown.BeginCooldown();
+            _isEmpty = _queue.IsEmpty;
         }
 
         public void Clear()
@@ -70,6 +72,7 @@ namespace ClassicUO.Game.Managers
             while (_queue.TryDequeue(out var _))
             {
             }
+            _isEmpty = true;
         }
 
         private readonly struct MoveRequest(uint serial, uint destination, ushort amount, int x, int y, int z)

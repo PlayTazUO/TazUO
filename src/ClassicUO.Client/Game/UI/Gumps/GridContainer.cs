@@ -776,12 +776,6 @@ namespace ClassicUO.Game.UI.Gumps
             Style8
         }
 
-        public static void ClearInstance()
-        {
-            GridContainerSaveData.Instance.Save();
-            GridContainerSaveData.Reset();
-        }
-
         public class GridItem : Control
         {
             private readonly HitBox hit;
