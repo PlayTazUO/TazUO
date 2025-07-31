@@ -1775,3 +1775,17 @@ def GetPersistentVar(name: str, defaultValue: str, scope: Any) -> str:
     """
     pass
 
+def MarkTile(x: int, y: int, hue: int, map: int = -1) -> None:
+    """
+     Mark a tile with a specific hue.
+    
+    """
+    pass
+
+def RemoveMarkedTile(x: int, y: int, map: int = -1) -> None:
+    """
+     Remove a marked tile. See MarkTile for more info.
+    
+    """
+    pass
+

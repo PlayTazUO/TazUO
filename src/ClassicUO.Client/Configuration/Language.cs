@@ -529,7 +529,7 @@ namespace ClassicUO.Configuration
             public string UseLandTexturesWhereAvailable { get; set; } = "Use land textures where available(Experimental)";
             public string SOSGumpID { get; set; } = "SOS Gump ID";
             public string UseWASDMovement { get; set; } = "Use WASD movement instead of arrow keys";
-            public string BorderCaveTiles { get; set; } = "Apply a border to static item art";
+            public string ApplyBorderCaveTiles { get; set; } = "Apply a border to cave tile art";
             public string ForcedHouseTransparencyLevel { get; set; } = "Forced house transparency";
             public string EnableHouseTransparency { get; set; } = "Enable forced house transparency";
             public string HouseTransparencyTileHue { get; set; } = "House transparency tile hue";

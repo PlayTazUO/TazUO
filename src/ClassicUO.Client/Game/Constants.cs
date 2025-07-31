@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -37,7 +37,7 @@ namespace ClassicUO.Game
         public const string WIKI_LINK = "https://github.com/ClassicUO/ClassicUO/wiki";
 
         public const int MIN_FPS = 12;
-        public const int MAX_FPS = 250;
+        public const int MAX_FPS = 1000;
         public const int LOGIN_SCREEN_FPS = 60;
 
         public const int CHARACTER_ANIMATION_DELAY = 80;

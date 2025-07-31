@@ -217,48 +217,56 @@ public class NineSliceGump : Gump
             switch (_dragCorner)
             {
                 case ResizeCorner.TopLeft:
-                    // Top-left: position moves, size shrinks in both directions
-                    newWidth = Math.Max(_borderSize * 2, _dragStartSize.X - deltaX);
-                    newHeight = Math.Max(_borderSize * 2, _dragStartSize.Y - deltaY);
-                    // Only move position if we're actually resizing (not at minimum size)
-                    if (newWidth > _borderSize * 2 || deltaX < 0)
-                        newX = _dragStartPosition.X + (_dragStartSize.X - newWidth);
-                    if (newHeight > _borderSize * 2 || deltaY < 0)
-                        newY = _dragStartPosition.Y + (_dragStartSize.Y - newHeight);
+                    // Calculate desired size first
+                    int desiredWidth = _dragStartSize.X - deltaX;
+                    int desiredHeight = _dragStartSize.Y - deltaY;
+
+                    // Apply minimum constraints
+                    newWidth = Math.Max(Math.Max(_borderSize * 2, _minWidth), desiredWidth);
+                    newHeight = Math.Max(Math.Max(_borderSize * 2, _minHeight), desiredHeight);
+
+                    // Only adjust position based on actual size change
+                    newX = _dragStartPosition.X + (_dragStartSize.X - newWidth);
+                    newY = _dragStartPosition.Y + (_dragStartSize.Y - newHeight);
                     break;
 
                 case ResizeCorner.TopRight:
-                    // Top-right: X position stays fixed, width grows, height shrinks with Y moving
-                    newWidth = Math.Max(_borderSize * 2, _dragStartSize.X + deltaX);
-                    newHeight = Math.Max(_borderSize * 2, _dragStartSize.Y - deltaY);
-                    newX = _dragStartPosition.X; // X position doesn't change
-                    // Only move Y position to keep top-right corner fixed
-                    if (newHeight > _borderSize * 2 || deltaY < 0)
-                        newY = _dragStartPosition.Y + (_dragStartSize.Y - newHeight);
+                    int desiredWidthTR = _dragStartSize.X + deltaX;
+                    int desiredHeightTR = _dragStartSize.Y - deltaY;
+
+                    newWidth = Math.Max(Math.Max(_borderSize * 2, _minWidth), desiredWidthTR);
+                    newHeight = Math.Max(Math.Max(_borderSize * 2, _minHeight), desiredHeightTR);
+
+                    newX = _dragStartPosition.X; // X position doesn't change for top-right
+                    newY = _dragStartPosition.Y + (_dragStartSize.Y - newHeight);
                     break;
 
                 case ResizeCorner.BottomLeft:
-                    // Bottom-left: Y position stays fixed, width shrinks with X moving, height grows
-                    newWidth = Math.Max(_borderSize * 2, _dragStartSize.X - deltaX);
-                    newHeight = Math.Max(_borderSize * 2, _dragStartSize.Y + deltaY);
-                    newY = _dragStartPosition.Y; // Y position doesn't change
-                    // Only move X position to keep bottom-left corner fixed
-                    if (newWidth > _borderSize * 2 || deltaX < 0)
-                        newX = _dragStartPosition.X + (_dragStartSize.X - newWidth);
+                    int desiredWidthBL = _dragStartSize.X - deltaX;
+                    int desiredHeightBL = _dragStartSize.Y + deltaY;
+
+                    newWidth = Math.Max(Math.Max(_borderSize * 2, _minWidth), desiredWidthBL);
+                    newHeight = Math.Max(Math.Max(_borderSize * 2, _minHeight), desiredHeightBL);
+
+                    newX = _dragStartPosition.X + (_dragStartSize.X - newWidth);
+                    newY = _dragStartPosition.Y; // Y position doesn't change for bottom-left
                     break;
 
                 case ResizeCorner.BottomRight:
-                    // Bottom-right: position stays fixed, size grows in both directions
-                    newWidth = Math.Max(_borderSize * 2, _dragStartSize.X + deltaX);
-                    newHeight = Math.Max(_borderSize * 2, _dragStartSize.Y + deltaY);
+                    int desiredWidthBR = _dragStartSize.X + deltaX;
+                    int desiredHeightBR = _dragStartSize.Y + deltaY;
+
+                    newWidth = Math.Max(Math.Max(_borderSize * 2, _minWidth), desiredWidthBR);
+                    newHeight = Math.Max(Math.Max(_borderSize * 2, _minHeight), desiredHeightBR);
+
                     // Position doesn't change for bottom-right
                     newX = _dragStartPosition.X;
                     newY = _dragStartPosition.Y;
                     break;
             }
 
-            // Apply changes
-            if ((newWidth != Width || newHeight != Height || newX != X || newY != Y) && newWidth >= _minWidth && newHeight >= _minHeight)
+            // Apply changes - no additional size check needed since we already applied constraints
+            if (newWidth != Width || newHeight != Height || newX != X || newY != Y)
             {
                 X = newX;
                 Y = newY;
@@ -268,7 +276,7 @@ public class NineSliceGump : Gump
             }
         }
 
-        // Fixed: Reset drag state if mouse button is released (backup check)
+        // Reset drag state if mouse button is released
         if (_isDragging && !Mouse.LButtonPressed)
         {
             _isDragging = false;

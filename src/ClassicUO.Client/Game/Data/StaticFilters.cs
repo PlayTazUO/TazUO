@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -33,12 +33,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Configuration;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.Data
 {
@@ -238,24 +240,102 @@ namespace ClassicUO.Game.Data
             }
         }
 
-        public static void ApplyStaticBorder()
+        public static void ApplyCaveTileBorder()
         {
             Log.Trace("Applying statics border...");
-            foreach (ushort graphic in CaveTiles)
+
+            // Group graphics by their atlas texture to minimize GetData/SetData calls
+            var textureGroups = CaveTiles.GroupBy(graphic => Client.Game.Arts.GetArt(graphic).Texture)
+                .Where(g => g.Key != null);
+
+            foreach (var textureGroup in textureGroups)
             {
-                ref readonly var artInfo = ref Client.Game.Arts.GetArt(graphic);
+                var atlasTexture = textureGroup.Key;
+                uint[] atlasPixels = new uint[atlasTexture.Width * atlasTexture.Height];
+                atlasTexture.GetData(atlasPixels);
 
-                if (artInfo.Texture != null)
+                bool atlasModified = false;
+
+                foreach (ushort graphic in textureGroup)
                 {
-                    uint[] pixels = new uint[artInfo.Texture.Width * artInfo.Texture.Height];
-                    artInfo.Texture.GetData(pixels);
+                    ref readonly var artInfo = ref Client.Game.Arts.GetArt(graphic);
 
-                    AddBlackBorder(pixels, artInfo.Texture.Width, artInfo.Texture.Height);
-                    artInfo.Texture.SetData(pixels);
-                    break;//Can't directly access the atlas to only modify one area of it without modifying the atlas. That is doable, but in the meantime we will just border everything.
+                    if (ApplyBorderToAtlasRegion(atlasPixels, atlasTexture.Width, atlasTexture.Height, artInfo.UV))
+                    {
+                        atlasModified = true;
+                    }
+                }
+
+                if (atlasModified)
+                {
+                    atlasTexture.SetData(atlasPixels);
                 }
             }
         }
+
+    private static bool ApplyBorderToAtlasRegion(uint[] atlasPixels, int atlasWidth, int atlasHeight, Rectangle uv)
+    {
+        if (uv.Width <= 0 || uv.Height <= 0)
+            return false;
+
+        bool modified = false;
+
+        // Apply your border logic adapted for atlas coordinates
+        for (int yy = 0; yy < uv.Height; yy++)
+        {
+            int atlasY = uv.Y + yy;
+            if (atlasY < 0 || atlasY >= atlasHeight) continue;
+
+            int startY = yy != 0 ? -1 : 0;
+            int endY = yy + 1 < uv.Height ? 2 : 1;
+
+            for (int xx = 0; xx < uv.Width; xx++)
+            {
+                int atlasX = uv.X + xx;
+                if (atlasX < 0 || atlasX >= atlasWidth) continue;
+
+                int atlasIndex = atlasY * atlasWidth + atlasX;
+                ref uint pixel = ref atlasPixels[atlasIndex];
+
+                if (pixel == 0)
+                {
+                    continue;
+                }
+
+                int startX = xx != 0 ? -1 : 0;
+                int endX = xx + 1 < uv.Width ? 2 : 1;
+
+                for (int i = startY; i < endY; i++)
+                {
+                    int currentY = yy + i;
+                    int currentAtlasY = uv.Y + currentY;
+
+                    // Bounds check for atlas
+                    if (currentAtlasY < 0 || currentAtlasY >= atlasHeight) continue;
+
+                    for (int j = startX; j < endX; j++)
+                    {
+                        int currentX = xx + j;
+                        int currentAtlasX = uv.X + currentX;
+
+                        // Bounds check for atlas
+                        if (currentAtlasX < 0 || currentAtlasX >= atlasWidth) continue;
+
+                        int currentAtlasIndex = currentAtlasY * atlasWidth + currentAtlasX;
+                        ref uint currentPixel = ref atlasPixels[currentAtlasIndex];
+
+                        if (currentPixel == 0u)
+                        {
+                            pixel = 0xFF_00_00_00;
+                            modified = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return modified;
+    }
 
         public static void CleanTreeTextures()
         {

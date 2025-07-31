@@ -2925,6 +2925,30 @@ namespace ClassicUO.LegionScripting
         public bool IsProcessingMoveQue() => MainThreadQueue.InvokeOnMainThread(() => !MoveItemQueue.Instance.IsEmpty);
 
         /// <summary>
+        /// Check if the use item queue is being processed. You can use this to prevent actions if the queue is being processed.
+        /// Example:
+        /// ```py
+        /// if API.IsProcessingUseItemQueue():
+        ///   API.Pause(0.5)
+        /// ```
+        /// </summary>
+        /// <returns></returns>
+        public bool IsProcessingUseItemQueue() => MainThreadQueue.InvokeOnMainThread(() => !UseItemQueue.Instance.IsEmpty);
+
+        /// <summary>
+        /// Check if the global cooldown is currently active. This applies to actions like moving or using items,
+        /// and prevents new actions from executing until the cooldown has expired.
+        /// 
+        /// Example:
+        /// ```py
+        /// if API.IsGlobalCooldownActive():
+        ///     API.Pause(0.5)
+        /// ```
+        /// </summary>
+        /// <returns>True if the global cooldown is active; otherwise, false.</returns>
+        public bool IsGlobalCooldownActive() => MainThreadQueue.InvokeOnMainThread(() => GlobalActionCooldown.IsOnCooldown);
+
+        /// <summary>
         /// Save a variable that persists between sessions and scripts.
         /// Example:
         /// ```py
@@ -2985,6 +3009,36 @@ namespace ClassicUO.LegionScripting
 
             return PersistentVars.GetVar(scope, name, defaultValue);
         }
+
+        /// <summary>
+        /// Mark a tile with a specific hue.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="hue"></param>
+        /// <param name="map">Defaults to current map</param>
+        public void MarkTile(int x, int y, ushort hue, int map = -1) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if(map < 0)
+                map = World.Map.Index;
+
+            TileMarkerManager.Instance.AddTile(x, y, map, hue);
+        });
+
+        /// <summary>
+        /// Remove a marked tile. See MarkTile for more info.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="map"></param>
+        public void RemoveMarkedTile(int x, int y, int map = -1) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (map < 0)
+                map = World.Map.Index;
+            
+            TileMarkerManager.Instance.RemoveTile(x, y, map);
+        });
+
         #endregion
     }
 }
