@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -24,7 +24,7 @@ public static class GenDoc
             var sb = classesDict[className].Item1;
             var python = classesDict[className].Item2;
 
-            if(isMainAPI)
+            if (isMainAPI)
                 GenUniversalMdHeader(sb);
             GenClassHeader(sb, python, classDeclaration);
             GenClassProperties(sb, python, classDeclaration);
@@ -38,31 +38,62 @@ public static class GenDoc
 
     private static void GenUniversalMdHeader(StringBuilder sb)
     {
-        sb.AppendLine("# Python API Documentation  ");
+        // Add Starlight frontmatter
+        sb.AppendLine("---");
+        sb.AppendLine("title: Python API Documentation");
+        sb.AppendLine("description: Automatically generated documentation for the Python API scripting system");
+        sb.AppendLine("tableOfContents:");
+        sb.AppendLine("  minHeadingLevel: 1");
+        sb.AppendLine("  maxHeadingLevel: 4");
+        sb.AppendLine("---");
+        sb.AppendLine();
+
         sb.AppendLine("This is automatically generated documentation for the Python API scripting.  ");
-        sb.AppendLine("All methods, properties, enums, etc need to pre prefaced with `API.` for example: `API.Msg(\"An example\")`.  ");
-        sb.AppendLine("  ");
+        sb.AppendLine();
+
+        sb.AppendLine(":::note[Usage]");
+        sb.AppendLine("All methods, properties, enums, etc need to pre prefaced with `API.` for example:\n `API.Msg(\"An example\")`.");
+        sb.AppendLine(":::");
+        sb.AppendLine();
+
+        sb.AppendLine(":::tip[API.py File]");
         sb.AppendLine("If you download the [API.py](API.py) file, put it in the same folder as your python scripts and add `import API` to your script, that will enable some mild form of autocomplete in an editor like VS Code.  ");
-        sb.AppendLine("You can now type `-updateapi` in game to download the latest API.py file.  ");
-        sb.AppendLine("  ");
+        sb.AppendLine();
+        sb.AppendLine("You can now type `-updateapi` in game to download the latest API.py file.");
+        sb.AppendLine(":::");
+        sb.AppendLine();
+
         sb.AppendLine("[Additional notes](notes.md)  ");
-        sb.AppendLine("  ");
-        sb.AppendLine($"This was generated on `{DateTime.Now.Date.ToString("M/d/yy")}`.");
-        sb.AppendLine("  ");
+        sb.AppendLine();
+        sb.AppendLine($"*This was generated on `{DateTime.Now.Date.ToString("M/d/yy")}`.*");
+        sb.AppendLine();
     }
 
     private static void GenClassHeader(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
-        // Add class name
-        sb.AppendLine($"# {classDeclaration.Identifier.Text}  ");
-        sb.AppendLine();
+        if (!isMainAPI)
+        {
+            // Add Starlight frontmatter for non-main API classes
+            sb.AppendLine("---");
+            sb.AppendLine($"title: {classDeclaration.Identifier.Text}");
+            var classSummary = GetXmlSummary(classDeclaration);
+            if (!string.IsNullOrEmpty(classSummary))
+            {
+                sb.AppendLine($"description: {classSummary.Replace('\n', ' ').Replace('\r', ' ')}");
+            }
+            else
+            {
+                sb.AppendLine($"description: {classDeclaration.Identifier.Text} class documentation");
+            }
+            sb.AppendLine("---");
+            sb.AppendLine();
+        }
 
-        // Add class description
-        var classSummary = GetXmlSummary(classDeclaration);
-        if (!string.IsNullOrEmpty(classSummary))
+        // Add class description section for non-main API
+        if (!string.IsNullOrEmpty(GetXmlSummary(classDeclaration)) && !isMainAPI)
         {
             sb.AppendLine("## Class Description");
-            sb.AppendLine(classSummary);
+            sb.AppendLine(GetXmlSummary(classDeclaration));
             sb.AppendLine();
         }
 
@@ -85,10 +116,15 @@ public static class GenDoc
                     continue;
 
                 var propertySummary = GetXmlSummary(property);
-                sb.AppendLine($"- **{property.Identifier.Text}** (*{property.Type}*)");
+                sb.AppendLine($"### `{property.Identifier.Text}`");
+                sb.AppendLine();
+                sb.AppendLine($"**Type:** `{property.Type}`");
+                sb.AppendLine();
+
                 if (!string.IsNullOrEmpty(propertySummary))
                 {
-                    sb.AppendLine($"  - {propertySummary}");
+                    sb.AppendLine(propertySummary);
+                    sb.AppendLine();
                 }
 
                 string space = string.Empty;
@@ -105,34 +141,38 @@ public static class GenDoc
         }
         else
         {
-            sb.AppendLine("_No properties found._");
+            sb.AppendLine("*No properties found.*");
         }
         sb.AppendLine();
     }
 
     private static void GenClassFields(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
-        var properties = classDeclaration.Members.OfType<FieldDeclarationSyntax>();
-        if (properties.Any())
+        var fields = classDeclaration.Members.OfType<FieldDeclarationSyntax>();
+        if (fields.Any())
         {
-            foreach (var property in properties)
+            foreach (var field in fields)
             {
-                var typeSyntax = property.Declaration.Type;
+                var typeSyntax = field.Declaration.Type;
                 string typeName = typeSyntax.ToString();
-                foreach (var fieldVar in property.Declaration.Variables)
+                foreach (var fieldVar in field.Declaration.Variables)
                 {
-                    if (!property.Modifiers.Any(SyntaxKind.PublicKeyword))
+                    if (!field.Modifiers.Any(SyntaxKind.PublicKeyword))
                         continue;
 
-                    if(fieldVar.Identifier.Text == "QueuedPythonActions")
+                    if (fieldVar.Identifier.Text == "QueuedPythonActions")
                         continue;
 
-                    var propertySummary = GetXmlSummary(property);
-                    sb.AppendLine($"- **{fieldVar.Identifier.Text}** (*{typeName}*)");
+                    var fieldSummary = GetXmlSummary(field);
+                    sb.AppendLine($"### `{fieldVar.Identifier.Text}`");
+                    sb.AppendLine();
+                    sb.AppendLine($"**Type:** `{typeName}`");
+                    sb.AppendLine();
 
-                    if (!string.IsNullOrEmpty(propertySummary))
+                    if (!string.IsNullOrEmpty(fieldSummary))
                     {
-                        sb.AppendLine($"  - {propertySummary}");
+                        sb.AppendLine(fieldSummary);
+                        sb.AppendLine();
                     }
 
                     string space = string.Empty;
@@ -151,7 +191,7 @@ public static class GenDoc
         }
         else
         {
-            sb.AppendLine("_No properties found._");
+            sb.AppendLine("*No fields found.*");
         }
         sb.AppendLine();
     }
@@ -179,7 +219,9 @@ public static class GenDoc
                 var enumSummary = GetXmlSummary(enumDeclaration);
                 if (!string.IsNullOrEmpty(enumSummary))
                 {
+                    sb.AppendLine(":::note[Description]");
                     sb.AppendLine(enumSummary);
+                    sb.AppendLine(":::");
                     sb.AppendLine();
                 }
 
@@ -187,7 +229,7 @@ public static class GenDoc
                 byte last = 0;
                 foreach (var member in enumDeclaration.Members)
                 {
-                    sb.AppendLine($"- {member.Identifier.Text}");
+                    sb.AppendLine($"- `{member.Identifier.Text}`");
 
                     var value = last += 1;
                     if (member.EqualsValue?.Value.ToString() != null)
@@ -202,7 +244,7 @@ public static class GenDoc
         }
         else
         {
-            sb.AppendLine("_No enums found._");
+            sb.AppendLine("*No enums found.*");
         }
         python.AppendLine();
         sb.AppendLine();
@@ -210,69 +252,60 @@ public static class GenDoc
 
     private static void GenClassMethods(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
-                    // List methods
-            sb.AppendLine("## Methods");
-            var methods = classDeclaration.Members.OfType<MethodDeclarationSyntax>();
-            if (methods.Any())
+        // List methods
+        sb.AppendLine("## Methods");
+        var methods = classDeclaration.Members.OfType<MethodDeclarationSyntax>();
+        if (methods.Any())
+        {
+            foreach (var method in methods)
             {
-                foreach (var method in methods)
+                if (!method.Modifiers.Any(SyntaxKind.PublicKeyword))
+                    continue;
+
+                var methodSummary = GetXmlSummary(method);
+
+                sb.AppendLine($"### {method.Identifier.Text}");
+                GenParametersParenthesis(method.ParameterList.Parameters, ref sb);
+                sb.AppendLine();
+
+                if (!string.IsNullOrEmpty(methodSummary))
                 {
-                    if (!method.Modifiers.Any(SyntaxKind.PublicKeyword))
-                        continue;
-
-                    var methodSummary = GetXmlSummary(method);
+                    sb.AppendLine(methodSummary);
                     sb.AppendLine();
-                    sb.Append($"<details><summary><h3>{method.Identifier.Text}");
-                    GenParametersParenthesis(method.ParameterList.Parameters, ref sb);
-                    sb.Append("</h3></summary>");
-                    sb.AppendLine();
-                    sb.AppendLine();
-
-                    if (!string.IsNullOrEmpty(methodSummary))
-                    {
-                        var summaryWithBreaks = string.Join("\n", methodSummary
-                            .Split('\n')
-                            .Select(line => line.TrimEnd() + "  "));
-                        sb.AppendLine(summaryWithBreaks);
-                        //sb.AppendLine(methodSummary);
-                        sb.AppendLine();
-                    }
-
-                    GenParameters(method.ParameterList.Parameters, ref sb, method);
-
-                    GenReturnType(method.ReturnType, ref sb);
-
-                    sb.AppendLine("</details>");
-                    sb.AppendLine();
-
-                    sb.AppendLine("***");
-                    sb.AppendLine();
-
-                    string pySpace = isMainAPI ? string.Empty : "    ";
-                    string pyReturn = MapCSharpTypeToPython(method.ReturnType.ToString());
-
-                    if (pyReturn == classDeclaration.Identifier.Text)
-                        pyReturn = $"\"{pyReturn}\"";
-
-                    python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters)})"
-                     + $" -> {pyReturn}:");
-                    if (!string.IsNullOrWhiteSpace(methodSummary))
-                    {
-                        // Indent and escape triple quotes in summary if present
-                        var pyDoc = methodSummary.Replace("\"\"\"", "\\\"\\\"\\\"");
-                        var indentedDoc = string.Join("\n", pyDoc.Split('\n').Select(line => $"{pySpace}    " + line.TrimEnd()));
-                        python.AppendLine($"{pySpace}    \"\"\"");
-                        python.AppendLine(indentedDoc);
-                        python.AppendLine($"{pySpace}    \"\"\"");
-                    }
-                    python.AppendLine($"{pySpace}    pass");
-                    python.AppendLine();
                 }
+
+                GenParameters(method.ParameterList.Parameters, ref sb, method);
+
+                GenReturnType(method.ReturnType, ref sb);
+
+                sb.AppendLine("---");
+                sb.AppendLine();
+
+                string pySpace = isMainAPI ? string.Empty : "    ";
+                string pyReturn = MapCSharpTypeToPython(method.ReturnType.ToString());
+
+                if (pyReturn == classDeclaration.Identifier.Text)
+                    pyReturn = $"\"{pyReturn}\"";
+
+                python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters)})"
+                 + $" -> {pyReturn}:");
+                if (!string.IsNullOrWhiteSpace(methodSummary))
+                {
+                    // Indent and escape triple quotes in summary if present
+                    var pyDoc = methodSummary.Replace("\"\"\"", "\\\"\\\"\\\"");
+                    var indentedDoc = string.Join("\n", pyDoc.Split('\n').Select(line => $"{pySpace}    " + line.TrimEnd()));
+                    python.AppendLine($"{pySpace}    \"\"\"");
+                    python.AppendLine(indentedDoc);
+                    python.AppendLine($"{pySpace}    \"\"\"");
+                }
+                python.AppendLine($"{pySpace}    pass");
+                python.AppendLine();
             }
-            else
-            {
-                sb.AppendLine("_No methods found._");
-            }
+        }
+        else
+        {
+            sb.AppendLine("*No methods found.*");
+        }
     }
 
     private static string GetXmlSummary(SyntaxNode node)
@@ -315,11 +348,11 @@ public static class GenDoc
     {
         if (returnType.ToString() != "void")
         {
-            sb.AppendLine($"---> Return Type: *{returnType}*");
+            sb.AppendLine($"**Return Type:** `{returnType}`");
         }
         else
         {
-            sb.AppendLine("---> Does not return anything");
+            sb.AppendLine("**Return Type:** `void` *(Does not return anything)*");
         }
         sb.AppendLine();
     }
@@ -328,15 +361,16 @@ public static class GenDoc
     {
         if (parameters.Count == 0) return;
 
-        sb.AppendLine("**Parameters**  ");
+        sb.AppendLine("**Parameters:**");
+        sb.AppendLine();
         sb.AppendLine("| Name | Type | Optional | Description |");
         sb.AppendLine("| --- | --- | --- | --- |");
 
         foreach (var param in parameters)
         {
-            var isOptional = param.Default != null ? "Yes" : "No";
+            var isOptional = param.Default != null ? "✅ Yes" : "❌ No";
             var paramSummary = GetXmlParamSummary(methodNode, param.Identifier.Text);
-            sb.AppendLine($"| {param.Identifier.Text} | {param.Type} | {isOptional} | {paramSummary} |");
+            sb.AppendLine($"| `{param.Identifier.Text}` | `{param.Type}` | {isOptional} | {paramSummary} |");
         }
 
         sb.AppendLine();
@@ -371,16 +405,19 @@ public static class GenDoc
 
     private static void GenParametersParenthesis(SeparatedSyntaxList<ParameterSyntax> parameters, ref StringBuilder sb)
     {
-        sb.Append("(");
+        if (parameters.Count == 0)
+            return;
+
+        sb.Append("`(");
 
         foreach (var param in parameters)
         {
             sb.Append($"{param.Identifier.Text}, ");
         }
 
-        if (parameters.Count > 0) sb.Remove(sb.Length - 2, 2);
+        sb.Remove(sb.Length - 2, 2);
 
-        sb.Append(")");
+        sb.Append(")`");
     }
 
     private static string GetPythonParameters(SeparatedSyntaxList<ParameterSyntax> parameters)
@@ -547,7 +584,7 @@ class Program
         string docsDir = args[0];
 
         var pyFilePath = Path.Combine(docsDir, "API.py");
-        if(File.Exists(pyFilePath))
+        if (File.Exists(pyFilePath))
             File.Delete(pyFilePath);
 
         foreach (var filePath in args.Skip(1))
@@ -567,7 +604,7 @@ class Program
 
             foreach (var kvp in gen)
             {
-                if(!Directory.Exists(docsDir))
+                if (!Directory.Exists(docsDir))
                     Directory.CreateDirectory(docsDir);
                 File.WriteAllText(Path.Combine(docsDir, $"{kvp.Key}.md"), kvp.Value.Item1.ToString());
                 File.AppendAllText(pyFilePath, kvp.Value.Item2.ToString());
