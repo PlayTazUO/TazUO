@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -405,6 +405,9 @@ public static class GenDoc
 
     private static void GenParametersParenthesis(SeparatedSyntaxList<ParameterSyntax> parameters, ref StringBuilder sb)
     {
+        if (parameters.Count == 0)
+            return;
+
         sb.Append("`(");
 
         foreach (var param in parameters)
@@ -412,7 +415,7 @@ public static class GenDoc
             sb.Append($"{param.Identifier.Text}, ");
         }
 
-        if (parameters.Count > 0) sb.Remove(sb.Length - 2, 2);
+        sb.Remove(sb.Length - 2, 2);
 
         sb.Append(")`");
     }
