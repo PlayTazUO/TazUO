@@ -63,7 +63,7 @@ public static class GenDoc
         sb.AppendLine(":::");
         sb.AppendLine();
 
-        sb.AppendLine("[Additional notes](notes.md)  ");
+        sb.AppendLine("[Additional notes](../notes/)  ");
         sb.AppendLine();
         sb.AppendLine($"*This was generated on `{DateTime.Now.Date.ToString("M/d/yy")}`.*");
         sb.AppendLine();
