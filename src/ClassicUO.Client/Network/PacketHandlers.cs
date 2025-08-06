@@ -7325,6 +7325,24 @@ namespace ClassicUO.Network
                 {
                     // ??
                 }
+                else if (string.Equals(entry, "maparea", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if(gparams.Count >= 10)
+                        if(int.TryParse(gparams[1], out int cx) &&
+                           int.TryParse(gparams[2], out int cy) &&
+                           int.TryParse(gparams[3], out int width) &&
+                           int.TryParse(gparams[4], out int height) &&
+                           int.TryParse(gparams[5], out int mapindex) &&
+                           int.TryParse(gparams[6], out int mapx)&&
+                           int.TryParse(gparams[7], out int mapy)&&
+                           int.TryParse(gparams[8], out int mapex)&&
+                           int.TryParse(gparams[9], out int mapey))
+                        {
+                            var multiMapInfo = Client.Game.MultiMaps.GetMap(mapindex, mapex - mapx, mapey - mapy, mapx, mapy, mapex, mapey);
+                            if(multiMapInfo.Texture != null)
+                                gump.Add(new RenderedMapArea(multiMapInfo.Texture, cx, cy, width, height));
+                        }
+                }
                 else
                 {
                     Log.Warn($"Invalid Gump Command: \"{gparams[0]}\"");
