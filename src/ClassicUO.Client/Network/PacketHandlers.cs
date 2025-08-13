@@ -7338,7 +7338,7 @@ namespace ClassicUO.Network
                            int.TryParse(gparams[8], out int mapex)&&
                            int.TryParse(gparams[9], out int mapey))
                         {
-                            gump.Add(new RenderedMapArea(mapindex, new Rectangle(mapx, mapy, mapex - mapx, mapey - mapy), cx, cy, width, height));
+                            gump.Add(new RenderedMapArea(mapindex, new Rectangle(mapx, mapy, mapex - mapx, mapey - mapy), cx, cy, width, height), page);
                         }
                 }
                 else
