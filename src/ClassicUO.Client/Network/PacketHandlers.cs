@@ -7338,9 +7338,7 @@ namespace ClassicUO.Network
                            int.TryParse(gparams[8], out int mapex)&&
                            int.TryParse(gparams[9], out int mapey))
                         {
-                            var multiMapInfo = Client.Game.MultiMaps.GetMap(mapindex, mapex - mapx, mapey - mapy, mapx, mapy, mapex, mapey);
-                            if(multiMapInfo.Texture != null)
-                                gump.Add(new RenderedMapArea(multiMapInfo.Texture, cx, cy, width, height));
+                            gump.Add(new RenderedMapArea(mapindex, new Rectangle(mapx, mapy, mapex - mapx, mapey - mapy), cx, cy, width, height));
                         }
                 }
                 else
