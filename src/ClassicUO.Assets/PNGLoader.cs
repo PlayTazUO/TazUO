@@ -74,14 +74,16 @@ namespace ClassicUO.Assets
                     FixPNGAlpha(ref tempTexture);
 
                     uint[] pixels = GetPixels(tempTexture);
-                    gump_textureCache.Add(graphic, (pixels, tempTexture.Width, tempTexture.Height));
+                    int width = tempTexture.Width;
+                    int height = tempTexture.Height;
+                    gump_textureCache.Add(graphic, (pixels, width, height));
                     tempTexture.Dispose();
 
                     return new GumpInfo()
                     {
                         Pixels = pixels,
-                        Width = tempTexture.Width,
-                        Height = tempTexture.Height
+                        Width = width,
+                        Height = height
                     };
                 }
             }
@@ -114,24 +116,24 @@ namespace ClassicUO.Assets
 
                 if (File.Exists(fullImagePath))
                 {
-                    FileStream titleStream = File.OpenRead(fullImagePath);
-                    Texture2D tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
-                    titleStream.Close();
-                    Color[] buffer = new Color[tempTexture.Width * tempTexture.Height];
-                    tempTexture.GetData(buffer);
-                    for (int i = 0; i < buffer.Length; i++)
-                        buffer[i] = Color.FromNonPremultiplied(buffer[i].R, buffer[i].G, buffer[i].B, buffer[i].A);
-                    tempTexture.SetData(buffer);
+                    Texture2D tempTexture;
+                    using (FileStream titleStream = File.OpenRead(fullImagePath))
+                    {
+                        tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
+                    }
+                    FixPNGAlpha(ref tempTexture);
 
                     uint[] pixels = GetPixels(tempTexture);
-                    art_textureCache.Add(graphic, (pixels, tempTexture.Width, tempTexture.Height));
+                    int width = tempTexture.Width;
+                    int height = tempTexture.Height;
+                    art_textureCache.Add(graphic, (pixels, width, height));
                     tempTexture.Dispose();
 
                     return new ArtInfo()
                     {
                         Pixels = pixels,
-                        Width = tempTexture.Width,
-                        Height = tempTexture.Height
+                        Width = width,
+                        Height = height
                     };
                 }
             }
@@ -241,7 +243,9 @@ namespace ClassicUO.Assets
                                 FixPNGAlpha(ref tempTexture);
                                 
                                 uint[] pixels = GetPixels(tempTexture);
-                                gump_textureCache.Add(i, (pixels, tempTexture.Width, tempTexture.Height));
+                                int width = tempTexture.Width;
+                                int height = tempTexture.Height;
+                                gump_textureCache.Add(i, (pixels, width, height));
                                 tempTexture.Dispose();
 
 
