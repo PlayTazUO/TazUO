@@ -343,7 +343,7 @@ public class GridContainerEntry
         UseOriginalContainer = container.UseOldContainerStyle ?? false;
         AutoSort = container.AutoSortContainer;
         VisuallyStackNonStackables = container.StackNonStackableItems;
-        SortMode = container.SortMode;
+        SortMode = (int)container.SortMode;
         return this;
     }
 }

@@ -83,7 +83,7 @@ namespace ClassicUO.Game.UI.Gumps
         private bool quickLootThisContainer = false;
         public bool? UseOldContainerStyle = null;
         private bool autoSortContainer = false;
-        private int sortMode = 0; // 0 = Graphic+Hue, 1 = Name
+        private GridSortMode sortMode = GridSortMode.GraphicAndHue;
 
         private bool skipSave = false;
         private readonly ushort originalContainerItemGraphic;
@@ -110,7 +110,7 @@ namespace ClassicUO.Game.UI.Gumps
             get
             {
                 string status = autoSortContainer ? "<basefont color=\"green\">Enabled" : "<basefont color=\"red\">Disabled";
-                string sortModeText = sortMode == 1 ? "Name" : "Graphic + Hue";
+                string sortModeText = sortMode == GridSortMode.Name ? "Name" : "Graphic + Hue";
                 return $"Sort this container.<br>Left click to show sort options<br>Alt + Click to enable auto sort<br>Current sort: {sortModeText}<br>Auto sort currently {status}";
             }
         }
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.Gumps
         public readonly bool IsPlayerBackpack = false;
         public bool StackNonStackableItems = false;
         public bool AutoSortContainer { get { return autoSortContainer; } }
-        public int SortMode { get { return sortMode; } }
+        public GridSortMode SortMode { get { return sortMode; } }
         #endregion
 
         public GridContainer(uint local, ushort originalContainerGraphic, bool? useGridStyle = null) : base(GetWidth(), GetHeight(), GetWidth(2), GetHeight(1), local, 0)
@@ -145,7 +145,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             autoSortContainer = gridContainerEntry.AutoSort;
             StackNonStackableItems = gridContainerEntry.VisuallyStackNonStackables;
-            sortMode = gridContainerEntry.SortMode;
+            sortMode = (GridSortMode)gridContainerEntry.SortMode;
 
             Point lastPos = IsPlayerBackpack ? ProfileManager.CurrentProfile.BackpackGridPosition : gridContainerEntry.GetPosition();
             if (lastPos == Point.Zero || (lastPos.X == 100 && lastPos.Y == 100)) //Default positions, use last static position
@@ -382,19 +382,21 @@ namespace ClassicUO.Game.UI.Gumps
             
             control.Add(new ContextMenuItemEntry("Sort by Graphic + Hue", () =>
             {
-                sortMode = 0;
+                sortMode = GridSortMode.GraphicAndHue;
                 sortContents.ContextMenu = GenSortContextMenu();
                 sortContents.SetTooltip(sortButtonTooltip);
                 UpdateItems(true);
-            }, true, sortMode == 0));
+                gridContainerEntry.UpdateSaveDataEntry(this);
+            }, true, sortMode == GridSortMode.GraphicAndHue));
 
             control.Add(new ContextMenuItemEntry("Sort by Name", () =>
             {
-                sortMode = 1;
+                sortMode = GridSortMode.Name;
                 sortContents.ContextMenu = GenSortContextMenu();
                 sortContents.SetTooltip(sortButtonTooltip);
                 UpdateItems(true);
-            }, true, sortMode == 1));
+                gridContainerEntry.UpdateSaveDataEntry(this);
+            }, true, sortMode == GridSortMode.Name));
 
             return control;
         }
@@ -802,6 +804,12 @@ namespace ClassicUO.Game.UI.Gumps
             if(CUOEnviroment.Debug)
                 batcher.DrawString(Renderer.Fonts.Bold, LocalSerial.ToString(), x, y - 40, ShaderHueTranslator.GetHueVector(32));
             return base.Draw(batcher, x, y);
+        }
+
+        public enum GridSortMode
+        {
+            GraphicAndHue = 0,
+            Name = 1
         }
 
         public enum BorderStyle
@@ -1602,7 +1610,7 @@ namespace ClassicUO.Game.UI.Gumps
                 containerContents = GetItemsInContainer(container, gridContainer.SortMode);
             }
 
-            public static List<Item> GetItemsInContainer(Item _container, int sortMode = 0)
+            public static List<Item> GetItemsInContainer(Item _container, GridSortMode sortMode = GridSortMode.GraphicAndHue)
             {
                 List<Item> contents = new List<Item>();
                 for (LinkedObject i = _container.Items; i != null; i = i.Next)
@@ -1624,7 +1632,7 @@ namespace ClassicUO.Game.UI.Gumps
                     contents.Add(item);
                 }
 
-                if (sortMode == 1) // Sort by name
+                if (sortMode == GridSortMode.Name) // Sort by name
                 {
                     return contents.OrderBy(item => GetItemName(item)).ThenBy((x) => x.Graphic).ThenBy((x) => x.Hue).ToList();
                 }
