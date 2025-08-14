@@ -414,7 +414,11 @@ public class AssistantGump : BaseOptionsGump
         PositionHelper.BlankLine();
 
         Control c;
-        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Update interval (ms)", 0, ThemeSettings.SLIDER_WIDTH, 500, 5000, profile.TitleBarUpdateInterval, (r) => { profile.TitleBarUpdateInterval = r; })));
+        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Update interval (ms)", 0, ThemeSettings.SLIDER_WIDTH, 500, 5000, profile.TitleBarUpdateInterval, (r) =>
+        {
+            profile.TitleBarUpdateInterval = r;
+            TitleBarStatsManager.ForceUpdate();
+        })));
         c.SetTooltip("How often to update the title bar (500ms - 5000ms)");
         PositionHelper.BlankLine();
 
@@ -468,7 +472,6 @@ public class AssistantGump : BaseOptionsGump
 
         PositionHelper.BlankLine();
 
-        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Preview:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default())));
         PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Note: Progress bars use Unicode block characters (█▓▒░) and may not display correctly on all systems.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));

@@ -559,6 +559,10 @@ namespace ClassicUO.Network
                         )
                         {
                             Client.Game.SetWindowTitle(World.Player.Name);
+                            if (ProfileManager.CurrentProfile?.EnableTitleBarStats == true)
+                            {
+                                TitleBarStatsManager.ForceUpdate();
+                            }
                         }
 
                         ushort str = p.ReadUInt16BE();
@@ -3455,6 +3459,10 @@ namespace ClassicUO.Network
                 )
                 {
                     Client.Game.SetWindowTitle(name);
+                    if (ProfileManager.CurrentProfile?.EnableTitleBarStats == true)
+                    {
+                        TitleBarStatsManager.ForceUpdate();
+                    }
                 }
 
                 UIManager.GetGump<NameOverheadGump>(serial)?.SetName();

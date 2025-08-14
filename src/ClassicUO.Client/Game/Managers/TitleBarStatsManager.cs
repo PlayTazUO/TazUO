@@ -6,7 +6,7 @@ namespace ClassicUO.Game.Managers
 {
     public static class TitleBarStatsManager
     {
-        private static long _lastUpdate = 0;
+        private static uint _lastUpdate = 0;
         private static ushort _lastHits = 0;
         private static ushort _lastHitsMax = 0;
         private static ushort _lastMana = 0;
@@ -16,13 +16,19 @@ namespace ClassicUO.Game.Managers
 
         public static void UpdateTitleBar()
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return;
+            }
+            
             if (!ProfileManager.CurrentProfile.EnableTitleBarStats || World.Player == null)
             {
                 return;
             }
 
-            long currentTime = Time.Ticks;
-            if (currentTime - _lastUpdate < ProfileManager.CurrentProfile.TitleBarUpdateInterval)
+            uint currentTime = (uint)Time.Ticks;
+            uint delta = currentTime - _lastUpdate;
+            if (delta < (uint)ProfileManager.CurrentProfile.TitleBarUpdateInterval)
             {
                 return;
             }
@@ -57,6 +63,11 @@ namespace ClassicUO.Game.Managers
 
         private static string GenerateStatsText()
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return string.Empty;
+            }
+            
             switch (ProfileManager.CurrentProfile.TitleBarStatsMode)
             {
                 case TitleBarStatsMode.Text:
@@ -75,7 +86,7 @@ namespace ClassicUO.Game.Managers
                     return $"HP {hpBar} MP {mpBar} SP {spBar}";
 
                 default:
-                    return GenerateStatsText(); // Fallback to text mode
+                    return $"HP {World.Player.Hits}/{World.Player.HitsMax}, MP {World.Player.Mana}/{World.Player.ManaMax}, SP {World.Player.Stamina}/{World.Player.StaminaMax}"; // Fallback to text mode
             }
         }
 
@@ -131,6 +142,11 @@ namespace ClassicUO.Game.Managers
 
         public static string GetPreviewText()
         {
+            if (ProfileManager.CurrentProfile == null)
+            {
+                return string.Empty;
+            }
+            
             if (World.Player == null)
             {
                 // Use sample values for preview
@@ -141,7 +157,7 @@ namespace ClassicUO.Game.Managers
                     case TitleBarStatsMode.Percent:
                         return "PlayerName - HP 85%, MP 84%, SP 95%";
                     case TitleBarStatsMode.ProgressBar:
-                        return "PlayerName - HP ████████▓░ MP ████████▓░ SP █████████░";
+                        return "PlayerName - HP ██████▓░ MP ██████▓░ SP ███████▓";
                     default:
                         return "PlayerName - HP 85/100, MP 42/50, SP 95/100";
                 }
