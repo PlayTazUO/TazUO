@@ -304,6 +304,8 @@ public class GridContainerEntry
 
     [JsonPropertyName("vs")] public bool VisuallyStackNonStackables { get; set; }
 
+    [JsonPropertyName("sm")] public int SortMode { get; set; }
+
     [JsonPropertyName("ls")] public Dictionary<uint, GridContainerSlotEntry> Slots { get; set; } = new();
 
     public GridContainerSlotEntry GetSlot(uint serial)
@@ -341,6 +343,7 @@ public class GridContainerEntry
         UseOriginalContainer = container.UseOldContainerStyle ?? false;
         AutoSort = container.AutoSortContainer;
         VisuallyStackNonStackables = container.StackNonStackableItems;
+        SortMode = container.SortMode;
         return this;
     }
 }
