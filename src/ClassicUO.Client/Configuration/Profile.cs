@@ -262,6 +262,11 @@ namespace ClassicUO.Configuration
         public int CounterBarAbbreviatedAmount { get; set; } = 1000;
         public int CounterBarHighlightAmount { get; set; } = 5;
         public int CounterBarCellSize { get; set; } = 40;
+
+        // title bar stats
+        public bool EnableTitleBarStats { get; set; } = false;
+        public TitleBarStatsMode TitleBarStatsMode { get; set; } = TitleBarStatsMode.Text;
+        public int TitleBarUpdateInterval { get; set; } = 1000;
         public int CounterBarRows { get; set; } = 1;
         public int CounterBarColumns { get; set; } = 5;
 

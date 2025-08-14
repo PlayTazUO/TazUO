@@ -35,6 +35,7 @@ public class AssistantGump : BaseOptionsGump
         BuildHUD();
         BuildSpellIndicator();
         BuildJournalFilter();
+        BuildTitleBar();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -382,6 +383,97 @@ public class AssistantGump : BaseOptionsGump
         }
     }
 
+    private void BuildTitleBar()
+    {
+        var page = (int)PAGE.TitleBar;
+        MainContent.AddToLeft(CategoryButton("Title Bar", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
+        MainContent.AddToRight(scroll, false, page);
+
+        PositionHelper.Reset();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Configure window title bar to show HP, Mana, and Stamina information.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
+
+        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Title Bar Status Wiki", "https://github.com/PlayTazUO/TazUO/wiki/Title-Bar-Status", Color.White)));
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Enable title bar stats", 0, profile.EnableTitleBarStats, b =>
+        {
+            profile.EnableTitleBarStats = b;
+            if (b)
+            {
+                TitleBarStatsManager.ForceUpdate();
+            }
+            else
+            {
+                Client.Game.SetWindowTitle(string.IsNullOrEmpty(World.Player?.Name) ? string.Empty : World.Player.Name);
+            }
+        })));
+        PositionHelper.BlankLine();
+
+        Control c;
+        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Update interval (ms)", 0, ThemeSettings.SLIDER_WIDTH, 500, 5000, profile.TitleBarUpdateInterval, (r) => { profile.TitleBarUpdateInterval = r; })));
+        c.SetTooltip("How often to update the title bar (500ms - 5000ms)");
+        PositionHelper.BlankLine();
+
+        // Display mode radio buttons
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Display Mode:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default())));
+        PositionHelper.BlankLine();
+
+        CheckboxWithLabel textCheck = null;
+        CheckboxWithLabel percentCheck = null;
+        CheckboxWithLabel progressCheck = null;
+
+        textCheck = new CheckboxWithLabel("Text (HP 85/100, MP 42/50, SP 95/100)", 0, profile.TitleBarStatsMode == TitleBarStatsMode.Text, b => {
+            if (b)
+            {
+                // Uncheck others
+                percentCheck.IsChecked = false;
+                progressCheck.IsChecked = false;
+
+                profile.TitleBarStatsMode = TitleBarStatsMode.Text;
+                TitleBarStatsManager.ForceUpdate();
+            }
+        });
+
+        percentCheck = new CheckboxWithLabel("Percent (HP 85%, MP 84%, SP 95%)", 0, profile.TitleBarStatsMode == TitleBarStatsMode.Percent, b => {
+            if (b)
+            {
+                // Uncheck others
+                textCheck.IsChecked = false;
+                progressCheck.IsChecked = false;
+
+                profile.TitleBarStatsMode = TitleBarStatsMode.Percent;
+                TitleBarStatsManager.ForceUpdate();
+            }
+        });
+
+        progressCheck = new CheckboxWithLabel("Progress Bar (HP [||||||    ] MP [||||||    ] SP [||||||    ])", 0, profile.TitleBarStatsMode == TitleBarStatsMode.ProgressBar, b => {
+            if (b)
+            {
+                // Uncheck others
+                textCheck.IsChecked = false;
+                percentCheck.IsChecked = false;
+
+                profile.TitleBarStatsMode = TitleBarStatsMode.ProgressBar;
+                TitleBarStatsManager.ForceUpdate();
+            }
+        });
+
+        scroll.Add(PositionHelper.PositionControl(textCheck));
+        scroll.Add(PositionHelper.PositionControl(percentCheck));
+        scroll.Add(PositionHelper.PositionControl(progressCheck));
+
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Preview:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default())));
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Note: Progress bars use Unicode block characters (█▓▒░) and may not display correctly on all systems.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
+    }
+
     public enum PAGE
     {
         None,
@@ -392,7 +484,8 @@ public class AssistantGump : BaseOptionsGump
         SpellBar,
         HUD,
         SpellIndicator,
-        JournalFilter
+        JournalFilter,
+        TitleBar
     }
 
     #region CustomControls

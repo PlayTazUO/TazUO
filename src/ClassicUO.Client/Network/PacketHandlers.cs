@@ -725,6 +725,7 @@ namespace ClassicUO.Network
                     UoAssist.SignalHits();
                     UoAssist.SignalStamina();
                     UoAssist.SignalMana();
+                    TitleBarStatsManager.UpdateTitleBar();
                 }
             }
         }
@@ -1894,6 +1895,7 @@ namespace ClassicUO.Network
                     UoAssist.SignalHits();
                     UoAssist.SignalStamina();
                     UoAssist.SignalMana();
+                    TitleBarStatsManager.UpdateTitleBar();
                 }
             }
         }
@@ -3606,6 +3608,7 @@ namespace ClassicUO.Network
             {
                 UoAssist.SignalHits();
                 SpellVisualRangeManager.Instance.ClearCasting();
+                TitleBarStatsManager.UpdateTitleBar();
             }
         }
 
@@ -3624,6 +3627,7 @@ namespace ClassicUO.Network
             if (mobile == World.Player)
             {
                 UoAssist.SignalMana();
+                TitleBarStatsManager.UpdateTitleBar();
             }
         }
 
@@ -3642,6 +3646,7 @@ namespace ClassicUO.Network
             if (mobile == World.Player)
             {
                 UoAssist.SignalStamina();
+                TitleBarStatsManager.UpdateTitleBar();
             }
         }
 
