@@ -31,7 +31,7 @@ namespace ClassicUO.Game.UI
             }
         }
 
-        private readonly ScrollArea _scrollArea;
+        private readonly ModernScrollArea _scrollArea;
         private readonly VBoxContainer _dataBox;
         private readonly NiceButton _lootButton;
         private readonly AlphaBlendControl _alphaBg;
@@ -105,9 +105,12 @@ namespace ClassicUO.Game.UI
                 TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
             };
 
-            Add(_scrollArea = new ScrollArea(0, _lootButton.Y + _lootButton.Height, Width, Height - _lootButton.Y - _lootButton.Height, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
+            Add(_scrollArea = new ModernScrollArea(0, _lootButton.Y + _lootButton.Height, Width, Height - _lootButton.Y - _lootButton.Height) 
+            { 
+                ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways
+            });
 
-            _scrollArea.Add(_dataBox = new(Width - 18));//(0, 0, Width, scrollArea.Height));
+            _scrollArea.Add(_dataBox = new(Width - 12));//ModernScrollArea uses 12px wide scrollbar
 
             Add(_resizeDrag = new HitBox(Width / 2 - 10, Height - 10, 20, 10, "Drag to resize", 0.50f));
             _resizeDrag.Add(new AlphaBlendControl(0.25f) { Width = 20, Height = 10, BaseColor = Color.OrangeRed });
@@ -329,9 +332,10 @@ namespace ClassicUO.Game.UI
                     ProfileManager.CurrentProfile.NearbyLootGumpHeight = Height;
 
 
-                    _scrollArea.Height = Height - _lootButton.Y - _lootButton.Height;
+                    _scrollArea.UpdateHeight(Height - _lootButton.Y - _lootButton.Height);
                     _alphaBg.Height = Height;
                     _resizeDrag.Y = Height - 10;
+                    _scrollArea.UpdateScrollbarPosition();//Update scrollbar position for new dimensions
                     _scrollArea.SlowUpdate();//Recalculate scrollbar
                 }
             }
@@ -383,7 +387,7 @@ namespace ClassicUO.Game.UI
             borderTexture = SolidColorTextureCache.GetTexture(Color.White);
             CanMove = true;
             AcceptMouseInput = true;
-            Width = NearbyLootGump.WIDTH - 18; //-18 for scroll bar
+            Width = NearbyLootGump.WIDTH - 12; //-12 for modern scroll bar
             Height = ITEM_SIZE;
             this.index = index;
 
