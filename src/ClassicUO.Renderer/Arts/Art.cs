@@ -38,6 +38,7 @@ namespace ClassicUO.Renderer.Arts
             if (spriteInfo.Texture == null)
             {
                 ArtInfo artInfo = PNGLoader.Instance.LoadArtTexture(idx);
+                bool loadedFromPNG = artInfo.Pixels != null && !artInfo.Pixels.IsEmpty;
 
                 if (artInfo.Pixels == null || artInfo.Pixels.IsEmpty)
                 {
@@ -62,6 +63,12 @@ namespace ClassicUO.Renderer.Arts
                         artInfo.Height,
                         out spriteInfo.UV
                     );
+
+                    // Clear the pixel cache from PNG Loader since it's now in the atlas
+                    if (loadedFromPNG)
+                    {
+                        PNGLoader.Instance.ClearArtPixelCache(idx);
+                    }
 
                     if (idx > 0x4000)
                     {
