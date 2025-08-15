@@ -489,7 +489,7 @@ namespace ClassicUO.Game.Managers
                 progressBarGump = new ProgressBarGump("Auto looting...", 0)
                 {
                     Y = (ProfileManager.CurrentProfile.GameWindowPosition.Y + ProfileManager.CurrentProfile.GameWindowSize.Y) - 150,
-                    ForegrouneColor = Color.DarkOrange
+                    ForegroundColor = Color.DarkOrange
                 };
                 progressBarGump.CenterXInViewPort();
                 UIManager.Add(progressBarGump);

@@ -10,7 +10,7 @@ namespace ClassicUO.Game.UI.Gumps
         public double MaxValue { get; set; } = 1;
         public double MinValue { get; set; } = 0;
         public double CurrentPercentage { get; set; }
-        public Color ForegrouneColor { get; set; } = Color.Blue;
+        public Color ForegroundColor { get; set; } = Color.Blue;
 
         private Vector3 hueVector = ShaderHueTranslator.GetHueVector(0, false, 0.6f);
         public ProgressBarGump(string title, double startPercentage = 1.0, int width = 200, int height = 20) : base(0, 0)
@@ -35,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.Draw(batcher, x, y);
 
             batcher.Draw(
-                SolidColorTextureCache.GetTexture(ForegrouneColor),
+                SolidColorTextureCache.GetTexture(ForegroundColor),
                 new Rectangle
                 (
                     x,
