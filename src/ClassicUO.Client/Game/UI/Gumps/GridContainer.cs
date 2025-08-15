@@ -234,11 +234,10 @@ namespace ClassicUO.Game.UI.Gumps
             openRegularGump.SetTooltip(
                 "/c[orange]Grid Container Controls:/cd\n" +
                 "Ctrl + Click to lock an item in place\n" +
-                "Alt + Click to add an item to the quick move queue\n" +
-                "Alt + Double Click to add all similar items to the quick move queue\n" +
+                "Alt + Click to toggle selection for multi-move\n" +
+                "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
                 "Sort and single click looting can be enabled with the icons on the right side");
-
             quickDropBackpack = new ResizableStaticPic(World.Player.FindItemByLayer(Layer.Backpack).DisplayedGraphic, 20, 20)
             {
                 X = Width - openRegularGump.Width - 20 - borderWidth,
@@ -980,6 +979,8 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else if (Keyboard.Alt && _item != null)
                 {
+                    if (MultiItemMoveGump.TrySelect(_item))
+                        SelectHighlight = true;
                     var graphic = _item.Graphic;
                     var hue = _item.Hue;
                     foreach (var gridItem in gridContainer.gridSlotManager.GridSlots.Values)
@@ -1378,7 +1379,9 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 base.Update();
 
-                bool comboActive = Keyboard.Alt && Mouse.LButtonPressed;
+                bool comboActive = Keyboard.Alt && Mouse.LButtonPressed
+                   && !Client.Game.GameCursor.ItemHold.Enabled
+                   && !TargetManager.IsTargeting;
 
                 if (comboActive)
                 {

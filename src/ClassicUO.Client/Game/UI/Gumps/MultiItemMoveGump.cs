@@ -32,9 +32,18 @@ namespace ClassicUO.Game.UI.Gumps
 
             int y = Math.Max(0, Math.Min(anchor.Y, screenH - PreferredHeight));
 
-            AddMultiItemMoveGumpToUI(x, y);
-
-            UIManager.GetGump<MultiItemMoveGump>()?.SetInScreen();
+            var g = UIManager.GetGump<MultiItemMoveGump>();
+            if (g == null || g.IsDisposed)
+            {
+                AddMultiItemMoveGumpToUI(x, y);
+                g = UIManager.GetGump<MultiItemMoveGump>();
+            }
+            else
+            {
+                g.X = x;
+                g.Y = y;
+            }
+            g?.SetInScreen();
         }
 
         // ===== Selection + queue =====
@@ -124,8 +133,11 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (int.TryParse(_delayInput.Text, out int newDelay))
                 {
+                    newDelay = Math.Max(0, Math.Min(5000, newDelay));
                     ObjDelay = newDelay;
                     ProfileManager.CurrentProfile.MoveMultiObjectDelay = newDelay;
+                    if (_delayInput.Text != newDelay.ToString())
+                        _delayInput.SetText(newDelay.ToString());
                 }
             };
 
@@ -147,7 +159,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e.Button == MouseButtonType.Left)
                 {
                     var bp = World.Player.FindItemByLayer(Layer.Backpack);
-                    if (bp != null) processItemMoves(bp);
+                    if (bp != null) ProcessItemMoves(bp);
                 }
             };
 
@@ -179,7 +191,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
                     Item cont = World.Items.Get(fav);
-                    if (cont != null) processItemMoves(cont);
+                    if (cont != null) ProcessItemMoves(cont);
                     else GameActions.Print("Favorite container is not available.");
                 }
             };
@@ -259,7 +271,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return;
                 }
                 GameActions.Print("Moving items to the selected container..");
-                processItemMoves(moveToContainer);
+                ProcessItemMoves(moveToContainer);
             }
         }
 
@@ -275,7 +287,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         // ===== Processing impl =====
 
-        private static void processItemMoves(Item container)
+        private static void ProcessItemMoves(Item container)
         {
             if (container != null)
             {
@@ -327,7 +339,7 @@ namespace ClassicUO.Game.UI.Gumps
                         case ProcessType.Ground:
                             var itemData = TileDataLoader.Instance.StaticData[moveItem.Graphic];
                             MoveItemQueue.Instance.Enqueue(
-                                moveItem,
+                                moveItem.Serial,
                                 0,
                                 moveItem.Amount,
                                 groundX,
@@ -336,12 +348,12 @@ namespace ClassicUO.Game.UI.Gumps
                             break;
 
                         case ProcessType.Container:
-                            MoveItemQueue.Instance.Enqueue(moveItem, containerId, moveItem.Amount);
+                            MoveItemQueue.Instance.Enqueue(moveItem.Serial, containerId, moveItem.Amount);
                             break;
 
                         case ProcessType.TradeWindow:
                             MoveItemQueue.Instance.Enqueue(
-                                moveItem,
+                                moveItem.Serial,
                                 tradeId,
                                 moveItem.Amount,
                                 RandomHelper.GetValue(0, 20),
