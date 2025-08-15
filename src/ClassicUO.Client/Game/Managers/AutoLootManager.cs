@@ -300,7 +300,10 @@ namespace ClassicUO.Game.Managers
             EventSink.OnPositionChanged -= OnPositionChanged;
             Save();
 
-            // tidy caches
+            if (progressBarGump != null && !progressBarGump.IsDisposed)
+                progressBarGump.Dispose();
+            progressBarGump = null;
+
             _distanceCache.Clear();
             _openingAttempts.Clear();
             _scanningCorpses.Clear();
@@ -330,7 +333,13 @@ namespace ClassicUO.Game.Managers
         private void OnOpenContainer(object sender, uint e)
         {
             if (!loaded) return;
-            if (!IsEnabled && lootItems.Count == 0) return;
+            if (!IsEnabled && lootItems.Count == 0)
+            {
+                if (progressBarGump != null && !progressBarGump.IsDisposed)
+                    progressBarGump.Dispose();
+                progressBarGump = null;
+                return;
+            }
 
             var cont = World.Items.Get(e);
             if (cont == null) return;
@@ -392,9 +401,17 @@ namespace ClassicUO.Game.Managers
 
         private void PumpMoveOnce()
         {
+            // Always clean up the bar if the queue is empty, before any early returns.
+            if (lootItems.Count == 0)
+            {
+                if (progressBarGump != null && !progressBarGump.IsDisposed)
+                    progressBarGump.Dispose();
+                progressBarGump = null;
+            }
+
             if (!loaded || !World.InGame) return;
-            if (!IsEnabled && lootItems.Count == 0) return;
-            if (lootItems.Count == 0) { progressBarGump?.Dispose(); return; }
+            if (!IsEnabled && lootItems.Count == 0) return;     // allow queued moves when disabled
+            if (lootItems.Count == 0) return;                   // already disposed above
             if (Client.Game.GameCursor.ItemHold.Enabled) return;
 
             var moveSerial = lootItems.Dequeue();
