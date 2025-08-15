@@ -1058,15 +1058,24 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else if (Keyboard.Alt && _item != null)
                     {
-                        // Toggle already handled in Update() to unify click and drag behavior.
-                        if (MultiItemMoveGump.IsSelected(_item.Serial))
+                        // If no drag occurred, toggle on click to prevent missed quick taps.
+                        bool nowSelected;
+                        if (!_altDragActive)
                         {
-                            MultiItemMoveGump.ShowNextTo(gridContainer);
+                            nowSelected = MultiItemMoveGump.ToggleItem(_item);
+                            // reflect highlight immediately
+                            SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
                         }
                         else
                         {
-                            MultiItemMoveGump.HideIfNoSelection();
+                            nowSelected = MultiItemMoveGump.IsSelected(_item.Serial);
                         }
+
+                        if (nowSelected)
+                            MultiItemMoveGump.ShowNextTo(gridContainer);
+                        else
+                            MultiItemMoveGump.HideIfNoSelection();
+
                         Mouse.CancelDoubleClick = true;
                     }
                     else if (Keyboard.Shift && _item != null && ProfileManager.CurrentProfile.EnableAutoLoot && !ProfileManager.CurrentProfile.HoldShiftForContext && !ProfileManager.CurrentProfile.HoldShiftToSplitStack)

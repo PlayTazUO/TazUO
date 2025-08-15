@@ -277,12 +277,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void OnContainerTarget(int x, int y, int z)
         {
-            processItemMoves(x, y, z);
+            ProcessItemMoves(x, y, z);
         }
 
         public static void OnTradeWindowTarget(uint tradeID)
         {
-            processItemMoves(tradeID);
+            ProcessItemMoves(tradeID);
         }
 
         // ===== Processing impl =====
@@ -297,7 +297,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private static void processItemMoves(int x, int y, int z)
+        private static void ProcessItemMoves(int x, int y, int z)
         {
             processType = ProcessType.Ground;
             groundX = x;
@@ -306,7 +306,7 @@ namespace ClassicUO.Game.UI.Gumps
             processing = true;
         }
 
-        private static void processItemMoves(uint tradeID)
+        private static void ProcessItemMoves(uint tradeID)
         {
             tradeId = tradeID;
             processType = ProcessType.TradeWindow;
