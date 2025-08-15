@@ -34,67 +34,18 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => allConfigs = value;
         }
 
-        public string Name
-        {
-            get => _entry.Name;
-            set => _entry.Name = value;
-        }
-
-        public List<string> ItemNames
-        {
-            get => _entry.ItemNames;
-            set => _entry.ItemNames = value;
-        }
-
-        public ushort Hue
-        {
-            get => _entry.Hue;
-            set => _entry.Hue = value;
-        }
-
+        public string Name { get => _entry.Name; set => _entry.Name = value; }
+        public List<string> ItemNames { get => _entry.ItemNames; set => _entry.ItemNames = value; }
+        public ushort Hue { get => _entry.Hue; set => _entry.Hue = value; }
         public List<GridHighlightProperty> Properties => _entry.Properties;
-
-        public bool AcceptExtraProperties
-        {
-            get => _entry.AcceptExtraProperties;
-            set => _entry.AcceptExtraProperties = value;
-        }
-
-        public int MinimumProperty
-        {
-            get => _entry.MinimumProperty;
-            set => _entry.MinimumProperty = value;
-        }
-
-        public int MaximumProperty
-        {
-            get => _entry.MaximumProperty;
-            set => _entry.MaximumProperty = value;
-        }
-
-        public List<string> ExcludeNegatives
-        {
-            get => _entry.ExcludeNegatives;
-            set => _entry.ExcludeNegatives = value;
-        }
-
-        public bool Overweight
-        {
-            get => _entry.Overweight;
-            set => _entry.Overweight = value;
-        }
-
-        public List<string> RequiredRarities
-        {
-            get => _entry.RequiredRarities;
-            set => _entry.RequiredRarities = value;
-        }
-
-        public GridHighlightSlot EquipmentSlots
-        {
-            get => _entry.GridHighlightSlot;
-            set => _entry.GridHighlightSlot = value;
-        }
+        public bool AcceptExtraProperties { get => _entry.AcceptExtraProperties; set => _entry.AcceptExtraProperties = value; }
+        public bool AutoLoot { get => _entry.AutoLoot; set => _entry.AutoLoot = value; }
+        public int MinimumProperty { get => _entry.MinimumProperty; set => _entry.MinimumProperty = value; }
+        public int MaximumProperty { get => _entry.MaximumProperty; set => _entry.MaximumProperty = value; }
+        public List<string> ExcludeNegatives { get => _entry.ExcludeNegatives; set => _entry.ExcludeNegatives = value; }
+        public bool Overweight { get => _entry.Overweight; set => _entry.Overweight = value; }
+        public List<string> RequiredRarities { get => _entry.RequiredRarities; set => _entry.RequiredRarities = value; }
+        public GridHighlightSlot EquipmentSlots { get => _entry.GridHighlightSlot; set => _entry.GridHighlightSlot = value; }
 
         public GridHighlightData()
         {
@@ -102,9 +53,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             ProfileManager.CurrentProfile.GridHighlightSetup.Add(_entry);
         }
 
-        private GridHighlightData(GridHighlightSetupEntry entry)
+        private GridHighlightData(GridHighlightSetupEntry entry) { _entry = entry; }
+
+        private static void TryAutoLoot(Item item)
         {
-            _entry = entry;
+            if (item == null) return;
+            if (!item.IsLootable) return;               // skip hair/face/etc.
+            if (item.ItemData.IsContainer) return;      // skip containers; AutoLoot scans them
+
+            AutoLootManager.Instance?.LootItem(item);   // central handler does range/open/move
         }
 
         public void Delete()
@@ -117,16 +74,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             var list = ProfileManager.CurrentProfile.GridHighlightSetup;
             int index = list.IndexOf(_entry);
-            if (index == -1) return; // Not found
-
-            // Prevent moving out of bounds
+            if (index == -1) return;
             if (up && index == 0) return;
             if (!up && index == list.Count - 1) return;
 
             list.RemoveAt(index);
             list.Insert(up ? index - 1 : index + 1, _entry);
         }
-
 
         public static void ProcessItemOpl(uint value)
         {
@@ -136,8 +90,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public static void ProcessQueue()
         {
-            if (!hasQueuedItems)
-                return;
+            if (!hasQueuedItems) return;
 
             List<ItemPropertiesData> itemData = new(3);
 
@@ -156,12 +109,16 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     {
                         data.item.MatchesHighlightData = true;
                         data.item.HighlightHue = config.Hue;
+
+                        if (config.AutoLoot && (data.item.IsCorpse || data.item.FindRootCorpse() != null))
+                        {
+                            TryAutoLoot(data.item);
+                        }
                     }
                 }
             }
 
-            if (_queue.Count == 0)
-                hasQueuedItems = false;
+            if (_queue.Count == 0) hasQueuedItems = false;
         }
 
         public static GridHighlightData GetGridHighlightData(int index)
@@ -174,59 +131,44 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 list.Add(new GridHighlightSetupEntry());
                 data = new GridHighlightData(list[index]);
             }
-
             return data;
         }
 
         public bool IsMatch(ItemPropertiesData itemData)
         {
-            if (!itemData.HasData)
-                return false;
-
-            return AcceptExtraProperties
-                ? IsMatchFromProperties(itemData)
-                : IsMatchFromItemPropertiesData(itemData);
+            if (!itemData.HasData) return false;
+            return AcceptExtraProperties ? IsMatchFromProperties(itemData)
+                                         : IsMatchFromItemPropertiesData(itemData);
         }
 
         private bool IsMatchFromProperties(ItemPropertiesData itemData)
         {
-            if (!IsItemNameMatch(itemData.item.Name))
-                return false;
-
-            if (!MatchesSlot(itemData.item.ItemData.Layer))
-                    return false;
+            if (!IsItemNameMatch(itemData.item.Name)) return false;
+            if (!MatchesSlot(itemData.item.ItemData.Layer)) return false;
 
             if (Overweight && itemData.singlePropertyData.Any(prop =>
-                    Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
-            {
+                Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
                 return false;
-            }
 
             foreach (string pattern in ExcludeNegatives.Select(Normalize))
             {
                 if (itemData.singlePropertyData.Any(prop =>
                         Normalize(prop.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0 ||
                         Normalize(prop.OriginalString).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0))
-                {
                     return false;
-                }
             }
 
             if (RequiredRarities.Count > 0)
             {
                 bool hasRequired = itemData.singlePropertyData.Any(prop =>
-                {
-                    return GridHighlightRules.RarityProperties.Any(rule =>
+                    GridHighlightRules.RarityProperties.Any(rule =>
                         Normalize(rule).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase)) &&
                     RequiredRarities.Any(r =>
-                        Normalize(r).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase));
-                });
-
-                if (!hasRequired)
-                    return false;
+                        Normalize(r).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase)));
+                if (!hasRequired) return false;
             }
 
-            int matchingPropertiesCount = 0;
+            int matching = 0;
 
             foreach (var prop in Properties)
             {
@@ -235,26 +177,17 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                      Normalize(p.OriginalString).IndexOf(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase) >= 0) &&
                     (prop.MinValue == -1 || p.FirstValue >= prop.MinValue));
 
-                if (matched)
-                {
-                    matchingPropertiesCount++;
-                }
-
-                if (!matched && !prop.IsOptional)
-                    return false;
+                if (matched) matching++;
+                if (!matched && !prop.IsOptional) return false;
             }
 
-            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
-            return isMatchingPropertyCount;
+            return IsMatchingPropertyCount(matching);
         }
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
         {
-            if (!IsItemNameMatch(itemData.item.Name))
-                return false;
-
-            if (!MatchesSlot(itemData.item.ItemData.Layer))
-                return false;
+            if (!IsItemNameMatch(itemData.item.Name)) return false;
+            if (!MatchesSlot(itemData.item.ItemData.Layer)) return false;
 
             var props = itemData.singlePropertyData;
 
@@ -279,9 +212,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             if (Overweight && props.Any(prop =>
                     Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
-            {
                 return false;
-            }
 
             foreach (var pattern in ExcludeNegatives.Select(Normalize))
             {
@@ -295,12 +226,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 bool hasRequired = itemRarities.Any(r =>
                     RequiredRarities.Any(req =>
                         Normalize(r.Name).Equals(Normalize(req), StringComparison.OrdinalIgnoreCase)));
-
-                if (!hasRequired)
-                    return false;
+                if (!hasRequired) return false;
             }
 
-            int matchingPropertiesCount = 0;
+            int matching = 0;
 
             foreach (var prop in Properties)
             {
@@ -309,41 +238,30 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 if (match == null)
                 {
-                    if (!prop.IsOptional)
-                        return false;
+                    if (!prop.IsOptional) return false;
                 }
                 else if (prop.MinValue != -1 && match.FirstValue < prop.MinValue)
                 {
                     return false;
                 }
 
-                matchingPropertiesCount++;
+                matching++;
             }
 
-            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
-            return isMatchingPropertyCount;
+            return IsMatchingPropertyCount(matching);
         }
 
-        private bool IsMatchingPropertyCount(int matchingPropertiesCount)
+        private bool IsMatchingPropertyCount(int count)
         {
-            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
-            {
-                return false;
-            }
-            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
-            {
-                return false;
-            }
-
+            if (MinimumProperty > 0 && count < MinimumProperty) return false;
+            if (MaximumProperty > 0 && count > MaximumProperty) return false;
             return true;
         }
 
         private string Normalize(string input)
         {
             input ??= string.Empty;
-
-            if (_normalizeCache.TryGetValue(input, out var cached))
-                return cached;
+            if (_normalizeCache.TryGetValue(input, out var cached)) return cached;
 
             var result = StripHtmlTags(input).Trim();
             _normalizeCache[input] = result;
@@ -353,14 +271,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private string CleanItemName(string name)
         {
             if (string.IsNullOrEmpty(name)) return string.Empty;
-
             int index = 0;
-            // Skip leading digits
             while (index < name.Length && char.IsDigit(name[index])) index++;
-
-            // Skip following whitespace
             while (index < name.Length && char.IsWhiteSpace(name[index])) index++;
-
             return name.Substring(index).Trim().ToLowerInvariant();
         }
 
@@ -384,18 +297,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool IsItemNameMatch(string itemName)
         {
-            if (ItemNames.Count == 0)
-                return true;
+            if (ItemNames.Count == 0) return true;
 
-            string cleanedUpItemName = CleanItemName(itemName);
-            return ItemNames.Any(name => string.Equals(cleanedUpItemName, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            string cleaned = CleanItemName(itemName);
+            return ItemNames.Any(name => string.Equals(cleaned, name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         private bool MatchesSlot(byte layer)
         {
-            if (EquipmentSlots.Other) {
-                return true;
-            }
+            if (EquipmentSlots.Other) return true;
 
             return layer switch
             {
