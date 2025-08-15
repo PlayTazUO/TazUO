@@ -36,6 +36,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Clamp percentage to [0,1] to avoid negative/overflow widths
             var pct = CurrentPercentage < 0 ? 0 : (CurrentPercentage > 1 ? 1 : CurrentPercentage);
+            if (double.IsNaN(pct)) pct = 0;
             batcher.Draw(
                 SolidColorTextureCache.GetTexture(ForegroundColor),
                 new Rectangle

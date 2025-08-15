@@ -44,11 +44,11 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _openedContainers = new();
         private readonly HashSet<uint> _pendingContainers = new();
 
-        private readonly Dictionary<uint, (int distance, long ts)> _distanceCache = new();
+        private readonly Dictionary<uint, (int distance, uint ts)> _distanceCache = new();
 
         private readonly Dictionary<uint, int> _openingAttempts = new();
         private readonly Dictionary<(ushort graphic, ushort hue), bool> _quickMatchCache = new();
-
+        private readonly Dictionary<uint, uint> _rangeDeferUntil = new();
         private long _lastPruneTicks;
 
         private AutoLootManager() { }
@@ -70,7 +70,7 @@ namespace ClassicUO.Game.Managers
 
             if (target.OnGround && _distanceCache.TryGetValue(target.Serial, out var cached))
             {
-                if (Time.Ticks - cached.ts < 500)
+                if (Time.Ticks - cached.ts < 500u)
                 {
                     return cached.distance <= range;
                 }
@@ -452,6 +452,13 @@ namespace ClassicUO.Game.Managers
 
             if (!InRangeAnchor(m, ProfileManager.CurrentProfile.AutoOpenCorpseRange, out var anchor))
             {
+                if (_rangeDeferUntil.TryGetValue(moveSerial, out var until) && Time.Ticks < until)
+                {
+                    lootItems.Enqueue(moveSerial);
+                    return;
+                }
+
+                _rangeDeferUntil[moveSerial] = Time.Ticks + 300u; // ~300 ms
                 lootItems.Enqueue(moveSerial);
                 return;
             }
@@ -465,6 +472,7 @@ namespace ClassicUO.Game.Managers
                 if (attempts >= 3)
                 {
                     _openingAttempts.Remove(corpse.Serial);
+                    quickContainsLookup.Remove(moveSerial); // stop advertising "being looted"
                     return;
                 }
 
@@ -590,7 +598,15 @@ namespace ClassicUO.Game.Managers
                 string search;
                 if (World.OPL.TryGetNameAndData(compareTo.Serial, out string name, out string data)) search = name + data;
                 else search = StringHelper.GetPluralAdjustedString(compareTo.ItemData.Name);
-                return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
+                try
+                {
+                    return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
+                }
+                catch (ArgumentException)
+                {
+                    // Invalid pattern; do not match
+                    return false;
+                }
             }
 
             public override bool Equals(object obj) => Equals(obj as AutoLootConfigEntry);
