@@ -18,7 +18,18 @@ namespace ClassicUO.Game.Managers
     {
         public static readonly AutoLootManager Instance = new();
         public bool IsLoaded => loaded;
-        public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
+
+        public List<AutoLootConfigEntry> AutoLootList
+        {
+            get => autoLootItems;
+            set
+            {
+                autoLootItems = value ?? new List<AutoLootConfigEntry>();
+                _quickMatchCache.Clear();
+            }
+        }
+
+        private const ushort DBG_COLOR = 0x0044;
 
         private readonly HashSet<uint> quickContainsLookup = new();
         private static readonly Queue<uint> lootItems = new();
@@ -35,12 +46,12 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _openedContainers = new();
         private readonly HashSet<uint> _pendingContainers = new();
 
-        // NEW: distance cache (chebyshev, 1s TTL) for on-ground anchors
         private readonly Dictionary<uint, (int distance, long ts)> _distanceCache = new();
 
-        // NEW: guard against repeated corpse-opening attempts from the mover
         private readonly Dictionary<uint, int> _openingAttempts = new();
         private readonly Dictionary<(ushort graphic, ushort hue), bool> _quickMatchCache = new();
+
+        private long _lastPruneTicks;
 
         private AutoLootManager() { }
 
@@ -53,7 +64,7 @@ namespace ClassicUO.Game.Managers
             return maybeCorpseOrChild;
         }
 
-        private bool InRangeChebyshev(Item target, int range, string tag)
+        private bool InRangeChebyshev(Item target, int range, string _)
         {
             var p = World.Player;
             target = GetCorpseAnchor(target);
@@ -189,12 +200,17 @@ namespace ClassicUO.Game.Managers
         {
             var candidate = new AutoLootConfigEntry { Graphic = graphic, Hue = hue, Name = name };
             var existing = autoLootItems.FirstOrDefault(e => e.Equals(candidate));
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                if (!string.IsNullOrWhiteSpace(name) && !string.Equals(existing.Name, name, StringComparison.Ordinal))
+                    existing.Name = name;
+                return existing;
+            }
 
             autoLootItems.Add(candidate);
             _quickMatchCache.Clear();
             return candidate;
-}
+        }
 
         private void HandleCorpse(Item corpse)
         {
@@ -324,6 +340,8 @@ namespace ClassicUO.Game.Managers
                     CheckAndLoot(item);
                 }
 
+            PruneContainerSetsIfNeeded();
+
             PumpMoveOnce();
             MoveItemQueue.Instance?.ProcessQueue();
         }
@@ -351,6 +369,7 @@ namespace ClassicUO.Game.Managers
                 _pendingContainers.Remove(cont.Serial);
                 _openingAttempts.Remove(anchorCorpse.Serial);
                 HandleCorpse(anchorCorpse);
+                PruneContainerSetsIfNeeded();
                 PumpMoveOnce();
                 MoveItemQueue.Instance?.ProcessQueue();
                 return;
@@ -366,6 +385,7 @@ namespace ClassicUO.Game.Managers
                 if (IsOnLootList(child)) LootItem(child);
             }
 
+            PruneContainerSetsIfNeeded();
             PumpMoveOnce();
             MoveItemQueue.Instance?.ProcessQueue();
         }
@@ -376,6 +396,7 @@ namespace ClassicUO.Game.Managers
             if (sender is Item i)
             {
                 CheckCorpse(i);
+                PruneContainerSetsIfNeeded();
                 PumpMoveOnce();
                 MoveItemQueue.Instance?.ProcessQueue();
             }
@@ -387,12 +408,14 @@ namespace ClassicUO.Game.Managers
             var item = World.Items.Get(e.Serial);
             if (item != null) CheckCorpse(item);
 
+            PruneContainerSetsIfNeeded();
             PumpMoveOnce();
             MoveItemQueue.Instance?.ProcessQueue();
         }
 
         public void Update()
         {
+            PruneContainerSetsIfNeeded();
             PumpMoveOnce();
             MoveItemQueue.Instance?.ProcessQueue();
         }
@@ -417,7 +440,6 @@ namespace ClassicUO.Game.Managers
 
             if (lootItems.Count == 0) currentLootTotalCount = 0;
 
-            quickContainsLookup.Remove(moveSerial);
             CreateProgressBar();
 
             if (progressBarGump != null && !progressBarGump.IsDisposed)
@@ -454,9 +476,10 @@ namespace ClassicUO.Game.Managers
             var pack = World.Player?.FindItemByLayer(Layer.Backpack);
             if (pack == null) { lootItems.Enqueue(moveSerial); return; }
 
-            if (m.Container == pack.Serial) return;
+            if (m.Container == pack.Serial) { quickContainsLookup.Remove(moveSerial); return; }
 
             MoveItemQueue.Instance?.EnqueueQuick(m);
+            quickContainsLookup.Remove(moveSerial);
         }
 
         private void CreateProgressBar()
@@ -471,6 +494,18 @@ namespace ClassicUO.Game.Managers
                 progressBarGump.CenterXInViewPort();
                 UIManager.Add(progressBarGump);
             }
+        }
+
+        private void PruneContainerSetsIfNeeded()
+        {
+            if (Time.Ticks - _lastPruneTicks < 5000) return; // ~5s
+            _lastPruneTicks = Time.Ticks;
+
+            bool Missing(uint s) => World.Items.Get(s) == null;
+
+            _openedContainers.RemoveWhere(Missing);
+            _pendingContainers.RemoveWhere(Missing);
+            _openedCorpses.RemoveWhere(Missing);
         }
 
         private void Load()
@@ -514,23 +549,25 @@ namespace ClassicUO.Game.Managers
                 string fileData = JsonSerializer.Serialize(autoLootItems, options);
                 File.WriteAllText(savePath, fileData);
             }
-            catch { }
+            catch
+            {
+                try { GameActions.Print("AutoLoot: failed to save AutoLoot.json.", 32); } catch { }
+            }
         }
 
         public class AutoLootConfigEntry : IEquatable<AutoLootConfigEntry>
         {
             public string Name { get; set; } = "";
-            public int Graphic { get; set; } = 0;
+            public int Graphic { get; set; } = -1; // wildcard by default
             public ushort Hue { get; set; } = ushort.MaxValue;
             public string RegexSearch { get; set; } = string.Empty;
-            private bool RegexMatch => !string.IsNullOrEmpty(RegexSearch);
             public string UID { get; set; } = Guid.NewGuid().ToString();
 
             public bool Match(Item compareTo)
             {
                 if (Graphic != -1 && Graphic != compareTo.Graphic) return false;
                 if (!HueCheck(compareTo.Hue)) return false;
-                if (RegexMatch && !RegexCheck(compareTo)) return false;
+                if (!string.IsNullOrEmpty(RegexSearch) && !RegexCheck(compareTo)) return false;
                 return true;
             }
 
