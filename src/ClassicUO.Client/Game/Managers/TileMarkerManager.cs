@@ -54,7 +54,7 @@ namespace ClassicUO.Game.Managers
             markedTiles[location] = hue;
 
             // Update all live tiles at this location
-            UpdateLiveTilesAt(x, y, hue);
+            UpdateLiveTilesAt(x, y, map, hue);
         }
 
         public void RemoveTile(int x, int y, int map)
@@ -64,7 +64,7 @@ namespace ClassicUO.Game.Managers
             if (markedTiles.Remove(location))
             {
                 // Reset hue to 0 for all live tiles at this location
-                UpdateLiveTilesAt(x, y, 0);
+                UpdateLiveTilesAt(x, y, map, 0);
             }
         }
 
@@ -149,9 +149,9 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private void UpdateLiveTilesAt(int x, int y, ushort hue)
+        private void UpdateLiveTilesAt(int x, int y, int map, ushort hue)
         {
-            if (World.Map == null) return;
+            if (World.Map == null || World.Map.Index != map) return;
 
             var chunk = World.Map.GetChunk(x, y, false);
             if (chunk == null) return;
