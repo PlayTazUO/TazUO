@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Data;
 using System.IO;
+using System.Buffers;
 using SDL2;
 
 namespace ClassicUO.Network
@@ -89,7 +90,7 @@ namespace ClassicUO.Network
 
         private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
         {
-            var buffer = new byte[4096];
+            var buffer = ArrayPool<byte>.Shared.Rent(4096);
 
             try
             {
@@ -146,6 +147,10 @@ namespace ClassicUO.Network
                 Log.Error($"Error in receive loop {ex}");
                 Disconnect();
                 OnError?.Invoke(this, SocketError.SocketError);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
@@ -351,6 +356,8 @@ namespace ClassicUO.Network
             }
         }
 
+        private const int MAX_PACKETS_PER_FRAME = 50;
+
         public void ProcessIncomingMessages()
         {
             if (_cancellationTokenSource.IsCancellationRequested)
@@ -362,9 +369,11 @@ namespace ClassicUO.Network
                 return;
             }
             
-            while (_incomingMessages.TryDequeue(out var message))
+            int packetsProcessed = 0;
+            while (_incomingMessages.TryDequeue(out var message) && packetsProcessed < MAX_PACKETS_PER_FRAME)
             {
                 MessageReceived?.Invoke(this, message);
+                packetsProcessed++;
             }
         }
         
@@ -421,13 +430,13 @@ namespace ClassicUO.Network
                     {
                         var sendingBuffer = new byte[4096];
                         
-                        int size = Math.Max(sendingBuffer.Length, _sendStream.Length);
+                        int size = Math.Min(sendingBuffer.Length, _sendStream.Length);
                         
                         var read = _sendStream.Dequeue(sendingBuffer, 0, size);
 
                         if (read > 0)
                         {
-                            _socket.SendAsync(sendingBuffer, 0, read, cancellationToken);
+                            _ = _socket.SendAsync(sendingBuffer, 0, read, cancellationToken);
                         }
                     }
                 }
