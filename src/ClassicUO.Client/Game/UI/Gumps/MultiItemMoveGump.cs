@@ -15,7 +15,7 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class MultiItemMoveGump : NineSliceGump
     {
-        private const int WIDTH = 220;
+        private const int WIDTH = 230;
         private const int HEIGHT = 150;
 
         public static int PreferredWidth => UIManager.GetGump<MultiItemMoveGump>()?.Width ?? WIDTH;
