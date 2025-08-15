@@ -55,7 +55,7 @@ namespace ClassicUO.Game.UI.Gumps
         public static int ObjDelay = 1000;
         private static bool processing = false;
         private static ProcessType processType = ProcessType.None;
-        private static long nextMove;
+        private static uint _lastMoveTick;
         private static uint tradeId, containerId;
         private static int groundX, groundY, groundZ;
 
@@ -139,6 +139,15 @@ namespace ClassicUO.Game.UI.Gumps
                     if (_delayInput.Text != newDelay.ToString())
                         _delayInput.SetText(newDelay.ToString());
                 }
+                else if (string.IsNullOrWhiteSpace(_delayInput.Text))
+                {
+                    if (ObjDelay != 0)
+                    {
+                        ObjDelay = 0;
+                        ProfileManager.CurrentProfile.MoveMultiObjectDelay = 0;
+                    }
+                    _delayInput.SetText("0");
+                }
             };
 
             // --- Buttons: position from the content bottom so spacing stays correct when resizing ---
@@ -158,7 +167,9 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    var bp = World.Player.FindItemByLayer(Layer.Backpack);
+                    var player = World.Player;
+                    if (player == null) return;
+                    var bp = player.FindItemByLayer(Layer.Backpack);
                     if (bp != null) ProcessItemMoves(bp);
                 }
             };
@@ -324,8 +335,9 @@ namespace ClassicUO.Game.UI.Gumps
             if (!processing)
                 return;
 
-            if (Time.Ticks < nextMove)
-                return;
+            // Respect object delay with overflow-safe delta check
+            if (Time.Ticks - _lastMoveTick < (uint)ObjDelay)
+                 return;
 
             if (Client.Game.GameCursor.ItemHold.Enabled)
                 return;
@@ -375,7 +387,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (enqueued)
                     {
                         _selected.TryRemove(moveItem.Serial, out _);
-                        nextMove = Time.Ticks + ObjDelay;
+                        _lastMoveTick = Time.Ticks;
                     }
                 }
                 // else: was deselected after enqueue -> skip
