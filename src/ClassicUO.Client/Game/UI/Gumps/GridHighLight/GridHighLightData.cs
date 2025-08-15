@@ -62,6 +62,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (item.ItemData.IsContainer) return;      // skip containers; AutoLoot scans them
             if (AutoLootManager.Instance == null) return; // AutoLoot not initialized
 
+            var rootCorpse = item.FindRootCorpse();
+            if (rootCorpse != null && !rootCorpse.Opened) return;
+
             AutoLootManager.Instance.LootItem(item);   // central handler does range/open/move
         }
 
@@ -111,7 +114,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                         data.item.MatchesHighlightData = true;
                         data.item.HighlightHue = config.Hue;
 
-                        if (config.AutoLoot && (data.item.IsCorpse || data.item.FindRootCorpse() != null))
+                        if (config.AutoLoot && data.item.FindRootCorpse() != null)
                         {
                             TryAutoLoot(data.item);
                         }

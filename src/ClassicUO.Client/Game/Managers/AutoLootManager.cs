@@ -35,12 +35,14 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _scanningCorpses = new();
         private readonly HashSet<uint> _openedCorpses = new();
         private readonly HashSet<uint> _openedContainers = new();
+        private readonly HashSet<uint> _pendingContainers = new();
 
         // NEW: distance cache (chebyshev, 1s TTL) for on-ground anchors
         private readonly Dictionary<uint, (int distance, long ts)> _distanceCache = new();
 
         // NEW: guard against repeated corpse-opening attempts from the mover
         private readonly Dictionary<uint, int> _openingAttempts = new();
+        private readonly Dictionary<(ushort graphic, ushort hue), bool> _quickMatchCache = new();
 
         private AutoLootManager() { }
 
@@ -61,7 +63,7 @@ namespace ClassicUO.Game.Managers
 
             if (target.OnGround && _distanceCache.TryGetValue(target.Serial, out var cached))
             {
-                if (Time.Ticks - cached.ts < 1000)
+                if (Time.Ticks - cached.ts < 500)
                 {
                     return cached.distance <= range;
                 }
@@ -164,8 +166,24 @@ namespace ClassicUO.Game.Managers
         private bool IsOnLootList(Item i)
         {
             if (!loaded) return false;
+
+            // Quick check for exact graphic/hue matches
+            var key = (i.Graphic, i.Hue);
+            if (_quickMatchCache.TryGetValue(key, out bool cached))
+                return cached;
+
             foreach (var entry in autoLootItems)
-                if (entry.Match(i)) return true;
+                if (entry.Match(i))
+                {
+                    // Cache only non-regex matches
+                    if (string.IsNullOrEmpty(entry.RegexSearch))
+                        _quickMatchCache[key] = true;
+                    return true;
+                }
+
+            if (autoLootItems.All(e => string.IsNullOrEmpty(e.RegexSearch)))
+                _quickMatchCache[key] = false;
+
             return false;
         }
 
@@ -176,6 +194,7 @@ namespace ClassicUO.Game.Managers
                 if (entry.Equals(item)) return entry;
 
             autoLootItems.Add(item);
+            _quickMatchCache.Clear();
             return item;
         }
 
@@ -226,9 +245,13 @@ namespace ClassicUO.Game.Managers
                     {
                         if (!_openedContainers.Contains(child.Serial))
                         {
-                            GameActions.DoubleClick(child);
-                            _openedContainers.Add(child.Serial);
-                            return; // open one per pass
+                            // Queue for opening but continue processing
+                            if (!_pendingContainers.Contains(child.Serial))
+                            {
+                                GameActions.DoubleClick(child);
+                                _pendingContainers.Add(child.Serial);
+                            }
+                            continue;
                         }
 
                         if (child.Items != null) stack.Push(child);
@@ -243,7 +266,11 @@ namespace ClassicUO.Game.Managers
         public void TryRemoveAutoLootEntry(string UID)
         {
             int ix = autoLootItems.FindIndex(e => e.UID == UID);
-            if (ix >= 0) autoLootItems.RemoveAt(ix);
+            if (ix >= 0)
+            {
+                autoLootItems.RemoveAt(ix);
+                _quickMatchCache.Clear();
+            }
         }
 
         private void CheckCorpse(Item i)
@@ -279,11 +306,14 @@ namespace ClassicUO.Game.Managers
             _scanningCorpses.Clear();
             _openedCorpses.Clear();
             _openedContainers.Clear();
+            _pendingContainers.Clear();
+            _quickMatchCache.Clear();
         }
 
         private void OnPositionChanged(object sender, PositionChangedArgs e)
         {
             if (!loaded) return;
+            _distanceCache.Clear();
 
             if (ProfileManager.CurrentProfile.EnableScavenger)
                 foreach (Item item in World.Items.Values)
@@ -299,7 +329,8 @@ namespace ClassicUO.Game.Managers
 
         private void OnOpenContainer(object sender, uint e)
         {
-            if (!loaded || !IsEnabled) return;
+            if (!loaded) return;
+            if (!IsEnabled && lootItems.Count == 0) return;
 
             var cont = World.Items.Get(e);
             if (cont == null) return;
@@ -310,7 +341,8 @@ namespace ClassicUO.Game.Managers
             {
                 if (anchorCorpse.OnGround) _openedCorpses.Add(anchorCorpse.Serial);
                 _openedContainers.Add(cont.Serial);
-                _openingAttempts.Remove(anchorCorpse.Serial); // corpse did open → reset attempts
+                _pendingContainers.Remove(cont.Serial);
+                _openingAttempts.Remove(anchorCorpse.Serial);
                 HandleCorpse(anchorCorpse);
                 PumpMoveOnce();
                 MoveItemQueue.Instance?.ProcessQueue();
@@ -318,6 +350,7 @@ namespace ClassicUO.Game.Managers
             }
 
             _openedContainers.Add(cont.Serial);
+            _pendingContainers.Remove(cont.Serial);
 
             for (LinkedObject n = cont.Items; n != null; n = n.Next)
             {
@@ -359,7 +392,8 @@ namespace ClassicUO.Game.Managers
 
         private void PumpMoveOnce()
         {
-            if (!loaded || !IsEnabled || !World.InGame) return;
+            if (!loaded || !World.InGame) return;
+            if (!IsEnabled && lootItems.Count == 0) return;
             if (lootItems.Count == 0) { progressBarGump?.Dispose(); return; }
             if (Client.Game.GameCursor.ItemHold.Enabled) return;
 
@@ -441,12 +475,17 @@ namespace ClassicUO.Game.Managers
                                     ?? new List<AutoLootConfigEntry>();
                 }
                 loaded = true;
+
+                _quickMatchCache.Clear();
+                _distanceCache.Clear();
             }
             catch
             {
                 GameActions.Print("Error loading AutoLoot.json (check JSON).", 32);
                 autoLootItems = new List<AutoLootConfigEntry>();
                 loaded = true;
+                _quickMatchCache.Clear();
+                _distanceCache.Clear();
             }
         }
 
