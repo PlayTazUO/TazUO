@@ -69,8 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (SelectedCount == 0)
             {
-                processing = false;
-                ResetDestination();
+                ClearAll();
                 UIManager.GetGump<MultiItemMoveGump>()?.Dispose();
             }
         }
@@ -134,6 +133,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (int.TryParse(_delayInput.Text, out int newDelay))
                 {
                     newDelay = Math.Max(0, Math.Min(5000, newDelay));
+                    if (newDelay == ObjDelay) return;
                     ObjDelay = newDelay;
                     ProfileManager.CurrentProfile.MoveMultiObjectDelay = newDelay;
                     if (_delayInput.Text != newDelay.ToString())
@@ -334,6 +334,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (_selected.ContainsKey(moveItem.Serial))
                 {
+                    bool enqueued = false;
                     switch (processType)
                     {
                         case ProcessType.Ground:
@@ -345,10 +346,12 @@ namespace ClassicUO.Game.UI.Gumps
                                 groundX,
                                 groundY,
                                 groundZ + (sbyte)(itemData.Height == 0xFF ? 0 : itemData.Height));
+                            enqueued = true;
                             break;
 
                         case ProcessType.Container:
                             MoveItemQueue.Instance.Enqueue(moveItem.Serial, containerId, moveItem.Amount);
+                            enqueued = true;
                             break;
 
                         case ProcessType.TradeWindow:
@@ -359,6 +362,7 @@ namespace ClassicUO.Game.UI.Gumps
                                 RandomHelper.GetValue(0, 20),
                                 RandomHelper.GetValue(0, 20),
                                 0);
+                            enqueued = true;
                             break;
 
                         case ProcessType.None:
@@ -368,8 +372,11 @@ namespace ClassicUO.Game.UI.Gumps
                             break;
                     }
 
-                    _selected.TryRemove(moveItem.Serial, out _);
-                    nextMove = Time.Ticks + ObjDelay;
+                    if (enqueued)
+                    {
+                        _selected.TryRemove(moveItem.Serial, out _);
+                        nextMove = Time.Ticks + ObjDelay;
+                    }
                 }
                 // else: was deselected after enqueue -> skip
             }
@@ -383,11 +390,10 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            // auto-close if nothing to do
+            // auto-close if nothing is selected
             if (SelectedCount < 1 && MoveItems.IsEmpty)
             {
-                processing = false;
-                ResetDestination();
+                ClearAll();
                 Dispose();
                 return false;
             }
