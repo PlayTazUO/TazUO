@@ -16,7 +16,7 @@ namespace ClassicUO.Game.Managers
 {
     internal class AutoLootManager
     {
-        public static AutoLootManager Instance { get; private set; } = new();
+        public static readonly AutoLootManager Instance = new();
         public bool IsLoaded => loaded;
         public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
 
