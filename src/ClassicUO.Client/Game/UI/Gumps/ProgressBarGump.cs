@@ -34,13 +34,15 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Draw(batcher, x, y);
 
+            // Clamp percentage to [0,1] to avoid negative/overflow widths
+            var pct = CurrentPercentage < 0 ? 0 : (CurrentPercentage > 1 ? 1 : CurrentPercentage);
             batcher.Draw(
                 SolidColorTextureCache.GetTexture(ForegroundColor),
                 new Rectangle
                 (
                     x,
                     y,
-                    (int)(CurrentPercentage * Width),
+                    (int)(pct * Width),
                     Height
                 ),
                 hueVector);

@@ -29,8 +29,6 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private const ushort DBG_COLOR = 0x0044;
-
         private readonly HashSet<uint> quickContainsLookup = new();
         private static readonly Queue<uint> lootItems = new();
         private List<AutoLootConfigEntry> autoLootItems = new();
@@ -64,7 +62,7 @@ namespace ClassicUO.Game.Managers
             return maybeCorpseOrChild;
         }
 
-        private bool InRangeChebyshev(Item target, int range, string _)
+        private bool InRangeChebyshev(Item target, int range)
         {
             var p = World.Player;
             target = GetCorpseAnchor(target);
@@ -91,7 +89,7 @@ namespace ClassicUO.Game.Managers
         private bool InRangeAnchor(Item itemOrCorpse, int range, out Item anchor)
         {
             anchor = GetCorpseAnchor(itemOrCorpse);
-            return InRangeChebyshev(anchor, range, "anchor");
+            return InRangeChebyshev(anchor, range);
         }
 
         public bool IsBeingLooted(uint serial) => quickContainsLookup.Contains(serial);
@@ -121,7 +119,7 @@ namespace ClassicUO.Game.Managers
 
             var anchor = GetCorpseAnchor(cont);
 
-            if (!InRangeChebyshev(anchor, ProfileManager.CurrentProfile.AutoOpenCorpseRange, "ForceLootContainer"))
+            if (!InRangeChebyshev(anchor, ProfileManager.CurrentProfile.AutoOpenCorpseRange))
             {
                 return;
             }
@@ -196,7 +194,7 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
-        public AutoLootConfigEntry AddAutoLootEntry(ushort graphic = 0, ushort hue = ushort.MaxValue, string name = "")
+        public AutoLootConfigEntry AddAutoLootEntry(int graphic = -1, ushort hue = ushort.MaxValue, string name = "")
         {
             var candidate = new AutoLootConfigEntry { Graphic = graphic, Hue = hue, Name = name };
             var existing = autoLootItems.FirstOrDefault(e => e.Equals(candidate));
@@ -212,12 +210,15 @@ namespace ClassicUO.Game.Managers
             return candidate;
         }
 
+        public AutoLootConfigEntry AddAutoLootEntry(ushort graphic, ushort hue = ushort.MaxValue, string name = "")
+            => AddAutoLootEntry((int)graphic, hue, name);
+
         private void HandleCorpse(Item corpse)
         {
             var anchorCorpse = GetCorpseAnchor(corpse);
 
             if (anchorCorpse == null || !anchorCorpse.IsCorpse) return;
-            if (!InRangeChebyshev(anchorCorpse, ProfileManager.CurrentProfile.AutoOpenCorpseRange, "HandleCorpse")) return;
+            if (!InRangeChebyshev(anchorCorpse, ProfileManager.CurrentProfile.AutoOpenCorpseRange)) return;
             if (anchorCorpse.IsHumanCorpse && !ProfileManager.CurrentProfile.AutoLootHumanCorpses) return;
             if (!_scanningCorpses.Add(anchorCorpse.Serial)) return;
 
@@ -325,6 +326,7 @@ namespace ClassicUO.Game.Managers
             _openedContainers.Clear();
             _pendingContainers.Clear();
             _quickMatchCache.Clear();
+            quickContainsLookup.Clear();
         }
 
         private void OnPositionChanged(object sender, PositionChangedArgs e)
@@ -336,7 +338,7 @@ namespace ClassicUO.Game.Managers
                 foreach (Item item in World.Items.Values)
                 {
                     if (item == null || !item.OnGround || item.IsCorpse) continue;
-                    if (!InRangeChebyshev(item, 3, "Scavenger")) continue;
+                    if (!InRangeChebyshev(item, 3)) continue;
                     CheckAndLoot(item);
                 }
 
@@ -446,7 +448,7 @@ namespace ClassicUO.Game.Managers
                 progressBarGump.CurrentPercentage = 1 - ((double)lootItems.Count / Math.Max(1, currentLootTotalCount));
 
             var m = World.Items.Get(moveSerial);
-            if (m == null) return;
+            if (m == null) { quickContainsLookup.Remove(moveSerial); return; }
 
             if (!InRangeAnchor(m, ProfileManager.CurrentProfile.AutoOpenCorpseRange, out var anchor))
             {
@@ -506,6 +508,7 @@ namespace ClassicUO.Game.Managers
             _openedContainers.RemoveWhere(Missing);
             _pendingContainers.RemoveWhere(Missing);
             _openedCorpses.RemoveWhere(Missing);
+            quickContainsLookup.RemoveWhere(Missing);
         }
 
         private void Load()
@@ -545,6 +548,10 @@ namespace ClassicUO.Game.Managers
 
             try
             {
+                var dir = Path.GetDirectoryName(savePath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string fileData = JsonSerializer.Serialize(autoLootItems, options);
                 File.WriteAllText(savePath, fileData);
@@ -581,7 +588,7 @@ namespace ClassicUO.Game.Managers
             private bool RegexCheck(Item compareTo)
             {
                 string search;
-                if (World.OPL.TryGetNameAndData(compareTo, out string name, out string data)) search = name + data;
+                if (World.OPL.TryGetNameAndData(compareTo.Serial, out string name, out string data)) search = name + data;
                 else search = StringHelper.GetPluralAdjustedString(compareTo.ItemData.Name);
                 return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
             }
