@@ -20,8 +20,6 @@ namespace ClassicUO.Game.Managers
         public bool IsLoaded => loaded;
         public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
 
-        private const ushort DBG_COLOR = 0x0044;
-
         private readonly HashSet<uint> quickContainsLookup = new();
         private static readonly Queue<uint> lootItems = new();
         private List<AutoLootConfigEntry> autoLootItems = new();
@@ -189,14 +187,14 @@ namespace ClassicUO.Game.Managers
 
         public AutoLootConfigEntry AddAutoLootEntry(ushort graphic = 0, ushort hue = ushort.MaxValue, string name = "")
         {
-            var item = new AutoLootConfigEntry { Graphic = graphic, Hue = hue, Name = name };
-            foreach (var entry in autoLootItems)
-                if (entry.Equals(item)) return entry;
+            var candidate = new AutoLootConfigEntry { Graphic = graphic, Hue = hue, Name = name };
+            var existing = autoLootItems.FirstOrDefault(e => e.Equals(candidate));
+            if (existing != null) return existing;
 
-            autoLootItems.Add(item);
+            autoLootItems.Add(candidate);
             _quickMatchCache.Clear();
-            return item;
-        }
+            return candidate;
+}
 
         private void HandleCorpse(Item corpse)
         {
@@ -519,7 +517,7 @@ namespace ClassicUO.Game.Managers
             catch { }
         }
 
-        public class AutoLootConfigEntry
+        public class AutoLootConfigEntry : IEquatable<AutoLootConfigEntry>
         {
             public string Name { get; set; } = "";
             public int Graphic { get; set; } = 0;
@@ -551,10 +549,31 @@ namespace ClassicUO.Game.Managers
                 return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
             }
 
+            public override bool Equals(object obj) => Equals(obj as AutoLootConfigEntry);
+
             public bool Equals(AutoLootConfigEntry other)
+                => !(other is null)
+                && Graphic == other.Graphic
+                && Hue == other.Hue
+                && string.Equals(RegexSearch, other.RegexSearch, StringComparison.Ordinal);
+
+            public override int GetHashCode()
             {
-                return other.Graphic == Graphic && other.Hue == Hue && RegexSearch == other.RegexSearch;
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 31 + Graphic;
+                    hash = hash * 31 + Hue.GetHashCode();
+                    hash = hash * 31 + (RegexSearch != null ? StringComparer.Ordinal.GetHashCode(RegexSearch) : 0);
+                    return hash;
+                }
             }
+
+            public static bool operator ==(AutoLootConfigEntry left, AutoLootConfigEntry right)
+                => Equals(left, right);
+
+            public static bool operator !=(AutoLootConfigEntry left, AutoLootConfigEntry right)
+                => !Equals(left, right);
         }
     }
 }
