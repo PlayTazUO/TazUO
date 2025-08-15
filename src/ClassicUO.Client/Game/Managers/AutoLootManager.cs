@@ -20,19 +20,7 @@ namespace ClassicUO.Game.Managers
         public bool IsLoaded => loaded;
         public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
 
-        private const bool DEBUG = false;
         private const ushort DBG_COLOR = 0x0044;
-        private void Log(string msg)
-        {
-            if (!DEBUG) return;
-            try { GameActions.Print($"[AutoLoot] {msg}", DBG_COLOR); } catch { }
-            try { System.Diagnostics.Debug.WriteLine($"[AutoLoot] {msg}"); } catch { }
-        }
-        private static string Info(Item i)
-        {
-            if (i == null) return "null";
-            return $"ser={i.Serial:X8} gfx={i.Graphic:X4} amt={i.Amount} xy=({i.X},{i.Y}) dist={i.Distance} corpse={(i.IsCorpse ? "Y" : "N")} inside={(i.FindRootCorpse() != null ? "Y" : "N")}";
-        }
 
         private readonly HashSet<uint> quickContainsLookup = new();
         private static readonly Queue<uint> lootItems = new();
@@ -47,6 +35,12 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _scanningCorpses = new();
         private readonly HashSet<uint> _openedCorpses = new();
         private readonly HashSet<uint> _openedContainers = new();
+
+        // NEW: distance cache (chebyshev, 1s TTL) for on-ground anchors
+        private readonly Dictionary<uint, (int distance, long ts)> _distanceCache = new();
+
+        // NEW: guard against repeated corpse-opening attempts from the mover
+        private readonly Dictionary<uint, int> _openingAttempts = new();
 
         private AutoLootManager() { }
 
@@ -64,10 +58,22 @@ namespace ClassicUO.Game.Managers
             var p = World.Player;
             target = GetCorpseAnchor(target);
             if (p == null || target == null) return false;
+
+            if (target.OnGround && _distanceCache.TryGetValue(target.Serial, out var cached))
+            {
+                if (Time.Ticks - cached.ts < 1000)
+                {
+                    return cached.distance <= range;
+                }
+            }
+
             int dx = Math.Abs((int)p.X - (int)target.X);
             int dy = Math.Abs((int)p.Y - (int)target.Y);
             int chev = Math.Max(dx, dy);
-            Log($"Range[{tag}]: player=({p.X},{p.Y}) target=({target.X},{target.Y}) chev={chev} item.dist={target.Distance} range={range}");
+
+            if (target.OnGround)
+                _distanceCache[target.Serial] = (chev, Time.Ticks);
+
             return chev <= range;
         }
 
@@ -83,7 +89,6 @@ namespace ClassicUO.Game.Managers
         {
             var item = World.Items.Get(serial);
             if (item != null) LootItem(item);
-            else Log($"LootItem(serial): missing {serial:X8}");
         }
 
         public void LootItem(Item item)
@@ -91,7 +96,6 @@ namespace ClassicUO.Game.Managers
             if (item == null) return;
             if (!quickContainsLookup.Add(item.Serial)) return;
 
-            Log($"Queued {item.Serial:X8} {item.Graphic:X4} x{item.Amount}");
             lootItems.Enqueue(item.Serial);
             currentLootTotalCount++;
 
@@ -102,23 +106,20 @@ namespace ClassicUO.Game.Managers
         public void ForceLootContainer(uint serial)
         {
             var cont = World.Items.Get(serial);
-            Log($"ForceLootContainer({serial:X8}) cont={Info(cont)}");
             if (cont == null) return;
 
             var anchor = GetCorpseAnchor(cont);
-            Log($"ForceLootContainer: anchor={Info(anchor)}");
 
             if (!InRangeChebyshev(anchor, ProfileManager.CurrentProfile.AutoOpenCorpseRange, "ForceLootContainer"))
             {
-                Log("ForceLootContainer: out of range");
                 return;
             }
 
             if (anchor.IsCorpse && !_openedCorpses.Contains(anchor.Serial))
             {
-                Log($"ForceLootContainer: opening corpse {anchor.Serial:X8}");
                 GameActions.DoubleClick(anchor);
                 _openedCorpses.Add(anchor.Serial);
+                _openingAttempts.Remove(anchor.Serial); // reset attempts on manual open
                 return;
             }
 
@@ -131,7 +132,6 @@ namespace ClassicUO.Game.Managers
             for (LinkedObject n = cont.Items; n != null; n = n.Next)
             {
                 var child = (Item)n;
-                Log($"ForceLootContainer: child {Info(child)}");
                 if (child == null) continue;
 
                 if (child.IsCorpse) HandleCorpse(child);
@@ -143,7 +143,6 @@ namespace ClassicUO.Game.Managers
 
         private void CheckAndLoot(Item i)
         {
-            Log($"CheckAndLoot({Info(i)})");
             if (!loaded || i == null || quickContainsLookup.Contains(i.Serial)) return;
 
             if (i.IsCorpse) { HandleCorpse(i); return; }
@@ -183,7 +182,6 @@ namespace ClassicUO.Game.Managers
         private void HandleCorpse(Item corpse)
         {
             var anchorCorpse = GetCorpseAnchor(corpse);
-            Log($"HandleCorpse ENTER corpse={Info(corpse)}  anchor={Info(anchorCorpse)}");
 
             if (anchorCorpse == null || !anchorCorpse.IsCorpse) return;
             if (!InRangeChebyshev(anchorCorpse, ProfileManager.CurrentProfile.AutoOpenCorpseRange, "HandleCorpse")) return;
@@ -194,47 +192,51 @@ namespace ClassicUO.Game.Managers
             {
                 if (!_openedCorpses.Contains(anchorCorpse.Serial))
                 {
-                    Log($"HandleCorpse: opening corpse {anchorCorpse.Serial:X8}");
                     GameActions.DoubleClick(anchorCorpse);
                     _openedCorpses.Add(anchorCorpse.Serial);
+                    _openingAttempts.Remove(anchorCorpse.Serial); // reset attempts when we open here
                     return;
                 }
 
-                var visited = new HashSet<uint>();
-                var stack = new Stack<Item>();
-                stack.Push(anchorCorpse);
-
-                while (stack.Count > 0)
-                {
-                    var container = stack.Pop();
-                    if (container == null || !visited.Add(container.Serial)) continue;
-
-                    for (LinkedObject node = container.Items; node != null; node = node.Next)
-                    {
-                        var child = (Item)node;
-                        if (child == null) continue;
-
-                        if (child.ItemData.IsContainer)
-                        {
-                            if (!_openedContainers.Contains(child.Serial))
-                            {
-                                Log($"HandleCorpse: opening subcontainer {Info(child)}");
-                                GameActions.DoubleClick(child);
-                                _openedContainers.Add(child.Serial);
-                                return; // open one per pass
-                            }
-
-                            if (child.Items != null) stack.Push(child);
-                            continue;
-                        }
-
-                        if (IsOnLootList(child)) LootItem(child);
-                    }
-                }
+                ProcessCorpseContents(anchorCorpse);
             }
             finally
             {
                 _scanningCorpses.Remove(anchorCorpse.Serial);
+            }
+        }
+
+        private void ProcessCorpseContents(Item anchorCorpse)
+        {
+            var visited = new HashSet<uint>();
+            var stack = new Stack<Item>();
+            stack.Push(anchorCorpse);
+
+            while (stack.Count > 0)
+            {
+                var container = stack.Pop();
+                if (container == null || !visited.Add(container.Serial)) continue;
+
+                for (LinkedObject node = container.Items; node != null; node = node.Next)
+                {
+                    var child = (Item)node;
+                    if (child == null) continue;
+
+                    if (child.ItemData.IsContainer)
+                    {
+                        if (!_openedContainers.Contains(child.Serial))
+                        {
+                            GameActions.DoubleClick(child);
+                            _openedContainers.Add(child.Serial);
+                            return; // open one per pass
+                        }
+
+                        if (child.Items != null) stack.Push(child);
+                        continue;
+                    }
+
+                    if (IsOnLootList(child)) LootItem(child);
+                }
             }
         }
 
@@ -270,6 +272,13 @@ namespace ClassicUO.Game.Managers
             EventSink.OnOpenContainer -= OnOpenContainer;
             EventSink.OnPositionChanged -= OnPositionChanged;
             Save();
+
+            // tidy caches
+            _distanceCache.Clear();
+            _openingAttempts.Clear();
+            _scanningCorpses.Clear();
+            _openedCorpses.Clear();
+            _openedContainers.Clear();
         }
 
         private void OnPositionChanged(object sender, PositionChangedArgs e)
@@ -301,6 +310,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (anchorCorpse.OnGround) _openedCorpses.Add(anchorCorpse.Serial);
                 _openedContainers.Add(cont.Serial);
+                _openingAttempts.Remove(anchorCorpse.Serial); // corpse did open → reset attempts
                 HandleCorpse(anchorCorpse);
                 PumpMoveOnce();
                 MoveItemQueue.Instance?.ProcessQueue();
@@ -349,7 +359,7 @@ namespace ClassicUO.Game.Managers
 
         private void PumpMoveOnce()
         {
-            if (!loaded || !World.InGame) return;
+            if (!loaded || !IsEnabled || !World.InGame) return;
             if (lootItems.Count == 0) { progressBarGump?.Dispose(); return; }
             if (Client.Game.GameCursor.ItemHold.Enabled) return;
 
@@ -376,8 +386,18 @@ namespace ClassicUO.Game.Managers
             var corpse = m.FindRootCorpse();
             if (corpse != null && !_openedCorpses.Contains(corpse.Serial))
             {
+                if (!_openingAttempts.TryGetValue(corpse.Serial, out var attempts))
+                    attempts = 0;
+
+                if (attempts >= 3)
+                {
+                    _openingAttempts.Remove(corpse.Serial);
+                    return;
+                }
+
                 GameActions.DoubleClick(corpse);
                 _openedCorpses.Add(corpse.Serial);
+                _openingAttempts[corpse.Serial] = attempts + 1;
                 lootItems.Enqueue(moveSerial);
                 return;
             }

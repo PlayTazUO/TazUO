@@ -60,8 +60,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (item == null) return;
             if (!item.IsLootable) return;               // skip hair/face/etc.
             if (item.ItemData.IsContainer) return;      // skip containers; AutoLoot scans them
+            if (AutoLootManager.Instance == null) return; // AutoLoot not initialized
 
-            AutoLootManager.Instance?.LootItem(item);   // central handler does range/open/move
+            AutoLootManager.Instance.LootItem(item);   // central handler does range/open/move
         }
 
         public void Delete()
