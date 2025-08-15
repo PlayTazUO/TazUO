@@ -1,25 +1,48 @@
 ﻿using ClassicUO.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Map;
 
 namespace ClassicUO.Game.Managers
 {
     [Serializable]
-    internal class TileMarkerData
+    internal record struct TileLocation
     {
-        public ushort MarkerHue { get; set; }
-        public ushort OriginalHue { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Map { get; set; }
+
+        public TileLocation(int x, int y, int map)
+        {
+            X = x;
+            Y = y;
+            Map = map;
+        }
+    }
+
+    [Serializable]
+    internal struct TileMarkerEntry
+    {
+        public TileLocation Location { get; set; }
+        public ushort Hue { get; set; }
+    }
+
+    [JsonSerializable(typeof(List<TileMarkerEntry>))]
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    internal partial class TileMarkerJsonContext : JsonSerializerContext
+    {
     }
 
     internal class TileMarkerManager
     {
         public static TileMarkerManager Instance { get; private set; } = new TileMarkerManager();
 
-        private Dictionary<string, TileMarkerData> markedTiles = new Dictionary<string, TileMarkerData>();
+        private Dictionary<TileLocation, ushort> markedTiles = new Dictionary<TileLocation, ushort>();
 
         private TileMarkerManager() { Load(); }
 
@@ -27,58 +50,37 @@ namespace ClassicUO.Game.Managers
 
         public void AddTile(int x, int y, int map, ushort hue)
         {
-            string key = FormatLocKey(x, y, map);
-            
-            // Store original hue if not already marked (use 0 as default for new markers)
-            ushort originalHue = 0;
-            if (markedTiles.ContainsKey(key))
-            {
-                // Keep the existing original hue
-                originalHue = markedTiles[key].OriginalHue;
-            }
-            
-            markedTiles[key] = new TileMarkerData { MarkerHue = hue, OriginalHue = originalHue };
-            
+            var location = new TileLocation(x, y, map);
+            markedTiles[location] = hue;
+
             // Update all live tiles at this location
             UpdateLiveTilesAt(x, y, hue);
         }
 
         public void RemoveTile(int x, int y, int map)
         {
-            string key = FormatLocKey(x, y, map);
-            
-            if (markedTiles.TryGetValue(key, out TileMarkerData data))
+            var location = new TileLocation(x, y, map);
+
+            if (markedTiles.Remove(location))
             {
-                markedTiles.Remove(key);
-                
-                // Restore original hue to all live tiles at this location
-                UpdateLiveTilesAt(x, y, data.OriginalHue);
+                // Reset hue to 0 for all live tiles at this location
+                UpdateLiveTilesAt(x, y, 0);
             }
         }
 
         public bool IsTileMarked(int x, int y, int map, out ushort hue)
         {
-            if (markedTiles.TryGetValue(FormatLocKey(x, y, map), out TileMarkerData data))
-            {
-                hue = data.MarkerHue;
-                return true;
-            }
-            hue = 0;
-            return false;
+            return markedTiles.TryGetValue(new TileLocation(x, y, map), out hue);
         }
 
-        private string FormatLocKey(int x, int y, int map)
-        {
-            return $"{x}.{y}.{map}";
-        }
 
         public void Save()
         {
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(SavePath));
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                string json = JsonSerializer.Serialize(markedTiles, options);
+                var entries = markedTiles.Select(kvp => new TileMarkerEntry { Location = kvp.Key, Hue = kvp.Value }).ToList();
+                string json = JsonSerializer.Serialize(entries, TileMarkerJsonContext.Default.ListTileMarkerEntry);
                 File.WriteAllText(SavePath, json);
             }
             catch (Exception ex)
@@ -94,7 +96,8 @@ namespace ClassicUO.Game.Managers
                 if (File.Exists(SavePath))
                 {
                     string json = File.ReadAllText(SavePath);
-                    markedTiles = JsonSerializer.Deserialize<Dictionary<string, TileMarkerData>>(json) ?? new Dictionary<string, TileMarkerData>();
+                    var entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
+                    markedTiles = entries.ToDictionary(e => e.Location, e => e.Hue);
                 }
                 else
                 {
@@ -105,10 +108,10 @@ namespace ClassicUO.Game.Managers
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to load marked tile data: {ex.Message}");
-                markedTiles = new Dictionary<string, TileMarkerData>();
+                markedTiles = new Dictionary<TileLocation, ushort>();
             }
         }
-        
+
         private void MigrateFromLegacyFormat()
         {
             string legacyPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "TileMarkers.bin");
@@ -120,12 +123,20 @@ namespace ClassicUO.Game.Managers
                     {
                         var bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                         var oldData = (Dictionary<string, ushort>)bf.Deserialize(fs);
-                        
+
                         foreach (var kvp in oldData)
                         {
-                            markedTiles[kvp.Key] = new TileMarkerData { MarkerHue = kvp.Value, OriginalHue = 0 };
+                            // Parse old string key format "x.y.map"
+                            var parts = kvp.Key.Split('.');
+                            if (parts.Length == 3 &&
+                                int.TryParse(parts[0], out int x) &&
+                                int.TryParse(parts[1], out int y) &&
+                                int.TryParse(parts[2], out int map))
+                            {
+                                markedTiles[new TileLocation(x, y, map)] = kvp.Value;
+                            }
                         }
-                        
+
                         // Save in new format and delete old file
                         Save();
                         File.Delete(legacyPath);
@@ -137,14 +148,14 @@ namespace ClassicUO.Game.Managers
                 }
             }
         }
-        
+
         private void UpdateLiveTilesAt(int x, int y, ushort hue)
         {
             if (World.Map == null) return;
-            
+
             var chunk = World.Map.GetChunk(x, y, false);
             if (chunk == null) return;
-            
+
             // Get all tiles at this location and update their hue
             for (GameObject obj = chunk.GetHeadObject(x % 8, y % 8); obj != null; obj = obj.TNext)
             {
