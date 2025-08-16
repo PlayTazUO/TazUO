@@ -310,7 +310,7 @@ namespace ClassicUO.Network
                 try
                 {
                     // Process outgoing data
-                    ProcessSendAsync(cancellationToken);
+                    await ProcessSendAsync(cancellationToken);
 
                     // Update statistics
                     Statistics.Update();
@@ -416,11 +416,13 @@ namespace ClassicUO.Network
             EncryptionHelper.Decrypt(buffer, buffer, buffer.Length);
         }
 
-        //Not really async, but sends data async inside
-        private void ProcessSendAsync(CancellationToken cancellationToken)
+        private async Task ProcessSendAsync(CancellationToken cancellationToken)
         {
             if (!IsConnected)
                 return;
+
+            byte[] sendingBuffer = null;
+            int bytesToSend = 0;
 
             try
             {
@@ -428,17 +430,17 @@ namespace ClassicUO.Network
                 {
                     if (_sendStream.Length > 0)
                     {
-                        var sendingBuffer = new byte[4096];
+                        sendingBuffer = new byte[4096];
                         
                         int size = Math.Min(sendingBuffer.Length, _sendStream.Length);
                         
-                        var read = _sendStream.Dequeue(sendingBuffer, 0, size);
-
-                        if (read > 0)
-                        {
-                            _ = _socket.SendAsync(sendingBuffer, 0, read, cancellationToken);
-                        }
+                        bytesToSend = _sendStream.Dequeue(sendingBuffer, 0, size);
                     }
+                }
+
+                if (bytesToSend > 0 && sendingBuffer != null)
+                {
+                    await _socket.SendAsync(sendingBuffer, 0, bytesToSend, cancellationToken);
                 }
             }
             catch (Exception ex)
