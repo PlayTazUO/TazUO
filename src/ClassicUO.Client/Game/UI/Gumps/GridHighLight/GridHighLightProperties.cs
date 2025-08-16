@@ -55,7 +55,19 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 data.AcceptExtraProperties = acceptExtraPropertiesCheckbox.IsChecked;
             };
 
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Allow extra properties", true, 0xffff), acceptExtraPropertiesCheckbox));
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Allow extra properties", true, 0xffff), acceptExtraPropertiesCheckbox));
+
+            string autoLootCheckboxTooltip = "Auto loot highlighted items from corpses.";
+
+            Checkbox autoLootCheckboxCheckbox;
+            mainScrollArea.Add(pos.PositionRightOf(autoLootCheckboxCheckbox = new Checkbox(0x00D2, 0x00D3) {  IsChecked = data.AutoLoot }, temp, 20));
+            autoLootCheckboxCheckbox.SetTooltip(autoLootCheckboxTooltip);
+            autoLootCheckboxCheckbox.ValueChanged += (s, e) =>
+            {
+                data.AutoLoot = autoLootCheckboxCheckbox.IsChecked;
+            };
+
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Auto loot", true, 0xffff), autoLootCheckboxCheckbox));
 
             InputField minPropertiesInput;
             mainScrollArea.Add(pos.Position(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));

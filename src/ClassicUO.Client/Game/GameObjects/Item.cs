@@ -167,8 +167,30 @@ namespace ClassicUO.Game.GameObjects
 
         public int MultiDistanceBonus { get; private set; }
 
-        public bool IsCorpse => /*MathHelper.InRange(Graphic, 0x0ECA, 0x0ED2) ||*/
-            Graphic == 0x2006;
+        private static bool IsCorpseGraphic(ushort g) => g == 0x2006;
+
+        public bool IsCorpse => IsCorpseGraphic(Graphic);
+
+        public Item FindRootCorpse()
+        {
+            Item cur = this;
+            var visited = new HashSet<uint>();
+
+            while (SerialHelper.IsItem(cur.Container))
+            {
+                if (!visited.Add(cur.Container))
+                    return null; // Circular reference detected
+                var parent = World.Items.Get(cur.Container);
+                if (parent == null) break;
+                if (IsCorpseGraphic(parent.Graphic)) return parent;
+                cur = parent;
+            }
+            return null;
+        }
+
+        public bool IsInsideCorpse => FindRootCorpse() != null;
+
+        public bool IsCorpseOrInsideCorpse => IsCorpse || IsInsideCorpse;
 
         public bool IsHumanCorpse => IsCorpse &&
             MathHelper.InRange(Amount, 0x0190, 0x0193) ||

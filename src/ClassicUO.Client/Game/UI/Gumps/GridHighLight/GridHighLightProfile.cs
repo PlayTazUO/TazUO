@@ -15,6 +15,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public ushort Hue { get; set; }
         public List<GridHighlightProperty> Properties { get; set; } = new();
         public bool AcceptExtraProperties { get; set; } = true;
+        public bool AutoLoot { get; set; } = false;
         public bool Overweight { get; set; } = true;
         public int MinimumProperty { get; set; } = 0;
         public int MaximumProperty { get; set; } = 0;
