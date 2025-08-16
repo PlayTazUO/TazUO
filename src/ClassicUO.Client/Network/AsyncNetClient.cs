@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Data;
 using System.IO;
+using System.Buffers;
 using SDL2;
 
 namespace ClassicUO.Network
@@ -89,7 +90,7 @@ namespace ClassicUO.Network
 
         private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
         {
-            var buffer = new byte[4096];
+            var buffer = ArrayPool<byte>.Shared.Rent(4096);
 
             try
             {
@@ -146,6 +147,10 @@ namespace ClassicUO.Network
                 Log.Error($"Error in receive loop {ex}");
                 Disconnect();
                 OnError?.Invoke(this, SocketError.SocketError);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
         }
 
@@ -305,7 +310,7 @@ namespace ClassicUO.Network
                 try
                 {
                     // Process outgoing data
-                    ProcessSendAsync(cancellationToken);
+                    await ProcessSendAsync(cancellationToken);
 
                     // Update statistics
                     Statistics.Update();
@@ -351,6 +356,8 @@ namespace ClassicUO.Network
             }
         }
 
+        private const int MAX_PACKETS_PER_FRAME = 50;
+
         public void ProcessIncomingMessages()
         {
             if (_cancellationTokenSource.IsCancellationRequested)
@@ -362,9 +369,11 @@ namespace ClassicUO.Network
                 return;
             }
             
-            while (_incomingMessages.TryDequeue(out var message))
+            int packetsProcessed = 0;
+            while (_incomingMessages.TryDequeue(out var message) && packetsProcessed < MAX_PACKETS_PER_FRAME)
             {
                 MessageReceived?.Invoke(this, message);
+                packetsProcessed++;
             }
         }
         
@@ -407,11 +416,13 @@ namespace ClassicUO.Network
             EncryptionHelper.Decrypt(buffer, buffer, buffer.Length);
         }
 
-        //Not really async, but sends data async inside
-        private void ProcessSendAsync(CancellationToken cancellationToken)
+        private async Task ProcessSendAsync(CancellationToken cancellationToken)
         {
             if (!IsConnected)
                 return;
+
+            byte[] sendingBuffer = null;
+            int bytesToSend = 0;
 
             try
             {
@@ -419,17 +430,17 @@ namespace ClassicUO.Network
                 {
                     if (_sendStream.Length > 0)
                     {
-                        var sendingBuffer = new byte[4096];
+                        sendingBuffer = new byte[4096];
                         
-                        int size = Math.Max(sendingBuffer.Length, _sendStream.Length);
+                        int size = Math.Min(sendingBuffer.Length, _sendStream.Length);
                         
-                        var read = _sendStream.Dequeue(sendingBuffer, 0, size);
-
-                        if (read > 0)
-                        {
-                            _socket.SendAsync(sendingBuffer, 0, read, cancellationToken);
-                        }
+                        bytesToSend = _sendStream.Dequeue(sendingBuffer, 0, size);
                     }
+                }
+
+                if (bytesToSend > 0 && sendingBuffer != null)
+                {
+                    await _socket.SendAsync(sendingBuffer, 0, bytesToSend, cancellationToken);
                 }
             }
             catch (Exception ex)
