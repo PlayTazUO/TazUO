@@ -126,7 +126,7 @@ namespace ClassicUO.Network
                 switch (socketEx.SocketErrorCode)
                 {
                     case SocketError.OperationAborted: OnError?.Invoke(this, SocketError.Success); break;
-                    default: 
+                    default:
                         Log.Error($"Socket error in receive loop: {socketEx.SocketErrorCode} - {socketEx.Message}");
                         OnError?.Invoke(this, socketEx.SocketErrorCode); break;
                 }
@@ -161,7 +161,7 @@ namespace ClassicUO.Network
                 return;
 
             _isDisconnecting = true;
-            
+
             _cancellationTokenSource?.Cancel();
             _receiveTask?.Wait(5000);
             _stream?.Close();
@@ -249,7 +249,6 @@ namespace ClassicUO.Network
 
         public event EventHandler Connected;
         public event EventHandler<SocketError> Disconnected;
-        public static event EventHandler<byte[]> MessageReceived;
 
         public async Task<bool> Connect(string ip, ushort port, CancellationToken cancellationToken = new ())
         {
@@ -275,7 +274,7 @@ namespace ClassicUO.Network
                 return;
 
             _isDisconnecting = true;
-            
+
             SDL.SDL_CaptureMouse(SDL.SDL_bool.SDL_FALSE);
             _isCompressionEnabled = false;
             Statistics.Reset();
@@ -290,6 +289,8 @@ namespace ClassicUO.Network
                 }
                 catch { }
             }
+
+            ClearIncomingMessages();
 
             _socket.Disconnect();
             _huffman.Reset();
@@ -356,34 +357,25 @@ namespace ClassicUO.Network
             }
         }
 
-        private const int MAX_PACKETS_PER_FRAME = 50;
-
-        public void ProcessIncomingMessages()
+        public bool TryDequeuePacket(out byte[] packet)
         {
-            if (_cancellationTokenSource.IsCancellationRequested)
-            {
-                while (_incomingMessages.TryDequeue(out _))
-                {
-                }
+            return _incomingMessages.TryDequeue(out packet);
+        }
 
-                return;
-            }
-            
-            int packetsProcessed = 0;
-            while (_incomingMessages.TryDequeue(out var message) && packetsProcessed < MAX_PACKETS_PER_FRAME)
+        public void ClearIncomingMessages()
+        {
+            while (_incomingMessages.TryDequeue(out _))
             {
-                MessageReceived?.Invoke(this, message);
-                packetsProcessed++;
             }
         }
-        
+
         public void Send(Span<byte> message, bool ignorePlugin = false, bool skipEncryption = false)
         {
             if (!IsConnected || message == null || message.Length == 0)
             {
                 return;
             }
-            
+
             if (!ignorePlugin && !Plugin.ProcessSendPacket(ref message))
             {
                 return;
@@ -431,9 +423,9 @@ namespace ClassicUO.Network
                     if (_sendStream.Length > 0)
                     {
                         sendingBuffer = new byte[4096];
-                        
+
                         int size = Math.Min(sendingBuffer.Length, _sendStream.Length);
-                        
+
                         bytesToSend = _sendStream.Dequeue(sendingBuffer, 0, size);
                     }
                 }
