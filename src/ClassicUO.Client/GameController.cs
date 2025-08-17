@@ -138,7 +138,7 @@ namespace ClassicUO
         private void ProcessNetworkPackets()
         {
             int packetsProcessed = 0;
-            while (AsyncNetClient.Socket.TryDequeuePacket(out byte[] message) && packetsProcessed < MAX_PACKETS_PER_FRAME)
+            while (packetsProcessed < MAX_PACKETS_PER_FRAME && AsyncNetClient.Socket.TryDequeuePacket(out byte[] message))
             {
                 var c = PacketHandlers.Handler.ParsePackets(message);
                 AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
