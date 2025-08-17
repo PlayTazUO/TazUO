@@ -45,6 +45,8 @@ namespace ClassicUO.Assets
 {
     public class UOFileManager
     {
+        public static TileArtLoader TileArtLoader { get; private set; }
+
         public static string GetUOFilePath(string file)
         {
             if (!UOFilesOverrideMap.Instance.TryGetValue(file.ToLowerInvariant(), out string uoFilePath))
@@ -62,7 +64,7 @@ namespace ClassicUO.Assets
                 {
                     var files = Directory.GetFiles(dir);
                     var matches = 0;
-                    
+
                     foreach (var f in files)
                     {
                         if (string.Equals(f, uoFilePath, StringComparison.OrdinalIgnoreCase))
@@ -76,7 +78,7 @@ namespace ClassicUO.Assets
                     {
                         Log.Warn($"Multiple files with ambiguous case found for {file}, using {Path.GetFileName(uoFilePath)}. Check your data directory for duplicate files.");
                     }
-                }             
+                }
             }
 
             return uoFilePath;
@@ -97,6 +99,8 @@ namespace ClassicUO.Assets
 
             IsUOPInstallation = Version >= ClientVersion.CV_7000 && File.Exists(GetUOFilePath("MainMisc.uop"));
 
+            TileArtLoader = new TileArtLoader();
+
             List<Task> tasks = new List<Task>
             {
                 AnimationsLoader.Instance.Load(),
@@ -116,7 +120,9 @@ namespace ClassicUO.Assets
                 SoundsLoader.Instance.Load(),
                 MultiMapLoader.Instance.Load(),
                 PNGLoader.Instance.Load(),
-                TrueTypeLoader.Instance.Load()
+                TrueTypeLoader.Instance.Load(),
+                TileArtLoader.Load()
+                
             };
 
             if (!Task.WhenAll(tasks).Wait(TimeSpan.FromSeconds(15)))

@@ -280,6 +280,7 @@ namespace ClassicUO.Game.UI.Controls
 
                     ushort id = GetAnimID(
                         mobile.Graphic,
+                        equipItem.Graphic,
                         equipItem.ItemData.AnimID,
                         mobile.IsFemale
                     );
@@ -314,6 +315,7 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     ushort id = GetAnimID(
                         mobile.Graphic,
+                        Client.Game.GameCursor.ItemHold.Graphic,
                         Client.Game.GameCursor.ItemHold.ItemData.AnimID,
                         mobile.IsFemale
                     );
@@ -410,7 +412,7 @@ namespace ClassicUO.Game.UI.Controls
             _updateUI = true;
         }
 
-        protected static ushort GetAnimID(ushort graphic, ushort animID, bool isfemale)
+        protected static ushort GetAnimID(ushort graphic, ushort itemGraphic, ushort animID, bool isfemale)
         {
             int offset = isfemale ? Constants.FEMALE_GUMP_OFFSET : Constants.MALE_GUMP_OFFSET;
 
@@ -445,6 +447,19 @@ namespace ClassicUO.Game.UI.Controls
                     else
                     {
                         animID = data.Gump;
+                    }
+                }
+            }
+
+            if (UOFileManager.TileArtLoader.TryGetTileArtInfo(itemGraphic, out var tileArtInfo))
+            {
+                if (tileArtInfo.TryGetAppearance(graphic, out var appareanceId))
+                {
+                    var gumpId = (ushort)(Constants.MALE_GUMP_OFFSET + appareanceId);
+                    if (Client.Game.Gumps.GetGump(gumpId).Texture != null)
+                    {
+                        Log.Info($"Equip conversion through tileart.uop done: old {animID} -> new {appareanceId}");
+                        return gumpId;
                     }
                 }
             }
