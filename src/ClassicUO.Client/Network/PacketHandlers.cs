@@ -399,6 +399,7 @@ namespace ClassicUO.Network
                 TargetManager.Target(World.Party.PartyHealTarget);
                 World.Party.PartyHealTimer = 0;
                 World.Party.PartyHealTarget = 0;
+                TargetManager.NextAutoTarget.Clear(); // Clear any queued auto-target
             }
             else if (TargetManager.NextAutoTarget.IsSet)
             {

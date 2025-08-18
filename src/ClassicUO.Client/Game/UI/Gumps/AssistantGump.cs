@@ -499,10 +499,14 @@ public class AssistantGump : BaseOptionsGump
         {
             if (int.TryParse(((BaseOptionsGump.InputField.StbTextBox)s).Text, out int delay))
             {
-                profile.BandageAgentDelay = delay;
+                // Clamp delay to sensible bounds (50ms to 30 seconds)
+                if (delay >= 50 && delay <= 30000)
+                {
+                    profile.BandageAgentDelay = delay;
+                }
             }
         })));
-        c.SetTooltip("Delay between bandage attempts in milliseconds");
+        c.SetTooltip("Delay between bandage attempts in milliseconds (50-30000)");
         PositionHelper.BlankLine();
 
         scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("HP percentage threshold", 0, ThemeSettings.SLIDER_WIDTH, 10, 95, profile.BandageAgentHPPercentage, (r) => { profile.BandageAgentHPPercentage = r; })));
@@ -515,14 +519,25 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Use new bandage packet", 0, profile.BandageAgentUseNewPacket, b => profile.BandageAgentUseNewPacket = b)));
         PositionHelper.BlankLine();
 
-        InputFieldWithLabel bandageGraphicInput = new("Bandage graphic ID", ThemeSettings.INPUT_WIDTH, profile.BandageAgentGraphic.ToString(), true, (s, e) =>
+        InputFieldWithLabel bandageGraphicInput = new("Bandage graphic ID", ThemeSettings.INPUT_WIDTH, $"0x{profile.BandageAgentGraphic:X4}", true, (s, e) =>
         {
-            if (ushort.TryParse(((BaseOptionsGump.InputField.StbTextBox)s).Text, out ushort graphic))
+            string text = ((BaseOptionsGump.InputField.StbTextBox)s).Text;
+            ushort graphic;
+
+            // Try to parse as hex (0x prefix) or decimal
+            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || text.StartsWith("0X", StringComparison.OrdinalIgnoreCase))
+            {
+                if (ushort.TryParse(text.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out graphic))
+                {
+                    profile.BandageAgentGraphic = graphic;
+                }
+            }
+            else if (ushort.TryParse(text, out graphic))
             {
                 profile.BandageAgentGraphic = graphic;
             }
         });
-        bandageGraphicInput.SetTooltip("Graphic ID of bandages to use (default: 0x0E21)");
+        bandageGraphicInput.SetTooltip("Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)");
         scroll.Add(PositionHelper.PositionControl(bandageGraphicInput));
     }
 

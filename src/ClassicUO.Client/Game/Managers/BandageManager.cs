@@ -57,6 +57,10 @@ namespace ClassicUO.Game.Managers
             if (World.Player == null || !isEnabled)
                 return;
 
+            // Guard against divide-by-zero
+            if (World.Player.HitsMax <= 0)
+                return;
+
             var currentHpPercentage = (int)((double)newHp / World.Player.HitsMax * 100);
 
             if (currentHpPercentage >= hpPercentageThreshold)
