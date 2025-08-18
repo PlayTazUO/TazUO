@@ -212,6 +212,7 @@ namespace ClassicUO.Game.Scenes
             SpellDefinition.LoadCustomSpells();
             SpellVisualRangeManager.Instance.OnSceneLoad();
             AutoLootManager.Instance.OnSceneLoad();
+            var _ = BandageManager.Instance;
 
             foreach (var xml in ProfileManager.CurrentProfile.AutoOpenXmlGumps)
             {

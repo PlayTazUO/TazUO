@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -155,6 +155,28 @@ namespace ClassicUO.Game.Managers
         }
     }
 
+    public class AutoTargetInfo
+    {
+        public uint TargetSerial { get; set; }
+        public TargetType ExpectedTargetType { get; set; }
+        public CursorTarget ExpectedCursorTarget { get; set; }
+        public bool IsSet => TargetSerial != 0;
+
+        public void Set(uint serial, TargetType targetType, CursorTarget cursorTarget)
+        {
+            TargetSerial = serial;
+            ExpectedTargetType = targetType;
+            ExpectedCursorTarget = cursorTarget;
+        }
+
+        public void Clear()
+        {
+            TargetSerial = 0;
+            ExpectedTargetType = TargetType.Cancel;
+            ExpectedCursorTarget = CursorTarget.Invalid;
+        }
+    }
+
     public static class TargetManager
     {
         private static uint _targetCursorId, _lastAttack;
@@ -202,6 +224,7 @@ namespace ClassicUO.Game.Managers
         }
 
         public static readonly LastTargetInfo LastTargetInfo = new LastTargetInfo();
+        public static readonly AutoTargetInfo NextAutoTarget = new AutoTargetInfo();
 
         public static MultiTargetInfo MultiTargetInfo { get; private set; }
 
@@ -259,6 +282,11 @@ namespace ClassicUO.Game.Managers
             // to send the last active cursorID, so update cursor data later
 
             _targetCursorId = cursorID;
+        }
+
+        public static void SetAutoTarget(uint serial, TargetType targetType, CursorTarget cursorTarget)
+        {
+            NextAutoTarget.Set(serial, targetType, cursorTarget);
         }
 
         public static void CancelTarget()

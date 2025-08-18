@@ -388,17 +388,30 @@ namespace ClassicUO.Network
 
         private static void TargetCursor(ref StackDataReader p)
         {
-            TargetManager.SetTargeting(
-                (CursorTarget)p.ReadUInt8(),
-                p.ReadUInt32BE(),
-                (TargetType)p.ReadUInt8()
-            );
+            var cursorTarget = (CursorTarget)p.ReadUInt8();
+            var cursorId = p.ReadUInt32BE();
+            var targetType = (TargetType)p.ReadUInt8();
+            
+            TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
 
             if (World.Party.PartyHealTimer < Time.Ticks && World.Party.PartyHealTarget != 0)
             {
                 TargetManager.Target(World.Party.PartyHealTarget);
                 World.Party.PartyHealTimer = 0;
                 World.Party.PartyHealTarget = 0;
+            }
+            else if (TargetManager.NextAutoTarget.IsSet)
+            {
+                // Check if this cursor matches what we expect
+                if (TargetManager.NextAutoTarget.ExpectedCursorTarget == cursorTarget &&
+                    TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
+                {
+                    // Auto-target the stored serial
+                    TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
+                }
+                
+                // Always clear after any target cursor (no queuing)
+                TargetManager.NextAutoTarget.Clear();
             }
         }
 
