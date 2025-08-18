@@ -218,3 +218,5 @@ The scripting API documentation is automatically generated during build via the 
 - **FNA Documentation**: https://fna-xna.github.io/
 - **Ultima Online Technical Resources**: Various community sites for UO file format documentation
 - **Discord Community**: Active development and user community
+
+- All json serialize and deserialize need to have context generated for them.

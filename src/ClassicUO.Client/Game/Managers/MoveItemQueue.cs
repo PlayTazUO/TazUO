@@ -2,15 +2,16 @@ using System.Collections.Concurrent;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Network;
 
 namespace ClassicUO.Game.Managers
 {
     public class MoveItemQueue
     {
         public static MoveItemQueue Instance { get; private set; }
-        
+
         public bool IsEmpty => _isEmpty;
-        
+
         private bool _isEmpty = true;
         private readonly ConcurrentQueue<MoveRequest> _queue = new();
 
@@ -35,10 +36,19 @@ namespace ClassicUO.Game.Managers
             }
 
             uint bag = ProfileManager.CurrentProfile.GrabBagSerial == 0 ? backpack.Serial : ProfileManager.CurrentProfile.GrabBagSerial;
-                
+
             Enqueue(item.Serial, bag, 0, 0xFFFF, 0xFFFF);
         }
-        
+
+        public void EnqueueEquipSingle(uint serial, Layer layer)
+        {
+            Item i = World.Items.Get(serial);
+            if (i == null) return;
+
+            _queue.Enqueue(new MoveRequest(serial, uint.MaxValue, 0, 0xFFFF, 0xFFFF, 0, layer));
+            _isEmpty = false;
+        }
+
         public void EnqueueQuick(uint serial)
         {
             Item i = World.Items.Get(serial);
@@ -61,7 +71,14 @@ namespace ClassicUO.Game.Managers
                 return;
 
             GameActions.PickUp(request.Serial, 0, 0, request.Amount);
-            GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
+
+            if(request.Destination != uint.MaxValue)
+                GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
+            else
+            {
+                AsyncNetClient.Socket.Send_EquipRequest(request.Serial, request.Layer, World.Player);
+                Client.Game.GameCursor.ItemHold.Clear();
+            }
 
             GlobalActionCooldown.BeginCooldown();
             _isEmpty = _queue.IsEmpty;
@@ -75,7 +92,7 @@ namespace ClassicUO.Game.Managers
             _isEmpty = true;
         }
 
-        private readonly struct MoveRequest(uint serial, uint destination, ushort amount, int x, int y, int z)
+        private readonly struct MoveRequest(uint serial, uint destination, ushort amount, int x, int y, int z, Layer layer = Layer.Invalid)
         {
             public uint Serial { get; } = serial;
             public uint Destination { get; } = destination;
@@ -83,6 +100,8 @@ namespace ClassicUO.Game.Managers
             public int X { get; } = x;
             public int Y { get; } = y;
             public int Z { get; } = z;
+
+            public Layer Layer { get; } = layer;
         }
     }
 }

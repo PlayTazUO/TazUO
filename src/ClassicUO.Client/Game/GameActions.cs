@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -77,7 +77,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no durability gump was open</returns>
         public static bool CloseDurabilityGump()
@@ -104,7 +104,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no nearby loot gump was open</returns>
         public static bool CloseLegionScriptingGump(){
@@ -120,7 +120,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no nearby loot gump was open</returns>
         public static bool CloseNearbyLootGump()
@@ -150,7 +150,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="serial"></param>
         /// <returns>False if no paperdoll is open</returns>
@@ -208,7 +208,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no settings are open</returns>
         public static bool CloseSettings()
@@ -254,7 +254,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no status gump open</returns>
         public static bool CloseStatusBar()
@@ -275,7 +275,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no journals were open</returns>
         public static bool CloseAllJournals()
@@ -294,7 +294,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="type"></param>
         /// <returns>False if no spell books of that type were open</returns>
@@ -315,7 +315,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no skill gumps were open</returns>
         public static bool CloseSkills()
@@ -365,7 +365,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no mini map open</returns>
         public static bool CloseMiniMap()
@@ -409,7 +409,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no world map is open</returns>
         public static bool CloseWorldMap()
@@ -442,7 +442,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no chat was open</returns>
         public static bool CloseChat()
@@ -509,7 +509,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns>False if no backpack was opened</returns>
         public static bool CloseBackpack()
@@ -657,7 +657,7 @@ namespace ClassicUO.Game
             }
 
             // TODO: identify what means 'older client' that uses ASCIISpeechRquest [0x03]
-            // 
+            //
             // Fix -> #1267
             if (Client.Version >= ClientVersion.CV_200)
             {
@@ -873,6 +873,7 @@ namespace ClassicUO.Game
 
                 Client.Game.GameCursor.ItemHold.Enabled = false;
                 Client.Game.GameCursor.ItemHold.Dropped = true;
+                Client.Game.GameCursor.ItemHold.Clear();
             }
         }
 
@@ -981,7 +982,7 @@ namespace ClassicUO.Game
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="name">Can be a partial match</param>
         public static bool CastSpellByName(string name)
