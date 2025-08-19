@@ -2016,8 +2016,8 @@ You can now type `-updateapi` in game to download the latest API.py file.
  Example:
  ```py
  statics = API.GetStaticsAt(1000, 1000)
- for static in statics:
-     API.Print(f"Static ID: {static.ID}, Z: {static.Z}")
+ for s in statics:
+     API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
  ```
 
 
@@ -2039,10 +2039,10 @@ You can now type `-updateapi` in game to download the latest API.py file.
  Example:
  ```py
  statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
- API.Print(f"Found {len(statics)} statics in area")
- for static in statics:
-     if static.IsVegetation:
-         API.Print(f"Vegetation at {static.X}, {static.Y}")
+ API.SysMsg(f"Found {len(statics)} statics in area")
+ for s in statics:
+     if s.IsVegetation:
+         API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
  ```
 
 

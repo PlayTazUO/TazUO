@@ -2279,8 +2279,8 @@ namespace ClassicUO.LegionScripting
         /// Example:
         /// ```py
         /// statics = API.GetStaticsAt(1000, 1000)
-        /// for static in statics:
-        ///     API.Print(f"Static ID: {static.ID}, Z: {static.Z}")
+        /// for s in statics:
+        ///     API.SysMsg(f"Static Graphic: {s.Graphic}, Z: {s.Z}")
         /// ```
         /// </summary>
         /// <param name="x">X coordinate</param>
@@ -2289,7 +2289,10 @@ namespace ClassicUO.LegionScripting
         public List<PyStatic> GetStaticsAt(int x, int y) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             var statics = new List<PyStatic>();
-            var chunk = World.Map.GetChunk(x, y);
+            
+            if (World.Map is null) return new List<PyStatic>();
+            
+            var chunk = World.Map.GetChunk(x, y, false);
 
             if (chunk != null)
             {
@@ -2314,10 +2317,10 @@ namespace ClassicUO.LegionScripting
         /// Example:
         /// ```py
         /// statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
-        /// API.Print(f"Found {len(statics)} statics in area")
-        /// for static in statics:
-        ///     if static.IsVegetation:
-        ///         API.Print(f"Vegetation at {static.X}, {static.Y}")
+        /// API.SysMsg(f"Found {len(statics)} statics in area")
+        /// for s in statics:
+        ///     if s.IsVegetation:
+        ///         API.SysMsg(f"Vegetation Graphic: {s.Graphic} at {s.X}, {s.Y}")
         /// ```
         /// </summary>
         /// <param name="x1">Starting X coordinate</param>
@@ -2328,6 +2331,8 @@ namespace ClassicUO.LegionScripting
         public List<PyStatic> GetStaticsInArea(int x1, int y1, int x2, int y2) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             var statics = new List<PyStatic>();
+            
+            if (World.Map is null) return new List<PyStatic>();
 
             // Ensure coordinates are in correct order
             int minX = Math.Min(x1, x2);
@@ -2339,7 +2344,7 @@ namespace ClassicUO.LegionScripting
             {
                 for (int y = minY; y <= maxY; y++)
                 {
-                    var chunk = World.Map.GetChunk(x, y);
+                    var chunk = World.Map.GetChunk(x, y, false);
 
                     if (chunk != null)
                     {

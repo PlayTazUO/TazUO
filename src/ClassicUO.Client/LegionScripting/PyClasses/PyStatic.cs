@@ -18,14 +18,14 @@ public class PyStatic : PyGameObject
     /// <summary>
     /// Initializes a new instance of the <see cref="PyStatic"/> class from a <see cref="Static"/> object.
     /// </summary>
-    /// <param name="static">The static object to wrap.</param>
-    internal PyStatic(Static @static) : base(@static)
+    /// <param name="staticObj">The static object to wrap.</param>
+    internal PyStatic(Static staticObj) : base(staticObj)
     {
-        IsImpassible = @static.ItemData.IsImpassable;
-        Graphic = @static.OriginalGraphic;
-        IsVegetation = @static.IsVegetation;
-        X = @static.X;
-        Y = @static.Y;
+        IsImpassible = staticObj.ItemData.IsImpassable;
+        Graphic = staticObj.OriginalGraphic;
+        IsVegetation = staticObj.IsVegetation;
+        X = staticObj.X;
+        Y = staticObj.Y;
     }
 
     /// <summary>
