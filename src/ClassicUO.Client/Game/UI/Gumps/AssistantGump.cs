@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -20,8 +21,8 @@ public class AssistantGump : BaseOptionsGump
     {
         profile = ProfileManager.CurrentProfile;
 
-        CenterXInScreen();
-        CenterYInScreen();
+        CenterXInViewPort();
+        CenterYInViewPort();
 
         Build();
     }
@@ -37,6 +38,7 @@ public class AssistantGump : BaseOptionsGump
         BuildSpellIndicator();
         BuildJournalFilter();
         BuildTitleBar();
+        BuildDressAgent();
         BuildBandageAgent();
         BuildFriendsList();
 
@@ -480,6 +482,128 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Note: Progress bars use Unicode block characters (█▓▒░) and may not display correctly on all systems.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
     }
 
+    private void BuildDressAgent()
+    {
+        var page = (int)PAGE.DressAgent;
+        MainContent.AddToLeft(CategoryButton("Dress Agent", page, MainContent.LeftWidth));
+
+        LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+        MainContent.AddToRight(content, false, page);
+
+        // Build character menu on the left
+        BuildDressAgentCharacterMenu(content);
+    }
+
+    private void BuildDressAgentCharacterMenu(LeftSideMenuRightSideContent content)
+    {
+        DressAgentManager.Instance.Load();
+
+        int pageBase = (int)PAGE.DressAgent + 10000; // Base page number for dress agent
+
+        // Current character
+        string currentCharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
+        ModernButton currentCharButton = SubCategoryButton(currentCharacterName, pageBase, content.LeftWidth);
+        content.AddToLeft(currentCharButton);
+
+        // Build current character's configs page
+        BuildCharacterConfigsList(content, currentCharacterName, false, pageBase);
+
+        // Other characters
+        var otherCharacters = DressAgentManager.Instance.OtherCharacterConfigs.GroupBy(c => c.CharacterName).ToList();
+        int index = 0;
+        foreach (var characterGroup in otherCharacters)
+        {
+            index++;
+            int charPageBase = pageBase + 1000 + index;
+            ModernButton charButton = SubCategoryButton(characterGroup.Key, charPageBase, content.LeftWidth);
+            content.AddToLeft(charButton);
+
+            // Build other character's configs page
+            BuildCharacterConfigsList(content, characterGroup.Key, true, charPageBase);
+        }
+    }
+
+    private void BuildCharacterConfigsList(LeftSideMenuRightSideContent content, string characterName, bool readOnly, int page)
+    {
+        content.ResetRightSide();
+
+        // Character header
+        content.AddToRight(TextBox.GetOne($"Dress Configurations for: {characterName}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE,
+            ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(content.RightWidth - 40)), true, page);
+
+        VBoxContainer configsList = new VBoxContainer(content.RightWidth - 40);
+
+        // Add "Create New Config" button for current character
+        if (!readOnly)
+        {
+            ModernButton createButton = new(0, 0, 200, 30, ButtonAction.Default, "+ Create New Config", ThemeSettings.BUTTON_FONT_COLOR);
+            createButton.MouseUp += (s, e) =>
+            {
+                string configName = $"Config {DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1}";
+                var newConfig = DressAgentManager.Instance.CreateNewConfig(configName);
+                UIManager.Add(new DressAgentConfigGump(newConfig, readOnly));
+                configsList.Add(GenArea(newConfig));
+            };
+            configsList.Add(createButton);
+        }
+
+        // Get configs for this character
+        var configs = readOnly ?
+            DressAgentManager.Instance.OtherCharacterConfigs.Where(c => c.CharacterName == characterName).ToList() :
+            DressAgentManager.Instance.CurrentPlayerConfigs;
+
+        // Show configs list
+        foreach (var config in configs)
+        {
+            configsList.Add(GenArea(config));
+        }
+
+        if (configs.Count == 0)
+        {
+            string message = readOnly ?
+                "This character has no dress configurations." :
+                "No dress configurations yet. Create your first one!";
+            configsList.Add(TextBox.GetOne(message, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE,
+                Color.Gray, TextBox.RTLOptions.Default()));
+        }
+
+        content.AddToRight(configsList, true, page);
+
+        Area GenArea(DressConfig config)
+        {
+            Area configArea = new Area { Width = content.RightWidth - 60, Height = 40 };
+
+            // Config name and item count
+            var configLabel = TextBox.GetOne($"{config.Name} ({config.Items.Count} items)",
+                ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
+            configLabel.Y = 5;
+            configArea.Add(configLabel);
+
+            // Edit button
+            ModernButton editButton = new(configArea.Width - 70, 4, 40, 25, ButtonAction.Default, "Edit", ThemeSettings.BUTTON_FONT_COLOR);
+            editButton.MouseUp += (s, e) =>
+            {
+                UIManager.Add(new DressAgentConfigGump(config, readOnly));
+            };
+            configArea.Add(editButton);
+
+            // Delete button for current character
+            if (!readOnly)
+            {
+                ModernButton deleteButton = new(configArea.Width - 25, 4, 20, 25, ButtonAction.Default, "X", Color.Red);
+                deleteButton.MouseUp += (s, e) =>
+                {
+                    DressAgentManager.Instance.DeleteConfig(config);
+                    configArea.Dispose();
+                };
+                configArea.Add(deleteButton);
+            }
+            configArea.ForceSizeUpdate();
+            return configArea;
+        }
+    }
+
+
     private void BuildBandageAgent()
     {
         var page = (int)PAGE.BandageAgent;
@@ -658,6 +782,7 @@ public class AssistantGump : BaseOptionsGump
         SpellIndicator,
         JournalFilter,
         TitleBar,
+        DressAgent,
         BandageAgent,
         FriendsList
     }

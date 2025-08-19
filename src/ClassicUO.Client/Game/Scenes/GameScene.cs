@@ -212,6 +212,7 @@ namespace ClassicUO.Game.Scenes
             SpellDefinition.LoadCustomSpells();
             SpellVisualRangeManager.Instance.OnSceneLoad();
             AutoLootManager.Instance.OnSceneLoad();
+            DressAgentManager.Instance.Load();
             FriendsListManager.Instance.OnSceneLoad();
             var _ = BandageManager.Instance;
 
