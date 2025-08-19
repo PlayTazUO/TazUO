@@ -55,6 +55,7 @@ namespace ClassicUO.Game.UI.Gumps
             ).ToArray();
 
             int selectedIndex = _allConfigs.FindIndex(c => c == _config);
+
             if (selectedIndex == -1) selectedIndex = 0;
 
             _configCombobox = new Combobox(120, 20, 250, configOptions, selectedIndex, emptyString: "No configs available")

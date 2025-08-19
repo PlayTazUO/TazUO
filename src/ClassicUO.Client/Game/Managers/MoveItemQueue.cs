@@ -25,6 +25,7 @@ namespace ClassicUO.Game.Managers
             if(amt == 0)
             {
                 Item i = World.Items.Get(serial);
+
                 if (i != null)
                     amt = i.Amount;
                 else
@@ -52,6 +53,7 @@ namespace ClassicUO.Game.Managers
         public void EnqueueEquipSingle(uint serial, Layer layer)
         {
             Item i = World.Items.Get(serial);
+
             if (i == null) return;
 
             _queue.Enqueue(new MoveRequest(serial, uint.MaxValue, 1, 0xFFFF, 0xFFFF, 0, layer));
@@ -61,6 +63,7 @@ namespace ClassicUO.Game.Managers
         public void EnqueueQuick(uint serial)
         {
             Item i = World.Items.Get(serial);
+
             if(i != null)
                 EnqueueQuick(i);
         }

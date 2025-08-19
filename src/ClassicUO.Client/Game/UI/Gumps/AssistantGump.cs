@@ -508,9 +508,11 @@ public class AssistantGump : BaseOptionsGump
 
         // Other characters
         var otherCharacters = DressAgentManager.Instance.OtherCharacterConfigs.GroupBy(c => c.CharacterName).ToList();
+        int index = 0;
         foreach (var characterGroup in otherCharacters)
         {
-            int charPageBase = pageBase + 1000 + (characterGroup.Key.GetHashCode() % 1000);
+            index++;
+            int charPageBase = pageBase + 1000 + index;
             ModernButton charButton = SubCategoryButton(characterGroup.Key, charPageBase, content.LeftWidth);
             content.AddToLeft(charButton);
 

@@ -132,7 +132,7 @@ namespace ClassicUO.Game.Managers
 
         private void RegisterCommands()
         {
-            if(CommandManager.Commands.ContainsKey("dressagent")) return;
+            if (CommandManager.Commands.ContainsKey("dressagent")) return;
 
             CommandManager.Register("dressagent", args =>
             {
@@ -188,12 +188,7 @@ namespace ClassicUO.Game.Managers
 
         public DressConfig CreateNewConfig(string name)
         {
-            var config = new DressConfig
-            {
-                Name = name,
-                CharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "",
-                Items = new List<DressItem>()
-            };
+            var config = new DressConfig { Name = name, CharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "", Items = new List<DressItem>() };
 
             CurrentPlayerConfigs.Add(config);
             Save();
@@ -292,9 +287,9 @@ namespace ClassicUO.Game.Managers
                 {
                     if (!layersToUnequip.Contains((Layer)dressItem.Layer))
                     {
-                        if(dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains(Layer.OneHanded))
+                        if (dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains(Layer.OneHanded))
                             layersToUnequip.Add(Layer.OneHanded);
-                        if(dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains(Layer.TwoHanded))
+                        if (dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains(Layer.TwoHanded))
                             layersToUnequip.Add(Layer.TwoHanded);
                         layersToUnequip.Add((Layer)dressItem.Layer);
                     }
@@ -334,9 +329,9 @@ namespace ClassicUO.Game.Managers
                 {
                     if (!layersToUnequip.Contains(dressItem.Layer))
                     {
-                        if(dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains((byte)Layer.OneHanded))
+                        if (dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains((byte)Layer.OneHanded))
                             layersToUnequip.Add((byte)Layer.OneHanded);
-                        if(dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains((byte)Layer.TwoHanded))
+                        if (dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains((byte)Layer.TwoHanded))
                             layersToUnequip.Add((byte)Layer.TwoHanded);
                         layersToUnequip.Add(dressItem.Layer);
                     }
@@ -422,6 +417,7 @@ namespace ClassicUO.Game.Managers
         private void UnequipItemAsync(uint serial, DressConfig config)
         {
             var item = World.Items.Get(serial);
+
             if (item != null && item.Container == World.Player?.Serial)
             {
                 uint undressBag = GetUndressBag(config);
@@ -432,12 +428,10 @@ namespace ClassicUO.Game.Managers
         public void CreateDressMacro(string configName)
         {
             var macroManager = MacroManager.TryGetMacroManager();
+
             if (macroManager == null) return;
 
-            var macro = new Macro($"Dress: {configName}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false)
-            {
-                Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent dress \"{configName}\"")
-            };
+            var macro = new Macro($"Dress: {configName}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent dress \"{configName}\"") };
 
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(macro, Mouse.Position.X, Mouse.Position.Y));
@@ -446,12 +440,10 @@ namespace ClassicUO.Game.Managers
         public void CreateUndressMacro(string configName)
         {
             var macroManager = MacroManager.TryGetMacroManager();
+
             if (macroManager == null) return;
 
-            var macro = new Macro($"Undress: {configName}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false)
-            {
-                Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent undress \"{configName}\"")
-            };
+            var macro = new Macro($"Undress: {configName}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent undress \"{configName}\"") };
 
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(macro, Mouse.Position.X, Mouse.Position.Y));
