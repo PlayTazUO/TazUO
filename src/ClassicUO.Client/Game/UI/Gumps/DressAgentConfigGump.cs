@@ -94,7 +94,6 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     _config.Name = nameInput.Text;
                     DressAgentManager.Instance.Save();
-                    RefreshConfigDropdown();
                 };
                 Add(nameInput);
             }
@@ -113,6 +112,23 @@ namespace ClassicUO.Game.UI.Gumps
                 X = 20,
                 Y = 75
             });
+
+            // KR Packet option
+            if (!_readOnly)
+            {
+                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, "Use KR Equip Packets (faster)", 1, 0xFFFF, true)
+                {
+                    X = 300,
+                    Y = 75,
+                    IsChecked = _config.UseKREquipPacket
+                };
+                krPacketCheckbox.ValueChanged += (s, e) =>
+                {
+                    _config.UseKREquipPacket = krPacketCheckbox.IsChecked;
+                    DressAgentManager.Instance.Save();
+                };
+                Add(krPacketCheckbox);
+            }
 
             // Left side - Action buttons
             _buttonContainer = new VBoxContainer(180)
@@ -161,17 +177,19 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     });
                 });
+            }
 
-                AddButton("Dress", 63, () =>
-                {
-                    DressAgentManager.Instance.DressFromConfig(_config);
-                });
+            AddButton("Dress", 63, () =>
+            {
+                DressAgentManager.Instance.DressFromConfig(_config);
+            });
 
-                AddButton("Undress", 49, () =>
-                {
-                    DressAgentManager.Instance.UndressFromConfig(_config);
-                });
+            AddButton("Undress", 49, () =>
+            {
+                DressAgentManager.Instance.UndressFromConfig(_config);
+            });
 
+            if(!_readOnly) {
                 AddButton("Create Dress Macro", () =>
                 {
                     DressAgentManager.Instance.CreateDressMacro(_config.Name);

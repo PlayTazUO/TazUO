@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -1349,8 +1349,8 @@ namespace ClassicUO.Network
             socket.Send(writer.BufferWritten);
             writer.Dispose();
 
-            if (World.Player != null)            
-                World.Player.HasGump = false;            
+            if (World.Player != null)
+                World.Player.HasGump = false;
         }
 
         public static void Send_VirtueGumpResponse(this AsyncNetClient socket, uint serial, uint code)
@@ -4653,6 +4653,72 @@ namespace ClassicUO.Network
 
             int len = writer.BytesWritten;
             Plugin.ProcessRecvPacket(writer.AllocatedBuffer, ref len);
+            writer.Dispose();
+        }
+
+        public static void Send_EquipMacroKR(this AsyncNetClient socket, ReadOnlySpan<uint> serials)
+        {
+            const byte ID = 0xEC;
+
+            int length = PacketsTable.GetPacketLength(ID);
+
+            var writer = new StackDataWriter(length < 0 ? 64 : length);
+
+            writer.WriteUInt8(ID);
+
+            if (length < 0)
+            {
+                writer.WriteZero(2);
+            }
+
+            writer.WriteUInt8((byte)serials.Length);
+            foreach (ref readonly var serial in serials)
+                writer.WriteUInt32BE(serial);
+
+            if (length < 0)
+            {
+                writer.Seek(1, SeekOrigin.Begin);
+                writer.WriteUInt16BE((ushort)writer.BytesWritten);
+            }
+            else
+            {
+                writer.WriteZero(length - writer.BytesWritten);
+            }
+
+            socket.Send(writer.BufferWritten);
+            writer.Dispose();
+        }
+
+        public static void Send_UnequipMacroKR(this AsyncNetClient socket, ReadOnlySpan<Layer> layers)
+        {
+            const byte ID = 0xED;
+
+            int length = PacketsTable.GetPacketLength(ID);
+
+            var writer = new StackDataWriter(length < 0 ? 64 : length);
+
+            writer.WriteUInt8(ID);
+
+            if (length < 0)
+            {
+                writer.WriteZero(2);
+            }
+
+            writer.WriteUInt8((byte)layers.Length);
+            foreach (ref readonly var layer in layers)
+                writer.WriteUInt16BE((byte)layer);
+
+            if (length < 0)
+            {
+                writer.Seek(1, SeekOrigin.Begin);
+                writer.WriteUInt16BE((ushort)writer.BytesWritten);
+            }
+            else
+            {
+                writer.WriteZero(length - writer.BytesWritten);
+            }
+
+            socket.Send(writer.BufferWritten);
             writer.Dispose();
         }
     }

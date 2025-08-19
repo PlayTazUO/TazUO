@@ -7,10 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
-using ClassicUO.Utility.Logging;
+using ClassicUO.Network;
 
 namespace ClassicUO.Game.Managers
 {
@@ -284,47 +283,128 @@ namespace ClassicUO.Game.Managers
 
         private void Dress(DressConfig config)
         {
-            // Collect layers that need to be unequipped
-            var layersToUnequip = new List<byte>();
-            foreach (var dressItem in config.Items)
+            if (config.UseKREquipPacket)
             {
-                if (!layersToUnequip.Contains(dressItem.Layer))
+                // Use KR Equip Packets for faster operation
+                // First, collect layers that need to be unequipped (same logic as traditional method)
+                var layersToUnequip = new List<Layer>();
+                foreach (var dressItem in config.Items)
                 {
-                    if(dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains((byte)Layer.OneHanded))
-                        layersToUnequip.Add((byte)Layer.OneHanded);
-                    if(dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains((byte)Layer.TwoHanded))
-                        layersToUnequip.Add((byte)Layer.TwoHanded);
-                    layersToUnequip.Add(dressItem.Layer);
+                    if (!layersToUnequip.Contains((Layer)dressItem.Layer))
+                    {
+                        if(dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains(Layer.OneHanded))
+                            layersToUnequip.Add(Layer.OneHanded);
+                        if(dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains(Layer.TwoHanded))
+                            layersToUnequip.Add(Layer.TwoHanded);
+                        layersToUnequip.Add((Layer)dressItem.Layer);
+                    }
+                }
+
+                // Unequip conflicting layers first
+                if (layersToUnequip.Count > 0)
+                    AsyncNetClient.Socket.Send_UnequipMacroKR(layersToUnequip.ToArray().AsSpan());
+
+                // Then collect items to equip
+                var itemsToEquip = new List<uint>();
+
+                foreach (var dressItem in config.Items)
+                {
+                    // Check if the item is already equipped on the player
+                    var item = World.Items.Get(dressItem.Serial);
+                    if (item != null && item.Container == World.Player?.Serial)
+                    {
+                        continue;
+                    }
+
+                    itemsToEquip.Add(dressItem.Serial);
+                }
+
+                if (itemsToEquip.Count > 0)
+                {
+                    // Send KR equip packet for all items at once
+                    AsyncNetClient.Socket.Send_EquipMacroKR(itemsToEquip.ToArray().AsSpan());
                 }
             }
-
-            // First, unequip all conflicting layers
-            if (layersToUnequip.Count > 0)
-                UnequipLayers(layersToUnequip, config);
-
-            foreach (var dressItem in config.Items)
+            else
             {
-                Log.Debug($"ENQUEING: {dressItem.Name} {dressItem.Serial} FOR EQUIPPING");
-                MoveItemQueue.Instance.EnqueueEquipSingle(dressItem.Serial, (Layer)dressItem.Layer);
+                // Use traditional queue-based approach
+                // Collect layers that need to be unequipped
+                var layersToUnequip = new List<byte>();
+                foreach (var dressItem in config.Items)
+                {
+                    if (!layersToUnequip.Contains(dressItem.Layer))
+                    {
+                        if(dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains((byte)Layer.OneHanded))
+                            layersToUnequip.Add((byte)Layer.OneHanded);
+                        if(dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains((byte)Layer.TwoHanded))
+                            layersToUnequip.Add((byte)Layer.TwoHanded);
+                        layersToUnequip.Add(dressItem.Layer);
+                    }
+                }
+
+                // First, unequip all conflicting layers
+                if (layersToUnequip.Count > 0)
+                    UnequipLayers(layersToUnequip, config);
+
+                foreach (var dressItem in config.Items)
+                {
+                    // Check if the item is already equipped on the player
+                    var item = World.Items.Get(dressItem.Serial);
+                    if (item != null && item.Container == World.Player?.Serial)
+                    {
+                        continue;
+                    }
+
+                    MoveItemQueue.Instance.EnqueueEquipSingle(dressItem.Serial, (Layer)dressItem.Layer);
+                }
             }
         }
 
         private void Undress(DressConfig config)
         {
-            var itemsToUnequip = new List<uint>();
-
-            // Collect items that are currently equipped
-            foreach (var dressItem in config.Items)
+            if (config.UseKREquipPacket)
             {
-                var item = World.Items.Get(dressItem.Serial);
-                if (item != null && item.Container == World.Player?.Serial)
+                // Use KR Unequip Packets for faster operation
+                var layersToUnequip = new List<Layer>();
+
+                // Collect layers that are currently equipped with config items
+                foreach (var dressItem in config.Items)
                 {
-                    itemsToUnequip.Add(dressItem.Serial);
+                    var item = World.Items.Get(dressItem.Serial);
+                    if (item != null && item.Container == World.Player?.Serial)
+                    {
+                        var layer = (Layer)dressItem.Layer;
+                        if (!layersToUnequip.Contains(layer))
+                        {
+                            layersToUnequip.Add(layer);
+                        }
+                    }
+                }
+
+                if (layersToUnequip.Count > 0)
+                {
+                    // Send KR unequip packet for all layers at once
+                    AsyncNetClient.Socket.Send_UnequipMacroKR(layersToUnequip.ToArray().AsSpan());
                 }
             }
+            else
+            {
+                // Use traditional queue-based approach
+                var itemsToUnequip = new List<uint>();
 
-            foreach (var serial in itemsToUnequip)
-                UnequipItemAsync(serial, config);
+                // Collect items that are currently equipped
+                foreach (var dressItem in config.Items)
+                {
+                    var item = World.Items.Get(dressItem.Serial);
+                    if (item != null && item.Container == World.Player?.Serial)
+                    {
+                        itemsToUnequip.Add(dressItem.Serial);
+                    }
+                }
+
+                foreach (var serial in itemsToUnequip)
+                    UnequipItemAsync(serial, config);
+            }
         }
 
         private void UnequipLayers(List<byte> layers, DressConfig config)
@@ -345,7 +425,6 @@ namespace ClassicUO.Game.Managers
             if (item != null && item.Container == World.Player?.Serial)
             {
                 uint undressBag = GetUndressBag(config);
-                Log.Debug($"ENQUEING: {item.Name} {item.Serial} FOR UNEQUIPPPP");
                 MoveItemQueue.Instance.Enqueue(item, undressBag);
             }
         }
@@ -385,6 +464,7 @@ namespace ClassicUO.Game.Managers
         public string CharacterName { get; set; } = "";
         public uint UndressBagSerial { get; set; } = 0;
         public List<DressItem> Items { get; set; } = new();
+        public bool UseKREquipPacket { get; set; } = false;
 
         public bool Contains(uint serial) => Items.Any(i => i.Serial == serial);
     }

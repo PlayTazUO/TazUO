@@ -490,10 +490,6 @@ public class AssistantGump : BaseOptionsGump
 
         // Build character menu on the left
         BuildDressAgentCharacterMenu(content);
-        // Build initial instructions on the right
-        content.AddToRight(TextBox.GetOne("Select a character from the list on the left to view their dress configurations.",
-            ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR,
-            TextBox.RTLOptions.Default(content.RightWidth - 40)), true, 1);
     }
 
     private void BuildDressAgentCharacterMenu(LeftSideMenuRightSideContent content)
@@ -525,6 +521,7 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildCharacterConfigsList(LeftSideMenuRightSideContent content, string characterName, bool readOnly, int page)
     {
+        PositionHelper.Reset();
 
         // Character header
         content.AddToRight(TextBox.GetOne($"Dress Configurations for: {characterName}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE,
