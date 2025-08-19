@@ -7,6 +7,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
+using ClassicUO.Game.GameObjects;
 
 namespace ClassicUO.Game.UI.Gumps;
 
@@ -37,6 +38,7 @@ public class AssistantGump : BaseOptionsGump
         BuildJournalFilter();
         BuildTitleBar();
         BuildBandageAgent();
+        BuildFriendsList();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -541,6 +543,109 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(bandageGraphicInput));
     }
 
+    private void BuildFriendsList()
+    {
+        var page = (int)PAGE.FriendsList;
+        MainContent.AddToLeft(CategoryButton("Friends List", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
+        MainContent.AddToRight(scroll, false, page);
+        PositionHelper.Reset();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Manage your friends list.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
+        PositionHelper.BlankLine();
+
+        VBoxContainer friendsContainer = new(MainContent.RightWidth - 20);
+
+        ModernButton addByTargetButton;
+        scroll.Add(PositionHelper.PositionControl(addByTargetButton = new ModernButton(0, 0, 120, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Add by Target", ThemeSettings.BUTTON_FONT_COLOR)));
+        addByTargetButton.MouseUp += (s, e) =>
+        {
+            GameActions.Print("Target a player to add to friends list");
+            TargetHelper.TargetObject(targeted =>
+            {
+                if (targeted != null && targeted is Mobile mobile)
+                {
+                    if (FriendsListManager.Instance.AddFriend(mobile))
+                    {
+                        GameActions.Print($"Added {mobile.Name} to friends list");
+                        friendsContainer.Add(GenFriend(FriendsListManager.Instance.GetFriend(mobile)), true);
+                    }
+                    else
+                    {
+                        GameActions.Print($"Could not add {mobile.Name} - already in friends list");
+                    }
+                }
+                else
+                {
+                    GameActions.Print("Invalid target - must be a player");
+                }
+            });
+        };
+
+        PositionHelper.BlankLine();
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Current Friends:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default())));
+        PositionHelper.BlankLine();
+
+        // Display friends list
+        var friends = FriendsListManager.Instance.GetFriends();
+
+        scroll.Add(PositionHelper.PositionControl(friendsContainer));
+
+        if (friends.Count == 0)
+        {
+            friendsContainer.Add(TextBox.GetOne("No friends added yet.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
+        }
+
+        foreach (var friend in friends)
+        {
+            friendsContainer.Add(GenFriend(friend));
+        }
+
+        Area GenFriend(FriendEntry friend)
+            {
+                Area friendArea = new Area();
+                friendArea.Width = MainContent.RightWidth - 20;
+                friendArea.Height = 30;
+
+                // Friend name
+                TextBox nameText = TextBox.GetOne(friend.Name, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
+                nameText.X = 5;
+                nameText.Y = 5;
+                friendArea.Add(nameText);
+
+                // Serial info (if not 0)
+                if (friend.Serial != 0)
+                {
+                    TextBox serialText = TextBox.GetOne($"(Serial: {friend.Serial})", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 2, Color.Gray, TextBox.RTLOptions.Default());
+                    serialText.X = nameText.Width + 15;
+                    serialText.Y = 7;
+                    friendArea.Add(serialText);
+                }
+
+                // Remove button
+                ModernButton removeButton = new ModernButton(MainContent.RightWidth - 160, 2, 150, 26, ButtonAction.Default, "Remove", ThemeSettings.BUTTON_FONT_COLOR);
+                removeButton.MouseUp += (s, e) =>
+                {
+                    bool removed = friend.Serial != 0
+                        ? FriendsListManager.Instance.RemoveFriend(friend.Serial)
+                        : FriendsListManager.Instance.RemoveFriend(friend.Name);
+                    if (removed)
+                    {
+                        GameActions.Print($"Removed {friend.Name} from friends list");
+                        friendArea.Dispose();
+                    }
+                };
+                friendArea.Add(removeButton);
+
+                friendArea.ForceSizeUpdate();
+                return friendArea;
+            }
+    }
+
     public enum PAGE
     {
         None,
@@ -553,7 +658,8 @@ public class AssistantGump : BaseOptionsGump
         SpellIndicator,
         JournalFilter,
         TitleBar,
-        BandageAgent
+        BandageAgent,
+        FriendsList
     }
 
     #region CustomControls
