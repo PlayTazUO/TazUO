@@ -1333,7 +1333,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="serial">Defaults to saved mount</param>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
         public void Mount(uint serial = uint.MaxValue, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
-        (void () =>
+        (() =>
             {
                 if (serial == uint.MaxValue)
                     serial = ProfileManager.CurrentProfile.SavedMountSerial;
@@ -1349,7 +1349,10 @@ namespace ClassicUO.LegionScripting
         /// This will set your saved mount for this character.
         /// </summary>
         /// <param name="serial"></param>
-        public void SetMount(uint serial) => MainThreadQueue.InvokeOnMainThread(void () => ProfileManager.CurrentProfile.SavedMountSerial = serial);
+        public void SetMount(uint serial) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            ProfileManager.CurrentProfile.SavedMountSerial = serial;
+        });
 
         /// <summary>
         /// Wait for a target cursor.

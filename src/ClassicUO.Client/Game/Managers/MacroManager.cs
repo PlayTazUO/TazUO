@@ -2717,11 +2717,11 @@ namespace ClassicUO.Game.Managers
         SpellBarRowUp,
         SpellBarRowDown,
         Dismount,
-        Mount,
-        SetMount,
         ToggleHouses,
         ToggleHudVisible,
-        Resync
+        Resync,
+        Mount,
+        SetMount,
     }
 
     public enum MacroSubType

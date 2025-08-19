@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `8/13/25`.*
+*This was generated on `8/18/25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -1253,8 +1253,23 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `serial` | `uint` | ❌ No |  |
+| `serial` | `uint` | ✅ Yes | Defaults to saved mount |
 | `skipQueue` | `bool` | ✅ Yes | Defaults true, set to false to use a double click queue |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### SetMount
+`(serial)`
+ This will set your saved mount for this character.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No |  |
 
 **Return Type:** `void` *(Does not return anything)*
 
