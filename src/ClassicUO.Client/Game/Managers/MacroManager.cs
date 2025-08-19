@@ -1122,8 +1122,35 @@ namespace ClassicUO.Game.Managers
                     var m = World.Player.FindItemByLayer(Layer.Mount);
                     if (m != null)
                     {
-                        GameActions.DoubleClick(World.Player);
+                        GameActions.DoubleClickQueued(World.Player);
                     }
+                    break;
+
+                case MacroType.Mount:
+                    if (ProfileManager.CurrentProfile.SavedMountSerial != 0)
+                    {
+                        Entity mount = World.Get(ProfileManager.CurrentProfile.SavedMountSerial);
+                        if (mount != null)
+                        {
+                            GameActions.DoubleClickQueued(ProfileManager.CurrentProfile.SavedMountSerial);
+                        }
+                        else
+                        {
+                            GameActions.Print("Saved mount not found. Target a new mount.", 32);
+                            TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
+                        }
+                    }
+                    else
+                    {
+                        GameActions.Print("No mount set. Target a mount to save it.", 48);
+                        TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
+                        result = 1;
+                    }
+                    break;
+
+                case MacroType.SetMount:
+                    GameActions.Print("Target a mount to save it for the Mount macro.", 48);
+                    TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
                     break;
 
                 case MacroType.OpenDoor:
@@ -2692,7 +2719,9 @@ namespace ClassicUO.Game.Managers
         Dismount,
         ToggleHouses,
         ToggleHudVisible,
-        Resync
+        Resync,
+        Mount,
+        SetMount,
     }
 
     public enum MacroSubType

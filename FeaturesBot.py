@@ -5,6 +5,14 @@ import os
 motd = [
 """
 ```ini
+[ Auto Bandage ]
+```
+> TazUO added auto bandaging to keep you healed. \n
+See more -> <https://github.com/PlayTazUO/TazUO/wiki/Auto-Bandage>
+""",
+
+"""
+```ini
 [ Profile backups ]
 ```
 > TazUO backs up your profiles 3 times, just in-case. \n

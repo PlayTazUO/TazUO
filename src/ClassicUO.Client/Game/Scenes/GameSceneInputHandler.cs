@@ -796,6 +796,24 @@ namespace ClassicUO.Game.Scenes
                             }
                         }
                         break;
+                    case CursorTarget.SetMount:
+                        if (SelectedObject.Object is Mobile m)
+                        {
+                            if (SerialHelper.IsMobile(m))
+                            {
+                                ProfileManager.CurrentProfile.SavedMountSerial = m;
+                                Entity mount = World.Get(m);
+                                string mountName = mount?.Name ?? "mount";
+                                GameActions.Print($"Mount set: {mountName} (Serial: {m.Serial})", 48);
+                            }
+                            TargetManager.Reset();
+                        }
+                        else
+                        {
+                            GameActions.Print("You must target a mobile/creature to set as your mount.", 32);
+                        }
+
+                        break;
                 }
             }
             else

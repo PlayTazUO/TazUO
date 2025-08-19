@@ -38,6 +38,7 @@ public class AssistantGump : BaseOptionsGump
         BuildJournalFilter();
         BuildTitleBar();
         BuildDressAgent();
+        BuildBandageAgent();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -596,6 +597,69 @@ public class AssistantGump : BaseOptionsGump
     }
 
 
+    private void BuildBandageAgent()
+    {
+        var page = (int)PAGE.BandageAgent;
+        MainContent.AddToLeft(CategoryButton("Auto Bandage", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
+        MainContent.AddToRight(scroll, false, page);
+        PositionHelper.Reset();
+
+        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("Automatically use bandages to heal when HP drops below threshold.", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Enable bandage agent", 0, profile.EnableBandageAgent, b => profile.EnableBandageAgent = b)));
+        PositionHelper.BlankLine();
+
+        Control c;
+        scroll.Add(c = PositionHelper.PositionControl(new InputFieldWithLabel("Bandage delay (ms)", ThemeSettings.INPUT_WIDTH, profile.BandageAgentDelay.ToString(), true, (s, e) =>
+        {
+            if (int.TryParse(((BaseOptionsGump.InputField.StbTextBox)s).Text, out int delay))
+            {
+                // Clamp delay to sensible bounds (50ms to 30 seconds)
+                if (delay >= 50 && delay <= 30000)
+                {
+                    profile.BandageAgentDelay = delay;
+                }
+            }
+        })));
+        c.SetTooltip("Delay between bandage attempts in milliseconds (50-30000)");
+        PositionHelper.BlankLine();
+
+        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("HP percentage threshold", 0, ThemeSettings.SLIDER_WIDTH, 10, 95, profile.BandageAgentHPPercentage, (r) => { profile.BandageAgentHPPercentage = r; })));
+        c.SetTooltip("Heal when HP drops below this percentage");
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Use bandaging buff instead of delay", 0, profile.BandageAgentCheckForBuff, b => profile.BandageAgentCheckForBuff = b)));
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Use new bandage packet", 0, profile.BandageAgentUseNewPacket, b => profile.BandageAgentUseNewPacket = b)));
+        PositionHelper.BlankLine();
+
+        InputFieldWithLabel bandageGraphicInput = new("Bandage graphic ID", ThemeSettings.INPUT_WIDTH, $"0x{profile.BandageAgentGraphic:X4}", true, (s, e) =>
+        {
+            string text = ((BaseOptionsGump.InputField.StbTextBox)s).Text;
+            ushort graphic;
+
+            // Try to parse as hex (0x prefix) or decimal
+            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase) || text.StartsWith("0X", StringComparison.OrdinalIgnoreCase))
+            {
+                if (ushort.TryParse(text.Substring(2), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out graphic))
+                {
+                    profile.BandageAgentGraphic = graphic;
+                }
+            }
+            else if (ushort.TryParse(text, out graphic))
+            {
+                profile.BandageAgentGraphic = graphic;
+            }
+        });
+        bandageGraphicInput.SetTooltip("Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)");
+        scroll.Add(PositionHelper.PositionControl(bandageGraphicInput));
+    }
+
     public enum PAGE
     {
         None,
@@ -608,7 +672,8 @@ public class AssistantGump : BaseOptionsGump
         SpellIndicator,
         JournalFilter,
         TitleBar,
-        DressAgent
+        DressAgent,
+        BandageAgent
     }
 
     #region CustomControls

@@ -881,13 +881,20 @@ def Dismount(skipQueue: bool = True) -> None:
     """
     pass
 
-def Mount(serial: int, skipQueue: bool = True) -> None:
+def Mount(serial: int = 1337, skipQueue: bool = True) -> None:
     """
      Attempt to mount(double click)
      Example:
      ```py
      API.Mount(0x12345678)
      ```
+    
+    """
+    pass
+
+def SetMount(serial: int) -> None:
+    """
+     This will set your saved mount for this character.
     
     """
     pass
