@@ -135,6 +135,15 @@ public class AssistantGump : BaseOptionsGump
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoBuyEnable, 0, profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b)));
         PositionHelper.BlankLine();
+        
+        Control c;
+        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Max total items (0 = unlimited)", 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.BuyAgentMaxItems, (r) => { profile.BuyAgentMaxItems = r; })));
+        c.SetTooltip("Maximum total items to buy in a single transaction. Set to 0 for unlimited.");
+        PositionHelper.BlankLine();
+        
+        scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Max unique items", 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.BuyAgentMaxUniques, (r) => { profile.BuyAgentMaxUniques = r; })));
+        c.SetTooltip("Maximum number of different items to buy in a single transaction.");
+        PositionHelper.BlankLine();
 
         scroll.Add(PositionHelper.PositionControl(new BuyAgentConfigs(MainContent.RightWidth - ThemeSettings.SCROLL_BAR_WIDTH - 10)));
     }
@@ -1098,7 +1107,7 @@ public class AssistantGump : BaseOptionsGump
     }
     private class SellAgentConfigs : Control
     {
-        private DataBox _dataBox;
+        private VBoxContainer _container;
 
         public SellAgentConfigs(int width)
         {
@@ -1106,18 +1115,19 @@ public class AssistantGump : BaseOptionsGump
             CanMove = true;
             Width = width;
 
-            Add(_dataBox = new DataBox(0, 0, width, 0));
+            Add(_container = new VBoxContainer(width));
 
             ModernButton b;
-            _dataBox.Add(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add entry", ThemeSettings.BUTTON_FONT_COLOR));
+            _container.Add(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add entry", ThemeSettings.BUTTON_FONT_COLOR));
 
             b.MouseUp += (s, e) =>
             {
-                _dataBox.Insert(3, GenConfigEntry(BuySellAgent.Instance.NewSellConfig(), width));
-                RearrangeDataBox();
+                var newEntry = GenConfigEntry(BuySellAgent.Instance.NewSellConfig(), width);
+                _container.Add(newEntry);
+                RefreshLayout();
             };
 
-            _dataBox.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Target item", ThemeSettings.BUTTON_FONT_COLOR));
+            _container.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Target item", ThemeSettings.BUTTON_FONT_COLOR));
 
             b.MouseUp += (s, e) =>
             {
@@ -1130,8 +1140,9 @@ public class AssistantGump : BaseOptionsGump
                         var sc = BuySellAgent.Instance.NewSellConfig();
                         sc.Graphic = e.Graphic;
                         sc.Hue = e.Hue;
-                        _dataBox.Insert(3, GenConfigEntry(sc, width));
-                        RearrangeDataBox();
+                        var newEntry = GenConfigEntry(sc, width);
+                        _container.Add(newEntry);
+                        RefreshLayout();
                     }
                 );
             };
@@ -1143,28 +1154,32 @@ public class AssistantGump : BaseOptionsGump
             titles.Add(tempTextBox1);
 
             tempTextBox1 = TextBox.GetOne("Hue", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
-            tempTextBox1.X = ((width - 90 - 60) / 3) + 55;
+            tempTextBox1.X = ((width - 90 - 60) / 5) + 55;
             titles.Add(tempTextBox1);
 
             tempTextBox1 = TextBox.GetOne("Max Amount", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
-            tempTextBox1.X = (((width - 90 - 60) / 3) * 2) + 60;
+            tempTextBox1.X = (((width - 90 - 60) / 5) * 2) + 60;
+            titles.Add(tempTextBox1);
+
+            tempTextBox1 = TextBox.GetOne("Min on Hand", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
+            tempTextBox1.X = (((width - 90 - 60) / 5) * 3) + 65;
             titles.Add(tempTextBox1);
 
             titles.ForceSizeUpdate();
-            _dataBox.Add(titles);
+            _container.Add(titles);
 
             if (BuySellAgent.Instance.SellConfigs != null)
                 foreach (var item in BuySellAgent.Instance.SellConfigs)
                 {
-                    _dataBox.Add(GenConfigEntry(item, width));
+                    _container.Add(GenConfigEntry(item, width));
                 }
 
-            RearrangeDataBox();
+            RefreshLayout();
         }
 
         private Control GenConfigEntry(BuySellItemConfig itemConfig, int width)
         {
-            int ewidth = (width - 90 - 60) / 3;
+            int ewidth = (width - 90 - 60) / 5; // Divide by 5 instead of 3 for smaller inputs
 
             Area area = new Area()
             {
@@ -1258,6 +1273,26 @@ public class AssistantGump : BaseOptionsGump
             area.Add(maxInput);
             x += maxInput.Width + 5;
 
+            InputField restockInput = new InputField
+            (
+                ewidth, 50, 100, -1, itemConfig.RestockUpTo.ToString(), false, (s, e) =>
+                {
+                    InputField.StbTextBox restockInput = (InputField.StbTextBox)s;
+
+                    if (ushort.TryParse(restockInput.Text, out var ng))
+                    {
+                        itemConfig.RestockUpTo = ng;
+                    }
+                }
+            )
+            {
+                X = x
+            };
+
+            restockInput.SetTooltip("Minimum amount to keep on hand (0 = disabled)");
+            area.Add(restockInput);
+            x += restockInput.Width + 5;
+
             CheckboxWithLabel enabled = new CheckboxWithLabel(isChecked: itemConfig.Enabled, valueChanged: (e) => { itemConfig.Enabled = e; })
             {
                 X = x
@@ -1286,24 +1321,24 @@ public class AssistantGump : BaseOptionsGump
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     BuySellAgent.Instance?.DeleteConfig(itemConfig);
+                    _container.Remove(area);
                     area.Dispose();
-                    RearrangeDataBox();
+                    RefreshLayout();
                 }
             };
 
             return area;
         }
 
-        private void RearrangeDataBox()
+        private void RefreshLayout()
         {
-            _dataBox.ReArrangeChildren();
-            _dataBox.ForceSizeUpdate();
-            Height = _dataBox.Height;
+            _container.ForceSizeUpdate();
+            Height = _container.Height;
         }
     }
     private class BuyAgentConfigs : Control
     {
-        private DataBox _dataBox;
+        private VBoxContainer _container;
 
         public BuyAgentConfigs(int width)
         {
@@ -1311,18 +1346,19 @@ public class AssistantGump : BaseOptionsGump
             CanMove = true;
             Width = width;
 
-            Add(_dataBox = new DataBox(0, 0, width, 0));
+            Add(_container = new VBoxContainer(width));
 
             ModernButton b;
-            _dataBox.Add(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add entry", ThemeSettings.BUTTON_FONT_COLOR));
+            _container.Add(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add entry", ThemeSettings.BUTTON_FONT_COLOR));
 
             b.MouseUp += (s, e) =>
             {
-                _dataBox.Insert(3, GenConfigEntry(BuySellAgent.Instance.NewBuyConfig(), width));
-                RearrangeDataBox();
+                var newEntry = GenConfigEntry(BuySellAgent.Instance.NewBuyConfig(), width);
+                _container.Add(newEntry);
+                RefreshLayout();
             };
 
-            _dataBox.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Target item", ThemeSettings.BUTTON_FONT_COLOR));
+            _container.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Target item", ThemeSettings.BUTTON_FONT_COLOR));
 
             b.MouseUp += (s, e) =>
             {
@@ -1335,8 +1371,9 @@ public class AssistantGump : BaseOptionsGump
                         var sc = BuySellAgent.Instance.NewBuyConfig();
                         sc.Graphic = e.Graphic;
                         sc.Hue = e.Hue;
-                        _dataBox.Insert(3, GenConfigEntry(sc, width));
-                        RearrangeDataBox();
+                        var newEntry = GenConfigEntry(sc, width);
+                        _container.Add(newEntry);
+                        RefreshLayout();
                     }
                 );
             };
@@ -1344,33 +1381,36 @@ public class AssistantGump : BaseOptionsGump
             Area titles = new Area(false);
 
             TextBox tempTextBox1 = TextBox.GetOne("Graphic", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(null));
-
             tempTextBox1.X = 50;
             titles.Add(tempTextBox1);
 
             tempTextBox1 = TextBox.GetOne("Hue", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(null));
-            tempTextBox1.X = ((width - 90 - 60) / 3) + 55;
+            tempTextBox1.X = 50 + ((width - 90 - 60) / 5) + 5;
             titles.Add(tempTextBox1);
 
             tempTextBox1 = TextBox.GetOne("Max Amount", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(null));
-            tempTextBox1.X = (((width - 90 - 60) / 3) * 2) + 60;
+            tempTextBox1.X = 50 + (((width - 90 - 60) / 5) * 2) + 10;
+            titles.Add(tempTextBox1);
+
+            tempTextBox1 = TextBox.GetOne("Restock Up To", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(null));
+            tempTextBox1.X = 50 + (((width - 90 - 60) / 5) * 3) + 15;
             titles.Add(tempTextBox1);
 
             titles.ForceSizeUpdate();
-            _dataBox.Add(titles);
+            _container.Add(titles);
 
             if (BuySellAgent.Instance.BuyConfigs != null)
                 foreach (var item in BuySellAgent.Instance.BuyConfigs)
                 {
-                    _dataBox.Add(GenConfigEntry(item, width));
+                    _container.Add(GenConfigEntry(item, width));
                 }
 
-            RearrangeDataBox();
+            RefreshLayout();
         }
 
         private Control GenConfigEntry(BuySellItemConfig itemConfig, int width)
         {
-            int ewidth = (width - 90 - 60) / 3;
+            int ewidth = (width - 90 - 60) / 5; // Divide by 5 instead of 3 for smaller inputs
 
             Area area = new Area()
             {
@@ -1464,6 +1504,26 @@ public class AssistantGump : BaseOptionsGump
             area.Add(maxInput);
             x += maxInput.Width + 5;
 
+            InputField restockInput = new InputField
+            (
+                ewidth, 50, 100, -1, itemConfig.RestockUpTo.ToString(), false, (s, e) =>
+                {
+                    InputField.StbTextBox restockInput = (InputField.StbTextBox)s;
+
+                    if (ushort.TryParse(restockInput.Text, out var ng))
+                    {
+                        itemConfig.RestockUpTo = ng;
+                    }
+                }
+            )
+            {
+                X = x
+            };
+
+            restockInput.SetTooltip("Restock up to this amount (0 = disabled)");
+            area.Add(restockInput);
+            x += restockInput.Width + 5;
+
             CheckboxWithLabel enabled = new CheckboxWithLabel(isChecked: itemConfig.Enabled, valueChanged: (e) => { itemConfig.Enabled = e; })
             {
                 X = x
@@ -1492,19 +1552,19 @@ public class AssistantGump : BaseOptionsGump
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     BuySellAgent.Instance?.DeleteConfig(itemConfig);
+                    _container.Remove(area);
                     area.Dispose();
-                    RearrangeDataBox();
+                    RefreshLayout();
                 }
             };
 
             return area;
         }
 
-        private void RearrangeDataBox()
+        private void RefreshLayout()
         {
-            _dataBox.ReArrangeChildren();
-            _dataBox.ForceSizeUpdate();
-            Height = _dataBox.Height;
+            _container.ForceSizeUpdate();
+            Height = _container.Height;
         }
     }
     private class GraphicFilterConfigs : Control

@@ -641,6 +641,8 @@ namespace ClassicUO.Configuration
         public int SellAgentMaxUniques { get; set; } = 50;
         public int SellAgentMaxItems { get; set; } = 0;
         public bool BuyAgentEnabled { get; set; }
+        public int BuyAgentMaxUniques { get; set; } = 50;
+        public int BuyAgentMaxItems { get; set; } = 0;
         public bool DisableTargetingGridContainers { get; set; }
         public bool ControllerEnabled { get; set; } = true;
         public bool EnableScavenger { get; set; } = true;

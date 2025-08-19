@@ -101,37 +101,58 @@ namespace ClassicUO.Game.Managers
             List<Tuple<uint, ushort>> buyList = new List<Tuple<uint, ushort>>();
             long val = 0;
             ushort total_count = 0;
+            ushort unique_items = 0;
+            int max_total_items = ProfileManager.CurrentProfile.BuyAgentMaxItems;
+            bool limit_total_items = max_total_items > 0;
+            int max_unique_items = ProfileManager.CurrentProfile.BuyAgentMaxUniques;
+            bool limit_unique_items = max_unique_items > 0;
             
             foreach (var buyConfigEntry in buyItems)
             {
                 if (!buyConfigEntry.Enabled) continue;
 
                 ushort current_count = 0;
+                ushort maxToBuy = buyConfigEntry.MaxAmount;
+
+                // Check restock functionality
+                if (buyConfigEntry.RestockUpTo > 0)
+                {
+                    ushort currentBackpackAmount = GetBackpackItemCount(buyConfigEntry.Graphic, buyConfigEntry.Hue);
+                    if (currentBackpackAmount >= buyConfigEntry.RestockUpTo)
+                    {
+                        continue; // Already have enough, skip this item
+                    }
+                    maxToBuy = (ushort)(buyConfigEntry.RestockUpTo - currentBackpackAmount);
+                    maxToBuy = Math.Min(maxToBuy, buyConfigEntry.MaxAmount);
+                }
 
                 foreach (var item in items)
                 {
                     if (!buyConfigEntry.IsMatch(item.Graphic, item.Hue)) continue;
 
-                    if (current_count >= buyConfigEntry.MaxAmount) continue;
+                    if (current_count >= maxToBuy) continue;
 
-                    //Made it here, add to buy list
-                    if (current_count + item.Amount < buyConfigEntry.MaxAmount)
+                    if (limit_unique_items && unique_items >= max_unique_items) break;
+
+                    if (limit_total_items && current_count + total_count >= max_total_items) break;
+
+                    int amount_buyable = Math.Min(item.Amount, maxToBuy - current_count);
+                    if (limit_total_items)
                     {
-                        buyList.Add(new Tuple<uint, ushort>(item.Serial, item.Amount));
-                        current_count += item.Amount;
-                        val += item.Price * item.Amount;
+                        amount_buyable = Math.Min(amount_buyable, max_total_items - total_count - current_count);
                     }
-                    else
+
+                    if (amount_buyable > 0)
                     {
-                        ushort remainingAmount = (ushort)(buyConfigEntry.MaxAmount - current_count);
-                        if (remainingAmount > 0)
-                        {
-                            buyList.Add(new Tuple<uint, ushort>(item.Serial, remainingAmount));
-                            current_count += remainingAmount;
-                            val += item.Price * remainingAmount;
-                        }
+                        buyList.Add(new Tuple<uint, ushort>(item.Serial, (ushort)amount_buyable));
+                        current_count += (ushort)amount_buyable;
+                        val += item.Price * (ushort)amount_buyable;
                     }
                 }
+                
+                if (current_count > 0)
+                    unique_items++;
+                    
                 total_count += current_count;
             }
 
@@ -140,6 +161,24 @@ namespace ClassicUO.Game.Managers
             NetClient.Socket.Send_BuyRequest(shopSerial, buyList.ToArray());
             GameActions.Print($"Purchased {total_count} items for {val} gold.");
             UIManager.GetGump(shopSerial)?.Dispose();
+        }
+
+        private ushort GetBackpackItemCount(ushort graphic, ushort hue)
+        {
+            var backpack = World.Player?.FindItemByLayer(Data.Layer.Backpack);
+            if (backpack == null) return 0;
+
+            ushort count = 0;
+            var item = (Item)backpack.Items;
+            while (item != null)
+            {
+                if (item.Graphic == graphic && (hue == ushort.MaxValue || item.Hue == hue))
+                {
+                    count += item.Amount;
+                }
+                item = (Item)item.Next;
+            }
+            return count;
         }
 
         public void HandleSellPacket(uint vendorSerial, uint serial, ushort graphic, ushort hue, ushort amount, uint price)
@@ -176,6 +215,18 @@ namespace ClassicUO.Game.Managers
                 if (!sellConfig.Enabled) continue;
 
                 ushort current_count = 0;
+                
+                // Check minimum on hand logic
+                ushort backpackTotal = 0;
+                if (sellConfig.RestockUpTo > 0)
+                {
+                    backpackTotal = GetBackpackItemCount(sellConfig.Graphic, sellConfig.Hue);
+                    if (backpackTotal <= sellConfig.RestockUpTo)
+                    {
+                        continue; // Skip selling this item type - already at or below minimum
+                    }
+                }
+                
                 foreach (var item in sellPackets[vendorSerial].AvailableItems)
                 {
                     if (!sellConfig.IsMatch(item.Graphic, item.Hue)) continue;
@@ -192,14 +243,27 @@ namespace ClassicUO.Game.Managers
                         amount_sellable = Math.Min(amount_sellable, max_total_items - total_count - current_count);
                     }
 
+                    // Apply minimum on hand restriction
+                    if (sellConfig.RestockUpTo > 0 && backpackTotal > 0)
+                    {
+                        int maxSellableBeforeMin = backpackTotal - sellConfig.RestockUpTo;
+                        amount_sellable = Math.Min(amount_sellable, maxSellableBeforeMin - current_count);
+                        
+                        if (amount_sellable <= 0)
+                            break; // Can't sell more without going below minimum
+                    }
+
                     if (amount_sellable > 0)
                     {
                         sellList.Add(new Tuple<uint, ushort>(item.Serial, (ushort)amount_sellable));
                         current_count += (ushort)amount_sellable;
                         val += item.Price * (ushort)amount_sellable;
-                        unique_items++;
                     }
                 }
+                
+                if (current_count > 0)
+                    unique_items++;
+                    
                 total_count += current_count;
             }
             sellPackets.Remove(vendorSerial);
@@ -217,6 +281,7 @@ namespace ClassicUO.Game.Managers
         public ushort Graphic { get; set; }
         public ushort Hue { get; set; } = ushort.MaxValue;
         public ushort MaxAmount { get; set; } = ushort.MaxValue;
+        public ushort RestockUpTo { get; set; } = 0;
         public bool Enabled { get; set; } = true;
 
         public bool IsMatch(ushort graphic, ushort hue)
