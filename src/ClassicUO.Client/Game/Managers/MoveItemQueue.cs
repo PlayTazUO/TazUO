@@ -70,14 +70,15 @@ namespace ClassicUO.Game.Managers
             if (!_queue.TryDequeue(out var request))
                 return;
 
-            GameActions.PickUp(request.Serial, 0, 0, request.Amount);
+            AsyncNetClient.Socket.Send_PickUpRequest(request.Serial, request.Amount);
 
             if(request.Destination != uint.MaxValue)
+            {
                 GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
+            }
             else
             {
                 AsyncNetClient.Socket.Send_EquipRequest(request.Serial, request.Layer, World.Player);
-                Client.Game.GameCursor.ItemHold.Clear();
             }
 
             GlobalActionCooldown.BeginCooldown();
