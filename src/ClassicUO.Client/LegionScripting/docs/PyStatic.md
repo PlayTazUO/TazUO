@@ -9,6 +9,26 @@ description:  Represents a Python-accessible static object (non-interactive scen
 
 
 ## Properties
+### `IsImpassible`
+
+**Type:** `bool`
+
+### `Graphic`
+
+**Type:** `ushort`
+
+### `IsVegetation`
+
+**Type:** `bool`
+
+### `X`
+
+**Type:** `int`
+
+### `Y`
+
+**Type:** `int`
+
 ### `__class__`
 
 **Type:** `string`

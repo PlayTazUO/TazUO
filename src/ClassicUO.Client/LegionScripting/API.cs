@@ -2273,6 +2273,93 @@ namespace ClassicUO.LegionScripting
         /// <returns>A GameObject of that location.</returns>
         public PyGameObject GetTile(int x, int y) => MainThreadQueue.InvokeOnMainThread(() => { return new PyGameObject(World.Map.GetTile(x, y)); });
 
+        /// <summary>
+        /// Gets all static objects at a specific position (x, y coordinates).
+        /// This includes trees, vegetation, buildings, and other non-movable scenery.
+        /// Example:
+        /// ```py
+        /// statics = API.GetStaticsAt(1000, 1000)
+        /// for static in statics:
+        ///     API.Print(f"Static ID: {static.ID}, Z: {static.Z}")
+        /// ```
+        /// </summary>
+        /// <param name="x">X coordinate</param>
+        /// <param name="y">Y coordinate</param>
+        /// <returns>List of PyStatic objects at the specified position</returns>
+        public List<PyStatic> GetStaticsAt(int x, int y) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            var statics = new List<PyStatic>();
+            var chunk = World.Map.GetChunk(x, y);
+
+            if (chunk != null)
+            {
+                var obj = chunk.GetHeadObject(x % 8, y % 8);
+
+                while (obj != null)
+                {
+                    if (obj is Static staticObj)
+                    {
+                        statics.Add(new PyStatic(staticObj));
+                    }
+                    obj = obj.TNext;
+                }
+            }
+
+            return statics;
+        });
+
+        /// <summary>
+        /// Gets all static objects within a rectangular area defined by coordinates.
+        /// This includes trees, vegetation, buildings, and other non-movable scenery.
+        /// Example:
+        /// ```py
+        /// statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
+        /// API.Print(f"Found {len(statics)} statics in area")
+        /// for static in statics:
+        ///     if static.IsVegetation:
+        ///         API.Print(f"Vegetation at {static.X}, {static.Y}")
+        /// ```
+        /// </summary>
+        /// <param name="x1">Starting X coordinate</param>
+        /// <param name="y1">Starting Y coordinate</param>
+        /// <param name="x2">Ending X coordinate</param>
+        /// <param name="y2">Ending Y coordinate</param>
+        /// <returns>List of PyStatic objects within the specified area</returns>
+        public List<PyStatic> GetStaticsInArea(int x1, int y1, int x2, int y2) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            var statics = new List<PyStatic>();
+
+            // Ensure coordinates are in correct order
+            int minX = Math.Min(x1, x2);
+            int maxX = Math.Max(x1, x2);
+            int minY = Math.Min(y1, y2);
+            int maxY = Math.Max(y1, y2);
+
+            for (int x = minX; x <= maxX; x++)
+            {
+                for (int y = minY; y <= maxY; y++)
+                {
+                    var chunk = World.Map.GetChunk(x, y);
+
+                    if (chunk != null)
+                    {
+                        var obj = chunk.GetHeadObject(x % 8, y % 8);
+
+                        while (obj != null)
+                        {
+                            if (obj is Static staticObj)
+                            {
+                                statics.Add(new PyStatic(staticObj));
+                            }
+                            obj = obj.TNext;
+                        }
+                    }
+                }
+            }
+
+            return statics;
+        });
+
         #region Gumps
 
         /// <summary>

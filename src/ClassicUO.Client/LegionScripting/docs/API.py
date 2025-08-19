@@ -151,6 +151,11 @@ class PyProfile:
     AutoLootEnabled: bool = None
 
 class PyStatic:
+    IsImpassible: bool = None
+    Graphic: int = None
+    IsVegetation: bool = None
+    X: int = None
+    Y: int = None
     __class__: str = None
 
 JournalEntries = None
@@ -1372,6 +1377,36 @@ def GetTile(x: int, y: int) -> PyGameObject:
      tile = API.GetTile(1414, 1515)
      if tile:
        API.SysMsg(f"Found a tile with graphic: {tile.Graphic}")
+     ```
+    
+    """
+    pass
+
+def GetStaticsAt(x: int, y: int) -> list[Any]:
+    """
+     Gets all static objects at a specific position (x, y coordinates).
+     This includes trees, vegetation, buildings, and other non-movable scenery.
+     Example:
+     ```py
+     statics = API.GetStaticsAt(1000, 1000)
+     for static in statics:
+         API.Print(f"Static ID: {static.ID}, Z: {static.Z}")
+     ```
+    
+    """
+    pass
+
+def GetStaticsInArea(x1: int, y1: int, x2: int, y2: int) -> list[Any]:
+    """
+     Gets all static objects within a rectangular area defined by coordinates.
+     This includes trees, vegetation, buildings, and other non-movable scenery.
+     Example:
+     ```py
+     statics = API.GetStaticsInArea(1000, 1000, 1010, 1010)
+     API.Print(f"Found {len(statics)} statics in area")
+     for static in statics:
+         if static.IsVegetation:
+             API.Print(f"Vegetation at {static.X}, {static.Y}")
      ```
     
     """

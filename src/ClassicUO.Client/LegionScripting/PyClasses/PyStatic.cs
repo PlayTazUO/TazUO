@@ -9,12 +9,23 @@ namespace ClassicUO.LegionScripting.PyClasses;
 /// </summary>
 public class PyStatic : PyGameObject
 {
+    public bool IsImpassible { get; }
+    public ushort Graphic { get; }
+    public bool IsVegetation { get; }
+    public int X { get; }
+    public int Y { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="PyStatic"/> class from a <see cref="Static"/> object.
     /// </summary>
     /// <param name="static">The static object to wrap.</param>
     internal PyStatic(Static @static) : base(@static)
     {
+        IsImpassible = @static.ItemData.IsImpassable;
+        Graphic = @static.OriginalGraphic;
+        IsVegetation = @static.IsVegetation;
+        X = @static.X;
+        Y = @static.Y;
     }
 
     /// <summary>
