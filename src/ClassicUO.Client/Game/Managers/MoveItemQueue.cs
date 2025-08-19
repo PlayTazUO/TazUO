@@ -74,7 +74,7 @@ namespace ClassicUO.Game.Managers
 
             if(request.Destination != uint.MaxValue)
             {
-                GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination);
+                GameActions.DropItem(request.Serial, request.X, request.Y, request.Z, request.Destination, true);
             }
             else
             {
