@@ -1330,17 +1330,26 @@ namespace ClassicUO.LegionScripting
         /// API.Mount(0x12345678)
         /// ```
         /// </summary>
-        /// <param name="serial"></param>
+        /// <param name="serial">Defaults to saved mount</param>
         /// <param name="skipQueue">Defaults true, set to false to use a double click queue</param>
-        public void Mount(uint serial, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
-        (() =>
+        public void Mount(uint serial = uint.MaxValue, bool skipQueue = true) => MainThreadQueue.InvokeOnMainThread
+        (void () =>
             {
+                if (serial == uint.MaxValue)
+                    serial = ProfileManager.CurrentProfile.SavedMountSerial;
+
                 if (skipQueue)
                     GameActions.DoubleClick(serial);
                 else
                     GameActions.DoubleClickQueued(serial);
             }
         );
+
+        /// <summary>
+        /// This will set your saved mount for this character.
+        /// </summary>
+        /// <param name="serial"></param>
+        public void SetMount(uint serial) => MainThreadQueue.InvokeOnMainThread(void () => ProfileManager.CurrentProfile.SavedMountSerial = serial);
 
         /// <summary>
         /// Wait for a target cursor.

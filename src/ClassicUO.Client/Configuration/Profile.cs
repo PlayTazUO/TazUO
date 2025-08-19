@@ -517,6 +517,8 @@ namespace ClassicUO.Configuration
 
         public int TextBorderSize { get; set; } = 1;
 
+        public uint SavedMountSerial { get; set; } = 0;
+
         public bool UseModernShopGump { get; set; } = false;
 
         public int MaxJournalEntries { get; set; } = 250;

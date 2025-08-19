@@ -58,6 +58,7 @@ namespace ClassicUO.Game.Managers
         SetTargetClientSide = 3,
         Grab,
         SetGrabBag,
+        SetMount,
         HueCommandTarget,
         IgnorePlayerTarget,
         MoveItemContainer,
@@ -494,6 +495,24 @@ namespace ClassicUO.Game.Managers
                         ClearTargetingWithoutTargetCancelPacket();
 
                         return;
+
+                    case CursorTarget.SetMount:
+
+                        if (SerialHelper.IsMobile(serial))
+                        {
+                            ProfileManager.CurrentProfile.SavedMountSerial = serial;
+                            Entity mount = World.Get(serial);
+                            string mountName = mount?.Name ?? "mount";
+                            GameActions.Print($"Mount set: {mountName} (Serial: {serial})", 48);
+                        }
+                        else
+                        {
+                            GameActions.Print("You must target a mobile/creature to set as your mount.", 32);
+                        }
+
+                        ClearTargetingWithoutTargetCancelPacket();
+
+                        return;
                     case CursorTarget.SetFavoriteMoveBag:
                         if (SerialHelper.IsItem(serial))
                         {
@@ -527,6 +546,25 @@ namespace ClassicUO.Game.Managers
                         if (SerialHelper.IsItem(serial))
                         {
                             MultiItemMoveGump.OnContainerTarget(serial);
+                        }
+                        ClearTargetingWithoutTargetCancelPacket();
+                        return;
+                }
+            }
+            else
+            {
+                // Handle cases where entity is null but we still want to use the serial
+                switch (TargetingState)
+                {
+                    case CursorTarget.SetMount:
+                        if (SerialHelper.IsMobile(serial))
+                        {
+                            ProfileManager.CurrentProfile.SavedMountSerial = serial;
+                            GameActions.Print($"Mount set (Serial: {serial})", 48);
+                        }
+                        else
+                        {
+                            GameActions.Print("You must target a mobile/creature to set as your mount.", 32);
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;
