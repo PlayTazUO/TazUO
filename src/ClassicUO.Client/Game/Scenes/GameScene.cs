@@ -224,6 +224,7 @@ namespace ClassicUO.Game.Scenes
             PersistentVars.Load();
             LegionScripting.LegionScripting.Init();
             BuySellAgent.Load();
+            OrganizerAgent.Load();
             GraphicsReplacement.Load();
             SpellBarManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
@@ -389,6 +390,7 @@ namespace ClassicUO.Game.Scenes
 
             GraphicsReplacement.Save();
             BuySellAgent.Unload();
+            OrganizerAgent.Unload();
 
             PersistentVars.Unload();
             LegionScripting.LegionScripting.Unload();
