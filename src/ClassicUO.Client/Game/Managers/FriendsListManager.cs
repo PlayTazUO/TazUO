@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration;
@@ -40,7 +41,7 @@ namespace ClassicUO.Game.Managers
             if (_loaded)
                 return;
 
-            string serverName = World.ServerName ?? "Default";
+            string serverName = SanitizeServerName(World.ServerName);
             string serverFolder = Path.Combine(CUOEnviroment.ExecutablePath, "Data", serverName);
             
             // Create directory if it doesn't exist
@@ -176,6 +177,47 @@ namespace ClassicUO.Game.Managers
                 return null;
 
             return _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string SanitizeServerName(string serverName)
+        {
+            // Handle null, empty, or whitespace-only server names
+            if (string.IsNullOrWhiteSpace(serverName))
+                return "Default";
+
+            // Trim whitespace
+            serverName = serverName.Trim();
+
+            // If still empty after trimming, use default
+            if (string.IsNullOrEmpty(serverName))
+                return "Default";
+
+            // Get invalid filename characters and directory separators
+            var invalidChars = Path.GetInvalidFileNameChars()
+                .Union(new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\' })
+                .ToArray();
+
+            // Replace invalid characters with underscores
+            foreach (char invalidChar in invalidChars)
+            {
+                serverName = serverName.Replace(invalidChar, '_');
+            }
+
+            // Enforce reasonable max length (255 is common filesystem limit, but we'll use 100 for safety)
+            const int maxLength = 100;
+            if (serverName.Length > maxLength)
+            {
+                serverName = serverName.Substring(0, maxLength);
+            }
+
+            // Remove any trailing dots or spaces (Windows doesn't like these)
+            serverName = serverName.TrimEnd('.', ' ');
+
+            // Final check - if we ended up with empty string after sanitization, use default
+            if (string.IsNullOrEmpty(serverName))
+                return "Default";
+
+            return serverName;
         }
     }
 
