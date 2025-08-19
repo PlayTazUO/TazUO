@@ -144,7 +144,7 @@ namespace ClassicUO.Game.UI.Gumps
                     GameActions.Print("Target item to add to dress config");
                     TargetHelper.TargetObject((obj) =>
                     {
-                        if (obj != null)
+                        if (obj != null && SerialHelper.IsItem(obj.Serial))
                         {
                             DressAgentManager.Instance.AddItemToConfig(_config, obj.Serial, obj.Name);
                             RefreshItemsList();
@@ -169,7 +169,7 @@ namespace ClassicUO.Game.UI.Gumps
                     GameActions.Print("Target container for undress items");
                     TargetHelper.TargetObject((obj) =>
                     {
-                        if (obj != null)
+                        if (obj != null && SerialHelper.IsItem(obj.Serial))
                         {
                             DressAgentManager.Instance.SetUndressBag(_config, obj.Serial);
                             GameActions.Print($"Undress bag set to: {obj.Name}");

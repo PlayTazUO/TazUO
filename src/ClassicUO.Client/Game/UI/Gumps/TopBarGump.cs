@@ -158,30 +158,45 @@ namespace ClassicUO.Game.UI.Gumps
                 background.Width = startX;
             }
 
-            RighClickableButton supporters;
-            Add
-            (supporters =
-                new RighClickableButton
-                (
-                    998877,
-                    0x098D,
-                    0x098D,
-                    0x098D,
-                    "Supporters",
-                    1,
-                    true,
-                    0,
-                    0x0036
-                )
-                {
-                    ButtonAction = ButtonAction.Activate,
-                    X = startX,
-                    Y = 1,
-                    FontCenter = true
-                },
-                1
-            );
-            supporters.MouseUp += (s, e) => { UIManager.Add(new Supporters()); };
+            RighClickableButton assistant;
+            Add(assistant = new(998877,
+                0x098D,
+                0x098D,
+                0x098D,
+                "Assistant",
+                1,
+                true,
+                0,
+                0x0036
+            )
+            {
+                ButtonAction = ButtonAction.Activate,
+                X = startX,
+                Y = 1,
+                FontCenter = true
+            }, 1);
+            assistant.MouseUp += (s, e) => { UIManager.Add(new AssistantGump()); };
+            startX += largeWidth + 1;
+
+            RighClickableButton lscript;
+            Add(lscript = new(998877,
+                0x098D,
+                0x098D,
+                0x098D,
+                "Legion Script",
+                1,
+                true,
+                0,
+                0x0036
+            )
+            {
+                ButtonAction = ButtonAction.Activate,
+                X = startX,
+                Y = 1,
+                FontCenter = true
+            }, 1);
+            lscript.MouseUp += (s, e) => { UIManager.Add(new LegionScripting.ScriptManagerGump()); };
+            startX += largeWidth + 1;
 
             RighClickableButton moreMenu;
             Add
@@ -208,10 +223,6 @@ namespace ClassicUO.Game.UI.Gumps
             );
             moreMenu.ContextMenu = new ContextMenuControl();
             moreMenu.MouseUp += (s, e) => { moreMenu.ContextMenu?.Show(); };
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Assistant", () =>
-            {
-                UIManager.Add(new AssistantGump());
-            }));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.TopBarGump.CommandsEntry, () =>
             {
                 UIManager.Add(new CommandsGump());
@@ -258,9 +269,7 @@ namespace ClassicUO.Game.UI.Gumps
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(cliloc.GetString(3000134, ResGumps.Help), () => { GameActions.RequestHelp(); }));
 
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Toggle nameplates", () => { NameOverHeadManager.ToggleOverheads(); }));
-            
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Legion Scripting", () => { UIManager.Add(new LegionScripting.ScriptManagerGump()); }));
-            
+
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Discord", () => { UIManager.Add(new DiscordGump()); }));
 
             var submenu = new ContextMenuItemEntry("Tools");

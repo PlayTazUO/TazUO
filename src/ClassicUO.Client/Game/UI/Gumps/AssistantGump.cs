@@ -20,8 +20,8 @@ public class AssistantGump : BaseOptionsGump
     {
         profile = ProfileManager.CurrentProfile;
 
-        CenterXInScreen();
-        CenterYInScreen();
+        CenterXInViewPort();
+        CenterYInViewPort();
 
         Build();
     }
@@ -496,7 +496,7 @@ public class AssistantGump : BaseOptionsGump
     {
         DressAgentManager.Instance.Load();
 
-        int pageBase = 10000; // Base page number for dress agent
+        int pageBase = (int)PAGE.DressAgent + 10000; // Base page number for dress agent
 
         // Current character
         string currentCharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
@@ -521,7 +521,7 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildCharacterConfigsList(LeftSideMenuRightSideContent content, string characterName, bool readOnly, int page)
     {
-        PositionHelper.Reset();
+        content.ResetRightSide();
 
         // Character header
         content.AddToRight(TextBox.GetOne($"Dress Configurations for: {characterName}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE,
@@ -538,6 +538,7 @@ public class AssistantGump : BaseOptionsGump
                 string configName = $"Config {DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1}";
                 var newConfig = DressAgentManager.Instance.CreateNewConfig(configName);
                 UIManager.Add(new DressAgentConfigGump(newConfig, readOnly));
+                configsList.Add(GenArea(newConfig));
             };
             configsList.Add(createButton);
         }
@@ -550,35 +551,7 @@ public class AssistantGump : BaseOptionsGump
         // Show configs list
         foreach (var config in configs)
         {
-            Area configArea = new Area { Width = content.RightWidth - 60, Height = 40 };
-
-            // Config name and item count
-            var configLabel = TextBox.GetOne($"{config.Name} ({config.Items.Count} items)",
-                ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
-            configLabel.Y = 5;
-            configArea.Add(configLabel);
-
-            // Edit button
-            ModernButton editButton = new(configArea.Width - 70, 8, 40, 25, ButtonAction.Default, "Edit", ThemeSettings.BUTTON_FONT_COLOR);
-            editButton.MouseUp += (s, e) =>
-            {
-                UIManager.Add(new DressAgentConfigGump(config, readOnly));
-            };
-            configArea.Add(editButton);
-
-            // Delete button for current character
-            if (!readOnly)
-            {
-                ModernButton deleteButton = new(configArea.Width - 25, 8, 20, 25, ButtonAction.Default, "X", Color.Red);
-                deleteButton.MouseUp += (s, e) =>
-                {
-                    DressAgentManager.Instance.DeleteConfig(config);
-                    configArea.Dispose();
-                };
-                configArea.Add(deleteButton);
-            }
-
-            configsList.Add(configArea);
+            configsList.Add(GenArea(config));
         }
 
         if (configs.Count == 0)
@@ -591,6 +564,39 @@ public class AssistantGump : BaseOptionsGump
         }
 
         content.AddToRight(configsList, true, page);
+
+        Area GenArea(DressConfig config)
+        {
+            Area configArea = new Area { Width = content.RightWidth - 60, Height = 40 };
+
+            // Config name and item count
+            var configLabel = TextBox.GetOne($"{config.Name} ({config.Items.Count} items)",
+                ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
+            configLabel.Y = 5;
+            configArea.Add(configLabel);
+
+            // Edit button
+            ModernButton editButton = new(configArea.Width - 70, 4, 40, 25, ButtonAction.Default, "Edit", ThemeSettings.BUTTON_FONT_COLOR);
+            editButton.MouseUp += (s, e) =>
+            {
+                UIManager.Add(new DressAgentConfigGump(config, readOnly));
+            };
+            configArea.Add(editButton);
+
+            // Delete button for current character
+            if (!readOnly)
+            {
+                ModernButton deleteButton = new(configArea.Width - 25, 4, 20, 25, ButtonAction.Default, "X", Color.Red);
+                deleteButton.MouseUp += (s, e) =>
+                {
+                    DressAgentManager.Instance.DeleteConfig(config);
+                    configArea.Dispose();
+                };
+                configArea.Add(deleteButton);
+            }
+            configArea.ForceSizeUpdate();
+            return configArea;
+        }
     }
 
 

@@ -22,6 +22,15 @@ namespace ClassicUO.Game.Managers
 
         public void Enqueue(uint serial, uint destination, ushort amt = 0, int x = 0xFFFF, int y = 0xFFFF, int z = 0)
         {
+            if(amt == 0)
+            {
+                Item i = World.Items.Get(serial);
+                if (i != null)
+                    amt = i.Amount;
+                else
+                    amt = 1;
+            }
+
             _queue.Enqueue(new MoveRequest(serial, destination, amt, x, y, z));
             _isEmpty = false;
         }
@@ -37,7 +46,7 @@ namespace ClassicUO.Game.Managers
 
             uint bag = ProfileManager.CurrentProfile.GrabBagSerial == 0 ? backpack.Serial : ProfileManager.CurrentProfile.GrabBagSerial;
 
-            Enqueue(item.Serial, bag, 0, 0xFFFF, 0xFFFF);
+            Enqueue(item.Serial, bag, item.Amount, 0xFFFF, 0xFFFF);
         }
 
         public void EnqueueEquipSingle(uint serial, Layer layer)
@@ -45,7 +54,7 @@ namespace ClassicUO.Game.Managers
             Item i = World.Items.Get(serial);
             if (i == null) return;
 
-            _queue.Enqueue(new MoveRequest(serial, uint.MaxValue, 0, 0xFFFF, 0xFFFF, 0, layer));
+            _queue.Enqueue(new MoveRequest(serial, uint.MaxValue, 1, 0xFFFF, 0xFFFF, 0, layer));
             _isEmpty = false;
         }
 
