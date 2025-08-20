@@ -181,6 +181,12 @@ namespace ClassicUO.Game.GameObjects
             byte animIndex = AnimIndex;
 
             Item mount = Mount;
+            if (mount != null)
+            {
+                if (World.Items.Get(mount.Serial) == null) //Double check mount exists. Still a performance increase for non-mounted mobiles.
+                    mount = Mount = null;
+            }
+
             sbyte mountOffsetY = 0;
 
             if (isHuman && mount != null && mount.Graphic != 0x3E96)
@@ -997,7 +1003,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (isHuman)
             {
-                Item mount = FindItemByLayer(Layer.Mount);
+                Item mount = Mount;
                 if (mount != null)
                 {
                     var mountGraphic = mount.GetGraphicForAnimation();

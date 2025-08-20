@@ -160,51 +160,47 @@ namespace ClassicUO.Assets
             return pixels;
         }
 
-        public Task Load()
+        public void Load()
         {
-            return Task.Run(
-                () =>
+            string strExeFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            exePath = Path.GetDirectoryName(strExeFilePath);
+
+            string gumpPath = Path.Combine(exePath, IMAGES_FOLDER, GUMP_EXTERNAL_FOLDER);
+            if (Directory.Exists(gumpPath))
+            {
+                string[] files = Directory.GetFiles(gumpPath, "*.png", SearchOption.TopDirectoryOnly);
+                gump_availableIDs = new uint[files.Length];
+
+                for (int i = 0; i < files.Length; i++)
                 {
-                    string strExeFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                    exePath = Path.GetDirectoryName(strExeFilePath);
+                    string fname = Path.GetFileName(files[i]);
+                    uint.TryParse(fname.Substring(0, fname.Length - 4), out gump_availableIDs[i]);
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(gumpPath);
+            }
 
-                    string gumpPath = Path.Combine(exePath, IMAGES_FOLDER, GUMP_EXTERNAL_FOLDER);
-                    if (Directory.Exists(gumpPath))
-                    {
-                        string[] files = Directory.GetFiles(gumpPath, "*.png", SearchOption.TopDirectoryOnly);
-                        gump_availableIDs = new uint[files.Length];
+            string artPath = Path.Combine(exePath, IMAGES_FOLDER, ART_EXTERNAL_FOLDER);
+            if (Directory.Exists(artPath))
+            {
+                string[] files = Directory.GetFiles(artPath, "*.png", SearchOption.TopDirectoryOnly);
+                art_availableIDs = new uint[files.Length];
 
-                        for (int i = 0; i < files.Length; i++)
-                        {
-                            string fname = Path.GetFileName(files[i]);
-                            uint.TryParse(fname.Substring(0, fname.Length - 4), out gump_availableIDs[i]);
-                        }
-                    }
-                    else
+                for (int i = 0; i < files.Length; i++)
+                {
+                    string fname = Path.GetFileName(files[i]);
+                    if (uint.TryParse(fname.Substring(0, fname.Length - 4), out uint gfx))
                     {
-                        Directory.CreateDirectory(gumpPath);
+                        art_availableIDs[i] = gfx + 0x4000;
                     }
-
-                    string artPath = Path.Combine(exePath, IMAGES_FOLDER, ART_EXTERNAL_FOLDER);
-                    if (Directory.Exists(artPath))
-                    {
-                        string[] files = Directory.GetFiles(artPath, "*.png", SearchOption.TopDirectoryOnly);
-                        art_availableIDs = new uint[files.Length];
-
-                        for (int i = 0; i < files.Length; i++)
-                        {
-                            string fname = Path.GetFileName(files[i]);
-                            if (uint.TryParse(fname.Substring(0, fname.Length - 4), out uint gfx))
-                            {
-                                art_availableIDs[i] = gfx + 0x4000;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        Directory.CreateDirectory(artPath);
-                    }
-                });
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory(artPath);
+            }
         }
 
         public Task LoadResourceAssets()
@@ -241,7 +237,7 @@ namespace ClassicUO.Assets
                             {
                                 Texture2D tempTexture = Texture2D.FromStream(GraphicsDevice, stream);
                                 FixPNGAlpha(ref tempTexture);
-                                
+
                                 uint[] pixels = GetPixels(tempTexture);
                                 int width = tempTexture.Width;
                                 int height = tempTexture.Height;

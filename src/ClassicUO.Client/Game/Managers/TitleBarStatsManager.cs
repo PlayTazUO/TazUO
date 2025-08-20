@@ -74,9 +74,9 @@ namespace ClassicUO.Game.Managers
                     return $"HP {World.Player.Hits}/{World.Player.HitsMax}, MP {World.Player.Mana}/{World.Player.ManaMax}, SP {World.Player.Stamina}/{World.Player.StaminaMax}";
 
                 case TitleBarStatsMode.Percent:
-                    int hpPercent = World.Player.HitsMax > 0 ? (World.Player.Hits * 100) / World.Player.HitsMax : 0;
-                    int mpPercent = World.Player.ManaMax > 0 ? (World.Player.Mana * 100) / World.Player.ManaMax : 0;
-                    int spPercent = World.Player.StaminaMax > 0 ? (World.Player.Stamina * 100) / World.Player.StaminaMax : 0;
+                    int hpPercent = World.Player.HitsMax > 0 ? (World.Player.Hits * 100) / World.Player.HitsMax : 100;
+                    int mpPercent = World.Player.ManaMax > 0 ? (World.Player.Mana * 100) / World.Player.ManaMax : 100;
+                    int spPercent = World.Player.StaminaMax > 0 ? (World.Player.Stamina * 100) / World.Player.StaminaMax : 100;
                     return $"HP {hpPercent}%, MP {mpPercent}%, SP {spPercent}%";
 
                 case TitleBarStatsMode.ProgressBar:

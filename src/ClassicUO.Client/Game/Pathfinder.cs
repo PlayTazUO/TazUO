@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -409,10 +409,11 @@ namespace ClassicUO.Game
             newX += _offsetX[direction];
             newY += _offsetY[direction];
 
-            foreach (PathObject o in _reusableList)
+            for (int i = 0; i < _reusableList.Count; i++)
             {
-                o.Return();
+                _reusableList[i]?.Return();
             }
+
             _reusableList.Clear();
 
             if (!CreateItemList(_reusableList, newX, newY, stepState) || _reusableList.Count == 0)
@@ -834,14 +835,14 @@ namespace ClassicUO.Game
             updatedNode.Direction = direction;
             updatedNode.Parent = parent;
             updatedNode.DistFromStartCost = newDistFromStart;
-            updatedNode.DistFromGoalCost = GetGoalDistCost(new Point(x, y), cost); 
+            updatedNode.DistFromGoalCost = GetGoalDistCost(new Point(x, y), cost);
             updatedNode.Cost = updatedNode.DistFromStartCost + updatedNode.DistFromGoalCost;
-            
+
             if (_openSet.Contains(coordinate))
             {
                 // Since tile is already in the open list, we enqueue the better option that
                 // has a lower cost (existing one will be ignored later by PriorityQueue impl)
-                
+
                 _openSet.Enqueue(updatedNode);
                 return false;
             }
@@ -855,7 +856,7 @@ namespace ClassicUO.Game
             }
 
             return true;
-            
+
         }
 
         private static bool OpenNodes(PathNode node)
@@ -903,7 +904,7 @@ namespace ClassicUO.Game
                     }
                 }
             }
-            
+
             return found;
         }
 
@@ -938,7 +939,7 @@ namespace ClassicUO.Game
             startNode.Z = World.Player.Z;
             startNode.Parent = null;
             startNode.DistFromStartCost = 0;
-            
+
             var startPoint = new Point(_startPoint.X, _startPoint.Y);
             startNode.DistFromGoalCost = GetGoalDistCost(startPoint, 0);
             startNode.Cost = startNode.DistFromGoalCost;
@@ -987,7 +988,7 @@ namespace ClassicUO.Game
             var current = goalNode;
             var visited = new HashSet<PathNode>();
             int iterations = 0;
-    
+
             while (current is not null && current.Parent != current && iterations < PATHFINDER_MAX_NODES)
             {
                 // Check for cycles
@@ -997,18 +998,18 @@ namespace ClassicUO.Game
                     Log.Warn("[Pathfinder]Cycle detected in path reconstruction!");
                     break;
                 }
-        
+
                 visited.Add(current);
                 pathStack.Push(current);
                 current = current.Parent;
                 iterations++;
             }
-    
+
             if (iterations >= PATHFINDER_MAX_NODES)
             {
                 Log.Warn($"[Pathfinder]Path reconstruction hit iteration limit: {PATHFINDER_MAX_NODES}");
             }
-    
+
             _path.Clear();
             while (pathStack.Count > 0)
             {
@@ -1040,7 +1041,7 @@ namespace ClassicUO.Game
             {
                 result.Add((node.X, node.Y, node.Z));
             }
-            
+
             return result;
         }
 
@@ -1111,7 +1112,7 @@ namespace ClassicUO.Game
             _run = false;
             CleanupPathfinding();
         }
-        
+
         private static void CleanupPathfinding()
         {
             // Clean up any remaining nodes in the open set
@@ -1162,7 +1163,7 @@ namespace ClassicUO.Game
                     po.AverageZ = 0;
                     po.Height = 0;
                     po.Object = null;
-                }, 
+                },
                 15
                 );
             private PathObject(uint flags, int z, int avgZ, int h, GameObject obj)
@@ -1189,7 +1190,7 @@ namespace ClassicUO.Game
             {
                 _pool.Return(this);
             }
-            
+
             public uint Flags { get; private set; }
 
             public int Z { get; private set; }
@@ -1216,11 +1217,11 @@ namespace ClassicUO.Game
         private class PathNode
         {
             private static ObjectPool<PathNode> _pool = new(
-                ()=>new PathNode(), 
+                ()=>new PathNode(),
                 (pn) => {pn.Reset();},
                 15
                 );
-            
+
             private PathNode()
             {
             }

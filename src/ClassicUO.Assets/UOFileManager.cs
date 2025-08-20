@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -119,16 +119,17 @@ namespace ClassicUO.Assets
                 LightsLoader.Instance.Load(),
                 SoundsLoader.Instance.Load(),
                 MultiMapLoader.Instance.Load(),
-                PNGLoader.Instance.Load(),
                 TrueTypeLoader.Instance.Load(),
                 TileArtLoader.Load()
-                
             };
+
 
             if (!Task.WhenAll(tasks).Wait(TimeSpan.FromSeconds(15)))
             {
                 Log.Panic("Loading files timeout.");
             }
+
+            PNGLoader.Instance.Load();
 
             Read_Art_def();
 
@@ -334,7 +335,7 @@ namespace ClassicUO.Assets
             {
                 TileDataLoader tiledataLoader =  TileDataLoader.Instance;
                 ArtLoader artLoader = ArtLoader.Instance;
-                
+
                 using (DefReader reader = new DefReader(pathdef, 1))
                 {
                     while (reader.Next())
@@ -374,8 +375,8 @@ namespace ClassicUO.Assets
                             }
 
                             if (index < ArtLoader.MAX_LAND_DATA_INDEX_COUNT &&
-                                checkIndex < ArtLoader.MAX_LAND_DATA_INDEX_COUNT && 
-                                checkIndex < tiledataLoader.LandData.Length && 
+                                checkIndex < ArtLoader.MAX_LAND_DATA_INDEX_COUNT &&
+                                checkIndex < tiledataLoader.LandData.Length &&
                                 index < tiledataLoader.LandData.Length &&
                                 !tiledataLoader.LandData[checkIndex].Equals(default) &&
                                 tiledataLoader.LandData[index].Equals(default))

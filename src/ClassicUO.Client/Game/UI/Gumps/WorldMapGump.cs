@@ -593,7 +593,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                             if (!markerFile.Hidden)
                             {
-                                string hiddenFile = _hiddenMarkerFiles.SingleOrDefault(x => x.Equals(markerFile.Name));
+                                string hiddenFile = _hiddenMarkerFiles.FirstOrDefault(x => x.Equals(markerFile.Name));
 
                                 if (!string.IsNullOrEmpty(hiddenFile))
                                 {
