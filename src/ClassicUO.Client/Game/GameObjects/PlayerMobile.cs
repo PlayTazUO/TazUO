@@ -1367,6 +1367,11 @@ namespace ClassicUO.Game.GameObjects
 
             Plugin.UpdatePlayerPosition(X, Y, Z);
 
+            // Record movement for script recording (only if position actually changed)
+            bool isRunning = Steps.Count > 0 && Steps.Back().Run;
+            Direction direction = Steps.Count > 0 ? (Direction)Steps.Back().Direction : Direction.North;
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.UpdatePlayerPosition(X, Y, direction, isRunning);
+
             TryOpenDoors();
             TryOpenCorpses();
 

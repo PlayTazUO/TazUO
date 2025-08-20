@@ -3423,6 +3423,8 @@ namespace ClassicUO.Network
 
         public static void Send_BuyRequest(this AsyncNetClient socket, uint serial, Tuple<uint, ushort>[] items)
         {
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVendorBuy(serial, items);
             const byte ID = 0x3B;
 
             int length = PacketsTable.GetPacketLength(ID);
@@ -3472,6 +3474,8 @@ namespace ClassicUO.Network
 
         public static void Send_SellRequest(this AsyncNetClient socket, uint serial, Tuple<uint, ushort>[] items)
         {
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVendorSell(serial, items);
             const byte ID = 0x9F;
 
             int length = PacketsTable.GetPacketLength(ID);

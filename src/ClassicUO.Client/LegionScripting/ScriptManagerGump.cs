@@ -62,6 +62,10 @@ namespace ClassicUO.LegionScripting
             {
                 UIManager.Add(new ScriptBrowser());
             }));
+            refresh.ContextMenu.Add(new ContextMenuItemEntry("Script Recording", () =>
+            {
+                UIManager.Add(new ScriptRecordingGump());
+            }));
 
             refresh.MouseDown += (s, e) =>
             {

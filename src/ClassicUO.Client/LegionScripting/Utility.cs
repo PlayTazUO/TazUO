@@ -13,7 +13,7 @@ namespace ClassicUO.LegionScripting
     internal static class Utility
     {
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="gfx">Graphic to match</param>
         /// <param name="parentContainer">Matches *only* the parent container, not root **Don't use different continer params together**</param>
@@ -198,6 +198,27 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Get string from a Direction
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <returns></returns>
+        public static string GetDirectionString(Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.North: return "north";
+                case Direction.Right: return "northeast";
+                case Direction.East: return "east";
+                case Direction.Down: return "southeast";
+                case Direction.South: return "south";
+                case Direction.Left: return "southwest";
+                case Direction.West: return "west";
+                case Direction.Up: return "northwest";
+                default: return "none";
+            }
+        }
+
+        /// <summary>
         /// Get Direction from a string
         /// </summary>
         /// <param name="direction"></param>
@@ -313,7 +334,7 @@ namespace ClassicUO.LegionScripting
 
                 return new Color(r, g, b);
             }
-            
+
             return Color.Black;
         }
     }

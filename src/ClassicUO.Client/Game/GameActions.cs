@@ -402,6 +402,9 @@ namespace ClassicUO.Game
             Item bandage = World.Player.FindBandage();
             if (bandage != null)
             {
+                // Record action for script recording
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordBandageSelf();
+                
                 Socket.Send_TargetSelectedObject(bandage.Serial, World.Player.Serial);
                 return true;
             }
@@ -502,6 +505,9 @@ namespace ClassicUO.Game
                 return false;
             }
 
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordOpenContainer(serial, "corpse");
+
             World.Player.ManualOpenedCorpses.Add(serial);
             DoubleClick(serial);
 
@@ -523,6 +529,9 @@ namespace ClassicUO.Game
                 return false;
             }
 
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCloseContainer(backpack.Serial, "backpack");
+
             g = UIManager.GetGump<ContainerGump>(backpack);
             g ??= UIManager.GetGump<GridContainer>(backpack);
 
@@ -543,6 +552,9 @@ namespace ClassicUO.Game
             {
                 return false;
             }
+
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordOpenContainer(backpack.Serial, "backpack");
 
             Gump backpackGump = UIManager.GetGump<ContainerGump>(backpack);
             if (backpackGump == null)
@@ -594,6 +606,9 @@ namespace ClassicUO.Game
                 }
             }
 
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAttack(serial);
+            
             TargetManager.LastAttack = serial;
             Socket.Send_AttackRequest(serial);
         }
@@ -605,6 +620,10 @@ namespace ClassicUO.Game
 
         public static void DoubleClick(uint serial)
         {
+            // Record action for script recording (only for items)
+            if (SerialHelper.IsItem(serial))
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseItem(serial);
+                
             if (serial != World.Player && SerialHelper.IsMobile(serial) && World.Player.InWarMode)
             {
                 RequestMobileStatus(serial);
@@ -651,6 +670,10 @@ namespace ClassicUO.Game
 
         public static void Say(string message, ushort hue = 0xFFFF, MessageType type = MessageType.Regular, byte font = 3)
         {
+            // Record action for script recording (only for regular speech)
+            if (type == MessageType.Regular)
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordSay(message);
+                
             if (hue == 0xFFFF)
             {
                 hue = ProfileManager.CurrentProfile.SpeechHue;
@@ -837,6 +860,10 @@ namespace ClassicUO.Game
         {
             if (force || (Client.Game.GameCursor.ItemHold.Enabled && !Client.Game.GameCursor.ItemHold.IsFixedPosition && (Client.Game.GameCursor.ItemHold.Serial != container || Client.Game.GameCursor.ItemHold.ItemData.IsStackable)))
             {
+                // Record action for script recording
+                var sourceSerial = Client.Game.GameCursor.ItemHold.Enabled ? Client.Game.GameCursor.ItemHold.Serial : serial;
+                int amount = Client.Game.GameCursor.ItemHold.Enabled ? Client.Game.GameCursor.ItemHold.Amount : -1;
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordDragDrop(sourceSerial, container, amount, x, y);
                 if (Client.Version >= ClientVersion.CV_6017)
                 {
                     Socket.Send_DropRequest(serial,
@@ -869,6 +896,9 @@ namespace ClassicUO.Game
                     container = World.Player.Serial;
                 }
 
+                // Record action for script recording
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordEquipItem(Client.Game.GameCursor.ItemHold.Serial, (Layer)Client.Game.GameCursor.ItemHold.ItemData.Layer);
+
                 Socket.Send_EquipRequest(Client.Game.GameCursor.ItemHold.Serial, (Layer)Client.Game.GameCursor.ItemHold.ItemData.Layer, container);
 
                 Client.Game.GameCursor.ItemHold.Enabled = false;
@@ -879,6 +909,9 @@ namespace ClassicUO.Game
 
         public static void ReplyGump(uint local, uint server, int button, uint[] switches = null, Tuple<ushort, string>[] entries = null)
         {
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
+            
             Socket.Send_GumpResponse(local,
                                      server,
                                      button,
@@ -991,6 +1024,9 @@ namespace ClassicUO.Game
 
             if (!string.IsNullOrEmpty(name) && SpellDefinition.TryGetSpellFromName(name, out var spellDef))
             {
+                // Record action for script recording
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(name);
+                
                 CastSpell(spellDef.ID);
                 return true;
             }
@@ -1032,6 +1068,12 @@ namespace ClassicUO.Game
         {
             if (index >= 0)
             {
+                // Record action for script recording
+                string skillName = "";
+                if (index < World.Player.Skills.Length)
+                    skillName = World.Player.Skills[index].Name;
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseSkill(skillName);
+                
                 LastSkillIndex = index;
                 Socket.Send_UseSkill(index);
             }
@@ -1051,6 +1093,9 @@ namespace ClassicUO.Game
 
         public static void ResponsePopupMenu(uint serial, ushort index)
         {
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordContextMenu(serial, index);
+            
             Socket.Send_PopupMenuSelection(serial, index);
         }
 
