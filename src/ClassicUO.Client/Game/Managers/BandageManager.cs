@@ -68,7 +68,9 @@ namespace ClassicUO.Game.Managers
             if (CheckHidden && World.Player.IsHidden)
                 return;
 
-            if (currentHpPercentage >= hpPercentageThreshold)
+            // Check for poison status #thanks taz
+            if ((!UseOnPoisoned || !World.Player.IsPoisoned) &&
+                currentHpPercentage >= hpPercentageThreshold)
                 return;
 
             // If using buff checking, only prevent healing if buff is present
