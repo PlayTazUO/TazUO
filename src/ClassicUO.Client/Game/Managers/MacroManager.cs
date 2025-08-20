@@ -1153,6 +1153,64 @@ namespace ClassicUO.Game.Managers
                     TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
                     break;
 
+                case MacroType.AddFriend:
+                    GameActions.Print("Target a player to add as a friend.", 62);
+                    _ = TargetHelper.TargetObject(targeted =>
+                    {
+                        if (targeted != null && targeted is Mobile mobile && targeted.Serial != World.Player.Serial)
+                        {
+                            if (FriendsListManager.Instance.AddFriend(mobile))
+                            {
+                                GameActions.Print($"Added {mobile.Name} to friends list", 62);
+                            }
+                            else
+                            {
+                                GameActions.Print($"Could not add {mobile.Name} - already in friends list", 33);
+                            }
+                        }
+                        else
+                        {
+                            if (targeted.Serial == World.Player.Serial)
+                            {
+                                GameActions.Print("You cannot add yourself as a friend", 33);
+                            }
+                            else
+                            {
+                                GameActions.Print("Invalid target - must be a player", 33);
+                            }
+                        }
+                    });
+                    break;
+
+                case MacroType.RemoveFriend:
+                    GameActions.Print("Target a friend to remove from your friend list.", 33);
+                    _ = TargetHelper.TargetObject(targeted =>
+                    {
+                        if (targeted != null && targeted is Mobile mobile && targeted.Serial != World.Player.Serial)
+                        {
+                            if (FriendsListManager.Instance.RemoveFriend(mobile))
+                            {
+                                GameActions.Print($"Removed {mobile.Name} from friends list", 33);
+                            }
+                            else
+                            {
+                                GameActions.Print($"Could not remove {mobile.Name} - not in friends list", 33);
+                            }
+                        }
+                        else
+                        {
+                            if (targeted.Serial == World.Player.Serial)
+                            {
+                                GameActions.Print("You cannot remove yourself as a friend", 33);
+                            }
+                            else
+                            {
+                                GameActions.Print("Invalid target - must be a player", 33);
+                            }
+                        }
+                    });
+                    break;
+
                 case MacroType.OpenDoor:
                     GameActions.OpenDoor();
 
@@ -2722,6 +2780,8 @@ namespace ClassicUO.Game.Managers
         Resync,
         Mount,
         SetMount,
+        AddFriend,
+        RemoveFriend,
     }
 
     public enum MacroSubType
