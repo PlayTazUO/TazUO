@@ -404,7 +404,7 @@ namespace ClassicUO.Game
             {
                 // Record action for script recording
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordBandageSelf();
-                
+
                 Socket.Send_TargetSelectedObject(bandage.Serial, World.Player.Serial);
                 return true;
             }
@@ -505,9 +505,6 @@ namespace ClassicUO.Game
                 return false;
             }
 
-            // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordOpenContainer(serial, "corpse");
-
             World.Player.ManualOpenedCorpses.Add(serial);
             DoubleClick(serial);
 
@@ -552,9 +549,6 @@ namespace ClassicUO.Game
             {
                 return false;
             }
-
-            // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordOpenContainer(backpack.Serial, "backpack");
 
             Gump backpackGump = UIManager.GetGump<ContainerGump>(backpack);
             if (backpackGump == null)
@@ -608,7 +602,7 @@ namespace ClassicUO.Game
 
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAttack(serial);
-            
+
             TargetManager.LastAttack = serial;
             Socket.Send_AttackRequest(serial);
         }
@@ -623,7 +617,7 @@ namespace ClassicUO.Game
             // Record action for script recording (only for items)
             if (SerialHelper.IsItem(serial))
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseItem(serial);
-                
+
             if (serial != World.Player && SerialHelper.IsMobile(serial) && World.Player.InWarMode)
             {
                 RequestMobileStatus(serial);
@@ -673,7 +667,7 @@ namespace ClassicUO.Game
             // Record action for script recording (only for regular speech)
             if (type == MessageType.Regular)
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordSay(message);
-                
+
             if (hue == 0xFFFF)
             {
                 hue = ProfileManager.CurrentProfile.SpeechHue;
@@ -911,7 +905,7 @@ namespace ClassicUO.Game
         {
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
-            
+
             Socket.Send_GumpResponse(local,
                                      server,
                                      button,
@@ -1026,7 +1020,7 @@ namespace ClassicUO.Game
             {
                 // Record action for script recording
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(name);
-                
+
                 CastSpell(spellDef.ID);
                 return true;
             }
@@ -1073,7 +1067,7 @@ namespace ClassicUO.Game
                 if (index < World.Player.Skills.Length)
                     skillName = World.Player.Skills[index].Name;
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseSkill(skillName);
-                
+
                 LastSkillIndex = index;
                 Socket.Send_UseSkill(index);
             }
@@ -1095,7 +1089,7 @@ namespace ClassicUO.Game
         {
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordContextMenu(serial, index);
-            
+
             Socket.Send_PopupMenuSelection(serial, index);
         }
 

@@ -26,6 +26,7 @@ namespace ClassicUO.LegionScripting
         private Label _durationText;
         private Label _actionCountText;
         private VBoxContainer _actionList;
+        private Checkbox _recordPausesCheckbox;
 
         private static int _lastX = 100, _lastY = 100;
         private static int _lastWidth = 400, _lastHeight = 500;
@@ -48,7 +49,7 @@ namespace ClassicUO.LegionScripting
         private void BuildGump()
         {
             // Title bar
-            _titleBar = new Label("Script Recording - Stopped", true, 0, font: 1)
+            _titleBar = new Label("Script Recording - Stopped", true, 52, font: 1)
             {
                 X = BorderSize + 10,
                 Y = BorderSize + 10
@@ -111,7 +112,18 @@ namespace ClassicUO.LegionScripting
             };
             Add(_actionCountText);
 
-            currentY += _actionCountText.Height + 15;
+            currentY += _actionCountText.Height + 10;
+
+            // Record pauses option
+            _recordPausesCheckbox = new Checkbox(0x00D2, 0x00D3, "Record pauses (timing delays)", 1)
+            {
+                X = BorderSize + 10,
+                Y = currentY,
+                IsChecked = true
+            };
+            Add(_recordPausesCheckbox);
+
+            currentY += _recordPausesCheckbox.Height + 15;
 
             // Action list
             var actionListLabel = new Label("Recorded Actions:", true, 0x35, font: 1)
@@ -221,6 +233,69 @@ namespace ClassicUO.LegionScripting
             }
         }
 
+        private void OnActionButtonClick(object sender, MouseEventArgs e)
+        {
+            if (sender is NiceButton button)
+            {
+                string actionType = button.Tag as string;
+                int index = button.ButtonParameter;
+
+                switch (actionType)
+                {
+                    case "delete":
+                        DeleteAction(index);
+                        break;
+
+                    case "moveup":
+                        MoveActionUp(index);
+                        break;
+
+                    case "movedown":
+                        MoveActionDown(index);
+                        break;
+                }
+            }
+        }
+
+        private void DeleteAction(int index)
+        {
+            if (index >= 0 && index < _displayedActions.Count)
+            {
+                _displayedActions.RemoveAt(index);
+                ScriptRecorder.Instance.RemoveActionAt(index);
+                UpdateActionList();
+                UpdateActionCount();
+            }
+        }
+
+        private void MoveActionUp(int index)
+        {
+            if (index > 0 && index < _displayedActions.Count)
+            {
+                // Swap with previous action
+                var temp = _displayedActions[index];
+                _displayedActions[index] = _displayedActions[index - 1];
+                _displayedActions[index - 1] = temp;
+
+                ScriptRecorder.Instance.SwapActions(index, index - 1);
+                UpdateActionList();
+            }
+        }
+
+        private void MoveActionDown(int index)
+        {
+            if (index >= 0 && index < _displayedActions.Count - 1)
+            {
+                // Swap with next action
+                var temp = _displayedActions[index];
+                _displayedActions[index] = _displayedActions[index + 1];
+                _displayedActions[index + 1] = temp;
+
+                ScriptRecorder.Instance.SwapActions(index, index + 1);
+                UpdateActionList();
+            }
+        }
+
         private void UpdateUI()
         {
             var recorder = ScriptRecorder.Instance;
@@ -267,14 +342,60 @@ namespace ClassicUO.LegionScripting
         {
             _actionList.Clear();
 
-            var recentActions = _displayedActions.Skip(Math.Max(0, _displayedActions.Count - 50)); // Show last 50 actions
-
-            foreach (var action in recentActions)
+            // Show all actions, not just recent ones, to allow proper manipulation
+            for (int i = 0; i < _displayedActions.Count; i++)
             {
-                string actionText = FormatActionForDisplay(action);
-                var label = new Label(actionText, true, 0xFFFF, font: 1, maxwidth: _actionList.Width - 10);
-                _actionList.Add(label);
+                var actionContainer = CreateActionRowContainer(_displayedActions[i], i);
+                _actionList.Add(actionContainer);
             }
+        }
+
+        private Control CreateActionRowContainer(RecordedAction action, int index)
+        {
+            var container = new HitBox(0, 0, _actionList.Width - 10, 25, alpha: 0.0f);
+
+            // Action text label
+            string actionText = FormatActionForDisplay(action);
+            var actionLabel = new Label(actionText, true, 0xFFFF, font: 1, maxwidth: container.Width - 90)
+            {
+                X = 0,
+                Y = 2
+            };
+            container.Add(actionLabel);
+
+            // Delete button
+            var deleteButton = new NiceButton(container.Width - 85, 2, 25, 20, ButtonAction.Activate, "×", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            {
+                ButtonParameter = index,
+                DisplayBorder = true,
+                Tag = "delete"
+            };
+            deleteButton.MouseUp += OnActionButtonClick;
+            container.Add(deleteButton);
+
+            // Move up button
+            var moveUpButton = new NiceButton(container.Width - 57, 2, 25, 20, ButtonAction.Activate, "↑", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            {
+                ButtonParameter = index,
+                DisplayBorder = true,
+                IsEnabled = index > 0,
+                Tag = "moveup"
+            };
+            moveUpButton.MouseUp += OnActionButtonClick;
+            container.Add(moveUpButton);
+
+            // Move down button
+            var moveDownButton = new NiceButton(container.Width - 29, 2, 25, 20, ButtonAction.Activate, "↓", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            {
+                ButtonParameter = index,
+                DisplayBorder = true,
+                IsEnabled = index < _displayedActions.Count - 1,
+                Tag = "movedown"
+            };
+            moveDownButton.MouseUp += OnActionButtonClick;
+            container.Add(moveDownButton);
+
+            return container;
         }
 
         private string FormatActionForDisplay(RecordedAction action)
@@ -417,7 +538,7 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                string script = ScriptRecorder.Instance.GenerateScript();
+                string script = ScriptRecorder.Instance.GenerateScript(_recordPausesCheckbox.IsChecked);
                 SDL2.SDL.SDL_SetClipboardText(script);
                 GameActions.Print("Script copied to clipboard!");
             }
@@ -431,7 +552,7 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                string script = ScriptRecorder.Instance.GenerateScript();
+                string script = ScriptRecorder.Instance.GenerateScript(_recordPausesCheckbox.IsChecked);
                 string fileName = $"recorded_script_{DateTime.Now:yyyyMMdd_HHmmss}.py";
                 string filePath = System.IO.Path.Combine(LegionScripting.ScriptPath, fileName);
 

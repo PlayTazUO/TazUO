@@ -191,15 +191,6 @@ namespace ClassicUO.LegionScripting
             RecordAction("targetlocation", parameters);
         }
 
-        public void RecordOpenContainer(uint serial, string containerType = "container")
-        {
-            RecordAction("opencontainer", new Dictionary<string, object>
-            {
-                { "serial", serial },
-                { "type", containerType }
-            });
-        }
-
         public void RecordCloseContainer(uint serial, string containerType = "container")
         {
             RecordAction("closecontainer", new Dictionary<string, object>
@@ -306,16 +297,6 @@ namespace ClassicUO.LegionScripting
             RecordAction("msg", new Dictionary<string, object> { { "message", message } });
         }
 
-        public void RecordHeadMsg(string message, uint serial, ushort hue)
-        {
-            RecordAction("headmsg", new Dictionary<string, object>
-            {
-                { "message", message },
-                { "serial", serial },
-                { "hue", hue }
-            });
-        }
-
         public void RecordPartyMsg(string message)
         {
             RecordAction("partymsg", new Dictionary<string, object> { { "message", message } });
@@ -418,7 +399,33 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public string GenerateScript()
+        public void RemoveActionAt(int index)
+        {
+            lock (_actionsLock)
+            {
+                if (index >= 0 && index < _recordedActions.Count)
+                {
+                    _recordedActions.RemoveAt(index);
+                }
+            }
+        }
+
+        public void SwapActions(int index1, int index2)
+        {
+            lock (_actionsLock)
+            {
+                if (index1 >= 0 && index1 < _recordedActions.Count &&
+                    index2 >= 0 && index2 < _recordedActions.Count &&
+                    index1 != index2)
+                {
+                    var temp = _recordedActions[index1];
+                    _recordedActions[index1] = _recordedActions[index2];
+                    _recordedActions[index2] = temp;
+                }
+            }
+        }
+
+        public string GenerateScript(bool includePauses = true)
         {
             List<RecordedAction> actions;
             lock (_actionsLock)
@@ -441,7 +448,7 @@ namespace ClassicUO.LegionScripting
             foreach (var action in actions)
             {
                 // Add timing delay (skip for first action)
-                if (!firstAction && action.DelayFromPrevious > 100) // Only add delays > 100ms
+                if (includePauses && !firstAction && action.DelayFromPrevious > 100) // Only add delays > 100ms
                 {
                     double delaySeconds = action.DelayFromPrevious / 1000.0;
                     script.AppendLine($"time.sleep({delaySeconds:F2})");
@@ -469,11 +476,6 @@ namespace ClassicUO.LegionScripting
                     case "cast":
                         if (action.Parameters.TryGetValue("spell", out object spell))
                             script.AppendLine($"API.Cast(\"{spell}\")");
-                        break;
-
-                    case "say":
-                        if (action.Parameters.TryGetValue("message", out object message))
-                            script.AppendLine($"API.Say(\"{message}\")");
                         break;
 
                     case "dragdrop":
@@ -511,16 +513,6 @@ namespace ClassicUO.LegionScripting
                             else
                                 script.AppendLine($"API.Target({targX}, {targY}, {targZ})");
                         }
-                        break;
-
-                    case "opencontainer":
-                        if (action.Parameters.TryGetValue("serial", out object openSerial))
-                            script.AppendLine($"API.UseObject(0x{openSerial:X8})  # Open container");
-                        break;
-
-                    case "closecontainer":
-                        if (action.Parameters.TryGetValue("serial", out object closeSerial))
-                            script.AppendLine($"# Close container 0x{closeSerial:X8} (no direct API method)");
                         break;
 
                     case "attack":
@@ -570,16 +562,9 @@ namespace ClassicUO.LegionScripting
                             script.AppendLine($"# Vendor Sell: 0x{sellVendor:X8} items: {sellItems} (no direct API - use gump interactions)");
                         break;
 
-                    case "msg":
+                    case "msg" or "say":
                         if (action.Parameters.TryGetValue("message", out object msgText))
                             script.AppendLine($"API.Msg(\"{msgText}\")");
-                        break;
-
-                    case "headmsg":
-                        if (action.Parameters.TryGetValue("message", out object headMessage) &&
-                            action.Parameters.TryGetValue("serial", out object headSerial) &&
-                            action.Parameters.TryGetValue("hue", out object headHue))
-                            script.AppendLine($"API.HeadMsg(\"{headMessage}\", 0x{headSerial:X8}, {headHue})");
                         break;
 
                     case "partymsg":
