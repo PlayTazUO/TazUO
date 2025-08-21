@@ -448,7 +448,7 @@ See more -> <https://tazuo.org/wiki/tazuotooltip-override>
 [ Treasure map locator ]
 ```
 > TUO made it easier than ever to locate treasure via treasure maps, see how on the wiki.\n
-See more -> <https://tazuo.org/wiki/tazuotreasure-maps-&-sos>
+See more -> <https://tazuo.org/wiki/tazuotreasure-maps--sos/>
 """,
 
 """
