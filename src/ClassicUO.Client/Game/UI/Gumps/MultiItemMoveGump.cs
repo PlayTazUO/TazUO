@@ -65,15 +65,6 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static bool IsSelected(uint serial) => _selected.ContainsKey(serial);
 
-        public static void HideIfNoSelection()
-        {
-            if (SelectedCount == 0)
-            {
-                ClearAll();
-                UIManager.GetGump<MultiItemMoveGump>()?.Dispose();
-            }
-        }
-
         public MultiItemMoveGump(int x, int y)
             // resizable = true, with sensible minimums
             : base(x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel,
@@ -132,21 +123,12 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (int.TryParse(_delayInput.Text, out int newDelay))
                 {
-                    newDelay = Math.Max(0, Math.Min(5000, newDelay));
+                    newDelay = Math.Max(0, newDelay);
                     if (newDelay == ObjDelay) return;
                     ObjDelay = newDelay;
                     ProfileManager.CurrentProfile.MoveMultiObjectDelay = newDelay;
                     if (_delayInput.Text != newDelay.ToString())
                         _delayInput.SetText(newDelay.ToString());
-                }
-                else if (string.IsNullOrWhiteSpace(_delayInput.Text))
-                {
-                    if (ObjDelay != 0)
-                    {
-                        ObjDelay = 0;
-                        ProfileManager.CurrentProfile.MoveMultiObjectDelay = 0;
-                    }
-                    _delayInput.SetText("0");
                 }
             };
 
@@ -403,7 +385,7 @@ namespace ClassicUO.Game.UI.Gumps
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             // auto-close if nothing is selected
-            if (SelectedCount < 1 && MoveItems.IsEmpty)
+            if (SelectedCount == 0 || MoveItems.IsEmpty)
             {
                 ClearAll();
                 Dispose();

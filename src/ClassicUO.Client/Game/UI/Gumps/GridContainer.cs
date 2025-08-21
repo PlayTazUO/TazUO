@@ -1059,22 +1059,19 @@ namespace ClassicUO.Game.UI.Gumps
                     else if (Keyboard.Alt && _item != null)
                     {
                         // If no drag occurred, toggle on click to prevent missed quick taps.
-                        bool nowSelected;
                         if (!_altDragActive)
                         {
-                            nowSelected = MultiItemMoveGump.ToggleItem(_item);
+                            SelectHighlight = MultiItemMoveGump.ToggleItem(_item);
                             // reflect highlight immediately
                             SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
                         }
                         else
                         {
-                            nowSelected = MultiItemMoveGump.IsSelected(_item.Serial);
+                            SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
                         }
 
-                        if (nowSelected)
+                        if (SelectHighlight)
                             MultiItemMoveGump.ShowNextTo(gridContainer);
-                        else
-                            MultiItemMoveGump.HideIfNoSelection();
 
                         Mouse.CancelDoubleClick = true;
                     }
@@ -1237,7 +1234,9 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                SelectHighlight = _item != null && MultiItemMoveGump.IsSelected(_item.Serial);
+                if (SelectHighlight && !itemNull)
+                    if (!MultiItemMoveGump.IsSelected(_item.Serial))
+                        SelectHighlight = false;
 
                 base.Draw(batcher, x, y);
 
@@ -1404,19 +1403,10 @@ namespace ClassicUO.Game.UI.Gumps
                     // Toggle immediately for the item currently under the cursor
                     if (_item != null && hit.MouseIsOver && _toggledThisAltDrag.Add(_item.Serial))
                     {
-                        bool nowSelected = MultiItemMoveGump.ToggleItem(_item);
+                        SelectHighlight = MultiItemMoveGump.ToggleItem(_item);
 
-                        if (nowSelected)
-                        {
+                        if (SelectHighlight)
                             MultiItemMoveGump.ShowNextTo(gridContainer);
-                        }
-                        else
-                        {
-                            MultiItemMoveGump.HideIfNoSelection();
-                        }
-
-                        // reflect highlight immediately
-                        SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
                     }
                 }
                 else if (_altDragActive)
