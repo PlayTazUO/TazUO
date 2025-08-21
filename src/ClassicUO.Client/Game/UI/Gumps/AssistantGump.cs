@@ -41,6 +41,7 @@ public class AssistantGump : BaseOptionsGump
         BuildDressAgent();
         BuildBandageAgent();
         BuildFriendsList();
+        BuildOrganizer();
 
         ChangePage((int)PAGE.AutoLoot);
     }
@@ -779,6 +780,209 @@ public class AssistantGump : BaseOptionsGump
             }
     }
 
+    private void BuildOrganizer()
+    {
+        const int page = (int)PAGE.Organizer;
+
+        MainContent.AddToLeft(CategoryButton("Organizer", page, MainContent.LeftWidth));
+        MainContent.ResetRightSide();
+
+        // Left side content - organizer list
+        var leftSideContent = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.28));
+        MainContent.AddToRight(leftSideContent, true, page);
+
+        // Add new organizer button
+        ModernButton addButton = new(0, 0, leftSideContent.LeftWidth, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add Organizer", ThemeSettings.BUTTON_FONT_COLOR);
+        addButton.MouseUp += (sender, e) =>
+        {
+            var newConfig = OrganizerAgent.Instance?.NewOrganizerConfig();
+            if (newConfig != null)
+            {
+                var configButton = CreateOrganizerConfigButton(newConfig, leftSideContent);
+                leftSideContent.AddToLeft(configButton);
+                // Auto-select the new config
+                SelectOrganizerConfig(newConfig, leftSideContent, configButton);
+            }
+        };
+        leftSideContent.AddToLeft(addButton);
+
+        // Organizer configurations list
+        OrganizerConfig firstConfig = null;
+        if (OrganizerAgent.Instance?.OrganizerConfigs != null)
+        {
+            for (int i = 0; i < OrganizerAgent.Instance.OrganizerConfigs.Count; i++)
+            {
+                var config = OrganizerAgent.Instance.OrganizerConfigs[i];
+                if (firstConfig == null) firstConfig = config;
+
+                var configButton = CreateOrganizerConfigButton(config, leftSideContent);
+                leftSideContent.AddToLeft(configButton);
+            }
+        }
+    }
+
+    private ModernButton CreateOrganizerConfigButton(OrganizerConfig config, LeftSideMenuRightSideContent leftSideContent)
+    {
+        var button = new ModernButton(0, 0, leftSideContent.LeftWidth, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, config.Name, ThemeSettings.BUTTON_FONT_COLOR);
+        button.MouseUp += (sender, e) =>
+        {
+            SelectOrganizerConfig(config, leftSideContent, button);
+        };
+        return button;
+    }
+
+    private void SelectOrganizerConfig(OrganizerConfig config, LeftSideMenuRightSideContent leftSideContent, ModernButton button)
+    {
+        // Clear right side
+        leftSideContent.RightArea.Clear();
+        leftSideContent.ResetRightSide();
+
+        // Add configuration details to right side
+        BuildOrganizerConfigDetails(config, leftSideContent, button);
+    }
+
+    private void BuildOrganizerConfigDetails(OrganizerConfig config, LeftSideMenuRightSideContent leftSideContent, ModernButton button)
+    {
+        // Name input
+        InputFieldWithLabel nameInput = null;
+        nameInput = new InputFieldWithLabel("Name", ThemeSettings.INPUT_WIDTH, config.Name, false, (s, e) =>
+        {
+            config.Name = nameInput.Text;
+            button.TextLabel.SetText(nameInput.Text);
+        });
+        leftSideContent.AddToRight(nameInput);
+
+        // Enabled checkbox
+        var enabledCheckbox = new CheckboxWithLabel("Enabled", 0, config.Enabled, b => config.Enabled = b)
+        {
+            X = nameInput.X + nameInput.Width + 10,
+            Y = nameInput.Y
+        };
+        leftSideContent.AddToRight(enabledCheckbox, false);
+
+        // Target bag button
+        ModernButton bagButton = new(0, 0, 150, 26, ButtonAction.Default, "Set Destination Bag", ThemeSettings.BUTTON_FONT_COLOR);
+        bagButton.MouseUp += (s, e) =>
+        {
+            TargetHelper.TargetObject((obj) =>
+            {
+                if (!SerialHelper.IsItem(obj))
+                {
+                    GameActions.Print("Only items can be added!");
+                    return;
+                }
+                config.TargetBagSerial = obj.Serial;
+                GameActions.Print($"Target bag set to {obj.Serial:X}");
+            });
+        };
+        leftSideContent.AddToRight(bagButton);
+
+        // Current target bag display
+        if (config.TargetBagSerial != 0)
+        {
+            leftSideContent.AddToRight(TextBox.GetOne($"Current target: {config.TargetBagSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.Gray, TextBox.RTLOptions.Default()));
+        }
+
+        // Run organizer button
+        ModernButton runButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Run Organizer", ThemeSettings.BUTTON_FONT_COLOR);
+        runButton.MouseUp += (sender, e) =>
+        {
+            OrganizerAgent.Instance?.RunOrganizer(config.Name);
+        };
+        leftSideContent.AddToRight(runButton);
+
+        // Delete organizer button
+        ModernButton deleteButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Delete Organizer", Color.Red)
+        {
+            X = runButton.X + runButton.Width + 10,
+            Y = runButton.Y
+        };
+        deleteButton.MouseUp += (sender, e) =>
+        {
+            OrganizerAgent.Instance?.DeleteConfig(config);
+            button.Dispose();
+        };
+        leftSideContent.AddToRight(deleteButton, false);
+
+        // Items to organize label
+        Control c;
+        leftSideContent.AddToRight(c = TextBox.GetOne("Items to organize:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
+
+        // Add item button with targeting
+        ModernButton addItemButton = new(0, 0, 120, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Add Item", ThemeSettings.BUTTON_FONT_COLOR)
+        {
+            X = leftSideContent.RightWidth - 145,
+            Y = c.Y - 15
+        };
+        addItemButton.MouseUp += (sender, e) =>
+        {
+            TargetHelper.TargetObject((obj) =>
+            {
+                if (!SerialHelper.IsItem(obj))
+                {
+                    GameActions.Print("Only items can be added!");
+                    return;
+                }
+
+                var newItemConfig = config.NewItemConfig();
+                newItemConfig.Graphic = obj.Graphic;
+                newItemConfig.Hue = obj.Hue;
+
+                GameActions.Print($"Added item: Graphic {obj.Graphic:X}, Hue {obj.Hue:X}");
+
+                // Refresh the right side to show the new item
+                SelectOrganizerConfig(config, leftSideContent, button);
+            });
+        };
+        leftSideContent.AddToRight(addItemButton, false);
+
+        // Item configurations list
+        foreach (var itemConfig in config.ItemConfigs)
+        {
+            var itemArea = CreateOrganizerItemConfigArea(itemConfig, config, leftSideContent, button);
+            leftSideContent.AddToRight(itemArea);
+        }
+    }
+
+    private Control CreateOrganizerItemConfigArea(OrganizerItemConfig itemConfig, OrganizerConfig parentConfig, LeftSideMenuRightSideContent leftSideContent, ModernButton button)
+    {
+        var itemArea = new Area() { Width = leftSideContent.RightArea.Width - 20, AcceptMouseInput = false };
+        Control c;
+
+        var rsp = new ResizableStaticPic(itemConfig.Graphic, 50, 50) { Hue = (ushort)(itemConfig.Hue == ushort.MaxValue ? 0 : itemConfig.Hue) };
+        itemArea.Add(rsp);
+
+        // Item info display
+        var itemText = $"Graphic: {itemConfig.Graphic:X4}, Hue: {(itemConfig.Hue == ushort.MaxValue ? "ANY" : itemConfig.Hue.ToString())}";
+        itemArea.Add(c = TextBox.GetOne(itemText, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
+        c.X = rsp.Width + 10;
+        c.Y = (rsp.Height - c.Height) / 2;
+
+        // Enabled checkbox
+        var enabledCheckbox = new CheckboxWithLabel("Enabled", 0, itemConfig.Enabled, b => itemConfig.Enabled = b)
+        {
+            X = itemArea.Width - 130
+        };
+        enabledCheckbox.Y = (rsp.Height - enabledCheckbox.Height) / 2;
+        itemArea.Add(enabledCheckbox);
+
+        // Delete button
+        ModernButton deleteButton = new(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Delete Item", Color.Red)
+        {
+            X = enabledCheckbox.X - 110
+        };
+        deleteButton.Y = (rsp.Height - deleteButton.Height) / 2;
+        deleteButton.MouseUp += (sender, e) =>
+        {
+            parentConfig.DeleteItemConfig(itemConfig);
+            // Refresh the right side to remove the deleted item
+            SelectOrganizerConfig(parentConfig, leftSideContent, button);
+        };
+        itemArea.Add(deleteButton);
+        itemArea.ForceSizeUpdate();
+        return itemArea;
+    }
+
     public enum PAGE
     {
         None,
@@ -793,7 +997,8 @@ public class AssistantGump : BaseOptionsGump
         TitleBar,
         DressAgent,
         BandageAgent,
-        FriendsList
+        FriendsList,
+        Organizer
     }
 
     #region CustomControls
