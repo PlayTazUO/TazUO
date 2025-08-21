@@ -176,7 +176,7 @@ See more -> <https://tazuo.org/wiki/tazuojournal>
 [ Sound overrides ]
 ```
 > TUO allows you to easily override sounds without modifying your client.\n
-See more -> <https://tazuo.org/wiki/tuo.sound-override>
+See more -> <https://tazuo.org/wiki/tuosound-override>
 """,
 
 """
