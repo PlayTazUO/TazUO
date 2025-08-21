@@ -157,11 +157,11 @@ namespace ClassicUO.LegionScripting
             RecordAction("say", new Dictionary<string, object> { { "message", message } });
         }
 
-        public void RecordDragDrop(uint fromSerial, uint toSerial, int amount = -1, int x = -1, int y = -1)
+        public void RecordDragDrop(uint itemSerial, uint toSerial, int amount = -1, int x = -1, int y = -1)
         {
             var parameters = new Dictionary<string, object>
             {
-                { "from", fromSerial },
+                { "from", itemSerial },
                 { "to", toSerial }
             };
 
@@ -268,28 +268,6 @@ namespace ClassicUO.LegionScripting
                 parameters["entries"] = string.Join(";", entries.Select(e => $"{e.Item1}:{e.Item2}"));
 
             RecordAction("replygump", parameters);
-        }
-
-        public void RecordVendorBuy(uint vendorSerial, Tuple<uint, ushort>[] items)
-        {
-            var parameters = new Dictionary<string, object>
-            {
-                { "vendor", vendorSerial },
-                { "items", string.Join(";", items.Select(i => $"{i.Item1}:{i.Item2}")) }
-            };
-
-            RecordAction("vendorbuy", parameters);
-        }
-
-        public void RecordVendorSell(uint vendorSerial, Tuple<uint, ushort>[] items)
-        {
-            var parameters = new Dictionary<string, object>
-            {
-                { "vendor", vendorSerial },
-                { "items", string.Join(";", items.Select(i => $"{i.Item1}:{i.Item2}")) }
-            };
-
-            RecordAction("vendorsell", parameters);
         }
 
         public void RecordMsg(string message)
@@ -482,7 +460,7 @@ namespace ClassicUO.LegionScripting
                         if (action.Parameters.TryGetValue("from", out object from) &&
                             action.Parameters.TryGetValue("to", out object to))
                         {
-                            string dragDropCall = $"API.DragDrop(0x{from:X8}, 0x{to:X8}";
+                            string dragDropCall = $"API.MoveItem(0x{from:X8}, 0x{to:X8}";
 
                             if (action.Parameters.TryGetValue("amount", out object amount))
                                 dragDropCall += $", {amount}";
@@ -548,18 +526,6 @@ namespace ClassicUO.LegionScripting
                             else
                                 script.AppendLine($"API.ReplyGump({gumpButton})");
                         }
-                        break;
-
-                    case "vendorbuy":
-                        if (action.Parameters.TryGetValue("vendor", out object buyVendor) &&
-                            action.Parameters.TryGetValue("items", out object buyItems))
-                            script.AppendLine($"# Vendor Buy: 0x{buyVendor:X8} items: {buyItems} (no direct API - use gump interactions)");
-                        break;
-
-                    case "vendorsell":
-                        if (action.Parameters.TryGetValue("vendor", out object sellVendor) &&
-                            action.Parameters.TryGetValue("items", out object sellItems))
-                            script.AppendLine($"# Vendor Sell: 0x{sellVendor:X8} items: {sellItems} (no direct API - use gump interactions)");
                         break;
 
                     case "msg" or "say":
