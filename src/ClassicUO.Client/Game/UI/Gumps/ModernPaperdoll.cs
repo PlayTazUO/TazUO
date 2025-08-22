@@ -23,7 +23,15 @@ namespace ClassicUO.Game.UI.Gumps
         #region CONST
         private const int WIDTH = 250, HEIGHT = 380;
         private const int CELL_SPACING = 2, TOP_SPACING = 40;
-        private Texture2D MordernPaperdollGump = PNGLoader.Instance.EmbeddedArt["modern-paperdollgump.png"];
+        private Texture2D MordernPaperdollGump;
+        
+        private void InitializeTexture()
+        {
+            if (MordernPaperdollGump == null)
+            {
+                PNGLoader.Instance.TryGetEmbeddedTexture("modern-paperdollgump.png", out MordernPaperdollGump);
+            }
+        }
         #endregion
 
         #region VARS
@@ -58,6 +66,7 @@ namespace ClassicUO.Game.UI.Gumps
             itemLayerSlots = new Dictionary<Layer[], ItemSlot>();
             #endregion
 
+            InitializeTexture();
             Add(backgroundImage = new EmbeddedGumpPic(0, 0, MordernPaperdollGump, ProfileManager.CurrentProfile.ModernPaperDollHue));
 
             HitBox _menuHit = new HitBox(Width - 26, 1, 25, 16, alpha: 0f);

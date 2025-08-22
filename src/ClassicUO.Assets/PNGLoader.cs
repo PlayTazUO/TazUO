@@ -13,7 +13,8 @@ namespace ClassicUO.Assets
 
         private string exePath;
 
-        public Dictionary<string, Texture2D> EmbeddedArt = new Dictionary<string, Texture2D>();
+        private Dictionary<string, Texture2D> EmbeddedArt = new Dictionary<string, Texture2D>();
+        private Texture2D _emptyTexture;
 
         private uint[] gump_availableIDs;
         private Dictionary<uint, (uint[] pixels, int width, int height)> gump_textureCache = new Dictionary<uint, (uint[], int, int)>();
@@ -25,6 +26,23 @@ namespace ClassicUO.Assets
 
         public static PNGLoader _instance;
         public static PNGLoader Instance => _instance ?? (_instance = new PNGLoader());
+
+        public bool TryGetEmbeddedTexture(string name, out Texture2D texture)
+        {
+            if (EmbeddedArt.TryGetValue(name, out texture))
+            {
+                return true;
+            }
+
+            if (_emptyTexture == null && GraphicsDevice != null)
+            {
+                _emptyTexture = new Texture2D(GraphicsDevice, 1, 1);
+                _emptyTexture.SetData(new Color[] { Color.Transparent });
+            }
+
+            texture = _emptyTexture;
+            return false;
+        }
 
         public Texture2D GetImageTexture(string fullImagePath)
         {
