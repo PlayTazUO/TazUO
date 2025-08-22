@@ -32,7 +32,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            base.Draw(batcher, x, y);
+            if (!base.Draw(batcher, x, y))
+                return false;
 
             batcher.Draw(
                 SolidColorTextureCache.GetTexture(ForegrouneColor),
