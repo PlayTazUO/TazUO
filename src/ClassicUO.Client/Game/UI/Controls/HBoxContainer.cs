@@ -2,16 +2,16 @@ using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.UI.Controls;
 
-public class VBoxContainer : Control
+public class HBoxContainer : Control
 {
     private Positioner pos;
     private bool repositionRequested;
 
-    public VBoxContainer(int width, int leftpad = 1, int toppad = 1)
+    public HBoxContainer(int height, int leftpad = 1, int toppad = 1)
     {
         CanMove = true;
-        Width = width;
-        pos = new(leftpad, toppad);
+        Height = height;
+        pos = new(leftpad, toppad, direction: PositionerDirection.Horizontal);
     }
 
     public override bool AcceptMouseInput { get; set; } = true;
@@ -33,7 +33,7 @@ public class VBoxContainer : Control
 
         pos.Position(c);
 
-        c.UpdateOffset(0, Offset.Y);
+        c.UpdateOffset(Offset.X, 0);
 
         if (repositionRequested)
             Reposition();
@@ -72,22 +72,22 @@ public class VBoxContainer : Control
 
     private void UpdateSize()
     {
-        int h = 0;
+        int w = 0;
         foreach (Control child in Children)
         {
             if(!child.IsVisible || child.IsDisposed) continue;
 
-            if (child.Height + child.Y > h)
-                h = child.Height + child.Y;
+            if (child.Width + child.X > w)
+                w = child.Width + child.X;
         }
 
-        Height = h;
+        Width = w;
     }
 
     private void UpdateSize(Control c)
     {
         if(!c.IsVisible || c.IsDisposed) return;
 
-        Height = c.Height + c.Y;
+        Width = c.Width + c.X;
     }
 }
