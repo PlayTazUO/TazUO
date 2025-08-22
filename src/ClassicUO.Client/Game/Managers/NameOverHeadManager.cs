@@ -304,6 +304,14 @@ namespace ClassicUO.Game.Managers
                     Options.Add(option);
                 }
             }
+
+            // Ensure at least one option exists after loading
+            if (Options.Count == 0)
+            {
+                Log.Trace("No nameoverhead options loaded. Creating default entries.");
+                CreateDefaultEntries();
+                Save();
+            }
         }
 
         public static void Save()
@@ -311,24 +319,54 @@ namespace ClassicUO.Game.Managers
             var list = Options;
 
             string path = Path.Combine(ProfileManager.ProfilePath, "nameoverhead.xml");
+            string tempPath = path + ".tmp";
 
-            using XmlTextWriter xml = new(path, Encoding.UTF8)
+            try
             {
-                Formatting = Formatting.Indented,
-                IndentChar = '\t',
-                Indentation = 1
-            };
+                using (XmlTextWriter xml = new(tempPath, Encoding.UTF8)
+                {
+                    Formatting = Formatting.Indented,
+                    IndentChar = '\t',
+                    Indentation = 1
+                })
+                {
+                    xml.WriteStartDocument(true);
+                    xml.WriteStartElement("nameoverhead");
 
-            xml.WriteStartDocument(true);
-            xml.WriteStartElement("nameoverhead");
+                    foreach (var option in list)
+                    {
+                        option.Save(xml);
+                    }
 
-            foreach (var option in list)
-            {
-                option.Save(xml);
+                    xml.WriteEndElement();
+                    xml.WriteEndDocument();
+                }
+
+                // Atomic move: replace the original file with the temp file
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+                File.Move(tempPath, path);
             }
-
-            xml.WriteEndElement();
-            xml.WriteEndDocument();
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to save nameoverhead.xml: {ex}");
+                
+                // Clean up temp file if it exists
+                if (File.Exists(tempPath))
+                {
+                    try
+                    {
+                        File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                        // Ignore cleanup errors
+                    }
+                }
+                throw;
+            }
         }
 
         private static void CreateDefaultEntries()
