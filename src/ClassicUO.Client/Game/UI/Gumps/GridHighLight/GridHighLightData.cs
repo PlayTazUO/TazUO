@@ -96,6 +96,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.GridHighlightSlot = value;
         }
 
+        public bool LootOnMatch
+        {
+            get => _entry.LootOnMatch;
+            set => _entry.LootOnMatch = value;
+        }
+
         public GridHighlightData()
         {
             _entry = new GridHighlightSetupEntry();
@@ -156,6 +162,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     {
                         data.item.MatchesHighlightData = true;
                         data.item.HighlightHue = config.Hue;
+
+                        if (config.LootOnMatch)
+                        {
+                            AutoLootManager.Instance.LootItem(data.item);
+                        }
                     }
                 }
             }
