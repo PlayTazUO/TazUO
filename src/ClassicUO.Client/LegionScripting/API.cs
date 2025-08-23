@@ -1615,19 +1615,19 @@ namespace ClassicUO.LegionScripting
         /// ```py
         /// # Pre-target self for healing
         /// API.PreTarget(API.Player.Serial, "beneficial")
-        /// API.UseItem(bandage_item)  # This will automatically target self when targeting request comes
+        /// API.UseObject(bandage_item)  # This will automatically target self when targeting request comes
         ///
         /// # Pre-target an enemy for attack spells
         /// enemy = API.FindMobile(mobile_serial)
         /// API.PreTarget(enemy.Serial, "harmful")
-        /// API.Cast("Lightning")  # This will automatically target the enemy
+        /// API.CastSpell("Lightning")  # This will automatically target the enemy
         /// ```
         /// </summary>
         /// <param name="serial">Serial of the entity to pre-target</param>
-        /// <param name="targetType">Type of target: "neutral"/"n", "harmful"/"harm"/"h", "beneficial"/"ben"/"heal"/"b" (default: "neutral")</param>
+        /// <param name="targetType">Type of target: "neutral"/"neut"/"n", "harmful"/"harm"/"h", "beneficial"/"ben"/"heal"/"b" (default: "neutral")</param>
         public void PreTarget(uint serial, string targetType = "neutral") => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            TargetType type = TargetType.Neutral;
+            TargetType type;
             switch (targetType.ToLower())
             {
                 case "harmful":
@@ -2437,7 +2437,7 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Gets all multi objects at a specific position (x, y coordinates).
-        /// This includes houses, boats, and other multi-tile structures from both map chunks and server-side house data.
+        /// This includes server-side house data.
         /// Example:
         /// ```py
         /// multis = API.GetMultisAt(1000, 1000)
@@ -2472,7 +2472,7 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Gets all multi objects within a rectangular area defined by coordinates.
-        /// This includes houses, boats, and other multi-tile structures from both map chunks and server-side house data.
+        /// This includes server-side house data.
         /// Example:
         /// ```py
         /// multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
