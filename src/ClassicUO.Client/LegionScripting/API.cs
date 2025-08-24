@@ -611,6 +611,69 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Picks up an item from the game world and places it onto the mouse cursor.
+        /// </summary>
+        /// <param name="serial">The unique serial identifier of the item to pick up.</param>
+        /// <param name="amt">
+        /// The amount of the item to pick up. 
+        /// If 0, the full stack will be picked up (if stackable).
+        /// </param>
+        public void PickUpToCursor(uint serial, int amt = 0) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            GameActions.PickUp(serial, 0, 0, amt);
+        });
+
+        /// <summary>
+        /// Drops an item currently held by the mouse cursor into a container or on the ground at a specified position.
+        /// </summary>
+        /// <param name="serial">The unique serial identifier of the item to drop.</param>
+        /// <param name="x">
+        /// The X coordinate of the ground drop location, or the X position inside a container if a container is specified.
+        /// If not specified, defaults to the player's current X position.
+        /// </param>
+        /// <param name="y">
+        /// The Y coordinate of the ground drop location, or the X position inside a container if a container is specified.
+        /// If not specified, defaults to the player's current Y position.
+        /// </param>
+        /// <param name="z">
+        /// The Z coordinate (elevation) of the ground drop location. Unused if dropping into container.
+        /// If not specified, defaults to the Z value of the static or map land at (x, y) if x and y are specified.
+        /// </param>
+        /// <param name="container">
+        /// The serial of the container to drop the item into. 
+        /// If unspecified, the item will be dropped on the ground.
+        /// </param>
+        public void DropFromCursor(uint serial, int x = ushort.MaxValue, int y = ushort.MaxValue, int z = sbyte.MaxValue, uint container = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (container == uint.MaxValue && z == sbyte.MaxValue && x != ushort.MaxValue && y != ushort.MaxValue)
+            {
+                World.Map.GetMapZ(x, y, out var landZ, out var staticZ);
+                z = Math.Max(landZ, staticZ);
+            }
+
+            GameActions.DropItem(serial, x, y, z, container);
+        });
+
+        /// <summary>
+        /// Retrieves data of the currently held item on the game cursor.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="ItemHold"/> instance representing the held item data.
+        /// </returns>
+        /// <remarks>
+        /// The held item does not exist in the world as a proper <see cref="Item"/> object, but its data is temporarily tracked
+        /// in an <see cref="ItemHold"/> instance. This allows inspection of its properties while it's being held or manipulated.
+        /// If an item is being held on the cursor, ItemHold.Enabled will be true and ItemHold.Dropped will be false.
+        /// </remarks>
+        public ItemHold GetHeldItemData() => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (Client.Game?.GameCursor?.ItemHold is not ItemHold hold)
+                return null;
+
+            return hold;
+        });
+
+        /// <summary>
         /// Use a skill.
         /// Example:
         /// ```py
