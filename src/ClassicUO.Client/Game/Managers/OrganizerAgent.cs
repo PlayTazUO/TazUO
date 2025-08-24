@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Input;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
@@ -47,7 +49,7 @@ namespace ClassicUO.Game.Managers
                         // Run all organizers
                         Instance?.RunOrganizer();
                     }
-                    else if (int.TryParse(s[0], out int index))
+                    else if (int.TryParse(s[1], out int index))
                     {
                         // Run organizer by index
                         Instance?.RunOrganizer(index);
@@ -55,7 +57,7 @@ namespace ClassicUO.Game.Managers
                     else
                     {
                         // Run organizer by name
-                        Instance?.RunOrganizer(s[0]);
+                        Instance?.RunOrganizer(s[1]);
                     }
                 });
             }
@@ -148,6 +150,22 @@ namespace ClassicUO.Game.Managers
             };
             OrganizerConfigs.Add(dupedConfig);
             return dupedConfig;
+        }
+
+        public void CreateOrganizerMacroButton(string name)
+        {
+            var macroManager = MacroManager.TryGetMacroManager();
+
+            if (macroManager == null) return;
+
+            var config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            int index = OrganizerConfigs.IndexOf(config);
+            if (config == null) return;
+
+            var macro = new Macro($"Organizer: {config.Name}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"organize {index}") };
+
+            macroManager.PushToBack(macro);
+            UIManager.Add(new MacroButtonGump(macro, Mouse.Position.X, Mouse.Position.Y));
         }
         public void ListOrganizers()
         {

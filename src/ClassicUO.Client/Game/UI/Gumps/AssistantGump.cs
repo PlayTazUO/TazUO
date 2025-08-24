@@ -866,10 +866,24 @@ public class AssistantGump : BaseOptionsGump
         };
         leftSideContent.AddToRight(enabledCheckbox, false);
 
-        //Dupe button
-        ModernButton dupeButton = new(0, 0, 50, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Dupe", Color.Cyan)
+        // Run organizer button
+        ModernButton runButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Run Organizer", Color.Lime)
         {
-            X = enabledCheckbox.X + enabledCheckbox.Width + 10,
+            IsSelected = true,
+            X = enabledCheckbox.X,
+            Y = enabledCheckbox.Y + 30
+        };
+        runButton.MouseUp += (sender, e) =>
+        {
+            OrganizerAgent.Instance?.RunOrganizer(config.Name);
+        };
+        leftSideContent.AddToRight(runButton);
+
+        //Dupe button
+        ModernButton dupeButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Dupe", Color.Cyan)
+        {
+            IsSelected = true,
+            X = runButton.X
         };
         dupeButton.Y = enabledCheckbox.Y + 20;
         dupeButton.MouseUp += (sender, e) =>
@@ -883,8 +897,41 @@ public class AssistantGump : BaseOptionsGump
             }
         };
         leftSideContent.AddToRight(dupeButton);
+
+        //Macro button
+        ModernButton MacroButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Macro Button", Color.Yellow)
+        {
+            IsSelected = true,
+            X = dupeButton.X,
+            Y = dupeButton.Y + dupeButton.Width + 10,
+        };
+        MacroButton.Y = enabledCheckbox.Y + 20;
+        MacroButton.MouseUp += (sender, e) =>
+        {
+            OrganizerAgent.Instance?.CreateOrganizerMacroButton(config.Name);
+            GameActions.Print($"Created Organizer Macro: Organizer: {config.Name}");
+        };
+        leftSideContent.AddToRight(MacroButton);
+
+        // Delete organizer button
+        ModernButton deleteButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Delete Organizer", Color.Red)
+        {
+            IsSelected = true,
+            X = dupeButton.X + dupeButton.Width + 60,
+            Y = runButton.Y
+        };
+
+        deleteButton.MouseUp += (sender, e) =>
+        {
+            OrganizerAgent.Instance?.DeleteConfig(config);
+            button.Dispose();
+        };
+        leftSideContent.AddToRight(deleteButton, false);
         // Target container button
-        ModernButton SourceButton = new(0, 0, 150, 26, ButtonAction.Default, "Set Source", ThemeSettings.BUTTON_FONT_COLOR);
+        ModernButton SourceButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Set Source", ThemeSettings.BUTTON_FONT_COLOR)
+        {
+            IsSelected = true
+        };
         SourceButton.MouseUp += (s, e) =>
         {
             GameActions.Print("Select source container", 62);
@@ -897,14 +944,15 @@ public class AssistantGump : BaseOptionsGump
                 }
                 config.SourceContSerial = source.Serial;
                 GameActions.Print($"Source container set to {source.Serial:X}");
-
+                leftSideContent.Update();
             });
         };
         leftSideContent.AddToRight(SourceButton);
 
-        ModernButton DestButton = new(0, 0, 150, 26, ButtonAction.Default, "Set Destination", ThemeSettings.BUTTON_FONT_COLOR)
+        ModernButton DestButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Set Destination", ThemeSettings.BUTTON_FONT_COLOR)
         {
-            X = SourceButton.X + SourceButton.Width + 10,
+            IsSelected = true,
+            X = SourceButton.X + SourceButton.Width + 60,
             Y = SourceButton.Y
         };
         DestButton.MouseUp += (s, e) =>
@@ -919,48 +967,30 @@ public class AssistantGump : BaseOptionsGump
                 }
                 config.DestContSerial = destination.Serial;
                 GameActions.Print($"Destination container set to {destination.Serial:X}");
-
+                leftSideContent.Update();
             });
         };
         leftSideContent.AddToRight(DestButton,false);
 
+        HBoxContainer box = new HBoxContainer(50);
+        box.BlankLine();
         // Current source container display
         if (config.SourceContSerial != 0)
         {
-            leftSideContent.AddToRight(TextBox.GetOne($" [Source] \n Name: {World.Items.Get(config.SourceContSerial)?.Name} \n Serial: {config.SourceContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($" [Source] \n Name: {World.Items.Get(config.SourceContSerial)?.Name} \n Serial: {config.SourceContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
         }
         else
         {
-            leftSideContent.AddToRight(TextBox.GetOne($" [Source] \n Default: Player's Backpack", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.Green, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($" [Source] \n Default: Player's Backpack", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.Green, TextBox.RTLOptions.Default()));
         }
+        box.BlankLine();
         // Current destination container display
         if (config.DestContSerial != 0)
         {
-            leftSideContent.AddToRight(TextBox.GetOne($" [Destination] \n Name: {World.Items.Get(config.DestContSerial)?.Name} \n Serial: {config.DestContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($" [Destination] \n Name: {World.Items.Get(config.DestContSerial)?.Name} \n Serial: {config.DestContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
         }
-
-        PositionHelper.BlankLine();
-
-        // Run organizer button
-        ModernButton runButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Run Organizer", ThemeSettings.BUTTON_FONT_COLOR);
-        runButton.MouseUp += (sender, e) =>
-        {
-            OrganizerAgent.Instance?.RunOrganizer(config.Name);
-        };
-        leftSideContent.AddToRight(runButton);
-
-        // Delete organizer button
-        ModernButton deleteButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Delete Organizer", Color.Red)
-        {
-            X = runButton.X + runButton.Width + 50,
-            Y = runButton.Y
-        };
-        deleteButton.MouseUp += (sender, e) =>
-        {
-            OrganizerAgent.Instance?.DeleteConfig(config);
-            button.Dispose();
-        };
-        leftSideContent.AddToRight(deleteButton, false);
+        leftSideContent.AddToRight(box);
+        leftSideContent.BlankLine();
 
         // Items to organize label
         Control c;
