@@ -35,7 +35,7 @@ namespace ClassicUO.LegionScripting
 
         private List<RecordedAction> _displayedActions = new List<RecordedAction>();
 
-        public ScriptRecordingGump() : base(_lastX, _lastY, _lastWidth, _lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true)
+        public ScriptRecordingGump() : base(_lastX, _lastY, _lastWidth, _lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
         {
             CanCloseWithRightClick = true;
             AcceptMouseInput = true;
@@ -115,7 +115,7 @@ namespace ClassicUO.LegionScripting
             currentY += _actionCountText.Height + 10;
 
             // Record pauses option
-            _recordPausesCheckbox = new Checkbox(0x00D2, 0x00D3, "Record pauses (timing delays)", 1)
+            _recordPausesCheckbox = new Checkbox(0x00D2, 0x00D3, "Included pauses (timing delays)", 1, 0xFFFF)
             {
                 X = BorderSize + 10,
                 Y = currentY,
@@ -306,9 +306,6 @@ namespace ClassicUO.LegionScripting
                 : "Stopped";
 
             _titleBar.Text = $"Script Recording - {status}";
-            _titleBar.Hue = recorder.IsRecording
-                ? (recorder.IsPaused ? (ushort)Color.Yellow.PackedValue : (ushort)Color.Red.PackedValue)
-                : (ushort)Color.Orange.PackedValue;
 
             // Update buttons
             _recordButton.SetText(recorder.IsRecording ? "Stop" : "Record");
@@ -403,10 +400,10 @@ namespace ClassicUO.LegionScripting
             switch (action.ActionType.ToLower())
             {
                 case "walk":
-                    var walkDir = action.Parameters.ContainsKey("direction") ? action.Parameters["direction"] : "?";
+                    var walkDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
                     return $"Walk {walkDir}";
                 case "run":
-                    var runDir = action.Parameters.ContainsKey("direction") ? action.Parameters["direction"] : "?";
+                    var runDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
                     return $"Run {runDir}";
                 case "cast":
                     var spell = action.Parameters.ContainsKey("spell") ? action.Parameters["spell"] : "?";
@@ -459,16 +456,6 @@ namespace ClassicUO.LegionScripting
                     var gumpButton = action.Parameters.ContainsKey("button") ? action.Parameters["button"] : "?";
                     var gumpId = action.Parameters.ContainsKey("gumpid") ? action.Parameters["gumpid"] : "?";
                     return $"Gump Button {gumpButton} (0x{gumpId:X8})";
-                case "vendorbuy":
-                    var buyVendor = action.Parameters.ContainsKey("vendor") ? action.Parameters["vendor"] : "?";
-                    return $"Buy from Vendor 0x{buyVendor:X8}";
-                case "vendorsell":
-                    var sellVendor = action.Parameters.ContainsKey("vendor") ? action.Parameters["vendor"] : "?";
-                    return $"Sell to Vendor 0x{sellVendor:X8}";
-                case "msg":
-                    var msgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
-                    if (msgText.Length > 25) msgText = msgText.Substring(0, 22) + "...";
-                    return $"Say \"{msgText}\"";
                 case "headmsg":
                     var headMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     var headSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
@@ -498,37 +485,19 @@ namespace ClassicUO.LegionScripting
                     var emoteMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (emoteMsgText.Length > 25) emoteMsgText = emoteMsgText.Substring(0, 22) + "...";
                     return $"Emote: \"{emoteMsgText}\"";
-                case "usetype":
-                    var useGraphic = action.Parameters.ContainsKey("graphic") ? action.Parameters["graphic"] : "?";
-                    var useHue = action.Parameters.ContainsKey("hue") ? action.Parameters["hue"] : "?";
-                    return $"Use Type 0x{useGraphic:X4} (Hue: {useHue})";
                 case "mount":
                     var mountSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     return $"Mount 0x{mountSerial:X8}";
                 case "dismount":
                     return "Dismount";
-                case "turn":
-                    var turnDir = action.Parameters.ContainsKey("direction") ? action.Parameters["direction"] : "?";
-                    return $"Turn {turnDir}";
-                case "rename":
-                    var renameSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    var renameName = action.Parameters.ContainsKey("name") ? action.Parameters["name"].ToString() : "?";
-                    if (renameName.Length > 15) renameName = renameName.Substring(0, 12) + "...";
-                    return $"Rename 0x{renameSerial:X8} \"{renameName}\"";
                 case "toggleability":
                     var ability = action.Parameters.ContainsKey("ability") ? action.Parameters["ability"] : "?";
                     return $"Toggle Ability \"{ability}\"";
                 case "virtue":
                     var virtue = action.Parameters.ContainsKey("virtue") ? action.Parameters["virtue"] : "?";
                     return $"Invoke Virtue \"{virtue}\"";
-                case "setskilllock":
-                    var skill = action.Parameters.ContainsKey("skill") ? action.Parameters["skill"] : "?";
-                    var skillState = action.Parameters.ContainsKey("state") ? action.Parameters["state"] : "?";
-                    return $"Set Skill Lock \"{skill}\" ({skillState})";
-                case "setstatlock":
-                    var stat = action.Parameters.ContainsKey("stat") ? action.Parameters["stat"] : "?";
-                    var statState = action.Parameters.ContainsKey("state") ? action.Parameters["state"] : "?";
-                    return $"Set Stat Lock \"{stat}\" ({statState})";
+                case "waitforgump":
+                    return "Wait for gump";
                 default:
                     return $"{action.ActionType}(...)";
             }

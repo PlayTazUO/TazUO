@@ -270,11 +270,6 @@ namespace ClassicUO.LegionScripting
             RecordAction("replygump", parameters);
         }
 
-        public void RecordMsg(string message)
-        {
-            RecordAction("msg", new Dictionary<string, object> { { "message", message } });
-        }
-
         public void RecordPartyMsg(string message)
         {
             RecordAction("partymsg", new Dictionary<string, object> { { "message", message } });
@@ -305,18 +300,6 @@ namespace ClassicUO.LegionScripting
             RecordAction("emotemsg", new Dictionary<string, object> { { "message", message } });
         }
 
-        public void RecordUseType(uint graphic, ushort hue, uint container)
-        {
-            var parameters = new Dictionary<string, object>
-            {
-                { "graphic", graphic },
-                { "hue", hue },
-                { "container", container }
-            };
-
-            RecordAction("usetype", parameters);
-        }
-
         public void RecordMount(uint serial)
         {
             RecordAction("mount", new Dictionary<string, object> { { "serial", serial } });
@@ -327,23 +310,9 @@ namespace ClassicUO.LegionScripting
             RecordAction("dismount", new Dictionary<string, object>());
         }
 
-        public void RecordTurn(string direction)
+        public void RecordAbility(string ability)
         {
-            RecordAction("turn", new Dictionary<string, object> { { "direction", direction } });
-        }
-
-        public void RecordRename(uint serial, string name)
-        {
-            RecordAction("rename", new Dictionary<string, object>
-            {
-                { "serial", serial },
-                { "name", name }
-            });
-        }
-
-        public void RecordToggleAbility(string ability)
-        {
-            RecordAction("toggleability", new Dictionary<string, object> { { "ability", ability } });
+            RecordAction("ability" , new Dictionary<string, object> { { "ability", ability } });
         }
 
         public void RecordVirtue(string virtue)
@@ -351,22 +320,9 @@ namespace ClassicUO.LegionScripting
             RecordAction("virtue", new Dictionary<string, object> { { "virtue", virtue } });
         }
 
-        public void RecordSetSkillLock(string skill, string lockState)
+        public void RecordWaitForGump(string gumpid)
         {
-            RecordAction("setskilllock", new Dictionary<string, object>
-            {
-                { "skill", skill },
-                { "state", lockState }
-            });
-        }
-
-        public void RecordSetStatLock(string stat, string lockState)
-        {
-            RecordAction("setstatlock", new Dictionary<string, object>
-            {
-                { "stat", stat },
-                { "state", lockState }
-            });
+            RecordAction("waitforgump", new Dictionary<string, object> { { "id", gumpid } });
         }
 
         public List<RecordedAction> GetRecordedActions()
@@ -419,7 +375,8 @@ namespace ClassicUO.LegionScripting
             script.AppendLine("# Created: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             script.AppendLine();
             script.AppendLine("import API");
-            script.AppendLine("import time");
+            if(includePauses)
+                script.AppendLine("import time");
             script.AppendLine();
 
             bool firstAction = true;
@@ -528,7 +485,7 @@ namespace ClassicUO.LegionScripting
                         }
                         break;
 
-                    case "msg" or "say":
+                    case "say":
                         if (action.Parameters.TryGetValue("message", out object msgText))
                             script.AppendLine($"API.Msg(\"{msgText}\")");
                         break;
@@ -563,20 +520,6 @@ namespace ClassicUO.LegionScripting
                             script.AppendLine($"API.EmoteMsg(\"{emoteMessage}\")");
                         break;
 
-                    case "usetype":
-                        if (action.Parameters.TryGetValue("graphic", out object useGraphic) &&
-                            action.Parameters.TryGetValue("hue", out object useHue) &&
-                            action.Parameters.TryGetValue("container", out object useContainer))
-                        {
-                            if ((ushort)useHue == ushort.MaxValue && (uint)useContainer == uint.MaxValue)
-                                script.AppendLine($"API.UseType(0x{useGraphic:X4})");
-                            else if ((uint)useContainer == uint.MaxValue)
-                                script.AppendLine($"API.UseType(0x{useGraphic:X4}, {useHue})");
-                            else
-                                script.AppendLine($"API.UseType(0x{useGraphic:X4}, {useHue}, 0x{useContainer:X8})");
-                        }
-                        break;
-
                     case "mount":
                         if (action.Parameters.TryGetValue("serial", out object mountSerial))
                             script.AppendLine($"API.Mount(0x{mountSerial:X8})");
@@ -586,37 +529,23 @@ namespace ClassicUO.LegionScripting
                         script.AppendLine("API.Dismount()");
                         break;
 
-                    case "turn":
-                        if (action.Parameters.TryGetValue("direction", out object turnDirection))
-                            script.AppendLine($"API.Turn(\"{turnDirection}\")");
+                    case "ability":
+                        if (action.Parameters.TryGetValue("ability", out object abil))
+                            script.AppendLine($"API.ToggleAbility(\"{abil}\")");
                         break;
 
-                    case "rename":
-                        if (action.Parameters.TryGetValue("serial", out object renameSerial) &&
-                            action.Parameters.TryGetValue("name", out object renameName))
-                            script.AppendLine($"API.Rename(0x{renameSerial:X8}, \"{renameName}\")");
-                        break;
-
-                    case "toggleability":
-                        if (action.Parameters.TryGetValue("ability", out object toggleAbility))
-                            script.AppendLine($"API.ToggleAbility(\"{toggleAbility}\")");
-                        break;
 
                     case "virtue":
                         if (action.Parameters.TryGetValue("virtue", out object virtueType))
                             script.AppendLine($"API.Virtue(\"{virtueType}\")");
                         break;
 
-                    case "setskilllock":
-                        if (action.Parameters.TryGetValue("skill", out object skillName) &&
-                            action.Parameters.TryGetValue("state", out object skillLockState))
-                            script.AppendLine($"API.SetSkillLock(\"{skillName}\", \"{skillLockState}\")");
-                        break;
-
-                    case "setstatlock":
-                        if (action.Parameters.TryGetValue("stat", out object statName) &&
-                            action.Parameters.TryGetValue("state", out object statLockState))
-                            script.AppendLine($"API.SetStatLock(\"{statName}\", \"{statLockState}\")");
+                    case "waitforgump":
+                        if (action.Parameters.TryGetValue("id", out object gumpid))
+                        {
+                            script.AppendLine($"while not API.HasGump(\"{gumpid}\")");
+                            script.AppendLine($"    API.Pause(0.1)");
+                        }
                         break;
 
                     default:

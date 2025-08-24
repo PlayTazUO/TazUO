@@ -391,7 +391,7 @@ namespace ClassicUO.Network
             var cursorTarget = (CursorTarget)p.ReadUInt8();
             var cursorId = p.ReadUInt32BE();
             var targetType = (TargetType)p.ReadUInt8();
-            
+
             TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
 
             if (World.Party.PartyHealTimer < Time.Ticks && World.Party.PartyHealTarget != 0)
@@ -410,7 +410,7 @@ namespace ClassicUO.Network
                     // Auto-target the stored serial
                     TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
                 }
-                
+
                 // Always clear after any target cursor (no queuing)
                 TargetManager.NextAutoTarget.Clear();
             }
@@ -6772,6 +6772,7 @@ namespace ClassicUO.Network
             string[] lines
         )
         {
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordWaitForGump(gumpID.ToString());
             List<string> cmdlist = _parser.GetTokens(layout);
             int cmdlen = cmdlist.Count;
 

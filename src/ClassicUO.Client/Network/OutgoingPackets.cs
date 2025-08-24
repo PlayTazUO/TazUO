@@ -3073,6 +3073,19 @@ namespace ClassicUO.Network
         {
             const byte ID = 0x12;
 
+            switch (id)
+            {
+                case 0x01:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVirtue("honor");
+                    break;
+                case 0x02:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVirtue("sacrifice");
+                    break;
+                case 0x03:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordVirtue("valor");
+                    break;
+            }
+
             int length = PacketsTable.GetPacketLength(ID);
 
             var writer = new StackDataWriter(length < 0 ? 64 : length);

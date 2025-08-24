@@ -266,7 +266,6 @@ while True:
 
                 label = TextBox.GetOne(group + "  ", TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.Default());
                 label.AcceptMouseInput = false;
-                Add(label);
                 label.X = expand.X + expand.Width;
                 label.Y = (HEIGHT - label.Height) / 2;
 

@@ -665,8 +665,30 @@ namespace ClassicUO.Game
         public static void Say(string message, ushort hue = 0xFFFF, MessageType type = MessageType.Regular, byte font = 3)
         {
             // Record action for script recording (only for regular speech)
-            if (type == MessageType.Regular)
-                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordSay(message);
+            switch (type)
+            {
+                case MessageType.Regular:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordSay(message);
+                    break;
+                case MessageType.Emote:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordEmoteMsg(message);
+                    break;
+                case MessageType.Whisper:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordWhisperMsg(message);
+                    break;
+                case MessageType.Yell:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordYellMsg(message);
+                    break;
+                case MessageType.Guild:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordGuildMsg(message);
+                    break;
+                case MessageType.Alliance:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAllyMsg(message);
+                    break;
+                case MessageType.Party:
+                    ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordPartyMsg(message);
+                    break;
+            }
 
             if (hue == 0xFFFF)
             {
@@ -747,6 +769,8 @@ namespace ClassicUO.Game
 
         public static void SayParty(string message, uint serial = 0)
         {
+            // Record action for script recording
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordPartyMsg(message);
             Socket.Send_PartyMessage(message, serial);
         }
 
@@ -1005,6 +1029,9 @@ namespace ClassicUO.Game
                 LastSpellIndex = index;
                 SpellVisualRangeManager.Instance.ClearCasting();
                 Socket.Send_CastSpell(index);
+
+                // Record action for script recording
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(SpellDefinition.FullIndexGetSpell(index).Name);
             }
         }
 
@@ -1183,6 +1210,7 @@ namespace ClassicUO.Game
                 SendAbility(0, true);
             }
 
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAbility("primary");
 
             ability ^= (Ability)0x80;
         }
@@ -1204,6 +1232,8 @@ namespace ClassicUO.Game
             {
                 SendAbility(1, true);
             }
+
+            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAbility("secondary");
 
             ability ^= (Ability)0x80;
         }
