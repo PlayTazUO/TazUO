@@ -234,11 +234,10 @@ namespace ClassicUO.Game.UI.Gumps
             openRegularGump.SetTooltip(
                 "/c[orange]Grid Container Controls:/cd\n" +
                 "Ctrl + Click to lock an item in place\n" +
-                "Alt + Click to add an item to the quick move queue\n" +
-                "Alt + Double Click to add all similar items to the quick move queue\n" +
+                "Alt + Click to toggle selection for multi-move\n" +
+                "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
                 "Sort and single click looting can be enabled with the icons on the right side");
-
             quickDropBackpack = new ResizableStaticPic(World.Player.FindItemByLayer(Layer.Backpack).DisplayedGraphic, 20, 20)
             {
                 X = Width - openRegularGump.Width - 20 - borderWidth,
@@ -379,7 +378,7 @@ namespace ClassicUO.Game.UI.Gumps
         private ContextMenuControl GenSortContextMenu()
         {
             var control = new ContextMenuControl();
-            
+
             control.Add(new ContextMenuItemEntry("Sort by Graphic + Hue", () =>
             {
                 sortMode = GridSortMode.GraphicAndHue;
@@ -801,7 +800,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            if(CUOEnviroment.Debug)
+            if (CUOEnviroment.Debug)
                 batcher.DrawString(Renderer.Fonts.Bold, LocalSerial.ToString(), x, y - 40, ShaderHueTranslator.GetHueVector(32));
             return base.Draw(batcher, x, y);
         }
@@ -839,6 +838,8 @@ namespace ClassicUO.Game.UI.Gumps
             private AlphaBlendControl background;
             private CustomToolTip toolTipThis, toolTipitem1, toolTipitem2;
             private readonly List<SimpleTimedTextGump> timedTexts = new();
+            private static readonly HashSet<uint> _toggledThisAltDrag = new HashSet<uint>();
+            private static bool _altDragActive;
 
             public bool Highlight { get; set; }
             public bool SelectHighlight { get; set; }
@@ -956,9 +957,6 @@ namespace ClassicUO.Game.UI.Gumps
                     Y = Height - count.Height;
                 }
 
-                if (MultiItemMoveGump.MoveItems.Contains(_item))
-                    Highlight = true;
-
                 hit.SetTooltip(_item);
             }
 
@@ -981,6 +979,8 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else if (Keyboard.Alt && _item != null)
                 {
+                    if (MultiItemMoveGump.TrySelect(_item))
+                        SelectHighlight = true;
                     var graphic = _item.Graphic;
                     var hue = _item.Hue;
                     foreach (var gridItem in gridContainer.gridSlotManager.GridSlots.Values)
@@ -989,17 +989,16 @@ namespace ClassicUO.Game.UI.Gumps
                         if (item is null ||
                             graphic != item.Graphic ||
                             hue != item.Hue ||
-                            MultiItemMoveGump.MoveItems.Contains(item))
+                            MultiItemMoveGump.IsSelected(item.Serial))
                         {
                             continue;
                         }
 
-                        MultiItemMoveGump.MoveItems.Enqueue(item);
-                        gridItem.SelectHighlight = true;
+                        if (MultiItemMoveGump.TrySelect(item))
+                            gridItem.SelectHighlight = true;
                     }
 
-                    int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
-                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
+                    MultiItemMoveGump.ShowNextTo(gridContainer);
                 }
                 else
                 {
@@ -1053,17 +1052,28 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else if (Keyboard.Ctrl)
                     {
-                        if(_item != null)
+                        if (_item != null)
                             gridContainer.gridSlotManager.SetLockedSlot(slot, !ItemGridLocked, gridContainer.gridContainerEntry.GetSlot(_item.Serial));
                         Mouse.CancelDoubleClick = true;
                     }
                     else if (Keyboard.Alt && _item != null)
                     {
-                        if (!MultiItemMoveGump.MoveItems.Contains(_item))
-                            MultiItemMoveGump.MoveItems.Enqueue(_item);
-                        int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
-                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
-                        SelectHighlight = true;
+                        // If no drag occurred, toggle on click to prevent missed quick taps.
+                        if (!_altDragActive)
+                        {
+                            SelectHighlight = MultiItemMoveGump.ToggleItem(_item);
+                            // reflect highlight immediately
+                            SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
+                        }
+                        else
+                        {
+                            SelectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
+                        }
+
+                        if (SelectHighlight)
+                            MultiItemMoveGump.ShowNextTo(gridContainer);
+
+                        Mouse.CancelDoubleClick = true;
                     }
                     else if (Keyboard.Shift && _item != null && ProfileManager.CurrentProfile.EnableAutoLoot && !ProfileManager.CurrentProfile.HoldShiftForContext && !ProfileManager.CurrentProfile.HoldShiftToSplitStack)
                     {
@@ -1144,16 +1154,6 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                if (Keyboard.Alt && Mouse.LButtonPressed && _item != null)
-                {
-                    if (!MultiItemMoveGump.MoveItems.Contains(_item))
-                        MultiItemMoveGump.MoveItems.Enqueue(_item);
-                    int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
-                    MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
-                    SelectHighlight = true;
-                }
-
-
                 GridContainerPreview g;
                 while ((g = UIManager.GetGump<GridContainerPreview>()) != null)
                 {
@@ -1164,25 +1164,15 @@ namespace ClassicUO.Game.UI.Gumps
             private void _hit_MouseEnter(object sender, MouseEventArgs e)
             {
                 SelectedObject.Object = World.Get(LocalSerial);
-                if (Mouse.LButtonPressed)
-                    mousePressedWhenEntered = true;
-                else
-                    mousePressedWhenEntered = false;
+                mousePressedWhenEntered = Mouse.LButtonPressed;
+
                 if (_item != null)
                 {
-                    if (_item.ItemData.IsContainer && _item.Items != null && ProfileManager.CurrentProfile.GridEnableContPreview && !spellbooks.Contains(_item.Graphic))
+                    if (_item.ItemData.IsContainer && _item.Items != null &&
+                        ProfileManager.CurrentProfile.GridEnableContPreview && !spellbooks.Contains(_item.Graphic))
                     {
                         preview = new GridContainerPreview(_item, Mouse.Position.X, Mouse.Position.Y);
                         UIManager.Add(preview);
-                    }
-
-                    if (Keyboard.Alt && Mouse.LButtonPressed && _item != null)
-                    {
-                        if (!MultiItemMoveGump.MoveItems.Contains(_item))
-                            MultiItemMoveGump.MoveItems.Enqueue(_item);
-                        int multimoveX = gridContainer.X >= 200 ? gridContainer.X - 200 : gridContainer.X + gridContainer.Width;
-                        MultiItemMoveGump.AddMultiItemMoveGumpToUI(multimoveX, gridContainer.Y);
-                        SelectHighlight = true;
                     }
 
                     if (!hit.HasTooltip)
@@ -1244,8 +1234,8 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                if (SelectHighlight)
-                    if (!MultiItemMoveGump.MoveItems.Contains(_item))
+                if (SelectHighlight && !itemNull)
+                    if (!MultiItemMoveGump.IsSelected(_item.Serial))
                         SelectHighlight = false;
 
                 base.Draw(batcher, x, y);
@@ -1391,6 +1381,40 @@ namespace ClassicUO.Game.UI.Gumps
                     count?.Draw(batcher, x + count.X, y + count.Y);
                 }
                 return true;
+            }
+
+            public override void Update()
+            {
+                base.Update();
+
+                bool comboActive = Keyboard.Alt && Mouse.LButtonPressed
+                   && !Client.Game.GameCursor.ItemHold.Enabled
+                   && !TargetManager.IsTargeting;
+
+                if (comboActive)
+                {
+                    // Gesture just started: reset guard
+                    if (!_altDragActive)
+                    {
+                        _altDragActive = true;
+                        _toggledThisAltDrag.Clear();
+                    }
+
+                    // Toggle immediately for the item currently under the cursor
+                    if (_item != null && hit.MouseIsOver && _toggledThisAltDrag.Add(_item.Serial))
+                    {
+                        SelectHighlight = MultiItemMoveGump.ToggleItem(_item);
+
+                        if (SelectHighlight)
+                            MultiItemMoveGump.ShowNextTo(gridContainer);
+                    }
+                }
+                else if (_altDragActive)
+                {
+                    // Gesture ended: clean up
+                    _altDragActive = false;
+                    _toggledThisAltDrag.Clear();
+                }
             }
         }
 

@@ -21,6 +21,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public List<string> ExcludeNegatives { get; set; } = new();
         public List<string> RequiredRarities { get; set; } = new();
         public GridHighlightSlot GridHighlightSlot { get; set; } = new();
+        public bool LootOnMatch { get; set; } = false;
     }
 
     public class GridHighlightSlot

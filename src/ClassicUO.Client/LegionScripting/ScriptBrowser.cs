@@ -152,7 +152,7 @@ namespace ClassicUO.LegionScripting
 
             // Add directories first, then files
             var directories = files.Where(f => f.type == "dir").OrderBy(f => f.name);
-            var scriptFiles = files.Where(f => f.type == "file" && f.name.EndsWith(".lscript")).OrderBy(f => f.name);
+            var scriptFiles = files.Where(f => f.type == "file" && (f.name.EndsWith(".lscript") || f.name.EndsWith(".py"))).OrderBy(f => f.name);
 
             foreach (var dir in directories)
             {
@@ -272,6 +272,7 @@ namespace ClassicUO.LegionScripting
 
             private void FileMouseDown(object sender, MouseEventArgs e)
             {
+                if (e.Button != MouseButtonType.Left) return;
                 // Run file loading asynchronously to prevent UI freezing
                 Task.Run(async () =>
                 {

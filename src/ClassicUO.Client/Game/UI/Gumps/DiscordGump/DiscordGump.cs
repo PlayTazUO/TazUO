@@ -88,7 +88,8 @@ public class DiscordGump : Gump
     {
         AcceptMouseInput = true;
 
-        _discordLogo = new(LEFT_WIDTH / 2 - 66, HEIGHT / 2 - 50, PNGLoader.Instance.EmbeddedArt["Discord-Symbol-Blurple-SM.png"]);
+        PNGLoader.Instance.TryGetEmbeddedTexture("Discord-Symbol-Blurple-SM.png", out var discordTexture);
+        _discordLogo = new(LEFT_WIDTH / 2 - 66, HEIGHT / 2 - 50, discordTexture);
         Add(_discordLogo);
 
         AlphaBlendControl c;

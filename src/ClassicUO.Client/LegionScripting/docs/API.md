@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `8/18/25`.*
+*This was generated on `8/22/25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -1447,6 +1447,49 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### PreTarget
+`(serial, targetType)`
+ Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
+ This is useful for automating actions that require targeting, like using bandages or spells.
+ Example:
+ ```py
+ # Pre-target self for healing
+ API.PreTarget(API.Player.Serial, "beneficial")
+ API.UseObject(bandage_item)  # This will automatically target self when targeting request comes
+
+ # Pre-target an enemy for attack spells
+ enemy = API.FindMobile(mobile_serial)
+ API.PreTarget(enemy.Serial, "harmful")
+ API.CastSpell("Lightning")  # This will automatically target the enemy
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No | Serial of the entity to pre-target |
+| `targetType` | `string` | ✅ Yes | Type of target: "neutral"/"neut"/"n", "harmful"/"harm"/"h", "beneficial"/"ben"/"heal"/"b" (default: "neutral") |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### CancelPreTarget
+
+ Cancels any active pre-target.
+ Example:
+ ```py
+ API.PreTarget(enemy.Serial, "harmful")
+ # Changed my mind, cancel the pre-target
+ API.CancelPreTarget()
+ ```
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### HasTarget
 `(targetType)`
  Check if the player has a target cursor.
@@ -2071,6 +2114,55 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `y2` | `int` | ❌ No | Ending Y coordinate |
 
 **Return Type:** `List<PyStatic>`
+
+---
+
+### GetMultisAt
+`(x, y)`
+ Gets all multi objects at a specific position (x, y coordinates).
+ This includes server-side house data.
+ Example:
+ ```py
+ multis = API.GetMultisAt(1000, 1000)
+ for m in multis:
+     API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No | X coordinate |
+| `y` | `int` | ❌ No | Y coordinate |
+
+**Return Type:** `List<PyMulti>`
+
+---
+
+### GetMultisInArea
+`(x1, y1, x2, y2)`
+ Gets all multi objects within a rectangular area defined by coordinates.
+ This includes server-side house data.
+ Example:
+ ```py
+ multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
+ API.SysMsg(f"Found {len(multis)} multis in area")
+ for m in multis:
+     API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x1` | `int` | ❌ No | Starting X coordinate |
+| `y1` | `int` | ❌ No | Starting Y coordinate |
+| `x2` | `int` | ❌ No | Ending X coordinate |
+| `y2` | `int` | ❌ No | Ending Y coordinate |
+
+**Return Type:** `List<PyMulti>`
 
 ---
 

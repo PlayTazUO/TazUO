@@ -6,52 +6,17 @@ namespace ClassicUO.Game.Managers
 {
     public static class TitleBarStatsManager
     {
-        private static uint _lastUpdate = 0;
-        private static ushort _lastHits = 0;
-        private static ushort _lastHitsMax = 0;
-        private static ushort _lastMana = 0;
-        private static ushort _lastManaMax = 0;
-        private static ushort _lastStamina = 0;
-        private static ushort _lastStaminaMax = 0;
-
         public static void UpdateTitleBar()
         {
             if (ProfileManager.CurrentProfile == null)
             {
                 return;
             }
-            
+
             if (!ProfileManager.CurrentProfile.EnableTitleBarStats || World.Player == null)
             {
                 return;
             }
-
-            uint currentTime = (uint)Time.Ticks;
-            uint delta = currentTime - _lastUpdate;
-            if (delta < (uint)ProfileManager.CurrentProfile.TitleBarUpdateInterval)
-            {
-                return;
-            }
-
-            // Check if stats have changed
-            if (World.Player.Hits == _lastHits &&
-                World.Player.HitsMax == _lastHitsMax &&
-                World.Player.Mana == _lastMana &&
-                World.Player.ManaMax == _lastManaMax &&
-                World.Player.Stamina == _lastStamina &&
-                World.Player.StaminaMax == _lastStaminaMax)
-            {
-                return;
-            }
-
-            // Update cached values
-            _lastHits = World.Player.Hits;
-            _lastHitsMax = World.Player.HitsMax;
-            _lastMana = World.Player.Mana;
-            _lastManaMax = World.Player.ManaMax;
-            _lastStamina = World.Player.Stamina;
-            _lastStaminaMax = World.Player.StaminaMax;
-            _lastUpdate = currentTime;
 
             string statsText = GenerateStatsText();
             string title = string.IsNullOrEmpty(World.Player.Name) ?
@@ -67,7 +32,7 @@ namespace ClassicUO.Game.Managers
             {
                 return string.Empty;
             }
-            
+
             switch (ProfileManager.CurrentProfile.TitleBarStatsMode)
             {
                 case TitleBarStatsMode.Text:
@@ -130,13 +95,6 @@ namespace ClassicUO.Game.Managers
 
         public static void ForceUpdate()
         {
-            _lastUpdate = 0;
-            _lastHits = 0;
-            _lastHitsMax = 0;
-            _lastMana = 0;
-            _lastManaMax = 0;
-            _lastStamina = 0;
-            _lastStaminaMax = 0;
             UpdateTitleBar();
         }
 
@@ -146,7 +104,7 @@ namespace ClassicUO.Game.Managers
             {
                 return string.Empty;
             }
-            
+
             if (World.Player == null)
             {
                 // Use sample values for preview

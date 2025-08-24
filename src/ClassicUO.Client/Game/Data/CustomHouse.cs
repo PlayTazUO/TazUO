@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -82,7 +82,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 17)
+            if (scanf.Length >= 18)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Style) && int.TryParse(scanf[2], out TID) && int.TryParse(scanf[3], out South1) && int.TryParse(scanf[4], out South2) && int.TryParse(scanf[5], out South3) && int.TryParse(scanf[6], out Corner) && int.TryParse(scanf[7], out East1) && int.TryParse(scanf[8], out East2) && int.TryParse(scanf[9], out East3) && int.TryParse(scanf[10], out Post) && int.TryParse(scanf[11], out WindowS) && int.TryParse(scanf[12], out AltWindowS) && int.TryParse(scanf[13], out WindowE) && int.TryParse(scanf[14], out AltWindowE) && int.TryParse(scanf[15], out SecondAltWindowS) && int.TryParse(scanf[16], out SecondAltWindowE) && int.TryParse(scanf[17], out FeatureMask);
             }
@@ -156,7 +156,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 17)
+            if (scanf.Length >= 18)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out F1) && int.TryParse(scanf[2], out F2) && int.TryParse(scanf[3], out F3) && int.TryParse(scanf[4], out F4) && int.TryParse(scanf[5], out F5) && int.TryParse(scanf[6], out F6) && int.TryParse(scanf[7], out F7) && int.TryParse(scanf[8], out F8) && int.TryParse(scanf[9], out F9) && int.TryParse(scanf[10], out F10) && int.TryParse(scanf[11], out F11) && int.TryParse(scanf[12], out F12) && int.TryParse(scanf[13], out F13) && int.TryParse(scanf[14], out F14) && int.TryParse(scanf[15], out F15) && int.TryParse(scanf[16], out F16) && int.TryParse(scanf[17], out FeatureMask);
             }
@@ -203,7 +203,7 @@ namespace ClassicUO.Game.Data
         public const int GRAPHICS_COUNT = 16;
         public ushort[] Graphics = new ushort[GRAPHICS_COUNT];
 
-        public int Style, TID, North, East, South, West, NSCrosspiece, EWCrosspiece, NDent, SDent, WDent, NTPiece, ETPiece, STPiece, WTPiece, XPiece, Extra, Piece;
+        public int Style, TID, North, East, South, West, NSCrosspiece, EWCrosspiece, NDent, EDent, SDent, WDent, NTPiece, ETPiece, STPiece, WTPiece, XPiece, ExtraPiece;
 
         public override bool Parse(string text)
         {
@@ -211,9 +211,9 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 19)
+            if (scanf.Length >= 20)
             {
-                result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Style) && int.TryParse(scanf[2], out TID) && int.TryParse(scanf[3], out North) && int.TryParse(scanf[4], out East) && int.TryParse(scanf[5], out South) && int.TryParse(scanf[6], out West) && int.TryParse(scanf[7], out NSCrosspiece) && int.TryParse(scanf[8], out EWCrosspiece) && int.TryParse(scanf[9], out NDent) && int.TryParse(scanf[10], out SDent) && int.TryParse(scanf[11], out WDent) && int.TryParse(scanf[12], out NTPiece) && int.TryParse(scanf[13], out ETPiece) && int.TryParse(scanf[14], out STPiece) && int.TryParse(scanf[15], out WTPiece) && int.TryParse(scanf[16], out XPiece) && int.TryParse(scanf[17], out Extra) && int.TryParse(scanf[18], out Piece) && int.TryParse(scanf[19], out FeatureMask);
+                result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Style) && int.TryParse(scanf[2], out TID) && int.TryParse(scanf[3], out North) && int.TryParse(scanf[4], out East) && int.TryParse(scanf[5], out South) && int.TryParse(scanf[6], out West) && int.TryParse(scanf[7], out NSCrosspiece) && int.TryParse(scanf[8], out EWCrosspiece) && int.TryParse(scanf[9], out NDent) && int.TryParse(scanf[10], out EDent) && int.TryParse(scanf[11], out SDent) && int.TryParse(scanf[12], out WDent) && int.TryParse(scanf[13], out NTPiece) && int.TryParse(scanf[14], out ETPiece) && int.TryParse(scanf[15], out STPiece) && int.TryParse(scanf[16], out WTPiece) && int.TryParse(scanf[17], out XPiece) && int.TryParse(scanf[18], out ExtraPiece) && int.TryParse(scanf[19], out FeatureMask);
             }
 
             if (result)
@@ -225,15 +225,15 @@ namespace ClassicUO.Game.Data
                 Graphics[4] = (ushort) NSCrosspiece;
                 Graphics[5] = (ushort) EWCrosspiece;
                 Graphics[6] = (ushort) NDent;
-                Graphics[7] = (ushort) SDent;
-                Graphics[8] = (ushort) WDent;
-                Graphics[9] = (ushort) NTPiece;
-                Graphics[10] = (ushort) ETPiece;
-                Graphics[11] = (ushort) STPiece;
-                Graphics[12] = (ushort) WTPiece;
-                Graphics[13] = (ushort) XPiece;
-                Graphics[14] = (ushort) Extra;
-                Graphics[15] = (ushort) Piece;
+                Graphics[7] = (ushort) EDent;
+                Graphics[8] = (ushort) SDent;
+                Graphics[9] = (ushort) WDent;
+                Graphics[10] = (ushort) NTPiece;
+                Graphics[11] = (ushort) ETPiece;
+                Graphics[12] = (ushort) STPiece;
+                Graphics[13] = (ushort) WTPiece;
+                Graphics[14] = (ushort) XPiece;
+                Graphics[15] = (ushort) ExtraPiece;
             }
 
             return result;
@@ -270,7 +270,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 11)
+            if (scanf.Length >= 12)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Style) && int.TryParse(scanf[2], out TID) && int.TryParse(scanf[3], out Piece1) && int.TryParse(scanf[4], out Piece2) && int.TryParse(scanf[5], out Piece3) && int.TryParse(scanf[6], out Piece4) && int.TryParse(scanf[7], out Piece5) && int.TryParse(scanf[8], out Piece6) && int.TryParse(scanf[9], out Piece7) && int.TryParse(scanf[10], out Piece8) && int.TryParse(scanf[11], out FeatureMask);
             }
@@ -321,7 +321,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 9)
+            if (scanf.Length >= 10)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Piece1) && int.TryParse(scanf[2], out Piece2) && int.TryParse(scanf[3], out Piece3) && int.TryParse(scanf[4], out Piece4) && int.TryParse(scanf[5], out Piece5) && int.TryParse(scanf[6], out Piece6) && int.TryParse(scanf[7], out Piece7) && int.TryParse(scanf[8], out Piece8) && int.TryParse(scanf[9], out FeatureMask);
             }
@@ -368,7 +368,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 17)
+            if (scanf.Length >= 18)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out F1) && int.TryParse(scanf[2], out F2) && int.TryParse(scanf[3], out F3) && int.TryParse(scanf[4], out F4) && int.TryParse(scanf[5], out F5) && int.TryParse(scanf[6], out F6) && int.TryParse(scanf[7], out F7) && int.TryParse(scanf[8], out F8) && int.TryParse(scanf[9], out F9) && int.TryParse(scanf[10], out F10) && int.TryParse(scanf[11], out F11) && int.TryParse(scanf[12], out F12) && int.TryParse(scanf[13], out F13) && int.TryParse(scanf[14], out F14) && int.TryParse(scanf[15], out F15) && int.TryParse(scanf[16], out F16) && int.TryParse(scanf[17], out FeatureMask);
             }
@@ -423,7 +423,7 @@ namespace ClassicUO.Game.Data
 
             bool result = false;
 
-            if (scanf.Length >= 14)
+            if (scanf.Length >= 15)
             {
                 result = int.TryParse(scanf[0], out Category) && int.TryParse(scanf[1], out Block) && int.TryParse(scanf[2], out North) && int.TryParse(scanf[3], out East) && int.TryParse(scanf[4], out South) && int.TryParse(scanf[5], out West) && int.TryParse(scanf[6], out Squared1) && int.TryParse(scanf[7], out Squared2) && int.TryParse(scanf[8], out Rounded1) && int.TryParse(scanf[9], out Rounded2) && int.TryParse(scanf[10], out MultiNorth) && int.TryParse(scanf[11], out MultiEast) && int.TryParse(scanf[12], out MultiSouth) && int.TryParse(scanf[13], out MultiWest) && int.TryParse(scanf[14], out FeatureMask);
             }

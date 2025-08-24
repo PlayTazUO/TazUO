@@ -117,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
             // KR Packet option
             if (!_readOnly)
             {
-                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, "Use KR Equip Packets (faster)", 1, 0xFFFF, true)
+                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, "Use Equip Packets (faster)", 1, 0xFFFF, true)
                 {
                     X = 300,
                     Y = 75,
@@ -128,6 +128,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _config.UseKREquipPacket = krPacketCheckbox.IsChecked;
                     DressAgentManager.Instance.Save();
                 };
+                krPacketCheckbox.SetTooltip("Not all servers support this.");
                 Add(krPacketCheckbox);
             }
 
@@ -248,6 +249,8 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var newConfig = _allConfigs[selectedIndex];
 
+                if (newConfig == _config) return;
+
                 // Check if this is a config from another character (read-only)
                 bool isOtherCharacter = newConfig.CharacterName != ProfileManager.CurrentProfile?.CharacterName;
 
@@ -256,25 +259,6 @@ namespace ClassicUO.Game.UI.Gumps
 
                 // Rebuild the gump with the new config
                 BuildGump();
-            }
-        }
-
-        private void RefreshConfigDropdown()
-        {
-            // Rebuild the dropdown options to reflect any name changes
-            if (_configCombobox != null && _allConfigs != null)
-            {
-                string[] configOptions = _allConfigs.Select(c =>
-                    c.CharacterName == ProfileManager.CurrentProfile?.CharacterName
-                        ? c.Name
-                        : $"{c.Name} ({c.CharacterName})"
-                ).ToArray();
-
-                int currentIndex = _allConfigs.FindIndex(c => c == _config);
-                if (currentIndex != -1)
-                {
-                    _configCombobox.SelectedIndex = currentIndex;
-                }
             }
         }
 
@@ -365,7 +349,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     // Item name label with layer info
                     string layerName = ((Layer)item.Layer).ToString();
-                    var nameLabel = new Label($"{item.Name} [{layerName}] ({item.Serial})", true, 0xFFFF, font: 1)
+                    var nameLabel = new Label($"{item.Name} [{layerName}] ({item.Serial})", true, 0xFFFF, 300, 1)
                     {
                         X = 5,
                         Y = 5

@@ -4,14 +4,21 @@ using ClassicUO.Game.UI.Controls;
 
 namespace ClassicUO.Game.UI;
 
+public enum PositionerDirection
+{
+    Vertical,
+    Horizontal
+}
+
 public class Positioner
 {
     public int TopPadding;
     public int LeftPadding;
     public int BlankLineHeight;
     public int IndentWidth;
+    public PositionerDirection Direction;
 
-    public int X, Y, LastY, LastHeight;
+    public int X, Y, LastY, LastHeight, LastX, LastWidth;
 
     // Table positioning properties
     private bool _tableMode = false;
@@ -24,15 +31,16 @@ public class Positioner
     private int _maxRowHeight = 0;
     private Dictionary<int, TableColumnAlignment> _tableColumnAlignments = new();
 
-    public Positioner(int leftPadding = 2, int topPadding = 5, int blankLineHeight = 20, int indentation = 40)
+    public Positioner(int leftPadding = 2, int topPadding = 5, int blankLineHeight = 20, int indentation = 40, PositionerDirection direction = PositionerDirection.Vertical)
     {
+        Direction = direction;
         LeftPadding = leftPadding;
         TopPadding = topPadding;
         BlankLineHeight = blankLineHeight;
         IndentWidth = indentation;
 
         Y = LastY = TopPadding;
-        X = leftPadding;
+        X = LastX = LeftPadding;
     }
 
     public void BlankLine()
@@ -42,18 +50,40 @@ public class Positioner
             EndTable();
         }
 
-        LastY = Y;
-        Y += BlankLineHeight;
+        if (Direction == PositionerDirection.Vertical)
+        {
+            LastY = Y;
+            Y += BlankLineHeight;
+        }
+        else
+        {
+            LastX = X;
+            X += BlankLineHeight;
+        }
     }
 
     public void Indent()
     {
-        X += IndentWidth;
+        if (Direction == PositionerDirection.Vertical)
+        {
+            X += IndentWidth;
+        }
+        else
+        {
+            Y += IndentWidth;
+        }
     }
 
     public void RemoveIndent()
     {
-        X -= IndentWidth;
+        if (Direction == PositionerDirection.Vertical)
+        {
+            X -= IndentWidth;
+        }
+        else
+        {
+            Y -= IndentWidth;
+        }
     }
 
     /// <summary>
@@ -135,9 +165,18 @@ public class Positioner
         c.X = X;
         c.Y = Y;
 
-        LastY = Y;
-        Y += c.Height + TopPadding;
-        LastHeight = c.Height;
+        if (Direction == PositionerDirection.Vertical)
+        {
+            LastY = Y;
+            Y += c.Height + TopPadding;
+            LastHeight = c.Height;
+        }
+        else
+        {
+            LastX = X;
+            X += c.Width + LeftPadding;
+            LastWidth = c.Width;
+        }
 
         return c;
     }
@@ -242,7 +281,7 @@ public class Positioner
             EndTable();
         }
 
-        X = LeftPadding;
+        X = LastX = LeftPadding;
         Y = LastY = TopPadding;
     }
 

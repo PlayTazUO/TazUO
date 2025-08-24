@@ -280,24 +280,6 @@ namespace ClassicUO.Game.Managers
         {
             if (config.UseKREquipPacket)
             {
-                // Use KR Equip Packets for faster operation
-                // First, collect layers that need to be unequipped (same logic as traditional method)
-                var layersToUnequip = new List<Layer>();
-                foreach (var dressItem in config.Items)
-                {
-                    if (!layersToUnequip.Contains((Layer)dressItem.Layer))
-                    {
-                        if (dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains(Layer.OneHanded))
-                            layersToUnequip.Add(Layer.OneHanded);
-                        if (dressItem.Layer == (byte)Layer.OneHanded && !layersToUnequip.Contains(Layer.TwoHanded))
-                            layersToUnequip.Add(Layer.TwoHanded);
-                        layersToUnequip.Add((Layer)dressItem.Layer);
-                    }
-                }
-
-                // Unequip conflicting layers first
-                if (layersToUnequip.Count > 0)
-                    AsyncNetClient.Socket.Send_UnequipMacroKR(layersToUnequip.ToArray().AsSpan());
 
                 // Then collect items to equip
                 var itemsToEquip = new List<uint>();

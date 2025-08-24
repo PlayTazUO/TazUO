@@ -57,6 +57,21 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             mainScrollArea.Add(pos.PositionRightOf(new Label("Allow extra properties", true, 0xffff), acceptExtraPropertiesCheckbox));
 
+            // Loot on match checkbox
+            string lootOnMatchTooltip =
+                "Automatically loot items that match this highlight configuration.\n" +
+                "When checked: Items matching this configuration will be added to the auto loot queue.";
+
+            Checkbox lootOnMatchCheckbox;
+            mainScrollArea.Add(pos.Position(lootOnMatchCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.LootOnMatch }));
+            lootOnMatchCheckbox.SetTooltip(lootOnMatchTooltip);
+            lootOnMatchCheckbox.ValueChanged += (s, e) =>
+            {
+                data.LootOnMatch = lootOnMatchCheckbox.IsChecked;
+            };
+
+            mainScrollArea.Add(pos.PositionRightOf(new Label("Auto loot on match", true, 0xffff), lootOnMatchCheckbox));
+
             InputField minPropertiesInput;
             mainScrollArea.Add(pos.Position(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
             minPropertiesInput.SetText(data.MinimumProperty.ToString());

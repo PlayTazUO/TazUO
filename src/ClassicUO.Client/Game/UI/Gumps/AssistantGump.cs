@@ -136,12 +136,12 @@ public class AssistantGump : BaseOptionsGump
 
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoBuyEnable, 0, profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b)));
         PositionHelper.BlankLine();
-        
+
         Control c;
         scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Max total items (0 = unlimited)", 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.BuyAgentMaxItems, (r) => { profile.BuyAgentMaxItems = r; })));
         c.SetTooltip("Maximum total items to buy in a single transaction. Set to 0 for unlimited.");
         PositionHelper.BlankLine();
-        
+
         scroll.Add(c = PositionHelper.PositionControl(new SliderWithLabel("Max unique items", 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.BuyAgentMaxUniques, (r) => { profile.BuyAgentMaxUniques = r; })));
         c.SetTooltip("Maximum number of different items to buy in a single transaction.");
         PositionHelper.BlankLine();
@@ -655,6 +655,12 @@ public class AssistantGump : BaseOptionsGump
         scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Use new bandage packet", 0, profile.BandageAgentUseNewPacket, b => profile.BandageAgentUseNewPacket = b)));
         PositionHelper.BlankLine();
 
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Bandage if Poisoned", 0, profile.BandageAgentCheckPoisoned, b => profile.BandageAgentCheckPoisoned = b)));
+        PositionHelper.BlankLine();
+
+        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Skip Bandage if Hidden", 0, profile.BandageAgentCheckHidden, b => profile.BandageAgentCheckHidden = b)));
+        PositionHelper.BlankLine();
+
         InputFieldWithLabel bandageGraphicInput = new("Bandage graphic ID", ThemeSettings.INPUT_WIDTH, $"0x{profile.BandageAgentGraphic:X4}", true, (s, e) =>
         {
             string text = ((BaseOptionsGump.InputField.StbTextBox)s).Text;
@@ -981,6 +987,13 @@ public class AssistantGump : BaseOptionsGump
         itemArea.Add(deleteButton);
         itemArea.ForceSizeUpdate();
         return itemArea;
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        DressAgentManager.Instance.Save();
+        OrganizerAgent.Instance.Save();
     }
 
     public enum PAGE

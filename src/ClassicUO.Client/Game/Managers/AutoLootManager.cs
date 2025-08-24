@@ -18,13 +18,16 @@ namespace ClassicUO.Game.Managers
         public static AutoLootManager Instance { get; private set; } = new ();
         public bool IsLoaded { get { return loaded; } }
         public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
+        public bool IsLooting => lootItems.Count > 0;
 
         private HashSet<uint> quickContainsLookup = new ();
+        private HashSet<uint> recentlyLooted = new();
         private static Queue<uint> lootItems = new ();
         private List<AutoLootConfigEntry> autoLootItems = new ();
         private bool loaded = false;
         private readonly string savePath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "AutoLoot.json");
         private long nextLootTime = Time.Ticks;
+        private long nextClearRecents = Time.Ticks + 5000;
         private ProgressBarGump progressBarGump;
         private int currentLootTotalCount = 0;
         private bool IsEnabled { get { return ProfileManager.CurrentProfile.EnableAutoLoot; } }
@@ -45,18 +48,19 @@ namespace ClassicUO.Game.Managers
 
         public void LootItem(Item item)
         {
-            if (item == null || !quickContainsLookup.Add(item.Serial)) return;
+            if (item == null || !recentlyLooted.Add(item.Serial) || !quickContainsLookup.Add(item.Serial)) return;
 
             lootItems.Enqueue(item);
             currentLootTotalCount++;
+            nextClearRecents = Time.Ticks + 5000;
         }
 
         public void ForceLootContainer(uint serial)
         {
             Item cont = World.Items.Get(serial);
-            
+
             if (cont == null) return;
-            
+
             if (cont.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange)
             {
                 for (LinkedObject i = cont.Items; i != null; i = i.Next)
@@ -72,7 +76,7 @@ namespace ClassicUO.Game.Managers
         private void CheckAndLoot(Item i)
         {
             if (!loaded || i == null || quickContainsLookup.Contains(i.Serial)) return;
-            
+
             if(i.IsCorpse)
             {
                 HandleCorpse(i);
@@ -104,7 +108,7 @@ namespace ClassicUO.Game.Managers
             }
             return false;
         }
-        
+
         /// <summary>
         /// Add an entry for auto looting to match against when opening corpses.
         /// </summary>
@@ -162,7 +166,7 @@ namespace ClassicUO.Game.Managers
                 autoLootItems.RemoveAt(removeAt);
             }
         }
-       
+
         /// <summary>
         /// Checks if item is a corpse, or if its root container is corpse and handles them appropriately.
         /// </summary>
@@ -184,7 +188,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
         }
-        
+
         public void OnSceneLoad()
         {
             Load();
@@ -204,7 +208,7 @@ namespace ClassicUO.Game.Managers
             EventSink.OnPositionChanged -= OnPositionChanged;
             Save();
         }
- 
+
         private void OnPositionChanged(object sender, PositionChangedArgs e)
         {
             if (!loaded) return;
@@ -212,7 +216,7 @@ namespace ClassicUO.Game.Managers
             if(ProfileManager.CurrentProfile.EnableScavenger)
                 foreach (Item item in World.Items.Values)
                 {
-                    if (item == null || !item.OnGround || item.IsCorpse) continue;
+                    if (item == null || !item.OnGround || item.IsCorpse || item.IsLocked) continue;
                     if (item.Distance >= 3) continue;
                     CheckAndLoot(item);
                 }
@@ -224,15 +228,23 @@ namespace ClassicUO.Game.Managers
 
             CheckCorpse((Item)sender);
         }
-        
+
         private void OnItemCreatedOrUpdated(object sender, EventArgs e)
         {
             if (!loaded || !IsEnabled) return;
-            
+
             if (sender is Item i)
+            {
                 CheckCorpse(i);
+
+                // Check for ground items to auto-loot (scavenger functionality)
+                if (ProfileManager.CurrentProfile.EnableScavenger && i.OnGround && !i.IsCorpse && !i.IsLocked && i.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange)
+                {
+                    CheckAndLoot(i);
+                }
+            }
         }
-        
+
         private void OnOPLReceived(object sender, OPLEventArgs e)
         {
             if (!loaded || !IsEnabled) return;
@@ -245,21 +257,26 @@ namespace ClassicUO.Game.Managers
         {
             if (!loaded || !IsEnabled || !World.InGame) return;
 
-            if (lootItems.Count == 0)
-            {
-                progressBarGump?.Dispose();
-                return;
-            }
-
             if (nextLootTime > Time.Ticks) return;
 
             if (Client.Game.GameCursor.ItemHold.Enabled)
                 return; //Prevent moving stuff while holding an item.
 
+            if (lootItems.Count == 0)
+            {
+                progressBarGump?.Dispose();
+                if (Time.Ticks > nextClearRecents)
+                {
+                    recentlyLooted.Clear();
+                    nextClearRecents = Time.Ticks + 5000;
+                }
+                return;
+            }
+
             var moveItem = lootItems.Dequeue();
             if (moveItem != 0)
             {
-                if (lootItems.Count == 0) //Que emptied out                
+                if (lootItems.Count == 0) //Que emptied out
                     currentLootTotalCount = 0;
 
                 quickContainsLookup.Remove(moveItem);
@@ -281,10 +298,9 @@ namespace ClassicUO.Game.Managers
                         if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                             return;
                     }
-                    
+
                     MoveItemQueue.Instance?.EnqueueQuick(m);
-                    
-                    //GameActions.GrabItem(m, m.Amount);
+
                     nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
                 }
             }

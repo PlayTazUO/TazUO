@@ -25,6 +25,8 @@ public enum HideHudFlags : ulong //Up to 63 gump types for ulong
     CounterBar = 1 << 16,
     InfoBar = 1 << 17,
     SpellIcons = 1 << 18,
+    NameOverheadGump = 1 << 19,
+    ScriptManagerGump = 1 << 20,
 
-    All = (1UL << 19) - 1 //Update 19 if more are added
+    All = (1UL << 21) - 1 //Update 21 if more are added
 }

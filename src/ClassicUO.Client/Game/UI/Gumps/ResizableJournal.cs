@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
+using ClassicUO.Utility.Logging;
 using Point = Microsoft.Xna.Framework.Point;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -408,7 +409,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
 
             string text;
-            if (string.IsNullOrEmpty(journalEntry.Name))
+            if (string.IsNullOrEmpty(journalEntry.Name) || string.Equals(journalEntry.Name, journalEntry.Text.Trim())) //Text is apparently prepended with a space from servers.
             {
                 text = journalEntry.Text;
             }

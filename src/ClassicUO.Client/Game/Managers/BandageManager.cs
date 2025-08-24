@@ -18,7 +18,8 @@ namespace ClassicUO.Game.Managers
         private ushort bandageGraphic => ProfileManager.CurrentProfile?.BandageAgentGraphic ?? 0x0E21;
         private bool useNewBandagePacket => ProfileManager.CurrentProfile?.BandageAgentUseNewPacket ?? true;
         private int hpPercentageThreshold => ProfileManager.CurrentProfile?.BandageAgentHPPercentage ?? 80;
-
+        public bool UseOnPoisoned => ProfileManager.CurrentProfile?.BandageAgentCheckPoisoned ?? false;
+        public bool CheckHidden => ProfileManager.CurrentProfile?.BandageAgentCheckHidden ?? false;
         public bool HasBandagingBuff { get; set; } = false;
 
         private BandageManager()
@@ -63,7 +64,13 @@ namespace ClassicUO.Game.Managers
 
             var currentHpPercentage = (int)((double)newHp / World.Player.HitsMax * 100);
 
-            if (currentHpPercentage >= hpPercentageThreshold)
+            // Check for hidden status
+            if (CheckHidden && World.Player.IsHidden)
+                return;
+
+            // Check for poison status #thanks taz
+            if ((!UseOnPoisoned || !World.Player.IsPoisoned) &&
+                currentHpPercentage >= hpPercentageThreshold)
                 return;
 
             // If using buff checking, only prevent healing if buff is present
@@ -97,7 +104,7 @@ namespace ClassicUO.Game.Managers
 
                 // Set up auto-target before double-clicking
                 TargetManager.SetAutoTarget(World.Player.Serial, TargetType.Beneficial, CursorTarget.Object);
-                
+
                 GameActions.DoubleClick(bandage.Serial);
                 nextBandageTime = Time.Ticks + healDelayMs;
             }

@@ -161,15 +161,17 @@ namespace ClassicUO.Configuration
         public bool EnableMousewheelScaleZoom { get; set; }
         public bool RestoreScaleAfterUnpressCtrl { get; set; }
         public bool BandageSelfOld { get; set; } = true;
-        
+
         // Bandage Agent Settings
         public bool EnableBandageAgent { get; set; } = false;
         public int BandageAgentDelay { get; set; } = 3000;
         public bool BandageAgentCheckForBuff { get; set; } = false;
         public ushort BandageAgentGraphic { get; set; } = 0x0E21;
         public bool BandageAgentUseNewPacket { get; set; } = true;
+        public bool BandageAgentCheckHidden { get; set; } = false;
+        public bool BandageAgentCheckPoisoned { get; set; } = false;
         public int BandageAgentHPPercentage { get; set; } = 80;
-        
+
         public bool EnableDeathScreen { get; set; } = true;
         public bool EnableBlackWhiteEffect { get; set; } = true;
         public ushort HiddenBodyHue { get; set; } = 0x038E;

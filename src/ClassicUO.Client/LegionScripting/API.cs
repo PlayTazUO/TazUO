@@ -1609,6 +1609,64 @@ namespace ClassicUO.LegionScripting
         public void CancelTarget() => MainThreadQueue.InvokeOnMainThread(TargetManager.CancelTarget);
 
         /// <summary>
+        /// Sets a pre-target that will be automatically applied when the next targeting request comes from the server.
+        /// This is useful for automating actions that require targeting, like using bandages or spells.
+        /// Example:
+        /// ```py
+        /// # Pre-target self for healing
+        /// API.PreTarget(API.Player.Serial, "beneficial")
+        /// API.UseObject(bandage_item)  # This will automatically target self when targeting request comes
+        ///
+        /// # Pre-target an enemy for attack spells
+        /// enemy = API.FindMobile(mobile_serial)
+        /// API.PreTarget(enemy.Serial, "harmful")
+        /// API.CastSpell("Lightning")  # This will automatically target the enemy
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial of the entity to pre-target</param>
+        /// <param name="targetType">Type of target: "neutral"/"neut"/"n", "harmful"/"harm"/"h", "beneficial"/"ben"/"heal"/"b" (default: "neutral")</param>
+        public void PreTarget(uint serial, string targetType = "neutral") => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            TargetType type;
+            switch (targetType.ToLower())
+            {
+                case "harmful":
+                case "harm":
+                case "h":
+                    type = TargetType.Harmful;
+                    break;
+                case "beneficial":
+                case "ben":
+                case "heal":
+                case "b":
+                    type = TargetType.Beneficial;
+                    break;
+                case "neutral":
+                case "neut":
+                case "n":
+                default:
+                    type = TargetType.Neutral;
+                    break;
+            }
+
+            TargetManager.SetAutoTarget(serial, type, CursorTarget.Object);
+        });
+
+        /// <summary>
+        /// Cancels any active pre-target.
+        /// Example:
+        /// ```py
+        /// API.PreTarget(enemy.Serial, "harmful")
+        /// # Changed my mind, cancel the pre-target
+        /// API.CancelPreTarget()
+        /// ```
+        /// </summary>
+        public void CancelPreTarget() => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            TargetManager.NextAutoTarget.Clear();
+        });
+
+        /// <summary>
         /// Check if the player has a target cursor.
         /// Example:
         /// ```py
@@ -2301,9 +2359,9 @@ namespace ClassicUO.LegionScripting
         public List<PyStatic> GetStaticsAt(int x, int y) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             var statics = new List<PyStatic>();
-            
+
             if (World.Map is null) return new List<PyStatic>();
-            
+
             var chunk = World.Map.GetChunk(x, y, false);
 
             if (chunk != null)
@@ -2343,7 +2401,7 @@ namespace ClassicUO.LegionScripting
         public List<PyStatic> GetStaticsInArea(int x1, int y1, int x2, int y2) => MainThreadQueue.InvokeOnMainThread(() =>
         {
             var statics = new List<PyStatic>();
-            
+
             if (World.Map is null) return new List<PyStatic>();
 
             // Ensure coordinates are in correct order
@@ -2375,6 +2433,91 @@ namespace ClassicUO.LegionScripting
             }
 
             return statics;
+        });
+
+        /// <summary>
+        /// Gets all multi objects at a specific position (x, y coordinates).
+        /// This includes server-side house data.
+        /// Example:
+        /// ```py
+        /// multis = API.GetMultisAt(1000, 1000)
+        /// for m in multis:
+        ///     API.SysMsg(f"Multi Graphic: {m.Graphic}, Z: {m.Z}")
+        /// ```
+        /// </summary>
+        /// <param name="x">X coordinate</param>
+        /// <param name="y">Y coordinate</param>
+        /// <returns>List of PyMulti objects at the specified position</returns>
+        public List<PyMulti> GetMultisAt(int x, int y) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            var multis = new List<PyMulti>();
+
+            if (World.Map is null) return new List<PyMulti>();
+
+            // Check server-side houses for Multi components
+            if (World.HouseManager != null)
+            {
+                foreach (var house in World.HouseManager.Houses)
+                {
+                    var houseMultis = house.GetMultiAt(x, y);
+                    foreach (var houseMulti in houseMultis)
+                    {
+                        multis.Add(new PyMulti(houseMulti));
+                    }
+                }
+            }
+
+            return multis;
+        });
+
+        /// <summary>
+        /// Gets all multi objects within a rectangular area defined by coordinates.
+        /// This includes server-side house data.
+        /// Example:
+        /// ```py
+        /// multis = API.GetMultisInArea(1000, 1000, 1010, 1010)
+        /// API.SysMsg(f"Found {len(multis)} multis in area")
+        /// for m in multis:
+        ///     API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
+        /// ```
+        /// </summary>
+        /// <param name="x1">Starting X coordinate</param>
+        /// <param name="y1">Starting Y coordinate</param>
+        /// <param name="x2">Ending X coordinate</param>
+        /// <param name="y2">Ending Y coordinate</param>
+        /// <returns>List of PyMulti objects within the specified area</returns>
+        public List<PyMulti> GetMultisInArea(int x1, int y1, int x2, int y2) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            var multis = new List<PyMulti>();
+
+            if (World.Map is null) return new List<PyMulti>();
+
+            // Ensure coordinates are in correct order
+            int minX = Math.Min(x1, x2);
+            int maxX = Math.Max(x1, x2);
+            int minY = Math.Min(y1, y2);
+            int maxY = Math.Max(y1, y2);
+
+            // Check server-side houses for Multi components in the area
+            if (World.HouseManager != null)
+            {
+                foreach (var house in World.HouseManager.Houses)
+                {
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        for (int y = minY; y <= maxY; y++)
+                        {
+                            var houseMultis = house.GetMultiAt(x, y);
+                            foreach (var houseMulti in houseMultis)
+                            {
+                                multis.Add(new PyMulti(houseMulti));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return multis;
         });
 
         #region Gumps

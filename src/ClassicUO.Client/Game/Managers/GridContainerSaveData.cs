@@ -44,13 +44,14 @@ public class GridContainerSaveData
 
     private void RemoveOldContainers()
     {
-        var now = (DateTimeOffset.UtcNow - INACTIVE_CUTOFF).ToUnixTimeSeconds();
+        var cutoffTime = (DateTimeOffset.UtcNow - INACTIVE_CUTOFF).ToUnixTimeSeconds();
 
         List<GridContainerEntry> toRemove = new();
 
         foreach (var entry in _entries.Values)
         {
-            if (entry.LastOpened < now)
+            // Only remove if LastOpened is valid (not 0) and actually old
+            if (entry.LastOpened > 0 && entry.LastOpened < cutoffTime)
                 toRemove.Add(entry);
         }
 

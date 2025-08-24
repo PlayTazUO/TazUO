@@ -1689,7 +1689,7 @@ namespace ClassicUO.Game.GameObjects
                     int newY = y;
                     sbyte newZ = z;
 
-                    if (!Pathfinder.CanWalkObstacules(ref newDir, ref newX, ref newY, ref newZ))
+                    if (!Pathfinder.CanWalk(ref newDir, ref newX, ref newY, ref newZ))
                     {
                         return false;
                     }
@@ -1715,7 +1715,7 @@ namespace ClassicUO.Game.GameObjects
                     int newY = y;
                     sbyte newZ = z;
 
-                    if (!Pathfinder.CanWalkObstacules(ref newDir, ref newX, ref newY, ref newZ))
+                    if (!Pathfinder.CanWalk(ref newDir, ref newX, ref newY, ref newZ))
                     {
                         if ((oldDirection & Direction.Mask) == newDir)
                         {
@@ -1805,7 +1805,6 @@ namespace ClassicUO.Game.GameObjects
 
         }
 
-        // Funções auxiliares para contornar obstáculos
         bool IsCardinalDirection(Direction direction)
         {
             return direction == Direction.North || direction == Direction.South ||
@@ -1814,13 +1813,11 @@ namespace ClassicUO.Game.GameObjects
 
         bool IsObstacle(Direction direction, int x, int y, sbyte z)
         {
-            // Verifica se há um obstáculo usando a função de caminho
-            return !Pathfinder.CanWalkObstacules(ref direction, ref x, ref y, ref z);
+            return !Pathfinder.CanWalk(ref direction, ref x, ref y, ref z);
         }
 
         Direction TryToAvoid(Direction direction, int x, int y, sbyte z)
         {
-            // Tenta contornar o obstáculo movendo-se lateralmente
             switch (direction)
             {
                 case Direction.North:

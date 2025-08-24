@@ -1036,9 +1036,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (obj is Static || obj is Multi || obj is Item)
                     {
-                        ref StaticTiles itemdata = ref TileDataLoader.Instance.StaticData[obj.Graphic];
-
-                        if (itemdata.IsSurface && Pathfinder.WalkTo(obj.X, obj.Y, obj.Z, 0))
+                        if (Pathfinder.WalkTo(obj.X, obj.Y, obj.Z, 0))
                         {
                             World.Player.AddMessage
                             (
@@ -1091,11 +1089,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (obj is Static || obj is Multi || obj is Item)
                     {
-                        ref StaticTiles itemdata = ref TileDataLoader.Instance.StaticData[
-                            obj.Graphic
-                        ];
-
-                        if (itemdata.IsSurface && Pathfinder.WalkTo(obj.X, obj.Y, obj.Z, 0))
+                        if (Pathfinder.WalkTo(obj.X, obj.Y, obj.Z, 0))
                         {
                             World.Player.AddMessage(
                                 MessageType.Label,

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
@@ -26,21 +28,8 @@ namespace ClassicUO.Game.Managers
         public static void Load()
         {
             Instance = new OrganizerAgent();
-
-            try
-            {
-                string savePath = Path.Combine(GetDataPath(), "OrganizerConfig.json");
-                if (File.Exists(savePath))
-                {
-                    var json = File.ReadAllText(savePath);
-                    Instance.OrganizerConfigs = JsonSerializer.Deserialize<List<OrganizerConfig>>(json) ?? new List<OrganizerConfig>();
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error loading OrganizerAgent config: {ex}");
-                Instance.OrganizerConfigs = new List<OrganizerConfig>();
-            }
+            if (JsonHelper.Load<List<OrganizerConfig>>(Path.Combine(GetDataPath(), "OrganizerConfig.json"), OrganizerAgentContext.Default.ListOrganizerConfig, out var configs))
+                Instance.OrganizerConfigs = configs;
 
             // Register organizer commands if they don't already exist
             RegisterCommands();
@@ -51,7 +40,7 @@ namespace ClassicUO.Game.Managers
             // Check if commands already exist before registering
             if (!CommandManager.Commands.ContainsKey("organize"))
             {
-                CommandManager.Register("organize", (s) => 
+                CommandManager.Register("organize", (s) =>
                 {
                     if (s.Length == 0)
                     {
@@ -73,7 +62,7 @@ namespace ClassicUO.Game.Managers
 
             if (!CommandManager.Commands.ContainsKey("organizer"))
             {
-                CommandManager.Register("organizer", (s) => 
+                CommandManager.Register("organizer", (s) =>
                 {
                     if (s.Length == 0)
                     {
@@ -95,28 +84,21 @@ namespace ClassicUO.Game.Managers
 
             if (!CommandManager.Commands.ContainsKey("organizerlist"))
             {
-                CommandManager.Register("organizerlist", (s) => 
+                CommandManager.Register("organizerlist", (s) =>
                 {
                     Instance?.ListOrganizers();
                 });
             }
         }
 
+        public void Save()
+        {
+            JsonHelper.SaveAndBackup(OrganizerConfigs, Path.Combine(GetDataPath(), "OrganizerConfig.json"), OrganizerAgentContext.Default.ListOrganizerConfig);
+        }
+
         public static void Unload()
         {
-            if (Instance != null)
-            {
-                try
-                {
-                    string savePath = Path.Combine(GetDataPath(), "OrganizerConfig.json");
-                    var json = JsonSerializer.Serialize(Instance.OrganizerConfigs, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(savePath, json);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error saving OrganizerAgent config: {ex}");
-                }
-            }
+            Instance?.Save();
 
             // Unregister commands
             UnregisterCommands();
@@ -307,6 +289,10 @@ namespace ClassicUO.Game.Managers
             return itemsToMove.Count;
         }
     }
+
+    [JsonSerializable(typeof(List<OrganizerAgent>))]
+    internal partial class OrganizerAgentContext : JsonSerializerContext
+    { }
 
     internal class OrganizerConfig
     {
