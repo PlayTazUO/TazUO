@@ -51,6 +51,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using ClassicUO.LegionScripting;
+using Constants = ClassicUO.Game.Constants;
 
 namespace ClassicUO.Network
 {
@@ -6773,6 +6775,7 @@ namespace ClassicUO.Network
         )
         {
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordWaitForGump(gumpID.ToString());
+            ScriptingInfoGump.AddOrUpdateInfo("Last Gump Opened", gumpID);
             List<string> cmdlist = _parser.GetTokens(layout);
             int cmdlen = cmdlist.Count;
 

@@ -602,6 +602,7 @@ namespace ClassicUO.Game
 
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordAttack(serial);
+            ScriptingInfoGump.AddOrUpdateInfo("Last Attacked", serial);
 
             TargetManager.LastAttack = serial;
             Socket.Send_AttackRequest(serial);
@@ -617,6 +618,8 @@ namespace ClassicUO.Game
             // Record action for script recording (only for items)
             if (SerialHelper.IsItem(serial))
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseItem(serial);
+
+            ScriptingInfoGump.AddOrUpdateInfo("Last Object", serial);
 
             if (serial != World.Player && SerialHelper.IsMobile(serial) && World.Player.InWarMode)
             {
@@ -861,6 +864,8 @@ namespace ClassicUO.Game
             Client.Game.GameCursor.ItemHold.Set(item, (ushort)amount, offset);
             Client.Game.GameCursor.ItemHold.IsGumpTexture = is_gump;
             Socket.Send_PickUpRequest(item, (ushort)amount);
+            ScriptingInfoGump.AddOrUpdateInfo("Last Picked Up Item", item.Serial);
+
 
             if (item.OnGround)
             {
@@ -929,6 +934,7 @@ namespace ClassicUO.Game
         {
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
+            ScriptingInfoGump.AddOrUpdateInfo("Last Gump Response", button);
 
             Socket.Send_GumpResponse(local,
                                      server,
@@ -1031,7 +1037,9 @@ namespace ClassicUO.Game
                 Socket.Send_CastSpell(index);
 
                 // Record action for script recording
-                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(SpellDefinition.FullIndexGetSpell(index).Name);
+                var name = SpellDefinition.FullIndexGetSpell(index).Name;
+                ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(name);
+                ScriptingInfoGump.AddOrUpdateInfo("Last Spell", name);
             }
         }
 
@@ -1047,6 +1055,7 @@ namespace ClassicUO.Game
             {
                 // Record action for script recording
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordCastSpell(name);
+                ScriptingInfoGump.AddOrUpdateInfo("Last Spell", name);
 
                 CastSpell(spellDef.ID);
                 return true;
@@ -1094,6 +1103,7 @@ namespace ClassicUO.Game
                 if (index < World.Player.Skills.Length)
                     skillName = World.Player.Skills[index].Name;
                 ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordUseSkill(skillName);
+                ScriptingInfoGump.AddOrUpdateInfo("Last Skill", skillName);
 
                 LastSkillIndex = index;
                 Socket.Send_UseSkill(index);
@@ -1116,6 +1126,7 @@ namespace ClassicUO.Game
         {
             // Record action for script recording
             ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordContextMenu(serial, index);
+            ScriptingInfoGump.AddOrUpdateInfo("Last Context Menu response", index);
 
             Socket.Send_PopupMenuSelection(serial, index);
         }
