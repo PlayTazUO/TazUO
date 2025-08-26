@@ -1045,7 +1045,7 @@ public class AssistantGump : BaseOptionsGump
         c.X = rsp.Width + 1;
         c.Y = (rsp.Height - c.Height) / 2;
 
-        InputField input = new InputField(100, 30, 100, ThemeSettings.CHECKBOX_SIZE, itemConfig.Amount.ToString(), false,
+        InputField input = new InputField(100, ThemeSettings.CHECKBOX_SIZE, 100, 60000, itemConfig.Amount.ToString(), true,
         onTextChanges: (s, e) =>
         {
             if (ushort.TryParse(((InputField.StbTextBox)s).Text, out ushort amount))

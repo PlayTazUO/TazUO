@@ -168,9 +168,8 @@ namespace ClassicUO.Game.Managers
             if (macroManager == null) return;
 
             var config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-            int index = OrganizerConfigs.IndexOf(config);
             if (config == null) return;
-
+            int index = OrganizerConfigs.IndexOf(config);
             var macro = new Macro($"Organizer: {config.Name}", SDL2.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"organize {index}") };
 
             macroManager.PushToBack(macro);
@@ -262,7 +261,7 @@ namespace ClassicUO.Game.Managers
             var destCont = World.Items.Get(config.DestContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
             if (destCont == null)
             {
-                GameActions.Print($"Cannot find target bag for organizer '{config.Name}' (Serial: {config.DestContSerial:X})");
+                GameActions.Print($"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})");
                 return;
             }
 
@@ -309,15 +308,15 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private int OrganizeItems(Item SourceCont, Item DestCont, OrganizerConfig config)
+        private int OrganizeItems(Item sourceCont, Item destCont, OrganizerConfig config)
         {
             var itemsToMove = new List<(Item Item, ushort Amount)>();
 
-            var sourceItems = (Item)SourceCont.Items;
+            var sourceItems = (Item)sourceCont.Items;
 
-            var destItems = (Item)DestCont.Items;
+            var destItems = (Item)destCont.Items;
 
-            if (SourceCont.Serial == DestCont.Serial)
+            if (sourceCont.Serial == destCont.Serial)
             {
                 for (var item = sourceItems; item != null; item = (Item)item.Next)
                 {
@@ -339,7 +338,7 @@ namespace ClassicUO.Game.Managers
             else
             {
                 // Build a lookup of existing item counts in the destination container
-                var destItemCounts = new Dictionary<(ushort Graphic, ushort Hue), ushort>();
+                var destItemCounts = new Dictionary<(ushort Graphic, ushort Hue), int>();
                 for (var item = destItems; item != null; item = (Item)item.Next)
                 {
                     var key = (item.Graphic, item.Hue);
@@ -364,7 +363,7 @@ namespace ClassicUO.Game.Managers
                             else
                             {
                                 // Move up to the configured amount, considering existing items in destination
-                                destItemCounts.TryGetValue((item.Graphic, item.Hue), out ushort existingCount);
+                                destItemCounts.TryGetValue((item.Graphic, item.Hue), out int existingCount);
                                 int toMove = itemConfig.Amount - existingCount;
                                 if (toMove > 0)
                                 {
@@ -382,7 +381,7 @@ namespace ClassicUO.Game.Managers
             // Move matching items to target bag using MoveItemQueue
             foreach (var itemToMove in itemsToMove)
             {
-                MoveItemQueue.Instance?.Enqueue(itemToMove.Item.Serial, DestCont.Serial, itemToMove.Amount, 0xFFFF, 0xFFFF, 0);
+                MoveItemQueue.Instance?.Enqueue(itemToMove.Item.Serial, destCont.Serial, itemToMove.Amount, 0xFFFF, 0xFFFF, 0);
             }
 
             if (itemsToMove.Count > 0)
