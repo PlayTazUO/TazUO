@@ -849,6 +849,7 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildOrganizerConfigDetails(OrganizerConfig config, LeftSideMenuRightSideContent leftSideContent, ModernButton button)
     {
+        HBoxContainer box = new HBoxContainer(50);
         // Name input
         InputFieldWithLabel nameInput = null;
         nameInput = new InputFieldWithLabel("Name", ThemeSettings.INPUT_WIDTH, config.Name, false, (s, e) =>
@@ -902,10 +903,7 @@ public class AssistantGump : BaseOptionsGump
         ModernButton MacroButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Macro Button", Color.Yellow)
         {
             IsSelected = true,
-            X = dupeButton.X,
-            Y = dupeButton.Y + dupeButton.Width + 10,
         };
-        MacroButton.Y = enabledCheckbox.Y + 20;
         MacroButton.MouseUp += (sender, e) =>
         {
             OrganizerAgent.Instance?.CreateOrganizerMacroButton(config.Name);
@@ -934,7 +932,7 @@ public class AssistantGump : BaseOptionsGump
         };
         SourceButton.MouseUp += (s, e) =>
         {
-            GameActions.Print("Select source container", 62);
+            GameActions.Print("Select [SOURCE] Container", 82);
             var source = TargetHelper.TargetObject((source) =>
             {
                 if (!SerialHelper.IsItem(source))
@@ -943,8 +941,8 @@ public class AssistantGump : BaseOptionsGump
                     return;
                 }
                 config.SourceContSerial = source.Serial;
-                GameActions.Print($"Source container set to {source.Serial:X}");
-                leftSideContent.Update();
+                GameActions.Print($"Source container set to {source.Serial:X}", 63);
+                box.Update();
             });
         };
         leftSideContent.AddToRight(SourceButton);
@@ -957,7 +955,7 @@ public class AssistantGump : BaseOptionsGump
         };
         DestButton.MouseUp += (s, e) =>
         {
-            GameActions.Print("Select destination container", 62);
+            GameActions.Print("Select [DESTINATION] Container", 82);
             var destination = TargetHelper.TargetObject((destination) =>
             {
                 if (!SerialHelper.IsItem(destination))
@@ -966,13 +964,13 @@ public class AssistantGump : BaseOptionsGump
                     return;
                 }
                 config.DestContSerial = destination.Serial;
-                GameActions.Print($"Destination container set to {destination.Serial:X}");
-                leftSideContent.Update();
+                GameActions.Print($"Destination container set to {destination.Serial:X}", 63);
+                box.Update();
             });
         };
         leftSideContent.AddToRight(DestButton,false);
 
-        HBoxContainer box = new HBoxContainer(50);
+
         box.BlankLine();
         // Current source container display
         if (config.SourceContSerial != 0)
@@ -983,6 +981,8 @@ public class AssistantGump : BaseOptionsGump
         {
             box.Add(TextBox.GetOne($" [Source] \n Default: Player's Backpack", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.Green, TextBox.RTLOptions.Default()));
         }
+        box.BlankLine();
+        box.Add(TextBox.GetOne("-------->", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
         box.BlankLine();
         // Current destination container display
         if (config.DestContSerial != 0)
@@ -1042,10 +1042,10 @@ public class AssistantGump : BaseOptionsGump
         // Item info display
         var itemText = $"Graphic: {itemConfig.Graphic:X4}, Hue: {(itemConfig.Hue == ushort.MaxValue ? "ANY" : itemConfig.Hue.ToString())}";
         itemArea.Add(c = TextBox.GetOne(itemText, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
-        c.X = rsp.Width + 10;
+        c.X = rsp.Width + 1;
         c.Y = (rsp.Height - c.Height) / 2;
 
-        InputField input = new InputField(40, 30, 20, ThemeSettings.CHECKBOX_SIZE, itemConfig.Amount.ToString(), true,
+        InputField input = new InputField(100, 30, 100, ThemeSettings.CHECKBOX_SIZE, itemConfig.Amount.ToString(), false,
         onTextChanges: (s, e) =>
         {
             if (ushort.TryParse(((InputField.StbTextBox)s).Text, out ushort amount))
@@ -1055,7 +1055,7 @@ public class AssistantGump : BaseOptionsGump
             }
         })
         {
-            X = 270,
+            X = 240,
             Y = 10
         };
 

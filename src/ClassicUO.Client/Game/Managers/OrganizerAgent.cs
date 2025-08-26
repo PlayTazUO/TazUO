@@ -136,10 +136,10 @@ namespace ClassicUO.Game.Managers
 
             var dupedConfig = new OrganizerConfig
             {
-                Name = config.Name + " Copy",
+                Name = GetUniqueName(config.Name + " Copy"),
                 SourceContSerial = config.SourceContSerial,
                 DestContSerial = config.DestContSerial,
-                Enabled = config.Enabled,
+                Enabled = false,
                 ItemConfigs = config.ItemConfigs.Select(c => new OrganizerItemConfig
                 {
                     Graphic = c.Graphic,
@@ -150,6 +150,15 @@ namespace ClassicUO.Game.Managers
             };
             OrganizerConfigs.Add(dupedConfig);
             return dupedConfig;
+        }
+
+        private string GetUniqueName(string baseName)
+        {
+            string name = baseName;
+            int i = 2;
+            while (OrganizerConfigs.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase)))
+                name = $"{baseName} ({i++})";
+            return name;
         }
 
         public void CreateOrganizerMacroButton(string name)
@@ -181,7 +190,7 @@ namespace ClassicUO.Game.Managers
                 var config = OrganizerConfigs[i];
                 var status = config.Enabled ? "enabled" : "disabled";
                 var itemCount = config.ItemConfigs.Count(ic => ic.Enabled);
-                GameActions.Print($"  {i}: '{config.Name}' ({status}, {itemCount} item types, target: {config.DestContSerial:X})");
+                GameActions.Print($"  {i}: '{config.Name}' ({status}, {itemCount} item types, destination: {config.DestContSerial:X})");
             }
         }
 
@@ -199,19 +208,32 @@ namespace ClassicUO.Game.Managers
             {
                 if (!config.Enabled) continue;
 
-                var destcontainer = World.Items.Get(config.DestContSerial);
-                if (destcontainer == null)
+                var sourceCont = config.SourceContSerial != 0
+                    ? World.Items.Get(config.SourceContSerial)
+                    : backpack;
+
+                if (sourceCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container '{config.Name}' (Serial: {config.DestContSerial:X})");
+                    GameActions.Print($"Cannot find source container for organizer '{config.Name}'.");
                     continue;
                 }
 
-                totalOrganized += OrganizeItems(backpack, destcontainer, config);
+                var destCont = config.DestContSerial != 0
+                    ? World.Items.Get(config.DestContSerial)
+                    : backpack;
+
+                if (destCont == null)
+                {
+                    GameActions.Print($"Cannot find destination container for organizer '{config.Name}'. Using backpack as default.");
+                    destCont = backpack;
+                }
+
+                totalOrganized += OrganizeItems(sourceCont, destCont, config);
             }
 
             if (totalOrganized == 0)
             {
-                GameActions.Print("No items were organized.");
+                GameActions.Print("No items were organized.", 33);
             }
         }
 
@@ -220,34 +242,34 @@ namespace ClassicUO.Game.Managers
             var config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
-                GameActions.Print($"Organizer '{name}' not found.");
+                GameActions.Print($"Organizer '{name}' not found.", 33);
                 return;
             }
 
             if (!config.Enabled)
             {
-                GameActions.Print($"Organizer '{name}' is disabled.");
+                GameActions.Print($"Organizer '{name}' is disabled.", 33);
                 return;
             }
 
-            var sourceBag = World.Items.Get(config.SourceContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
-            if (sourceBag == null)
+            var sourceCont = World.Items.Get(config.SourceContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
+            if (sourceCont == null)
             {
                 GameActions.Print("Cannot find player backpack.");
                 return;
             }
 
-            var targetBag = World.Items.Get(config.DestContSerial);
-            if (targetBag == null)
+            var destCont = World.Items.Get(config.DestContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
+            if (destCont == null)
             {
                 GameActions.Print($"Cannot find target bag for organizer '{config.Name}' (Serial: {config.DestContSerial:X})");
                 return;
             }
 
-            int organized = OrganizeItems(sourceBag, targetBag, config);
+            int organized = OrganizeItems(sourceCont, destCont, config);
             if (organized == 0)
             {
-                GameActions.Print($"No items were organized by '{config.Name}'.");
+                GameActions.Print($"No items were organized by '{config.Name}'.", 33);
             }
         }
 
@@ -255,35 +277,35 @@ namespace ClassicUO.Game.Managers
         {
             if (index < 0 || index >= OrganizerConfigs.Count)
             {
-                GameActions.Print($"Organizer index {index} is out of range. Available organizers: 0-{OrganizerConfigs.Count - 1}");
+                GameActions.Print($"Organizer index {index} is out of range. Available organizers: 0-{OrganizerConfigs.Count - 1}", 33);
                 return;
             }
 
             var config = OrganizerConfigs[index];
             if (!config.Enabled)
             {
-                GameActions.Print($"Organizer {index} ('{config.Name}') is disabled.");
+                GameActions.Print($"Organizer {index} ('{config.Name}') is disabled.", 33);
                 return;
             }
 
-            var sourcecont = World.Items.Get(config.SourceContSerial);
-            if (sourcecont == null)
+            var sourceCont = World.Items.Get(config.SourceContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
+            if (sourceCont == null)
             {
-                GameActions.Print("Cannot find source bag.");
+                GameActions.Print("Cannot find source container / backpack.");
                 return;
             }
 
-            var destinationcont = World.Items.Get(config.DestContSerial);
-            if (destinationcont == null)
+            var destCont = World.Items.Get(config.DestContSerial);
+            if (destCont == null)
             {
-                GameActions.Print($"Cannot find destination Container '{config.Name}' (Serial: {config.DestContSerial:X})");
+                GameActions.Print($"Cannot find destination Container '{config.Name}' (Serial: {config.DestContSerial:X})", 33);
                 return;
             }
 
-            int organized = OrganizeItems(sourcecont, destinationcont, config);
+            int organized = OrganizeItems(sourceCont, destCont, config);
             if (organized == 0)
             {
-                GameActions.Print($"No items were organized by '{config.Name}'.");
+                GameActions.Print($"No items were organized by '{config.Name}'.", 33);
             }
         }
 
@@ -291,45 +313,71 @@ namespace ClassicUO.Game.Managers
         {
             var itemsToMove = new List<(Item Item, ushort Amount)>();
 
-            var srcitem = (Item)SourceCont.Items;
+            var sourceItems = (Item)SourceCont.Items;
 
-            while (srcitem != null)
+            var destItems = (Item)DestCont.Items;
+
+            if (SourceCont.Serial == DestCont.Serial)
             {
-                // Skip the target bag itself if it's in the same container
-                if (srcitem.Serial == DestCont.Serial && SourceCont.Serial == DestCont.Serial)
+                for (var item = sourceItems; item != null; item = (Item)item.Next)
                 {
-                    srcitem = (Item)srcitem.Next;
-                    continue;
-                }
-
-                // Check if this item matches any of the configured graphics/hues
-                foreach (var itemConfig in config.ItemConfigs)
-                {
-                    if (itemConfig.Enabled && itemConfig.IsMatch(srcitem.Graphic, srcitem.Hue))
+                    foreach (var itemConfig in config.ItemConfigs)
                     {
-                        if (itemConfig.Amount == 0)
+                        if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
                         {
-                            itemsToMove.Add((srcitem, ushort.MaxValue)); // Move all
-                            break;
-                        }
-
-                        ushort amountAtDest = World.Items.Get(DestCont.Serial).FindItem(srcitem.Graphic, srcitem.Hue)?.Amount ?? 0;
-
-                        int missing = itemConfig.Amount - amountAtDest;
-
-                        if (missing > 0)
-                        {
-                            ushort amountToMove = (ushort)Math.Min(srcitem.Amount, missing);
-                            if (amountToMove > 0)
+                            if (!item.ItemData.IsStackable) break; // non-stackable items can't be organized in the same container
+                            if (itemConfig.Amount > 0)
+                                itemsToMove.Add((item, itemConfig.Amount));
+                            else
                             {
-                                itemsToMove.Add((srcitem, amountToMove));
+                                itemsToMove.Add((item, ushort.MaxValue));
                             }
                         }
                     }
-
                 }
-                srcitem = (Item)srcitem.Next;
             }
+            else
+            {
+                // Build a lookup of existing item counts in the destination container
+                var destItemCounts = new Dictionary<(ushort Graphic, ushort Hue), ushort>();
+                for (var item = destItems; item != null; item = (Item)item.Next)
+                {
+                    var key = (item.Graphic, item.Hue);
+                    if (destItemCounts.ContainsKey(key))
+                        destItemCounts[key] += item.Amount;
+                    else
+                        destItemCounts[key] = item.Amount;
+                }
+
+                // Determine which items to move based on config and existing counts in destination
+                for (var item = sourceItems; item != null; item = (Item)item.Next)
+                {
+                    foreach (var itemConfig in config.ItemConfigs)
+                    {
+                        if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
+                        {
+                            if (itemConfig.Amount == 0)
+                            {
+                                // Move all items of this type
+                                itemsToMove.Add((item, ushort.MaxValue));
+                            }
+                            else
+                            {
+                                // Move up to the configured amount, considering existing items in destination
+                                destItemCounts.TryGetValue((item.Graphic, item.Hue), out ushort existingCount);
+                                int toMove = itemConfig.Amount - existingCount;
+                                if (toMove > 0)
+                                {
+                                    itemsToMove.Add((item, (ushort)Math.Min(toMove, item.Amount)));
+                                    // Update the count to avoid over-moving if multiple stacks exist in source
+                                    destItemCounts[(item.Graphic, item.Hue)] = (ushort)(existingCount + Math.Min(toMove, item.Amount));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
 
             // Move matching items to target bag using MoveItemQueue
             foreach (var itemToMove in itemsToMove)
@@ -339,11 +387,12 @@ namespace ClassicUO.Game.Managers
 
             if (itemsToMove.Count > 0)
             {
-                GameActions.Print($"Organized {itemsToMove.Count} items from '{config.Name}' to target bag.");
+                GameActions.Print($"Organizing... {itemsToMove.Count} items from '{config.Name}' to destination container.", 63);
             }
 
             return itemsToMove.Count;
         }
+
     }
 
     [JsonSerializable(typeof(List<OrganizerAgent>))]
@@ -378,7 +427,7 @@ namespace ClassicUO.Game.Managers
     {
         public ushort Graphic { get; set; }
         public ushort Hue { get; set; } = ushort.MaxValue;
-        public ushort Amount { get; set; } = 0; // default max amount
+        public ushort Amount { get; set; } = 0; // 0 = move all; otherwise move up to this amount
         public bool Enabled { get; set; } = true;
 
         public bool IsMatch(ushort graphic, ushort hue)
