@@ -942,7 +942,7 @@ public class AssistantGump : BaseOptionsGump
                 }
                 config.SourceContSerial = source.Serial;
                 GameActions.Print($"Source container set to {source.Serial:X}", 63);
-                box.Update();
+                SelectOrganizerConfig(config, leftSideContent, button);
             });
         };
         leftSideContent.AddToRight(SourceButton);
@@ -965,7 +965,7 @@ public class AssistantGump : BaseOptionsGump
                 }
                 config.DestContSerial = destination.Serial;
                 GameActions.Print($"Destination container set to {destination.Serial:X}", 63);
-                box.Update();
+                SelectOrganizerConfig(config, leftSideContent, button);
             });
         };
         leftSideContent.AddToRight(DestButton,false);
