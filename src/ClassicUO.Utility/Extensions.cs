@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -230,8 +230,8 @@ namespace ClassicUO.Utility
         public static Color FromHtmlHex(this string hex)
         {
             if (hex.StartsWith("#")) hex = hex.Substring(1);
-            if (hex.Length != 6) throw new ArgumentException("Invalid hex color format");
-            
+            if (hex.Length != 6) return Color.White;
+
             int value = Convert.ToInt32(hex, 16);
             return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
         }
