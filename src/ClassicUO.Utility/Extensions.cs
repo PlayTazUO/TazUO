@@ -219,5 +219,21 @@ namespace ClassicUO.Utility
         {
             return $"0x{b:X2}";
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ToHtmlHex(this Color color)
+        {
+            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Color FromHtmlHex(this string hex)
+        {
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            if (hex.Length != 6) throw new ArgumentException("Invalid hex color format");
+            
+            int value = Convert.ToInt32(hex, 16);
+            return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
+        }
     }
 }

@@ -101,6 +101,7 @@ namespace ClassicUO.Game.GameObjects
                 i.ResetOriginalGraphic();
                 i.MatchesHighlightData = false;
                 i.HighlightHue = 0;
+                i.HighlightColor = Color.White;
             }
         );
 
@@ -113,6 +114,7 @@ namespace ClassicUO.Game.GameObjects
 
         public bool MatchesHighlightData;
         public ushort HighlightHue;
+        public Color HighlightColor = Color.White;
         public ushort DisplayedGraphic
         {
             get

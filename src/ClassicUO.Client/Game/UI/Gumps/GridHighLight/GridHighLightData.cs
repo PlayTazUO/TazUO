@@ -2,6 +2,8 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,6 +52,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             get => _entry.Hue;
             set => _entry.Hue = value;
+        }
+
+        public Color HighlightColor
+        {
+            get => _entry.GetHighlightColor();
+            set => _entry.SetHighlightColor(value);
         }
 
         public List<GridHighlightProperty> Properties => _entry.Properties;
@@ -162,6 +170,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     {
                         data.item.MatchesHighlightData = true;
                         data.item.HighlightHue = config.Hue;
+                        data.item.HighlightColor = config.HighlightColor;
 
                         if (config.LootOnMatch)
                         {

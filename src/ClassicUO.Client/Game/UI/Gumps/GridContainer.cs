@@ -1268,8 +1268,8 @@ namespace ClassicUO.Game.UI.Gumps
                     int bsize = ProfileManager.CurrentProfile.GridHighlightSize;
 
 
-                    Texture2D borderTexture = SolidColorTextureCache.GetTexture(Color.White);
-                    Vector3 borderHueVec = ShaderHueTranslator.GetHueVector(_item.HighlightHue, false, 0.8f);
+                    Texture2D borderTexture = SolidColorTextureCache.GetTexture(_item.HighlightColor);
+                    Vector3 borderHueVec = new Vector3(1, 0, 1);
 
                     batcher.Draw( //Top bar
                         borderTexture,

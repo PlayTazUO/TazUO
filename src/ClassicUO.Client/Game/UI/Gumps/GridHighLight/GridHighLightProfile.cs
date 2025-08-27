@@ -1,5 +1,7 @@
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +15,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public string Name { get; set; }
         public List<string> ItemNames { get; set; } = new();
         public ushort Hue { get; set; }
+        public string HighlightColor { get; set; } = "#FF0000";
         public List<GridHighlightProperty> Properties { get; set; } = new();
         public bool AcceptExtraProperties { get; set; } = true;
         public bool Overweight { get; set; } = true;
@@ -22,6 +25,16 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public List<string> RequiredRarities { get; set; } = new();
         public GridHighlightSlot GridHighlightSlot { get; set; } = new();
         public bool LootOnMatch { get; set; } = false;
+
+        public Color GetHighlightColor()
+        {
+            return HighlightColor.FromHtmlHex();
+        }
+
+        public void SetHighlightColor(Color color)
+        {
+            HighlightColor = color.ToHtmlHex();
+        }
     }
 
     public class GridHighlightSlot

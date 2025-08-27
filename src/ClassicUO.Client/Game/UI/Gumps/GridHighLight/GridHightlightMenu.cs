@@ -107,12 +107,19 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             y = 0;
             int spaceBetween = 7;
 
-            ModernColorPicker.HueDisplay hueDisplay;
-            area.Add(hueDisplay = new ModernColorPicker.HueDisplay(data.Hue, null, true) { Y = y });
-            hueDisplay.SetTooltip("Select grid highlight hue");
-            hueDisplay.HueChanged += (s, e) =>
+            NiceButton colorButton;
+            area.Add(colorButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, "Color") { IsSelectable = false });
+            colorButton.SetTooltip("Select grid highlight color");
+            colorButton.MouseUp += (s, e) =>
             {
-                data.Hue = hueDisplay.Hue;
+                if (e.Button == Input.MouseButtonType.Left)
+                {
+                    RGBColorPickerGump.Open(data.HighlightColor, selectedColor =>
+                    {
+                        data.HighlightColor = selectedColor;
+                        data.Hue = (ushort)(selectedColor.R + (selectedColor.G << 8) + (selectedColor.B << 16));
+                    });
+                }
             };
 
             NiceButton  _propertiesButton;
@@ -167,10 +174,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             pos.PositionLeftOf(_moveUp, _moveDown);
             pos.PositionLeftOf( _del, _moveUp);
             pos.PositionLeftOf( _propertiesButton, _del);
-            pos.PositionLeftOf(hueDisplay,  _propertiesButton);
+            pos.PositionLeftOf(colorButton,  _propertiesButton);
 
             InputField _name;
-            area.Add(_name = new InputField(0x0BB8, 0xFF, 0xFFFF, true, hueDisplay.X - spaceBetween, 20)
+            area.Add(_name = new InputField(0x0BB8, 0xFF, 0xFFFF, true, colorButton.X - spaceBetween, 20)
                 {
                     X = 0,
                     Y = y,
