@@ -1856,8 +1856,8 @@ namespace ClassicUO.Game.UI.Gumps
                     List<string> mapIconPathsPngJpg = new();
                     foreach (string s in _mapIconsPath)
                     {
-                        bool add = false;
-                        if (!Directory.Exists(s))
+                        bool add = Directory.Exists(s);
+                        if (!add)
                         {
                             try
                             {
@@ -1926,8 +1926,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                     foreach (string s in _mapFilesPath)
                     {
-                        bool add = false;
-                        if (!Directory.Exists(s))
+                        bool add = Directory.Exists(s);
+                        if (!add)
                         {
                             try
                             {

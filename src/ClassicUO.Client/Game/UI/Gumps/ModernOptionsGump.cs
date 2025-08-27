@@ -2992,6 +2992,11 @@ namespace ClassicUO.Game.UI.Gumps
                     (lang.GetTazUO.BackgroundOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateOpacity, (i) => { profile.NamePlateOpacity = (byte)i; }), true, page
             );
 
+            content.AddToRight
+            (
+                new CheckboxWithLabel("Avoid overlap", 0, profile.NamePlateAvoidOverlap, (b) => { profile.NamePlateAvoidOverlap = b; }), true, page
+            );
+
             #endregion
 
             #region Mobiles

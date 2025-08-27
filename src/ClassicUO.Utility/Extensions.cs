@@ -235,5 +235,58 @@ namespace ClassicUO.Utility
             int value = Convert.ToInt32(hex, 16);
             return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);
         }
+
+        /// <summary>
+        /// Gets all character profile directories from the profiles path structure.
+        /// Structure: ProfilesPath/Account/Server/Character
+        /// </summary>
+        /// <param name="profilesPath">Root profiles path</param>
+        /// <returns>Dictionary mapping character names to their directory paths</returns>
+        public static Dictionary<string, string> GetAllCharacterPaths(string profilesPath)
+        {
+            var characterPaths = new Dictionary<string, string>();
+
+            if (string.IsNullOrEmpty(profilesPath) || !Directory.Exists(profilesPath))
+                return characterPaths;
+
+            try
+            {
+                string[] allAccounts = Directory.GetDirectories(profilesPath);
+
+                foreach (string account in allAccounts)
+                {
+                    string[] allServers = Directory.GetDirectories(account);
+
+                    foreach (string server in allServers)
+                    {
+                        string[] allCharacters = Directory.GetDirectories(server);
+
+                        foreach (string characterPath in allCharacters)
+                        {
+                            string characterName = Path.GetFileName(characterPath);
+
+                            // Use the character name as key, but handle potential duplicates
+                            // by appending server/account info if needed
+                            string key = characterName;
+                            int counter = 1;
+                            while (characterPaths.ContainsKey(key))
+                            {
+                                key = $"{characterName}_{counter}";
+                                counter++;
+                            }
+
+                            characterPaths[key] = characterPath;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw to avoid breaking calling code
+                Log.Error($"Error scanning character profiles: {ex.Message}");
+            }
+
+            return characterPaths;
+        }
     }
 }
