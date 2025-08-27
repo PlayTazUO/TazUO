@@ -77,7 +77,7 @@ namespace ClassicUO.Game.UI.Gumps
                 currentHeight = value;
             }
         }
-        
+
         public new UILayer LayerOrder {
             get
             {
@@ -94,7 +94,7 @@ namespace ClassicUO.Game.UI.Gumps
             CanMove = false;
             AcceptMouseInput = true;
             CanCloseWithRightClick = true;
-            
+
             Entity entity = World.Get(serial);
 
             if (entity == null)
@@ -532,23 +532,23 @@ namespace ClassicUO.Game.UI.Gumps
         private static List<NameOverheadGump> GetAllVisibleNameOverheads()
         {
             var result = new List<NameOverheadGump>();
-            
+
             for (var node = UIManager.Gumps.First; node != null; node = node.Next)
             {
-                if (node.Value is NameOverheadGump nameGump && 
-                    !nameGump.IsDisposed && 
+                if (node.Value is NameOverheadGump nameGump &&
+                    !nameGump.IsDisposed &&
                     nameGump.IsVisible)
                 {
                     result.Add(nameGump);
                 }
             }
-            
+
             return result;
         }
 
-        private Rectangle GetBounds(int x, int y)
+        private Rectangle GetBounds(int x, int y, int width, int height)
         {
-            return new Rectangle(x, y, Width, Height);
+            return new Rectangle(x, y, width, height);
         }
 
         private Point AdjustPositionToAvoidOverlap(int originalX, int originalY)
@@ -566,7 +566,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             while (iterations < maxIterations)
             {
-                var proposedBounds = GetBounds(adjustedX, adjustedY);
+                var proposedBounds = GetBounds(adjustedX, adjustedY, Width, Height);
                 bool hasCollision = false;
 
                 foreach (var other in allNameOverheads)
@@ -574,8 +574,8 @@ namespace ClassicUO.Game.UI.Gumps
                     if (other == this || other.LocalSerial == this.LocalSerial)
                         continue;
 
-                    var otherBounds = GetBounds(other.X, other.Y);
-                    
+                    var otherBounds = GetBounds(other.X, other.Y, other.Width, other.Height);
+
                     if (proposedBounds.Intersects(otherBounds))
                     {
                         adjustedY = otherBounds.Bottom + COLLISION_SPACING;
