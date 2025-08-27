@@ -881,7 +881,7 @@ public class AssistantGump : BaseOptionsGump
         leftSideContent.AddToRight(runButton);
 
         //Dupe button
-        ModernButton dupeButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Dupe", Color.Cyan)
+        ModernButton dupeButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Duplicate", Color.Cyan)
         {
             IsSelected = true,
             X = runButton.X
@@ -900,7 +900,7 @@ public class AssistantGump : BaseOptionsGump
         leftSideContent.AddToRight(dupeButton);
 
         //Macro button
-        ModernButton MacroButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Macro Button", Color.Yellow)
+        ModernButton MacroButton = new(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Macro Button", Color.Yellow)
         {
             IsSelected = true,
         };
@@ -933,11 +933,12 @@ public class AssistantGump : BaseOptionsGump
         SourceButton.MouseUp += (s, e) =>
         {
             GameActions.Print("Select [SOURCE] Container", 82);
+            TargetManager.LastTargetInfo.Clear();
             var source = TargetHelper.TargetObject((source) =>
             {
-                if (!SerialHelper.IsItem(source))
+                if (source == null || !SerialHelper.IsItem(source))
                 {
-                    GameActions.Print("Only items can be added!");
+                    GameActions.Print("Only items can be selected!");
                     return;
                 }
                 config.SourceContSerial = source.Serial;
@@ -956,11 +957,12 @@ public class AssistantGump : BaseOptionsGump
         DestButton.MouseUp += (s, e) =>
         {
             GameActions.Print("Select [DESTINATION] Container", 82);
+            TargetManager.LastTargetInfo.Clear();
             var destination = TargetHelper.TargetObject((destination) =>
             {
-                if (!SerialHelper.IsItem(destination))
+                if (destination == null || !SerialHelper.IsItem(destination))
                 {
-                    GameActions.Print("Only items can be added!");
+                    GameActions.Print("Only items can be selected!");
                     return;
                 }
                 config.DestContSerial = destination.Serial;
@@ -975,26 +977,24 @@ public class AssistantGump : BaseOptionsGump
         // Current source container display
         if (config.SourceContSerial != 0)
         {
-            box.Add(TextBox.GetOne($" [Source] \n Name: {World.Items.Get(config.SourceContSerial)?.Name} \n Serial: {config.SourceContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($"Source ({World.Items.Get(config.SourceContSerial)?.Name}, {config.SourceContSerial:X})", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
         }
         else
         {
-            box.Add(TextBox.GetOne($" [Source] \n Default: Player's Backpack", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.Green, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($"Source (Your backpack)", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.DarkGreen, TextBox.RTLOptions.Default()));
         }
-        box.BlankLine();
-        box.Add(TextBox.GetOne("-------->", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
         box.BlankLine();
         // Current destination container display
         if (config.DestContSerial != 0)
         {
-            box.Add(TextBox.GetOne($" [Destination] \n Name: {World.Items.Get(config.DestContSerial)?.Name} \n Serial: {config.DestContSerial:X}", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
+            box.Add(TextBox.GetOne($"Dest. ({World.Items.Get(config.DestContSerial)?.Name}, {config.DestContSerial:X})", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE - 1, Color.White, TextBox.RTLOptions.Default()));
         }
         leftSideContent.AddToRight(box);
         leftSideContent.BlankLine();
 
         // Items to organize label
         Control c;
-        leftSideContent.AddToRight(c = TextBox.GetOne("Items to organize:                                  Amount:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
+        leftSideContent.AddToRight(c = TextBox.GetOne("Items to organize:                              Amount:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, Color.White, TextBox.RTLOptions.Default()));
         // Add item button with targeting
         ModernButton addItemButton = new(0, 0, 120, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Add Item", ThemeSettings.BUTTON_FONT_COLOR)
         {

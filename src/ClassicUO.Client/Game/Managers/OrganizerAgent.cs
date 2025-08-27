@@ -44,7 +44,7 @@ namespace ClassicUO.Game.Managers
             {
                 CommandManager.Register("organize", (s) =>
                 {
-                    if (s.Length == 0)
+                    if (s.Length == 1)
                     {
                         // Run all organizers
                         Instance?.RunOrganizer();
@@ -56,8 +56,9 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        // Run organizer by name
-                        Instance?.RunOrganizer(s[1]);
+                        // Run organizer by name - join all args after command
+                        string name = string.Join(" ", s.Skip(1));
+                        Instance?.RunOrganizer(name);
                     }
                 });
             }
@@ -66,20 +67,21 @@ namespace ClassicUO.Game.Managers
             {
                 CommandManager.Register("organizer", (s) =>
                 {
-                    if (s.Length == 0)
+                    if (s.Length == 1)
                     {
                         // Run all organizers
                         Instance?.RunOrganizer();
                     }
-                    else if (int.TryParse(s[0], out int index))
+                    else if (int.TryParse(s[1], out int index))
                     {
                         // Run organizer by index
                         Instance?.RunOrganizer(index);
                     }
                     else
                     {
-                        // Run organizer by name
-                        Instance?.RunOrganizer(s[0]);
+                        // Run organizer by name - join all args after command
+                        string name = string.Join(" ", s.Skip(1));
+                        Instance?.RunOrganizer(name);
                     }
                 });
             }
@@ -245,31 +247,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            if (!config.Enabled)
-            {
-                GameActions.Print($"Organizer '{name}' is disabled.", 33);
-                return;
-            }
-
-            var sourceCont = World.Items.Get(config.SourceContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
-            if (sourceCont == null)
-            {
-                GameActions.Print("Cannot find player backpack.");
-                return;
-            }
-
-            var destCont = World.Items.Get(config.DestContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
-            if (destCont == null)
-            {
-                GameActions.Print($"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})");
-                return;
-            }
-
-            int organized = OrganizeItems(sourceCont, destCont, config);
-            if (organized == 0)
-            {
-                GameActions.Print($"No items were organized by '{config.Name}'.", 33);
-            }
+            RunSingleOrganizer(config);
         }
 
         public void RunOrganizer(int index)
@@ -281,31 +259,7 @@ namespace ClassicUO.Game.Managers
             }
 
             var config = OrganizerConfigs[index];
-            if (!config.Enabled)
-            {
-                GameActions.Print($"Organizer {index} ('{config.Name}') is disabled.", 33);
-                return;
-            }
-
-            var sourceCont = World.Items.Get(config.SourceContSerial) ?? World.Player?.FindItemByLayer(Data.Layer.Backpack);
-            if (sourceCont == null)
-            {
-                GameActions.Print("Cannot find source container / backpack.");
-                return;
-            }
-
-            var destCont = World.Items.Get(config.DestContSerial);
-            if (destCont == null)
-            {
-                GameActions.Print($"Cannot find destination Container '{config.Name}' (Serial: {config.DestContSerial:X})", 33);
-                return;
-            }
-
-            int organized = OrganizeItems(sourceCont, destCont, config);
-            if (organized == 0)
-            {
-                GameActions.Print($"No items were organized by '{config.Name}'.", 33);
-            }
+            RunSingleOrganizer(config);
         }
 
         private int OrganizeItems(Item sourceCont, Item destCont, OrganizerConfig config)
@@ -387,10 +341,52 @@ namespace ClassicUO.Game.Managers
 
             if (itemsToMove.Count > 0)
             {
-                GameActions.Print($"Organizing... {itemsToMove.Count} items from '{config.Name}' to destination container.", 63);
+                GameActions.Print($"Organizing {itemsToMove.Count} items from '{config.Name}' to destination container...", 63);
             }
 
             return itemsToMove.Count;
+        }
+
+        private void RunSingleOrganizer(OrganizerConfig config)
+        {
+            if (!config.Enabled)
+            {
+                GameActions.Print($"Organizer '{config.Name}' is disabled.", 33);
+                return;
+            }
+
+            var backpack = World.Player?.FindItemByLayer(Data.Layer.Backpack);
+            if (backpack == null)
+            {
+                GameActions.Print("Cannot find player backpack.");
+                return;
+            }
+
+            var sourceCont = config.SourceContSerial != 0
+                ? World.Items.Get(config.SourceContSerial)
+                : backpack;
+
+            if (sourceCont == null)
+            {
+                GameActions.Print($"Cannot find source container for organizer '{config.Name}'.");
+                return;
+            }
+
+            var destCont = config.DestContSerial != 0
+                ? World.Items.Get(config.DestContSerial)
+                : backpack;
+
+            if (destCont == null)
+            {
+                GameActions.Print($"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})", 33);
+                return;
+            }
+
+            int organized = OrganizeItems(sourceCont, destCont, config);
+            if (organized == 0)
+            {
+                GameActions.Print($"No items were organized by '{config.Name}'.", 33);
+            }
         }
 
     }
