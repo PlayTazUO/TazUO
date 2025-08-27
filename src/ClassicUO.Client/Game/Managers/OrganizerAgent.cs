@@ -331,6 +331,7 @@ namespace ClassicUO.Game.Managers
                             {
                                 itemsToMove.Add((item, ushort.MaxValue));
                             }
+                            break; // Avoid processing the same item multiple times
                         }
                     }
                 }
