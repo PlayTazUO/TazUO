@@ -9,45 +9,52 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ClassicUO.Assets;
 using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using LScript;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting
 {
-    internal class ScriptBrowser : Gump
+    internal class ScriptBrowser : NineSliceGump
     {
         private static ConcurrentQueue<Action> _mainThreadActions = new();
         private const int WIDTH = 400;
         private const int HEIGHT = 600;
         private const string REPO = "PlayTazUO/PublicLegionScripts";
 
-        private ScrollArea scrollArea;
+        private ModernScrollArea scrollArea;
         private readonly GitHubContentCache cache;
         private string currentPath = "";
         private readonly Stack<string> navigationHistory = new Stack<string>();
         private bool isLoading = false;
         private TextBox loadingText;
+        private TextBox titleText;
 
-        public ScriptBrowser() : base(0, 0)
+        public ScriptBrowser() : base(0, 0, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
         {
             CanMove = true;
             CanCloseWithRightClick = true;
 
-            Width = WIDTH;
-            Height = HEIGHT;
-
             cache = new GitHubContentCache(REPO);
 
-            Add(new AlphaBlendControl() { Width = Width, Height = Height });
-            Add(scrollArea = new ScrollArea(0, 0, Width, Height, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
+            // Add title
+            titleText = TextBox.GetOne("Public Script Browser", TrueTypeLoader.EMBEDDED_FONT, 18, Color.DarkOrange, TextBox.RTLOptions.Default(Width - 2 * BorderSize));
+            titleText.X = BorderSize;
+            titleText.Y = BorderSize;
+            titleText.AcceptMouseInput = false;
+            Add(titleText);
+
+            // Add scroll area with proper positioning
+            Add(scrollArea = new (BorderSize, titleText.Y + titleText.Height + 5, Width - (BorderSize * 2), Height - (BorderSize * 2) - titleText.Height - 5) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
 
             // Add loading indicator
             loadingText = GenTextBox("Loading...", 16);
-            loadingText.X = (Width - loadingText.MeasuredSize.X) / 2;
-            loadingText.Y = (Height - loadingText.MeasuredSize.Y) / 2;
+            loadingText.X = (scrollArea.Width - loadingText.MeasuredSize.X) / 2;
+            loadingText.Y = (scrollArea.Height - loadingText.MeasuredSize.Y) / 2;
             scrollArea.Add(loadingText);
 
             CenterXInViewPort();
@@ -69,6 +76,29 @@ namespace ClassicUO.LegionScripting
                     });
                 }
             });
+        }
+
+        protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
+        {
+            base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
+
+            // Recreate title text with new width if needed
+            if (titleText != null)
+            {
+                titleText.Dispose();
+                titleText = TextBox.GetOne("Public Script Browser", TrueTypeLoader.EMBEDDED_FONT, 18, Color.DarkOrange, TextBox.RTLOptions.Default(newWidth - 2 * BorderSize));
+                titleText.X = BorderSize;
+                titleText.Y = BorderSize;
+                titleText.AcceptMouseInput = false;
+                Add(titleText);
+            }
+
+            // Update scroll area size and position
+            if (scrollArea != null)
+            {
+                scrollArea.UpdateWidth(newWidth - (BorderSize * 2));
+                scrollArea.UpdateHeight(newHeight - (BorderSize * 2) - titleText.Height - 5);
+            }
         }
 
         private async Task LoadCurrentDirectoryAsync()
@@ -98,8 +128,8 @@ namespace ClassicUO.LegionScripting
         {
             ClearScrollArea();
             var errorText = GenTextBox(message, 14);
-            errorText.X = (Width - errorText.MeasuredSize.X) / 2;
-            errorText.Y = (Height - errorText.MeasuredSize.Y) / 2;
+            errorText.X = (scrollArea.Width - errorText.MeasuredSize.X) / 2;
+            errorText.Y = (scrollArea.Height - errorText.MeasuredSize.Y) / 2;
             scrollArea.Add(errorText);
         }
 
@@ -191,8 +221,8 @@ namespace ClassicUO.LegionScripting
             // Show loading state
             ClearScrollArea();
             loadingText = GenTextBox("Loading...", 16);
-            loadingText.X = (Width - loadingText.MeasuredSize.X) / 2;
-            loadingText.Y = (Height - loadingText.MeasuredSize.Y) / 2;
+            loadingText.X = (scrollArea.Width - loadingText.MeasuredSize.X) / 2;
+            loadingText.Y = (scrollArea.Height - loadingText.MeasuredSize.Y) / 2;
             scrollArea.Add(loadingText);
 
             // Load directory asynchronously
@@ -243,7 +273,7 @@ namespace ClassicUO.LegionScripting
 
             public ItemControl(GHFileObject gHFileObject, ScriptBrowser scriptBrowser, bool isBackButton = false)
             {
-                Width = WIDTH - 18;
+                Width = scriptBrowser.scrollArea.Width - 18;
                 Height = 50;
                 this.isBackButton = isBackButton;
 
