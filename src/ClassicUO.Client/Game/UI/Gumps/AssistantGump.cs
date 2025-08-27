@@ -99,6 +99,7 @@ public class AssistantGump : BaseOptionsGump
         {
             FileSelector.ShowFileBrowser(FileSelectorType.Directory, null, null, (selectedPath) =>
             {
+                if (string.IsNullOrWhiteSpace(selectedPath)) return;
                 string fileName = $"AutoLoot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
                 string fullPath = Path.Combine(selectedPath, fileName);
                 AutoLootManager.Instance.ExportToFile(fullPath);
@@ -110,6 +111,7 @@ public class AssistantGump : BaseOptionsGump
         {
             FileSelector.ShowFileBrowser(FileSelectorType.File, null, new[] { "json" }, (selectedFile) =>
             {
+                if (string.IsNullOrWhiteSpace(selectedFile)) return;
                 AutoLootManager.Instance.ImportFromFile(selectedFile);
             }, "Import Autoloot Configuration");
         };

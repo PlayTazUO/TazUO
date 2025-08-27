@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -225,9 +225,8 @@ namespace ClassicUO.Utility
         /// Structure: ProfilesPath/Account/Server/Character
         /// </summary>
         /// <param name="profilesPath">Root profiles path</param>
-        /// <param name="currentCharacterName">Current character name to exclude (optional)</param>
         /// <returns>Dictionary mapping character names to their directory paths</returns>
-        public static Dictionary<string, string> GetAllCharacterPaths(string profilesPath, string currentCharacterName = null)
+        public static Dictionary<string, string> GetAllCharacterPaths(string profilesPath)
         {
             var characterPaths = new Dictionary<string, string>();
 
@@ -249,10 +248,6 @@ namespace ClassicUO.Utility
                         foreach (string characterPath in allCharacters)
                         {
                             string characterName = Path.GetFileName(characterPath);
-
-                            // Skip current character if specified
-                            if (!string.IsNullOrEmpty(currentCharacterName) && characterName == currentCharacterName)
-                                continue;
 
                             // Use the character name as key, but handle potential duplicates
                             // by appending server/account info if needed

@@ -396,7 +396,7 @@ namespace ClassicUO.Game.Managers
 
                 string data = File.ReadAllText(filePath);
                 AutoLootConfigEntry[] importedItems = JsonSerializer.Deserialize<AutoLootConfigEntry[]>(data);
-                
+
                 if (importedItems != null)
                 {
                     ImportEntries(importedItems.ToList(), $"file: {filePath}");
@@ -487,7 +487,7 @@ namespace ClassicUO.Game.Managers
         public Dictionary<string, List<AutoLootConfigEntry>> GetOtherCharacterConfigs()
         {
             var otherConfigs = new Dictionary<string, List<AutoLootConfigEntry>>();
-            
+
             string rootpath;
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.ProfilesPath))
             {
@@ -499,12 +499,15 @@ namespace ClassicUO.Game.Managers
             }
 
             string currentCharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
-            var characterPaths = Exstentions.GetAllCharacterPaths(rootpath, currentCharacterName);
+            var characterPaths = Exstentions.GetAllCharacterPaths(rootpath);
 
             foreach (var kvp in characterPaths)
             {
                 string characterName = kvp.Key;
                 string characterPath = kvp.Value;
+
+                if (characterPath == ProfileManager.ProfilePath)
+                    continue;
 
                 var configs = LoadOtherCharacterConfig(characterPath);
                 if (configs.Count > 0)
