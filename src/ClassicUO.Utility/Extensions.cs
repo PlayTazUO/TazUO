@@ -219,5 +219,63 @@ namespace ClassicUO.Utility
         {
             return $"0x{b:X2}";
         }
+
+        /// <summary>
+        /// Gets all character profile directories from the profiles path structure.
+        /// Structure: ProfilesPath/Account/Server/Character
+        /// </summary>
+        /// <param name="profilesPath">Root profiles path</param>
+        /// <param name="currentCharacterName">Current character name to exclude (optional)</param>
+        /// <returns>Dictionary mapping character names to their directory paths</returns>
+        public static Dictionary<string, string> GetAllCharacterPaths(string profilesPath, string currentCharacterName = null)
+        {
+            var characterPaths = new Dictionary<string, string>();
+
+            if (string.IsNullOrEmpty(profilesPath) || !Directory.Exists(profilesPath))
+                return characterPaths;
+
+            try
+            {
+                string[] allAccounts = Directory.GetDirectories(profilesPath);
+
+                foreach (string account in allAccounts)
+                {
+                    string[] allServers = Directory.GetDirectories(account);
+
+                    foreach (string server in allServers)
+                    {
+                        string[] allCharacters = Directory.GetDirectories(server);
+
+                        foreach (string characterPath in allCharacters)
+                        {
+                            string characterName = Path.GetFileName(characterPath);
+
+                            // Skip current character if specified
+                            if (!string.IsNullOrEmpty(currentCharacterName) && characterName == currentCharacterName)
+                                continue;
+
+                            // Use the character name as key, but handle potential duplicates
+                            // by appending server/account info if needed
+                            string key = characterName;
+                            int counter = 1;
+                            while (characterPaths.ContainsKey(key))
+                            {
+                                key = $"{characterName}_{counter}";
+                                counter++;
+                            }
+
+                            characterPaths[key] = characterPath;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't throw to avoid breaking calling code
+                Log.Error($"Error scanning character profiles: {ex.Message}");
+            }
+
+            return characterPaths;
+        }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -9,6 +10,7 @@ using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.UI.Gumps;
 
@@ -87,6 +89,36 @@ public class AssistantGump : BaseOptionsGump
 
         scroll.Add
             (PositionHelper.PositionControl(new CheckboxWithLabel(lang.GetTazUO.AutoLootHumanCorpses, 0, profile.AutoLootHumanCorpses, b => profile.AutoLootHumanCorpses = b)));
+
+        PositionHelper.BlankLine();
+
+        ModernButton exportButton, importButton, importOtherButton;
+
+        scroll.Add(PositionHelper.PositionControl(exportButton = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Export JSON", ThemeSettings.BUTTON_FONT_COLOR)));
+        exportButton.MouseUp += (s, e) =>
+        {
+            FileSelector.ShowFileBrowser(FileSelectorType.Directory, null, null, (selectedPath) =>
+            {
+                string fileName = $"AutoLoot_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+                string fullPath = Path.Combine(selectedPath, fileName);
+                AutoLootManager.Instance.ExportToFile(fullPath);
+            }, "Export Autoloot Configuration");
+        };
+
+        scroll.Add(PositionHelper.ToRightOf(importButton = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Import JSON", ThemeSettings.BUTTON_FONT_COLOR), exportButton));
+        importButton.MouseUp += (s, e) =>
+        {
+            FileSelector.ShowFileBrowser(FileSelectorType.File, null, new[] { "json" }, (selectedFile) =>
+            {
+                AutoLootManager.Instance.ImportFromFile(selectedFile);
+            }, "Import Autoloot Configuration");
+        };
+
+        scroll.Add(PositionHelper.ToRightOf(importOtherButton = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Import from Character", ThemeSettings.BUTTON_FONT_COLOR), importButton));
+        importOtherButton.MouseUp += (s, e) =>
+        {
+            ShowCharacterImportContextMenu();
+        };
 
         PositionHelper.BlankLine();
 
@@ -989,11 +1021,37 @@ public class AssistantGump : BaseOptionsGump
         return itemArea;
     }
 
+    private void ShowCharacterImportContextMenu()
+    {
+        var otherConfigs = AutoLootManager.Instance.GetOtherCharacterConfigs();
+
+        if (otherConfigs.Count == 0)
+        {
+            GameActions.Print("No other character autoloot configurations found.", 32);
+            return;
+        }
+
+        var contextMenu = new ContextMenuControl();
+
+        foreach (var characterConfig in otherConfigs.OrderBy(c => c.Key))
+        {
+            string characterName = characterConfig.Key;
+            var configs = characterConfig.Value;
+
+            contextMenu.Add($"{characterName} ({configs.Count} items)", () =>
+            {
+                AutoLootManager.Instance.ImportFromOtherCharacter(characterName, configs);
+            });
+        }
+
+        contextMenu.Show();
+    }
+
     public override void Dispose()
     {
         base.Dispose();
-        DressAgentManager.Instance.Save();
-        OrganizerAgent.Instance.Save();
+        DressAgentManager.Instance?.Save();
+        OrganizerAgent.Instance?.Save();
     }
 
     public enum PAGE

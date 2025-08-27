@@ -369,6 +369,153 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        public void ExportToFile(string filePath)
+        {
+            try
+            {
+                var options = new JsonSerializerOptions() { WriteIndented = true };
+                string fileData = JsonSerializer.Serialize(autoLootItems, options);
+                File.WriteAllText(filePath, fileData);
+                GameActions.Print($"Autoloot configuration exported to: {filePath}", 0x48);
+            }
+            catch (Exception e)
+            {
+                GameActions.Print($"Error exporting autoloot configuration: {e.Message}", 32);
+            }
+        }
+
+        public void ImportFromFile(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    GameActions.Print($"File not found: {filePath}", 32);
+                    return;
+                }
+
+                string data = File.ReadAllText(filePath);
+                AutoLootConfigEntry[] importedItems = JsonSerializer.Deserialize<AutoLootConfigEntry[]>(data);
+                
+                if (importedItems != null)
+                {
+                    ImportEntries(importedItems.ToList(), $"file: {filePath}");
+                }
+            }
+            catch (Exception e)
+            {
+                GameActions.Print($"Error importing autoloot configuration: {e.Message}", 32);
+            }
+        }
+
+        public void ImportFromOtherCharacter(string characterName, List<AutoLootConfigEntry> entries)
+        {
+            try
+            {
+                if (entries != null && entries.Count > 0)
+                {
+                    ImportEntries(entries, $"character: {characterName}");
+                }
+                else
+                {
+                    GameActions.Print($"No autoloot entries found for character: {characterName}", 32);
+                }
+            }
+            catch (Exception e)
+            {
+                GameActions.Print($"Error importing from other character: {e.Message}", 32);
+            }
+        }
+
+        private void ImportEntries(List<AutoLootConfigEntry> entries, string source)
+        {
+            var newItems = new List<AutoLootConfigEntry>();
+            int duplicateCount = 0;
+
+            foreach (var importedItem in entries)
+            {
+                bool isDuplicate = false;
+                foreach (var existingItem in autoLootItems)
+                {
+                    if (existingItem.Equals(importedItem))
+                    {
+                        isDuplicate = true;
+                        duplicateCount++;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate)
+                {
+                    newItems.Add(importedItem);
+                }
+            }
+
+            if (newItems.Count > 0)
+            {
+                autoLootItems.AddRange(newItems);
+                Save();
+            }
+
+            string message = $"Imported {newItems.Count} new autoloot entries from {source}";
+            if (duplicateCount > 0)
+            {
+                message += $" ({duplicateCount} duplicates skipped)";
+            }
+            GameActions.Print(message, 0x48);
+        }
+
+        public List<AutoLootConfigEntry> LoadOtherCharacterConfig(string characterPath)
+        {
+            try
+            {
+                string configPath = Path.Combine(characterPath, "AutoLoot.json");
+                if (File.Exists(configPath))
+                {
+                    string data = File.ReadAllText(configPath);
+                    AutoLootConfigEntry[] items = JsonSerializer.Deserialize<AutoLootConfigEntry[]>(data);
+                    return items?.ToList() ?? new List<AutoLootConfigEntry>();
+                }
+            }
+            catch (Exception e)
+            {
+                GameActions.Print($"Error loading autoloot config from {characterPath}: {e.Message}", 32);
+            }
+            return new List<AutoLootConfigEntry>();
+        }
+
+        public Dictionary<string, List<AutoLootConfigEntry>> GetOtherCharacterConfigs()
+        {
+            var otherConfigs = new Dictionary<string, List<AutoLootConfigEntry>>();
+            
+            string rootpath;
+            if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.ProfilesPath))
+            {
+                rootpath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles");
+            }
+            else
+            {
+                rootpath = Settings.GlobalSettings.ProfilesPath;
+            }
+
+            string currentCharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
+            var characterPaths = Exstentions.GetAllCharacterPaths(rootpath, currentCharacterName);
+
+            foreach (var kvp in characterPaths)
+            {
+                string characterName = kvp.Key;
+                string characterPath = kvp.Value;
+
+                var configs = LoadOtherCharacterConfig(characterPath);
+                if (configs.Count > 0)
+                {
+                    otherConfigs[characterName] = configs;
+                }
+            }
+
+            return otherConfigs;
+        }
+
         public class AutoLootConfigEntry
         {
             public string Name { get; set; } = "";
