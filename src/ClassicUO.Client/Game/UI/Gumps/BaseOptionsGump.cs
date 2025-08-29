@@ -219,7 +219,7 @@ public class BaseOptionsGump : Gump
         };
     }
 
-    protected static class ThemeSettings
+    public static class ThemeSettings
     {
         public static int SLIDER_WIDTH { get; set; } = 150;
         public static int COMBO_BOX_WIDTH { get; set; } = 225;
@@ -401,7 +401,7 @@ public class BaseOptionsGump : Gump
         public ScrollArea ScrollContainer { get; }
     }
 
-    protected class LeftSideMenuRightSideContent : Control
+    public class LeftSideMenuRightSideContent : Control
     {
         private ScrollArea left, right;
         private int leftY, rightY = ThemeSettings.TOP_PADDING, leftX, rightX;
@@ -1735,7 +1735,7 @@ public class BaseOptionsGump : Gump
         }
     }
 
-    protected class ModernButton : HitBox, SearchableOption
+    public class ModernButton : HitBox, SearchableOption
     {
         private readonly ButtonAction _action;
         private readonly int _groupnumber;
@@ -1904,7 +1904,7 @@ public class BaseOptionsGump : Gump
         }
     }
 
-    protected class ScrollArea : Control
+    public class ScrollArea : Control
     {
         private ScrollBar _scrollBar;
 
@@ -2512,7 +2512,7 @@ public class BaseOptionsGump : Gump
         }
     }
 
-    protected class InputFieldWithLabel : Control, SearchableOption
+    public class InputFieldWithLabel : Control, SearchableOption
     {
         public string Text => _inputField.Text;
         private readonly InputField _inputField;
@@ -2657,7 +2657,7 @@ public class BaseOptionsGump : Gump
         }
     }
 
-    protected class CheckboxWithLabel : Control, SearchableOption
+    public class CheckboxWithLabel : Control, SearchableOption
     {
         private bool _isChecked;
         private readonly TextBox _text;
