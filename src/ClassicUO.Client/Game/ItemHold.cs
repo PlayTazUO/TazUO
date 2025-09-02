@@ -37,15 +37,16 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game
 {
-    sealed class ItemHold
+    public sealed class ItemHold
     {
         private bool _enabled;
 
-        public Point MouseOffset;
+        public Point MouseOffset { get; internal set; }
 
-        public bool IsFixedPosition;
-        public bool IgnoreFixedPosition;
-        public int FixedX, FixedY;
+        public bool IsFixedPosition { get; internal set; }
+        public bool IgnoreFixedPosition { get; internal set; }
+        public int FixedX { get; internal set; }
+        public int FixedY { get; internal set; }
 
         public bool OnGround { get; private set; }
         public ushort X { get; private set; }
@@ -55,7 +56,7 @@ namespace ClassicUO.Game
         public uint Serial { get; private set; }
         public ushort Graphic { get; private set; }
         public ushort DisplayedGraphic { get; private set; }
-        public bool IsGumpTexture { get; set; }
+        public bool IsGumpTexture { get; internal set; }
         public ushort Hue { get; private set; }
         public ushort Amount { get; private set; }
         public ushort TotalAmount { get; private set; }
@@ -69,7 +70,7 @@ namespace ClassicUO.Game
         public bool Enabled
         {
             get => _enabled;
-            set
+            internal set
             {
                 _enabled = value;
 
@@ -83,11 +84,11 @@ namespace ClassicUO.Game
             }
         }
 
-        public bool Dropped { get; set; }
-        public bool UpdatedInWorld { get; set; }
+        public bool Dropped { get; internal set; }
+        public bool UpdatedInWorld { get; internal set; }
         public ref StaticTiles ItemData => ref TileDataLoader.Instance.StaticData[Graphic];
 
-        public void Set(Item item, ushort amount, Point? offset = null)
+        internal void Set(Item item, ushort amount, Point? offset = null)
         {
             Enabled = true;
             Serial = item.Serial;
@@ -115,7 +116,7 @@ namespace ClassicUO.Game
             IsGumpTexture = false;
         }
 
-        public void Clear()
+        internal void Clear()
         {
             Serial = 0;
             X = 0xFFFF;
