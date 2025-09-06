@@ -96,7 +96,8 @@ namespace ClassicUO.Game.Scenes
 
         private uint _timeToPlaceMultiInHouseCustomization;
         private bool _use_render_target = false;
-        private static string _filterMode = "xbr"; // "point" | "linear" | "anisotropic" | "xbr"
+        private int _max_texture_size = 8192;
+        private static string _filterMode = "linear"; // "point" | "linear" | "anisotropic" | "xbr"
         private string _currentFilter;
         private Effect _postFx;
         private SamplerState _postSampler = SamplerState.PointClamp;
@@ -105,7 +106,7 @@ namespace ClassicUO.Game.Scenes
         private MoveItemQueue _moveItemQueue = new MoveItemQueue();
         private bool _useObjectHandles;
         private RenderTarget2D _world_render_target,
-            _lightRenderTarget;
+            _light_render_target;
         private AnimatedStaticsManager _animatedStaticsManager;
         private long _nextProfileSave;
 
@@ -471,8 +472,10 @@ namespace ClassicUO.Game.Scenes
 
             NetClient.Socket.Disconnected -= SocketOnDisconnected;
             NetClient.Socket.Disconnect();
-            _lightRenderTarget?.Dispose();
+            _light_render_target?.Dispose();
             _world_render_target?.Dispose();
+            _xbr?.Dispose();
+            _xbr = null;
 
             CommandManager.UnRegisterAll();
             Weather.Reset();
@@ -1082,6 +1085,15 @@ namespace ClassicUO.Game.Scenes
             }
         }
 
+        private float GetActiveScale()
+        {
+            float factor = ProfileManager.CurrentProfile.GlobalScaling
+                ? ProfileManager.CurrentProfile.GlobalScale
+                : Camera.Zoom;
+
+            return Math.Max(0.0001f, factor);
+        }
+
         public override bool Draw(UltimaBatcher2D batcher)
         {
             if (!World.InGame)
@@ -1097,74 +1109,22 @@ namespace ClassicUO.Game.Scenes
             var profile = ProfileManager.CurrentProfile;
             var gd = batcher.GraphicsDevice;
 
-            if(_use_render_target)
-                EnsureRenderTargets(gd);
-
             Viewport r_viewport = gd.Viewport;
             Viewport camera_viewport = Camera.GetViewport();
             Matrix matrix = Camera.ViewTransformMatrix;
 
             bool can_draw_lights = false;
+            Vector3 hue = new Vector3(0, 0, 1);
 
-            if (!_use_render_target)
-            {
-                if (profile.GlobalScaling)
-                {
-                    Camera.Zoom = 1f; // oScale + profile.GlobalScale;
-                    matrix = Matrix.CreateScale(profile.GlobalScale);
-                    camera_viewport.Bounds = new Rectangle(
-                        (int)(camera_viewport.Bounds.X * profile.GlobalScale),
-                        (int)(camera_viewport.Bounds.Y * profile.GlobalScale),
-                        (int)(camera_viewport.Bounds.Width * profile.GlobalScale),
-                        (int)(camera_viewport.Bounds.Height * profile.GlobalScale)
-                        );
-                }
-
-                can_draw_lights = PrepareLightsRendering(batcher, ref matrix);
-                gd.Viewport = camera_viewport;
-            }
-
-            DrawWorld(batcher, ref matrix, _use_render_target);
+            EnsureRenderTargets(gd);
 
             if (_use_render_target)
             {
-                can_draw_lights = PrepareLightsRendering(batcher, ref matrix);
-                gd.Viewport = camera_viewport;
+                can_draw_lights = DrawWorldRenderTarget(batcher, gd, camera_viewport);
             }
-
-            // draw world rt
-            Vector3 hue = Vector3.Zero;
-            hue.Z = 1f;
-
-            if (_use_render_target)
+            else
             {
-                UpdatePostProcessState(gd);
-
-                if (_postFx != null && ReferenceEquals(_postFx, _xbr) && _world_render_target != null)
-                {
-                    var vp = gd.Viewport;
-                    var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
-
-                    _xbr.MatrixTransform?.SetValue(ortho);
-                    _xbr.TextureSize?.SetValue(new Vector2(_world_render_target.Width, _world_render_target.Height));
-                    _xbr.Parameters?["decal"]?.SetValue(_world_render_target);
-                }
-
-                var vp2 = gd.Viewport;
-                var dst = new Rectangle(0, 0, vp2.Width, vp2.Height);
-
-                if (_postFx == null)
-                    batcher.Begin(null, Matrix.Identity);
-                else
-                    batcher.Begin(_postFx, Matrix.Identity);
-
-                batcher.SetBlendState(BlendState.Opaque);
-                batcher.SetSampler(_postSampler);
-                batcher.Draw(_world_render_target, dst, hue);
-                batcher.End();
-
-                batcher.SetSampler(null);
-                batcher.SetBlendState(null);
+                can_draw_lights = DrawWorldDirect(batcher, gd, camera_viewport);
             }
 
             // draw lights
@@ -1186,7 +1146,7 @@ namespace ClassicUO.Game.Scenes
                 }
 
                 batcher.Draw(
-                    _lightRenderTarget,
+                    _light_render_target,
                     new Rectangle(0, 0, Camera.Bounds.Width, Camera.Bounds.Height),
                     hue
                 );
@@ -1201,6 +1161,7 @@ namespace ClassicUO.Game.Scenes
                 batcher.Begin(null, Matrix.CreateScale(profile.GlobalScale));
             else
                 batcher.Begin();
+
             DrawOverheads(batcher);
             DrawSelection(batcher);
             batcher.End();
@@ -1208,6 +1169,105 @@ namespace ClassicUO.Game.Scenes
             gd.Viewport = r_viewport;
 
             return base.Draw(batcher);
+        }
+
+        private bool DrawWorldDirect(UltimaBatcher2D batcher, GraphicsDevice gd, Viewport camera_viewport)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            Matrix  matrix = Camera.ViewTransformMatrix;
+
+            if (profile.GlobalScaling)
+            {
+                Camera.Zoom = 1f; // oScale + profile.GlobalScale;
+                float scale = profile.GlobalScale;
+                matrix = Matrix.CreateScale(profile.GlobalScale);
+                camera_viewport.Bounds = new Rectangle(
+                    (int)(camera_viewport.Bounds.X * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Y * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Width * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Height * profile.GlobalScale)
+                );
+            }
+
+            bool can_draw_lights = PrepareLightsRendering(batcher, ref matrix);
+            gd.Viewport = camera_viewport;
+
+            DrawWorld(batcher, ref matrix, false);
+
+            return can_draw_lights;
+        }
+
+        private bool DrawWorldRenderTarget(UltimaBatcher2D batcher, GraphicsDevice gd, Viewport camera_viewport)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float scale = GetActiveScale();
+            bool can_draw_lights = false;
+            Rectangle srcRect;
+            Rectangle destRect;
+
+            int rtW = _world_render_target?.Width ?? Camera.Bounds.Width;
+            int rtH = _world_render_target?.Height ?? Camera.Bounds.Height;
+            int vpW = Camera.Bounds.Width;
+            int vpH = Camera.Bounds.Height;
+
+            Vector2 vpCenter = new Vector2(vpW * 0.5f, vpH * 0.5f);
+            Vector2 camOffset = Camera.Offset;
+            Vector2 rtCenter = new Vector2(rtW * 0.5f, rtH * 0.5f);
+
+            Matrix.CreateTranslation(-vpCenter.X, -vpCenter.Y, 0f, out Matrix matTrans1);
+            Matrix.CreateTranslation(-camOffset.X, -camOffset.Y, 0f, out Matrix matTrans2);
+            Matrix.CreateTranslation(rtCenter.X, rtCenter.Y, 0f, out Matrix matTrans3);
+            Matrix.Multiply(ref matTrans1, ref matTrans2, out Matrix temp1);
+            Matrix.Multiply(ref temp1, ref matTrans3, out Matrix worldRTMatrix);
+
+            if (profile.GlobalScaling)
+            {
+                Camera.Zoom = 1f;
+
+                camera_viewport.Bounds = new Rectangle(
+                    (int)(camera_viewport.Bounds.X * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Y * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Width * profile.GlobalScale),
+                    (int)(camera_viewport.Bounds.Height * profile.GlobalScale)
+                );
+
+                DrawWorld(batcher, ref worldRTMatrix, true);
+
+                can_draw_lights = PrepareLightsRendering(batcher, ref worldRTMatrix);
+                gd.Viewport = camera_viewport;
+
+                srcRect = new Rectangle(0, 0, rtW, rtH);
+                destRect = new Rectangle(0, 0, (int)Math.Floor(vpW * scale), (int)Math.Floor(vpH * scale));
+            }
+            else
+            {
+                DrawWorld(batcher, ref worldRTMatrix, true);
+
+                can_draw_lights = PrepareLightsRendering(batcher, ref worldRTMatrix);
+                gd.Viewport = camera_viewport;
+
+                int srcW = (int)Math.Floor(vpW * scale);
+                int srcH = (int)Math.Floor(vpH * scale);
+                int srcX = (rtW - srcW) / 2;
+                int srcY = (rtH - srcH) / 2;
+                srcRect = new Rectangle(srcX, srcY, srcW, srcH);
+                destRect = new Rectangle(0, 0, vpW, vpH);
+            }
+            
+            UpdatePostProcessState(gd);
+
+            if (_postFx == _xbr && _xbr != null)
+            {
+                BindXbrParams(gd);
+            }
+            batcher.Begin(_postFx, Matrix.Identity);
+            try { batcher.SetSampler(_postSampler ?? SamplerState.PointClamp); } catch { batcher.SetSampler(SamplerState.PointClamp); }
+            batcher.Draw(_world_render_target, destRect, srcRect, new Vector3(0, 0, 1));
+            batcher.End();
+            batcher.SetSampler(null);
+            batcher.SetBlendState(null);
+
+            return can_draw_lights;
         }
 
         private void DrawWorld(UltimaBatcher2D batcher, ref Matrix matrix, bool use_render_target)
@@ -1218,17 +1278,13 @@ namespace ClassicUO.Game.Scenes
             if (use_render_target)
             {
                 batcher.GraphicsDevice.SetRenderTarget(_world_render_target);
-                batcher.GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, Color.Black, 1f, 0);
+                batcher.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 1f, 0);
             }
-            else
-            {
-                batcher.SetSampler(SamplerState.PointClamp);
-            }
+
+            batcher.SetSampler(SamplerState.PointClamp);
 
             batcher.Begin(null, matrix);
             batcher.SetBrightlight(ProfileManager.CurrentProfile.TerrainShadowsLevel * 0.1f);
-
-            // https://shawnhargreaves.com/blog/depth-sorting-alpha-blended-objects.html
             batcher.SetStencil(DepthStencilState.Default);
 
             RenderedObjectsCount = 0;
@@ -1301,7 +1357,7 @@ namespace ClassicUO.Game.Scenes
             {
                 batcher.GraphicsDevice.SetRenderTarget(null);
             }
-
+            
             //batcher.Begin();
             //hueVec.X = 0;
             //hueVec.Y = 1;
@@ -1340,13 +1396,13 @@ namespace ClassicUO.Game.Scenes
             if (
                 !UseLights && !UseAltLights
                 || World.Player.IsDead && ProfileManager.CurrentProfile.EnableBlackWhiteEffect
-                || _lightRenderTarget == null
+                || _light_render_target == null
             )
             {
                 return false;
             }
 
-            batcher.GraphicsDevice.SetRenderTarget(_lightRenderTarget);
+            batcher.GraphicsDevice.SetRenderTarget(_light_render_target);
             batcher.GraphicsDevice.Clear(ClearOptions.Target, Color.Black, 0f, 0);
 
             if (!UseAltLights)
@@ -1465,78 +1521,78 @@ namespace ClassicUO.Game.Scenes
 
         private void EnsureRenderTargets(GraphicsDevice gd)
         {
-            var cam = Camera.Bounds;
+            var vp = Camera.GetViewport();
+            Profile profile = ProfileManager.CurrentProfile;
+            float scale = GetActiveScale();
 
-            int worldW = Math.Max(1, cam.Width);
-            int worldH = Math.Max(1, cam.Height);
-
-            if (_world_render_target == null ||
-                _world_render_target.IsDisposed ||
-                _world_render_target.Width != worldW ||
-                _world_render_target.Height != worldH)
+            int vw = Math.Max(1, Camera.Bounds.Width);
+            int vh = Math.Max(1, Camera.Bounds.Height);
+            int rtWidth = Math.Min(profile.GlobalScaling ? vw : (int)Math.Floor(vw * scale), _max_texture_size);
+            int rtHeight = Math.Min(profile.GlobalScaling ? vh : (int)Math.Floor(vh * scale), _max_texture_size);
+            
+            if (_use_render_target
+                && (_world_render_target == null
+                    || _world_render_target.IsDisposed
+                    || _world_render_target.Width != rtWidth
+                    || _world_render_target.Height != rtHeight
+                 ))
             {
                 _world_render_target?.Dispose();
+                var pp = gd.PresentationParameters;
                 _world_render_target = new RenderTarget2D(
-                    gd,
-                    worldW, worldH,
-                    false,
-                    SurfaceFormat.Color,
-                    DepthFormat.Depth24Stencil8,
-                    0,
-                    RenderTargetUsage.DiscardContents
-                );
-                _rtWCache = worldW;
-                _rtHCache = worldH;
+                    gd, rtWidth, rtHeight, false,
+                    pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount, pp.RenderTargetUsage);
             }
 
-            int lightW = Math.Max(1, cam.Width);
-            int lightH = Math.Max(1, cam.Height);
+            int ltWidth = _use_render_target ? rtWidth : vw;
+            int ltHeight = _use_render_target ? rtHeight : vh;
 
-            if (_lightRenderTarget == null ||
-                _lightRenderTarget.IsDisposed ||
-                _lightRenderTarget.Width != lightW ||
-                _lightRenderTarget.Height != lightH)
+            if (_light_render_target == null
+                || _light_render_target.IsDisposed
+                || _light_render_target.Width != ltWidth
+                || _light_render_target.Height != ltHeight)
             {
-                _lightRenderTarget?.Dispose();
-                _lightRenderTarget = new RenderTarget2D(
-                    gd,
-                    lightW, lightH,
-                    false,
-                    SurfaceFormat.Color,
-                    DepthFormat.None,
-                    0,
-                    RenderTargetUsage.DiscardContents
-                );
+                _light_render_target?.Dispose();
+                var pp = gd.PresentationParameters;
+                _light_render_target = new RenderTarget2D(
+                    gd, ltWidth, ltHeight, false,
+                    pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount, pp.RenderTargetUsage);
             }
         }
 
         private void UpdatePostProcessState(GraphicsDevice gd)
         {
             string mode = (_filterMode ?? "point").ToLowerInvariant();
+            Profile profile = ProfileManager.CurrentProfile;
+            float scale = GetActiveScale();
 
-            bool rtSizeChanged = _world_render_target != null &&
-                                 (_rtWCache != _world_render_target.Width || _rtHCache != _world_render_target.Height);
+            if (
+                (mode == "xbr" && scale >= 1.0f && !profile.GlobalScaling) ||
+                (mode == "xbr" && scale <= 1.0f && profile.GlobalScaling))
+            {
+                _postFx = null;
+                _postSampler = SamplerState.LinearClamp;
+                _currentFilter = "linear";
+                return;
+            }
 
-            if (_postFx != null && _currentFilter == mode && !rtSizeChanged)
+            if (_currentFilter == mode &&
+                ((_postFx == null && mode != "xbr") || (_postFx != null && (mode != "xbr" || ReferenceEquals(_postFx, _xbr)))))
                 return;
 
             _currentFilter = mode;
-            _rtWCache = _world_render_target?.Width ?? -1;
-            _rtHCache = _world_render_target?.Height ?? -1;
 
             switch (mode)
             {
                 case "xbr":
                     if (_xbr == null)
-                        _xbr = new XBREffect(gd);
-
-                    try
                     {
-                        var t = _xbr.Techniques?["T0"] ?? (_xbr.Techniques?.Count > 0 ? _xbr.Techniques[0] : null);
-                        if (t != null) _xbr.CurrentTechnique = t;
+                        _xbr = new XBREffect(gd);
+                        var tech = _xbr.Techniques?["T0"] ??
+                                   (_xbr.Techniques?.Count > 0 ? _xbr.Techniques[0] : null);
+                        if (tech != null) _xbr.CurrentTechnique = tech;
+                        else { _xbr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
                     }
-                    catch { }
-
                     _postFx = _xbr;
                     _postSampler = SamplerState.PointClamp;
                     break;
@@ -1557,6 +1613,29 @@ namespace ClassicUO.Game.Scenes
                     _postSampler = SamplerState.PointClamp;
                     break;
             }
+        }
+
+        private void BindXbrParams(GraphicsDevice gd)
+        {
+            if (_xbr == null || _world_render_target == null) return;
+
+            try
+            {
+                if (_xbr.Techniques?["T0"] != null)
+                    _xbr.CurrentTechnique = _xbr.Techniques["T0"];
+            }
+            catch { }
+
+            float w = _world_render_target.Width;
+            float h = _world_render_target.Height;
+
+            var vp = gd.Viewport;
+            var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
+            _xbr.MatrixTransform?.SetValue(ortho);
+            _xbr.TextureSize?.SetValue(new Vector2(w, h));
+            _xbr.Parameters?["invTextureSize"]?.SetValue(new Vector2(1f / w, 1f / h));
+            _xbr.Parameters?["TextureSizeInv"]?.SetValue(new Vector2(1f / w, 1f / h));
+            _xbr.Parameters?["decal"]?.SetValue(_world_render_target);
         }
 
         private static readonly RenderedText _youAreDeadText = RenderedText.Create(

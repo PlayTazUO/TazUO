@@ -1222,53 +1222,6 @@ namespace ClassicUO.Game.Scenes
             {
                 UpdateDrawPosition = true;
                 _lastCamOffset = Camera.Offset;
-
-                if (
-                    _use_render_target
-                    && (
-                        _world_render_target == null
-                        || _world_render_target.Width != (int)(winGameWidth * zoom)
-                        || _world_render_target.Height != (int)(winGameHeight * zoom)
-                    )
-                )
-                {
-                    _world_render_target?.Dispose();
-
-                    PresentationParameters pp = Client.Game.GraphicsDevice.PresentationParameters;
-
-                    _world_render_target = new RenderTarget2D(
-                        Client.Game.GraphicsDevice,
-                        winGameWidth * 1,
-                        winGameHeight * 1,
-                        false,
-                        pp.BackBufferFormat,
-                        pp.DepthStencilFormat,
-                        pp.MultiSampleCount,
-                        pp.RenderTargetUsage
-                    );
-                }
-
-                if (
-                    _lightRenderTarget == null
-                    || _lightRenderTarget.Width != winGameWidth
-                    || _lightRenderTarget.Height != winGameHeight
-                )
-                {
-                    _lightRenderTarget?.Dispose();
-
-                    PresentationParameters pp = Client.Game.GraphicsDevice.PresentationParameters;
-
-                    _lightRenderTarget = new RenderTarget2D(
-                        Client.Game.GraphicsDevice,
-                        winGameWidth,
-                        winGameHeight,
-                        false,
-                        pp.BackBufferFormat,
-                        pp.DepthStencilFormat,
-                        pp.MultiSampleCount,
-                        pp.RenderTargetUsage
-                    );
-                }
             }
 
             _minTile.X = realMinRangeX;
