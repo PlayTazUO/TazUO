@@ -713,7 +713,7 @@ namespace ClassicUO.LegionScripting
                     try
                     {
                         var client = new System.Net.WebClient();
-                        var api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
+                        var api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/legacy/src/ClassicUO.Client/LegionScripting/docs/API.py"));
                         File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "API.py"), api);
                         MainThreadQueue.EnqueueAction(() => { GameActions.Print("Updated API!"); });
                     }
