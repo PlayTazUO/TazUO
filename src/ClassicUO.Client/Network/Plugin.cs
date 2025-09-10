@@ -251,33 +251,33 @@ namespace ClassicUO.Network
                     //};
                     //Client.Game.AssistantHost.Connect("127.0.0.1", 7777);
 
-                    //Assembly asm = Assembly.LoadFile(PluginPath);
-                    //Type type = asm.GetType("Assistant.Engine");
+                    Assembly asm = Assembly.LoadFile(PluginPath);
+                    Type type = asm.GetType("Assistant.Engine");
 
-                    //if (type == null)
-                    //{
-                    //    Log.Error(
-                    //        "Unable to find Plugin Type, API requires the public class Engine in namespace Assistant."
-                    //    );
+                    if (type == null)
+                    {
+                        Log.Error(
+                            "Unable to find Plugin Type, API requires the public class Engine in namespace Assistant."
+                        );
 
-                    //    return;
-                    //}
+                        return;
+                    }
 
-                    //MethodInfo meth = type.GetMethod(
-                    //    "Install",
-                    //    BindingFlags.Public | BindingFlags.Static
-                    //);
+                    MethodInfo meth = type.GetMethod(
+                        "Install",
+                        BindingFlags.Public | BindingFlags.Static
+                    );
 
-                    //if (meth == null)
-                    //{
-                    //    Log.Error(
-                    //        "Engine class missing public static Install method Needs 'public static unsafe void Install(PluginHeader *plugin)' "
-                    //    );
+                    if (meth == null)
+                    {
+                        Log.Error(
+                            "Engine class missing public static Install method Needs 'public static unsafe void Install(PluginHeader *plugin)' "
+                        );
 
-                    //    return;
-                    //}
+                        return;
+                    }
 
-                    //meth.Invoke(null, new object[] { (IntPtr)func });
+                    meth.Invoke(null, new object[] { (IntPtr)func });
                 }
                 catch (Exception err)
                 {
