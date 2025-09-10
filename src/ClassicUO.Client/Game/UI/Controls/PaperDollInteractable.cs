@@ -70,6 +70,33 @@ namespace ClassicUO.Game.UI.Controls
             Layer.Talisman
         };
 
+        private static readonly Layer[] _layerOrder_parrot_fix =
+        {
+            Layer.Shirt,
+            Layer.Pants,
+            Layer.Shoes,
+            Layer.Legs,
+            Layer.Arms,
+            Layer.Torso,
+            Layer.Tunic,
+            Layer.Cloak,
+            Layer.Ring,
+            Layer.Bracelet,
+            Layer.Face,
+            Layer.Gloves,
+            Layer.Skirt,
+            Layer.Waist,
+            Layer.Necklace,
+            Layer.Hair,
+            Layer.Beard,
+            Layer.Earrings,
+            Layer.Helmet,
+            Layer.OneHanded,
+            Layer.TwoHanded,
+            Layer.Talisman,
+            Layer.Robe
+        };
+
         private readonly PaperDollGump _paperDollGump;
 
         private bool _updateUI;
@@ -182,6 +209,7 @@ namespace ClassicUO.Game.UI.Controls
             // equipment
             Item equipItem = mobile.FindItemByLayer(Layer.Cloak);
             Item arms = mobile.FindItemByLayer(Layer.Arms);
+            Item robe = mobile.FindItemByLayer(Layer.Robe);
 
             bool switch_arms_with_torso = false;
 
@@ -205,7 +233,14 @@ namespace ClassicUO.Game.UI.Controls
 
             if (equipItem != null)
             {
-                layers = equipItem.ItemData.IsContainer ? _layerOrder_quiver_fix : _layerOrder;
+                if (robe != null && robe.Graphic == 0xA2CB) // parrot
+                {
+                    layers = _layerOrder_parrot_fix;
+                }
+                else
+                {
+                    layers = equipItem.ItemData.IsContainer ? _layerOrder_quiver_fix : _layerOrder;
+                }
             }
             else if (
                 HasFakeItem
