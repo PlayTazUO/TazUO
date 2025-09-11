@@ -18,6 +18,7 @@ using static ClassicUO.LegionScripting.Commands;
 using static ClassicUO.LegionScripting.Expressions;
 using System.Text.Json.Serialization;
 using Microsoft.Scripting;
+using System.Globalization;
 
 namespace ClassicUO.LegionScripting
 {
@@ -878,6 +879,27 @@ namespace ClassicUO.LegionScripting
             if (pythonEngine != null && !LegionScripting.LScriptSettings.DisableModuleCache)
                 return;
 
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
+                CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+                CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
+            }
+            catch (Exception er)
+            {
+                Console.WriteLine($"Culture error: {er}");
+            }
+
+            try
+            {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            }
+            catch (Exception er)
+            {
+                Console.WriteLine($"Encoding error: {er}");
+            }
+
             pythonEngine = Python.CreateEngine();
 
             string dir = System.IO.Path.GetDirectoryName(FullPath);
@@ -895,7 +917,19 @@ namespace ClassicUO.LegionScripting
             pythonScope = pythonEngine.CreateScope();
             var api = new API(pythonEngine);
             scopedAPI = api;
-            pythonEngine.GetBuiltinModule().SetVariable("API", api);
+
+            var builtins = pythonEngine.GetBuiltinModule();
+            builtins.SetVariable("API", api);
+
+            var asm = typeof(ScriptFile).Assembly;
+            var pyClassesNamespace = "ClassicUO.LegionScripting.PyClasses";
+
+            var pyTypes = asm.GetTypes()
+                .Where(t => t.Namespace == pyClassesNamespace);
+            foreach (var t in pyTypes)
+            {
+                builtins.SetVariable(t.Name, t);
+            }
         }
 
         public void PythonScriptStopped()
