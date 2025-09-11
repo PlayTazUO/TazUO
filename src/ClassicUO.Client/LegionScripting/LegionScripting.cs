@@ -881,14 +881,13 @@ namespace ClassicUO.LegionScripting
 
             try
             {
-                Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-                Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-US");
-                CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
-                CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
+                var c = new CultureInfo("en-US");
+                Thread.CurrentThread.CurrentCulture = c;
+                Thread.CurrentThread.CurrentUICulture = c;
             }
             catch (Exception er)
             {
-                Console.WriteLine($"Culture error: {er}");
+                Log.Error($"Culture error: {er}");
             }
 
             try
@@ -897,7 +896,7 @@ namespace ClassicUO.LegionScripting
             }
             catch (Exception er)
             {
-                Console.WriteLine($"Encoding error: {er}");
+                Log.Error($"Encoding error: {er}");
             }
 
             pythonEngine = Python.CreateEngine();
@@ -922,13 +921,21 @@ namespace ClassicUO.LegionScripting
             builtins.SetVariable("API", api);
 
             var asm = typeof(ScriptFile).Assembly;
-            var pyClassesNamespace = "ClassicUO.LegionScripting.PyClasses";
+            const string pyClassesNamespace = "ClassicUO.LegionScripting.PyClasses";
 
             var pyTypes = asm.GetTypes()
-                .Where(t => t.Namespace == pyClassesNamespace);
+                .Where(t => t.Namespace == pyClassesNamespace
+                            && t.IsClass
+                            && !t.IsAbstract);
             foreach (var t in pyTypes)
             {
-                builtins.SetVariable(t.Name, t);
+                var name = t.Name.Split('`')[0];
+                if (builtins.ContainsVariable(name))
+                {
+                    Log.Debug($"PyClasses exposure skipped due to name collision: {name}");
+                    continue;
+                }
+                builtins.SetVariable(name, t);
             }
         }
 
