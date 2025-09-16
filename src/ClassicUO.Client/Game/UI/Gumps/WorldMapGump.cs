@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using SDL3;
 using System.Text.Json.Serialization;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
 using SixLabors.ImageSharp.PixelFormats;
@@ -992,17 +992,19 @@ public class WorldMapGump : ResizableGump
 
                 bi_height >>= 1;
 
-                surface = (SDL.SDL_Surface*)SDL.SDL_CreateRGBSurface
-                (
-                    0,
-                    (int)bi_width,
-                    (int)bi_height,
-                    32,
-                    0x00FF0000,
-                    0x0000FF00,
-                    0x000000FF,
-                    0xFF000000
-                );
+                // surface = (SDL.SDL_Surface*)SDL.SDL_CreateRGBSurface
+                // (
+                //     0,
+                //     (int)bi_width,
+                //     (int)bi_height,
+                //     32,
+                //     0x00FF0000,
+                //     0x0000FF00,
+                //     0x000000FF,
+                //     0xFF000000
+                // );
+                //Pretty sure its abgr8888
+                surface = (SDL.SDL_Surface*)SDL.SDL_CreateSurface((int)bi_width, (int)bi_height, SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888);
 
                 if (bi_bit_count <= 8)
                 {
@@ -1127,7 +1129,8 @@ public class WorldMapGump : ResizableGump
                     }
                 }
 
-                surface = (SDL.SDL_Surface*)INTERNAL_convertSurfaceFormat((IntPtr)surface);
+                //Since it is intially created as argb8888 I don't think we need this
+                //surface = (SDL.SDL_Surface*)INTERNAL_convertSurfaceFormat((IntPtr)surface);
 
                 int len = surface->w * surface->h * 4;
                 byte* pixels = (byte*)surface->pixels;
@@ -1145,7 +1148,8 @@ public class WorldMapGump : ResizableGump
                 Texture2D texture = new Texture2D(Client.Game.GraphicsDevice, surface->w, surface->h);
                 texture.SetDataPointerEXT(0, new Rectangle(0, 0, surface->w, surface->h), surface->pixels, len);
 
-                SDL.SDL_FreeSurface((IntPtr)surface);
+                //SDL.SDL_FreeSurface((IntPtr)surface);
+                SDL.SDL_free((IntPtr)surface);
 
                 reader.Release();
 
@@ -1157,22 +1161,22 @@ public class WorldMapGump : ResizableGump
             }
         }
 
-        private static unsafe IntPtr INTERNAL_convertSurfaceFormat(IntPtr surface)
-        {
-            IntPtr result = surface;
-            SDL.SDL_Surface* surPtr = (SDL.SDL_Surface*)surface;
-            SDL.SDL_PixelFormat* pixelFormatPtr = (SDL.SDL_PixelFormat*)surPtr->format;
-
-            // SurfaceFormat.Color is SDL_PIXELFORMAT_ABGR8888
-            if (pixelFormatPtr->format != SDL.SDL_PIXELFORMAT_ABGR8888)
-            {
-                // Create a properly formatted copy, free the old surface
-                result = SDL.SDL_ConvertSurfaceFormat(surface, SDL.SDL_PIXELFORMAT_ABGR8888, 0);
-                SDL.SDL_FreeSurface(surface);
-            }
-
-            return result;
-        }
+        // private static unsafe IntPtr INTERNAL_convertSurfaceFormat(IntPtr surface)
+        // {
+        //     IntPtr result = surface;
+        //     SDL.SDL_Surface* surPtr = (SDL.SDL_Surface*)surface;
+        //     SDL.SDL_PixelFormat* pixelFormatPtr = (SDL.SDL_PixelFormat*)surPtr->format;
+        //
+        //     // SurfaceFormat.Color is SDL_PIXELFORMAT_ABGR8888
+        //     if (pixelFormatPtr->format != SDL.SDL_PIXELFORMAT_ABGR8888)
+        //     {
+        //         // Create a properly formatted copy, free the old surface
+        //         result = SDL.SDL_ConvertSurfaceFormat(surface, SDL.SDL_PIXELFORMAT_ABGR8888, 0);
+        //         SDL.SDL_FreeSurface(surface);
+        //     }
+        //
+        //     return result;
+        // }
     }
 
     #region Loading

@@ -394,8 +394,6 @@ namespace ClassicUO.Game.GameObjects
             }
             else if (WantUpdateMulti)
             {
-                World.UoAssist.SignalAddMulti((ushort)(Graphic | 0x4000), X, Y);
-
                 if (
                     MultiDistanceBonus == 0
                     || World.HouseManager.IsHouseInRange(Serial, World.ClientViewRange)

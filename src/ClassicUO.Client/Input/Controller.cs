@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SDL2;
+using SDL3;
 
 namespace ClassicUO.Input
 {
@@ -25,79 +25,79 @@ namespace ClassicUO.Input
         public static bool Button_LeftStick { get; private set; }
         public static bool Button_RightStick { get; private set; }
 
-        public static Dictionary<SDL.SDL_GameControllerButton, bool> ButtonStates = new Dictionary<SDL.SDL_GameControllerButton, bool>();
+        public static Dictionary<SDL.SDL_GamepadButton, bool> ButtonStates = new();
 
-        public static void OnButtonDown(SDL.SDL_ControllerButtonEvent e)
+        public static void OnButtonDown(SDL.SDL_GamepadButtonEvent e)
         {
-            SetButtonState((SDL.SDL_GameControllerButton)e.button, true);
+            SetButtonState((SDL.SDL_GamepadButton)e.button, true);
         }
 
-        public static void OnButtonUp(SDL.SDL_ControllerButtonEvent e)
+        public static void OnButtonUp(SDL.SDL_GamepadButtonEvent e)
         {
-            SetButtonState((SDL.SDL_GameControllerButton)e.button, false);
+            SetButtonState((SDL.SDL_GamepadButton)e.button, false);
         }
 
-        private static void SetButtonState(SDL.SDL_GameControllerButton button, bool state)
+        private static void SetButtonState(SDL.SDL_GamepadButton button, bool state)
         {
             ButtonStates[button] = state;
 
             switch (button)
             {
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_A:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_SOUTH:
                     Button_A = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_B:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_EAST:
                     Button_B = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_X:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_WEST:
                     Button_X = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_Y:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_NORTH:
                     Button_Y = state;
                     break;
 
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                     Button_Left = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                     Button_Right = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_UP:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_UP:
                     Button_Up = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                     Button_Down = state;
                     break;
 
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
                     Button_LeftBumper = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
                     Button_RightBumper = state;
                     break;
 
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_BACK:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_BACK:
                     Button_LeftTrigger = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_GUIDE:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_GUIDE:
                     Button_RightTrigger = state;
                     break;
 
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_LEFT_STICK:
                     Button_LeftStick = state;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_RIGHT_STICK:
                     Button_RightStick = state;
                     break;
             }
         }
 
-        public static bool IsButtonPressed(SDL.SDL_GameControllerButton button)
+        public static bool IsButtonPressed(SDL.SDL_GamepadButton button)
         {
             return ButtonStates.ContainsKey(button) && ButtonStates[button];
         }
-        
-        public static bool AreButtonsPressed(int[] buttons, bool exact = true) => AreButtonsPressed(buttons.Select(x => (SDL.SDL_GameControllerButton)x).ToArray(), exact);
+
+        public static bool AreButtonsPressed(int[] buttons, bool exact = true) => AreButtonsPressed(buttons.Select(x => (SDL.SDL_GamepadButton)x).ToArray(), exact);
 
         /// <summary>
         /// Check is the supplied list of buttons are currently pressed.
@@ -105,7 +105,7 @@ namespace ClassicUO.Input
         /// <param name="buttons"></param>
         /// <param name="exact">If true, any other buttons pressed will make this return false</param>
         /// <returns></returns>
-        public static bool AreButtonsPressed(SDL.SDL_GameControllerButton[] buttons, bool exact = true)
+        public static bool AreButtonsPressed(SDL.SDL_GamepadButton[] buttons, bool exact = true)
         {
             bool finalstatus = true;
 
@@ -131,9 +131,9 @@ namespace ClassicUO.Input
             return finalstatus;
         }
 
-        public static SDL.SDL_GameControllerButton[] PressedButtons() => ButtonStates.Where(x => x.Value).Select(x => x.Key).ToArray();
+        public static SDL.SDL_GamepadButton[] PressedButtons() => ButtonStates.Where(x => x.Value).Select(x => x.Key).ToArray();
 
-        public static string GetButtonNames(SDL.SDL_GameControllerButton[] buttons)
+        public static string GetButtonNames(SDL.SDL_GamepadButton[] buttons)
         {
             string keys = string.Empty;
 
@@ -141,52 +141,52 @@ namespace ClassicUO.Input
             {
                 switch (button)
                 {
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_A:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_SOUTH:
                         keys += "A";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_B:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_EAST:
                         keys += "B";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_X:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_WEST:
                         keys += "X";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_Y:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_NORTH:
                         keys += "Y";
                         break;
 
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_LEFT:
                         keys += "Left";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_RIGHT:
                         keys += "Right";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_UP:
                         keys += "Up";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                         keys += "Down";
                         break;
 
 
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_LEFT_SHOULDER:
                         keys += "LB";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER:
                         keys += "RB";
                         break;
 
 
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_BACK:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_BACK:
                         keys += "LT";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_GUIDE:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_GUIDE:
                         keys += "RT";
                         break;
 
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_LEFTSTICK:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_LEFT_STICK:
                         keys += "LS";
                         break;
-                    case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+                    case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_RIGHT_STICK:
                         keys += "RS";
                         break;
                 }

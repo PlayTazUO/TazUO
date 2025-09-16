@@ -7,7 +7,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
-using SDL2;
+using SDL3;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -63,7 +63,7 @@ namespace ClassicUO.Game.Managers
     {
         private NameOverHeadHandlerGump _gump;
         private static SDL.SDL_Keycode _lastKeySym = SDL.SDL_Keycode.SDLK_UNKNOWN;
-        private static SDL.SDL_Keymod _lastKeyMod = SDL.SDL_Keymod.KMOD_NONE;
+        private static SDL.SDL_Keymod _lastKeyMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
         private readonly World _world;
 
         public NameOverHeadManager(World world) { _world = world; }
@@ -330,7 +330,7 @@ namespace ClassicUO.Game.Managers
             catch (Exception ex)
             {
                 Log.Error($"Failed to save nameoverhead.xml: {ex}");
-                
+
                 // Clean up temp file if it exists
                 if (File.Exists(tempPath))
                 {
@@ -385,19 +385,19 @@ namespace ClassicUO.Game.Managers
 
         public static List<NameOverheadOption> GetAllOptions() => Options;
 
-        public void RegisterKeyDown(SDL.SDL_Keysym key)
+        public void RegisterKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
-            if (_lastKeySym == key.sym && _lastKeyMod == key.mod)
+            if (_lastKeySym == key && _lastKeyMod == mod)
                 return;
 
-            _lastKeySym = key.sym;
-            _lastKeyMod = key.mod;
+            _lastKeySym = key;
+            _lastKeyMod = mod;
 
-            bool shift = (key.mod & SDL.SDL_Keymod.KMOD_SHIFT) != SDL.SDL_Keymod.KMOD_NONE;
-            bool alt = (key.mod & SDL.SDL_Keymod.KMOD_ALT) != SDL.SDL_Keymod.KMOD_NONE;
-            bool ctrl = (key.mod & SDL.SDL_Keymod.KMOD_CTRL) != SDL.SDL_Keymod.KMOD_NONE;
+            bool shift = (mod & SDL.SDL_Keymod.SDL_KMOD_SHIFT) != SDL.SDL_Keymod.SDL_KMOD_NONE;
+            bool alt = (mod & SDL.SDL_Keymod.SDL_KMOD_ALT) != SDL.SDL_Keymod.SDL_KMOD_NONE;
+            bool ctrl = (mod & SDL.SDL_Keymod.SDL_KMOD_CTRL) != SDL.SDL_Keymod.SDL_KMOD_NONE;
 
-            var option = FindOptionByHotkey(key.sym, alt, ctrl, shift);
+            var option = FindOptionByHotkey(key, alt, ctrl, shift);
 
             if (option == null)
                 return;
@@ -407,9 +407,9 @@ namespace ClassicUO.Game.Managers
             IsTemporarilyShowing = true;
         }
 
-        public static void RegisterKeyUp(SDL.SDL_Keysym key)
+        public static void RegisterKeyUp(SDL.SDL_Keycode key)
         {
-            if (key.sym != _lastKeySym)
+            if (key != _lastKeySym)
                 return;
 
             _lastKeySym = SDL.SDL_Keycode.SDLK_UNKNOWN;

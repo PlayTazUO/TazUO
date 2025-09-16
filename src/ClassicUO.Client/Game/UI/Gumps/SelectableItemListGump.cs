@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
-using SDL2;
+using SDL3;
 
 namespace ClassicUO.Game.UI.Gumps;
 

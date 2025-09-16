@@ -443,7 +443,7 @@ namespace ClassicUO.Game.Managers
 
             for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
             {
-                Control g = last.Value;
+                Gump g = last.Value;
                 g.Draw(batcher, g.X, g.Y);
             }
 

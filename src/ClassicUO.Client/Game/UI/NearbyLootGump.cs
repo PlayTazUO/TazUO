@@ -11,7 +11,7 @@ using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using SDL3;
 using static ClassicUO.Game.UI.Gumps.GridHighLight.GridHighlightMenu;
 
 namespace ClassicUO.Game.UI
@@ -297,18 +297,18 @@ namespace ClassicUO.Game.UI
 
             }
         }
-        protected override void OnControllerButtonDown(SDL.SDL_GameControllerButton button)
+        protected override void OnControllerButtonDown(SDL.SDL_GamepadButton button)
         {
             base.OnControllerButtonDown(button);
             switch (button)
             {
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_UP:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_UP:
                     SelectedIndex--;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_DPAD_DOWN:
                     SelectedIndex++;
                     break;
-                case SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_A:
+                case SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_SOUTH:
                     LootSelectedIndex();
                     break;
             }

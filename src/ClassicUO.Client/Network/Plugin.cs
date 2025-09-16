@@ -9,16 +9,14 @@ using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
-using ClassicUO.IO;
 using ClassicUO.Assets;
-using ClassicUO.Renderer;
 using ClassicUO.Renderer.Batching;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
 using CUO_API;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using SDL3;
 
 namespace ClassicUO.Network
 {
@@ -117,6 +115,8 @@ namespace ClassicUO.Network
 
         public bool IsValid { get; private set; }
 
+        public static bool Enabled = false;
+
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool DeleteFile(string name);
@@ -148,6 +148,7 @@ namespace ClassicUO.Network
 
             Log.Trace($"Plugin: {path} loaded.");
             Plugins.Add(p);
+            Enabled = true;
 
             return p;
         }
@@ -169,16 +170,7 @@ namespace ClassicUO.Network
             _get_tile_data = GetTileData;
             _get_cliloc = GetCliloc;
 
-            SDL.SDL_SysWMinfo info = new SDL.SDL_SysWMinfo();
-            SDL.SDL_VERSION(out info.version);
-            SDL.SDL_GetWindowWMInfo(Client.Game.Window.Handle, ref info);
-
             IntPtr hwnd = IntPtr.Zero;
-
-            if (info.subsystem == SDL.SDL_SYSWM_TYPE.SDL_SYSWM_WINDOWS)
-            {
-                hwnd = info.info.win.window;
-            }
 
             PluginHeader header = new PluginHeader
             {
@@ -500,6 +492,8 @@ namespace ClassicUO.Network
 
         internal static void Tick()
         {
+            if (!Enabled) return;
+
             Client.Game.PluginHost?.Tick();
 
             foreach (Plugin t in Plugins)
@@ -513,6 +507,8 @@ namespace ClassicUO.Network
 
         internal static bool ProcessRecvPacket(byte[] data, ref int length)
         {
+            if (!Enabled) return true;
+
             bool result = Client.Game.PluginHost?.PacketIn(new ArraySegment<byte>(data, 0, length)) ?? true;
 
             foreach (Plugin plugin in Plugins)
@@ -548,6 +544,8 @@ namespace ClassicUO.Network
 
         internal static bool ProcessSendPacket(ref Span<byte> message)
         {
+            if (!Enabled) return true;
+
             bool result = Client.Game.PluginHost?.PacketOut(message) ?? true;
 
             foreach (Plugin plugin in Plugins)
@@ -626,6 +624,8 @@ namespace ClassicUO.Network
 
         internal static void OnConnected()
         {
+            if (!Enabled) return;
+
             Client.Game.PluginHost?.Connected();
 
             foreach (Plugin t in Plugins)
@@ -639,6 +639,8 @@ namespace ClassicUO.Network
 
         internal static void OnDisconnected()
         {
+            if (!Enabled) return;
+
             Client.Game.PluginHost?.Disconnected();
 
             foreach (Plugin t in Plugins)
@@ -652,6 +654,8 @@ namespace ClassicUO.Network
 
         internal static bool ProcessHotkeys(int key, int mod, bool ispressed)
         {
+            if (!Enabled) return true;
+
             if ((!Client.Game.UO.World?.InGame ?? false) || UIManager.SystemChat != null && (
                         ProfileManager.CurrentProfile != null
                             && ProfileManager.CurrentProfile.ActivateChatAfterEnter

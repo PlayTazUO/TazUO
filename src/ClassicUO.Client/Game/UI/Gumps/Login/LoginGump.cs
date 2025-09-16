@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -10,7 +10,7 @@ using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
-using SDL2;
+using SDL3;
 using System.Collections.Generic;
 
 namespace ClassicUO.Game.UI.Gumps.Login
@@ -26,14 +26,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
         private readonly StbTextBox _textboxAccount;
 
         private float _time;
-        
+
         public static LoginGump Instance { get; private set; }
 
         public LoginGump(World world, LoginScene scene) : base(world, 0, 0)
         {
             Instance?.Dispose();
             Instance = this;
-            
+
             CanCloseWithRightClick = false;
 
             AcceptKeyboardInput = false;
@@ -531,10 +531,10 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }
         }
 
-        protected override void OnControllerButtonUp(SDL.SDL_GameControllerButton button)
+        protected override void OnControllerButtonUp(SDL.SDL_GamepadButton button)
         {
             base.OnControllerButtonUp(button);
-            if (button == SDL.SDL_GameControllerButton.SDL_CONTROLLER_BUTTON_A)
+            if (button == SDL.SDL_GamepadButton.SDL_GAMEPAD_BUTTON_SOUTH)
             {
                 SaveCheckboxStatus();
                 LoginScene ls = Client.Game.GetScene<LoginScene>();

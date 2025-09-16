@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +42,6 @@ namespace ClassicUO.Game
             SkillsGroupManager = new SkillsGroupManager(this);
             ChatManager = new ChatManager(this);
             AuraManager = new AuraManager(this);
-            UoAssist = new UoAssist(this);
             TargetManager = new TargetManager(this);
             DelayedObjectClickManager = new DelayedObjectClickManager(this);
             BoatMovingManager = new BoatMovingManager(this);
@@ -88,8 +87,6 @@ namespace ClassicUO.Game
         public ChatManager ChatManager { get; }
 
         public AuraManager AuraManager { get; }
-
-        public UoAssist UoAssist { get; }
 
         public TargetManager TargetManager { get; }
 
@@ -181,8 +178,6 @@ namespace ClassicUO.Game
                     {
                         Client.Game.UO.GameCursor.Graphic = 0xFFFF;
                     }
-
-                    UoAssist.SignalMapChanged(value);
                 }
             }
         }

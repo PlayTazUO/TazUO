@@ -508,7 +508,7 @@ namespace ClassicUO.LegionScripting
             try
             {
                 string script = ScriptRecorder.Instance.GenerateScript(_recordPausesCheckbox.IsChecked);
-                SDL2.SDL.SDL_SetClipboardText(script);
+                SDL3.SDL.SDL_SetClipboardText(script);
                 GameActions.Print("Script copied to clipboard!");
             }
             catch (Exception ex)

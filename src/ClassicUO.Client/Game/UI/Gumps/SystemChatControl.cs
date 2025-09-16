@@ -14,7 +14,7 @@ using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
-using SDL2;
+using SDL3;
 using Control = ClassicUO.Game.UI.Controls.Control;
 using Label = ClassicUO.Game.UI.Controls.Label;
 using TextBox = ClassicUO.Game.UI.Controls.TextBox;
@@ -530,7 +530,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             switch (key)
             {
-                case SDL.SDL_Keycode.SDLK_q when Keyboard.Ctrl && _messageHistoryIndex > -1 && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
+                case SDL.SDL_Keycode.SDLK_Q when Keyboard.Ctrl && _messageHistoryIndex > -1 && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
 
                     GameScene scene = Client.Game.GetScene<GameScene>();
 
@@ -560,7 +560,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     break;
 
-                case SDL.SDL_Keycode.SDLK_w when Keyboard.Ctrl && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
+                case SDL.SDL_Keycode.SDLK_W when Keyboard.Ctrl && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
 
                     scene = Client.Game.GetScene<GameScene>();
 
@@ -689,7 +689,7 @@ namespace ClassicUO.Game.UI.Gumps
                 text = text.Substring(0, cutoffIndex);
                 sendAgain = true;
             }
-            
+
             if (_gump.World.MessageManager.PromptData.Prompt != ConsolePrompt.None)
             {
                 if (_gump.World.MessageManager.PromptData.Prompt == ConsolePrompt.ASCII)
@@ -940,8 +940,6 @@ namespace ClassicUO.Game.UI.Gumps
                         break;
 
                     case ChatMode.UOAMChat:
-                        _gump.World.UoAssist.SignalMessage(text);
-
                         break;
 
                     case ChatMode.UOChat:

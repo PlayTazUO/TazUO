@@ -717,10 +717,7 @@ sealed class PacketHandlers
 
             if (mobile == world.Player)
             {
-                world.UoAssist.SignalHits();
-                world.UoAssist.SignalStamina();
-                world.UoAssist.SignalMana();
-                    TitleBarStatsManager.UpdateTitleBar();
+                TitleBarStatsManager.UpdateTitleBar();
             }
         }
     }
@@ -1887,10 +1884,7 @@ sealed class PacketHandlers
 
             if (mobile == world.Player)
             {
-                world.UoAssist.SignalHits();
-                world.UoAssist.SignalStamina();
-                world.UoAssist.SignalMana();
-                    TitleBarStatsManager.UpdateTitleBar();
+                TitleBarStatsManager.UpdateTitleBar();
             }
         }
     }
@@ -3622,7 +3616,6 @@ sealed class PacketHandlers
 
         if (entity == world.Player)
         {
-            world.UoAssist.SignalHits();
             SpellVisualRangeManager.Instance.ClearCasting();
             TitleBarStatsManager.UpdateTitleBar();
         }
@@ -3642,7 +3635,6 @@ sealed class PacketHandlers
 
         if (mobile == world.Player)
         {
-            world.UoAssist.SignalMana();
             TitleBarStatsManager.UpdateTitleBar();
         }
     }
@@ -3661,7 +3653,6 @@ sealed class PacketHandlers
 
         if (mobile == world.Player)
         {
-            world.UoAssist.SignalStamina();
             TitleBarStatsManager.UpdateTitleBar();
         }
     }

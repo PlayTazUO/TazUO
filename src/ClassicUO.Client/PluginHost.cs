@@ -2,11 +2,12 @@
 using ClassicUO.Game;
 using ClassicUO.Network;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using SDL3;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ClassicUO.Utility.Logging;
 
 
 namespace ClassicUO
@@ -224,8 +225,16 @@ namespace ClassicUO
 
         static void setWindowTitle(IntPtr ptr)
         {
-            var title = SDL2.SDL.UTF8_ToManaged(ptr);
-            Client.Game.SetWindowTitle(title);
+            try
+            {
+                var title = Marshal.PtrToStringUTF8(ptr);
+                if (!string.IsNullOrEmpty(title))
+                    Client.Game.SetWindowTitle(title);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString());
+            }
         }
 
         static IntPtr reflectionCmd(IntPtr cmd)
@@ -357,7 +366,7 @@ namespace ClassicUO
         public bool Hotkey(int key, int mod, bool pressed);
         public void Mouse(int button, int wheel);
         public void GetCommandList(out IntPtr listPtr, out int listCount);
-        public unsafe int SdlEvent(SDL2.SDL.SDL_Event* ev);
+        public unsafe int SdlEvent(SDL3.SDL.SDL_Event* ev);
         public void UpdatePlayerPosition(int x, int y, int z);
         public bool PacketIn(ArraySegment<byte> buffer);
         public bool PacketOut(Span<byte> buffer);

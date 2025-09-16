@@ -8,7 +8,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Input;
 using ClassicUO.Utility.Logging;
-using SDL2;
+using SDL3;
 
 namespace ClassicUO.Game.Managers;
 
@@ -38,7 +38,7 @@ public class SpellBarManager
     public static string GetControllerButtonsName(int slot)
     {
         if(spellBarSettings.ControllerButtons.Length <= slot || slot < 0) return string.Empty;
-        return Controller.GetButtonNames(spellBarSettings.ControllerButtons[slot].Select(i => (SDL.SDL_GameControllerButton)i).ToArray());
+        return Controller.GetButtonNames(spellBarSettings.ControllerButtons[slot].Select(i => (SDL.SDL_GamepadButton)i).ToArray());
     }
 
     public static string GetKetNames(int slot)
@@ -49,7 +49,7 @@ public class SpellBarManager
         return KeysTranslator.TryGetKey(hotKey, hotMod);
     }
 
-    public static void ControllerInput(SDL.SDL_GameControllerButton button)
+    public static void ControllerInput(SDL.SDL_GamepadButton button)
     {
         if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.DisableHotkeys)
             return;
@@ -81,9 +81,9 @@ public class SpellBarManager
                 continue;
 
             // If no mod is expected, only allow if none are pressed
-            if (hotMod == SDL.SDL_Keymod.KMOD_NONE)
+            if (hotMod == SDL.SDL_Keymod.SDL_KMOD_NONE)
             {
-                if (mod == SDL.SDL_Keymod.KMOD_NONE)
+                if (mod == SDL.SDL_Keymod.SDL_KMOD_NONE)
                     UseSlot(CurrentRow, i);
             }
             else
@@ -108,13 +108,13 @@ public class SpellBarManager
         GameActions.CastSpell(spell.ID);
     }
 
-    public static SDL.SDL_GameControllerButton[][] GetControllerButtons()
+    public static SDL.SDL_GamepadButton[][] GetControllerButtons()
     {
         if (!enabled || !spellBarSettings.Enabled)
             return [];
 
         return spellBarSettings.ControllerButtons
-                               .Select(group => group.Select(x => (SDL.SDL_GameControllerButton)x).ToArray())
+                               .Select(group => group.Select(x => (SDL.SDL_GamepadButton)x).ToArray())
                                .ToArray();
     }
 
@@ -122,7 +122,7 @@ public class SpellBarManager
 
     public static SDL.SDL_Keymod[] GetModKeys() => spellBarSettings.KeyMod.Select(x=>(SDL.SDL_Keymod)x).ToArray();
 
-    public static void SetButtons(int slot, SDL.SDL_Keymod mod, SDL.SDL_Keycode key, SDL.SDL_GameControllerButton[] controllerButtons)
+    public static void SetButtons(int slot, SDL.SDL_Keymod mod, SDL.SDL_Keycode key, SDL.SDL_GamepadButton[] controllerButtons)
     {
         spellBarSettings.KeyMod[slot] = (int)mod;
         spellBarSettings.HotKeys[slot] = (int)key;

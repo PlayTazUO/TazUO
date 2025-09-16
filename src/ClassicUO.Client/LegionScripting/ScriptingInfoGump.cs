@@ -193,7 +193,7 @@ namespace ClassicUO.LegionScripting
 
             private static void SetClipboardText(string text)
             {
-                SDL2.SDL.SDL_SetClipboardText(text);
+                SDL3.SDL.SDL_SetClipboardText(text);
             }
         }
     }

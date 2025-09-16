@@ -10,7 +10,7 @@ using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SDL2;
+using SDL3;
 using StbTextEditSharp;
 
 namespace ClassicUO.Game.UI.Gumps;
@@ -596,7 +596,7 @@ public class BaseOptionsGump : Gump
         }
 
         public SDL.SDL_Keycode Key { get; private set; }
-        public SDL.SDL_GameControllerButton[] Buttons { get; private set; }
+        public SDL.SDL_GamepadButton[] Buttons { get; private set; }
         public MouseButtonType MouseButton { get; private set; }
         public bool WheelScroll { get; private set; }
         public bool WheelUp { get; private set; }
@@ -624,7 +624,7 @@ public class BaseOptionsGump : Gump
 
         public event EventHandler HotkeyChanged, HotkeyCancelled;
 
-        protected override void OnControllerButtonDown(SDL.SDL_GameControllerButton button)
+        protected override void OnControllerButtonDown(SDL.SDL_GamepadButton button)
         {
             if (IsActive)
             {
@@ -640,7 +640,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        public void SetButtons(SDL.SDL_GameControllerButton[] buttons)
+        public void SetButtons(SDL.SDL_GamepadButton[] buttons)
         {
             ResetBinding();
             Buttons = buttons;
@@ -649,7 +649,7 @@ public class BaseOptionsGump : Gump
 
         public void SetKey(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
-            if (key == SDL.SDL_Keycode.SDLK_UNKNOWN && mod == SDL.SDL_Keymod.KMOD_NONE)
+            if (key == SDL.SDL_Keycode.SDLK_UNKNOWN && mod == SDL.SDL_Keymod.SDL_KMOD_NONE)
             {
                 ResetBinding();
 
@@ -675,21 +675,21 @@ public class BaseOptionsGump : Gump
         {
             if (button == MouseButtonType.Middle || button == MouseButtonType.XButton1 || button == MouseButtonType.XButton2)
             {
-                SDL.SDL_Keymod mod = SDL.SDL_Keymod.KMOD_NONE;
+                SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
                 if (Keyboard.Alt)
                 {
-                    mod |= SDL.SDL_Keymod.KMOD_ALT;
+                    mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
                 }
 
                 if (Keyboard.Shift)
                 {
-                    mod |= SDL.SDL_Keymod.KMOD_SHIFT;
+                    mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
                 }
 
                 if (Keyboard.Ctrl)
                 {
-                    mod |= SDL.SDL_Keymod.KMOD_CTRL;
+                    mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
                 }
 
                 SetMouseButton(button, mod);
@@ -712,21 +712,21 @@ public class BaseOptionsGump : Gump
 
         protected override void OnMouseWheel(MouseEventType delta)
         {
-            SDL.SDL_Keymod mod = SDL.SDL_Keymod.KMOD_NONE;
+            SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
             if (Keyboard.Alt)
             {
-                mod |= SDL.SDL_Keymod.KMOD_ALT;
+                mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
             }
 
             if (Keyboard.Shift)
             {
-                mod |= SDL.SDL_Keymod.KMOD_SHIFT;
+                mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
             }
 
             if (Keyboard.Ctrl)
             {
-                mod |= SDL.SDL_Keymod.KMOD_CTRL;
+                mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
             }
 
             if (delta == MouseEventType.WheelScrollUp)
@@ -782,7 +782,7 @@ public class BaseOptionsGump : Gump
                     HotkeyCancelled.Raise(this);
 
                     Key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-                    Mod = SDL.SDL_Keymod.KMOD_NONE;
+                    Mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
                     break;
             }
@@ -1185,10 +1185,10 @@ public class BaseOptionsGump : Gump
                 base.OnFocusEnter();
                 CaretIndex = Text?.Length ?? 0;
 
-                if (SDL.SDL_IsTextInputActive() == SDL.SDL_bool.SDL_FALSE) {
-                    SDL.SDL_StartTextInput();
+                if (SDL.SDL_TextInputActive(Client.Game.Window.Handle) == false) {
+                    SDL.SDL_StartTextInput(Client.Game.Window.Handle);
                     SDL.SDL_Rect textRect = new() { x = ScreenCoordinateX, y = ScreenCoordinateY, w = Width, h = Height };
-                    SDL.SDL_SetTextInputRect(ref textRect);
+                    SDL.SDL_SetTextInputArea(Client.Game.Window.Handle, ref textRect, 0);
                 }
             }
 
@@ -1199,8 +1199,8 @@ public class BaseOptionsGump : Gump
                     Stb.SelectStart = Stb.SelectEnd = 0;
                 }
 
-                if (SDL.SDL_IsTextInputActive() == SDL.SDL_bool.SDL_TRUE) {
-                    SDL.SDL_StopTextInput();
+                if (SDL.SDL_TextInputActive(Client.Game.Window.Handle) == true) {
+                    SDL.SDL_StopTextInput(Client.Game.Window.Handle);
                 }
 
                 base.OnFocusLost();
@@ -1226,7 +1226,7 @@ public class BaseOptionsGump : Gump
 
                         break;
 
-                    case SDL.SDL_Keycode.SDLK_a when Keyboard.Ctrl && !NoSelection: SelectAll(); break;
+                    case SDL.SDL_Keycode.SDLK_A when Keyboard.Ctrl && !NoSelection: SelectAll(); break;
 
                     case SDL.SDL_Keycode.SDLK_ESCAPE:
                         if (LoseFocusOnEscapeKey && SelectionStart == SelectionEnd)
@@ -1241,7 +1241,7 @@ public class BaseOptionsGump : Gump
 
                     case SDL.SDL_Keycode.SDLK_INSERT when IsEditable: stb_key = ControlKeys.InsertMode; break;
 
-                    case SDL.SDL_Keycode.SDLK_c when Keyboard.Ctrl && !NoSelection:
+                    case SDL.SDL_Keycode.SDLK_C when Keyboard.Ctrl && !NoSelection:
                         int selectStart = Math.Min(Stb.SelectStart, Stb.SelectEnd);
                         int selectEnd = Math.Max(Stb.SelectStart, Stb.SelectEnd);
 
@@ -1252,7 +1252,7 @@ public class BaseOptionsGump : Gump
 
                         break;
 
-                    case SDL.SDL_Keycode.SDLK_x when Keyboard.Ctrl && !NoSelection:
+                    case SDL.SDL_Keycode.SDLK_X when Keyboard.Ctrl && !NoSelection:
                         selectStart = Math.Min(Stb.SelectStart, Stb.SelectEnd);
                         selectEnd = Math.Max(Stb.SelectStart, Stb.SelectEnd);
 
@@ -1268,11 +1268,11 @@ public class BaseOptionsGump : Gump
 
                         break;
 
-                    case SDL.SDL_Keycode.SDLK_v when Keyboard.Ctrl && IsEditable: OnTextInput(StringHelper.GetClipboardText(Multiline)); break;
+                    case SDL.SDL_Keycode.SDLK_V when Keyboard.Ctrl && IsEditable: OnTextInput(StringHelper.GetClipboardText(Multiline)); break;
 
-                    case SDL.SDL_Keycode.SDLK_z when Keyboard.Ctrl && IsEditable: stb_key = ControlKeys.Undo; break;
+                    case SDL.SDL_Keycode.SDLK_Z when Keyboard.Ctrl && IsEditable: stb_key = ControlKeys.Undo; break;
 
-                    case SDL.SDL_Keycode.SDLK_y when Keyboard.Ctrl && IsEditable: stb_key = ControlKeys.Redo; break;
+                    case SDL.SDL_Keycode.SDLK_Y when Keyboard.Ctrl && IsEditable: stb_key = ControlKeys.Redo; break;
 
                     case SDL.SDL_Keycode.SDLK_LEFT:
                         if (Keyboard.Ctrl && Keyboard.Shift)

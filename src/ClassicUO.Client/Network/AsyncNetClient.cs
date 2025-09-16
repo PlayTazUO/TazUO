@@ -9,7 +9,7 @@ using System.Collections.Concurrent;
 using System.Data;
 using System.IO;
 using System.Buffers;
-using SDL2;
+using SDL3;
 
 namespace ClassicUO.Network
 {
@@ -284,7 +284,7 @@ namespace ClassicUO.Network
 
             _isDisconnecting = true;
 
-            SDL.SDL_CaptureMouse(SDL.SDL_bool.SDL_FALSE);
+            SDL.SDL_CaptureMouse(false);
             _isCompressionEnabled = false;
             Statistics.Reset();
 
