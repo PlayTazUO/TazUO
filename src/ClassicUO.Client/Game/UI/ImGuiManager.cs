@@ -46,7 +46,7 @@ namespace ClassicUO.Game.UI
             _windows.Clear();
         }
 
-        private static void SetDarkTheme()
+        private static void SetTazUOTheme()
         {
             var io = ImGui.GetIO();
             unsafe
@@ -64,60 +64,73 @@ namespace ClassicUO.Game.UI
             var style = ImGui.GetStyle();
 
             // Style settings
-            style.WindowMinSize = new System.Numerics.Vector2(160, 20);
-            style.FramePadding = new System.Numerics.Vector2(4, 2);
-            style.ItemSpacing = new System.Numerics.Vector2(6, 2);
-            style.ItemInnerSpacing = new System.Numerics.Vector2(6, 4);
-            style.Alpha = 0.95f;
-            style.WindowRounding = 4.0f;
-            style.FrameRounding = 2.0f;
-            style.IndentSpacing = 6.0f;
-            style.ColumnsMinSpacing = 50.0f;
-            style.GrabMinSize = 14.0f;
-            style.GrabRounding = 16.0f;
-            style.ScrollbarSize = 12.0f;
-            style.ScrollbarRounding = 16.0f;
+            style.WindowRounding = 5.0f;
+            style.FrameRounding = 5.0f;
+            style.GrabRounding = 5.0f;
+            style.TabRounding = 5.0f;
+            style.PopupRounding = 5.0f;
+            style.ScrollbarRounding = 5.0f;
+            style.WindowPadding = new System.Numerics.Vector2(10, 10);
+            style.FramePadding = new System.Numerics.Vector2(6, 4);
+            style.ItemSpacing = new System.Numerics.Vector2(8, 6);
+            style.TabBorderSize = 1.0f;
 
-            // Dark theme colors
+
+            // TazUO color scheme
             var colors = style.Colors;
-            colors[(int)ImGuiCol.Text] = new System.Numerics.Vector4(0.86f, 0.93f, 0.89f, 0.78f);
-            colors[(int)ImGuiCol.TextDisabled] = new System.Numerics.Vector4(0.86f, 0.93f, 0.89f, 0.28f);
-            colors[(int)ImGuiCol.WindowBg] = new System.Numerics.Vector4(0.13f, 0.14f, 0.17f, 1.00f);
-            colors[(int)ImGuiCol.Border] = new System.Numerics.Vector4(0.31f, 0.31f, 1.00f, 0.00f);
-            colors[(int)ImGuiCol.BorderShadow] = new System.Numerics.Vector4(0.00f, 0.00f, 0.00f, 0.00f);
-            colors[(int)ImGuiCol.FrameBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 1.00f);
-            colors[(int)ImGuiCol.FrameBgHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.78f);
-            colors[(int)ImGuiCol.FrameBgActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.TitleBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 1.00f);
-            colors[(int)ImGuiCol.TitleBgCollapsed] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 0.75f);
-            colors[(int)ImGuiCol.TitleBgActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.MenuBarBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 0.47f);
-            colors[(int)ImGuiCol.ScrollbarBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 1.00f);
-            colors[(int)ImGuiCol.ScrollbarGrab] = new System.Numerics.Vector4(0.09f, 0.15f, 0.16f, 1.00f);
-            colors[(int)ImGuiCol.ScrollbarGrabHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.78f);
-            colors[(int)ImGuiCol.ScrollbarGrabActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.CheckMark] = new System.Numerics.Vector4(0.71f, 0.22f, 0.27f, 1.00f);
-            colors[(int)ImGuiCol.SliderGrab] = new System.Numerics.Vector4(0.47f, 0.77f, 0.83f, 0.14f);
-            colors[(int)ImGuiCol.SliderGrabActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.Button] = new System.Numerics.Vector4(0.47f, 0.77f, 0.83f, 0.14f);
-            colors[(int)ImGuiCol.ButtonHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.86f);
-            colors[(int)ImGuiCol.ButtonActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.Header] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.76f);
-            colors[(int)ImGuiCol.HeaderHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.86f);
-            colors[(int)ImGuiCol.HeaderActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.Separator] = new System.Numerics.Vector4(0.14f, 0.16f, 0.19f, 1.00f);
-            colors[(int)ImGuiCol.SeparatorHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.78f);
-            colors[(int)ImGuiCol.SeparatorActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.ResizeGrip] = new System.Numerics.Vector4(0.47f, 0.77f, 0.83f, 0.04f);
-            colors[(int)ImGuiCol.ResizeGripHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.78f);
-            colors[(int)ImGuiCol.ResizeGripActive] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.PlotLines] = new System.Numerics.Vector4(0.86f, 0.93f, 0.89f, 0.63f);
-            colors[(int)ImGuiCol.PlotLinesHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.PlotHistogram] = new System.Numerics.Vector4(0.86f, 0.93f, 0.89f, 0.63f);
-            colors[(int)ImGuiCol.PlotHistogramHovered] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 1.00f);
-            colors[(int)ImGuiCol.TextSelectedBg] = new System.Numerics.Vector4(0.92f, 0.18f, 0.29f, 0.43f);
-            colors[(int)ImGuiCol.PopupBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 0.9f);
-            colors[(int)ImGuiCol.ModalWindowDimBg] = new System.Numerics.Vector4(0.20f, 0.22f, 0.27f, 0.73f);
+
+            // Primary background
+            colors[(int)ImGuiCol.WindowBg] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.MenuBarBg] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.PopupBg] = ThemeUtils.Colors.Primary;
+
+            // Headers
+            colors[(int)ImGuiCol.Header] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.HeaderHovered] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.HeaderActive] = ThemeUtils.Colors.Primary;
+
+            // Buttons
+            colors[(int)ImGuiCol.Button] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.ButtonHovered] = ThemeUtils.Colors.Base200;
+            colors[(int)ImGuiCol.ButtonActive] = ThemeUtils.Colors.Primary;
+
+            // Frame BG
+            colors[(int)ImGuiCol.FrameBg] = ThemeUtils.Colors.Base200;
+            colors[(int)ImGuiCol.FrameBgHovered] = ThemeUtils.Colors.Base300;
+            colors[(int)ImGuiCol.FrameBgActive] = ThemeUtils.Colors.Primary;
+
+            // Tabs
+            colors[(int)ImGuiCol.Tab] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.TabHovered] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.TabSelected] = ThemeUtils.Colors.Primary;
+
+
+            // Title
+            colors[(int)ImGuiCol.TitleBg] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.TitleBgActive] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.TitleBgCollapsed] = ThemeUtils.Colors.Base100;
+
+            // Borders
+            colors[(int)ImGuiCol.Border] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.BorderShadow] = ThemeUtils.Colors.BorderShadow;
+
+            // Text
+            colors[(int)ImGuiCol.Text] = ThemeUtils.Colors.BaseContent;
+            colors[(int)ImGuiCol.TextDisabled] = ThemeUtils.Colors.Base300;
+
+            // Highlights
+            colors[(int)ImGuiCol.CheckMark] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.SliderGrab] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.SliderGrabActive] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.ResizeGrip] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.ResizeGripHovered] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.ResizeGripActive] = ThemeUtils.Colors.Primary;
+
+            // Scrollbar
+            colors[(int)ImGuiCol.ScrollbarBg] = ThemeUtils.Colors.ScrollbarBg;
+            colors[(int)ImGuiCol.ScrollbarGrab] = ThemeUtils.Colors.ScrollbarGrab;
+            colors[(int)ImGuiCol.ScrollbarGrabHovered] = ThemeUtils.Colors.ScrollbarGrabHovered;
+            colors[(int)ImGuiCol.ScrollbarGrabActive] = ThemeUtils.Colors.ScrollbarGrabActive;
         }
 
         public static void Initialize(Microsoft.Xna.Framework.Game game)
@@ -128,7 +141,7 @@ namespace ClassicUO.Game.UI
             try
             {
                 _imGuiRenderer = new ImGuiRenderer(game);
-                SetDarkTheme();
+                SetTazUOTheme();
                 _imGuiRenderer.RebuildFontAtlas();
 
                 _isInitialized = true;
