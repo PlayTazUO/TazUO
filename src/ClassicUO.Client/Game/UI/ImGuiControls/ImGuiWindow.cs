@@ -1,6 +1,8 @@
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
+using ClassicUO.Renderer;
 
 namespace ClassicUO.Game.UI.ImGuiControls
 {
@@ -78,24 +80,44 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.SetTooltip(tooltip);
         }
 
+        private Dictionary<ushort, ArtPointerStruct> _texturePointerCache = new();
+
         protected bool DrawArt(ushort graphic, Vector2 size, bool useSmallerIfGfxSmaller = true)
         {
             var artInfo = Client.Game.UO.Arts.GetArt(graphic);
+
+            if(useSmallerIfGfxSmaller && artInfo.UV.Width < size.X && artInfo.UV.Height < size.Y)
+                size = new Vector2(artInfo.UV.Width, artInfo.UV.Height);
+
+            if (_texturePointerCache.TryGetValue(graphic, out ArtPointerStruct art))
+            {
+                ImGui.Image(art.Pointer, size, art.UV0, art.UV1);
+                return true;
+            }
 
             if(artInfo.Texture != null)
             {
                 var uv0 = new Vector2(artInfo.UV.X / (float)artInfo.Texture.Width, artInfo.UV.Y / (float)artInfo.Texture.Height);
                 var uv1 = new Vector2((artInfo.UV.X + artInfo.UV.Width) / (float)artInfo.Texture.Width, (artInfo.UV.Y + artInfo.UV.Height) / (float)artInfo.Texture.Height);
+                var pnt = ImGuiManager.Renderer.BindTexture(artInfo.Texture);
 
-                if(useSmallerIfGfxSmaller && artInfo.UV.Width < size.X && artInfo.UV.Height < size.Y)
-                    size = new Vector2(artInfo.UV.Width, artInfo.UV.Height);
+                _texturePointerCache.Add(graphic, new ArtPointerStruct(pnt, artInfo, uv0, uv1, size));
 
-                ImGui.Image(ImGuiManager.Renderer.BindTexture(artInfo.Texture), size, uv0, uv1);
+                ImGui.Image(pnt, size, uv0, uv1);
                 return true;
             }
 
             return false;
         }
+    }
+
+    public struct ArtPointerStruct(nint pointer, SpriteInfo spriteInfo, Vector2 uv0, Vector2 uv1, Vector2 size)
+    {
+        public Vector2 Size = size;
+        public IntPtr Pointer = pointer;
+        public Vector2 UV0 = uv0;
+        public Vector2 UV1 = uv1;
+        SpriteInfo SpriteInfo = spriteInfo;
     }
 
     public abstract class SingletonImGuiWindow<T> : ImGuiWindow where T : SingletonImGuiWindow<T>

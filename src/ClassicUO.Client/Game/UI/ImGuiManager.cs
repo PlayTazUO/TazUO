@@ -198,19 +198,6 @@ namespace ClassicUO.Game.UI
                     _windows.RemoveAt(i);
                 }
             }
-            //
-            // if (_showDemoWindow)
-            // {
-            //     ImGui.ShowDemoWindow(ref _showDemoWindow);
-            // }
-            //
-            // if (_showDebugWindow)
-            // {
-            //     DrawDebugWindow();
-            // }
-            //
-            // // Example custom window
-            // DrawExampleWindow();
         }
 
         public static void Dispose()

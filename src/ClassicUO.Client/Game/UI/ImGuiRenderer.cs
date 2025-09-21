@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
+using SDL3;
 
 namespace ImGuiNET.SampleProgram.XNA
 {
@@ -40,6 +41,7 @@ namespace ImGuiNET.SampleProgram.XNA
         private int _scrollWheelValue;
         private readonly float WHEEL_DELTA = 120;
         private Keys[] _allKeys = Enum.GetValues<Keys>();
+        private bool _textInputActive = false;
 
         public ImGuiRenderer(Game game)
         {
@@ -187,7 +189,16 @@ namespace ImGuiNET.SampleProgram.XNA
         /// </summary>
         protected virtual void UpdateInput()
         {
-            if (!_game.IsActive) return;
+            if (!_game.IsActive)
+            {
+                // Stop text input when game is not active
+                if (_textInputActive)
+                {
+                    SDL.SDL_StopTextInput(_game.Window.Handle);
+                    _textInputActive = false;
+                }
+                return;
+            }
 
             var io = ImGui.GetIO();
 
@@ -215,6 +226,19 @@ namespace ImGuiNET.SampleProgram.XNA
 
             io.DisplaySize = new System.Numerics.Vector2(_graphicsDevice.PresentationParameters.BackBufferWidth, _graphicsDevice.PresentationParameters.BackBufferHeight);
             io.DisplayFramebufferScale = new System.Numerics.Vector2(1f, 1f);
+
+            // Handle SDL text input state based on ImGui's needs
+            bool wantTextInput = io.WantTextInput;
+            if (wantTextInput && !_textInputActive)
+            {
+                SDL.SDL_StartTextInput(_game.Window.Handle);
+                _textInputActive = true;
+            }
+            else if (!wantTextInput && _textInputActive)
+            {
+                SDL.SDL_StopTextInput(_game.Window.Handle);
+                _textInputActive = false;
+            }
         }
 
         private bool TryMapKeys(Keys key, out ImGuiKey imguikey)
