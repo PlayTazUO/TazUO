@@ -72,6 +72,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
         public virtual void Dispose()
         {
             OnWindowClosed();
+
+            foreach (var item in _texturePointerCache)
+                if(item.Value.Pointer != IntPtr.Zero)
+                    ImGuiManager.Renderer.UnbindTexture(item.Value.Pointer);
+
+            _texturePointerCache.Clear();
         }
 
         protected void SetTooltip(string tooltip)
