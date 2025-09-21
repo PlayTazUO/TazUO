@@ -49,8 +49,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             ImGui.Text("Organizers");
 
-            // Add new organizer
-            ImGui.SameLine();
             ImGui.Separator();
             if (ImGui.Button("Add Organizer"))
             {

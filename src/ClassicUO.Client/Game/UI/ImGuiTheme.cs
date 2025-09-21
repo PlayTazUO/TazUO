@@ -5,7 +5,7 @@ namespace ClassicUO.Game.UI
     /// <summary>
     /// A collection of color definitions for a consistent ImGui theme.
     /// </summary>
-    public static class ThemeUtils
+    public static class ImGuiTheme
     {
         public static class Colors
         {

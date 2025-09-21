@@ -80,57 +80,57 @@ namespace ClassicUO.Game.UI
             var colors = style.Colors;
 
             // Primary background
-            colors[(int)ImGuiCol.WindowBg] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.MenuBarBg] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.PopupBg] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.WindowBg] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.MenuBarBg] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.PopupBg] = ImGuiTheme.Colors.Primary;
 
             // Headers
-            colors[(int)ImGuiCol.Header] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.HeaderHovered] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.HeaderActive] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.Header] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.HeaderHovered] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.HeaderActive] = ImGuiTheme.Colors.Primary;
 
             // Buttons
-            colors[(int)ImGuiCol.Button] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.ButtonHovered] = ThemeUtils.Colors.Base200;
-            colors[(int)ImGuiCol.ButtonActive] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.Button] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.ButtonHovered] = ImGuiTheme.Colors.Base200;
+            colors[(int)ImGuiCol.ButtonActive] = ImGuiTheme.Colors.Primary;
 
             // Frame BG
-            colors[(int)ImGuiCol.FrameBg] = ThemeUtils.Colors.Base200;
-            colors[(int)ImGuiCol.FrameBgHovered] = ThemeUtils.Colors.Base300;
-            colors[(int)ImGuiCol.FrameBgActive] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.FrameBg] = ImGuiTheme.Colors.Base200;
+            colors[(int)ImGuiCol.FrameBgHovered] = ImGuiTheme.Colors.Base300;
+            colors[(int)ImGuiCol.FrameBgActive] = ImGuiTheme.Colors.Primary;
 
             // Tabs
-            colors[(int)ImGuiCol.Tab] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.TabHovered] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.TabSelected] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.Tab] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.TabHovered] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.TabSelected] = ImGuiTheme.Colors.Primary;
 
 
             // Title
-            colors[(int)ImGuiCol.TitleBg] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.TitleBgActive] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.TitleBgCollapsed] = ThemeUtils.Colors.Base100;
+            colors[(int)ImGuiCol.TitleBg] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.TitleBgActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.TitleBgCollapsed] = ImGuiTheme.Colors.Base100;
 
             // Borders
-            colors[(int)ImGuiCol.Border] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.BorderShadow] = ThemeUtils.Colors.BorderShadow;
+            colors[(int)ImGuiCol.Border] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.BorderShadow] = ImGuiTheme.Colors.BorderShadow;
 
             // Text
-            colors[(int)ImGuiCol.Text] = ThemeUtils.Colors.BaseContent;
-            colors[(int)ImGuiCol.TextDisabled] = ThemeUtils.Colors.Base300;
+            colors[(int)ImGuiCol.Text] = ImGuiTheme.Colors.BaseContent;
+            colors[(int)ImGuiCol.TextDisabled] = ImGuiTheme.Colors.Base300;
 
             // Highlights
-            colors[(int)ImGuiCol.CheckMark] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.SliderGrab] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.SliderGrabActive] = ThemeUtils.Colors.Base100;
-            colors[(int)ImGuiCol.ResizeGrip] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.ResizeGripHovered] = ThemeUtils.Colors.Primary;
-            colors[(int)ImGuiCol.ResizeGripActive] = ThemeUtils.Colors.Primary;
+            colors[(int)ImGuiCol.CheckMark] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.SliderGrab] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.SliderGrabActive] = ImGuiTheme.Colors.Base100;
+            colors[(int)ImGuiCol.ResizeGrip] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.ResizeGripHovered] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.ResizeGripActive] = ImGuiTheme.Colors.Primary;
 
             // Scrollbar
-            colors[(int)ImGuiCol.ScrollbarBg] = ThemeUtils.Colors.ScrollbarBg;
-            colors[(int)ImGuiCol.ScrollbarGrab] = ThemeUtils.Colors.ScrollbarGrab;
-            colors[(int)ImGuiCol.ScrollbarGrabHovered] = ThemeUtils.Colors.ScrollbarGrabHovered;
-            colors[(int)ImGuiCol.ScrollbarGrabActive] = ThemeUtils.Colors.ScrollbarGrabActive;
+            colors[(int)ImGuiCol.ScrollbarBg] = ImGuiTheme.Colors.ScrollbarBg;
+            colors[(int)ImGuiCol.ScrollbarGrab] = ImGuiTheme.Colors.ScrollbarGrab;
+            colors[(int)ImGuiCol.ScrollbarGrabHovered] = ImGuiTheme.Colors.ScrollbarGrabHovered;
+            colors[(int)ImGuiCol.ScrollbarGrabActive] = ImGuiTheme.Colors.ScrollbarGrabActive;
         }
 
         public static void Initialize(Microsoft.Xna.Framework.Game game)
