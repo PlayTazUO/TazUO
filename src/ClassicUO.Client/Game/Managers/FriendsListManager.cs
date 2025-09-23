@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using ClassicUO.Configuration;
-using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
+using IronPython.Runtime;
 
 namespace ClassicUO.Game.Managers
 {
@@ -177,6 +174,19 @@ namespace ClassicUO.Game.Managers
                 return null;
 
             return _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        public PythonList GetAllFriends()
+        {
+            if (!_loaded)
+                Load();
+
+            PythonList friendList = new();
+
+            foreach (FriendEntry friend in _friends)
+                friendList.Add(friend.Serial);
+
+            return friendList;
         }
     }
 

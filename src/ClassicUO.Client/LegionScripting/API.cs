@@ -2835,6 +2835,62 @@ namespace ClassicUO.LegionScripting
             return multis;
         });
 
+        #region Friends List
+
+        /// <summary>
+        /// Check if a mobile is in the friends list.
+        /// Example:
+        /// ```py
+        /// if API.IsFriend(player.Serial):
+        ///     API.SysMsg("This player is your friend!")
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial number of the mobile to check</param>
+        /// <returns>True if the mobile is in the friends list, false otherwise</returns>
+        public bool IsFriend(uint serial) => MainThreadQueue.InvokeOnMainThread(() => FriendsListManager.Instance.IsFriend(serial));
+
+        /// <summary>
+        /// Add a mobile to the friends list by serial number.
+        /// Example:
+        /// ```py
+        /// mobile = API.GetMobile(0x12345)
+        /// if mobile:
+        ///     API.AddFriend(mobile.Serial)
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial number of the mobile to add</param>
+        /// <returns>True if the friend was added successfully, false if already exists or invalid</returns>
+        public bool AddFriend(uint serial) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            var mobile = World.Mobiles.Get(serial);
+            return mobile != null && FriendsListManager.Instance.AddFriend(mobile);
+        });
+
+        /// <summary>
+        /// Remove a mobile from the friends list by serial number.
+        /// Example:
+        /// ```py
+        /// API.RemoveFriend(0x12345)
+        /// ```
+        /// </summary>
+        /// <param name="serial">Serial number of the mobile to remove</param>
+        /// <returns>True if the friend was removed successfully, false if not found</returns>
+        public bool RemoveFriend(uint serial) => MainThreadQueue.InvokeOnMainThread(() => FriendsListManager.Instance.RemoveFriend(serial));
+
+        /// <summary>
+        /// Get all friends as an array of serials.
+        /// Example:
+        /// ```py
+        /// friends = API.GetAllFriends()
+        /// for friend in friends:
+        ///     API.FindMobile(friend)
+        /// ```
+        /// </summary>
+        /// <returns>Array of serials representing all friends</returns>
+        public PythonList GetAllFriends() => MainThreadQueue.InvokeOnMainThread(() => FriendsListManager.Instance.GetAllFriends());
+
+        #endregion
+
         #region Gumps
 
         /// <summary>

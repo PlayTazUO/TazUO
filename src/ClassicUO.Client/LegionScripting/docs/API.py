@@ -174,6 +174,7 @@ LastTargetPos = None
 LastTargetGraphic: int = None
 Found: int = None
 PyProfile: PyProfile = None
+StopRequested: bool = None
 
 class ScanType:
     Hostile = 0
@@ -1574,6 +1575,55 @@ def GetMultisInArea(x1: int, y1: int, x2: int, y2: int) -> list[Any]:
      API.SysMsg(f"Found {len(multis)} multis in area")
      for m in multis:
          API.SysMsg(f"Multi Graphic: {m.Graphic} at {m.X}, {m.Y}")
+     ```
+    
+    """
+    pass
+
+def IsFriend(serial: int) -> bool:
+    """
+     Check if a mobile is in the friends list.
+     Example:
+     ```py
+     if API.IsFriend(player.Serial):
+         API.SysMsg("This player is your friend!")
+     ```
+    
+    """
+    pass
+
+def AddFriend(serial: int) -> bool:
+    """
+     Add a mobile to the friends list by serial number.
+     Example:
+     ```py
+     mobile = API.GetMobile(0x12345)
+     if mobile:
+         API.AddFriend(mobile.Serial)
+     ```
+    
+    """
+    pass
+
+def RemoveFriend(serial: int) -> bool:
+    """
+     Remove a mobile from the friends list by serial number.
+     Example:
+     ```py
+     API.RemoveFriend(0x12345)
+     ```
+    
+    """
+    pass
+
+def GetAllFriends() -> Any:
+    """
+     Get all friends as an array of serials.
+     Example:
+     ```py
+     friends = API.GetAllFriends()
+     for friend in friends:
+         API.FindMobile(friend)
      ```
     
     """
