@@ -2853,7 +2853,7 @@ namespace ClassicUO.LegionScripting
         /// Add a mobile to the friends list by serial number.
         /// Example:
         /// ```py
-        /// mobile = API.GetMobile(0x12345)
+        /// mobile = API.FindMobile(0x12345)
         /// if mobile:
         ///     API.AddFriend(mobile.Serial)
         /// ```
