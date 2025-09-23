@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.Gumps
         public static bool ReloadTabs { get; set; } = false;
 
         private static int BORDER_WIDTH = 4;
-        private static int MIN_WIDTH = (BORDER_WIDTH * 2) + (TAB_WIDTH * 4) + 20;
+        private static int MIN_WIDTH = (BORDER_WIDTH * 2) + (TAB_WIDTH * 4) + 40;
         private const int MIN_HEIGHT = 100;
         private const int SCROLL_BAR_WIDTH = 14;
         #region TABS
@@ -43,6 +43,7 @@ namespace ClassicUO.Game.UI.Gumps
         private JournalEntriesContainer _journalArea;
         private ScrollBar _scrollBarBase;
         private NiceButton _newTabButton;
+        private NiceButton _clearJournalButton;
         #endregion
 
         #region OTHER
@@ -128,6 +129,16 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             };
 
+            Add(_clearJournalButton = new NiceButton(0, 0, 20, TAB_HEIGHT, ButtonAction.Activate, "X") { IsSelectable = false });
+            _clearJournalButton.SetTooltip("Clear journal entries");
+            _clearJournalButton.MouseUp += (s, e) =>
+            {
+                if (e.Button == MouseButtonType.Left)
+                {
+                    _journalArea.ClearEntries();
+                }
+            };
+
             BuildTabs();
 
             InitJournalEntries();
@@ -182,6 +193,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Add(_tab[i]);
 
             _newTabButton.X = (_tab.Count * TAB_WIDTH) + 4;
+            _clearJournalButton.X = _newTabButton.X + _newTabButton.Width + 4;
         }
 
         public void BuildBorder()
@@ -630,6 +642,12 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 return true;
+            }
+
+            public void ClearEntries()
+            {
+                Reset();
+                CalculateScrollBarMaxValue();
             }
 
             private void Reset()
