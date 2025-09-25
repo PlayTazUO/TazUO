@@ -5,8 +5,8 @@
     <ApplicationIcon>cuoicon.ico</ApplicationIcon>
     <AssemblyName>TazUO</AssemblyName>
     <RootNamespace>ClassicUO</RootNamespace>
-    <AssemblyVersion>4.9.10</AssemblyVersion>
-    <FileVersion>4.9.10</FileVersion>
+    <AssemblyVersion>4.9.11</AssemblyVersion>
+    <FileVersion>4.9.11</FileVersion>
     <PackageProjectUrl>https://github.com/PlayTazUO/TazUO</PackageProjectUrl>
     <PublishAot>false</PublishAot>
     <PlatformTarget>AnyCPU</PlatformTarget>

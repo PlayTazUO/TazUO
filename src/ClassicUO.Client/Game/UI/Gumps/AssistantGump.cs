@@ -86,6 +86,23 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildAutoBuy()
     {
+        int page = (int)PAGE.AutoBuy;
+
+        ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Auto buy", ThemeSettings.BUTTON_FONT_COLOR);
+        button.MouseUp += (_, e) =>
+        {
+            if(e.Button == MouseButtonType.Left)
+            {
+                AssistantWindow.Show();
+                AssistantWindow.Instance.SelectTab(PAGE.AutoBuy);
+            }
+        };
+
+        MainContent.AddToLeft(button);
+    }
+
+    private void BuildAutoBuyLegacy()
+    {
         var page = (int)PAGE.AutoBuy;
         MainContent.AddToLeft(CategoryButton("Auto buy", page, MainContent.LeftWidth));
         MainContent.ResetRightSide();
