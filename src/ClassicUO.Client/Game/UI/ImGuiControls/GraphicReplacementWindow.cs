@@ -1,0 +1,222 @@
+using ImGuiNET;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Numerics;
+using ClassicUO.Game.Managers;
+using ClassicUO.Game.GameObjects;
+
+namespace ClassicUO.Game.UI.ImGuiControls
+{
+    public class GraphicReplacementWindow : SingletonImGuiWindow<GraphicReplacementWindow>
+    {
+        private string newOriginalGraphicInput = "";
+        private string newReplacementGraphicInput = "";
+        private string newHueInput = "";
+        private bool showAddEntry = false;
+        private Dictionary<ushort, string> entryOriginalInputs = new Dictionary<ushort, string>();
+        private Dictionary<ushort, string> entryReplacementInputs = new Dictionary<ushort, string>();
+        private Dictionary<ushort, string> entryHueInputs = new Dictionary<ushort, string>();
+
+        private GraphicReplacementWindow() : base("Mobile Graphics Replacement")
+        {
+            WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
+        }
+
+        public override void DrawContent()
+        {
+            ImGui.TextWrapped("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
+
+            ImGui.Separator();
+
+            // Add entry section
+            if (ImGui.Button("Add Entry"))
+            {
+                showAddEntry = !showAddEntry;
+            }
+
+            ImGui.SameLine();
+            if (ImGui.Button("Target Entity"))
+            {
+                World.Instance.TargetManager.SetTargeting((targetedEntity) =>
+                {
+                    if (targetedEntity != null && targetedEntity is Entity entity)
+                    {
+                        var filter = GraphicsReplacement.NewFilter(entity.Graphic, entity.Graphic, entity.Hue);
+                        if (filter != null)
+                        {
+                            // Initialize input strings for the new entry
+                            entryOriginalInputs[filter.OriginalGraphic] = filter.OriginalGraphic.ToString();
+                            entryReplacementInputs[filter.OriginalGraphic] = filter.ReplacementGraphic.ToString();
+                            entryHueInputs[filter.OriginalGraphic] = filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString();
+                        }
+                    }
+                });
+            }
+
+            if (showAddEntry)
+            {
+                ImGui.Separator();
+                ImGui.Text("Add New Entry:");
+
+                ImGui.Text("Original Graphic:");
+                ImGui.SameLine();
+                ImGui.InputText("##NewOriginalGraphic", ref newOriginalGraphicInput, 10);
+
+                ImGui.Text("Replacement Graphic:");
+                ImGui.SameLine();
+                ImGui.InputText("##NewReplacementGraphic", ref newReplacementGraphicInput, 10);
+
+                ImGui.Text("New Hue (-1 to leave original):");
+                ImGui.SameLine();
+                ImGui.InputText("##NewHue", ref newHueInput, 10);
+
+                if (ImGui.Button("Add##AddEntry"))
+                {
+                    if (TryParseGraphic(newOriginalGraphicInput, out int originalGraphic) &&
+                        TryParseGraphic(newReplacementGraphicInput, out int replacementGraphic))
+                    {
+                        ushort newHue = ushort.MaxValue;
+                        if (!string.IsNullOrEmpty(newHueInput) && newHueInput != "-1")
+                        {
+                            ushort.TryParse(newHueInput, out newHue);
+                        }
+
+                        var filter = GraphicsReplacement.NewFilter((ushort)originalGraphic, (ushort)replacementGraphic, newHue);
+                        if (filter != null)
+                        {
+                            // Initialize input strings for the new entry
+                            entryOriginalInputs[filter.OriginalGraphic] = filter.OriginalGraphic.ToString();
+                            entryReplacementInputs[filter.OriginalGraphic] = filter.ReplacementGraphic.ToString();
+                            entryHueInputs[filter.OriginalGraphic] = filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString();
+                        }
+
+                        newOriginalGraphicInput = "";
+                        newReplacementGraphicInput = "";
+                        newHueInput = "";
+                        showAddEntry = false;
+                    }
+                }
+                ImGui.SameLine();
+                if (ImGui.Button("Cancel##AddEntry"))
+                {
+                    showAddEntry = false;
+                    newOriginalGraphicInput = "";
+                    newReplacementGraphicInput = "";
+                    newHueInput = "";
+                }
+            }
+
+            ImGui.Separator();
+
+            // List of current filters
+            ImGui.Text("Current Graphic Replacements:");
+
+            var filters = GraphicsReplacement.GraphicFilters;
+            if (filters.Count == 0)
+            {
+                ImGui.Text("No replacements configured");
+            }
+            else
+            {
+                // Table headers
+                if (ImGui.BeginTable("GraphicReplacementTable", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, 200)))
+                {
+                    ImGui.TableSetupColumn("Original Graphic", ImGuiTableColumnFlags.WidthFixed, 80);
+                    ImGui.TableSetupColumn("Replacement Graphic", ImGuiTableColumnFlags.WidthFixed, 80);
+                    ImGui.TableSetupColumn("New Hue", ImGuiTableColumnFlags.WidthFixed, 80);
+                    ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, 80);
+                    ImGui.TableHeadersRow();
+
+                    var filterList = filters.Values.ToList();
+                    for (int i = filterList.Count - 1; i >= 0; i--)
+                    {
+                        var filter = filterList[i];
+                        ImGui.TableNextRow();
+
+                        ImGui.TableNextColumn();
+                        // Initialize input string if not exists
+                        if (!entryOriginalInputs.ContainsKey(filter.OriginalGraphic))
+                        {
+                            entryOriginalInputs[filter.OriginalGraphic] = filter.OriginalGraphic.ToString();
+                        }
+                        string originalStr = entryOriginalInputs[filter.OriginalGraphic];
+                        if (ImGui.InputText($"##Original{i}", ref originalStr, 10))
+                        {
+                            entryOriginalInputs[filter.OriginalGraphic] = originalStr;
+                            if (TryParseGraphic(originalStr, out int newOriginal))
+                            {
+                                filter.OriginalGraphic = (ushort)newOriginal;
+                                GraphicsReplacement.ResetLists();
+                            }
+                        }
+
+                        ImGui.TableNextColumn();
+                        // Initialize input string if not exists
+                        if (!entryReplacementInputs.ContainsKey(filter.OriginalGraphic))
+                        {
+                            entryReplacementInputs[filter.OriginalGraphic] = filter.ReplacementGraphic.ToString();
+                        }
+                        string replacementStr = entryReplacementInputs[filter.OriginalGraphic];
+                        if (ImGui.InputText($"##Replacement{i}", ref replacementStr, 10))
+                        {
+                            entryReplacementInputs[filter.OriginalGraphic] = replacementStr;
+                            if (TryParseGraphic(replacementStr, out int newReplacement))
+                            {
+                                filter.ReplacementGraphic = (ushort)newReplacement;
+                            }
+                        }
+
+                        ImGui.TableNextColumn();
+                        // Initialize input string if not exists
+                        if (!entryHueInputs.ContainsKey(filter.OriginalGraphic))
+                        {
+                            entryHueInputs[filter.OriginalGraphic] = filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString();
+                        }
+                        string hueStr = entryHueInputs[filter.OriginalGraphic];
+                        if (ImGui.InputText($"##Hue{i}", ref hueStr, 10))
+                        {
+                            entryHueInputs[filter.OriginalGraphic] = hueStr;
+                            if (hueStr == "-1")
+                            {
+                                filter.NewHue = ushort.MaxValue;
+                            }
+                            else if (ushort.TryParse(hueStr, out ushort newHue))
+                            {
+                                filter.NewHue = newHue;
+                            }
+                        }
+
+                        ImGui.TableNextColumn();
+                        if (ImGui.Button($"Delete##Delete{i}"))
+                        {
+                            GraphicsReplacement.DeleteFilter(filter.OriginalGraphic);
+                            // Clean up input dictionaries
+                            entryOriginalInputs.Remove(filter.OriginalGraphic);
+                            entryReplacementInputs.Remove(filter.OriginalGraphic);
+                            entryHueInputs.Remove(filter.OriginalGraphic);
+                        }
+                    }
+
+                    ImGui.EndTable();
+                }
+            }
+        }
+
+        private bool TryParseGraphic(string text, out int graphic)
+        {
+            graphic = 0;
+            if (string.IsNullOrEmpty(text)) return false;
+
+            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return int.TryParse(text.Substring(2), NumberStyles.AllowHexSpecifier, null, out graphic);
+            }
+            else
+            {
+                return int.TryParse(text, out graphic);
+            }
+        }
+    }
+}

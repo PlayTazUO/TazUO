@@ -52,7 +52,6 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildAutoLoot()
     {
-        int page = (int)PAGE.AutoLoot;
 
         ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Auto loot", ThemeSettings.BUTTON_FONT_COLOR);
         button.MouseUp += (_, e) =>
@@ -69,7 +68,6 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildAutoSell()
     {
-        int page = (int)PAGE.AutoSell;
 
         ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Auto sell", ThemeSettings.BUTTON_FONT_COLOR);
         button.MouseUp += (_, e) =>
@@ -86,7 +84,6 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildAutoBuy()
     {
-        int page = (int)PAGE.AutoBuy;
 
         ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Auto buy", ThemeSettings.BUTTON_FONT_COLOR);
         button.MouseUp += (_, e) =>
@@ -131,18 +128,18 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildMobileGraphicFilter()
     {
-        var page = (int)PAGE.MobileGraphicFilter;
-        MainContent.AddToLeft(CategoryButton("Mobile Graphics", page, MainContent.LeftWidth));
-        MainContent.ResetRightSide();
 
-        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
-        MainContent.AddToRight(scroll, false, page);
-        PositionHelper.Reset();
+        ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Mobile Graphics", ThemeSettings.BUTTON_FONT_COLOR);
+        button.MouseUp += (_, e) =>
+        {
+            if(e.Button == MouseButtonType.Left)
+            {
+                AssistantWindow.Show();
+                AssistantWindow.Instance.SelectTab(PAGE.MobileGraphicFilter);
+            }
+        };
 
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("Mobile Graphic Filter Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Mobile-Graphics-Filter", ThemeSettings.TEXT_FONT_COLOR)));
-        scroll.Add(PositionHelper.PositionControl(TextBox.GetOne("This can be used to replace graphics of mobiles with other graphics(For example if dragons are too big, replace them with wyverns).", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default(MainContent.RightWidth - 20))));
-        PositionHelper.BlankLine();
-        scroll.Add(PositionHelper.PositionControl(new GraphicFilterConfigs(World, MainContent.RightWidth - ThemeSettings.SCROLL_BAR_WIDTH - 10)));
+        MainContent.AddToLeft(button);
     }
 
     private void BuildSpellBar()
@@ -596,7 +593,6 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildBandageAgent()
     {
-        var page = (int)PAGE.BandageAgent;
 
         ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Auto Bandage", ThemeSettings.BUTTON_FONT_COLOR);
         button.MouseUp += (_, e) =>
@@ -716,7 +712,6 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildOrganizer()
     {
-        const int page = (int)PAGE.Organizer;
         ModernButton orgButton = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Organizer", ThemeSettings.BUTTON_FONT_COLOR);
         orgButton.MouseUp += (_, e) =>
         {
@@ -1107,191 +1102,6 @@ public class AssistantGump : BaseOptionsGump
             Height = _container.Height;
         }
     }
-    private class GraphicFilterConfigs : Control
-        {
-            private DataBox _dataBox;
-
-            public GraphicFilterConfigs(World world, int width)
-            {
-                AcceptMouseInput = true;
-                CanMove = true;
-                Width = width;
-
-                Add(_dataBox = new DataBox(0, 0, width, 0));
-
-                ModernButton b;
-                _dataBox.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Add blank entry", ThemeSettings.BUTTON_FONT_COLOR));
-
-                b.MouseUp += (s, e) =>
-                {
-                    var newConfig = GraphicsReplacement.NewFilter(0, 0);
-
-                    if (newConfig != null)
-                    {
-                        _dataBox.Insert(3, GenConfigEntry(newConfig, width));
-                        RearrangeDataBox();
-                    }
-                };
-
-                _dataBox.Add(b = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "+ Target entity", ThemeSettings.BUTTON_FONT_COLOR));
-
-                b.MouseUp += (s, e) =>
-                {
-                    world.TargetManager.SetTargeting((e) =>
-                        {
-                            if (e == null || !(e is Entity entity))
-                                return;
-
-                            // if (e == null || !SerialHelper.IsMobile(e)) return;
-                            var sc = GraphicsReplacement.NewFilter(entity.Graphic, entity.Graphic, entity.Hue);
-
-                            if (sc != null && _dataBox != null)
-                            {
-                                _dataBox.Insert(3, GenConfigEntry(sc, width));
-                                RearrangeDataBox();
-                            }
-                        }
-                    );
-                };
-
-                Area titles = new Area(false);
-
-                Control c;
-                titles.Add(TextBox.GetOne("Graphic", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
-                titles.Add(c = TextBox.GetOne("New Graphic", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
-                c.X = ((width - 90 - 5) / 3) + 5;
-                titles.Add(c = TextBox.GetOne("New Hue", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
-                c.X = (((width - 90 - 5) / 3) * 2) + 10;
-                titles.ForceSizeUpdate();
-                _dataBox.Add(titles);
-
-                foreach (var item in GraphicsReplacement.GraphicFilters)
-                {
-                    _dataBox.Add(GenConfigEntry(item.Value, width));
-                }
-
-                RearrangeDataBox();
-            }
-
-            private Control GenConfigEntry(GraphicChangeFilter filter, int width)
-            {
-                int ewidth = (width - 90) / 3;
-
-                Area area = new Area()
-                {
-                    Width = width,
-                    Height = 50
-                };
-
-                int x = 0;
-
-                InputField graphicInput = new InputField
-                (
-                    ewidth, 50, 100, -1, filter.OriginalGraphic.ToString(), false, (s, e) =>
-                    {
-                        InputField.StbTextBox graphicInput = (InputField.StbTextBox)s;
-
-                        if (graphicInput.Text.StartsWith("0x") && ushort.TryParse(graphicInput.Text.Substring(2), NumberStyles.AllowHexSpecifier, null, out var ngh))
-                        {
-                            filter.OriginalGraphic = ngh;
-                            GraphicsReplacement.ResetLists();
-                        }
-                        else if (ushort.TryParse(graphicInput.Text, out var ng))
-                        {
-                            filter.OriginalGraphic = ng;
-                            GraphicsReplacement.ResetLists();
-                        }
-                    }
-                )
-                {
-                    X = x
-                };
-
-                graphicInput.SetTooltip("Original Graphic");
-                area.Add(graphicInput);
-                x += graphicInput.Width + 5;
-
-                InputField newgraphicInput = new InputField
-                (
-                    ewidth, 50, 100, -1, filter.ReplacementGraphic.ToString(), false, (s, e) =>
-                    {
-                        InputField.StbTextBox graphicInput = (InputField.StbTextBox)s;
-
-                        if (graphicInput.Text.StartsWith("0x") && ushort.TryParse(graphicInput.Text.Substring(2), NumberStyles.AllowHexSpecifier, null, out var ngh))
-                        {
-                            filter.ReplacementGraphic = ngh;
-                        }
-                        else if (ushort.TryParse(graphicInput.Text, out var ng))
-                        {
-                            filter.ReplacementGraphic = ng;
-                        }
-                    }
-                )
-                {
-                    X = x
-                };
-
-                newgraphicInput.SetTooltip("Replacement Graphic");
-                area.Add(newgraphicInput);
-                x += newgraphicInput.Width + 5;
-
-                InputField hueInput = new InputField
-                (
-                    ewidth, 50, 100, -1, filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString(), false, (s, e) =>
-                    {
-                        InputField.StbTextBox hueInput = (InputField.StbTextBox)s;
-
-                        if (hueInput.Text == "-1")
-                        {
-                            filter.NewHue = ushort.MaxValue;
-                        }
-                        else if (ushort.TryParse(hueInput.Text, out var ng))
-                        {
-                            filter.NewHue = ng;
-                        }
-                    }
-                )
-                {
-                    X = x
-                };
-
-                hueInput.SetTooltip("Hue (-1 to leave original)");
-                area.Add(hueInput);
-                x += hueInput.Width + 5;
-
-                NiceButton delete;
-
-                area.Add
-                (
-                    delete = new NiceButton(x, 0, area.Width - x, 49, ButtonAction.Activate, "X")
-                    {
-                        IsSelectable = false,
-                        DisplayBorder = true
-                    }
-                );
-
-                delete.SetTooltip("Delete this entry");
-
-                delete.MouseUp += (s, e) =>
-                {
-                    if (e.Button == Input.MouseButtonType.Left)
-                    {
-                        GraphicsReplacement.DeleteFilter(filter.OriginalGraphic);
-                        area.Dispose();
-                        RearrangeDataBox();
-                    }
-                };
-
-                return area;
-            }
-
-            private void RearrangeDataBox()
-            {
-                _dataBox.ReArrangeChildren();
-                _dataBox.ForceSizeUpdate();
-                Height = _dataBox.Height;
-            }
-        }
 
     #endregion
 }
