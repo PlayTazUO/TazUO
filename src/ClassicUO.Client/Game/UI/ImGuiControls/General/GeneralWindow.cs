@@ -11,7 +11,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private bool _highlightObjects;
         private bool _showNames;
         private ushort _turnDelay;
-        private GeneralWindow() : base("General Settings")
+        private GeneralWindow() : base("General Tab")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
             _objectMoveDelay = _profile.MoveMultiObjectDelay;
@@ -19,8 +19,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
             _showNames = _profile.NameOverheadToggled;
             _turnDelay = _profile.TurnDelay;
         }
-
-        private int _activeTab = 0;
 
         public override void DrawContent()
         {
@@ -30,72 +28,50 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 return;
             }
 
-            ImGui.Separator();
-
-            CreateTabButton("Options", 0);
-            ImGui.SameLine(0, 5);
-            CreateTabButton("Info", 1);
-            ImGui.SameLine(0, 5);
-            CreateTabButton("HUD", 2);
-            ImGui.SameLine(0, 5);
-            CreateTabButton("Journal Filter", 3);
-
-            ImGui.Separator();
             ImGui.Spacing();
 
-            // Show active tab content
-            switch (_activeTab)
+            if (ImGui.BeginTabBar("##GeneralTabs", ImGuiTabBarFlags.None))
             {
-                case 0:
+                if (ImGui.BeginTabItem("Options"))
+                {
                     DrawOptionsTab();
-                    break;
-                case 1:
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Info"))
+                {
                     DrawInfoTab();
-                    break;
-                case 2:
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("HUD"))
+                {
                     ImGui.Text("HUD Settings will go here.");
-                    break;
-                case 3:
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Journal Filter"))
+                {
                     ImGui.Text("Journal Filter Settings will go here.");
-                    break;
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Graphics"))
+                {
+                    GraphicReplacementWindow.GetInstance()?.DrawContent();
+                    ImGui.EndTabItem();
+                }
+                ImGui.EndTabBar();
             }
         }
 
-        private void CreateTabButton(string label, int tabIndex)
-        {
-            Vector4 buttonColor, textColor;
-
-            if (_activeTab == tabIndex)
-            {
-                // Active tab
-                buttonColor = ImGuiTheme.Colors.Primary;
-                textColor = ImGuiTheme.Colors.BaseContent;
-            }
-            else
-            {
-                // Inactive tab
-                buttonColor = ImGuiTheme.Colors.Base200;
-                textColor = ImGuiTheme.Colors.BaseContent;
-            }
-
-            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(buttonColor.X + 0.1f, buttonColor.Y + 0.1f, buttonColor.Z + 0.1f, 1.0f));
-            ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-
-            if (ImGui.Button(label))
-            {
-                _activeTab = tabIndex;
-            }
-
-            ImGui.PopStyleColor(3);
-        }
 
         private void DrawOptionsTab()
         {
-            // Section title with spacing
-            ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Visual Config");
-            ImGui.Separator();
+            // Group: Visual Config
+            ImGui.BeginGroup();
             ImGui.Spacing();
+            ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Visual Config");
 
             if (ImGui.Checkbox("Highlight game objects", ref _highlightObjects))
             {
@@ -107,16 +83,21 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _profile.NameOverheadToggled = _showNames;
             }
 
-            // Large separation between sections
-            ImGui.Dummy(new Vector2(0.0f, 20.0f));
+            ImGui.SameLine();
+            ImGui.TextDisabled("(?)");
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Toggle the display of names above characters and NPCs in the game world.");
+            ImGui.EndGroup();
 
-            // Second section
+            ImGui.SameLine();
+
+            // Group: Delay Config
+            ImGui.BeginGroup();
             ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Delay Config");
-            ImGui.Separator();
-            ImGui.Spacing();
 
             int tempTurnDelay = _turnDelay;
 
+            ImGui.SetNextItemWidth(150);
             if (ImGui.SliderInt("Turn Delay", ref tempTurnDelay, 0, 150, " %d ms"))
             {
                 if (tempTurnDelay < 0) tempTurnDelay = 0;
@@ -125,15 +106,15 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _turnDelay = (ushort)tempTurnDelay;
                 _profile.TurnDelay = _turnDelay;
             }
-
-            ImGui.Spacing(); // Moderate space between controls
-
+            ImGui.SetNextItemWidth(150);
             if (ImGui.InputInt("Object Delay", ref _objectMoveDelay, 50, 100))
             {
                 if (_objectMoveDelay < 0 || _objectMoveDelay > 1000)
                     _objectMoveDelay = 1000;
+
                 _profile.MoveMultiObjectDelay = _objectMoveDelay;
             }
+            ImGui.EndGroup();
         }
 
         private readonly string _version = "TazUO Version: " + CUOEnviroment.Version; //Pre-cache to prevent reading var and string concatenation every frame
@@ -146,12 +127,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text("Last Object:");
             ImGui.Spacing();
             ImGui.Text(_version);
-
-
-            if (ImGui.Button("More Details"))
-            {
-                // Logic to show more information
-            }
         }
+
     }
 }
