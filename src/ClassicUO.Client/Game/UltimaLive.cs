@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -291,7 +291,7 @@ namespace ClassicUO.Game
 
                             mapChunk.Clear();
                             _UL._ULMap.ReloadBlock(mapId, block);
-                            mapChunk.Load(mapId);
+                            mapChunk.Load(mapId, true);
 
                             //linkedList?.AddLast(c.Node);
 
@@ -511,7 +511,7 @@ namespace ClassicUO.Game
                         }
 
                         mapChunk.Clear();
-                        mapChunk.Load(mapId);
+                        mapChunk.Load(mapId, true);
 
                         foreach (GameObject obj in gameObjects)
                         {

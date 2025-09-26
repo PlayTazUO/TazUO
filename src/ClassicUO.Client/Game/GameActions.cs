@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -1058,22 +1058,24 @@ internal static class GameActions
         Socket.Send_RenameRequest(serial, name);
     }
 
-        public static void Logout(World world)
+    public static void Logout(World world)
+    {
+        if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_OWERWRITE_CONFIGURATION_BUTTON) != 0)
         {
-            if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_OWERWRITE_CONFIGURATION_BUTTON) != 0)
-            {
-                Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
-                Socket.Send_LogoutNotification();
-            }
-            else
-            {
-                Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
-                Client.Game.SetScene(new LoginScene(world));
-
-                Socket?.Disconnect();
-                Socket = new AsyncNetClient();
-            }
+            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
+            Socket.Send_LogoutNotification();
         }
+        else
+        {
+            Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
+            Client.Game.SetScene(new LoginScene(world));
+
+            Socket?.Disconnect();
+            Socket = new AsyncNetClient();
+        }
+
+        WorldMapGump.ClearMapCache();
+    }
 
     internal static void UseSkill(int index)
     {

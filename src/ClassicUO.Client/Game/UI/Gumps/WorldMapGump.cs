@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -623,6 +623,7 @@ public class WorldMapGump : ResizableGump
 
     public void ChangeMap(int index)
     {
+        ClearMapCache();
         Client.Game.UO.FileManager.Maps.LoadMap(index, World.ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
         _map = new Map.Map(World, index);
 
@@ -1250,6 +1251,10 @@ public class WorldMapGump : ResizableGump
 
             if (!File.Exists(fileMapPath))
             {
+                //Delete old map cache files
+                if (Directory.Exists(_mapsCachePath))
+                    Directory.GetFiles(_mapsCachePath, "map" + mapIndex + "_*.png").ForEach(s => File.Delete(s));
+
                 try
                 {
                     var map = _map;
@@ -1316,6 +1321,9 @@ public class WorldMapGump : ResizableGump
                             {
                                 fileStatics = new UOFile(indexMap.StaticFile.FilePath);
                             }
+
+                            if (fileStatics.Length == 0) //Fix for empty statics file
+                                continue;
 
                             fileStatics.Seek((long)indexMap.StaticAddress, System.IO.SeekOrigin.Begin);
 
@@ -1453,6 +1461,50 @@ public class WorldMapGump : ResizableGump
         {
             _mapLoading = 0;
         }
+    }
+
+    public unsafe Task UpdateWorldMapChunk(int mapBlockX, int mapBlockY, uint[] bufferBlock)
+    {
+        if (_mapLoading == 1 || _mapTexture == null || _mapTexture.IsDisposed)
+        {
+            return Task.CompletedTask;
+        }
+
+        return Task.Run
+        (
+            () =>
+            {
+                const int OFFSET_PIX = 2;
+                const int OFFSET_PIX_HALF = OFFSET_PIX / 2;
+
+                // Adjust map coordinates based on the block to reload
+                // Multiply by 8 to get the actual map coordinate
+                int startMapX = (mapBlockX << 3) + OFFSET_PIX_HALF;
+                int startMapY = (mapBlockY << 3) + OFFSET_PIX_HALF;
+
+                int blockWidth = 8;
+                int blockHeight = 8;
+
+                // Clamp block size if near the right or bottom border
+                if (startMapX + blockWidth > _mapTexture.Width)
+                    blockWidth = _mapTexture.Width - startMapX;
+                if (startMapY + blockHeight > _mapTexture.Height)
+                    blockHeight = _mapTexture.Height - startMapY;
+
+                if (blockWidth > 0 && blockHeight > 0)
+                {
+                    fixed (uint* pixels = &bufferBlock[0])
+                    {
+                        _mapTexture.SetDataPointerEXT(0, new Rectangle(startMapX, startMapY, blockWidth, blockHeight), (IntPtr)pixels, sizeof(uint) * blockWidth * blockHeight);
+                    }
+                }
+            }
+        );
+    }
+
+    public static void ClearMapCache()
+    {
+        _mapCache?.Clear();
     }
 
     public class ZonesFileZoneData
