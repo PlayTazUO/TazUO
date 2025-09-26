@@ -25,7 +25,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         public override void DrawContent()
         {
-            ImGui.TextWrapped("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
+            ImGui.Text("Info:");
+            ImGui.SameLine();
+            ImGui.TextDisabled("(?)");
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
 
             ImGui.Separator();
 
@@ -56,21 +60,30 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (showAddEntry)
             {
+                ImGui.Spacing();
+                ImGui.Text("New Entry:");
+                ImGui.Spacing();
+                ImGui.BeginGroup();
                 ImGui.Separator();
-                ImGui.Text("Add New Entry:");
-
                 ImGui.Text("Original Graphic:");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(150);
                 ImGui.InputText("##NewOriginalGraphic", ref newOriginalGraphicInput, 10);
+                ImGui.EndGroup();
 
+                ImGui.SameLine();
+
+                ImGui.BeginGroup();
                 ImGui.Text("Replacement Graphic:");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(150);
                 ImGui.InputText("##NewReplacementGraphic", ref newReplacementGraphicInput, 10);
+                ImGui.EndGroup();
 
+                ImGui.Spacing();
                 ImGui.Text("New Hue (-1 to leave original):");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(150);
                 ImGui.InputText("##NewHue", ref newHueInput, 10);
 
+                ImGui.Spacing();
                 if (ImGui.Button("Add##AddEntry"))
                 {
                     if (StringHelper.TryParseGraphic(newOriginalGraphicInput, out int originalGraphic) &&
