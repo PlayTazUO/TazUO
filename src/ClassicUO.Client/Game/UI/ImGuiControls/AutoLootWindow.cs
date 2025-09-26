@@ -209,8 +209,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
             else
             // Table headers
-            if (ImGui.BeginTable("AutoLootTable", 4, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, 200)))
+            if (ImGui.BeginTable("AutoLootTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, 200)))
             {
+                ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, 52);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, 80);
                 ImGui.TableSetupColumn("Hue", ImGuiTableColumnFlags.WidthFixed, 80);
                 ImGui.TableSetupColumn("Regex", ImGuiTableColumnFlags.WidthStretch);
@@ -221,6 +222,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     var entry = lootEntries[i];
                     ImGui.TableNextRow();
+
+                    ImGui.TableNextColumn();
+                    if (!DrawArt((ushort)entry.Graphic, new Vector2(50, 50)))
+                        ImGui.Text($"{entry.Graphic:X4}");
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
