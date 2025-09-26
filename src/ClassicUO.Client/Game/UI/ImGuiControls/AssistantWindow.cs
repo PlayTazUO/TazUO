@@ -15,12 +15,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
 
             AddTab("General", DrawGeneral, GeneralWindow.Show, () => GeneralWindow.Instance?.Dispose());
-            AddTab("Auto Loot", DrawAutoLoot, AutoLootWindow.Show, () => AutoLootWindow.Instance?.Dispose() );
-            AddTab("Auto Sell", DrawAutoSell, AutoSellWindow.Show, () => AutoSellWindow.Instance?.Dispose() );
-            AddTab("Auto Buy", DrawAutoBuy, AutoBuyWindow.Show, () => AutoBuyWindow.Instance?.Dispose() );
-            AddTab("Mobile Graphics", DrawGraphicReplacement, GraphicReplacementWindow.Show, () => GraphicReplacementWindow.Instance?.Dispose() );
+            AddTab("Agents", DrawAgents, AgentsWindow.Show, () => AgentsWindow.Instance?.Dispose());
             AddTab("Organizer", DrawOrganizer, OrganizerWindow.Show, () => OrganizerWindow.Instance?.Dispose() );
-            AddTab("Bandage Agent", DrawBandageAgent, BandageAgentWindow.Show, () => BandageAgentWindow.Instance?.Dispose() );
         }
 
         public void SelectTab(AssistantGump.PAGE page)
@@ -126,12 +122,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
         }
 
         private void DrawGeneral() => GeneralWindow.GetInstance()?.DrawContent();
-        private void DrawAutoLoot() => AutoLootWindow.GetInstance()?.DrawContent();
-        private void DrawAutoSell() => AutoSellWindow.GetInstance()?.DrawContent();
-        private void DrawAutoBuy() => AutoBuyWindow.GetInstance()?.DrawContent();
-        private void DrawGraphicReplacement() => GraphicReplacementWindow.GetInstance()?.DrawContent();
+        private void DrawAgents() => AgentsWindow.GetInstance()?.DrawContent();
         private void DrawOrganizer() => OrganizerWindow.GetInstance()?.DrawContent();
-        private void DrawBandageAgent() => BandageAgentWindow.GetInstance()?.DrawContent();
+
 
         public override void Dispose()
         {
