@@ -287,7 +287,7 @@ public static class GenDoc
                 if (pyReturn == classDeclaration.Identifier.Text)
                     pyReturn = $"\"{pyReturn}\"";
 
-                python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters)})"
+                python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters, !isMainAPI)})"
                  + $" -> {pyReturn}:");
                 if (!string.IsNullOrWhiteSpace(methodSummary))
                 {
@@ -420,11 +420,15 @@ public static class GenDoc
         sb.Append(")`");
     }
 
-    private static string GetPythonParameters(SeparatedSyntaxList<ParameterSyntax> parameters)
+    private static string GetPythonParameters(SeparatedSyntaxList<ParameterSyntax> parameters, bool inClass)
     {
-        if (parameters.Count == 0) return "";
+        if (parameters.Count == 0) return inClass ? "self" : string.Empty;
 
         var sb = new StringBuilder();
+
+        if(inClass)
+            sb.Append("self, ");
+
         foreach (var param in parameters)
         {
             string pythonType = MapCSharpTypeToPython(param.Type!.ToString());
@@ -567,6 +571,7 @@ public static class GenDoc
             "Notoriety" => "Notoriety",
             "GameObject" or "PyGameObject" => "PyGameObject",
             "PyProfile" => "PyProfile",
+            "PyControlDropDown" => "PyControlDropDown",
 
             // Fallback for unknown types
             _ => noMatch
