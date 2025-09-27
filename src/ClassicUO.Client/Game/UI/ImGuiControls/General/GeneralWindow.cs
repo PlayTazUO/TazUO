@@ -1,6 +1,7 @@
 using ImGuiNET;
 using ClassicUO.Configuration;
 using System.Numerics;
+using ClassicUO.Network;
 
 namespace ClassicUO.Game.UI.ImGuiControls
 {
@@ -118,13 +119,29 @@ namespace ClassicUO.Game.UI.ImGuiControls
         }
 
         private readonly string _version = "TazUO Version: " + CUOEnviroment.Version; //Pre-cache to prevent reading var and string concatenation every frame
+        private uint _lastObject = 0;
+        private string _lastObjectString = "Last Object:";
         private void DrawInfoTab()
         {
-            ImGui.Text("Ping:");
+            if (World.Instance != null)
+            {
+                if (_lastObject != World.Instance.LastObject)
+                {
+                    _lastObject = World.Instance.LastObject;
+                    _lastObjectString = "Last Object: " + _lastObject;
+                }
+            }
+
+            ImGui.Text("Ping: " + AsyncNetClient.Socket.Statistics.Ping + "ms");
             ImGui.Spacing();
-            ImGui.Text("FPS:");
+            ImGui.Text("FPS: " + CUOEnviroment.CurrentRefreshRate);
             ImGui.Spacing();
-            ImGui.Text("Last Object:");
+            ImGui.Text(_lastObjectString);
+            if(ImGui.IsItemClicked())
+            {
+                SDL3.SDL.SDL_SetClipboardText(_lastObject.ToString());
+                GameActions.Print("Copied last object to clipboard.", 62);
+            }
             ImGui.Spacing();
             ImGui.Text(_version);
         }
