@@ -168,14 +168,16 @@ while True:
             // Group header with expand/collapse button and context menu
             ImGui.PushID(fullGroupPath);
 
-            bool headerClicked = false;
-            if (isCollapsed)
+            // Call TreeNode and store the open state
+            bool nodeOpen = ImGui.TreeNode(groupName);
+
+            // Only toggle collapsed state when left-clicked
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             {
-                headerClicked = ImGui.TreeNode($"+ {groupName}");
-            }
-            else
-            {
-                headerClicked = ImGui.TreeNode($"- {groupName}");
+                if (isCollapsed)
+                    _collapsedGroups.Remove(fullGroupPath);
+                else
+                    _collapsedGroups.Add(fullGroupPath);
             }
 
             // Right-click context menu for group
@@ -188,15 +190,8 @@ while True:
                 _contextMenuPosition = ImGui.GetMousePos();
             }
 
-            if (headerClicked)
-            {
-                if (isCollapsed)
-                    _collapsedGroups.Remove(fullGroupPath);
-                else
-                    _collapsedGroups.Add(fullGroupPath);
-            }
-
-            if (!isCollapsed)
+            // If node is open, render children and call TreePop
+            if (nodeOpen)
             {
                 ImGui.Indent();
 
@@ -220,6 +215,7 @@ while True:
                 }
 
                 ImGui.Unindent();
+                ImGui.TreePop();
             }
 
             ImGui.PopID();
@@ -428,9 +424,13 @@ while True:
                             {
                                 try
                                 {
-                                    string gPath = _contextMenuGroup == NOGROUPTEXT ? "" :
-                                        string.IsNullOrEmpty(_contextMenuGroup) ? _contextMenuSubGroup :
-                                        Path.Combine(_contextMenuGroup, _contextMenuSubGroup);
+                                    // Normalize sentinels by replacing NOGROUPTEXT with empty string
+                                    string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
+                                    string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
+
+                                    string gPath = string.IsNullOrEmpty(normalizedGroup) ? normalizedSubGroup :
+                                        string.IsNullOrEmpty(normalizedSubGroup) ? normalizedGroup :
+                                        Path.Combine(normalizedGroup, normalizedSubGroup);
 
                                     string filePath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath, _newScriptName);
                                     if (!File.Exists(filePath))
@@ -487,8 +487,15 @@ while True:
 
                             try
                             {
-                                string gname = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
-                                string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gname, _newGroupName);
+                                // Build full path including parent group
+                                string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
+                                string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
+
+                                string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath,
+                                    normalizedGroup ?? "",
+                                    normalizedSubGroup ?? "",
+                                    _newGroupName);
+
                                 if (!Directory.Exists(path))
                                 {
                                     Directory.CreateDirectory(path);
