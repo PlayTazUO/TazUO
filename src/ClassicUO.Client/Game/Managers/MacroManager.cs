@@ -2038,6 +2038,18 @@ namespace ClassicUO.Game.Managers
                             gridLootGump.Dispose();
                         }
                     }
+
+                    // Close GridContainer corpses
+                    IEnumerable<GridContainer> gridContainerCorpses = UIManager.Gumps.OfType<GridContainer>().Where(gc =>
+                    {
+                        var item = _world.Items.Get(gc.LocalSerial);
+                        return item != null && item.IsCorpse;
+                    });
+
+                    foreach (var gridContainer in gridContainerCorpses)
+                    {
+                        gridContainer.Dispose();
+                    }
                     break;
 
                 case MacroType.ToggleDrawRoofs:
