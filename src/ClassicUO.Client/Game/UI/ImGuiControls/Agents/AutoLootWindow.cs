@@ -301,7 +301,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     {
                         ImGui.TextColored(ImGuiTheme.Colors.Primary, "Regex Editor:");
 
-                        if (ImGui.InputTextMultiline($"##Regex{i}", ref regexStr, 200, new Vector2(300, 100)))
+                        if (ImGui.InputTextMultiline($"##Regex{i}", ref regexStr, 500, new Vector2(300, 100)))
                         {
                             entryRegexInputs[entry.UID] = regexStr;
                             entry.RegexSearch = regexStr;
