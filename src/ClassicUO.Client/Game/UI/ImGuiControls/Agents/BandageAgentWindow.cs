@@ -64,14 +64,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     profile.BandageAgentDelay = Math.Clamp(delay, 50, 30000);
                 }
             }
-            SetTooltip("Delay between bandage attempts in milliseconds (50-30000)");
+            ImGuiComponents.Tooltip("Delay between bandage attempts in milliseconds (50-30000)");
 
             // HP percentage threshold slider
             if (ImGui.SliderInt("HP percentage threshold", ref hpPercentage, 10, 95))
             {
                 profile.BandageAgentHPPercentage = hpPercentage;
             }
-            SetTooltip("Heal when HP drops below this percentage");
+            ImGuiComponents.Tooltip("Heal when HP drops below this percentage");
 
             ImGui.Separator();
 
@@ -117,7 +117,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     profile.BandageAgentGraphic = graphic;
                 }
             }
-            SetTooltip("Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)");
+            ImGuiComponents.Tooltip("Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)");
         }
 
         private bool TryParseBandageGraphic(string text, out ushort graphic)

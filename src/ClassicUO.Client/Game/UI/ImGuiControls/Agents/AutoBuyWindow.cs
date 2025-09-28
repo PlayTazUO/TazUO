@@ -140,7 +140,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Restock Up To:");
                 ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewRestock", ref _newRestockInput, 10);
-                ImGui.SetTooltip("Amount to restock up to when buying (0 = disabled)");
+                ImGuiComponents.Tooltip("Amount to restock up to when buying (0 = disabled)");
 
                 ImGui.EndGroup();
 
