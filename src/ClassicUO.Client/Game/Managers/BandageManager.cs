@@ -88,6 +88,12 @@ namespace ClassicUO.Game.Managers
 
         private void AttemptHeal()
         {
+            // Enqueue the healing action into the global priority queue
+            GlobalPriorityQueue.Instance.Enqueue(() => ExecuteHeal());
+        }
+
+        private void ExecuteHeal()
+        {
             if (World.Instance.Player == null)
                 return;
 

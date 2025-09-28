@@ -393,6 +393,7 @@ namespace ClassicUO.Game.Scenes
 
             SpellBarManager.Unload();
             _moveItemQueue.Clear();
+            GlobalPriorityQueue.Instance.Clear();
 
             GraphicsReplacement.Save();
             BuySellAgent.Unload();
@@ -462,6 +463,7 @@ namespace ClassicUO.Game.Scenes
             _world.DelayedObjectClickManager.Clear();
 
             _useItemQueue?.Clear();
+            GlobalPriorityQueue.Instance.Clear();
             EventSink.MessageReceived -= ChatOnMessageReceived;
 
             Settings.GlobalSettings.WindowSize = new Point(
@@ -899,6 +901,9 @@ namespace ClassicUO.Game.Scenes
             {
                 _useItemQueue.ClearCorpses();
             }
+
+            // Process priority queue first (for bandages and other high-priority actions)
+            GlobalPriorityQueue.Instance.Update();
 
             _useItemQueue.Update();
 
