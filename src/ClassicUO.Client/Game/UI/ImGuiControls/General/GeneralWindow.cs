@@ -71,7 +71,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             // Group: Visual Config
             ImGui.BeginGroup();
-            ImGui.Spacing();
+            ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Visual Config");
 
             if (ImGui.Checkbox("Highlight game objects", ref _highlightObjects))
@@ -83,17 +83,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
             {
                 _profile.NameOverheadToggled = _showNames;
             }
-
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Toggle the display of names above characters and NPCs in the game world.");
+                ImGuiComponents.Tooltip("Toggle the display of names above characters and NPCs in the game world.");
             ImGui.EndGroup();
 
             ImGui.SameLine();
 
             // Group: Delay Config
             ImGui.BeginGroup();
+            ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Delay Config");
 
             int tempTurnDelay = _turnDelay;

@@ -54,35 +54,36 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             // Main settings
-            if (ImGui.Checkbox("Enable auto sell", ref _enableAutoSell))
+            ImGui.Spacing();
+            if (ImGui.Checkbox("Enable Auto Sell", ref _enableAutoSell))
             {
                 _profile.SellAgentEnabled = _enableAutoSell;
             }
 
-            if (ImGui.SliderInt("Max total items (0 = unlimited)", ref _maxItems, 0, 100))
+            ImGui.SeparatorText("Options:");
+
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.SliderInt("Max total items", ref _maxItems, 0, 100))
             {
                 _profile.SellAgentMaxItems = _maxItems;
             }
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Maximum total items to sell in a single transaction. Set to 0 for unlimited.");
+                ImGuiComponents.Tooltip("Maximum total items to sell in a single transaction. Set to 0 for unlimited.");
 
             if (ImGui.SliderInt("Max unique items", ref _maxUniques, 0, 100))
             {
                 _profile.SellAgentMaxUniques = _maxUniques;
             }
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Maximum number of different items to sell in a single transaction.");
+                ImGuiComponents.Tooltip("Maximum number of different items to sell in a single transaction.");
 
-            ImGui.Separator();
-
+            ImGui.SeparatorText("Entries:");
             // Add entry section
-            if (ImGui.Button("Add Entry"))
+            if (ImGui.Button("Add Manual Entry"))
             {
                 _showAddEntry = !_showAddEntry;
             }
 
             ImGui.SameLine();
-            if (ImGui.Button("Target Item to Add"))
+            if (ImGui.Button("Add from Target"))
             {
                 World.Instance.TargetManager.SetTargeting((targetedItem) =>
                 {
@@ -101,26 +102,44 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (_showAddEntry)
             {
-                ImGui.Separator();
-                ImGui.Text("Add New Entry:");
+                ImGui.SeparatorText("Add New Entry:");
+                ImGui.Spacing();
 
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
                 ImGui.Text("Graphic:");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(70);
                 ImGui.InputText("##NewGraphic", ref _newGraphicInput, 10);
+                ImGui.EndGroup();
 
+                ImGui.SameLine();
+
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
                 ImGui.Text("Hue (-1 for any):");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(50);
                 ImGui.InputText("##NewHue", ref _newHueInput, 10);
+                ImGui.EndGroup();
 
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
                 ImGui.Text("Max Amount:");
-                ImGui.SameLine();
+                ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewMaxAmount", ref _newMaxAmountInput, 10);
+                ImGui.EndGroup();
 
-                ImGui.Text("Min on Hand:");
                 ImGui.SameLine();
+
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Min on Hand:");
+                ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewRestock", ref _newRestockInput, 10);
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Minimum amount to keep on hand (0 = disabled)");
+                    ImGuiComponents.Tooltip("Minimum amount to keep on hand (0 = disabled)");
+                ImGui.EndGroup();
+
+                ImGui.Spacing();
+                ImGui.Separator();
 
                 if (ImGui.Button("Add##AddEntry"))
                 {

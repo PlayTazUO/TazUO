@@ -53,47 +53,56 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Profile not loaded");
                 return;
             }
-
-            ImGui.TextWrapped("Auto Loot allows you to automatically pick up items from corpses based on configured criteria.");
-            ImGui.Separator();
-
             // Main settings
-            if (ImGui.Checkbox("Enable auto loot", ref enableAutoLoot))
+            ImGui.Spacing();
+            if (ImGui.Checkbox("Enable Auto Loot", ref enableAutoLoot))
             {
                 profile.EnableAutoLoot = enableAutoLoot;
             }
+            ImGuiComponents.Tooltip("Auto Loot allows you to automatically pick up items from corpses based on configured criteria.");
 
-            if (ImGui.InputInt("Action Delay", ref actionDelay))
-            {
-                actionDelay = Math.Clamp(actionDelay, 10, 30000);
-                profile.MoveMultiObjectDelay = actionDelay;
-            }
+            ImGui.SameLine();
+            ImGui.Spacing();
+            ImGui.SameLine();
 
-            if (ImGui.Checkbox("Enable scavenger", ref enableScavenger))
-            {
-                profile.EnableScavenger = enableScavenger;
-            }
-
-            if (ImGui.Checkbox("Enable progress bar", ref enableProgressBar))
-            {
-                profile.EnableAutoLootProgressBar = enableProgressBar;
-            }
-
-            if (ImGui.Checkbox("Auto loot human corpses", ref autoLootHumanCorpses))
-            {
-                profile.AutoLootHumanCorpses = autoLootHumanCorpses;
-            }
-
-            ImGui.Separator();
-
-            // Buttons for grab bag and import/export
             if (ImGui.Button("Set Grab Bag"))
             {
                 GameActions.Print(Client.Game.UO.World, "Target container to grab items into");
                 Client.Game.UO.World.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
             }
-
             ImGui.SameLine();
+
+            ImGuiComponents.Tooltip("Choose a container to grab items into");
+
+            ImGui.SeparatorText("Options:");
+
+            if (ImGui.Checkbox("Enable Scavenger", ref enableScavenger))
+            {
+                profile.EnableScavenger = enableScavenger;
+            }
+            ImGui.SameLine();
+
+            ImGuiComponents.Tooltip("Scavenger option allows to pick objects from ground.");
+
+            if (ImGui.Checkbox("Enable progress bar", ref enableProgressBar))
+            {
+                profile.EnableAutoLootProgressBar = enableProgressBar;
+            }
+            ImGui.SameLine();
+
+            ImGuiComponents.Tooltip("Shows a progress bar gump.");
+
+
+            if (ImGui.Checkbox("Auto loot human corpses", ref autoLootHumanCorpses))
+            {
+                profile.AutoLootHumanCorpses = autoLootHumanCorpses;
+            }
+            ImGui.SameLine();
+
+            ImGuiComponents.Tooltip("Auto loots human corpses.");
+
+            // Buttons for grab bag and import/export
+            ImGui.SeparatorText("Import & Export:");
             if (ImGui.Button("Export JSON"))
             {
                 FileSelector.ShowFileBrowser(Client.Game.UO.World, FileSelectorType.Directory, null, null, (selectedPath) =>
@@ -126,22 +135,21 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 showCharacterImportPopup = true;
             }
 
-            ImGui.Separator();
-
             // Add entry section
-            if (ImGui.Button("Add Entry"))
+            ImGui.SeparatorText("Entries:");
+
+            if (ImGui.Button("Add Manual Entry"))
             {
                 showAddEntry = !showAddEntry;
             }
-
             ImGui.SameLine();
-            if (ImGui.Button("Target Item to Add"))
+            if (ImGui.Button("Add From Target"))
             {
                 World.Instance.TargetManager.SetTargeting((targetedItem) =>
                 {
                     if (targetedItem != null && targetedItem is Entity targetedEntity)
                     {
-                        if(SerialHelper.IsItem(targetedEntity))
+                        if (SerialHelper.IsItem(targetedEntity))
                         {
                             AutoLootManager.Instance.AddAutoLootEntry(targetedEntity.Graphic, targetedEntity.Hue, targetedEntity.Name);
                             lootEntries = AutoLootManager.Instance.AutoLootList;
@@ -154,18 +162,33 @@ namespace ClassicUO.Game.UI.ImGuiControls
             {
                 ImGui.Separator();
                 ImGui.Text("Add New Entry:");
+                ImGui.Spacing();
 
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
                 ImGui.Text("Graphic:");
                 ImGui.SameLine();
+                ImGuiComponents.Tooltip("Item Graphic");
+                ImGui.SetNextItemWidth(70);
                 ImGui.InputText("##NewGraphic", ref newGraphicInput, 10);
+                ImGui.EndGroup();
 
-                ImGui.Text("Hue (-1 for any):");
                 ImGui.SameLine();
+
+                ImGui.BeginGroup();
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Hue:");
+                ImGui.SameLine();
+
+                ImGuiComponents.Tooltip("Set -1 to match any Hue");
+                ImGui.SetNextItemWidth(70);
                 ImGui.InputText("##NewHue", ref newHueInput, 10);
+                ImGui.EndGroup();
 
                 ImGui.Text("Regex:");
-                ImGui.SameLine();
-                ImGui.InputText("##NewRegex", ref newRegexInput, 100);
+                ImGui.InputText("##NewRegex", ref newRegexInput, 500);
+
+                ImGui.Spacing();
 
                 if (ImGui.Button("Add##AddEntry"))
                 {
@@ -197,10 +220,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
             }
 
-            ImGui.Separator();
-
+            ImGui.SeparatorText("Current Auto Loot Entries:");
             // List of current entries
-            ImGui.Text("Current Auto Loot Entries:");
 
             if (lootEntries.Count == 0)
             {
@@ -213,7 +234,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, 52);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableSetupColumn("Hue", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
-                ImGui.TableSetupColumn("Regex", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableSetupColumn("Regex", ImGuiTableColumnFlags.WidthFixed, 100);
                 ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableHeadersRow();
 
@@ -269,11 +290,30 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         entryRegexInputs[entry.UID] = entry.RegexSearch ?? "";
                     }
                     string regexStr = entryRegexInputs[entry.UID];
-                    if (ImGui.InputText($"##Regex{i}", ref regexStr, 200))
+
+
+                    if (ImGui.Button($"Edit##{i}"))
                     {
-                        entryRegexInputs[entry.UID] = regexStr;
-                        entry.RegexSearch = regexStr;
+                        ImGui.OpenPopup($"RegexEditor##{i}");
                     }
+
+                    if (ImGui.BeginPopup($"RegexEditor##{i}"))
+                    {
+                        ImGui.TextColored(ImGuiTheme.Colors.Primary, "Regex Editor:");
+
+                        if (ImGui.InputTextMultiline($"##Regex{i}", ref regexStr, 200, new Vector2(300, 100)))
+                        {
+                            entryRegexInputs[entry.UID] = regexStr;
+                            entry.RegexSearch = regexStr;
+                        }
+
+                        if (ImGui.Button("Close"))
+                            ImGui.CloseCurrentPopup();
+
+                        ImGui.EndPopup();
+                    }
+
+
 
                     ImGui.TableNextColumn();
                     if (ImGui.Button($"Delete##Delete{i}"))
