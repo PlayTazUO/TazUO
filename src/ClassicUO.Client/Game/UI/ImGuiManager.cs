@@ -82,7 +82,7 @@ namespace ClassicUO.Game.UI
             // Primary background
             colors[(int)ImGuiCol.WindowBg] = ImGuiTheme.Colors.Base100;
             colors[(int)ImGuiCol.MenuBarBg] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.PopupBg] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.PopupBg] = ImGuiTheme.Colors.Base100;
 
             // Headers
             colors[(int)ImGuiCol.Header] = ImGuiTheme.Colors.Base100;
