@@ -31,6 +31,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private ScriptFile _contextMenuScript = null;
         private Vector2 _contextMenuPosition;
         private bool _showMainMenu = false;
+        private bool _pendingReload = false;
 
         private const string SCRIPT_HEADER =
             "# See examples at" +
@@ -60,12 +61,17 @@ while True:
         private ScriptManagerWindow() : base("Script Manager")
         {
             WindowFlags = ImGuiWindowFlags.None;
+            _pendingReload = true;
         }
 
         public override void DrawContent()
         {
             // Load scripts if needed
-            LegionScripting.LegionScripting.LoadScriptsFromFile();
+            if (_pendingReload)
+            {
+                LegionScripting.LegionScripting.LoadScriptsFromFile();
+                _pendingReload = false;
+            }
 
             // Top menu bar
             DrawMenuBar();
@@ -98,7 +104,7 @@ while True:
                 {
                     if (ImGui.MenuItem("Refresh"))
                     {
-                        LegionScripting.LegionScripting.LoadScriptsFromFile();
+                        _pendingReload = true;
                         _showMainMenu = false;
                     }
 
@@ -390,7 +396,7 @@ while True:
                                 string gPath = string.IsNullOrEmpty(parentGroup) ? groupName : Path.Combine(parentGroup, groupName);
                                 gPath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath);
                                 Directory.Delete(gPath, true);
-                                LegionScripting.LegionScripting.LoadScriptsFromFile();
+                                _pendingReload = true;
                             }
                             catch (Exception) { }
                         }
@@ -436,7 +442,7 @@ while True:
                                     if (!File.Exists(filePath))
                                     {
                                         File.WriteAllText(filePath, SCRIPT_HEADER);
-                                        LegionScripting.LegionScripting.LoadScriptsFromFile();
+                                        _pendingReload = true;
                                     }
                                 }
                                 catch (Exception e)
@@ -501,7 +507,7 @@ while True:
                                     Directory.CreateDirectory(path);
                                 }
                                 File.WriteAllText(Path.Combine(path, "Example.py"), EXAMPLE_LSCRIPT);
-                                LegionScripting.LegionScripting.LoadScriptsFromFile();
+                                _pendingReload = true;
                             }
                             catch (Exception e)
                             {
