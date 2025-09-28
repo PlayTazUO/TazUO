@@ -63,17 +63,17 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SeparatorText("Options:");
 
             ImGui.SetNextItemWidth(150);
-            if (ImGui.SliderInt("Max total items", ref _maxItems, 0, 100))
+            if (ImGui.SliderInt("Max total items", ref _maxItems, 0, 1000))
             {
                 _profile.SellAgentMaxItems = _maxItems;
             }
                 ImGuiComponents.Tooltip("Maximum total items to sell in a single transaction. Set to 0 for unlimited.");
-
+            ImGui.SetNextItemWidth(150);
             if (ImGui.SliderInt("Max unique items", ref _maxUniques, 0, 100))
             {
                 _profile.SellAgentMaxUniques = _maxUniques;
             }
-                ImGuiComponents.Tooltip("Maximum number of different items to sell in a single transaction.");
+            ImGuiComponents.Tooltip("Maximum number of different items to sell in a single transaction.");
 
             ImGui.SeparatorText("Entries:");
             // Add entry section
@@ -85,6 +85,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SameLine();
             if (ImGui.Button("Add from Target"))
             {
+                GameActions.Print(Client.Game.UO.World, "Target item to add");
                 World.Instance.TargetManager.SetTargeting((targetedItem) =>
                 {
                     if (targetedItem != null && targetedItem is Entity targetedEntity)
@@ -126,6 +127,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Max Amount:");
                 ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewMaxAmount", ref _newMaxAmountInput, 10);
+                ImGuiComponents.Tooltip("Set to 0 for unlimited.");
                 ImGui.EndGroup();
 
                 ImGui.SameLine();

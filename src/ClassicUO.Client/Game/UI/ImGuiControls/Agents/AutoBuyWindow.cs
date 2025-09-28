@@ -89,6 +89,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SameLine();
             if (ImGui.Button("Add from Target"))
             {
+                GameActions.Print(Client.Game.UO.World, "Target item to add");
                 World.Instance.TargetManager.SetTargeting((targetedItem) =>
                 {
                     if (targetedItem != null && targetedItem is Entity targetedEntity)
@@ -139,8 +140,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Restock Up To:");
                 ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewRestock", ref _newRestockInput, 10);
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Amount to restock up to when buying (0 = disabled)");
+                ImGui.SetTooltip("Amount to restock up to when buying (0 = disabled)");
 
                 ImGui.EndGroup();
 

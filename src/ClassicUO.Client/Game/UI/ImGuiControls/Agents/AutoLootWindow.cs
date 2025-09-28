@@ -62,8 +62,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGuiComponents.Tooltip("Auto Loot allows you to automatically pick up items from corpses based on configured criteria.");
 
             ImGui.SameLine();
-            ImGui.Spacing();
-            ImGui.SameLine();
 
             if (ImGui.Button("Set Grab Bag"))
             {
@@ -143,7 +141,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 showAddEntry = !showAddEntry;
             }
             ImGui.SameLine();
-            if (ImGui.Button("Add From Target"))
+            if (ImGui.Button("Add from Target"))
             {
                 World.Instance.TargetManager.SetTargeting((targetedItem) =>
                 {
@@ -160,8 +158,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (showAddEntry)
             {
-                ImGui.Separator();
-                ImGui.Text("Add New Entry:");
+                ImGui.SeparatorText("Add New Entry:");
                 ImGui.Spacing();
 
                 ImGui.BeginGroup();
