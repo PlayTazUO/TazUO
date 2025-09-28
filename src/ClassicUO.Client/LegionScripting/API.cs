@@ -40,7 +40,7 @@ namespace ClassicUO.LegionScripting
             this.engine = engine;
         }
 
-        private ScriptEngine engine;
+        internal ScriptEngine engine;
 
         private ConcurrentBag<Gump> gumps = new();
 
@@ -49,7 +49,7 @@ namespace ClassicUO.LegionScripting
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
 
-        private void ScheduleCallback(Action action)
+        internal void ScheduleCallback(Action action)
         {
             lock (scheduledCallbacks)
             {
@@ -2960,7 +2960,14 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="g">The gump to add</param>
-        public void AddGump(Gump g) => MainThreadQueue.InvokeOnMainThread(() => { UIManager.Add(g); });
+        public void AddGump(object g) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if(g is Gump gump)
+                UIManager.Add(gump);
+
+            if(g is IPyGump { Gump: not null } pyGump)
+                UIManager.Add(pyGump.Gump);
+        });
 
         /// <summary>
         /// Create a checkbox for gumps.
@@ -3303,6 +3310,24 @@ namespace ClassicUO.LegionScripting
         public PyControlDropDown CreateDropDown(int width, string[] items, int selectedIndex = 0)
         {
             return new PyControlDropDown(new Combobox(0, 0, width, items, selectedIndex));
+        }
+
+        /// <summary>
+        /// Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
+        /// The gump uses the standard modern UI panel texture and border size internally.
+        /// </summary>
+        /// <param name="x">X position</param>
+        /// <param name="y">Y position</param>
+        /// <param name="width">Initial width</param>
+        /// <param name="height">Initial height</param>
+        /// <param name="resizable">Whether the gump can be resized by dragging corners (default: true)</param>
+        /// <param name="minWidth">Minimum width (default: 50)</param>
+        /// <param name="minHeight">Minimum height (default: 50)</param>
+        /// <param name="onResized">Optional callback function called when the gump is resized</param>
+        /// <returns>A PyNineSliceGump wrapper containing the nine-slice gump control</returns>
+        public PyNineSliceGump CreateModernGump(int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null)
+        {
+            return new PyNineSliceGump(this, x, y, width, height, resizable, minWidth, minHeight, onResized);
         }
 
         /// <summary>

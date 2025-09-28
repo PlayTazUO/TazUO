@@ -7,6 +7,7 @@ namespace ClassicUO.LegionScripting.PyClasses;
 
 public class PyBaseControl(Control control)
 {
+    protected Control Control => control;
     /// <summary>
     /// Adds a child control to this control. Works with gumps too (gump.Add(control)).
     /// Used in python API
@@ -17,6 +18,8 @@ public class PyBaseControl(Control control)
         if (childControl != null && VerifyIntegrity())
             MainThreadQueue.EnqueueAction(() => control?.Add(childControl));
     }
+
+    public void Add(PyBaseControl childControl) => Add(childControl.Control);
 
     /// <summary>
     /// Returns the control's X position.
