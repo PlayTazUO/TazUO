@@ -578,10 +578,12 @@ namespace ClassicUO
             {
                 case SDL_EventType.SDL_EVENT_AUDIO_DEVICE_ADDED:
                     Log.Trace($"AUDIO ADDED: {sdlEvent->adevice.which}");
+                    Audio?.OnAudioDeviceAdded();
                     break;
 
                 case SDL_EventType.SDL_EVENT_AUDIO_DEVICE_REMOVED:
                     Log.Trace($"AUDIO REMOVED: {sdlEvent->adevice.which}");
+                    Audio?.OnAudioDeviceRemoved();
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_MOUSE_ENTER:

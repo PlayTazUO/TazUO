@@ -16,6 +16,9 @@ namespace ClassicUO.Game.Managers
         const float SOUND_DELTA = 250;
 
         private bool _canReproduceAudio = true;
+        private bool _audioDeviceDisconnected = false;
+        private uint _lastAudioRecoveryAttempt = 0;
+        private const uint AUDIO_RECOVERY_DELAY = 1000; // 1 second delay between recovery attempts
         private readonly LinkedList<UOSound> _currentSounds = new LinkedList<UOSound>();
         private readonly UOMusic[] _currentMusic = { null, null };
         private readonly int[] _currentMusicIndices = { 0, 0 };
@@ -50,12 +53,20 @@ namespace ClassicUO.Game.Managers
 
         private void OnWindowDeactivated(object sender, EventArgs e)
         {
-            if (!_canReproduceAudio || ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.ReproduceSoundsInBackground)
+            if (!_canReproduceAudio || _audioDeviceDisconnected || ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.ReproduceSoundsInBackground)
             {
                 return;
             }
 
-            SoundEffect.MasterVolume = 0;
+            try
+            {
+                SoundEffect.MasterVolume = 0;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Failed to set master volume on window deactivation: {ex.Message}");
+                _audioDeviceDisconnected = true;
+            }
         }
 
         private void OnWindowActivated(object sender, EventArgs e)
@@ -65,14 +76,29 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            SoundEffect.MasterVolume = 1;
+            if (_audioDeviceDisconnected)
+            {
+                TryImmediateFallback();
+                return;
+            }
+
+            try
+            {
+                SoundEffect.MasterVolume = 1;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Failed to set master volume on window activation: {ex.Message}");
+                _audioDeviceDisconnected = true;
+                TryImmediateFallback();
+            }
         }
 
         public void PlaySound(int index)
         {
             Profile currentProfile = ProfileManager.CurrentProfile;
 
-            if (!_canReproduceAudio || currentProfile == null)
+            if (!_canReproduceAudio || _audioDeviceDisconnected || currentProfile == null)
             {
                 return;
             }
@@ -103,19 +129,30 @@ namespace ClassicUO.Game.Managers
 
             UOSound sound = (UOSound) Client.Game.UO.Sounds.GetSound(index);
 
-            if (sound != null && sound.Play(Time.Ticks, volume))
+            if (sound != null)
             {
-                sound.X = -1;
-                sound.Y = -1;
-                sound.CalculateByDistance = false;
+                try
+                {
+                    if (sound.Play(Time.Ticks, volume))
+                    {
+                        sound.X = -1;
+                        sound.Y = -1;
+                        sound.CalculateByDistance = false;
 
-                _currentSounds.AddLast(sound);
+                        _currentSounds.AddLast(sound);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Failed to play sound {index}: {ex.Message}");
+                    _audioDeviceDisconnected = true;
+                }
             }
         }
 
         public void PlaySoundWithDistance(World world, int index, int x, int y)
         {
-            if (!_canReproduceAudio || !world.InGame)
+            if (!_canReproduceAudio || _audioDeviceDisconnected || !world.InGame)
             {
                 return;
             }
@@ -151,19 +188,30 @@ namespace ClassicUO.Game.Managers
 
             UOSound sound = (UOSound)Client.Game.UO.Sounds.GetSound(index);
 
-            if (sound != null && sound.Play(Time.Ticks, volume, distanceFactor))
+            if (sound != null)
             {
-                sound.X = x;
-                sound.Y = y;
-                sound.CalculateByDistance = true;
+                try
+                {
+                    if (sound.Play(Time.Ticks, volume, distanceFactor))
+                    {
+                        sound.X = x;
+                        sound.Y = y;
+                        sound.CalculateByDistance = true;
 
-                _currentSounds.AddLast(sound);
+                        _currentSounds.AddLast(sound);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Failed to play sound {index} with distance: {ex.Message}");
+                    _audioDeviceDisconnected = true;
+                }
             }
         }
 
         public void PlayMusic(int music, bool iswarmode = false, bool is_login = false)
         {
-            if (!_canReproduceAudio)
+            if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
                 return;
             }
@@ -218,13 +266,23 @@ namespace ClassicUO.Game.Managers
                 _currentMusicIndices[idx] = music;
                 _currentMusic[idx] = (UOMusic) m;
 
-                _currentMusic[idx].Play(Time.Ticks, volume);
+                try
+                {
+                    _currentMusic[idx].Play(Time.Ticks, volume);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Failed to play music {music}: {ex.Message}");
+                    _audioDeviceDisconnected = true;
+                    _currentMusic[idx] = null;
+                    _currentMusicIndices[idx] = 0;
+                }
             }
         }
 
         public void UpdateCurrentMusicVolume(bool isLogin = false)
         {
-            if (!_canReproduceAudio)
+            if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
                 return;
             }
@@ -252,14 +310,22 @@ namespace ClassicUO.Game.Managers
                         return;
                     }
 
-                    _currentMusic[i].Volume = i == 0 && _currentMusic[1] != null ? 0 : volume;
+                    try
+                    {
+                        _currentMusic[i].Volume = i == 0 && _currentMusic[1] != null ? 0 : volume;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warn($"Failed to set music volume: {ex.Message}");
+                        _audioDeviceDisconnected = true;
+                    }
                 }
             }
         }
 
         public void UpdateCurrentSoundsVolume()
         {
-            if (!_canReproduceAudio)
+            if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
                 return;
             }
@@ -275,7 +341,16 @@ namespace ClassicUO.Game.Managers
 
             for (LinkedListNode<UOSound> soundNode = _currentSounds.First; soundNode != null; soundNode = soundNode.Next)
             {
-                soundNode.Value.Volume = volume;
+                try
+                {
+                    soundNode.Value.Volume = volume;
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"Failed to set sound volume: {ex.Message}");
+                    _audioDeviceDisconnected = true;
+                    break;
+                }
             }
         }
 
@@ -319,6 +394,17 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
+
+            if (_audioDeviceDisconnected)
+            {
+                TryRecoverAudio();
+                if (_audioDeviceDisconnected)
+                {
+                    return;
+                }
+            }
+
+            CheckAudioDeviceHealth();
 
             bool runninWarMusic = _currentMusic[1] != null;
             Profile currentProfile = ProfileManager.CurrentProfile;
@@ -370,6 +456,150 @@ namespace ClassicUO.Game.Managers
                 }
             }
             return null;
+        }
+
+        public void OnAudioDeviceAdded()
+        {
+            if (_audioDeviceDisconnected && _canReproduceAudio)
+            {
+                Log.Info("Audio device added - attempting immediate recovery...");
+                TryImmediateFallback();
+            }
+            else if (_canReproduceAudio)
+            {
+                Log.Info("Audio device added while audio is working - system has more audio options available");
+            }
+        }
+
+        public void OnAudioDeviceRemoved()
+        {
+            if (_canReproduceAudio)
+            {
+                Log.Warn("Audio device removed - attempting immediate fallback to alternative device");
+                _audioDeviceDisconnected = true;
+
+                StopAllAudio();
+
+                TryImmediateFallback();
+            }
+        }
+
+        private void TryImmediateFallback()
+        {
+            Log.Info("Attempting immediate fallback to available audio device...");
+
+            if (TryCreateAudioInstance())
+            {
+                _audioDeviceDisconnected = false;
+                Log.Info("Immediate audio fallback successful!");
+                RestoreCurrentMusic();
+            }
+            else
+            {
+                Log.Warn("Immediate audio fallback failed - no alternative device available");
+                _lastAudioRecoveryAttempt = Time.Ticks;
+            }
+        }
+
+        private void TryRecoverAudio()
+        {
+            if (Time.Ticks - _lastAudioRecoveryAttempt < AUDIO_RECOVERY_DELAY)
+            {
+                return;
+            }
+
+            _lastAudioRecoveryAttempt = Time.Ticks;
+
+            Log.Info("Attempting audio recovery...");
+
+            if (TryCreateAudioInstance())
+            {
+                _audioDeviceDisconnected = false;
+                Log.Info("Audio recovery successful!");
+                RestoreCurrentMusic();
+            }
+            else
+            {
+                Log.Warn("Audio recovery failed - no hardware available");
+            }
+        }
+
+        private bool TryCreateAudioInstance()
+        {
+            try
+            {
+                for (int attempt = 0; attempt < 3; attempt++)
+                {
+                    try
+                    {
+                        var testInstance = new DynamicSoundEffectInstance(22050, AudioChannels.Mono);
+                        testInstance.Dispose();
+
+                        Log.Info($"Audio device test successful on attempt {attempt + 1}");
+                        return true;
+                    }
+                    catch (NoAudioHardwareException) when (attempt < 2)
+                    {
+                        Log.Warn($"Audio test attempt {attempt + 1} failed - trying again...");
+                        System.Threading.Thread.Sleep(100);
+                    }
+                }
+                return false;
+            }
+            catch (NoAudioHardwareException ex)
+            {
+                Log.Warn($"No audio hardware available: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Audio device test failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void StopAllAudio()
+        {
+            try
+            {
+                StopSounds();
+                StopMusic();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Error stopping audio during device disconnection: {ex.Message}");
+            }
+        }
+
+        private void RestoreCurrentMusic()
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                if (_currentMusicIndices[i] > 0)
+                {
+                    PlayMusic(_currentMusicIndices[i], i == 1);
+                }
+            }
+        }
+
+        private bool CheckAudioDeviceHealth()
+        {
+            if (!_canReproduceAudio || _audioDeviceDisconnected)
+            {
+                return false;
+            }
+
+            try
+            {
+                float volume = SoundEffect.MasterVolume;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Audio device health check failed: {ex.Message}");
+                _audioDeviceDisconnected = true;
+                return false;
+            }
         }
     }
 }
