@@ -62,6 +62,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     GraphicReplacementWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
+
+                if (ImGui.BeginTabItem("Spell Indicators"))
+                {
+                    SpellIndicatorWindow.GetInstance()?.DrawContent();
+                    ImGui.EndTabItem();
+                }
                 ImGui.EndTabBar();
             }
         }
