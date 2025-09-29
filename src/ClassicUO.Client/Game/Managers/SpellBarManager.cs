@@ -97,8 +97,6 @@ public class SpellBarManager
             var hotKey = (SDL.SDL_Keycode)spellBarSettings.HotKeys[i];
             var hotMod = (SDL.SDL_Keymod)spellBarSettings.KeyMod[i];
 
-            Log.Info($"Checking {key} {mod} against {hotKey} {hotMod}");
-
             if (key != hotKey)
                 continue;
 
