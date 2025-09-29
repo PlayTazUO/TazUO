@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework;
 using SDL3;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Assets;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Scenes
 {

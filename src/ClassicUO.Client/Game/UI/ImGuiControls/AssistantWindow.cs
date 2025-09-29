@@ -38,6 +38,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     _preSelectIndex = 4;
                     break;
                 case AssistantGump.PAGE.SpellBar:
+                    SpellBarWindow.Show();
+                    Dispose(); // Close the assistant window since we're opening the dedicated window
                     break;
                 case AssistantGump.PAGE.HUD:
                     break;
