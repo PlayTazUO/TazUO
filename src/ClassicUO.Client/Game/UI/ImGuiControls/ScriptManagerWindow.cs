@@ -41,7 +41,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             "# See examples at" +
             "\n#   https://github.com/PlayTazUO/PublicLegionScripts/" +
             "\n# Or documentation at" +
-            "\n#   https://github.com/PlayTazUO/TazUO/wiki/TazUO.Legion-Scripting";
+            "\n#   https://tazuo.org/legion/api/";
 
         private const string EXAMPLE_LSCRIPT =
             SCRIPT_HEADER +
@@ -180,10 +180,25 @@ while True:
         private void DrawGroup(string groupName, Dictionary<string, List<ScriptFile>> subGroups, string parentGroup)
         {
             string fullGroupPath = string.IsNullOrEmpty(parentGroup) ? groupName : Path.Combine(parentGroup, groupName);
+
+            // Initialize collapsed state from settings if not already in our set
+            string normalizedGroupName = groupName == NOGROUPTEXT ? "" : groupName;
+            string normalizedParentGroup = parentGroup == NOGROUPTEXT ? "" : parentGroup;
+
+            bool isCollapsedInSettings = string.IsNullOrEmpty(normalizedParentGroup)
+                ? LegionScripting.LegionScripting.IsGroupCollapsed(normalizedGroupName)
+                : LegionScripting.LegionScripting.IsGroupCollapsed(normalizedParentGroup, normalizedGroupName);
+
+            if (isCollapsedInSettings && !_collapsedGroups.Contains(fullGroupPath))
+                _collapsedGroups.Add(fullGroupPath);
+
             bool isCollapsed = _collapsedGroups.Contains(fullGroupPath);
 
             // Group header with expand/collapse button and context menu
             ImGui.PushID(fullGroupPath);
+
+            // Set the default open state based on collapsed state
+            ImGui.SetNextItemOpen(!isCollapsed, ImGuiCond.Once);
 
             // Call TreeNode and store the open state
             bool nodeOpen = ImGui.TreeNode(groupName);
@@ -192,9 +207,21 @@ while True:
             if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
             {
                 if (isCollapsed)
+                {
                     _collapsedGroups.Remove(fullGroupPath);
+                    if (string.IsNullOrEmpty(normalizedParentGroup))
+                        LegionScripting.LegionScripting.SetGroupCollapsed(normalizedGroupName, "", false);
+                    else
+                        LegionScripting.LegionScripting.SetGroupCollapsed(normalizedParentGroup, normalizedGroupName, false);
+                }
                 else
+                {
                     _collapsedGroups.Add(fullGroupPath);
+                    if (string.IsNullOrEmpty(normalizedParentGroup))
+                        LegionScripting.LegionScripting.SetGroupCollapsed(normalizedGroupName, "", true);
+                    else
+                        LegionScripting.LegionScripting.SetGroupCollapsed(normalizedParentGroup, normalizedGroupName, true);
+                }
             }
 
             // Right-click context menu for group
@@ -252,15 +279,14 @@ while True:
             bool isPlaying = script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying);
 
             // Script status color
-            Vector4 scriptColor = isPlaying
-                ? new Vector4(0.0f, 1.0f, 0.0f, 1.0f)  // Green for running
-                : new Vector4(1.0f, 1.0f, 1.0f, 1.0f);  // White for stopped
+            //Vector4 scriptColor = new Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 
             // Draw play/stop button
             string buttonText = isPlaying ? "Stop" : "Play";
             Vector4 buttonColor = isPlaying
-                ? new Vector4(1.0f, 0.3f, 0.3f, 1.0f)  // Red for stop
-                : new Vector4(0.3f, 1.0f, 0.3f, 1.0f); // Green for play
+                ? new Vector4(0.2f, 0.6f, 0.2f, 1.0f) // Green for play
+                : ImGuiTheme.Colors.Primary;
+
 
             ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonColor * 1.2f);
@@ -301,7 +327,7 @@ while True:
             }
 
             // Draw script name or rename input
-            ImGui.PushStyleColor(ImGuiCol.Text, scriptColor);
+            //ImGui.PushStyleColor(ImGuiCol.Text, scriptColor);
 
             if (_renamingScript == script)
             {
@@ -344,7 +370,7 @@ while True:
                 }
             }
 
-            ImGui.PopStyleColor();
+            //ImGui.PopStyleColor();
 
             // Tooltip with full filename (only when not renaming)
             if (_renamingScript != script && ImGui.IsItemHovered())
@@ -391,14 +417,14 @@ while True:
                 string newPath = Path.Combine(directory, newName);
 
                 // Check if the new file name already exists
-                if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath, StringComparison.OrdinalIgnoreCase))
+                if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath))
                 {
                     GameActions.Print(World.Instance, $"A file with the name '{newName}' already exists.", 32);
                     return;
                 }
 
                 // Perform the rename
-                if (!string.Equals(script.FullPath, newPath, StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(script.FullPath, newPath))
                 {
                     File.Move(script.FullPath, newPath);
 
@@ -592,6 +618,10 @@ while True:
                                         Path.Combine(normalizedGroup, normalizedSubGroup);
 
                                     string filePath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath, _newScriptName);
+
+                                    if (!Directory.Exists(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath)))
+                                        Directory.CreateDirectory(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath));
+
                                     if (!File.Exists(filePath))
                                     {
                                         File.WriteAllText(filePath, SCRIPT_HEADER);
