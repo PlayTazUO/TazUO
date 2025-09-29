@@ -52,13 +52,21 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SetNextItemWidth(300);
             if (ImGui.InputText("##SpellSearch", ref spellSearchInput, 100))
             {
-                if (SpellDefinition.TryGetSpellFromName(spellSearchInput, out SpellDefinition spell))
+                if (string.IsNullOrWhiteSpace(spellSearchInput))
+                {
+                    selectedSpell = null;
+                }
+                else if (SpellDefinition.TryGetSpellFromName(spellSearchInput, out SpellDefinition spell))
                 {
                     if (SpellVisualRangeManager.Instance.SpellRangeCache.TryGetValue(spell.ID, out SpellVisualRangeManager.SpellRangeInfo info))
                     {
                         selectedSpell = info;
                         InitializeInputs(info);
                     }
+                }
+                else
+                {
+                    selectedSpell = null;
                 }
             }
             ImGuiComponents.Tooltip("Type a spell name to search and edit its spell indicator settings.");
@@ -68,9 +76,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.SeparatorText("Spell Configuration:");
                 DrawSpellEditor(selectedSpell);
             }
-
-            ImGui.SeparatorText("All Spell Indicators:");
-            DrawSpellTable();
+            else if (string.IsNullOrWhiteSpace(spellSearchInput))
+            {
+                ImGui.SeparatorText("All Spell Indicators:");
+                DrawSpellTable();
+            }
         }
 
         private void InitializeInputs(SpellVisualRangeManager.SpellRangeInfo spell)
