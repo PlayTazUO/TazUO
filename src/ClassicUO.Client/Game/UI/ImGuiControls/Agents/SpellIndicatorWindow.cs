@@ -111,7 +111,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (ImGui.BeginTable("SpellEditorTable", 2, ImGuiTableFlags.SizingFixedFit))
             {
-                ImGui.TableSetupColumn("Property", ImGuiTableColumnFlags.WidthFixed, 120);
+                ImGui.TableSetupColumn("Property", ImGuiTableColumnFlags.WidthFixed, 140);
                 ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
 
                 // Name
@@ -260,7 +260,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
-                ImGui.Text("Show Range During Cast:");
+                ImGui.Text("Show Range:");
                 ImGui.TableNextColumn();
                 bool showRange = spell.ShowCastRangeDuringCasting;
                 if (ImGui.Checkbox($"##ShowRange{spell.ID}", ref showRange))
@@ -268,6 +268,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     spell.ShowCastRangeDuringCasting = showRange;
                     SaveSpell();
                 }
+                ImGuiComponents.Tooltip("Show the casting range circle while casting the spell.");
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
