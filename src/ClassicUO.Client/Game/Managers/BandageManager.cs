@@ -15,8 +15,10 @@ namespace ClassicUO.Game.Managers
         public static BandageManager Instance { get; private set; } = new();
 
         private long nextBandageTime = 0;
-        private readonly object timerLock = new object();
-        private readonly Dictionary<uint, Timer> activeTimers = new Dictionary<uint, Timer>();
+        private readonly object queueLock = new object();
+        private readonly Dictionary<uint, long> pendingHeals = new Dictionary<uint, long>();
+        private Timer retryTimer;
+        private const int RETRY_INTERVAL_MS = 500;
 
         private bool isEnabled => ProfileManager.CurrentProfile?.EnableBandageAgent ?? false;
         private bool friendBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandageFriends ?? false;
@@ -72,41 +74,69 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ScheduleRetry(uint mobileSerial)
         {
-            lock (timerLock)
+            lock (queueLock)
             {
-                // Dispose any existing timer for this mobile
-                if (activeTimers.TryGetValue(mobileSerial, out var existingTimer))
-                {
-                    existingTimer.Dispose();
-                }
+                // Schedule or reschedule this mobile for retry in 500ms
+                pendingHeals[mobileSerial] = Time.Ticks + RETRY_INTERVAL_MS;
 
-                // Create and store new timer
-                var timer = new Timer(RetryHeal, mobileSerial, 500, Timeout.Infinite);
-                activeTimers[mobileSerial] = timer;
+                // Start timer if this is the first pending heal
+                if (retryTimer == null)
+                {
+                    retryTimer = new Timer(ProcessRetryQueue, null, RETRY_INTERVAL_MS, RETRY_INTERVAL_MS);
+                }
             }
         }
 
         /// <summary>
-        /// Timer callback to retry healing a mobile
+        /// Timer callback to process the retry queue
         /// </summary>
-        private void RetryHeal(object state)
+        private void ProcessRetryQueue(object state)
         {
-            if (state is uint mobileSerial)
+            List<uint> mobilesToProcess = null;
+            var currentTime = Time.Ticks;
+
+            // Find mobiles ready for retry
+            lock (queueLock)
             {
-                // Clean up the timer from our collection
-                lock (timerLock)
+                if (pendingHeals.Count > 0)
                 {
-                    if (activeTimers.TryGetValue(mobileSerial, out var timer))
+                    mobilesToProcess = new List<uint>();
+                    var toRemove = new List<uint>();
+
+                    foreach (var kvp in pendingHeals)
                     {
-                        timer.Dispose();
-                        activeTimers.Remove(mobileSerial);
+                        if (kvp.Value <= currentTime)
+                        {
+                            mobilesToProcess.Add(kvp.Key);
+                            toRemove.Add(kvp.Key);
+                        }
+                    }
+
+                    // Remove processed items
+                    foreach (var serial in toRemove)
+                    {
+                        pendingHeals.Remove(serial);
+                    }
+
+                    // Stop timer if queue is now empty
+                    if (pendingHeals.Count == 0)
+                    {
+                        retryTimer?.Dispose();
+                        retryTimer = null;
                     }
                 }
+            }
 
-                var mobile = World.Instance?.Mobiles?.Get(mobileSerial);
-                if (mobile != null && ShouldAttemptHeal(mobile))
+            // Process retries outside the lock
+            if (mobilesToProcess != null)
+            {
+                foreach (var mobileSerial in mobilesToProcess)
                 {
-                    AttemptHealMobile(mobile);
+                    var mobile = World.Instance?.Mobiles?.Get(mobileSerial);
+                    if (mobile != null && ShouldAttemptHeal(mobile))
+                    {
+                        AttemptHealMobile(mobile);
+                    }
                 }
             }
         }
@@ -206,23 +236,23 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// Cleans up all active timers
+        /// Clears all pending healing requests
         /// </summary>
-        public void ClearAllTimers()
+        public void ClearAllPendingHeals()
         {
-            lock (timerLock)
+            lock (queueLock)
             {
-                foreach (var timer in activeTimers.Values)
-                {
-                    timer?.Dispose();
-                }
-                activeTimers.Clear();
+                pendingHeals.Clear();
+                retryTimer?.Dispose();
+                retryTimer = null;
             }
         }
 
         public void Dispose()
         {
-            ClearAllTimers();
+            retryTimer?.Dispose();
+            retryTimer = null;
+            ClearAllPendingHeals();
             EventSink.OnBuffAdded -= OnBuffAdded;
             EventSink.OnBuffRemoved -= OnBuffRemoved;
         }

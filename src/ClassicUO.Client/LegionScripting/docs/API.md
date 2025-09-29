@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `9/27/25`.*
+*This was generated on `9/28/25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -2492,7 +2492,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `g` | `Gump` | ❌ No | The gump to add |
+| `g` | `object` | ❌ No | The gump to add |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2861,6 +2861,29 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `selectedIndex` | `int` | ✅ Yes | The initially selected item index (default: 0) |
 
 **Return Type:** `PyControlDropDown`
+
+---
+
+### CreateModernGump
+`(x, y, width, height, resizable, minWidth, minHeight, onResized)`
+ Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
+ The gump uses the standard modern UI panel texture and border size internally.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No | X position |
+| `y` | `int` | ❌ No | Y position |
+| `width` | `int` | ❌ No | Initial width |
+| `height` | `int` | ❌ No | Initial height |
+| `resizable` | `bool` | ✅ Yes | Whether the gump can be resized by dragging corners (default: true) |
+| `minWidth` | `int` | ✅ Yes | Minimum width (default: 50) |
+| `minHeight` | `int` | ✅ Yes | Minimum height (default: 50) |
+| `onResized` | `object` | ✅ Yes | Optional callback function called when the gump is resized |
+
+**Return Type:** `PyNineSliceGump`
 
 ---
 

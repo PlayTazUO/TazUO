@@ -15,6 +15,9 @@ class PyBaseControl:
         """
         pass
 
+    def Add(self, childControl: Any) -> None:
+        pass
+
     def GetX(self) -> int:
         """
          Returns the control's X position.
@@ -264,6 +267,57 @@ class PyMobile:
 
 class PyMulti:
     __class__: str = None
+
+class PyNineSliceGump:
+    NineSliceGump = None
+    Gump: Gump = None
+
+    def GetHue(self) -> int:
+        """
+         Gets the current hue of the nine-slice gump
+        
+        """
+        pass
+
+    def SetHue(self, hue: int) -> None:
+        """
+         Sets the hue of the nine-slice gump
+        
+        """
+        pass
+
+    def GetResizable(self) -> bool:
+        """
+         Gets whether the gump is resizable
+        
+        """
+        pass
+
+    def SetResizable(self, resizable: bool) -> None:
+        """
+         Sets whether the gump is resizable
+        
+        """
+        pass
+
+    def GetBorderSize(self) -> int:
+        """
+         Gets the border size of the nine-slice
+        
+        """
+        pass
+
+    def SetBorderSize(self, borderSize: int) -> None:
+        """
+         Sets the border size of the nine-slice
+        
+        """
+        pass
+
+class ModernNineSliceGump:
+
+    def SetResizeCallback(self, callback: Any) -> None:
+        pass
 
 class PyProfile:
     CharacterName: str = None
@@ -1769,7 +1823,7 @@ def CreateGump(acceptMouseInput: bool = True, canMove: bool = True, keepOpen: bo
     """
     pass
 
-def AddGump(g: Gump) -> None:
+def AddGump(g: Any) -> None:
     """
      Add a gump to the players screen.
      Example:
@@ -2002,6 +2056,14 @@ def CreateGumpPic(graphic: int, x: int = 0, y: int = 0, hue: int = 0) -> PyContr
 def CreateDropDown(width: int, items: list[str], selectedIndex: int = 0) -> PyControlDropDown:
     """
      Creates a dropdown control (combobox) with the specified width and items.
+    
+    """
+    pass
+
+def CreateModernGump(x: int, y: int, width: int, height: int, resizable: bool = True, minWidth: int = 50, minHeight: int = 50, onResized: Any = None) -> Any:
+    """
+     Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
+     The gump uses the standard modern UI panel texture and border size internally.
     
     """
     pass
