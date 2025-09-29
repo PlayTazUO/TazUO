@@ -155,7 +155,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         }
 
                         string filterStr = filterInputs[filter];
-                        if (ImGui.InputText($"##Filter{i}", ref filterStr, 500))
+                        ImGui.InputText($"##Filter{i}", ref filterStr, 500);
+
+                        // Update the local input string
+                        filterInputs[filter] = filterStr;
+
+                        // Only commit changes on Enter or blur, and avoid no-ops/empty values
+                        if (ImGui.IsItemDeactivatedAfterEdit() && !string.IsNullOrWhiteSpace(filterStr) && filterStr != filter)
                         {
                             // Update the filter
                             string oldFilter = filter;
@@ -163,11 +169,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             JournalFilterManager.Instance.AddFilter(filterStr);
                             JournalFilterManager.Instance.Save(false);
 
-                            // Update our tracking
+                            // Update our tracking - remove old key, add new one
                             filterInputs.Remove(oldFilter);
                             filterInputs[filterStr] = filterStr;
 
                             RefreshFilterList();
+                            break; // Break out of loop after successful mutation to avoid iterating refreshed list
                         }
 
                         ImGui.TableNextColumn();
