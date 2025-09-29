@@ -229,7 +229,7 @@ while True:
 
         private void DrawScript(ScriptFile script)
         {
-            ImGui.PushID(script.FileName);
+            ImGui.PushID(script.FullPath);
 
             // Get script display name (without extension)
             string displayName = script.FileName;
@@ -304,6 +304,13 @@ while True:
                 if (ImGui.Begin("ContextMenu", ref _showContextMenu,
                     ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.AlwaysAutoResize))
                 {
+                    // Check for outside click or Escape key to dismiss menu
+                    if ((ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows)) ||
+                        ImGui.IsKeyPressed(ImGuiKey.Escape))
+                    {
+                        _showContextMenu = false;
+                    }
+
                     if (_contextMenuScript != null)
                     {
                         DrawScriptContextMenu(_contextMenuScript);
