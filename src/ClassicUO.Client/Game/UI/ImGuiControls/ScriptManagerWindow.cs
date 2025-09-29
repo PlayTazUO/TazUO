@@ -32,6 +32,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private Vector2 _contextMenuPosition;
         private bool _showMainMenu = false;
         private bool _pendingReload = false;
+        private ScriptFile _renamingScript = null;
+        private string _renameBuffer = "";
+        private double _lastClickTime = 0.0;
+        private ScriptFile _lastClickedScript = null;
 
         private const string SCRIPT_HEADER =
             "# See examples at" +
@@ -71,6 +75,13 @@ while True:
             {
                 LegionScripting.LegionScripting.LoadScriptsFromFile();
                 _pendingReload = false;
+            }
+
+            // Cancel rename if user clicks outside
+            if (_renamingScript != null && ImGui.IsMouseClicked(ImGuiMouseButton.Left) && !ImGui.IsAnyItemActive())
+            {
+                _renamingScript = null;
+                _renameBuffer = "";
             }
 
             // Top menu bar
@@ -265,18 +276,78 @@ while True:
 
             ImGui.PopStyleColor(3);
 
-            // Draw script name next to the button
+            // Autostart indicator
             ImGui.SameLine();
-            ImGui.PushStyleColor(ImGuiCol.Text, scriptColor);
-            bool isSelected = false;
-            if (ImGui.Selectable($"  {displayName}", isSelected))
+            bool hasGlobalAutostart = LegionScripting.LegionScripting.AutoLoadEnabled(script, true);
+            bool hasCharacterAutostart = LegionScripting.LegionScripting.AutoLoadEnabled(script, false);
+
+            if (hasGlobalAutostart || hasCharacterAutostart)
             {
-                // Optional: Could add double-click behavior here for editing
+                Vector4 autostartColor = hasGlobalAutostart
+                    ? new Vector4(1.0f, 0.8f, 0.0f, 1.0f)  // Gold for global autostart
+                    : new Vector4(0.0f, 0.8f, 1.0f, 1.0f); // Cyan for character autostart
+
+                ImGui.PushStyleColor(ImGuiCol.Text, autostartColor);
+                string indicator = hasGlobalAutostart ? "[G]" : "[C]";
+                ImGui.Text(indicator);
+                ImGui.PopStyleColor();
+
+                if (ImGui.IsItemHovered())
+                {
+                    string tooltip = hasGlobalAutostart ? "Autostart: All characters" : "Autostart: This character";
+                    ImGui.SetTooltip(tooltip);
+                }
+                ImGui.SameLine();
             }
+
+            // Draw script name or rename input
+            ImGui.PushStyleColor(ImGuiCol.Text, scriptColor);
+
+            if (_renamingScript == script)
+            {
+                // Show rename input and save button
+                ImGui.SetKeyboardFocusHere();
+                if (ImGui.InputText("##rename", ref _renameBuffer, 256, ImGuiInputTextFlags.EnterReturnsTrue))
+                {
+                    PerformRename(script);
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button("Save##rename"))
+                {
+                    PerformRename(script);
+                }
+
+                ImGui.SameLine();
+                if (ImGui.Button("Cancel##rename"))
+                {
+                    _renamingScript = null;
+                    _renameBuffer = "";
+                }
+            }
+            else
+            {
+                // Normal script display with double-click detection
+                bool isSelected = false;
+                if (ImGui.Selectable($"  {displayName}", isSelected))
+                {
+                    // Handle double-click for rename
+                    double currentTime = ImGui.GetTime();
+                    if (_lastClickedScript == script && (currentTime - _lastClickTime) < 0.5) // 500ms for double-click
+                    {
+                        // Start renaming
+                        _renamingScript = script;
+                        _renameBuffer = displayName;
+                    }
+                    _lastClickedScript = script;
+                    _lastClickTime = currentTime;
+                }
+            }
+
             ImGui.PopStyleColor();
 
-            // Tooltip with full filename
-            if (ImGui.IsItemHovered())
+            // Tooltip with full filename (only when not renaming)
+            if (_renamingScript != script && ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip(script.FileName);
             }
@@ -292,6 +363,61 @@ while True:
             }
 
             ImGui.PopID();
+        }
+
+        private void PerformRename(ScriptFile script)
+        {
+            if (string.IsNullOrWhiteSpace(_renameBuffer))
+            {
+                _renamingScript = null;
+                _renameBuffer = "";
+                return;
+            }
+
+            try
+            {
+                // Get the original extension
+                string originalExtension = Path.GetExtension(script.FileName);
+
+                // Ensure the new name has the correct extension
+                string newName = _renameBuffer;
+                if (!newName.EndsWith(originalExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    newName += originalExtension;
+                }
+
+                // Build new file path
+                string directory = Path.GetDirectoryName(script.FullPath);
+                string newPath = Path.Combine(directory, newName);
+
+                // Check if the new file name already exists
+                if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    GameActions.Print(World.Instance, $"A file with the name '{newName}' already exists.", 32);
+                    return;
+                }
+
+                // Perform the rename
+                if (!string.Equals(script.FullPath, newPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    File.Move(script.FullPath, newPath);
+
+                    // Update the script object
+                    script.FullPath = newPath;
+                    script.FileName = newName;
+
+                    _pendingReload = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                GameActions.Print(World.Instance, $"Error renaming script: {ex.Message}", 32);
+            }
+            finally
+            {
+                _renamingScript = null;
+                _renameBuffer = "";
+            }
         }
 
         private void DrawContextMenus()
@@ -587,6 +713,9 @@ while True:
             _showContextMenu = false;
             _showNewScriptDialog = false;
             _showNewGroupDialog = false;
+            _renamingScript = null;
+            _renameBuffer = "";
+            _lastClickedScript = null;
             base.Dispose();
         }
     }
