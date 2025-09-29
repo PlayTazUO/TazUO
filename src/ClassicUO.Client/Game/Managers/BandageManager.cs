@@ -10,12 +10,13 @@ using System.Threading;
 
 namespace ClassicUO.Game.Managers
 {
-    internal class BandageManager
+    internal class BandageManager : IDisposable
     {
         public static BandageManager Instance { get; private set; } = new();
 
         private long nextBandageTime = 0;
         private readonly object timerLock = new object();
+        private readonly Dictionary<uint, Timer> activeTimers = new Dictionary<uint, Timer>();
 
         private bool isEnabled => ProfileManager.CurrentProfile?.EnableBandageAgent ?? false;
         private bool friendBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandageFriends ?? false;
@@ -73,8 +74,15 @@ namespace ClassicUO.Game.Managers
         {
             lock (timerLock)
             {
+                // Dispose any existing timer for this mobile
+                if (activeTimers.TryGetValue(mobileSerial, out var existingTimer))
+                {
+                    existingTimer.Dispose();
+                }
+
+                // Create and store new timer
                 var timer = new Timer(RetryHeal, mobileSerial, 500, Timeout.Infinite);
-                // Timer will be disposed automatically after it fires once
+                activeTimers[mobileSerial] = timer;
             }
         }
 
@@ -85,6 +93,16 @@ namespace ClassicUO.Game.Managers
         {
             if (state is uint mobileSerial)
             {
+                // Clean up the timer from our collection
+                lock (timerLock)
+                {
+                    if (activeTimers.TryGetValue(mobileSerial, out var timer))
+                    {
+                        timer.Dispose();
+                        activeTimers.Remove(mobileSerial);
+                    }
+                }
+
                 var mobile = World.Instance?.Mobiles?.Get(mobileSerial);
                 if (mobile != null && ShouldAttemptHeal(mobile))
                 {
@@ -185,6 +203,28 @@ namespace ClassicUO.Game.Managers
                 return bandage;
 
             return World.Instance.Player?.FindBandage();
+        }
+
+        /// <summary>
+        /// Cleans up all active timers
+        /// </summary>
+        public void ClearAllTimers()
+        {
+            lock (timerLock)
+            {
+                foreach (var timer in activeTimers.Values)
+                {
+                    timer?.Dispose();
+                }
+                activeTimers.Clear();
+            }
+        }
+
+        public void Dispose()
+        {
+            ClearAllTimers();
+            EventSink.OnBuffAdded -= OnBuffAdded;
+            EventSink.OnBuffRemoved -= OnBuffRemoved;
         }
     }
 }
