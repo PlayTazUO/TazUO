@@ -62,6 +62,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     GraphicReplacementWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
+
+                if (ImGui.BeginTabItem("Title Bar"))
+                {
+                    TitleBarWindow.GetInstance()?.DrawContent();
+                    ImGui.EndTabItem();
+                }
                 ImGui.EndTabBar();
             }
         }
