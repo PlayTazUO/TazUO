@@ -454,6 +454,7 @@ namespace ClassicUO.Game.Managers
                 saveTimer = new Timer();
                 saveTimer.Interval = 500;
                 saveTimer.Elapsed += (_,_) => { PerformSave(); };
+                saveTimer.Start();
             }
         }
 

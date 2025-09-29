@@ -49,7 +49,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SeparatorText("Spell Search:");
 
             ImGui.Text("Spell search:");
-            ImGui.SetNextItemWidth(300);
+            ImGui.SetNextItemWidth(250);
             if (ImGui.InputText("##SpellSearch", ref spellSearchInput, 100))
             {
                 if (string.IsNullOrWhiteSpace(spellSearchInput))
@@ -68,6 +68,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     selectedSpell = null;
                 }
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Clear"))
+            {
+                spellSearchInput = "";
+                selectedSpell = null;
             }
             ImGuiComponents.Tooltip("Type a spell name to search and edit its spell indicator settings.");
 
@@ -300,7 +306,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 return;
             }
 
-            if (ImGui.BeginTable("SpellIndicatorTable", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY | ImGuiTableFlags.Sortable, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
+            if (ImGui.BeginTable("SpellIndicatorTable", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
             {
                 ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 150);
                 ImGui.TableSetupColumn("Power Words", ImGuiTableColumnFlags.WidthFixed, 120);
