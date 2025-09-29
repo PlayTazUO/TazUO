@@ -74,6 +74,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     SpellIndicatorWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
+
+                if (ImGui.BeginTabItem("Friends List"))
+                {
+                    FriendsListWindow.GetInstance()?.DrawContent();
+                    ImGui.EndTabItem();
+                }
                 ImGui.EndTabBar();
             }
         }
