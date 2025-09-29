@@ -132,7 +132,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             // Additional information
             ImGui.TextColored(ImGuiTheme.Colors.Primary, "Current Configuration:");
-            ImGui.Text($"Active flags: {CountActiveFlags()} / {hudFlagStates.Count - 1}"); // -1 to exclude None
+            ImGui.Text($"Active flags: {CountActiveFlags()} / {hudFlagStates.Count - 2}"); // -2 to exclude None and All
 
             if (ImGui.CollapsingHeader("Advanced"))
             {
@@ -197,7 +197,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private int CountActiveFlags()
         {
-            return hudFlagStates.Count(kvp => kvp.Key != HideHudFlags.None && kvp.Value);
+            return hudFlagStates.Count(kvp => kvp.Key != HideHudFlags.None && kvp.Key != HideHudFlags.All && kvp.Value);
         }
 
         private void AddTooltipForFlag(HideHudFlags flag)
