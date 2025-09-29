@@ -281,30 +281,17 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildSpellIndicator()
     {
-        var page = (int)PAGE.SpellIndicator;
-        MainContent.AddToLeft(CategoryButton("Spell Indicators", page, MainContent.LeftWidth));
-        MainContent.ResetRightSide();
-
-        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
-        MainContent.AddToRight(scroll, false, page);
-
-        PositionHelper.Reset();
-
-        SpellRangeEditor editor = new (scroll.Width - 20);
-
-        InputFieldWithLabel search = new ("Spell search", ThemeSettings.INPUT_WIDTH, string.Empty, false, (s, e) =>
+        ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Spell Indicators", ThemeSettings.BUTTON_FONT_COLOR);
+        button.MouseUp += (_, e) =>
         {
-            if (SpellDefinition.TryGetSpellFromName(((BaseOptionsGump.InputField.StbTextBox)s).Text, out SpellDefinition spell))
+            if(e.Button == MouseButtonType.Left)
             {
-                if(SpellVisualRangeManager.Instance.SpellRangeCache.TryGetValue(spell.ID, out SpellVisualRangeManager.SpellRangeInfo info))
-                    editor.SetSpellRangeInfo(info);
+                AssistantWindow.Show();
+                AssistantWindow.Instance.SelectTab(PAGE.SpellIndicator);
             }
-        });
+        };
 
-        scroll.Add(PositionHelper.PositionControl(search));
-        PositionHelper.BlankLine();
-        PositionHelper.BlankLine();
-        scroll.Add(PositionHelper.PositionControl(editor));
+        MainContent.AddToLeft(button);
     }
 
     private void BuildJournalFilter()

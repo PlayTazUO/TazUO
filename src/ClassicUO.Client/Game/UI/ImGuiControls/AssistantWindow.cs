@@ -42,6 +42,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 case AssistantGump.PAGE.HUD:
                     break;
                 case AssistantGump.PAGE.SpellIndicator:
+                    _preSelectIndex = 0; // General tab since spell indicators are now in General window
                     break;
                 case AssistantGump.PAGE.JournalFilter:
                     break;
