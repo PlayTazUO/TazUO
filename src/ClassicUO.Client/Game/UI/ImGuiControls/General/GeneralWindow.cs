@@ -47,7 +47,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 if (ImGui.BeginTabItem("HUD"))
                 {
-                    ImGui.Text("HUD Settings will go here.");
+                    HudWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
 
