@@ -53,7 +53,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 if (ImGui.BeginTabItem("Journal Filter"))
                 {
-                    ImGui.Text("Journal Filter Settings will go here.");
+                    JournalFilterWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
 

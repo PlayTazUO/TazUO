@@ -17,6 +17,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void DrawAutoSell() => AutoSellWindow.GetInstance()?.DrawContent();
         private void DrawAutoBuy() => AutoBuyWindow.GetInstance()?.DrawContent();
         private void DrawBandageAgent() => BandageAgentWindow.GetInstance()?.DrawContent();
+        private void DrawJournalFilter() => JournalFilterWindow.GetInstance()?.DrawContent();
         public override void DrawContent()
         {
             if (_profile == null)
@@ -55,6 +56,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 if (ImGui.BeginTabItem("Dress"))
                 {
                     ImGui.Text("Dress Agent Will go here.");
+                    ImGui.EndTabItem();
+                }
+
+                if (ImGui.BeginTabItem("Journal Filter"))
+                {
+                    DrawJournalFilter();
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
