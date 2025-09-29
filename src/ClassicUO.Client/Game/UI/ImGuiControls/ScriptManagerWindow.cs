@@ -237,21 +237,41 @@ while True:
             if (lastDotIndex != -1)
                 displayName = displayName.Substring(0, lastDotIndex);
 
+            // Check if script is playing
+            bool isPlaying = script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying);
+
             // Script status color
-            Vector4 scriptColor = script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying)
+            Vector4 scriptColor = isPlaying
                 ? new Vector4(0.0f, 1.0f, 0.0f, 1.0f)  // Green for running
                 : new Vector4(1.0f, 1.0f, 1.0f, 1.0f);  // White for stopped
 
-            // Draw script item
+            // Draw play/stop button
+            string buttonText = isPlaying ? "Stop" : "Play";
+            Vector4 buttonColor = isPlaying
+                ? new Vector4(1.0f, 0.3f, 0.3f, 1.0f)  // Red for stop
+                : new Vector4(0.3f, 1.0f, 0.3f, 1.0f); // Green for play
+
+            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonColor * 1.2f);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, buttonColor * 0.8f);
+
+            if (ImGui.Button(buttonText, new Vector2(50, 0)))
+            {
+                if (isPlaying)
+                    LegionScripting.LegionScripting.StopScript(script);
+                else
+                    LegionScripting.LegionScripting.PlayScript(script);
+            }
+
+            ImGui.PopStyleColor(3);
+
+            // Draw script name next to the button
+            ImGui.SameLine();
             ImGui.PushStyleColor(ImGuiCol.Text, scriptColor);
             bool isSelected = false;
             if (ImGui.Selectable($"  {displayName}", isSelected))
             {
-                // Toggle script play/stop on click
-                if (script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying))
-                    LegionScripting.LegionScripting.StopScript(script);
-                else
-                    LegionScripting.LegionScripting.PlayScript(script);
+                // Optional: Could add double-click behavior here for editing
             }
             ImGui.PopStyleColor();
 
@@ -261,7 +281,7 @@ while True:
                 ImGui.SetTooltip(script.FileName);
             }
 
-            // Right-click context menu for script
+            // Right-click context menu for script (works on both button and name)
             if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
             {
                 _showContextMenu = true;
