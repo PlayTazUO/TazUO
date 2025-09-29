@@ -144,83 +144,18 @@ public class AssistantGump : BaseOptionsGump
 
     private void BuildSpellBar()
     {
-        var page = (int)PAGE.SpellBar;
-        MainContent.AddToLeft(CategoryButton("Spell Bar", page, MainContent.LeftWidth));
-        MainContent.ResetRightSide();
 
-        ScrollArea scroll = new(0, 0, MainContent.RightWidth, MainContent.Height);
-        MainContent.AddToRight(scroll, false, page);
-        PositionHelper.Reset();
-
-        scroll.Add(PositionHelper.PositionControl(new HttpClickableLink("SpellBar Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.SpellBar", ThemeSettings.TEXT_FONT_COLOR)));
-        PositionHelper.BlankLine();
-
-        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Enable spellbar", 0, SpellBarManager.IsEnabled(), (b) =>
+        ModernButton button = new(0, 0, MainContent.LeftWidth, 40, ButtonAction.Default, "Spell Bar", ThemeSettings.BUTTON_FONT_COLOR);
+        button.MouseUp += (_, e) =>
         {
-            if (SpellBarManager.ToggleEnabled())
+            if(e.Button == MouseButtonType.Left)
             {
-                UIManager.Add(new SpellBar.SpellBar(World));
+                AssistantWindow.Show();
+                AssistantWindow.Instance.SelectTab(PAGE.SpellBar);
             }
-            else
-            {
-                SpellBar.SpellBar.Instance?.Dispose();
-            }
-
-        })));
-        PositionHelper.BlankLine();
-
-        scroll.Add(PositionHelper.PositionControl(new CheckboxWithLabel("Display hotkeys on spellbar", 0, profile.SpellBar_ShowHotkeys, (b) =>
-        {
-            profile.SpellBar_ShowHotkeys = b;
-            SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
-        })));
-        PositionHelper.BlankLine();
-
-        ModernButton b;
-        scroll.Add(PositionHelper.PositionControl(b = new ModernButton(0, 0, 100, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Add row", ThemeSettings.BUTTON_FONT_COLOR)));
-        b.MouseUp += (s, e) =>
-        {
-            SpellBarManager.SpellBarRows.Add(new SpellBarRow());
-            SpellBar.SpellBar.Instance?.Build();
         };
 
-        ModernButton bb;
-        scroll.Add(PositionHelper.ToRightOf(bb = new ModernButton(0, 0, 150, ThemeSettings.CHECKBOX_SIZE, ButtonAction.Default, "Remove row", ThemeSettings.BUTTON_FONT_COLOR), b));
-        bb.SetTooltip("This will remove the last row. If you have 5 rows, row 5 will be removed.");
-        bb.MouseUp += (s, e) =>
-        {
-            if(SpellBarManager.SpellBarRows.Count > 1) //Make sure to always leave one row.
-                SpellBarManager.SpellBarRows.RemoveAt(SpellBarManager.SpellBarRows.Count - 1);
-            SpellBar.SpellBar.Instance?.Build();
-        };
-
-        var controllerHotkeys = SpellBarManager.GetControllerButtons();
-        var hotkeys = SpellBarManager.GetHotKeys();
-        var keymods = SpellBarManager.GetModKeys();
-
-
-        for(var c = 0; c < 10; c++)
-        {
-            PositionHelper.BlankLine();
-            Control tb;
-            scroll.Add(tb = PositionHelper.PositionControl(TextBox.GetOne($"Slot {c} hotkeys: ", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default())));
-
-            HotkeyBox hotkey = new();
-            var c1 = c;
-
-            hotkey.HotkeyChanged += (s, e) =>
-            {
-                SpellBarManager.SetButtons(c1, hotkey.Mod, hotkey.Key, hotkey.Buttons);
-            };
-
-            if (controllerHotkeys.Length > c)
-                hotkey.SetButtons(controllerHotkeys[c]);
-
-            if(hotkeys.Length > c && keymods.Length > c)
-                hotkey.SetKey(hotkeys[c], keymods[c]);
-
-            scroll.Add(PositionHelper.ToRightOf(hotkey, tb));
-        }
+        MainContent.AddToLeft(button);
     }
 
     private void BuildHUD()
