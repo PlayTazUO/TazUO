@@ -146,9 +146,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void CaptureCurrentInput()
         {
             if (listeningSlot < 0) return;
-            // For now, we'll use a simplified approach
-            // The full SDL3 keyboard state polling has API compatibility issues
-            // Instead, we'll rely on ImGui's key detection for basic keys
 
             // Capture modifier keys from ImGui
             capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
@@ -159,6 +156,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             if (ImGui.GetIO().KeyShift)
                 capturedMod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
 
+            // Capture keyboard input
             foreach (var kvp in keyMap)
             {
                 if (ImGui.IsKeyPressed(kvp.Key))
@@ -168,8 +166,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
             }
 
-            // TODO: Add gamepad button capture using TazUO's existing controller system
-            // For now, focusing on keyboard capture
+            // Capture gamepad button input using TazUO's existing controller system
+            var pressedButtons = Controller.PressedButtons();
+            if (pressedButtons.Length > 0)
+            {
+                capturedButtons.Clear();
+                capturedButtons.AddRange(pressedButtons);
+            }
         }
 
         private void ApplyCapturedHotkey()
