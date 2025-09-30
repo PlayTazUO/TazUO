@@ -512,6 +512,7 @@ sealed class PacketHandlers
         }
 
         string oldName = entity.Name;
+        ushort oldHits = entity.Hits;
         entity.Name = p.ReadASCII(30);
         entity.Hits = p.ReadUInt16BE();
         entity.HitsMax = p.ReadUInt16BE();
@@ -715,6 +716,12 @@ sealed class PacketHandlers
             if (mobile == world.Player)
             {
                 TitleBarStatsManager.UpdateTitleBar();
+            }
+
+            // Check for bandage healing
+            if (oldHits != mobile.Hits)
+            {
+                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
             }
         }
     }
@@ -1857,6 +1864,7 @@ sealed class PacketHandlers
             return;
         }
 
+        ushort oldHits = entity.Hits;
         entity.HitsMax = p.ReadUInt16BE();
         entity.Hits = p.ReadUInt16BE();
 
@@ -1882,6 +1890,12 @@ sealed class PacketHandlers
             if (mobile == world.Player)
             {
                 TitleBarStatsManager.UpdateTitleBar();
+            }
+
+            // Check for bandage healing
+            if (oldHits != mobile.Hits)
+            {
+                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
             }
         }
     }
@@ -3600,6 +3614,7 @@ sealed class PacketHandlers
             return;
         }
 
+        ushort oldHits = entity.Hits;
         entity.HitsMax = p.ReadUInt16BE();
         entity.Hits = p.ReadUInt16BE();
 
@@ -3612,6 +3627,16 @@ sealed class PacketHandlers
         {
             SpellVisualRangeManager.Instance.ClearCasting();
             TitleBarStatsManager.UpdateTitleBar();
+        }
+
+        // Check for bandage healing for all mobiles
+        if (SerialHelper.IsMobile(entity.Serial) && oldHits != entity.Hits)
+        {
+            Mobile mobile = entity as Mobile;
+            if (mobile != null)
+            {
+                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, entity.Hits);
+            }
         }
     }
 

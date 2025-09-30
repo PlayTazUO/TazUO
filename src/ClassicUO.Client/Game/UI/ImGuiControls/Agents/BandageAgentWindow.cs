@@ -17,6 +17,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private bool checkPoisoned;
         private bool checkHidden;
         private bool checkInvul;
+        private bool healfriends;
 
         private BandageAgentWindow() : base("Bandage Agent")
         {
@@ -33,6 +34,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             checkPoisoned = profile.BandageAgentCheckPoisoned;
             checkHidden = profile.BandageAgentCheckHidden;
             checkInvul = profile.BandageAgentCheckInvul;
+            healfriends = profile.BandageAgentBandageFriends;
         }
 
         public override void DrawContent()
@@ -48,9 +50,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             // Enable bandage agent checkbox
             if (ImGui.Checkbox("Enable bandage agent", ref enabled))
-            {
                 profile.EnableBandageAgent = enabled;
-            }
+
+            ImGui.SameLine();
+            if (ImGui.Checkbox("Bandage friends", ref healfriends))
+                profile.BandageAgentBandageFriends = healfriends;
 
             ImGui.Separator();
 

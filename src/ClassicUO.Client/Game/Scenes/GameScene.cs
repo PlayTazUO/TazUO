@@ -222,7 +222,6 @@ namespace ClassicUO.Game.Scenes
             AutoLootManager.Instance.OnSceneLoad();
             DressAgentManager.Instance.Load();
             FriendsListManager.Instance.OnSceneLoad();
-            var _ = BandageManager.Instance;
 
             foreach (var xml in ProfileManager.CurrentProfile.AutoOpenXmlGumps)
             {
@@ -401,6 +400,7 @@ namespace ClassicUO.Game.Scenes
 
             PersistentVars.Unload();
             LegionScripting.LegionScripting.Unload();
+            BandageManager.Instance.Value.Dispose();
 
             ProfileManager.CurrentProfile.GameWindowPosition = new Point(
                 Camera.Bounds.X,
