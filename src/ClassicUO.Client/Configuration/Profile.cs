@@ -541,6 +541,8 @@ namespace ClassicUO.Configuration
         public bool EnableAutoLoot { get; set; } = false;
         public bool AutoLootHumanCorpses { get; set; } = false;
 
+        public bool ItemDatabaseEnabled { get; set; } = true;
+
         public static uint GumpsVersion { get; private set; }
 
         [JsonConverter(typeof(Point2Converter))]

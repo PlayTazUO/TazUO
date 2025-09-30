@@ -201,6 +201,7 @@ namespace ClassicUO.Game.Scenes
             _healthLinesManager = new HealthLinesManager(_world);
 
             _world.CommandManager.Initialize();
+            ItemDatabaseManager.Instance.Initialize();
 
             WorldViewportGump viewport = new WorldViewportGump(_world, this);
             UIManager.Add(viewport, false);

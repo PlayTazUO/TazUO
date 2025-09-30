@@ -38,6 +38,10 @@ namespace ClassicUO.Game.Managers
 
             EventSink.InvokeOPLOnReceive(null, new OPLEventArgs(serial, name, data));
 
+            Item item = _world.Items.Get(serial);
+            if(item != null)
+                ItemDatabaseManager.Instance.AddOrUpdateItem(item, _world);
+
             GridHighlightData.ProcessItemOpl(serial);
         }
 

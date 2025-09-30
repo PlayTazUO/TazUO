@@ -6341,7 +6341,7 @@ sealed class PacketHandlers
         }
         else if (SerialHelper.IsItem(containerSerial))
         {
-            //AutoLootManager.Instance.HandleCorpse(World.Items.Get(containerSerial));
+            ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
 
             Gump gump = UIManager.GetGump<BulletinBoardGump>(containerSerial);
 
@@ -6565,6 +6565,9 @@ sealed class PacketHandlers
                 EventSink.InvokeOnItemCreated(item);
             else
                 EventSink.InvokeOnItemUpdated(item);
+
+            // Update item database
+            ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
         }
         else
         {
