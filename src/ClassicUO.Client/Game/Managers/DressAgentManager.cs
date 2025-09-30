@@ -386,7 +386,7 @@ namespace ClassicUO.Game.Managers
             foreach (var layer in layers)
             {
                 var currentlyEquipped = World.Instance.Player?.FindItemByLayer((Layer)layer);
-                if (currentlyEquipped != null && !config.Contains(currentlyEquipped))
+                if (currentlyEquipped != null && !config.Contains(currentlyEquipped.Serial))
                     MoveItemQueue.Instance.Enqueue(currentlyEquipped, undressBag);
             }
         }
