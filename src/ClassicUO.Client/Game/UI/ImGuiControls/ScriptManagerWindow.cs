@@ -465,13 +465,49 @@ while True:
         {
             ImGui.PushID(script.FullPath);
 
+            // Add menu button next to play button
+            if (ImGui.Button("...", new Vector2(20, 0)))
+            {
+                _showContextMenu = true;
+                _contextMenuScript = script;
+                _contextMenuGroup = "";
+                _contextMenuSubGroup = "";
+                _contextMenuPosition = ImGui.GetMousePos();
+            }
+
+            ImGui.SameLine();
             // Get script display name (without extension)
             string displayName = script.FileName;
             int lastDotIndex = displayName.LastIndexOf('.');
             if (lastDotIndex != -1)
                 displayName = displayName.Substring(0, lastDotIndex);
 
+            // Check if script is playing
+            bool isPlaying = script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying);
+
+            // Draw play/stop button
+            string buttonText = isPlaying ? "Stop" : "Play";
+            Vector4 buttonColor = isPlaying
+                ? new Vector4(0.2f, 0.6f, 0.2f, 1.0f) // Green for play
+                : ImGuiTheme.Colors.Primary;
+
+
+            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonColor * 1.2f);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, buttonColor * 0.8f);
+
+            if (ImGui.Button(buttonText, new Vector2(50, 0)))
+            {
+                if (isPlaying)
+                    LegionScripting.LegionScripting.StopScript(script);
+                else
+                    LegionScripting.LegionScripting.PlayScript(script);
+            }
+
+            ImGui.PopStyleColor(3);
+
             // Autostart indicator
+            ImGui.SameLine();
             bool hasGlobalAutostart = LegionScripting.LegionScripting.AutoLoadEnabled(script, true);
             bool hasCharacterAutostart = LegionScripting.LegionScripting.AutoLoadEnabled(script, false);
 
@@ -570,41 +606,6 @@ while True:
 
             // Right-click context menu for script (works on both button and name)
             if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
-            {
-                _showContextMenu = true;
-                _contextMenuScript = script;
-                _contextMenuGroup = "";
-                _contextMenuSubGroup = "";
-                _contextMenuPosition = ImGui.GetMousePos();
-            }
-
-            // Check if script is playing
-            bool isPlaying = script.IsPlaying || (script.GetScript != null && script.GetScript.IsPlaying);
-
-            // Draw play/stop button
-            ImGui.SameLine();
-            string buttonText = isPlaying ? "Stop" : "Play";
-            Vector4 buttonColor = isPlaying
-                ? ImGuiTheme.Colors.Success
-                : ImGuiTheme.Colors.Primary;
-
-            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonColor * 1.2f);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, buttonColor * 0.8f);
-
-            if (ImGui.Button(buttonText, new Vector2(50, 0)))
-            {
-                if (isPlaying)
-                    LegionScripting.LegionScripting.StopScript(script);
-                else
-                    LegionScripting.LegionScripting.PlayScript(script);
-            }
-
-            ImGui.PopStyleColor(3);
-
-            // Add menu button at the end
-            ImGui.SameLine();
-            if (ImGui.Button("*", new Vector2(20, 0)))
             {
                 _showContextMenu = true;
                 _contextMenuScript = script;
