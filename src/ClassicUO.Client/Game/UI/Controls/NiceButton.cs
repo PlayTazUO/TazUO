@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Controls
         private readonly ButtonAction _action;
         private readonly int _groupnumber;
         private bool _isSelected;
-
+        public Color? BackgroundColor { get; set; } = null;
         public bool DisplayBorder;
 
         public NiceButton
@@ -137,6 +137,16 @@ namespace ClassicUO.Game.UI.Controls
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
+            if (BackgroundColor.HasValue)
+            {
+                batcher.Draw
+                (
+                    SolidColorTextureCache.GetTexture(BackgroundColor.Value),
+                    new Rectangle(x, y, Width, Height),
+                    ShaderHueTranslator.GetHueVector(0, false, Alpha)
+                );
+            }
+
             if (IsSelected || AlwaysShowBackground)
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, false, Alpha);
