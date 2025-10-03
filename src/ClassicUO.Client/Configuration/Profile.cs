@@ -425,6 +425,8 @@ namespace ClassicUO.Configuration
         public List<List<int>> GridHighlight_PropMinVal { get; set; } = new List<List<int>>();
         public bool GridHighlight_CorpseOnly { get; set; } = false;
         public int GridHighlightSize { get; set; } = 1;
+        public bool GridHighlightProperties { get; set; } = true;
+        public bool GridHighlightShowRuleName { get; set; } = true;
         public List<bool> GridHighlight_AcceptExtraProperties { get; set; } = new List<bool>();
         public List<List<bool>> GridHighlight_IsOptionalProperties { get; set; } = new List<List<bool>>();
         public List<List<string>> GridHighlight_ExcludeNegatives { get; set; } = new List<List<string>>();

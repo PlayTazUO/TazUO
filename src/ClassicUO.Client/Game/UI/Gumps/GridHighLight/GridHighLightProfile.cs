@@ -25,6 +25,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public List<string> RequiredRarities { get; set; } = new();
         public GridHighlightSlot GridHighlightSlot { get; set; } = new();
         public bool LootOnMatch { get; set; } = false;
+        public bool IsHighlightProperties { get; set; } = true;
 
         public Color GetHighlightColor()
         {

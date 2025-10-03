@@ -20,7 +20,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private static readonly Queue<uint> _queue = new();
         private static bool hasQueuedItems;
 
-        private static readonly Regex HtmlTagRegex = new("<.*?>", RegexOptions.Compiled);
         private readonly Dictionary<string, string> _normalizeCache = new();
 
         public static GridHighlightData[] AllConfigs
@@ -111,12 +110,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.LootOnMatch = value;
         }
 
-        public GridHighlightData()
-        {
-            _entry = new GridHighlightSetupEntry();
-            ProfileManager.CurrentProfile.GridHighlightSetup.Add(_entry);
-        }
-
         private GridHighlightData(GridHighlightSetupEntry entry)
         {
             _entry = entry;
@@ -163,22 +156,19 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     itemData.Add(new ItemPropertiesData(World, item));
             }
 
-            foreach (var config in AllConfigs)
+            foreach (var data in itemData)
             {
-                foreach (var data in itemData)
+                var bestMatch = GetBestMatch(data);
+                if (bestMatch != null)
                 {
-                    if (config.IsMatch(data))
-                    {
-                        data.item.MatchesHighlightData = true;
-                        data.item.HighlightHue = config.Hue;
-                        data.item.HighlightColor = config.HighlightColor;
+                    data.item.MatchesHighlightData = true;
+                    data.item.HighlightColor = bestMatch.HighlightColor;
 
-                        if (config.LootOnMatch)
-                        {
-                            var root = World.Items.Get(data.item.RootContainer);
-                            if (root != null && root.IsCorpse)
-                                AutoLootManager.Instance.LootItem(data.item);
-                        }
+                    if (bestMatch.LootOnMatch)
+                    {
+                        var root = World.Items.Get(data.item.RootContainer);
+                        if (root != null && root.IsCorpse)
+                            AutoLootManager.Instance.LootItem(data.item);
                     }
                 }
             }
@@ -212,12 +202,33 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public bool IsMatch(ItemPropertiesData itemData)
         {
-            if (!itemData.HasData)
-                return false;
-
             return AcceptExtraProperties
                 ? IsMatchFromProperties(itemData)
                 : IsMatchFromItemPropertiesData(itemData);
+        }
+
+        public bool DoesPropertyMatch(ItemPropertiesData.SinglePropertyData property)
+        {
+            foreach (var rule in Properties)
+            {
+                string nProp = Normalize(property.Name);
+                string nRule = Normalize(rule.Name);
+
+                bool nameMatch = nProp.Equals(nRule, StringComparison.OrdinalIgnoreCase) ||
+                                 nProp.Contains(nRule, StringComparison.OrdinalIgnoreCase) ||
+                                 Normalize(property.OriginalString).Contains(nRule, StringComparison.OrdinalIgnoreCase);
+
+                bool valueMatch = rule.MinValue == -1 || property.FirstValue >= rule.MinValue;
+
+                if (nameMatch && valueMatch)
+                    return true;
+            }
+
+            // rarities
+            if (RequiredRarities.Any(r => Normalize(property.Name).Equals(Normalize(r), StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            return false;
         }
 
         private bool IsMatchFromProperties(ItemPropertiesData itemData)
@@ -226,7 +237,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return false;
 
             if (!MatchesSlot(itemData.item.ItemData.Layer))
-                    return false;
+                return false;
 
             if (Overweight && itemData.singlePropertyData.Any(prop =>
                     Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
@@ -298,15 +309,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 GridHighlightRules.NegativeProperties.Any(rule =>
                     Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
 
-            var itemResistances = props.Where(p =>
-                GridHighlightRules.Resistances.Any(rule =>
-                    Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
-
             var itemRarities = props.Where(p =>
                 GridHighlightRules.RarityProperties.Any(rule =>
                     Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
 
-            if (!itemProperties.Any() && !itemNegatives.Any() && !itemResistances.Any() && !itemRarities.Any())
+            if (!itemProperties.Any() && !itemNegatives.Any() && !itemRarities.Any())
                 return false;
 
             if (Overweight && props.Any(prop =>
@@ -354,6 +361,53 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
             return isMatchingPropertyCount;
+        }
+
+        public static GridHighlightData GetBestMatch(ItemPropertiesData itemData)
+        {
+            GridHighlightData best = null;
+            int bestScore = -1;
+            bool bestHasExact = false;
+
+            foreach (var config in AllConfigs)
+            {
+                if (!config.IsMatch(itemData))
+                    continue;
+
+                int score = 0;
+                bool hasExact = false;
+
+                foreach (var prop in itemData.singlePropertyData)
+                {
+                    foreach (var rule in config.Properties)
+                    {
+                        string nProp = config.Normalize(prop.Name);
+                        string nRule = config.Normalize(rule.Name);
+
+                        if (nProp.Equals(nRule, StringComparison.OrdinalIgnoreCase))
+                        {
+                            score += 2; // exact name match = stronger
+                            hasExact = true;
+                        }
+                        else if (nProp.Contains(nRule, StringComparison.OrdinalIgnoreCase) ||
+                                 config.Normalize(prop.OriginalString).Contains(nRule, StringComparison.OrdinalIgnoreCase))
+                        {
+                            score += 1;
+                        }
+                    }
+                }
+
+                // tie-breaker: prefer exact name matches, then higher score
+                if (best == null || (hasExact && !bestHasExact) ||
+                    (hasExact == bestHasExact && score > bestScore))
+                {
+                    best = config;
+                    bestScore = score;
+                    bestHasExact = hasExact;
+                }
+            }
+
+            return best;
         }
 
         private bool IsMatchingPropertyCount(int matchingPropertiesCount)
@@ -425,7 +479,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private bool MatchesSlot(byte layer)
         {
-            if (EquipmentSlots.Other) {
+            if (EquipmentSlots.Other)
+            {
                 return true;
             }
 

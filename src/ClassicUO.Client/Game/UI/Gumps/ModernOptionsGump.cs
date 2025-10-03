@@ -2814,6 +2814,18 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
+                c = new CheckboxWithLabel(lang.GetTazUO.GridHighlightProperties, 0, profile.GridHighlightProperties, (b) => { profile.GridHighlightProperties = b; }),
+                true, page
+            );
+
+            content.AddToRight
+            (
+                c = new CheckboxWithLabel(lang.GetTazUO.GridHighlightShowRuleName, 0, profile.GridHighlightShowRuleName, (b) => { profile.GridHighlightShowRuleName = b; }),
+                true, page
+            );
+
+            content.AddToRight
+            (
                 c = new CheckboxWithLabel(lang.GetTazUO.GridDisableTargeting, 0, profile.DisableTargetingGridContainers, (b) => { profile.DisableTargetingGridContainers = b; }),
                 true, page
             );
