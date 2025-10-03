@@ -1,5 +1,6 @@
 #nullable enable
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Data;
 
 namespace ClassicUO.LegionScripting.PyClasses;
 
@@ -10,7 +11,9 @@ namespace ClassicUO.LegionScripting.PyClasses;
 public class PyStatic : PyGameObject
 {
     public bool IsImpassible { get; }
+    public bool IsTree { get; }
     public bool IsVegetation { get; }
+    public string Name { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyStatic"/> class from a <see cref="Static"/> object.
@@ -19,7 +22,9 @@ public class PyStatic : PyGameObject
     internal PyStatic(Static staticObj) : base(staticObj)
     {
         IsImpassible = staticObj.ItemData.IsImpassable;
+        IsTree = StaticFilters.IsTree(staticObj.Graphic, out _);
         IsVegetation = staticObj.IsVegetation;
+        Name = staticObj.Name;
     }
 
     /// <summary>
