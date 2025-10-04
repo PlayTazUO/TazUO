@@ -446,31 +446,6 @@ def ProcessCallbacks() -> None:
     """
     pass
 
-def OnHotKeyDispose() -> None:
-    pass
-
-def OnHotKey(key: str, callback: Any = None) -> None:
-    """
-     Register or unregister a Python callback for a hotkey.
-     ### Register:
-     ```py
-     def on_shift_a():
-         API.SysMsg("SHIFT+A pressed!")
-     API.OnHotKey("SHIFT+A", on_shift_a)
-     while True:
-       API.ProcessCallbacks()
-       API.Pause(0.1)
-     ```
-     ### Unregister:
-     ```py
-     API.OnHotKey("SHIFT+A")
-     ```
-     The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
-     for example: "CTRL+SHIFT+F1" or "ALT+A".
-    
-    """
-    pass
-
 def SetSharedVar(name: str, value: Any) -> None:
     """
      Set a variable that is shared between scripts.
