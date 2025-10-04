@@ -444,29 +444,27 @@ def ProcessCallbacks() -> None:
     """
     pass
 
-def RegisterKeyCallback(key: str, callback: Any) -> None:
+def OnHotKeyDispose() -> None:
+    pass
+
+def OnHotKey(key: str, callback: Any = None) -> None:
     """
-     Register a Python callback to be executed when a hotkey is pressed.
-     Example:
+     Register or unregister a Python callback for a hotkey.
+     ### Register:
      ```py
      def on_shift_a():
          API.SysMsg("SHIFT+A pressed!")
-    
-     API.RegisterKeyCallback("SHIFT+A", on_shift_a)
+     API.OnHotKey("SHIFT+A", on_shift_a)
+     while True:
+       API.ProcessCallbacks()
+       API.Pause(0.1)
      ```
-    
-     Modifiers (CTRL, SHIFT, ALT) are optional.
-    
-    """
-    pass
-
-def UnregisterKeyCallback(key: str) -> None:
-    """
-     Unregister a previously registered hotkey callback.
-     Example:
+     ### Unregister:
      ```py
-     API.UnregisterKeyCallback("SHIFT+A")
+     API.OnHotKey("SHIFT+A")
      ```
+     The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
+     for example: "CTRL+SHIFT+F1" or "ALT+A".
     
     """
     pass

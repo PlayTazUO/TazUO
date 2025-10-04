@@ -919,6 +919,8 @@ namespace ClassicUO.LegionScripting
         public void PythonScriptStopped()
         {
             scopedAPI?.CloseGumps();
+            scopedAPI?.OnHotKeyDispose();
+
             pythonScope = null;
             scopedAPI = null;
             if (LegionScripting.LScriptSettings.DisableModuleCache)
