@@ -53,7 +53,7 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private static readonly ConcurrentDictionary<string, List<(ScriptEngine engine, object callback)>> hotkeyCallbacks = new();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ScriptEngine, object>> hotkeyCallbacks = new();
         private HashSet<string> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
@@ -188,12 +188,11 @@ namespace ClassicUO.LegionScripting
 
         public void OnHotKeyDispose()
         {
-            foreach (var kvp in hotkeyCallbacks.ToArray())
+            foreach (var (hotkey, handlers) in hotkeyCallbacks.ToArray())
             {
-                var list = kvp.Value;
-                list.RemoveAll(e => e.engine == engine);
-                if (list.Count == 0)
-                    hotkeyCallbacks.TryRemove(kvp.Key, out _);
+                handlers.TryRemove(engine, out _);
+                if (handlers.IsEmpty)
+                    hotkeyCallbacks.TryRemove(hotkey, out _);
             }
         }
 
@@ -361,22 +360,22 @@ namespace ClassicUO.LegionScripting
 
             if (callback == null || !engine.Operations.IsCallable(callback))
             {
-                if (hotkeyCallbacks.TryGetValue(normalized, out var list))
+                if (hotkeyCallbacks.TryGetValue(normalized, out var handlers))
                 {
-                    list.RemoveAll(e => e.engine == engine);
-                    if (list.Count == 0)
+                    handlers.TryRemove(engine, out _);
+                    if (handlers.IsEmpty)
                         hotkeyCallbacks.TryRemove(normalized, out _);
                 }
                 return;
             }
 
-            hotkeyCallbacks.AddOrUpdate(normalized,
-                _ => new List<(ScriptEngine, object)> { (engine, callback) },
-                (_, list) =>
+            hotkeyCallbacks.AddOrUpdate(
+                normalized,
+                _ => new ConcurrentDictionary<ScriptEngine, object> { [engine] = callback },
+                (_, handlers) =>
                 {
-                    list.RemoveAll(e => e.engine == engine);
-                    list.Add((engine, callback));
-                    return list;
+                    handlers[engine] = callback;
+                    return handlers;
                 });
         }
 
