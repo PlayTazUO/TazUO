@@ -271,6 +271,27 @@ namespace ClassicUO.LegionScripting
             }
         }
 
+        public static Dictionary<string, string> GetAllVars(API.PersistentVar scope)
+        {
+            var (s, scopeKey) = GetScopeKeyPair(scope);
+            var scopeStr = s.ToString();
+            var result = new Dictionary<string, string>();
+
+            lock (_fileLock)
+            {
+                if (_data.TryGetValue(scopeStr, out var scopeData) &&
+                    scopeData.TryGetValue(scopeKey, out var keyData))
+                {
+                    foreach (var kvp in keyData)
+                    {
+                        result[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public static void Unload()
         {
             // Process any remaining items in the queue
