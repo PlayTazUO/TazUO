@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `9/30/25`.*
+*This was generated on `10-3-25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -156,6 +156,31 @@ You can now type `-updateapi` in game to download the latest API.py file.
    API.Pause(0.1)
  ```
 
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### RegisterKeyCallback
+`(key, callback)`
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `key` | `string` | ❌ No |  |
+| `callback` | `object` | ❌ No |  |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### UnregisterKeyCallback
+`(key)`
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `key` | `string` | ❌ No |  |
 
 **Return Type:** `void` *(Does not return anything)*
 
