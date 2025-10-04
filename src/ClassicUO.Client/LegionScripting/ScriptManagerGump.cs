@@ -65,6 +65,10 @@ namespace ClassicUO.LegionScripting
             {
                 ScriptingInfoGump.Show();
             }));
+            refresh.ContextMenu.Add(new ContextMenuItemEntry("Persistent Variables", () =>
+            {
+                Game.UI.ImGuiControls.PersistentVarsWindow.Show();
+            }));
             refresh.ContextMenu.Add(new ContextMenuItemEntry("Disable Module Cache", () =>
             {
                 LegionScripting.LScriptSettings.DisableModuleCache = !LegionScripting.LScriptSettings.DisableModuleCache;

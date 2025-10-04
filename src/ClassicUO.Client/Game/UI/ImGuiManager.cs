@@ -16,8 +16,8 @@ namespace ClassicUO.Game.UI
         private static ImGuiRenderer _imGuiRenderer;
         private static bool _isInitialized;
         private static bool _hasWindows;
-        private static readonly List<ImGuiWindow> _windows = new List<ImGuiWindow>();
-        private static readonly object _windowsLock = new object();
+        private static readonly List<ImGuiWindow> _windows = new();
+        private static readonly object _windowsLock = new();
         private static Microsoft.Xna.Framework.Game _game;
 
         public static bool IsInitialized => _isInitialized;
@@ -225,13 +225,11 @@ namespace ClassicUO.Game.UI
 
         public static void Dispose()
         {
-            if (_isInitialized)
-            {
-                RemoveAllWindows();
-                _imGuiRenderer = null;
-                _isInitialized = false;
-                Log.Info("ImGui disposed");
-            }
+            RemoveAllWindows();
+            _imGuiRenderer?.Dispose();
+            _imGuiRenderer = null;
+            _isInitialized = false;
+            Log.Info("ImGui disposed");
         }
     }
 }

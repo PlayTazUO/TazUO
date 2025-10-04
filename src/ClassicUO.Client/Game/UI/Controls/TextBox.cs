@@ -74,28 +74,28 @@ namespace ClassicUO.Game.UI.Controls
 
         public static TextBox GetOne(string text, string font, float size, Color hue, RTLOptions options)
         {
-            if (_pool.Count > 0)
-            {
-                TextBox tb = _pool.Dequeue();
-
-                while (!tb.IsDisposed && tb.Parent != null) //In case a text entry was added to the pool but is still in use somewhere
-                {
-                    if(_pool.Count > 0)
-                        tb = _pool.Dequeue();
-                    else
-                        return new TextBox(text, font, size, hue, options);
-                }
-
-                tb.SetDisposed(false);
-                tb._font = font;
-                tb._size = size;
-                tb._color = hue;
-                tb.Options = options;
-                tb.AcceptMouseInput = options.AcceptMouseInput;
-                tb.CreateRichTextLayout(text);
-
-                return tb;
-            }
+            // if (_pool.Count > 0)
+            // {
+            //     TextBox tb = _pool.Dequeue();
+            //
+            //     while (!tb.IsDisposed && tb.Parent != null) //In case a text entry was added to the pool but is still in use somewhere
+            //     {
+            //         if(_pool.Count > 0)
+            //             tb = _pool.Dequeue();
+            //         else
+            //             return new TextBox(text, font, size, hue, options);
+            //     }
+            //
+            //     tb.SetDisposed(false);
+            //     tb._font = font;
+            //     tb._size = size;
+            //     tb._color = hue;
+            //     tb.Options = options;
+            //     tb.AcceptMouseInput = options.AcceptMouseInput;
+            //     tb.CreateRichTextLayout(text);
+            //
+            //     return tb;
+            // }
 
             return new TextBox(text, font, size, hue, options);
         }
@@ -394,12 +394,12 @@ namespace ClassicUO.Game.UI.Controls
         public override void Dispose()
         {
             base.Dispose();
-#if DEBUG
-            if (CUOEnviroment.Debug)
-                Log.Debug($"Returned to pool: [{Text}]");
-#endif
-            Reset();
-            _pool.Enqueue(this);
+// #if DEBUG
+//             if (CUOEnviroment.Debug)
+//                 Log.Debug($"Returned to pool: [{Text}]");
+// #endif
+//             Reset();
+//             _pool.Enqueue(this);
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)

@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `10-3-25`.*
+*This was generated on `10/4/25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -1901,7 +1901,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  gump = API.GetGump()
  if gump:
    API.SysMsg("Found the gump!")
-   API.CloseGump(gump)
+   gump.Dispose() #Close it
  ```
 
 
@@ -1909,9 +1909,18 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `ID` | `uint` | ✅ Yes | Leabe blank to use last gump opened from server |
+| `ID` | `uint` | ✅ Yes | Leave blank to use last gump opened from server |
 
 **Return Type:** `Gump`
+
+---
+
+### GetAllGumps
+
+ Gets all currently open server-side gumps.
+
+
+**Return Type:** `PythonList`
 
 ---
 
