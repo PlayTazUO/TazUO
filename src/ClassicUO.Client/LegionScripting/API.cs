@@ -23,11 +23,14 @@ using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Button = ClassicUO.Game.UI.Controls.Button;
 using Control = ClassicUO.Game.UI.Controls.Control;
 using Label = ClassicUO.Game.UI.Controls.Label;
 using Lock = ClassicUO.Game.Data.Lock;
 using RadioButton = ClassicUO.Game.UI.Controls.RadioButton;
+using CUOKeyboard = ClassicUO.Input.Keyboard;
+using SDL3;
 
 namespace ClassicUO.LegionScripting
 {
@@ -50,6 +53,8 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
+        private static readonly ConcurrentDictionary<string, object> hotkeyCallbacks = new();
+        private HashSet<string> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -111,6 +116,23 @@ namespace ClassicUO.LegionScripting
             }
         }
 
+        private string NormalizeKeyString(string input)
+        {
+            var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
+            List<string> mods = new();
+
+            foreach (var p in parts)
+            {
+                if (p is "CTRL" or "CONTROL") mods.Add("CTRL");
+                else if (p == "SHIFT") mods.Add("SHIFT");
+                else if (p == "ALT") mods.Add("ALT");
+                else if (!p.StartsWith("SDLK_")) mods.Add("SDLK_" + p);
+                else mods.Add(p);
+            }
+
+            return string.Join("+", mods);
+        }
+
         #endregion
 
         private ConcurrentBag<uint> ignoreList = new();
@@ -118,6 +140,64 @@ namespace ClassicUO.LegionScripting
         private World World = Client.Game.UO.World;
         private Item backpack;
         private PlayerMobile player;
+        private static bool keyboardHooked = false;
+
+        private bool IgnoreBareModifierKey(SDL.SDL_KeyboardEvent e)
+        {
+            var keycode = (SDL.SDL_Keycode)e.key;
+            return keycode is SDL.SDL_Keycode.SDLK_LSHIFT
+                        or SDL.SDL_Keycode.SDLK_RSHIFT
+                        or SDL.SDL_Keycode.SDLK_LCTRL
+                        or SDL.SDL_Keycode.SDLK_RCTRL
+                        or SDL.SDL_Keycode.SDLK_LALT
+                        or SDL.SDL_Keycode.SDLK_RALT;
+        }
+
+        private string BuildHotKeyString(SDL.SDL_KeyboardEvent e)
+        {
+            List<string> parts = new();
+            if (CUOKeyboard.Ctrl) parts.Add("CTRL");
+            if (CUOKeyboard.Shift) parts.Add("SHIFT");
+            if (CUOKeyboard.Alt) parts.Add("ALT");
+
+            string keyName = ((SDL.SDL_Keycode)e.key).ToString().ToUpperInvariant();
+            parts.Add(keyName);
+
+            return string.Join("+", parts);
+        }
+
+        private void EnsureKeyboardHook()
+        {
+            if (keyboardHooked) return;
+
+            CUOKeyboard.KeyDownEvent += (e) =>
+            {
+                if (IgnoreBareModifierKey(e))
+                {
+                    return;
+                }
+
+                var hotkey = BuildHotKeyString(e);
+                if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var callback))
+                {
+                    pressedKeys.Add(hotkey);
+                    ScheduleCallback(() => engine.Operations.Invoke(callback));
+                }
+            };
+
+            CUOKeyboard.KeyUpEvent += (e) =>
+            {
+                if (IgnoreBareModifierKey(e))
+                {
+                    return;
+                }
+
+                var hotkey = BuildHotKeyString(e);
+                pressedKeys.Remove(hotkey);
+            };
+
+            keyboardHooked = true;
+        }
 
         public ConcurrentQueue<PyJournalEntry> JournalEntries
         {
@@ -158,10 +238,11 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Return the player's bank container serial if open, otherwise 0
         /// </summary>
-        public uint Bank {
+        public uint Bank
+        {
             get
             {
-                var i = MainThreadQueue.InvokeOnMainThread(()=>World.Player.FindItemByLayer(Layer.Bank));
+                var i = MainThreadQueue.InvokeOnMainThread(() => World.Player.FindItemByLayer(Layer.Bank));
                 return i != null ? i.Serial : 0;
             }
         }
@@ -247,6 +328,48 @@ namespace ClassicUO.LegionScripting
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Register a Python callback to be executed when a hotkey is pressed.
+        /// Example:
+        /// ```py
+        /// def on_shift_a():
+        ///     API.SysMsg("SHIFT+A pressed!")
+        ///
+        /// API.RegisterKeyCallback("SHIFT+A", on_shift_a)
+        /// ```
+        ///
+        /// Modifiers (CTRL, SHIFT, ALT) are optional.
+        /// </summary>
+        /// <param name="key">Key string to listen for. Can include modifiers (e.g. "CTRL+SHIFT+F1").</param>
+        /// <param name="callback">Python function to call when the key combination is pressed.</param>
+        public void RegisterKeyCallback(string key, object callback)
+        {
+            if (string.IsNullOrEmpty(key) || callback == null || !engine.Operations.IsCallable(callback))
+                return;
+
+            EnsureKeyboardHook();
+
+            string normalized = NormalizeKeyString(key);
+            hotkeyCallbacks[normalized] = callback;
+        }
+
+        /// <summary>
+        /// Unregister a previously registered hotkey callback.
+        /// Example:
+        /// ```py
+        /// API.UnregisterKeyCallback("SHIFT+A")
+        /// ```
+        /// </summary>
+        /// <param name="key">The key string to remove (must match the one passed to RegisterKeyCallback).</param>
+        public void UnregisterKeyCallback(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return;
+
+            string normalized = NormalizeKeyString(key);
+            hotkeyCallbacks.TryRemove(normalized, out _);
+        }
 
         /// <summary>
         /// Set a variable that is shared between scripts.
@@ -599,7 +722,7 @@ namespace ClassicUO.LegionScripting
                     z = gz;
                     useCalculatedZ = true;
                 }
-                if(gz2 > z)
+                if (gz2 > z)
                 {
                     z = gz2;
                     useCalculatedZ = true;
@@ -640,7 +763,7 @@ namespace ClassicUO.LegionScripting
                     z = gz;
                     useCalculatedZ = true;
                 }
-                if(gz2 > z)
+                if (gz2 > z)
                 {
                     z = gz2;
                     useCalculatedZ = true;
@@ -799,7 +922,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="hue">Color of the message</param>
         public void SysMsg(string message, ushort hue = 946)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => GameActions.Print(World, message, hue));
         }
 
@@ -813,7 +936,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message">The message to say</param>
         public void Msg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.SpeechHue); });
         }
 
@@ -852,7 +975,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message">The message</param>
         public void PartyMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.SayParty(message); });
         }
 
@@ -866,7 +989,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void GuildMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.GuildMessageHue, MessageType.Guild); });
         }
 
@@ -880,7 +1003,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void AllyMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.AllyMessageHue, MessageType.Alliance); });
         }
 
@@ -894,7 +1017,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void WhisperMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.WhisperHue, MessageType.Whisper); });
         }
 
@@ -908,7 +1031,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void YellMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.YellHue, MessageType.Yell); });
         }
 
@@ -922,7 +1045,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void EmoteMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { GameActions.Say(message, ProfileManager.CurrentProfile.EmoteHue, MessageType.Emote); });
         }
 
@@ -932,7 +1055,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="message"></param>
         public void GlobalMsg(string message)
         {
-            if(!string.IsNullOrEmpty(message))
+            if (!string.IsNullOrEmpty(message))
                 MainThreadQueue.InvokeOnMainThread(() => { AsyncNetClient.Socket.Send_ChatMessageCommand(message); });
         }
 
@@ -1284,12 +1407,12 @@ namespace ClassicUO.LegionScripting
             if (!wait)
                 return pathFindStatus;
 
-            if(timeout > 30)
+            if (timeout > 30)
                 timeout = 30;
 
             var expire = DateTime.Now.AddSeconds(timeout);
 
-            while (MainThreadQueue.InvokeOnMainThread(()=>World.Player.Pathfinder.AutoWalking))
+            while (MainThreadQueue.InvokeOnMainThread(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
@@ -1300,7 +1423,7 @@ namespace ClassicUO.LegionScripting
 
             MainThreadQueue.InvokeOnMainThread(World.Player.Pathfinder.StopAutoWalk);
 
-            return MainThreadQueue.InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            return MainThreadQueue.InvokeOnMainThread(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -1336,15 +1459,15 @@ namespace ClassicUO.LegionScripting
                 }
             );
 
-            if(!wait || (x == 0 && y == 0))
+            if (!wait || (x == 0 && y == 0))
                 return pathFindStatus;
 
-            if(timeout > 30)
+            if (timeout > 30)
                 timeout = 30;
 
             var expire = DateTime.Now.AddSeconds(timeout);
 
-            while (MainThreadQueue.InvokeOnMainThread(()=>World.Player.Pathfinder.AutoWalking))
+            while (MainThreadQueue.InvokeOnMainThread(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
@@ -1355,7 +1478,7 @@ namespace ClassicUO.LegionScripting
 
             MainThreadQueue.InvokeOnMainThread(World.Player.Pathfinder.StopAutoWalk);
 
-            return MainThreadQueue.InvokeOnMainThread(()=>World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
+            return MainThreadQueue.InvokeOnMainThread(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
         /// <summary>
@@ -2345,7 +2468,7 @@ namespace ClassicUO.LegionScripting
 
             foreach (var je in JournalEntries.ToArray())
             {
-                if(je.Disposed) continue;
+                if (je.Disposed) continue;
 
                 foreach (var msg in msgs)
                 {
@@ -2431,7 +2554,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="matchingEntries">String or regex to match with. If this is set, only matching entries will be removed.</param>
         public void ClearJournal(string matchingEntries = "")
         {
-            if(string.IsNullOrEmpty(matchingEntries))
+            if (string.IsNullOrEmpty(matchingEntries))
             {
                 while (JournalEntries.TryDequeue(out _))
                 {
@@ -2439,7 +2562,7 @@ namespace ClassicUO.LegionScripting
             }
             else
             {
-                ConcurrentQueue<PyJournalEntry> newQueue = new ();
+                ConcurrentQueue<PyJournalEntry> newQueue = new();
 
                 foreach (var je in JournalEntries.ToArray())
                 {
@@ -2474,7 +2597,7 @@ namespace ClassicUO.LegionScripting
         {
             seconds = Math.Clamp(seconds, 0, 30);
 
-            Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: CancellationToken.Token).Wait(cancellationToken:CancellationToken.Token);
+            Task.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: CancellationToken.Token).Wait(cancellationToken: CancellationToken.Token);
 
             if (StopRequested)
                 throw new ThreadInterruptedException();
@@ -2597,12 +2720,12 @@ namespace ClassicUO.LegionScripting
                 if (notoriety == null || notoriety.Count == 0)
                     return null;
 
-                var mob =  World.Mobiles.Values.Where
+                var mob = World.Mobiles.Values.Where
                 (m => !m.IsDestroyed && !m.IsDead && m.Serial != World.Player.Serial && notoriety.Contains
                      ((Notoriety)(byte)m.NotorietyFlag) && m.Distance <= maxDistance && !OnIgnoreList(m)
                 ).OrderBy(m => m.Distance).FirstOrDefault();
 
-                if(mob != null)
+                if (mob != null)
                 {
                     Found = mob.Serial;
                     return new PyMobile(mob);
@@ -2630,7 +2753,7 @@ namespace ClassicUO.LegionScripting
             Found = 0;
             var c = Utility.FindNearestCorpsePython(distance, this);
 
-            if(c != null)
+            if (c != null)
             {
                 Found = c.Serial;
                 return new PyItem(c);
@@ -2687,7 +2810,7 @@ namespace ClassicUO.LegionScripting
 
             var mob = World.Mobiles.Get(serial);
 
-            if(mob != null)
+            if (mob != null)
             {
                 Found = mob.Serial;
                 return new PyMobile(mob);
@@ -3021,10 +3144,10 @@ namespace ClassicUO.LegionScripting
         /// <param name="g">The gump to add</param>
         public void AddGump(object g) => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if(g is Gump gump)
+            if (g is Gump gump)
                 UIManager.Add(gump);
 
-            if(g is IPyGump { Gump: not null } pyGump)
+            if (g is IPyGump { Gump: not null } pyGump)
                 UIManager.Add(pyGump.Gump);
         });
 
@@ -3649,7 +3772,8 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="name"></param>
         public void RemoveMapMarker(string name) => MainThreadQueue.InvokeOnMainThread
-        (() => {
+        (() =>
+        {
             WorldMapGump wmap = UIManager.GetGump<WorldMapGump>();
 
             if (wmap == null || string.IsNullOrEmpty(name))
@@ -3764,7 +3888,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="map">Defaults to current map</param>
         public void MarkTile(int x, int y, ushort hue, int map = -1) => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if(map < 0)
+            if (map < 0)
                 map = World.Map.Index;
 
             TileMarkerManager.Instance.AddTile(x, y, map, hue);
@@ -3798,7 +3922,7 @@ namespace ClassicUO.LegionScripting
         {
             UIManager.GetGump<QuestArrowGump>(identifier)?.Dispose();
 
-            if(x > 0 && y > 0)
+            if (x > 0 && y > 0)
             {
                 var arrow = new QuestArrowGump(World, identifier, x, y) { CanCloseWithRightClick = true };
                 UIManager.Add(arrow);

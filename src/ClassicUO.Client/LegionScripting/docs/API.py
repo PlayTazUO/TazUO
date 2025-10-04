@@ -446,6 +446,12 @@ def ProcessCallbacks() -> None:
     """
     pass
 
+def RegisterKeyCallback(key: str, callback: Any) -> None:
+    pass
+
+def UnregisterKeyCallback(key: str) -> None:
+    pass
+
 def SetSharedVar(name: str, value: Any) -> None:
     """
      Set a variable that is shared between scripts.
