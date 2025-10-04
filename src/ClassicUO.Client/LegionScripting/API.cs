@@ -190,7 +190,7 @@ namespace ClassicUO.LegionScripting
                         if (ownerEngine == null || callback == null)
                             continue;
 
-                        MainThreadQueue.EnqueueAction(() =>
+                        Task.Run(() =>
                         {
                             try
                             {
