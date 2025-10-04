@@ -53,8 +53,7 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private readonly ConcurrentDictionary<string, (ScriptEngine engine, object callback)> hotkeyCallbacks = new();
-        private HashSet<string> pressedKeys = new();
+        private static readonly ConcurrentDictionary<string, List<(ScriptEngine engine, object callback)>> hotkeyCallbacks = new(); private HashSet<string> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -186,18 +185,23 @@ namespace ClassicUO.LegionScripting
                 var hotkey = BuildHotKeyString(e);
                 if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var entry))
                 {
-                    var (ownerEngine, cb) = entry;
-                    ScheduleCallback(() =>
+                    foreach (var (ownerEngine, callback) in entry.ToArray())
                     {
-                        try
+                        if (ownerEngine == null || callback == null)
+                            continue;
+
+                        MainThreadQueue.EnqueueAction(() =>
                         {
-                            ownerEngine.Operations.Invoke(cb);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Hotkey callback error for [{hotkey}]: {ex}");
-                        }
-                    });
+                            try
+                            {
+                                ownerEngine.Operations.Invoke(callback);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Hotkey callback error for [{hotkey}]: {ex}");
+                            }
+                        });
+                    }
                 }
 
             };
@@ -215,6 +219,18 @@ namespace ClassicUO.LegionScripting
 
             keyboardHooked = true;
         }
+
+        public void OnHotKeyDispose()
+        {
+            foreach (var kvp in hotkeyCallbacks.ToArray())
+            {
+                var list = kvp.Value;
+                list.RemoveAll(e => e.engine == engine);
+                if (list.Count == 0)
+                    hotkeyCallbacks.TryRemove(kvp.Key, out _);
+            }
+        }
+
 
         public ConcurrentQueue<PyJournalEntry> JournalEntries
         {
@@ -347,45 +363,55 @@ namespace ClassicUO.LegionScripting
         #region Methods
 
         /// <summary>
-        /// Register a Python callback to be executed when a hotkey is pressed.
-        /// Example:
+        /// Register or unregister a Python callback for a hotkey.
+        /// ### Register:
         /// ```py
         /// def on_shift_a():
         ///     API.SysMsg("SHIFT+A pressed!")
-        ///
-        /// API.RegisterKeyCallback("SHIFT+A", on_shift_a)
+        /// API.OnHotKey("SHIFT+A", on_shift_a)
+        /// while True:
+        ///   API.ProcessCallbacks()
+        ///   API.Pause(0.1)
         /// ```
-        ///
-        /// Modifiers (CTRL, SHIFT, ALT) are optional.
-        /// </summary>
-        /// <param name="key">Key string to listen for. Can include modifiers (e.g. "CTRL+SHIFT+F1").</param>
-        /// <param name="callback">Python function to call when the key combination is pressed.</param>
-        public void RegisterKeyCallback(string key, object callback)
-        {
-            if (string.IsNullOrEmpty(key) || callback == null || !engine.Operations.IsCallable(callback))
-                return;
-
-            EnsureKeyboardHook();
-
-            string normalized = NormalizeKeyString(key);
-            hotkeyCallbacks[normalized] = (engine, callback);
-        }
-
-        /// <summary>
-        /// Unregister a previously registered hotkey callback.
-        /// Example:
+        /// ### Unregister:
         /// ```py
-        /// API.UnregisterKeyCallback("SHIFT+A")
+        /// API.OnHotKey("SHIFT+A")
         /// ```
+        /// The <paramref name="key"/> can include modifiers (CTRL, SHIFT, ALT),
+        /// for example: "CTRL+SHIFT+F1" or "ALT+A".
         /// </summary>
-        /// <param name="key">The key string to remove (must match the one passed to RegisterKeyCallback).</param>
-        public void UnregisterKeyCallback(string key)
+        /// <param name="key">Key combination to listen for, e.g. "CTRL+SHIFT+F1".</param>
+        /// <param name="callback">
+        /// Python function to invoke when the hotkey is pressed.  
+        /// If <c>null</c>, the hotkey will be unregistered.
+        /// </param>
+        public void OnHotKey(string key, object callback = null)
         {
             if (string.IsNullOrEmpty(key))
                 return;
 
             string normalized = NormalizeKeyString(key);
-            hotkeyCallbacks.TryRemove(normalized, out _);
+            EnsureKeyboardHook();
+
+            if (callback == null || !engine.Operations.IsCallable(callback))
+            {
+                if (hotkeyCallbacks.TryGetValue(normalized, out var list))
+                {
+                    list.RemoveAll(e => e.engine == engine);
+                    if (list.Count == 0)
+                        hotkeyCallbacks.TryRemove(normalized, out _);
+                }
+                return;
+            }
+
+            hotkeyCallbacks.AddOrUpdate(normalized,
+                _ => new List<(ScriptEngine, object)> { (engine, callback) },
+                (_, list) =>
+                {
+                    list.RemoveAll(e => e.engine == engine);
+                    list.Add((engine, callback));
+                    return list;
+                });
         }
 
         /// <summary>
