@@ -163,12 +163,24 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### RegisterKeyCallback
 `(key, callback)`
+ Register a Python callback to be executed when a hotkey is pressed.
+ Example:
+ ```py
+ def on_shift_a():
+     API.SysMsg("SHIFT+A pressed!")
+
+ API.RegisterKeyCallback("SHIFT+A", on_shift_a)
+ ```
+
+ Modifiers (CTRL, SHIFT, ALT) are optional.
+
+
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `key` | `string` | ❌ No |  |
-| `callback` | `object` | ❌ No |  |
+| `key` | `string` | ❌ No | Key string to listen for. Can include modifiers (e.g. "CTRL+SHIFT+F1"). |
+| `callback` | `object` | ❌ No | Python function to call when the key combination is pressed. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -176,11 +188,18 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### UnregisterKeyCallback
 `(key)`
+ Unregister a previously registered hotkey callback.
+ Example:
+ ```py
+ API.UnregisterKeyCallback("SHIFT+A")
+ ```
+
+
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `key` | `string` | ❌ No |  |
+| `key` | `string` | ❌ No | The key string to remove (must match the one passed to RegisterKeyCallback). |
 
 **Return Type:** `void` *(Does not return anything)*
 
