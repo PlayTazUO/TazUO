@@ -52,7 +52,7 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private static readonly ConcurrentDictionary<string, object> hotkeyCallbacks = new();
+        private readonly ConcurrentDictionary<string, (ScriptEngine engine, object callback)> hotkeyCallbacks = new();
         private HashSet<string> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
@@ -118,18 +118,24 @@ namespace ClassicUO.LegionScripting
         private string NormalizeKeyString(string input)
         {
             var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
-            List<string> mods = new();
+            bool ctrl = false, shift = false, alt = false;
+            string key = null;
 
             foreach (var p in parts)
             {
-                if (p is "CTRL" or "CONTROL") mods.Add("CTRL");
-                else if (p == "SHIFT") mods.Add("SHIFT");
-                else if (p == "ALT") mods.Add("ALT");
-                else if (!p.StartsWith("SDLK_")) mods.Add("SDLK_" + p);
-                else mods.Add(p);
+                if (p is "CTRL") ctrl = true;
+                else if (p == "SHIFT") shift = true;
+                else if (p == "ALT") alt = true;
+                else key = p.StartsWith("SDLK_") ? p : "SDLK_" + p;
             }
 
-            return string.Join("+", mods);
+            List<string> normalized = new();
+            if (ctrl) normalized.Add("CTRL");
+            if (shift) normalized.Add("SHIFT");
+            if (alt) normalized.Add("ALT");
+            if (key != null) normalized.Add(key);
+
+            return string.Join("+", normalized);
         }
 
         #endregion
@@ -177,11 +183,22 @@ namespace ClassicUO.LegionScripting
                 }
 
                 var hotkey = BuildHotKeyString(e);
-                if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var callback))
+                if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var entry))
                 {
-                    pressedKeys.Add(hotkey);
-                    ScheduleCallback(() => engine.Operations.Invoke(callback));
+                    var (ownerEngine, cb) = entry;
+                    ScheduleCallback(() =>
+                    {
+                        try
+                        {
+                            ownerEngine.Operations.Invoke(cb);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Hotkey callback error for [{hotkey}]: {ex}");
+                        }
+                    });
                 }
+
             };
 
             CUOKeyboard.KeyUpEvent += (e) =>
@@ -350,7 +367,7 @@ namespace ClassicUO.LegionScripting
             EnsureKeyboardHook();
 
             string normalized = NormalizeKeyString(key);
-            hotkeyCallbacks[normalized] = callback;
+            hotkeyCallbacks[normalized] = (engine, callback);
         }
 
         /// <summary>
