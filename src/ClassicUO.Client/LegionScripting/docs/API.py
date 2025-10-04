@@ -389,7 +389,9 @@ class PyProfile:
 
 class PyStatic:
     IsImpassible: bool = None
+    IsTree: bool = None
     IsVegetation: bool = None
+    Name: str = None
     __class__: str = None
 
 JournalEntries = None
@@ -1491,8 +1493,15 @@ def GetGump(ID: int = 1337) -> Gump:
      gump = API.GetGump()
      if gump:
        API.SysMsg("Found the gump!")
-       API.CloseGump(gump)
+       gump.Dispose() #Close it
      ```
+    
+    """
+    pass
+
+def GetAllGumps() -> Any:
+    """
+     Gets all currently open server-side gumps.
     
     """
     pass

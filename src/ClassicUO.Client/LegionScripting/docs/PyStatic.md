@@ -13,9 +13,17 @@ description:  Represents a Python-accessible static object (non-interactive scen
 
 **Type:** `bool`
 
+### `IsTree`
+
+**Type:** `bool`
+
 ### `IsVegetation`
 
 **Type:** `bool`
+
+### `Name`
+
+**Type:** `string`
 
 ### `__class__`
 

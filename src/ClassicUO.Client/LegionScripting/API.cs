@@ -21,6 +21,7 @@ using ClassicUO.Utility;
 using FontStashSharp.RichText;
 using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
+using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
 using Button = ClassicUO.Game.UI.Controls.Button;
 using Control = ClassicUO.Game.UI.Controls.Control;
@@ -2166,10 +2167,10 @@ namespace ClassicUO.LegionScripting
         /// gump = API.GetGump()
         /// if gump:
         ///   API.SysMsg("Found the gump!")
-        ///   API.CloseGump(gump)
+        ///   gump.Dispose() #Close it
         /// ```
         /// </summary>
-        /// <param name="ID">Leabe blank to use last gump opened from server</param>
+        /// <param name="ID">Leave blank to use last gump opened from server</param>
         /// <returns></returns>
         public Gump GetGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
@@ -2179,6 +2180,22 @@ namespace ClassicUO.LegionScripting
                 return g;
             }
         );
+
+        /// <summary>
+        /// Gets all currently open server-side gumps.
+        /// </summary>
+        /// <returns>A PythonList containing all open server gumps, or null if none are open</returns>
+        public PythonList GetAllGumps() => MainThreadQueue.InvokeOnMainThread<PythonList>(() =>
+        {
+            Gump[] serverGumps = UIManager.Gumps.Where(g => g.ServerSerial > 0).ToArray();
+
+            if (!serverGumps.Any())
+                return null;
+
+            PythonList list = new();
+            list.AddRange(serverGumps);
+            return list;
+        });
 
         /// <summary>
         /// Wait for a server-side gump.

@@ -75,6 +75,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIToMarkdown", "src\APIToM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassicUO.CUOAPI", "src\ClassicUO.CUOAPI\ClassicUO.CUOAPI.csproj", "{F1234567-890A-BCDE-F123-456789ABCDEF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventGenerator", "tools\EventGenerator\EventGenerator.csproj", "{7890E00E-353C-445F-B1C7-002D51B84034}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -177,6 +179,14 @@ Global
 		{F1234567-890A-BCDE-F123-456789ABCDEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1234567-890A-BCDE-F123-456789ABCDEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1234567-890A-BCDE-F123-456789ABCDEF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Debug|x64.Build.0 = Debug|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|x64.ActiveCfg = Release|Any CPU
+		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

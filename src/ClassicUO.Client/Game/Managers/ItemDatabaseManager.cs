@@ -18,7 +18,7 @@ namespace ClassicUO.Game.Managers
     {
         private static readonly Lazy<ItemDatabaseManager> _instance =
             new Lazy<ItemDatabaseManager>(() => new ItemDatabaseManager());
-        private readonly object _dbLock = new object();
+        private readonly object _dbLock = new(), _timerLock = new();
         private string _databasePath;
         private bool _initialized;
         private ConcurrentQueue<ItemInfo> _pendingItems = new();
@@ -467,213 +467,6 @@ namespace ClassicUO.Game.Managers
             });
         }
 
-        public void SearchItemsByGraphics(Action<List<ItemInfo>> onResults, IEnumerable<ushort> graphics,
-            uint? character = null, string serverName = null, int limit = 1000)
-        {
-            var profile = ProfileManager.CurrentProfile;
-            if (!_initialized || profile == null || !profile.ItemDatabaseEnabled || graphics == null)
-            {
-                Task.Run(() => onResults?.Invoke(new List<ItemInfo>()));
-                return;
-            }
-
-            var graphicsList = graphics.ToList();
-            if (graphicsList.Count == 0)
-            {
-                Task.Run(() => onResults?.Invoke(new List<ItemInfo>()));
-                return;
-            }
-
-            Task.Run(() =>
-            {
-                List<ItemInfo> results = new List<ItemInfo>();
-                bool shouldInvokeCallback = false;
-
-                try
-                {
-                    lock (_dbLock)
-                    {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
-                        connection.Open();
-
-                        var whereConditions = new List<string>();
-                        var parameters = new List<(string name, object value)>();
-
-                        // Add graphics condition
-                        var graphicsPlaceholders = string.Join(",", graphicsList.Select((_, i) => $"@Graphic{i}"));
-                        whereConditions.Add($"Graphic IN ({graphicsPlaceholders})");
-                        for (int i = 0; i < graphicsList.Count; i++)
-                        {
-                            parameters.Add(($"@Graphic{i}", graphicsList[i]));
-                        }
-
-                        if (character.HasValue)
-                        {
-                            whereConditions.Add("Character = @Character");
-                            parameters.Add(("@Character", character.Value));
-                        }
-
-                        if (!string.IsNullOrEmpty(serverName))
-                        {
-                            whereConditions.Add("ServerName LIKE @ServerName ESCAPE '\\' COLLATE NOCASE");
-                            parameters.Add(("@ServerName", $"%{EscapeLikePattern(serverName)}%"));
-                        }
-
-                        string selectQuery = @"
-                            SELECT Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround
-                            FROM Items
-                            WHERE " + string.Join(" AND ", whereConditions) + @"
-                            ORDER BY UpdatedTime DESC";
-
-                        if (limit > 0)
-                        {
-                            selectQuery += $" LIMIT {limit}";
-                        }
-
-                        using var command = new SqliteCommand(selectQuery, connection);
-
-                        foreach (var (paramName, paramValue) in parameters)
-                        {
-                            command.Parameters.AddWithValue(paramName, paramValue);
-                        }
-
-                        using var reader = command.ExecuteReader();
-                        while (reader.Read())
-                        {
-                            results.Add(CreateItemInfoFromReader(reader));
-                        }
-                        shouldInvokeCallback = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Failed to search items by graphics in database: {ex}");
-                    results = new List<ItemInfo>();
-                    shouldInvokeCallback = true;
-                }
-
-                if (shouldInvokeCallback)
-                {
-                    onResults?.Invoke(results);
-                }
-            });
-        }
-
-        public void SearchItemsInContainer(Action<List<ItemInfo>> onResults, uint containerSerial,
-            bool includeSubContainers = false, uint? character = null, int limit = 1000)
-        {
-            var profile = ProfileManager.CurrentProfile;
-            if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
-            {
-                Task.Run(() => onResults?.Invoke(new List<ItemInfo>()));
-                return;
-            }
-
-            Task.Run(() =>
-            {
-                List<ItemInfo> results = new List<ItemInfo>();
-                bool shouldInvokeCallback = false;
-
-                try
-                {
-                    lock (_dbLock)
-                    {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
-                        connection.Open();
-
-                        var whereConditions = new List<string>();
-                        var parameters = new List<(string name, object value)>();
-
-                        string selectQuery;
-
-                        if (includeSubContainers)
-                        {
-                            // Use recursive CTE to find all items in container and its subcontainers
-                            selectQuery = @"
-                                WITH RECURSIVE container_items AS (
-                                    -- Base case: direct items in the container
-                                    SELECT Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround
-                                    FROM Items
-                                    WHERE Container = @Container";
-
-                            if (character.HasValue)
-                            {
-                                selectQuery += " AND Character = @Character";
-                                parameters.Add(("@Character", character.Value));
-                            }
-
-                            selectQuery += @"
-                                    UNION ALL
-                                    -- Recursive case: items in subcontainers
-                                    SELECT i.Serial, i.Graphic, i.Hue, i.Name, i.Properties, i.Container, i.Layer, i.UpdatedTime, i.Character, i.CharacterName, i.ServerName, i.X, i.Y, i.OnGround
-                                    FROM Items i
-                                    INNER JOIN container_items ci ON i.Container = ci.Serial";
-
-                            if (character.HasValue)
-                            {
-                                selectQuery += " WHERE i.Character = @Character";
-                            }
-
-                            selectQuery += @"
-                                )
-                                SELECT * FROM container_items
-                                ORDER BY UpdatedTime DESC";
-
-                            parameters.Add(("@Container", containerSerial));
-                        }
-                        else
-                        {
-                            // Simple direct container search
-                            whereConditions.Add("Container = @Container");
-                            parameters.Add(("@Container", containerSerial));
-
-                            if (character.HasValue)
-                            {
-                                whereConditions.Add("Character = @Character");
-                                parameters.Add(("@Character", character.Value));
-                            }
-
-                            selectQuery = @"
-                                SELECT Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround
-                                FROM Items
-                                WHERE " + string.Join(" AND ", whereConditions) + @"
-                                ORDER BY UpdatedTime DESC";
-                        }
-
-                        if (limit > 0)
-                        {
-                            selectQuery += $" LIMIT {limit}";
-                        }
-
-                        using var command = new SqliteCommand(selectQuery, connection);
-
-                        foreach (var (paramName, paramValue) in parameters)
-                        {
-                            command.Parameters.AddWithValue(paramName, paramValue);
-                        }
-
-                        using var reader = command.ExecuteReader();
-                        while (reader.Read())
-                        {
-                            results.Add(CreateItemInfoFromReader(reader));
-                        }
-                        shouldInvokeCallback = true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Failed to search items in container {containerSerial}: {ex}");
-                    results = new List<ItemInfo>();
-                    shouldInvokeCallback = true;
-                }
-
-                if (shouldInvokeCallback)
-                {
-                    onResults?.Invoke(results);
-                }
-            });
-        }
-
         private static string EscapeLikePattern(string input)
         {
             if (string.IsNullOrEmpty(input))
@@ -742,9 +535,9 @@ namespace ClassicUO.Game.Managers
             if (!_initialized || item == null || world?.Player == null || ProfileManager.CurrentProfile?.ItemDatabaseEnabled == false)
                 return;
 
-            if (item.ItemData.IsDoor || item.ItemData.IsLight || item.ItemData.IsInternal || item.ItemData.IsRoof || item.ItemData.IsWall || !item.IsMovable || item.IsCorpse || StaticFilters.IsRock(item.Graphic) || StaticFilters.IsTree(item.Graphic, out _))
+            if (item.ItemData.IsDoor || item.ItemData.IsLight || item.ItemData.IsInternal || item.ItemData.IsRoof || item.ItemData.IsWall  || item.IsMulti || item.IsCorpse || StaticFilters.IsRock(item.Graphic) || StaticFilters.IsTree(item.Graphic, out _))
                 return;
-
+            
             // Check if ItemData is accessible (TileData might not be loaded yet)
             Layer layer = Layer.Invalid;
             try
@@ -786,7 +579,7 @@ namespace ClassicUO.Game.Managers
 
             _pendingItems.Enqueue(itemInfo);
 
-            lock (_dbLock)
+            lock (_timerLock)
             {
                 if (_pendingItemsTimer != null)
                     return;
@@ -809,13 +602,14 @@ namespace ClassicUO.Game.Managers
         {
             await Task.Run(() =>
             {
-                List<ItemInfo> items = new List<ItemInfo>();
+                Log.Debug("Bulking items");
+                List<ItemInfo> items = new();
                 while (_pendingItems.TryDequeue(out ItemInfo itemInfo))
                 {
                     items.Add(itemInfo);
                 }
 
-                lock (_dbLock)
+                lock (_timerLock)
                 {
                     _pendingItemsTimer?.Dispose();
                     _pendingItemsTimer = null;

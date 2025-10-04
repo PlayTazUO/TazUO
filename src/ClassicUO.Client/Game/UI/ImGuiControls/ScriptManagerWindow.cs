@@ -273,6 +273,11 @@ while True:
                     ScriptingInfoGump.Show();
                 }
 
+                if (ImGui.MenuItem("Persistent Variables"))
+                {
+                    PersistentVarsWindow.Show();
+                }
+
                 bool disableCache = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;
                 if (ImGui.Checkbox("Disable Module Cache", ref disableCache))
                 {
