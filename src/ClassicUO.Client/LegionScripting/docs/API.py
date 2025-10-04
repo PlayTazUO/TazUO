@@ -447,9 +447,30 @@ def ProcessCallbacks() -> None:
     pass
 
 def RegisterKeyCallback(key: str, callback: Any) -> None:
+    """
+     Register a Python callback to be executed when a hotkey is pressed.
+     Example:
+     ```py
+     def on_shift_a():
+         API.SysMsg("SHIFT+A pressed!")
+    
+     API.RegisterKeyCallback("SHIFT+A", on_shift_a)
+     ```
+    
+     Modifiers (CTRL, SHIFT, ALT) are optional.
+    
+    """
     pass
 
 def UnregisterKeyCallback(key: str) -> None:
+    """
+     Unregister a previously registered hotkey callback.
+     Example:
+     ```py
+     API.UnregisterKeyCallback("SHIFT+A")
+     ```
+    
+    """
     pass
 
 def SetSharedVar(name: str, value: Any) -> None:
