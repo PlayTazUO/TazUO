@@ -53,7 +53,8 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private static readonly ConcurrentDictionary<string, List<(ScriptEngine engine, object callback)>> hotkeyCallbacks = new(); private HashSet<string> pressedKeys = new();
+        private static readonly ConcurrentDictionary<string, List<(ScriptEngine engine, object callback)>> hotkeyCallbacks = new();
+        private HashSet<string> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -123,7 +124,7 @@ namespace ClassicUO.LegionScripting
 
             foreach (var p in parts)
             {
-                if (p is "CTRL") ctrl = true;
+                if (p == "CTRL") ctrl = true;
                 else if (p == "SHIFT") shift = true;
                 else if (p == "ALT") alt = true;
                 else key = p.StartsWith("SDLK_") ? p : "SDLK_" + p;
@@ -147,42 +148,12 @@ namespace ClassicUO.LegionScripting
         private PlayerMobile player;
         private static bool keyboardHooked = false;
 
-        private bool IgnoreBareModifierKey(SDL.SDL_KeyboardEvent e)
-        {
-            var keycode = (SDL.SDL_Keycode)e.key;
-            return keycode is SDL.SDL_Keycode.SDLK_LSHIFT
-                        or SDL.SDL_Keycode.SDLK_RSHIFT
-                        or SDL.SDL_Keycode.SDLK_LCTRL
-                        or SDL.SDL_Keycode.SDLK_RCTRL
-                        or SDL.SDL_Keycode.SDLK_LALT
-                        or SDL.SDL_Keycode.SDLK_RALT;
-        }
-
-        private string BuildHotKeyString(SDL.SDL_KeyboardEvent e)
-        {
-            List<string> parts = new();
-            if (CUOKeyboard.Ctrl) parts.Add("CTRL");
-            if (CUOKeyboard.Shift) parts.Add("SHIFT");
-            if (CUOKeyboard.Alt) parts.Add("ALT");
-
-            string keyName = ((SDL.SDL_Keycode)e.key).ToString().ToUpperInvariant();
-            parts.Add(keyName);
-
-            return string.Join("+", parts);
-        }
-
         private void EnsureKeyboardHook()
         {
             if (keyboardHooked) return;
 
-            CUOKeyboard.KeyDownEvent += (e) =>
+            CUOKeyboard.KeyDownEvent += (hotkey) =>
             {
-                if (IgnoreBareModifierKey(e))
-                {
-                    return;
-                }
-
-                var hotkey = BuildHotKeyString(e);
                 if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var entry))
                 {
                     pressedKeys.Add(hotkey);
@@ -207,14 +178,8 @@ namespace ClassicUO.LegionScripting
 
             };
 
-            CUOKeyboard.KeyUpEvent += (e) =>
+            CUOKeyboard.KeyUpEvent += (hotkey) =>
             {
-                if (IgnoreBareModifierKey(e))
-                {
-                    return;
-                }
-
-                var hotkey = BuildHotKeyString(e);
                 pressedKeys.Remove(hotkey);
             };
 
