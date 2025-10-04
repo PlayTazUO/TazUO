@@ -263,10 +263,10 @@ namespace ClassicUO.Game.Managers
                 return null;
 
             var sb = new StringBuilder();
-            ToolTipOverrideData[] result = GetAllToolTipOverrides();
+            ToolTipOverrideData[] toolTipOverrides = GetAllToolTipOverrides();
 
             bool headerHandled = false;
-            foreach (var overrideData in FilteredOverrides(result, itemPropertiesData.item?.ItemData.Layer ?? 0))
+            foreach (var overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
             {
                 if (MatchItemName(itemPropertiesData.Name, overrideData.SearchText))
                 {
@@ -288,24 +288,20 @@ namespace ClassicUO.Game.Managers
                 );
             }
 
-            var best = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
+            var bestGridHighlightData = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
 
             foreach (var property in itemPropertiesData.singlePropertyData)
             {
-                bool handled = false;
+                string cleanText = StripColorCodes(property.OriginalString);
 
-                // 1. Highlight check (only once per property)
-                if (best != null && best.DoesPropertyMatch(property))
-                {
-                    string cleanText = StripColorCodes(property.OriginalString);
-                    sb.AppendLine($"[o] {cleanText}/cd");
-                    handled = true;
-                }
+                // Find if this property is highlighted
+                bool isHighlighted = bestGridHighlightData != null && bestGridHighlightData.DoesPropertyMatch(property);
 
-                // 2. Overrides (if not highlighted)
-                if (!handled && result != null)
+                // Try to find an override
+                ToolTipOverrideData matchedOverride = null;
+                if (toolTipOverrides != null)
                 {
-                    foreach (var overrideData in FilteredOverrides(result, itemPropertiesData.item?.ItemData.Layer ?? 0))
+                    foreach (var overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
                     {
                         if (!MatchPropertyName(World.Instance, property.OriginalString, overrideData.SearchText))
                             continue;
@@ -313,52 +309,65 @@ namespace ClassicUO.Game.Managers
                         if ((property.FirstValue == double.MinValue || (property.FirstValue >= overrideData.Min1 && property.FirstValue <= overrideData.Max1)) &&
                             (property.SecondValue == double.MinValue || (property.SecondValue >= overrideData.Min2 && property.SecondValue <= overrideData.Max2)))
                         {
-                            try
-                            {
-                                if (compareTo != uint.MinValue)
-                                {
-                                    sb.AppendLine(string.Format(
-                                        overrideData.FormattedText,
-                                        property.Name,
-                                        property.FirstValue.ToString(),
-                                        property.SecondValue.ToString(),
-                                        property.OriginalString,
-                                        property.FirstDiff != 0 ? $"({property.FirstDiff})" : "",
-                                        property.SecondDiff != 0 ? $"({property.SecondDiff})" : ""
-                                    ));
-                                }
-                                else
-                                {
-                                    sb.AppendLine(string.Format(
-                                        overrideData.FormattedText,
-                                        property.Name,
-                                        property.FirstValue.ToString(),
-                                        property.SecondValue.ToString(),
-                                        property.OriginalString, "", ""
-                                    ));
-                                }
-                                handled = true;
-                                break;
-                            }
-                            catch
-                            {
-                                GameActions.Print(World.Instance, $"Invalid format string in tooltip override: {overrideData.FormattedText}", 32);
-                            }
+                            matchedOverride = overrideData;
+                            break;
                         }
                     }
                 }
 
-                // 3. Fallback
-                if (!handled)
+                string finalLine;
+
+                // 1. If override exists, format it
+                if (matchedOverride != null)
                 {
-                    string cleanText = StripColorCodes(property.OriginalString);
-                    sb.AppendLine(cleanText);
+                    try
+                    {
+                        if (compareTo != uint.MinValue)
+                        {
+                            finalLine = string.Format(
+                                matchedOverride.FormattedText,
+                                property.Name,
+                                property.FirstValue.ToString(),
+                                property.SecondValue.ToString(),
+                                property.OriginalString,
+                                property.FirstDiff != 0 ? $"({property.FirstDiff})" : "",
+                                property.SecondDiff != 0 ? $"({property.SecondDiff})" : ""
+                            );
+                        }
+                        else
+                        {
+                            finalLine = string.Format(
+                                matchedOverride.FormattedText,
+                                property.Name,
+                                property.FirstValue.ToString(),
+                                property.SecondValue.ToString(),
+                                property.OriginalString, "", ""
+                            );
+                        }
+                    }
+                    catch
+                    {
+                        GameActions.Print(World.Instance, $"Invalid format string in tooltip override: {matchedOverride.FormattedText}", 32);
+                        finalLine = cleanText;
+                    }
                 }
+                else
+                {
+                    // 2. No override → fallback to original text
+                    finalLine = cleanText;
+                }
+
+                if (isHighlighted)
+                {
+                    finalLine = $"[o] {finalLine}/cd";
+                }
+
+                sb.AppendLine(finalLine);
             }
 
-            if (ProfileManager.CurrentProfile.GridHighlightShowRuleName && best != null && !string.IsNullOrEmpty(best.Name))
+            if (ProfileManager.CurrentProfile.GridHighlightShowRuleName && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
             {
-                sb.AppendLine($"/cdMatched Rule: {best.Name}/cd");
+                sb.AppendLine($"/c[gray]Matched Rule: {bestGridHighlightData.Name}/cd");
             }
 
             return sb.ToString();

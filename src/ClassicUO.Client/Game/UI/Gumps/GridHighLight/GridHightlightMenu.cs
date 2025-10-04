@@ -120,6 +120,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     {
                         data.HighlightColor = selectedColor;
                         data.Hue = (ushort)(selectedColor.R + (selectedColor.G << 8) + (selectedColor.B << 16));
+                        colorButton.BackgroundColor = selectedColor;
                         GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                     });
                 }
