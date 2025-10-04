@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using ClassicUO.Game.Data;
-using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
