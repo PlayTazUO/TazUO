@@ -185,6 +185,7 @@ namespace ClassicUO.LegionScripting
                 var hotkey = BuildHotKeyString(e);
                 if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var entry))
                 {
+                    pressedKeys.Add(hotkey);
                     foreach (var (ownerEngine, callback) in entry.ToArray())
                     {
                         if (ownerEngine == null || callback == null)
