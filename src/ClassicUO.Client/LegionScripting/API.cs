@@ -23,7 +23,6 @@ using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Button = ClassicUO.Game.UI.Controls.Button;
 using Control = ClassicUO.Game.UI.Controls.Control;
 using Label = ClassicUO.Game.UI.Controls.Label;
@@ -160,6 +159,7 @@ namespace ClassicUO.LegionScripting
         public void Dispose()
         {
             if (disposed) return;
+            disposed = true;
 
             if (keyboardHooked)
             {
@@ -171,7 +171,6 @@ namespace ClassicUO.LegionScripting
             hotkeyCallbacks.Clear();
             pressedKeys.Clear();
 
-            disposed = true;
         }
 
         public ConcurrentQueue<PyJournalEntry> JournalEntries
