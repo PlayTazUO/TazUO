@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +23,7 @@ using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Button = ClassicUO.Game.UI.Controls.Button;
 using Control = ClassicUO.Game.UI.Controls.Control;
 using Label = ClassicUO.Game.UI.Controls.Label;
@@ -112,6 +113,29 @@ namespace ClassicUO.LegionScripting
                 else
                     break;
             }
+        }
+
+        private string NormalizeKeyString(string input)
+        {
+            var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
+            bool ctrl = false, shift = false, alt = false;
+            string key = null;
+
+            foreach (var p in parts)
+            {
+                if (p == "CTRL") ctrl = true;
+                else if (p == "SHIFT") shift = true;
+                else if (p == "ALT") alt = true;
+                else key = p.StartsWith("SDLK_") ? p : "SDLK_" + p;
+            }
+
+            List<string> normalized = new();
+            if (ctrl) normalized.Add("CTRL");
+            if (shift) normalized.Add("SHIFT");
+            if (alt) normalized.Add("ALT");
+            if (key != null) normalized.Add(key);
+
+            return string.Join("+", normalized);
         }
 
         #endregion
