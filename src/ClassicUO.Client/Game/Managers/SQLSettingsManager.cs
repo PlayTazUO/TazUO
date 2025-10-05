@@ -313,7 +313,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="value">The value to store</param>
         public void Set(SettingsScope scope, string name, string value)
         {
-            SetAsync(scope, name, value).ConfigureAwait(false);
+            SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="value">The value to store</param>
         public void Set<T>(SettingsScope scope, string name, T value)
         {
-            SetAsync(scope, name, value).ConfigureAwait(false);
+            SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace ClassicUO.Game.Managers
                 await using SqliteConnection connection = new(_connectionString);
                 await connection.OpenAsync().ConfigureAwait(false);
 
-                SqliteCommand cmd = connection.CreateCommand();
+                await using SqliteCommand cmd = connection.CreateCommand();
                 cmd.CommandText = """
                                   INSERT OR REPLACE INTO settings (scope, name, value)
                                   VALUES ($scope, $name, $value)
@@ -405,7 +405,7 @@ namespace ClassicUO.Game.Managers
                 await using SqliteConnection connection = new(_connectionString);
                 await connection.OpenAsync();
 
-                SqliteCommand cmd = connection.CreateCommand();
+                await using SqliteCommand cmd = connection.CreateCommand();
                 cmd.CommandText = """
                                   SELECT name, value FROM settings
                                   WHERE scope = $scope
