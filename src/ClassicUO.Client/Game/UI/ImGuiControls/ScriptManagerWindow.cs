@@ -18,28 +18,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
     public class ScriptManagerWindow : SingletonImGuiWindow<ScriptManagerWindow>
     {
         private readonly HashSet<string> _collapsedGroups = new HashSet<string>();
-        private string _newScriptName = "";
-        private string _newGroupName = "";
         private bool _showContextMenu = false;
         private string _contextMenuGroup = "";
         private string _contextMenuSubGroup = "";
-        private bool _showNewScriptDialog = false;
-        private bool _showNewGroupDialog = false;
-        private bool _showRenameGroupDialog = false;
-        private bool _showDeleteConfirmDialog = false;
-        private string _deleteConfirmMessage = "";
-        private string _deleteConfirmTitle = "";
-        private ScriptFile _scriptToDelete = null;
-        private string _groupToDelete = "";
-        private string _groupToDeleteParent = "";
         private ScriptFile _contextMenuScript = null;
         private Vector2 _contextMenuPosition;
-        private bool _showMainMenu = false;
         private bool _pendingReload = false;
         private bool _shouldCancelRename = false;
-        private string _renamingGroup = null;
-        private string _renamingParentGroup = null;
-        private string _groupRenameBuffer = "";
 
         private const string SCRIPT_HEADER =
             "# See examples at" +
@@ -67,29 +52,6 @@ while True:
         private const string NOGROUPTEXT = "No group";
 
         // Helper classes for cleaner state management
-        private class DoubleClickDetector
-        {
-            private string _lastClickedItem = null;
-            private double _lastClickTime = 0.0;
-            private const double DOUBLE_CLICK_TIME = 0.4; // 400ms
-
-            public bool CheckDoubleClick(string itemKey)
-            {
-                double currentTime = ImGui.GetTime();
-                bool isDoubleClick = _lastClickedItem == itemKey && (currentTime - _lastClickTime) < DOUBLE_CLICK_TIME;
-
-                _lastClickedItem = itemKey;
-                _lastClickTime = currentTime;
-
-                return isDoubleClick;
-            }
-
-            public void Reset()
-            {
-                _lastClickedItem = null;
-                _lastClickTime = 0.0;
-            }
-        }
 
         private class RenameState
         {
@@ -175,8 +137,6 @@ while True:
             }
         }
 
-        private readonly DoubleClickDetector _scriptDoubleClick = new DoubleClickDetector();
-        private readonly DoubleClickDetector _groupDoubleClick = new DoubleClickDetector();
         private readonly RenameState _renameState = new RenameState();
         private readonly DialogState _dialogState = new DialogState();
 
@@ -212,16 +172,22 @@ while True:
                 _shouldCancelRename = true;
             }
 
-            // Top menu bar
+            // Top menu bar - fixed at the top, not affected by scrolling
             DrawMenuBar();
+            ImGui.SeparatorText("Scripts");
+            ImGui.Spacing();
+            // Create a scrollable child region for the script groups
+            var contentRegionAvail = ImGui.GetContentRegionAvail();
 
-            ImGui.Separator();
+            if (ImGui.BeginChild("ScriptGroupsScrollable", new Vector2(contentRegionAvail.X, contentRegionAvail.Y), ImGuiChildFlags.None, ImGuiWindowFlags.None))
+            {
+                // Organize scripts by groups
+                var groupsMap = OrganizeScripts();
 
-            // Organize scripts by groups
-            var groupsMap = OrganizeScripts();
-
-            // Draw script groups
-            DrawScriptGroups(groupsMap);
+                // Draw script groups within the scrollable area
+                DrawScriptGroups(groupsMap);
+            }
+            ImGui.EndChild();
 
             // Handle context menus and dialogs
             DrawContextMenus();
@@ -333,52 +299,24 @@ while True:
                 _collapsedGroups.Add(fullGroupPath);
 
             bool isCollapsed = _collapsedGroups.Contains(fullGroupPath);
-
             // Group header with expand/collapse button and context menu
             ImGui.PushID(fullGroupPath);
-
             // Create custom expand/collapse button with custom symbols
             string expandSymbol = isCollapsed ? "+" : "-"; // Plus for collapsed, minus for expanded
-            Vector4 buttonColor = new Vector4(0, 0, 0, 0); // Transparent background
-            ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, buttonColor);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, buttonColor);
-
             // Use a square button with larger size for better visibility
-            bool clicked = ImGui.Button($" {expandSymbol}  ##{fullGroupPath}");
-            ImGui.PopStyleColor(3);
+            ImGui.Text($"[ {expandSymbol} ] ");
 
             ImGui.SameLine(0, 2); // Small spacing between button and text
 
+            bool nodeOpen = !isCollapsed;
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(5, 10));
             // Use Selectable instead of Text to get hover highlighting
             bool groupSelected = false;
-            ImGui.Selectable(groupName, groupSelected, ImGuiSelectableFlags.SpanAllColumns);
-
-            // Check if the group name was clicked for double-click rename
-            bool nodeOpen = !isCollapsed;
-
-            // Handle expand/collapse button click
-            if (clicked)
+            if (ImGui.Selectable(groupName, groupSelected, ImGuiSelectableFlags.SpanAllColumns))
             {
-                ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
-            }
-
-            // Handle single click on group name for expand/collapse and double-click for rename
-            if (ImGui.IsItemClicked(ImGuiMouseButton.Left))
-            {
-                string groupKey = $"{parentGroup}|{groupName}";
-
-                if (groupName != NOGROUPTEXT && _groupDoubleClick.CheckDoubleClick(groupKey))
+                // Single click on group name - toggle expand/collapse
+                if (!ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {
-                    // Double-click: Start renaming group
-                    _renamingGroup = groupName;
-                    _renamingParentGroup = parentGroup;
-                    _groupRenameBuffer = groupName;
-                    _showRenameGroupDialog = true;
-                }
-                else
-                {
-                    // Single-click: Toggle expand/collapse
                     ToggleGroupState(isCollapsed, fullGroupPath, normalizedParentGroup, normalizedGroupName);
                 }
             }
@@ -462,7 +400,7 @@ while True:
                     }
                 }
             }
-
+            ImGui.PopStyleVar(1);
             ImGui.PopID();
         }
 
@@ -471,7 +409,7 @@ while True:
             ImGui.PushID(script.FullPath);
 
             // Add menu button next to play button
-            if (ImGui.Button("...", new Vector2(20, 0)))
+            if (ImGui.Button("..."))
             {
                 _showContextMenu = true;
                 _contextMenuScript = script;
@@ -479,7 +417,6 @@ while True:
                 _contextMenuSubGroup = "";
                 _contextMenuPosition = ImGui.GetMousePos();
             }
-
             ImGui.SameLine();
             // Get script display name (without extension)
             string displayName = script.FileName;
@@ -571,18 +508,17 @@ while True:
             }
             else
             {
-                // Normal script display with double-click detection
+                // Normal script display with native double-click detection
                 bool isSelected = false;
-                if (ImGui.Selectable($"{displayName}", isSelected))
+                ImGui.Selectable($"{displayName}", isSelected);
+
+                // Use native ImGUI double-click detection
+                if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                 {
-                    // Handle double-click for rename
-                    string scriptKey = script.FullPath;
-                    if (_scriptDoubleClick.CheckDoubleClick(scriptKey))
-                    {
-                        // Start renaming
-                        _renameState.StartScriptRename(script, displayName);
-                    }
+                    // Start renaming
+                    _renameState.StartScriptRename(script, displayName);
                 }
+
 
                 // Begin drag source for script
                 if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
@@ -618,7 +554,6 @@ while True:
                 _contextMenuSubGroup = "";
                 _contextMenuPosition = ImGui.GetMousePos();
             }
-
             ImGui.PopID();
         }
 
@@ -697,11 +632,9 @@ while True:
 
         private void PerformGroupRename()
         {
-            if (string.IsNullOrWhiteSpace(_groupRenameBuffer))
+            if (string.IsNullOrWhiteSpace(_renameState.Buffer))
             {
-                _renamingGroup = null;
-                _renamingParentGroup = null;
-                _groupRenameBuffer = "";
+                _renameState.Clear();
                 return;
             }
 
@@ -709,27 +642,27 @@ while True:
             {
                 // Build current group path
                 string currentPath = LegionScripting.LegionScripting.ScriptPath;
-                if (!string.IsNullOrEmpty(_renamingParentGroup))
-                    currentPath = Path.Combine(currentPath, _renamingParentGroup);
-                currentPath = Path.Combine(currentPath, _renamingGroup);
+                if (!string.IsNullOrEmpty(_renameState.GroupParent))
+                    currentPath = Path.Combine(currentPath, _renameState.GroupParent);
+                currentPath = Path.Combine(currentPath, _renameState.GroupName);
 
                 // Build new group path
                 string newPath = LegionScripting.LegionScripting.ScriptPath;
-                if (!string.IsNullOrEmpty(_renamingParentGroup))
-                    newPath = Path.Combine(newPath, _renamingParentGroup);
-                newPath = Path.Combine(newPath, _groupRenameBuffer);
+                if (!string.IsNullOrEmpty(_renameState.GroupParent))
+                    newPath = Path.Combine(newPath, _renameState.GroupParent);
+                newPath = Path.Combine(newPath, _renameState.Buffer);
 
                 // Check if the new group name already exists
                 if (Directory.Exists(newPath) && !string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    GameActions.Print(World.Instance, $"A group with the name '{_groupRenameBuffer}' already exists.", 32);
+                    GameActions.Print(World.Instance, $"A group with the name '{_renameState.Buffer}' already exists.", 32);
                     return;
                 }
 
                 // Check if current directory exists
                 if (!Directory.Exists(currentPath))
                 {
-                    GameActions.Print(World.Instance, $"Source group '{_renamingGroup}' not found.", 32);
+                    GameActions.Print(World.Instance, $"Source group '{_renameState.GroupName}' not found.", 32);
                     return;
                 }
 
@@ -738,7 +671,7 @@ while True:
                 {
                     Directory.Move(currentPath, newPath);
                     _pendingReload = true;
-                    GameActions.Print(World.Instance, $"Renamed group '{_renamingGroup}' to '{_groupRenameBuffer}'", 66);
+                    GameActions.Print(World.Instance, $"Renamed group '{_renameState.GroupName}' to '{_renameState.Buffer}'", 66);
                 }
             }
             catch (UnauthorizedAccessException)
@@ -756,13 +689,11 @@ while True:
             catch (Exception ex)
             {
                 GameActions.Print(World.Instance, $"Error renaming group: {ex.Message}", 32);
-                Log.Error($"Error renaming group {_renamingGroup}: {ex}");
+                Log.Error($"Error renaming group {_renameState.GroupName}: {ex}");
             }
             finally
             {
-                _renamingGroup = null;
-                _renamingParentGroup = null;
-                _groupRenameBuffer = "";
+                _renameState.Clear();
             }
         }
 
@@ -770,29 +701,29 @@ while True:
         {
             try
             {
-                if (_scriptToDelete != null)
+                if (_dialogState.ScriptToDelete != null)
                 {
                     // Delete script file
-                    File.Delete(_scriptToDelete.FullPath);
-                    LegionScripting.LegionScripting.LoadedScripts.Remove(_scriptToDelete);
-                    GameActions.Print(World.Instance, $"Deleted script '{_scriptToDelete.FileName}'", 66);
+                    File.Delete(_dialogState.ScriptToDelete.FullPath);
+                    LegionScripting.LegionScripting.LoadedScripts.Remove(_dialogState.ScriptToDelete);
+                    GameActions.Print(World.Instance, $"Deleted script '{_dialogState.ScriptToDelete.FileName}'", 66);
                     _pendingReload = true;
                 }
-                else if (!string.IsNullOrEmpty(_groupToDelete))
+                else if (!string.IsNullOrEmpty(_dialogState.GroupToDelete))
                 {
                     // Delete group folder
-                    string gPath = string.IsNullOrEmpty(_groupToDeleteParent) ? _groupToDelete : Path.Combine(_groupToDeleteParent, _groupToDelete);
+                    string gPath = string.IsNullOrEmpty(_dialogState.GroupToDeleteParent) ? _dialogState.GroupToDelete : Path.Combine(_dialogState.GroupToDeleteParent, _dialogState.GroupToDelete);
                     gPath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath);
 
                     if (Directory.Exists(gPath))
                     {
                         Directory.Delete(gPath, true);
-                        GameActions.Print(World.Instance, $"Deleted group '{_groupToDelete}' and all its contents", 66);
+                        GameActions.Print(World.Instance, $"Deleted group '{_dialogState.GroupToDelete}' and all its contents", 66);
                         _pendingReload = true;
                     }
                     else
                     {
-                        GameActions.Print(World.Instance, $"Group '{_groupToDelete}' not found", 32);
+                        GameActions.Print(World.Instance, $"Group '{_dialogState.GroupToDelete}' not found", 32);
                     }
                 }
             }
@@ -814,19 +745,15 @@ while True:
             }
             catch (Exception ex)
             {
-                string itemType = _scriptToDelete != null ? "script" : "group";
-                string itemName = _scriptToDelete != null ? _scriptToDelete.FileName : _groupToDelete;
+                string itemType = _dialogState.ScriptToDelete != null ? "script" : "group";
+                string itemName = _dialogState.ScriptToDelete != null ? _dialogState.ScriptToDelete.FileName : _dialogState.GroupToDelete;
                 GameActions.Print(World.Instance, $"Error deleting {itemType}: {ex.Message}", 32);
                 Log.Error($"Error deleting {itemType} {itemName}: {ex}");
             }
             finally
             {
-                // Reset delete state
-                _scriptToDelete = null;
-                _groupToDelete = "";
-                _groupToDeleteParent = "";
-                _deleteConfirmMessage = "";
-                _deleteConfirmTitle = "";
+                // Reset delete state using DialogState
+                _dialogState.ClearAll();
             }
         }
 
@@ -834,6 +761,7 @@ while True:
         {
             if (_showContextMenu)
             {
+                ImGui.SetNextWindowPos(_contextMenuPosition, ImGuiCond.Appearing);
                 ImGui.OpenPopup("ContextMenu");
                 _showContextMenu = false;
             }
@@ -855,7 +783,7 @@ while True:
         private void DrawScriptContextMenu(ScriptFile script)
         {
             ImGui.Text(script.FileName);
-            ImGui.Separator();
+            ImGui.SeparatorText("Options:");
 
             if (ImGui.MenuItem("Rename"))
             {
@@ -916,268 +844,292 @@ while True:
 
             if (ImGui.MenuItem("Delete"))
             {
-                // Set up delete confirmation dialog for script
-                _scriptToDelete = script;
-                _groupToDelete = "";
-                _groupToDeleteParent = "";
-                _deleteConfirmTitle = "Delete Script";
-                _deleteConfirmMessage = $"Are you sure you want to delete '{script.FileName}'?\n\nThis action cannot be undone.";
-                _showDeleteConfirmDialog = true;
+                _dialogState.ShowScriptDeleteDialog(script);
                 _showContextMenu = false;
             }
         }
 
         private void DrawGroupContextMenu(string parentGroup, string groupName)
         {
-
-            if (ImGui.MenuItem("New Script"))
-            {
-                _showNewScriptDialog = true;
-                _showContextMenu = false;
-            }
-
-            if (string.IsNullOrEmpty(parentGroup))
-            {
-                if (ImGui.MenuItem("New Group"))
-                {
-                    _showNewGroupDialog = true;
-                    _showContextMenu = false;
-                }
-            }
-
             if (groupName != NOGROUPTEXT && !string.IsNullOrEmpty(groupName))
             {
-                if (ImGui.MenuItem("Rename Group"))
+                ImGui.Text(groupName);
+                ImGui.SeparatorText("Options:");
+                if (ImGui.MenuItem("Rename"))
                 {
-                    _renamingGroup = groupName;
-                    _renamingParentGroup = parentGroup;
-                    _groupRenameBuffer = groupName;
-                    _showRenameGroupDialog = true;
+                    _renameState.StartGroupRename(groupName, parentGroup);
+                    _dialogState.ShowRenameGroup = true;
                     _showContextMenu = false;
+                }
+
+                if (ImGui.MenuItem("New Script"))
+                {
+                    _dialogState.ShowNewScript = true;
+                    _showContextMenu = false;
+                }
+
+                if (string.IsNullOrEmpty(parentGroup))
+                {
+                    if (ImGui.MenuItem("New Group"))
+                    {
+                        _dialogState.ShowNewGroup = true;
+                        _showContextMenu = false;
+                    }
                 }
 
                 if (ImGui.MenuItem("Delete Group"))
                 {
-                    // Set up delete confirmation dialog for group
-                    _scriptToDelete = null;
-                    _groupToDelete = groupName;
-                    _groupToDeleteParent = parentGroup;
-                    _deleteConfirmTitle = "Delete Group";
-                    _deleteConfirmMessage = $"Are you sure you want to delete the group '{groupName}'?\n\nThis will permanently delete the folder and ALL scripts inside it.\nThis action cannot be undone.";
-                    _showDeleteConfirmDialog = true;
+                    _dialogState.ShowGroupDeleteDialog(groupName, parentGroup);
                     _showContextMenu = false;
+                }
+            }
+            else
+            {
+                if (ImGui.MenuItem("New Script"))
+                {
+                    _dialogState.ShowNewScript = true;
+                    _showContextMenu = false;
+                }
+
+                if (string.IsNullOrEmpty(parentGroup))
+                {
+                    if (ImGui.MenuItem("New Group"))
+                    {
+                        _dialogState.ShowNewGroup = true;
+                        _showContextMenu = false;
+                    }
                 }
             }
         }
 
         private void DrawDialogs()
         {
-            // New Script Dialog
-            if (_showNewScriptDialog)
+            // Open popups when dialog state changes - ImGUI will handle positioning automatically
+            if (_dialogState.ShowNewScript && !ImGui.IsPopupOpen("New Script"))
             {
+                ImGui.OpenPopup("New Script");
+                // Center the popup on the main viewport
                 ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
-                if (ImGui.Begin("New Script", ref _showNewScriptDialog, ImGuiWindowFlags.AlwaysAutoResize))
-                {
-                    ImGui.Text("Enter a name for this script.");
-                    ImGui.Text("Use .lscript or .py extension");
-
-                    ImGui.InputText("Script Name", ref _newScriptName, 100);
-
-                    ImGui.Separator();
-
-                    if (ImGui.Button("Create"))
-                    {
-                        if (!string.IsNullOrEmpty(_newScriptName))
-                        {
-                            if (_newScriptName.EndsWith(".lscript") || _newScriptName.EndsWith(".py"))
-                            {
-                                try
-                                {
-                                    // Normalize sentinels by replacing NOGROUPTEXT with empty string
-                                    string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
-                                    string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
-
-                                    string gPath = string.IsNullOrEmpty(normalizedGroup) ? normalizedSubGroup :
-                                        string.IsNullOrEmpty(normalizedSubGroup) ? normalizedGroup :
-                                        Path.Combine(normalizedGroup, normalizedSubGroup);
-
-                                    string filePath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath, _newScriptName);
-
-                                    if (!Directory.Exists(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath)))
-                                        Directory.CreateDirectory(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath));
-
-                                    if (!File.Exists(filePath))
-                                    {
-                                        File.WriteAllText(filePath, SCRIPT_HEADER);
-                                        _pendingReload = true;
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    GameActions.Print(World.Instance, e.ToString(), 32);
-                                }
-                            }
-                            else
-                            {
-                                GameActions.Print(World.Instance, "Script files must end with .lscript or .py", 32);
-                            }
-                        }
-
-                        _newScriptName = "";
-                        _showNewScriptDialog = false;
-                    }
-
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Cancel"))
-                    {
-                        _newScriptName = "";
-                        _showNewScriptDialog = false;
-                    }
-                }
-                ImGui.End();
+            }
+            if (_dialogState.ShowNewGroup && !ImGui.IsPopupOpen("New Group"))
+            {
+                ImGui.OpenPopup("New Group");
+                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+            }
+            if (_dialogState.ShowRenameGroup && !ImGui.IsPopupOpen("Rename Group"))
+            {
+                ImGui.OpenPopup("Rename Group");
+                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+            }
+            if (_dialogState.ShowDeleteConfirm && !ImGui.IsPopupOpen(_dialogState.DeleteTitle))
+            {
+                ImGui.OpenPopup(_dialogState.DeleteTitle);
+                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
             }
 
-            // New Group Dialog
-            if (_showNewGroupDialog)
+            // New Script Dialog
+            bool showNewScript = _dialogState.ShowNewScript;
+            if (ImGui.BeginPopupModal("New Script", ref showNewScript, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
-                if (ImGui.Begin("New Group", ref _showNewGroupDialog, ImGuiWindowFlags.AlwaysAutoResize))
+                _dialogState.ShowNewScript = showNewScript;
+                ImGui.Text("Enter a name for this script.");
+                ImGui.Text("Use .lscript or .py extension");
+
+                string scriptName = _dialogState.NewScriptName;
+                ImGui.InputText("##ScriptName", ref scriptName, 100);
+                _dialogState.NewScriptName = scriptName;
+
+                ImGui.Separator();
+
+                if (ImGui.Button("Create"))
                 {
-                    ImGui.Text("Enter a name for this group.");
-
-                    ImGui.InputText("Group Name", ref _newGroupName, 100);
-
-                    ImGui.Separator();
-
-                    if (ImGui.Button("Create"))
+                    if (!string.IsNullOrEmpty(_dialogState.NewScriptName))
                     {
-                        if (!string.IsNullOrEmpty(_newGroupName))
+                        if (_dialogState.NewScriptName.EndsWith(".lscript") || _dialogState.NewScriptName.EndsWith(".py"))
                         {
-                            int p = _newGroupName.IndexOf('.');
-                            if (p != -1)
-                                _newGroupName = _newGroupName.Substring(0, p);
-
                             try
                             {
-                                // Build full path including parent group
+                                // Normalize sentinels by replacing NOGROUPTEXT with empty string
                                 string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
                                 string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
 
-                                string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath,
-                                    normalizedGroup ?? "",
-                                    normalizedSubGroup ?? "",
-                                    _newGroupName);
+                                string gPath = string.IsNullOrEmpty(normalizedGroup) ? normalizedSubGroup :
+                                    string.IsNullOrEmpty(normalizedSubGroup) ? normalizedGroup :
+                                    Path.Combine(normalizedGroup, normalizedSubGroup);
 
-                                if (!Directory.Exists(path))
+                                string filePath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath, _dialogState.NewScriptName);
+
+                                if (!Directory.Exists(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath)))
+                                    Directory.CreateDirectory(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath));
+
+                                if (!File.Exists(filePath))
                                 {
-                                    Directory.CreateDirectory(path);
+                                    File.WriteAllText(filePath, SCRIPT_HEADER);
+                                    _pendingReload = true;
                                 }
-                                File.WriteAllText(Path.Combine(path, "Example.py"), EXAMPLE_LSCRIPT);
-                                _pendingReload = true;
                             }
                             catch (Exception e)
                             {
-                                Log.Error(e.ToString());
+                                GameActions.Print(World.Instance, e.ToString(), 32);
                             }
                         }
-
-                        _newGroupName = "";
-                        _showNewGroupDialog = false;
+                        else
+                        {
+                            GameActions.Print(World.Instance, "Script files must end with .lscript or .py", 32);
+                        }
                     }
 
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Cancel"))
-                    {
-                        _newGroupName = "";
-                        _showNewGroupDialog = false;
-                    }
+                    _dialogState.NewScriptName = "";
+                    _dialogState.ShowNewScript = false;
+                    ImGui.CloseCurrentPopup();
                 }
-                ImGui.End();
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("Cancel"))
+                {
+                    _dialogState.NewScriptName = "";
+                    _dialogState.ShowNewScript = false;
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
+            }
+
+            // New Group Dialog
+            bool showNewGroup = _dialogState.ShowNewGroup;
+            if (ImGui.BeginPopupModal("New Group", ref showNewGroup, ImGuiWindowFlags.AlwaysAutoResize))
+            {
+                _dialogState.ShowNewGroup = showNewGroup;
+                ImGui.Text("Enter a name for this group.");
+
+                string groupName = _dialogState.NewGroupName;
+                ImGui.InputText("##GroupName", ref groupName, 100);
+                _dialogState.NewGroupName = groupName;
+
+                ImGui.Separator();
+
+                if (ImGui.Button("Create"))
+                {
+                    if (!string.IsNullOrEmpty(_dialogState.NewGroupName))
+                    {
+                        int p = _dialogState.NewGroupName.IndexOf('.');
+                        if (p != -1)
+                            _dialogState.NewGroupName = _dialogState.NewGroupName.Substring(0, p);
+
+                        try
+                        {
+                            // Build full path including parent group
+                            string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
+                            string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
+
+                            string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath,
+                                normalizedGroup ?? "",
+                                normalizedSubGroup ?? "",
+                                _dialogState.NewGroupName);
+
+                            if (!Directory.Exists(path))
+                            {
+                                Directory.CreateDirectory(path);
+                            }
+                            File.WriteAllText(Path.Combine(path, "Example.py"), EXAMPLE_LSCRIPT);
+                            _pendingReload = true;
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e.ToString());
+                        }
+                    }
+
+                    _dialogState.NewGroupName = "";
+                    _dialogState.ShowNewGroup = false;
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("Cancel"))
+                {
+                    _dialogState.NewGroupName = "";
+                    _dialogState.ShowNewGroup = false;
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
             }
 
             // Rename Group Dialog
-            if (_showRenameGroupDialog)
+            bool showRenameGroup = _dialogState.ShowRenameGroup;
+            if (ImGui.BeginPopupModal("Rename Group", ref showRenameGroup, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
-                if (ImGui.Begin("Rename Group", ref _showRenameGroupDialog, ImGuiWindowFlags.AlwaysAutoResize))
+                _dialogState.ShowRenameGroup = showRenameGroup;
+                ImGui.Text($"Enter a new name for the group '{_renameState.GroupName}'.");
+
+                string renameBuffer = _renameState.Buffer;
+                ImGui.InputText("##Group Name", ref renameBuffer, 100);
+                _renameState.Buffer = renameBuffer;
+
+                ImGui.Separator();
+
+                if (ImGui.Button("Save"))
                 {
-                    ImGui.Text($"Enter a new name for the group '{_renamingGroup}'.");
-
-                    ImGui.InputText("##Group Name", ref _groupRenameBuffer, 100);
-
-                    ImGui.Separator();
-
-                    if (ImGui.Button("Save"))
+                    if (!string.IsNullOrEmpty(_renameState.Buffer))
                     {
-                        if (!string.IsNullOrEmpty(_groupRenameBuffer))
-                        {
-                            int p = _groupRenameBuffer.IndexOf('.');
-                            if (p != -1)
-                                _groupRenameBuffer = _groupRenameBuffer.Substring(0, p);
+                        int p = _renameState.Buffer.IndexOf('.');
+                        if (p != -1)
+                            _renameState.Buffer = _renameState.Buffer.Substring(0, p);
 
-                            PerformGroupRename();
-                        }
-
-                        _showRenameGroupDialog = false;
+                        PerformGroupRename();
                     }
 
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Cancel"))
-                    {
-                        _renamingGroup = null;
-                        _renamingParentGroup = null;
-                        _groupRenameBuffer = "";
-                        _showRenameGroupDialog = false;
-                    }
+                    _dialogState.ShowRenameGroup = false;
+                    ImGui.CloseCurrentPopup();
                 }
-                ImGui.End();
+
+                ImGui.SameLine();
+
+                if (ImGui.Button("Cancel"))
+                {
+                    _renameState.Clear();
+                    _dialogState.ShowRenameGroup = false;
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
             }
 
             // Delete Confirmation Dialog
-            if (_showDeleteConfirmDialog)
+            bool showDeleteConfirm = _dialogState.ShowDeleteConfirm;
+            if (ImGui.BeginPopupModal(_dialogState.DeleteTitle, ref showDeleteConfirm, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse))
             {
-                ImGui.SetNextWindowPos(ImGui.GetMainViewport().GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
-                if (ImGui.Begin(_deleteConfirmTitle, ref _showDeleteConfirmDialog, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse))
+                _dialogState.ShowDeleteConfirm = showDeleteConfirm;
+                // Add warning icon color
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.8f, 0.0f, 1.0f)); // Orange/yellow warning color
+                ImGui.Text("⚠");
+                ImGui.PopStyleColor();
+                ImGui.SameLine();
+
+                ImGui.Text(_dialogState.DeleteMessage);
+
+                ImGui.Separator();
+
+                // Buttons with different colors
+                ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.8f, 0.2f, 0.2f, 1.0f)); // Red for delete
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.9f, 0.3f, 0.3f, 1.0f));
+                ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.7f, 0.1f, 0.1f, 1.0f));
+
+                if (ImGui.Button("Delete"))
                 {
-                    // Add warning icon color
-                    ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.8f, 0.0f, 1.0f)); // Orange/yellow warning color
-                    ImGui.Text("⚠");
-                    ImGui.PopStyleColor();
-                    ImGui.SameLine();
-
-                    ImGui.Text(_deleteConfirmMessage);
-
-                    ImGui.Separator();
-
-                    // Buttons with different colors
-                    ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.8f, 0.2f, 0.2f, 1.0f)); // Red for delete
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Vector4(0.9f, 0.3f, 0.3f, 1.0f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Vector4(0.7f, 0.1f, 0.1f, 1.0f));
-
-                    if (ImGui.Button("Delete"))
-                    {
-                        PerformDelete();
-                        _showDeleteConfirmDialog = false;
-                    }
-
-                    ImGui.PopStyleColor(3);
-                    ImGui.SameLine();
-
-                    if (ImGui.Button("Cancel"))
-                    {
-                        // Reset delete state
-                        _scriptToDelete = null;
-                        _groupToDelete = "";
-                        _groupToDeleteParent = "";
-                        _deleteConfirmMessage = "";
-                        _deleteConfirmTitle = "";
-                        _showDeleteConfirmDialog = false;
-                    }
+                    PerformDelete();
+                    ImGui.CloseCurrentPopup();
                 }
-                ImGui.End();
+
+                ImGui.PopStyleColor(3);
+                ImGui.SameLine();
+
+                if (ImGui.Button("Cancel"))
+                {
+                    _dialogState.ClearAll();
+                    ImGui.CloseCurrentPopup();
+                }
+                ImGui.EndPopup();
             }
         }
 
@@ -1320,24 +1272,10 @@ while True:
 
         public override void Dispose()
         {
-            _showMainMenu = false;
             _showContextMenu = false;
-            _showNewScriptDialog = false;
-            _showNewGroupDialog = false;
-            _showRenameGroupDialog = false;
-            _showDeleteConfirmDialog = false;
-            _scriptToDelete = null;
-            _groupToDelete = "";
-            _groupToDeleteParent = "";
-            _deleteConfirmMessage = "";
-            _deleteConfirmTitle = "";
+            _dialogState.ClearAll();
             _renameState.Clear();
-            _scriptDoubleClick.Reset();
-            _groupDoubleClick.Reset();
             _shouldCancelRename = false;
-            _renamingGroup = null;
-            _renamingParentGroup = null;
-            _groupRenameBuffer = "";
             base.Dispose();
         }
     }
