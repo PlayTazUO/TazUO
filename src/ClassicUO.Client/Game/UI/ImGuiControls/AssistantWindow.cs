@@ -16,8 +16,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             AddTab("General", DrawGeneral, GeneralWindow.Show, () => GeneralWindow.Instance?.Dispose());
             AddTab("Agents", DrawAgents, AgentsWindow.Show, () => AgentsWindow.Instance?.Dispose());
-            AddTab("Organizer", DrawOrganizer, OrganizerWindow.Show, () => OrganizerWindow.Instance?.Dispose() );
-            AddTab("Dress Agent", DrawDressAgent, DressAgentWindow.Show, () => DressAgentWindow.Instance?.Dispose() );
+            AddTab("Organizer", DrawOrganizer, OrganizerWindow.Show, () => OrganizerWindow.Instance?.Dispose());
+            AddTab("Dress Agent", DrawDressAgent, DressAgentWindow.Show, () => DressAgentWindow.Instance?.Dispose());
+            AddTab("Item Database", DrawItemDatabase, ItemDatabaseSearchWindow.Show, () => ItemDatabaseSearchWindow.Instance?.Dispose());
         }
 
         public void SelectTab(AssistantGump.PAGE page)
@@ -131,7 +132,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void DrawAgents() => AgentsWindow.GetInstance()?.DrawContent();
         private void DrawOrganizer() => OrganizerWindow.GetInstance()?.DrawContent();
         private void DrawDressAgent() => DressAgentWindow.GetInstance()?.DrawContent();
-
+        private void DrawItemDatabase() => ItemDatabaseSearchWindow.GetInstance()?.DrawContent();
 
         public override void Dispose()
         {

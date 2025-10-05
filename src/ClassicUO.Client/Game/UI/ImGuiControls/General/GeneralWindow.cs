@@ -86,12 +86,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     FriendsListWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
-
-                if (ImGui.BeginTabItem("Item Database"))
-                {
-                    ItemDatabaseSearchWindow.GetInstance()?.DrawContent();
-                    ImGui.EndTabItem();
-                }
+                
                 ImGui.EndTabBar();
             }
         }
