@@ -36,8 +36,10 @@ namespace ClassicUO.LegionScripting
     /// <summary>
     /// Python scripting access point
     /// </summary>
-    public class API
+    public class API : IDisposable
     {
+        private volatile bool disposed = false;
+
         public API(ScriptEngine engine)
         {
             this.engine = engine;
@@ -53,7 +55,7 @@ namespace ClassicUO.LegionScripting
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
         private readonly ConcurrentDictionary<string, object> hotkeyCallbacks = new();
-        private readonly ConcurrentDictionary<string, byte> pressedKeys = new();
+        private readonly ConcurrentDictionary<string, bool> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -123,20 +125,26 @@ namespace ClassicUO.LegionScripting
         private Item backpack;
         private PlayerMobile player;
         private bool keyboardHooked = false;
+        private readonly object hookLock = new object();
 
         private void EnsureKeyboardHook()
         {
-            if (keyboardHooked) return;
+            lock (hookLock)
+            {
+                if (keyboardHooked) return;
 
-            CUOKeyboard.KeyDownEvent += OnKeyDown;
-            CUOKeyboard.KeyUpEvent += OnKeyUp;
+                CUOKeyboard.KeyDownEvent += OnKeyDown;
+                CUOKeyboard.KeyUpEvent += OnKeyUp;
 
-            keyboardHooked = true;
+                keyboardHooked = true;
+            }
         }
 
         private void OnKeyDown(string hotkey)
         {
-            if (pressedKeys.TryAdd(hotkey, 0) && hotkeyCallbacks.TryGetValue(hotkey, out var callback))
+            if (disposed) return;
+
+            if (pressedKeys.TryAdd(hotkey, true) && hotkeyCallbacks.TryGetValue(hotkey, out var callback))
             {
                 ScheduleCallback(callback);
             }
@@ -144,11 +152,15 @@ namespace ClassicUO.LegionScripting
 
         private void OnKeyUp(string hotkey)
         {
+            if (disposed) return;
+
             pressedKeys.TryRemove(hotkey, out _);
         }
 
-        public void OnHotKeyDispose()
+        public void Dispose()
         {
+            if (disposed) return;
+
             if (keyboardHooked)
             {
                 CUOKeyboard.KeyDownEvent -= OnKeyDown;
@@ -158,6 +170,8 @@ namespace ClassicUO.LegionScripting
 
             hotkeyCallbacks.Clear();
             pressedKeys.Clear();
+
+            disposed = true;
         }
 
         public ConcurrentQueue<PyJournalEntry> JournalEntries

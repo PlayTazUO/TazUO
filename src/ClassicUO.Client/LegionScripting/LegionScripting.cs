@@ -919,7 +919,7 @@ namespace ClassicUO.LegionScripting
         public void PythonScriptStopped()
         {
             scopedAPI?.CloseGumps();
-            scopedAPI?.OnHotKeyDispose();
+            scopedAPI?.Dispose();
 
             pythonScope = null;
             scopedAPI = null;
