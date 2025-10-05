@@ -947,30 +947,94 @@ while True:
                     {
                         if (_dialogState.NewScriptName.EndsWith(".lscript") || _dialogState.NewScriptName.EndsWith(".py"))
                         {
-                            try
+                            // Validate and sanitize the script name to ensure it is a plain filename
+                            string sanitizedName = Path.GetFileName(_dialogState.NewScriptName.Trim());
+
+                            // Reject names that contain path separators or relative navigation
+                            if (string.IsNullOrWhiteSpace(sanitizedName) ||
+                                sanitizedName != _dialogState.NewScriptName.Trim() ||
+                                sanitizedName.Contains("\\") ||
+                                sanitizedName.Contains("/") ||
+                                sanitizedName.Contains("..") ||
+                                sanitizedName == "." ||
+                                sanitizedName == "..")
                             {
-                                // Normalize sentinels by replacing NOGROUPTEXT with empty string
-                                string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
-                                string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
-
-                                string gPath = string.IsNullOrEmpty(normalizedGroup) ? normalizedSubGroup :
-                                    string.IsNullOrEmpty(normalizedSubGroup) ? normalizedGroup :
-                                    Path.Combine(normalizedGroup, normalizedSubGroup);
-
-                                string filePath = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath, _dialogState.NewScriptName);
-
-                                if (!Directory.Exists(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath)))
-                                    Directory.CreateDirectory(Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath));
-
-                                if (!File.Exists(filePath))
-                                {
-                                    File.WriteAllText(filePath, SCRIPT_HEADER);
-                                    _pendingReload = true;
-                                }
+                                GameActions.Print(World.Instance, "Invalid script name. Names cannot contain path separators or relative navigation.", 32);
                             }
-                            catch (Exception e)
+                            else
                             {
-                                GameActions.Print(World.Instance, e.ToString(), 32);
+                                try
+                                {
+                                    // Normalize sentinels by replacing NOGROUPTEXT with empty string
+                                    string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
+                                    string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
+
+                                    // Sanitize group path segments as well
+                                    if (!string.IsNullOrEmpty(normalizedGroup))
+                                        normalizedGroup = Path.GetFileName(normalizedGroup);
+                                    if (!string.IsNullOrEmpty(normalizedSubGroup))
+                                        normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
+
+                                    string gPath = string.IsNullOrEmpty(normalizedGroup) ? normalizedSubGroup :
+                                        string.IsNullOrEmpty(normalizedSubGroup) ? normalizedGroup :
+                                        Path.Combine(normalizedGroup, normalizedSubGroup);
+
+                                    // Build target paths
+                                    string targetDirectory = Path.Combine(LegionScripting.LegionScripting.ScriptPath, gPath ?? "");
+                                    string filePath = Path.Combine(targetDirectory, sanitizedName);
+
+                                    // Get full paths and verify they stay within the scripts root
+                                    string scriptsRootFullPath = Path.GetFullPath(LegionScripting.LegionScripting.ScriptPath);
+                                    string targetDirectoryFullPath = Path.GetFullPath(targetDirectory);
+                                    string targetFileFullPath = Path.GetFullPath(filePath);
+
+                                    // Verify both directory and file paths are within the scripts root
+                                    if (!targetDirectoryFullPath.StartsWith(scriptsRootFullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                        !targetDirectoryFullPath.Equals(scriptsRootFullPath, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        GameActions.Print(World.Instance, "Invalid target directory. Path must be within the scripts directory.", 32);
+                                    }
+                                    else if (!targetFileFullPath.StartsWith(scriptsRootFullPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                        !targetFileFullPath.Equals(scriptsRootFullPath, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        GameActions.Print(World.Instance, "Invalid script path. Path must be within the scripts directory.", 32);
+                                    }
+                                    else
+                                    {
+                                        // Create directory if it doesn't exist (now validated)
+                                        if (!Directory.Exists(targetDirectoryFullPath))
+                                            Directory.CreateDirectory(targetDirectoryFullPath);
+
+                                        // Create script file if it doesn't exist
+                                        if (!File.Exists(targetFileFullPath))
+                                        {
+                                            File.WriteAllText(targetFileFullPath, SCRIPT_HEADER);
+                                            _pendingReload = true;
+                                            GameActions.Print(World.Instance, $"Created script '{sanitizedName}'", 66);
+                                        }
+                                        else
+                                        {
+                                            GameActions.Print(World.Instance, $"A script named '{sanitizedName}' already exists.", 32);
+                                        }
+                                    }
+                                }
+                                catch (UnauthorizedAccessException)
+                                {
+                                    GameActions.Print(World.Instance, "Access denied. Check directory permissions.", 32);
+                                }
+                                catch (DirectoryNotFoundException)
+                                {
+                                    GameActions.Print(World.Instance, "Directory not found.", 32);
+                                }
+                                catch (IOException ioEx)
+                                {
+                                    GameActions.Print(World.Instance, $"File operation failed: {ioEx.Message}", 32);
+                                }
+                                catch (Exception e)
+                                {
+                                    GameActions.Print(World.Instance, $"Error creating script: {e.Message}", 32);
+                                    Log.Error($"Error creating script {sanitizedName}: {e}");
+                                }
                             }
                         }
                         else
@@ -1012,31 +1076,81 @@ while True:
                 {
                     if (!string.IsNullOrEmpty(_dialogState.NewGroupName))
                     {
-                        int p = _dialogState.NewGroupName.IndexOf('.');
+                        // Sanitize the group name to prevent path traversal
+                        string sanitizedGroupName = Path.GetFileName(_dialogState.NewGroupName.Trim());
+
+                        // Remove extension if present
+                        int p = sanitizedGroupName.IndexOf('.');
                         if (p != -1)
-                            _dialogState.NewGroupName = _dialogState.NewGroupName.Substring(0, p);
+                            sanitizedGroupName = sanitizedGroupName.Substring(0, p);
 
-                        try
+                        // Explicitly reject names that contain directory separators or equal ".."
+                        if (string.IsNullOrEmpty(sanitizedGroupName) ||
+                            sanitizedGroupName != _dialogState.NewGroupName.Trim() ||
+                            sanitizedGroupName.Contains("\\") ||
+                            sanitizedGroupName.Contains("/") ||
+                            sanitizedGroupName == ".." ||
+                            sanitizedGroupName == ".")
                         {
-                            // Build full path including parent group
-                            string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
-                            string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
-
-                            string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath,
-                                normalizedGroup ?? "",
-                                normalizedSubGroup ?? "",
-                                _dialogState.NewGroupName);
-
-                            if (!Directory.Exists(path))
-                            {
-                                Directory.CreateDirectory(path);
-                            }
-                            File.WriteAllText(Path.Combine(path, "Example.py"), EXAMPLE_LSCRIPT);
-                            _pendingReload = true;
+                            GameActions.Print(World.Instance, "Invalid group name. Names cannot contain path separators or relative navigation.", 32);
                         }
-                        catch (Exception e)
+                        else
                         {
-                            Log.Error(e.ToString());
+                            try
+                            {
+                                // Build full path including parent group with sanitized segments
+                                string normalizedGroup = _contextMenuGroup == NOGROUPTEXT ? "" : _contextMenuGroup;
+                                string normalizedSubGroup = _contextMenuSubGroup == NOGROUPTEXT ? "" : _contextMenuSubGroup;
+
+                                // Sanitize parent group segments as well
+                                if (!string.IsNullOrEmpty(normalizedGroup))
+                                    normalizedGroup = Path.GetFileName(normalizedGroup);
+                                if (!string.IsNullOrEmpty(normalizedSubGroup))
+                                    normalizedSubGroup = Path.GetFileName(normalizedSubGroup);
+
+                                string path = Path.Combine(LegionScripting.LegionScripting.ScriptPath,
+                                    normalizedGroup ?? "",
+                                    normalizedSubGroup ?? "",
+                                    sanitizedGroupName);
+
+                                // Resolve both paths to absolute canonical paths
+                                string scriptsRootPath = Path.GetFullPath(LegionScripting.LegionScripting.ScriptPath);
+                                string targetPath = Path.GetFullPath(path);
+
+                                // Verify the target path starts with the scripts root path
+                                if (!targetPath.StartsWith(scriptsRootPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                    !targetPath.Equals(scriptsRootPath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    GameActions.Print(World.Instance, "Invalid group location. Path must be within the scripts directory.", 32);
+                                }
+                                else
+                                {
+                                    if (!Directory.Exists(targetPath))
+                                    {
+                                        Directory.CreateDirectory(targetPath);
+                                    }
+                                    File.WriteAllText(Path.Combine(targetPath, "Example.py"), EXAMPLE_LSCRIPT);
+                                    _pendingReload = true;
+                                    GameActions.Print(World.Instance, $"Created group '{sanitizedGroupName}'", 66);
+                                }
+                            }
+                            catch (UnauthorizedAccessException)
+                            {
+                                GameActions.Print(World.Instance, "Access denied. Check directory permissions.", 32);
+                            }
+                            catch (DirectoryNotFoundException)
+                            {
+                                GameActions.Print(World.Instance, "Directory not found.", 32);
+                            }
+                            catch (IOException ioEx)
+                            {
+                                GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32);
+                            }
+                            catch (Exception e)
+                            {
+                                GameActions.Print(World.Instance, $"Error creating group: {e.Message}", 32);
+                                Log.Error($"Error creating group {sanitizedGroupName}: {e}");
+                            }
                         }
                     }
 
