@@ -52,8 +52,8 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ScriptEngine, (API api, object callback)>> hotkeyCallbacks = new();
-        private static readonly ConcurrentDictionary<string, byte> pressedKeys = new();
+        private readonly ConcurrentDictionary<string, object> hotkeyCallbacks = new();
+        private readonly ConcurrentDictionary<string, byte> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -122,66 +122,43 @@ namespace ClassicUO.LegionScripting
         private World World = Client.Game.UO.World;
         private Item backpack;
         private PlayerMobile player;
-        private static bool keyboardHooked = false;
+        private bool keyboardHooked = false;
 
         private void EnsureKeyboardHook()
         {
             if (keyboardHooked) return;
 
-            CUOKeyboard.KeyDownEvent += (hotkey) =>
-            {
-                try
-                {
-                    if (!pressedKeys.TryGetValue(hotkey, out _) && hotkeyCallbacks.TryGetValue(hotkey, out var handlers))
-                    {
-                        pressedKeys.TryAdd(hotkey, 0);
-                        foreach (var entry in handlers.Values)
-                        {
-                            var (api, callback) = entry;
-                            if (api != null && callback != null)
-                            {
-                                api.ScheduleCallback(callback);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Hotkey handler error: {ex}");
-                }
-            };
-
-            CUOKeyboard.KeyUpEvent += (hotkey) =>
-            {
-                pressedKeys.TryRemove(hotkey, out _);
-            };
+            CUOKeyboard.KeyDownEvent += OnKeyDown;
+            CUOKeyboard.KeyUpEvent += OnKeyUp;
 
             keyboardHooked = true;
         }
 
-        public void OnHotKeyDispose()
+        private void OnKeyDown(string hotkey)
         {
-            if (hotkeyCallbacks == null || hotkeyCallbacks.IsEmpty)
-                return;
-
-            var currentEngine = engine;
-            if (currentEngine == null)
-                return;
-
-            foreach (var kvp in hotkeyCallbacks.ToArray())
+            if (pressedKeys.TryAdd(hotkey, 0) && hotkeyCallbacks.TryGetValue(hotkey, out var callback))
             {
-                var hotkey = kvp.Key;
-                var handlers = kvp.Value;
-                if (handlers == null)
-                    continue;
-
-                handlers.TryRemove(currentEngine, out _);
-
-                if (handlers.IsEmpty)
-                    hotkeyCallbacks.TryRemove(hotkey, out _);
+                ScheduleCallback(callback);
             }
         }
 
+        private void OnKeyUp(string hotkey)
+        {
+            pressedKeys.TryRemove(hotkey, out _);
+        }
+
+        public void OnHotKeyDispose()
+        {
+            if (keyboardHooked)
+            {
+                CUOKeyboard.KeyDownEvent -= OnKeyDown;
+                CUOKeyboard.KeyUpEvent -= OnKeyUp;
+                keyboardHooked = false;
+            }
+
+            hotkeyCallbacks.Clear();
+            pressedKeys.Clear();
+        }
 
         public ConcurrentQueue<PyJournalEntry> JournalEntries
         {
@@ -341,39 +318,21 @@ namespace ClassicUO.LegionScripting
             if (string.IsNullOrEmpty(key))
                 return;
 
-            // Defensive guard: make sure the API is fully initialized
             if (engine == null || engine.Operations == null)
-                return;
-
-            string normalized = CUOKeyboard.NormalizeKeyString(key);
-            if (string.IsNullOrEmpty(normalized))
             {
-                GameActions.Print(World, $"Invalid hotkey string: '{key}'", 32);
                 return;
             }
 
+            string normalized = CUOKeyboard.NormalizeKeyString(key);
             EnsureKeyboardHook();
 
             if (callback == null || !engine.Operations.IsCallable(callback))
             {
-                if (hotkeyCallbacks.TryGetValue(normalized, out var handlers))
-                {
-                    handlers.TryRemove(engine, out _);
-                    if (handlers.IsEmpty)
-                        hotkeyCallbacks.TryRemove(normalized, out _);
-                }
+                hotkeyCallbacks.TryRemove(normalized, out _);
                 return;
             }
 
-            hotkeyCallbacks.AddOrUpdate(
-                normalized,
-                _ => new ConcurrentDictionary<ScriptEngine, (API, object)>
-                { [engine] = (this, callback) },
-                (_, handlers) =>
-                {
-                    handlers[engine] = (this, callback);
-                    return handlers;
-                });
+            hotkeyCallbacks[normalized] = callback;
         }
 
         /// <summary>

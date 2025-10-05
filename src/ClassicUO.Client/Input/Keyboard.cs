@@ -82,8 +82,9 @@ namespace ClassicUO.Input
         private static void OnKeyEvent(SDL.SDL_KeyboardEvent e, Action<string> keyboardEvent)
         {
             UpdateModifiers(e.mod);
-            if (IgnoreBareModifierKey(e))
+            if (IgnoreBareModifierKey(e) || keyboardEvent == null)
                 return;
+
             string hotkey = BuildHotKeyString(e);
             keyboardEvent?.Invoke(hotkey);
         }
