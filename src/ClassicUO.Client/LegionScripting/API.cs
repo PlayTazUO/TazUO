@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,14 +23,12 @@ using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Button = ClassicUO.Game.UI.Controls.Button;
 using Control = ClassicUO.Game.UI.Controls.Control;
 using Label = ClassicUO.Game.UI.Controls.Label;
 using Lock = ClassicUO.Game.Data.Lock;
 using RadioButton = ClassicUO.Game.UI.Controls.RadioButton;
 using CUOKeyboard = ClassicUO.Input.Keyboard;
-using SDL3;
 
 namespace ClassicUO.LegionScripting
 {
@@ -53,8 +51,8 @@ namespace ClassicUO.LegionScripting
 
         private readonly Queue<Action> scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> sharedVars = new();
-        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ScriptEngine, object>> hotkeyCallbacks = new();
-        private HashSet<string> pressedKeys = new();
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<ScriptEngine, (API api, object callback)>> hotkeyCallbacks = new();
+        private static readonly ConcurrentDictionary<string, byte> pressedKeys = new();
 
         internal void ScheduleCallback(Action action)
         {
@@ -116,29 +114,6 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        private string NormalizeKeyString(string input)
-        {
-            var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
-            bool ctrl = false, shift = false, alt = false;
-            string key = null;
-
-            foreach (var p in parts)
-            {
-                if (p == "CTRL") ctrl = true;
-                else if (p == "SHIFT") shift = true;
-                else if (p == "ALT") alt = true;
-                else key = p.StartsWith("SDLK_") ? p : "SDLK_" + p;
-            }
-
-            List<string> normalized = new();
-            if (ctrl) normalized.Add("CTRL");
-            if (shift) normalized.Add("SHIFT");
-            if (alt) normalized.Add("ALT");
-            if (key != null) normalized.Add(key);
-
-            return string.Join("+", normalized);
-        }
-
         #endregion
 
         private ConcurrentBag<uint> ignoreList = new();
@@ -154,33 +129,30 @@ namespace ClassicUO.LegionScripting
 
             CUOKeyboard.KeyDownEvent += (hotkey) =>
             {
-                if (!pressedKeys.Contains(hotkey) && hotkeyCallbacks.TryGetValue(hotkey, out var entry))
+                try
                 {
-                    pressedKeys.Add(hotkey);
-                    foreach (var (ownerEngine, callback) in entry.ToArray())
+                    if (!pressedKeys.TryGetValue(hotkey, out _) && hotkeyCallbacks.TryGetValue(hotkey, out var handlers))
                     {
-                        if (ownerEngine == null || callback == null)
-                            continue;
-
-                        Task.Run(() =>
+                        pressedKeys.TryAdd(hotkey, 0);
+                        foreach (var entry in handlers.Values)
                         {
-                            try
+                            var (api, callback) = entry;
+                            if (api != null && callback != null)
                             {
-                                ownerEngine.Operations.Invoke(callback);
+                                api.ScheduleCallback(callback);
                             }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Hotkey callback error for [{hotkey}]: {ex}");
-                            }
-                        });
+                        }
                     }
                 }
-
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Hotkey handler error: {ex}");
+                }
             };
 
             CUOKeyboard.KeyUpEvent += (hotkey) =>
             {
-                pressedKeys.Remove(hotkey);
+                pressedKeys.TryRemove(hotkey, out _);
             };
 
             keyboardHooked = true;
@@ -188,9 +160,22 @@ namespace ClassicUO.LegionScripting
 
         public void OnHotKeyDispose()
         {
-            foreach (var (hotkey, handlers) in hotkeyCallbacks.ToArray())
+            if (hotkeyCallbacks == null || hotkeyCallbacks.IsEmpty)
+                return;
+
+            var currentEngine = engine;
+            if (currentEngine == null)
+                return;
+
+            foreach (var kvp in hotkeyCallbacks.ToArray())
             {
-                handlers.TryRemove(engine, out _);
+                var hotkey = kvp.Key;
+                var handlers = kvp.Value;
+                if (handlers == null)
+                    continue;
+
+                handlers.TryRemove(currentEngine, out _);
+
                 if (handlers.IsEmpty)
                     hotkeyCallbacks.TryRemove(hotkey, out _);
             }
@@ -355,7 +340,17 @@ namespace ClassicUO.LegionScripting
             if (string.IsNullOrEmpty(key))
                 return;
 
-            string normalized = NormalizeKeyString(key);
+            // Defensive guard: make sure the API is fully initialized
+            if (engine == null || engine.Operations == null)
+                return;
+
+            string normalized = CUOKeyboard.NormalizeKeyString(key);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                GameActions.Print(World, $"Invalid hotkey string: '{key}'", 32);
+                return;
+            }
+
             EnsureKeyboardHook();
 
             if (callback == null || !engine.Operations.IsCallable(callback))
@@ -371,10 +366,11 @@ namespace ClassicUO.LegionScripting
 
             hotkeyCallbacks.AddOrUpdate(
                 normalized,
-                _ => new ConcurrentDictionary<ScriptEngine, object> { [engine] = callback },
+                _ => new ConcurrentDictionary<ScriptEngine, (API, object)>
+                { [engine] = (this, callback) },
                 (_, handlers) =>
                 {
-                    handlers[engine] = callback;
+                    handlers[engine] = (this, callback);
                     return handlers;
                 });
         }

@@ -16,6 +16,35 @@ namespace ClassicUO.Input
         public static event Action<string> KeyDownEvent;
         public static event Action<string> KeyUpEvent;
 
+        public static string NormalizeKeyString(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+                return string.Empty;
+
+            var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
+            bool ctrl = false, shift = false, alt = false;
+            string key = null;
+
+            foreach (var p in parts)
+            {
+                if (string.IsNullOrEmpty(p))
+                    continue;
+
+                if (p == "CTRL") ctrl = true;
+                else if (p == "SHIFT") shift = true;
+                else if (p == "ALT") alt = true;
+                else key = p.StartsWith("SDLK_") ? p : "SDLK_" + p;
+            }
+
+            List<string> normalized = new();
+            if (ctrl) normalized.Add("CTRL");
+            if (shift) normalized.Add("SHIFT");
+            if (alt) normalized.Add("ALT");
+            if (key != null) normalized.Add(key);
+
+            return string.Join("+", normalized);
+        }
+
         public static bool IgnoreBareModifierKey(SDL.SDL_KeyboardEvent e)
         {
             var keycode = (SDL.SDL_Keycode)e.key;
@@ -39,7 +68,6 @@ namespace ClassicUO.Input
 
             return string.Join("+", parts);
         }
-
 
         public static void OnKeyUp(SDL.SDL_KeyboardEvent e)
         {
