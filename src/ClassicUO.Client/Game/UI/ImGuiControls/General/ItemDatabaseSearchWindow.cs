@@ -54,7 +54,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             var currentProfile = ProfileManager.CurrentProfile;
 
-            if (ImGui.Checkbox("Enable item database", ref _enabled))
+            if (ImGui.Checkbox("Enable", ref _enabled))
             {
                 currentProfile.ItemDatabaseEnabled = _enabled;
             }
@@ -112,69 +112,78 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawBasicSearchFields()
         {
-            ImGui.Text("Basic Search");
-            ImGui.Separator();
+            ImGui.SeparatorText("Search");
 
-            // Name search
-            ImGui.Text("Name:");
-            ImGui.SameLine();
-            ImGui.InputText("##SearchName", ref _searchName, 100);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search for items containing this text in their name");
+            // Use a table for consistent two-column layout
+            if (ImGui.BeginTable("SearchFieldsTable", 2, ImGuiTableFlags.None))
+            {
+                ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 80);
+                ImGui.TableSetupColumn("Input", ImGuiTableColumnFlags.WidthStretch);
 
-            // Properties search
-            ImGui.Text("Properties:");
-            ImGui.SameLine();
-            ImGui.InputText("##SearchProperties", ref _searchProperties, 200);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search for items containing this text in their properties/tooltip");
+                // Name search
+                ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Name");
+                ImGuiComponents.Tooltip("Search for items containing this text in their name");
 
-            // Graphic ID
-            ImGui.Text("Graphic ID:");
-            ImGui.SameLine();
-            ImGui.InputInt("##SearchGraphic", ref _searchGraphic);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search for items with this graphic ID (0 = any)");
+                ImGui.TableSetColumnIndex(1);
+                ImGui.SetNextItemWidth(-1);
+                ImGui.InputText("##SearchName", ref _searchName, 100);
 
-            // Hue
-            ImGui.Text("Hue:");
-            ImGui.SameLine();
-            ImGui.InputInt("##SearchHue", ref _searchHue);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search for items with this hue (-1 = any)");
+                // Properties search
+                ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Properties");
+                ImGuiComponents.Tooltip("Search for items containing this text in their properties/tooltip");
 
-            // Layer
-            ImGui.Text("Layer:");
-            ImGui.SameLine();
-            ImGui.InputInt("##SearchLayer", ref _searchLayer);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search for items on this layer (-1 = any, 0 = Invalid/Ground)");
+                ImGui.TableSetColumnIndex(1);
+                ImGui.SetNextItemWidth(-1);
+                ImGui.InputText("##SearchProperties", ref _searchProperties, 200);
+
+                // Graphic ID and Hue on same row
+                ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Graphic ID");
+                ImGuiComponents.Tooltip("Search for items with this graphic ID (0 = any)");
+
+                ImGui.TableSetColumnIndex(1);
+                ImGui.SetNextItemWidth(100);
+                ImGui.InputInt("##SearchGraphic", ref _searchGraphic);
+                ImGui.SameLine();
+                ImGui.Text("Hue:");
+                ImGuiComponents.Tooltip("Search for items with this hue (-1 = any)");
+                ImGui.SameLine();
+                ImGui.SetNextItemWidth(100);
+                ImGui.InputInt("##SearchHue", ref _searchHue);
+
+                // Layer
+                ImGui.TableNextRow();
+                ImGui.TableSetColumnIndex(0);
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text("Layer");
+                ImGuiComponents.Tooltip("Search for items on this layer (-1 = any, 0 = Invalid/Ground)");
+
+                ImGui.TableSetColumnIndex(1);
+                ImGui.SetNextItemWidth(100);
+                ImGui.InputInt("##SearchLayer", ref _searchLayer);
+
+                ImGui.EndTable();
+            }
         }
 
         private void DrawAdvancedSearchFields()
         {
             ImGui.Spacing();
-            ImGui.Text("Advanced Options");
-            ImGui.Separator();
+            ImGui.SeparatorText("Advanced Options");
 
             // Container filter
             ImGui.Text("Container Serial:");
             ImGui.SameLine();
             ImGui.InputInt("##SearchContainer", ref _searchContainer);
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Search only in this container (0 = any)");
+            ImGuiComponents.Tooltip("Search only in this container (0 = any)");
 
             // Location filters
             ImGui.Checkbox("On ground only", ref _onGroundOnly);
@@ -487,10 +496,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.InputInt("##ClearOlderThanDays", ref _clearOlderThanDays);
             ImGui.SameLine();
             ImGui.Text("days");
-            ImGui.SameLine();
-            ImGui.TextDisabled("(?)");
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Delete all database entries older than this many days");
+            ImGuiComponents.Tooltip("Delete all database entries older than this many days");
 
             // Ensure days is at least 1
             if (_clearOlderThanDays < 1)
