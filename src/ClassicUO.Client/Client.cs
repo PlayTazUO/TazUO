@@ -4,6 +4,7 @@ using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.Managers;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -199,6 +200,7 @@ namespace ClassicUO
     internal static class Client
     {
         public static GameController Game { get; private set; }
+        public static SQLSettingsManager Settings { get; private set; }
 
 
         public static void Run(IPluginHost pluginHost)
@@ -206,6 +208,17 @@ namespace ClassicUO
             Debug.Assert(Game == null);
 
             Log.Trace("Running game...");
+
+            // Initialize SQLSettingsManager
+            try
+            {
+                Settings = new SQLSettingsManager();
+                Log.Trace("SQLSettingsManager initialized");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to initialize SQLSettingsManager: {ex.Message}");
+            }
 
             using (Game = new GameController(pluginHost))
             {
@@ -218,6 +231,17 @@ namespace ClassicUO
                 }
 
                 Game.Run();
+            }
+
+            // Dispose SQLSettingsManager
+            try
+            {
+                Settings?.Dispose();
+                Log.Trace("SQLSettingsManager disposed");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to dispose SQLSettingsManager: {ex.Message}");
             }
 
             Log.Trace("Exiting game...");
