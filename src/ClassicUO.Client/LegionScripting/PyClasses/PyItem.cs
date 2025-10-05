@@ -11,9 +11,19 @@ namespace ClassicUO.LegionScripting.PyClasses;
 public class PyItem : PyEntity
 {
     public int Amount => GetItem()?.Amount ?? 0;
-    public bool IsCorpse => GetItem()?.IsCorpse ?? false;
+    public bool IsCorpse;
     public bool Opened => GetItem()?.Opened ?? false;
     public uint Container => GetItem()?.Container ?? 0;
+
+    /// <summary>
+    /// If this item matches a grid highlight rule, this is the rule name it matched against
+    /// </summary>
+    public string MatchingHighlightName = string.Empty;
+
+    /// <summary>
+    /// True/False if this matches a grid highlight config
+    /// </summary>
+    public bool MatchesHighlight;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyItem"/> class from an <see cref="Item"/>.
@@ -21,6 +31,11 @@ public class PyItem : PyEntity
     /// <param name="item">The item to wrap.</param>
     internal PyItem(Item item) : base(item)
     {
+        if (item == null) return;
+
+        IsCorpse =  item.IsCorpse;
+        MatchingHighlightName = item.HighlightName;
+        MatchesHighlight = item.MatchesHighlightData;
     }
 
     /// <summary>

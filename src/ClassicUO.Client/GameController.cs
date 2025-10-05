@@ -197,6 +197,7 @@ namespace ClassicUO
         protected override void UnloadContent()
         {
             DiscordManager.Instance?.BeginDisconnect();
+            ItemDatabaseManager.Instance.Dispose();
             SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
 
             Settings.GlobalSettings.WindowPosition = new Point(

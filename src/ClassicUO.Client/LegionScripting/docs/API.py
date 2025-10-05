@@ -292,10 +292,12 @@ class PyGameObject:
 
 class PyItem:
     Amount: int = None
-    IsCorpse: bool = None
     Opened: bool = None
     Container: int = None
     __class__: str = None
+    IsCorpse: bool = None
+    MatchingHighlightName: str = None
+    MatchesHighlight: bool = None
 
 class PyJournalEntry:
     Hue: int = None

@@ -163,6 +163,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 {
                     data.item.MatchesHighlightData = true;
                     data.item.HighlightColor = bestMatch.HighlightColor;
+                    data.item.HighlightName = bestMatch.Name;
 
                     if (bestMatch.LootOnMatch)
                     {

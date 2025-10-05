@@ -756,7 +756,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (buff == null) continue;
 
-                    if (buff.Title.Contains(buffName))
+                    if (buff.Title.Contains(buffName, StringComparison.OrdinalIgnoreCase))
                         return true;
                 }
 
@@ -2138,23 +2138,23 @@ namespace ClassicUO.LegionScripting
                 if (g == null)
                     return false;
 
-
                 bool regex = text.StartsWith("$");
 
-                    if (regex)
-                        text = text.Substring(1);
+                if (regex)
+                    text = text.Substring(1);
 
-                    foreach (Control c in g.Children)
-                    {
-                        if (c is Label l && (l.Text.Contains(text) || (regex && System.Text.RegularExpressions.Regex.IsMatch(l.Text, text))))
-                        {
-                            return true;
-                        }
-                        else if (c is HtmlControl ht && (ht.Text.Contains(text) || (regex && System.Text.RegularExpressions.Regex.IsMatch(ht.Text, text))))
-                        {
-                            return true;
-                        }
-                    }
+                string allControlsText = string.Empty;
+
+                foreach (Control c in g.Children)
+                {
+                    if (c is Label l)
+                        allControlsText += l.Text + " ";
+                    else if (c is HtmlControl ht)
+                        allControlsText += ht.Text + " ";
+                }
+
+                if (allControlsText.Contains(text) || (regex && RegexHelper.GetRegex(text).IsMatch(allControlsText)))
+                    return true;
 
                 return false;
             }

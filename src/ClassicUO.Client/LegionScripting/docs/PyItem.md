@@ -13,10 +13,6 @@ description:  Represents a Python-accessible item in the game world.   Inherits 
 
 **Type:** `int`
 
-### `IsCorpse`
-
-**Type:** `bool`
-
 ### `Opened`
 
 **Type:** `bool`
@@ -32,6 +28,24 @@ description:  Represents a Python-accessible item in the game world.   Inherits 
  The Python-visible class name of this object.
  Accessible in Python as <c>obj.__class__</c> .
 
+
+
+### `IsCorpse`
+
+**Type:** `bool`
+
+### `MatchingHighlightName`
+
+**Type:** `string`
+
+ If this item matches a grid highlight rule, this is the rule name it matched against
+
+
+### `MatchesHighlight`
+
+**Type:** `bool`
+
+ True/False if this matches a grid highlight config
 
 
 

@@ -1,28 +1,41 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Data.Sqlite;
+using Lock = System.Threading.Lock;
+using Timer = System.Timers.Timer;
 
 namespace ClassicUO.Game.Managers
 {
-    public sealed class ItemDatabaseManager
+    public sealed class ItemDatabaseManager : IDisposable
     {
+        private const int PENDING_ITEMS_FLUSH_INTERVAL_MS = 3000;
+        private const int MAX_BATCH_SIZE = 500;
+        private const int MAX_SEARCH_LIMIT = 10000;
+
         private static readonly Lazy<ItemDatabaseManager> _instance =
             new Lazy<ItemDatabaseManager>(() => new ItemDatabaseManager());
-        private readonly object _dbLock = new(), _timerLock = new();
+
+        private readonly Lock _dbLock = new();
+        private readonly Lock _timerLock = new();
         private string _databasePath;
+        private string _connectionString;
         private bool _initialized;
-        private ConcurrentQueue<ItemInfo> _pendingItems = new();
+        private bool _disposed;
+        private readonly ConcurrentQueue<ItemInfo> _pendingItems = new();
         private Timer _pendingItemsTimer;
+
+        private int _activeThreadCount;
 
         public static ItemDatabaseManager Instance
         {
@@ -45,6 +58,7 @@ namespace ClassicUO.Game.Managers
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_databasePath));
+                _connectionString = $"Data Source={_databasePath}";
                 CreateDatabaseIfNotExists();
                 _initialized = true;
                 Log.Trace($"ItemDatabaseManager initialized with database at: {_databasePath}");
@@ -59,7 +73,7 @@ namespace ClassicUO.Game.Managers
         {
             lock (_dbLock)
             {
-                using var connection = new SqliteConnection($"Data Source={_databasePath}");
+                using var connection = new SqliteConnection(_connectionString);
                 connection.Open();
 
                 string createTableQuery = @"
@@ -124,67 +138,6 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public async Task AddOrUpdateItemAsync(ItemInfo itemInfo)
-        {
-            var profile = ProfileManager.CurrentProfile;
-            if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
-                return;
-
-            await Task.Run(() =>
-            {
-                try
-                {
-                    lock (_dbLock)
-                    {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
-                        connection.Open();
-
-                        string upsertQuery = @"
-                            INSERT INTO Items
-                            (Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround)
-                            VALUES
-                            (@Serial, @Graphic, @Hue, @Name, @Properties, @Container, @Layer, @UpdatedTime, @Character, @CharacterName, @ServerName, @X, @Y, @OnGround)
-                            ON CONFLICT(Serial) DO UPDATE SET
-                                Graphic = excluded.Graphic,
-                                Hue = excluded.Hue,
-                                Name = CASE WHEN excluded.Name = '' THEN Items.Name ELSE excluded.Name END,
-                                Properties = CASE WHEN excluded.Properties = '' THEN Items.Properties ELSE excluded.Properties END,
-                                Container = excluded.Container,
-                                Layer = excluded.Layer,
-                                UpdatedTime = excluded.UpdatedTime,
-                                Character = excluded.Character,
-                                CharacterName = CASE WHEN excluded.CharacterName = '' THEN Items.CharacterName ELSE excluded.CharacterName END,
-                                ServerName = CASE WHEN excluded.ServerName = '' THEN Items.ServerName ELSE excluded.ServerName END,
-                                X = excluded.X,
-                                Y = excluded.Y,
-                                OnGround = excluded.OnGround";
-
-                        using var command = new SqliteCommand(upsertQuery, connection);
-                        command.Parameters.AddWithValue("@Serial", itemInfo.Serial);
-                        command.Parameters.AddWithValue("@Graphic", itemInfo.Graphic);
-                        command.Parameters.AddWithValue("@Hue", itemInfo.Hue);
-                        command.Parameters.AddWithValue("@Name", itemInfo.Name ?? string.Empty);
-                        command.Parameters.AddWithValue("@Properties", itemInfo.Properties ?? string.Empty);
-                        command.Parameters.AddWithValue("@Container", itemInfo.Container);
-                        command.Parameters.AddWithValue("@Layer", (int)itemInfo.Layer);
-                        command.Parameters.AddWithValue("@UpdatedTime", itemInfo.UpdatedTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        command.Parameters.AddWithValue("@Character", itemInfo.Character);
-                        command.Parameters.AddWithValue("@CharacterName", itemInfo.CharacterName ?? string.Empty);
-                        command.Parameters.AddWithValue("@ServerName", itemInfo.ServerName ?? string.Empty);
-                        command.Parameters.AddWithValue("@X", itemInfo.X);
-                        command.Parameters.AddWithValue("@Y", itemInfo.Y);
-                        command.Parameters.AddWithValue("@OnGround", itemInfo.OnGround ? 1 : 0);
-
-                        command.ExecuteNonQuery();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Failed to add/update item {itemInfo.Serial} in database: {ex}");
-                }
-            });
-        }
-
         public async Task AddOrUpdateItemsAsync(IEnumerable<ItemInfo> items)
         {
             var profile = ProfileManager.CurrentProfile;
@@ -197,53 +150,73 @@ namespace ClassicUO.Game.Managers
                 {
                     lock (_dbLock)
                     {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
+                        using var connection = new SqliteConnection(_connectionString);
                         connection.Open();
 
                         using var transaction = connection.BeginTransaction();
 
-                        string upsertQuery = @"
-                            INSERT INTO Items
-                            (Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround)
-                            VALUES
-                            (@Serial, @Graphic, @Hue, @Name, @Properties, @Container, @Layer, @UpdatedTime, @Character, @CharacterName, @ServerName, @X, @Y, @OnGround)
-                            ON CONFLICT(Serial) DO UPDATE SET
-                                Graphic = excluded.Graphic,
-                                Hue = excluded.Hue,
-                                Name = CASE WHEN excluded.Name = '' THEN Items.Name ELSE excluded.Name END,
-                                Properties = CASE WHEN excluded.Properties = '' THEN Items.Properties ELSE excluded.Properties END,
-                                Container = excluded.Container,
-                                Layer = excluded.Layer,
-                                UpdatedTime = excluded.UpdatedTime,
-                                Character = excluded.Character,
-                                CharacterName = CASE WHEN excluded.CharacterName = '' THEN Items.CharacterName ELSE excluded.CharacterName END,
-                                ServerName = CASE WHEN excluded.ServerName = '' THEN Items.ServerName ELSE excluded.ServerName END,
-                                X = excluded.X,
-                                Y = excluded.Y,
-                                OnGround = excluded.OnGround";
-
-                        using var command = new SqliteCommand(upsertQuery, connection, transaction);
-
-                        foreach (var itemInfo in items)
+                        var itemList = items as List<ItemInfo> ?? items.ToList();
+                        if (itemList.Count == 0)
                         {
-                            command.Parameters.Clear();
-                            command.Parameters.AddWithValue("@Serial", itemInfo.Serial);
-                            command.Parameters.AddWithValue("@Graphic", itemInfo.Graphic);
-                            command.Parameters.AddWithValue("@Hue", itemInfo.Hue);
-                            command.Parameters.AddWithValue("@Name", itemInfo.Name ?? string.Empty);
-                            command.Parameters.AddWithValue("@Properties", itemInfo.Properties ?? string.Empty);
-                            command.Parameters.AddWithValue("@Container", itemInfo.Container);
-                            command.Parameters.AddWithValue("@Layer", (int)itemInfo.Layer);
-                            command.Parameters.AddWithValue("@UpdatedTime", itemInfo.UpdatedTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                            command.Parameters.AddWithValue("@Character", itemInfo.Character);
-                            command.Parameters.AddWithValue("@CharacterName", itemInfo.CharacterName ?? string.Empty);
-                            command.Parameters.AddWithValue("@ServerName", itemInfo.ServerName ?? string.Empty);
-                            command.Parameters.AddWithValue("@X", itemInfo.X);
-                            command.Parameters.AddWithValue("@Y", itemInfo.Y);
-                            command.Parameters.AddWithValue("@OnGround", itemInfo.OnGround ? 1 : 0);
-
-                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                            return;
                         }
+
+                        using var command = new SqliteCommand();
+                        command.Connection = connection;
+                        command.Transaction = transaction;
+
+                        // Build batch INSERT using StringBuilder
+                        var sqlBuilder = new StringBuilder(itemList.Count * 200);
+                        sqlBuilder.AppendLine("INSERT INTO Items");
+                        sqlBuilder.AppendLine("(Serial, Graphic, Hue, Name, Properties, Container, Layer, UpdatedTime, Character, CharacterName, ServerName, X, Y, OnGround)");
+                        sqlBuilder.Append("VALUES");
+
+                        for (int i = 0; i < itemList.Count; i++)
+                        {
+                            var item = itemList[i];
+                            string suffix = i.ToString();
+
+                            if (i > 0)
+                                sqlBuilder.Append(',');
+
+                            sqlBuilder.AppendLine();
+                            sqlBuilder.Append($"(@Serial{suffix}, @Graphic{suffix}, @Hue{suffix}, @Name{suffix}, @Properties{suffix}, @Container{suffix}, @Layer{suffix}, @UpdatedTime{suffix}, @Character{suffix}, @CharacterName{suffix}, @ServerName{suffix}, @X{suffix}, @Y{suffix}, @OnGround{suffix})");
+
+                            command.Parameters.AddWithValue($"@Serial{suffix}", item.Serial);
+                            command.Parameters.AddWithValue($"@Graphic{suffix}", item.Graphic);
+                            command.Parameters.AddWithValue($"@Hue{suffix}", item.Hue);
+                            command.Parameters.AddWithValue($"@Name{suffix}", item.Name ?? string.Empty);
+                            command.Parameters.AddWithValue($"@Properties{suffix}", item.Properties ?? string.Empty);
+                            command.Parameters.AddWithValue($"@Container{suffix}", item.Container);
+                            command.Parameters.AddWithValue($"@Layer{suffix}", (int)item.Layer);
+                            command.Parameters.AddWithValue($"@UpdatedTime{suffix}", item.UpdatedTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+                            command.Parameters.AddWithValue($"@Character{suffix}", item.Character);
+                            command.Parameters.AddWithValue($"@CharacterName{suffix}", item.CharacterName ?? string.Empty);
+                            command.Parameters.AddWithValue($"@ServerName{suffix}", item.ServerName ?? string.Empty);
+                            command.Parameters.AddWithValue($"@X{suffix}", item.X);
+                            command.Parameters.AddWithValue($"@Y{suffix}", item.Y);
+                            command.Parameters.AddWithValue($"@OnGround{suffix}", item.OnGround ? 1 : 0);
+                        }
+
+                        sqlBuilder.AppendLine();
+                        sqlBuilder.AppendLine(@"ON CONFLICT(Serial) DO UPDATE SET
+                            Graphic = excluded.Graphic,
+                            Hue = excluded.Hue,
+                            Name = CASE WHEN excluded.Name = '' THEN Items.Name ELSE excluded.Name END,
+                            Properties = CASE WHEN excluded.Properties = '' THEN Items.Properties ELSE excluded.Properties END,
+                            Container = excluded.Container,
+                            Layer = excluded.Layer,
+                            UpdatedTime = excluded.UpdatedTime,
+                            Character = excluded.Character,
+                            CharacterName = CASE WHEN excluded.CharacterName = '' THEN Items.CharacterName ELSE excluded.CharacterName END,
+                            ServerName = CASE WHEN excluded.ServerName = '' THEN Items.ServerName ELSE excluded.ServerName END,
+                            X = excluded.X,
+                            Y = excluded.Y,
+                            OnGround = excluded.OnGround");
+
+                        command.CommandText = sqlBuilder.ToString();
+                        command.ExecuteNonQuery();
 
                         transaction.Commit();
                     }
@@ -273,7 +246,7 @@ namespace ClassicUO.Game.Managers
                 {
                     lock (_dbLock)
                     {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
+                        using var connection = new SqliteConnection(_connectionString);
                         connection.Open();
 
                         string selectQuery = @"
@@ -329,6 +302,12 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            // Validate and cap limit parameter
+            if (limit < 0)
+                limit = 1000;
+            else if (limit > MAX_SEARCH_LIMIT)
+                limit = MAX_SEARCH_LIMIT;
+
             Task.Run(() =>
             {
                 List<ItemInfo> results = new List<ItemInfo>();
@@ -338,7 +317,7 @@ namespace ClassicUO.Game.Managers
                 {
                     lock (_dbLock)
                     {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
+                        using var connection = new SqliteConnection(_connectionString);
                         connection.Open();
 
                         var whereConditions = new List<string>();
@@ -389,13 +368,13 @@ namespace ClassicUO.Game.Managers
                         if (updatedAfter.HasValue)
                         {
                             whereConditions.Add("UpdatedTime >= @UpdatedAfter");
-                            parameters.Add(("@UpdatedAfter", updatedAfter.Value.ToString("yyyy-MM-dd HH:mm:ss")));
+                            parameters.Add(("@UpdatedAfter", updatedAfter.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
                         }
 
                         if (updatedBefore.HasValue)
                         {
                             whereConditions.Add("UpdatedTime <= @UpdatedBefore");
-                            parameters.Add(("@UpdatedBefore", updatedBefore.Value.ToString("yyyy-MM-dd HH:mm:ss")));
+                            parameters.Add(("@UpdatedBefore", updatedBefore.Value.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
                         }
 
                         if (character.HasValue)
@@ -488,7 +467,7 @@ namespace ClassicUO.Game.Managers
                 Properties = reader["Properties"].ToString() ?? string.Empty,
                 Container = Convert.ToUInt32(reader["Container"]),
                 Layer = (Layer)Convert.ToInt32(reader["Layer"]),
-                UpdatedTime = DateTime.Parse(reader["UpdatedTime"].ToString()),
+                UpdatedTime = DateTime.ParseExact(reader["UpdatedTime"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
                 Character = Convert.ToUInt32(reader["Character"]),
                 CharacterName = reader["CharacterName"].ToString() ?? string.Empty,
                 ServerName = reader["ServerName"].ToString() ?? string.Empty,
@@ -510,14 +489,14 @@ namespace ClassicUO.Game.Managers
                 {
                     lock (_dbLock)
                     {
-                        using var connection = new SqliteConnection($"Data Source={_databasePath}");
+                        using var connection = new SqliteConnection(_connectionString);
                         connection.Open();
 
                         DateTime cutoffTime = DateTime.Now - maxAge;
                         string deleteQuery = @"DELETE FROM Items WHERE UpdatedTime < @CutoffTime";
 
                         using var command = new SqliteCommand(deleteQuery, connection);
-                        command.Parameters.AddWithValue("@CutoffTime", cutoffTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                        command.Parameters.AddWithValue("@CutoffTime", cutoffTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 
                         int deletedRows = command.ExecuteNonQuery();
                         Log.Trace($"Cleared {deletedRows} old items from database (older than {cutoffTime})");
@@ -537,14 +516,17 @@ namespace ClassicUO.Game.Managers
 
             if (item.ItemData.IsDoor || item.ItemData.IsLight || item.ItemData.IsInternal || item.ItemData.IsRoof || item.ItemData.IsWall  || item.IsMulti || item.IsCorpse || StaticFilters.IsRock(item.Graphic) || StaticFilters.IsTree(item.Graphic, out _))
                 return;
-            
+
             // Check if ItemData is accessible (TileData might not be loaded yet)
             Layer layer = Layer.Invalid;
             try
             {
                 layer = (Layer)item.ItemData.Layer;
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warn($"Failed to get layer for item {item.Serial}: {ex.Message}");
+            }
 
             var itemInfo = new ItemInfo
             {
@@ -584,39 +566,103 @@ namespace ClassicUO.Game.Managers
                 if (_pendingItemsTimer != null)
                     return;
 
-                _pendingItemsTimer = new Timer(3000);
-                if (_pendingItemsTimer != null)
-                {
-                    _pendingItemsTimer.Elapsed += PendingItemsTimerOnElapsed;
-                    _pendingItemsTimer.Start();
-                }
+                _pendingItemsTimer = new Timer(PENDING_ITEMS_FLUSH_INTERVAL_MS);
+                _pendingItemsTimer.AutoReset = false;
+                _pendingItemsTimer.Elapsed += PendingItemsTimerOnElapsed;
+                _pendingItemsTimer.Start();
             }
         }
 
         private void PendingItemsTimerOnElapsed(object sender, ElapsedEventArgs e)
         {
-            _ = BulkPending();
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await BulkPendingAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error in bulk pending items processing: {ex}");
+                }
+            });
         }
 
-        private async Task BulkPending()
+        private async Task BulkPendingAsync()
         {
-            await Task.Run(() =>
+            try
             {
-                Log.Debug("Bulking items");
                 List<ItemInfo> items = new();
-                while (_pendingItems.TryDequeue(out ItemInfo itemInfo))
+                int c = 0;
+                while (_pendingItems.TryDequeue(out ItemInfo itemInfo) && c < MAX_BATCH_SIZE)
                 {
                     items.Add(itemInfo);
+                    c++;
                 }
+                Log.Debug($"Bulked {c} items.");
 
                 lock (_timerLock)
                 {
-                    _pendingItemsTimer?.Dispose();
-                    _pendingItemsTimer = null;
+                    if (_pendingItems.IsEmpty && _pendingItemsTimer != null)
+                    {
+                        _pendingItemsTimer.Elapsed -= PendingItemsTimerOnElapsed;
+                        _pendingItemsTimer.Dispose();
+                        _pendingItemsTimer = null;
+                    }
+                    else if (_pendingItemsTimer != null)
+                    {
+                        _pendingItemsTimer.Start();
+                    }
                 }
 
-                _ = AddOrUpdateItemsAsync(items);
-            });
+                if (items.Count > 0)
+                {
+                    await AddOrUpdateItemsAsync(items);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            lock (_timerLock)
+            {
+                if (_pendingItemsTimer != null)
+                {
+                    _pendingItemsTimer.Elapsed -= PendingItemsTimerOnElapsed;
+                    _pendingItemsTimer.Dispose();
+                    _pendingItemsTimer = null;
+                }
+            }
+
+            // Flush remaining items synchronously
+            if (!_pendingItems.IsEmpty)
+            {
+                var remainingItems = new List<ItemInfo>();
+                while (_pendingItems.TryDequeue(out var item))
+                {
+                    remainingItems.Add(item);
+                }
+
+                if (remainingItems.Count > 0)
+                {
+                    try
+                    {
+                        Task.Run(() => AddOrUpdateItemsAsync(remainingItems)).Wait(TimeSpan.FromSeconds(5));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Failed to flush pending items during disposal: {ex}");
+                    }
+                }
+            }
         }
     }
 }

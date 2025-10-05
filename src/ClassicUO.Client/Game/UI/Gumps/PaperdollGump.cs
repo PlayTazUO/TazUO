@@ -841,7 +841,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public Layer Layer { get; }
 
-            public override void Update()
+            public override void PreDraw()
             {
                 Item item = _paperDollGump.World.Items.Get(LocalSerial);
 
@@ -892,7 +892,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                base.Update();
+                base.PreDraw();
             }
 
             private class ItemGumpFixed : ItemGump
