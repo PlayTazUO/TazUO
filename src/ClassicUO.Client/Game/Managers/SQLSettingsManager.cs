@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.LegionScripting;
+using ClassicUO.Utility.Logging;
 using Microsoft.Data.Sqlite;
 
 namespace ClassicUO.Game.Managers
@@ -14,15 +15,16 @@ namespace ClassicUO.Game.Managers
         private const string DB_FILE = "settings.db";
         private const int MAX_BACKUPS = 3;
 
-        private readonly SemaphoreSlim _dbLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _dbLock = new(1, 1);
+        private readonly string _dataDir;
         private readonly string _dataPath;
         private readonly string _connectionString;
-        private bool _disposed = false;
+        private bool _disposed;
 
         public SQLSettingsManager()
         {
-            var dataDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data");
-            _dataPath = Path.Combine(dataDir, DB_FILE);
+            _dataDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data");
+            _dataPath = Path.Combine(_dataDir, DB_FILE);
 
             _connectionString = new SqliteConnectionStringBuilder
             {
@@ -31,19 +33,17 @@ namespace ClassicUO.Game.Managers
                 Cache = SqliteCacheMode.Shared
             }.ToString();
 
-            InitializeAsync().Wait();
+            InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private async Task InitializeAsync()
         {
-            await _dbLock.WaitAsync();
+            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                // Ensure the Data directory exists
-                var dataDir = Path.GetDirectoryName(_dataPath);
-                if (!Directory.Exists(dataDir))
+                if (!Directory.Exists(_dataDir))
                 {
-                    Directory.CreateDirectory(dataDir);
+                    Directory.CreateDirectory(_dataDir);
                 }
 
                 // Create backups if the database exists
@@ -53,31 +53,31 @@ namespace ClassicUO.Game.Managers
                 }
 
                 // Create/open database and initialize table
-                using (var connection = new SqliteConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
+                await using SqliteConnection connection = new(_connectionString);
+                await connection.OpenAsync().ConfigureAwait(false);
 
-                    var createTableCmd = connection.CreateCommand();
-                    createTableCmd.CommandText = @"
-                        CREATE TABLE IF NOT EXISTS settings (
-                            scope TEXT NOT NULL,
-                            name TEXT NOT NULL,
-                            value TEXT NOT NULL,
-                            PRIMARY KEY (scope, name)
-                        )";
-                    await createTableCmd.ExecuteNonQueryAsync();
+                await using SqliteCommand createTableCmd = connection.CreateCommand();
+                createTableCmd.CommandText = """
+                                             CREATE TABLE IF NOT EXISTS settings (
+                                                 scope TEXT NOT NULL,
+                                                 name TEXT NOT NULL,
+                                                 value TEXT NOT NULL,
+                                                 PRIMARY KEY (scope, name)
+                                             )
+                                             """;
+                await createTableCmd.ExecuteNonQueryAsync();
 
-                    // Create index for faster lookups
-                    var createIndexCmd = connection.CreateCommand();
-                    createIndexCmd.CommandText = @"
-                        CREATE INDEX IF NOT EXISTS idx_scope
-                        ON settings(scope)";
-                    await createIndexCmd.ExecuteNonQueryAsync();
-                }
+                // Create index for faster lookups
+                await using SqliteCommand createIndexCmd = connection.CreateCommand();
+                createIndexCmd.CommandText = """
+                                             CREATE INDEX IF NOT EXISTS idx_scope
+                                             ON settings(scope)
+                                             """;
+                await createIndexCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error initializing SQLSettingsManager: {ex.Message}");
+                Log.Error($@"Error initializing SQLSettingsManager: {ex.Message}");
                 throw;
             }
             finally
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.Managers
                 // Rotate existing backups: .3 -> delete, .2 -> .3, .1 -> .2
                 for (int i = MAX_BACKUPS; i > 0; i--)
                 {
-                    var backupPath = $"{_dataPath}.{i}";
+                    string backupPath = $"{_dataPath}.{i}";
 
                     if (i == MAX_BACKUPS)
                     {
@@ -106,7 +106,7 @@ namespace ClassicUO.Game.Managers
                     else
                     {
                         // Rotate backup to next number
-                        var nextBackupPath = $"{_dataPath}.{i + 1}";
+                        string nextBackupPath = $"{_dataPath}.{i + 1}";
                         if (File.Exists(backupPath))
                         {
                             if (File.Exists(nextBackupPath))
@@ -119,7 +119,7 @@ namespace ClassicUO.Game.Managers
                 }
 
                 // Create new .1 backup from current database
-                var firstBackupPath = $"{_dataPath}.1";
+                string firstBackupPath = $"{_dataPath}.1";
                 if (File.Exists(firstBackupPath))
                 {
                     File.Delete(firstBackupPath);
@@ -128,7 +128,7 @@ namespace ClassicUO.Game.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Warning: Failed to create settings database backups: {ex.Message}");
+                Log.Error($@"Warning: Failed to create settings database backups: {ex.Message}");
             }
         }
 
@@ -155,12 +155,12 @@ namespace ClassicUO.Game.Managers
 
         public string Get(SettingsScope scope, string name, string defaultValue = "")
         {
-            return GetAsync(scope, name, defaultValue).Result;
+            return GetAsync(scope, name, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public string Get(SettingsScope scope, string name, string defaultValue, Action<string> onComplete)
         {
-            return GetAsync(scope, name, defaultValue, onComplete).Result;
+            return GetAsync(scope, name, defaultValue, onComplete).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public async Task<string> GetAsync(SettingsScope scope, string name, string defaultValue = "")
@@ -173,33 +173,32 @@ namespace ClassicUO.Game.Managers
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SQLSettingsManager));
 
-            var scopeKey = GetScopeKey(scope);
+            string scopeKey = GetScopeKey(scope);
 
-            await _dbLock.WaitAsync();
+            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                using (var connection = new SqliteConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
+                await using SqliteConnection connection = new(_connectionString);
+                await connection.OpenAsync().ConfigureAwait(false);
 
-                    var cmd = connection.CreateCommand();
-                    cmd.CommandText = @"
-                        SELECT value FROM settings
-                        WHERE scope = $scope AND name = $name";
-                    cmd.Parameters.AddWithValue("$scope", scopeKey);
-                    cmd.Parameters.AddWithValue("$name", name);
+                await using SqliteCommand cmd = connection.CreateCommand();
+                cmd.CommandText = """
+                                  SELECT value FROM settings
+                                  WHERE scope = $scope AND name = $name
+                                  """;
+                cmd.Parameters.AddWithValue("$scope", scopeKey);
+                cmd.Parameters.AddWithValue("$name", name);
 
-                    var result = await cmd.ExecuteScalarAsync();
-                    var value = result?.ToString() ?? defaultValue;
+                object result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
+                string value = result?.ToString() ?? defaultValue;
 
-                    onComplete?.Invoke(value);
+                onComplete?.Invoke(value);
 
-                    return value;
-                }
+                return value;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting setting '{name}' from scope '{scopeKey}': {ex.Message}");
+                Log.Error($@"Error getting setting '{name}' from scope '{scopeKey}': {ex.Message}");
                 onComplete?.Invoke(defaultValue);
                 return defaultValue;
             }
@@ -219,29 +218,27 @@ namespace ClassicUO.Game.Managers
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SQLSettingsManager));
 
-            var scopeKey = GetScopeKey(scope);
+            string scopeKey = GetScopeKey(scope);
 
-            await _dbLock.WaitAsync();
+            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                using (var connection = new SqliteConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
+                await using SqliteConnection connection = new(_connectionString);
+                await connection.OpenAsync().ConfigureAwait(false);
 
-                    var cmd = connection.CreateCommand();
-                    cmd.CommandText = @"
+                SqliteCommand cmd = connection.CreateCommand();
+                cmd.CommandText = @"
                         INSERT OR REPLACE INTO settings (scope, name, value)
                         VALUES ($scope, $name, $value)";
-                    cmd.Parameters.AddWithValue("$scope", scopeKey);
-                    cmd.Parameters.AddWithValue("$name", name);
-                    cmd.Parameters.AddWithValue("$value", value ?? string.Empty);
+                cmd.Parameters.AddWithValue("$scope", scopeKey);
+                cmd.Parameters.AddWithValue("$name", name);
+                cmd.Parameters.AddWithValue("$value", value ?? string.Empty);
 
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error setting '{name}' in scope '{scopeKey}': {ex.Message}");
+                Log.Error($@"Error setting '{name}' in scope '{scopeKey}': {ex.Message}");
             }
             finally
             {
@@ -254,36 +251,32 @@ namespace ClassicUO.Game.Managers
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SQLSettingsManager));
 
-            var scopeKey = GetScopeKey(scope);
-            var result = new Dictionary<string, string>();
+            string scopeKey = GetScopeKey(scope);
+            Dictionary<string, string> result = new();
 
             await _dbLock.WaitAsync();
             try
             {
-                using (var connection = new SqliteConnection(_connectionString))
-                {
-                    await connection.OpenAsync();
+                await using SqliteConnection connection = new(_connectionString);
+                await connection.OpenAsync();
 
-                    var cmd = connection.CreateCommand();
-                    cmd.CommandText = @"
+                SqliteCommand cmd = connection.CreateCommand();
+                cmd.CommandText = @"
                         SELECT name, value FROM settings
                         WHERE scope = $scope";
-                    cmd.Parameters.AddWithValue("$scope", scopeKey);
+                cmd.Parameters.AddWithValue("$scope", scopeKey);
 
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            result[reader.GetString(0)] = reader.GetString(1);
-                        }
-                    }
+                await using SqliteDataReader reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    result[reader.GetString(0)] = reader.GetString(1);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting all settings from scope '{scopeKey}': {ex.Message}");
+                Log.Error($@"Error getting all settings from scope '{scopeKey}': {ex.Message}");
                 return result;
             }
             finally
@@ -294,7 +287,7 @@ namespace ClassicUO.Game.Managers
 
         public Dictionary<string, string> GetAll(SettingsScope scope)
         {
-            return GetAllAsync(scope).Result;
+            return GetAllAsync(scope).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         public void Dispose()
