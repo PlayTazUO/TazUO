@@ -51,21 +51,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.EndTabItem();
                 }
 
-                if (ImGui.BeginTabItem("Journal Filter"))
-                {
-                    JournalFilterWindow.GetInstance()?.DrawContent();
-                    ImGui.EndTabItem();
-                }
-
                 if (ImGui.BeginTabItem("Spell Bar"))
                 {
                     SpellBarWindow.GetInstance()?.DrawContent();
-                    ImGui.EndTabItem();
-                }
-
-                if (ImGui.BeginTabItem("Graphics"))
-                {
-                    GraphicReplacementWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
 
@@ -86,7 +74,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     FriendsListWindow.GetInstance()?.DrawContent();
                     ImGui.EndTabItem();
                 }
-                
+
                 ImGui.EndTabBar();
             }
         }
