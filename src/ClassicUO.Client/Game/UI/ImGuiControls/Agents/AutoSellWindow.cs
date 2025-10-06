@@ -61,6 +61,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             ImGui.SeparatorText("Options:");
+            ImGui.Spacing();
 
             ImGui.SetNextItemWidth(150);
             if (ImGui.SliderInt("Max total items", ref _maxItems, 0, 1000))
@@ -74,6 +75,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _profile.SellAgentMaxUniques = _maxUniques;
             }
             ImGuiComponents.Tooltip("Maximum number of different items to sell in a single transaction.");
+
+            ImGui.Spacing();
 
             ImGui.SeparatorText("Entries:");
             // Add entry section
@@ -189,11 +192,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
             }
 
-            ImGui.Separator();
+            ImGui.Spacing();
 
             if (_sellEntries.Count == 0)
             {
-                ImGui.Text("No entries configured");
+                ImGui.Separator();
+                ImGui.Text("No entries configured.");
             }
             else
             {

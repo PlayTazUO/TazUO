@@ -131,6 +131,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Max Amount:");
                 ImGui.SetNextItemWidth(100);
                 ImGui.InputText("##NewMaxAmount", ref _newMaxAmountInput, 10);
+                ImGuiComponents.Tooltip("Set to 0 for unlimited.");
                 ImGui.EndGroup();
 
                 ImGui.SameLine();
@@ -143,6 +144,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGuiComponents.Tooltip("Amount to restock up to when buying (0 = disabled)");
 
                 ImGui.EndGroup();
+
+                ImGui.Spacing();
+                ImGui.Separator();
 
                 if (ImGui.Button("Add##AddEntry"))
                 {
@@ -190,11 +194,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
             }
 
-            ImGui.Separator();
+            ImGui.Spacing();
 
             if (_buyEntries.Count == 0)
             {
-                ImGui.Text("No entries configured");
+                ImGui.Separator();
+                ImGui.Text("No entries configured.");
             }
             else
             {
