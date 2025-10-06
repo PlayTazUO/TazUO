@@ -54,6 +54,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             var currentProfile = ProfileManager.CurrentProfile;
 
+            ImGui.Spacing();
+
             if (ImGui.Checkbox("Enable", ref _enabled))
             {
                 currentProfile.ItemDatabaseEnabled = _enabled;
@@ -91,33 +93,42 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             ImGui.Spacing();
 
-            // Search controls
-            DrawSearchControls();
+            // Use a table to place search controls and database maintenance side by side
+            if (ImGui.BeginTable("ActionsTable", 2, ImGuiTableFlags.Borders))
+            {
+                ImGui.TableSetupColumn("SearchControls", ImGuiTableColumnFlags.WidthStretch);
+                ImGui.TableSetupColumn("DatabaseMaintenance", ImGuiTableColumnFlags.WidthStretch);
 
-            ImGui.Spacing();
+                ImGui.TableNextRow();
 
-            // Status
-            ImGui.Text($"Status: {_statusMessage}");
+                // Search controls column
+                ImGui.TableSetColumnIndex(0);
+                DrawSearchControls();
 
-            ImGui.Spacing();
+                // Database maintenance column
+                ImGui.TableSetColumnIndex(1);
+                DrawDatabaseMaintenance();
 
-            // Database maintenance
-            DrawDatabaseMaintenance();
+                ImGui.EndTable();
+            }
 
             ImGui.Spacing();
 
             // Results
             DrawSearchResults();
+
+            ImGui.SeparatorText("Status:");
+            ImGui.Text(_statusMessage);
         }
 
         private void DrawBasicSearchFields()
         {
-            ImGui.SeparatorText("Search");
+            ImGui.SeparatorText("Options:");
 
             // Use a table for consistent two-column layout
             if (ImGui.BeginTable("SearchFieldsTable", 2, ImGuiTableFlags.None))
             {
-                ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 80);
+                ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.WidthFixed, 90);
                 ImGui.TableSetupColumn("Input", ImGuiTableColumnFlags.WidthStretch);
 
                 // Name search
@@ -128,7 +139,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGuiComponents.Tooltip("Search for items containing this text in their name");
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.SetNextItemWidth(-1);
+                ImGui.SetNextItemWidth(300);
                 ImGui.InputText("##SearchName", ref _searchName, 100);
 
                 // Properties search
@@ -139,7 +150,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGuiComponents.Tooltip("Search for items containing this text in their properties/tooltip");
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.SetNextItemWidth(-1);
+                ImGui.SetNextItemWidth(300);
                 ImGui.InputText("##SearchProperties", ref _searchProperties, 200);
 
                 // Graphic ID and Hue on same row
@@ -150,13 +161,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGuiComponents.Tooltip("Search for items with this graphic ID (0 = any)");
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.SetNextItemWidth(100);
+                ImGui.SetNextItemWidth(120);
                 ImGui.InputInt("##SearchGraphic", ref _searchGraphic);
                 ImGui.SameLine();
                 ImGui.Text("Hue:");
                 ImGuiComponents.Tooltip("Search for items with this hue (-1 = any)");
                 ImGui.SameLine();
-                ImGui.SetNextItemWidth(100);
+                ImGui.SetNextItemWidth(110);
                 ImGui.InputInt("##SearchHue", ref _searchHue);
 
                 // Layer
@@ -177,7 +188,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void DrawAdvancedSearchFields()
         {
             ImGui.Spacing();
-            ImGui.SeparatorText("Advanced Options");
+            ImGui.SeparatorText("Advanced Options:");
 
             // Container filter
             ImGui.Text("Container Serial:");
@@ -201,6 +212,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawSearchControls()
         {
+            ImGui.SeparatorText("Actions:");
+            ImGui.AlignTextToFramePadding();
             if (_searchInProgress)
             {
                 ImGui.Text("Searching...");
@@ -224,9 +237,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     ClearSearch();
                 }
-
                 ImGui.SameLine();
-
                 if (ImGui.Button("Clear Results"))
                 {
                     _searchResults.Clear();
@@ -489,11 +500,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawDatabaseMaintenance()
         {
-            ImGui.Text("Database Maintenance");
-            ImGui.Separator();
-
+            ImGui.SeparatorText("Database Maintenance:");
+            ImGui.AlignTextToFramePadding();
             ImGui.Text("Clear entries older than:");
-            ImGui.SameLine();
             ImGui.SetNextItemWidth(100);
             ImGui.InputInt("##ClearOlderThanDays", ref _clearOlderThanDays);
             ImGui.SameLine();
@@ -503,8 +512,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // Ensure days is at least 1
             if (_clearOlderThanDays < 1)
                 _clearOlderThanDays = 1;
-
-            ImGui.SameLine();
 
             if (_clearInProgress)
             {
@@ -517,6 +524,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ClearOldEntries();
                 }
             }
+            ImGui.Spacing();
         }
 
         private async void ClearOldEntries()
