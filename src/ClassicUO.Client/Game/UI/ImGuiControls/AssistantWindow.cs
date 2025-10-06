@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             AddTab("General", DrawGeneral, GeneralWindow.Show, () => GeneralWindow.Instance?.Dispose());
             AddTab("Agents", DrawAgents, AgentsWindow.Show, () => AgentsWindow.Instance?.Dispose());
             AddTab("Organizer", DrawOrganizer, OrganizerWindow.Show, () => OrganizerWindow.Instance?.Dispose());
-            AddTab("Dress Agent", DrawDressAgent, DressAgentWindow.Show, () => DressAgentWindow.Instance?.Dispose());
+            AddTab("Filters", DrawFilters, FiltersWindow.Show, () => FiltersWindow.Instance?.Dispose());
             AddTab("Item Database", DrawItemDatabase, ItemDatabaseSearchWindow.Show, () => ItemDatabaseSearchWindow.Instance?.Dispose());
         }
 
@@ -49,7 +49,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     _preSelectIndex = 0; // General tab since spell indicators are now in General window
                     break;
                 case AssistantGump.PAGE.JournalFilter:
-                    _preSelectIndex = 1; // Agents tab since Journal Filter is in Agents Window
+                    _preSelectIndex = 4; // Filters tab since Journal Filter is now in Filters Window
                     break;
                 case AssistantGump.PAGE.TitleBar:
                     break;
@@ -62,7 +62,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 case AssistantGump.PAGE.FriendsList:
                     break;
                 case AssistantGump.PAGE.Organizer:
-                    _preSelectIndex = 5;
+                    _preSelectIndex = 2;
                     break;
             }
         }
@@ -131,7 +131,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void DrawGeneral() => GeneralWindow.GetInstance()?.DrawContent();
         private void DrawAgents() => AgentsWindow.GetInstance()?.DrawContent();
         private void DrawOrganizer() => OrganizerWindow.GetInstance()?.DrawContent();
-        private void DrawDressAgent() => DressAgentWindow.GetInstance()?.DrawContent();
+        private void DrawFilters() => FiltersWindow.GetInstance()?.DrawContent();
         private void DrawItemDatabase() => ItemDatabaseSearchWindow.GetInstance()?.DrawContent();
 
         public override void Dispose()
