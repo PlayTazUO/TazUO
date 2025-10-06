@@ -5,6 +5,7 @@ using System.Numerics;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.ImGuiControls
 {
@@ -14,6 +15,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private string newReplacementGraphicInput = "";
         private string newHueInput = "";
         private bool showAddEntry = false;
+        private bool _enabled;
         private Dictionary<ushort, string> entryOriginalInputs = new Dictionary<ushort, string>();
         private Dictionary<ushort, string> entryReplacementInputs = new Dictionary<ushort, string>();
         private Dictionary<ushort, string> entryHueInputs = new Dictionary<ushort, string>();
@@ -21,14 +23,29 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private GraphicReplacementWindow() : base("Mobile Graphics Replacement")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
+            _enabled = GraphicsReplacement.Enabled; // Sync with manager state
         }
 
         public override void DrawContent()
         {
-            ImGui.Text("Info:");
+            ImGui.Spacing();
+
+            if (ImGui.Checkbox("Enable", ref _enabled))
+            {
+                GraphicsReplacement.Enabled = _enabled;
+            }
+
             ImGuiComponents.Tooltip("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
 
-            ImGui.Separator();
+            if (!_enabled)
+            {
+                ImGui.TextColored(new Vector4(1, 0.5f, 0.5f, 1), "Mobile Graphics Replacement is disabled.");
+                return;
+            }
+
+            ImGui.Spacing();
+
+            ImGui.SeparatorText("Options:");
 
             // Add entry section
             if (ImGui.Button("Add Entry"))
@@ -58,10 +75,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
             if (showAddEntry)
             {
                 ImGui.Spacing();
-                ImGui.Text("New Entry:");
+                ImGui.SeparatorText("New Entry:");
                 ImGui.Spacing();
                 ImGui.BeginGroup();
-                ImGui.Separator();
                 ImGui.Text("Original Graphic:");
                 ImGui.SetNextItemWidth(150);
                 ImGui.InputText("##NewOriginalGraphic", ref newOriginalGraphicInput, 10);
