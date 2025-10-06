@@ -144,7 +144,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.EndGroup();
 
                 ImGui.Spacing();
-                ImGui.Separator();
 
                 if (ImGui.Button("Add##AddEntry"))
                 {
