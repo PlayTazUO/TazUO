@@ -14,7 +14,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private string newReplacementGraphicInput = "";
         private string newHueInput = "";
         private bool showAddEntry = false;
-        private bool _enabled;
         private Dictionary<ushort, string> entryOriginalInputs = new Dictionary<ushort, string>();
         private Dictionary<ushort, string> entryReplacementInputs = new Dictionary<ushort, string>();
         private Dictionary<ushort, string> entryHueInputs = new Dictionary<ushort, string>();
@@ -28,12 +27,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             ImGui.Spacing();
             ImGuiComponents.Tooltip("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
-
-            if (!_enabled)
-            {
-                ImGui.TextColored(new Vector4(1, 0.5f, 0.5f, 1), "Mobile Graphics Replacement is disabled.");
-                return;
-            }
 
             ImGui.Spacing();
 
