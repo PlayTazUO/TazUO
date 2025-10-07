@@ -16,9 +16,6 @@ namespace ClassicUO.Game.Managers
         private static Dictionary<ushort, GraphicChangeFilter> graphicChangeFilters = new Dictionary<ushort, GraphicChangeFilter>();
         public static Dictionary<ushort, GraphicChangeFilter> GraphicFilters { get { return graphicChangeFilters; } }
         private static HashSet<ushort> quickLookup = new HashSet<ushort>();
-
-        // Enable/disable functionality
-        public static bool Enabled { get; set; } = false;
         public static void Load()
         {
             if (File.Exists(GetSavePath()))
@@ -60,23 +57,23 @@ namespace ClassicUO.Game.Managers
 
         public static void Replace(ushort graphic, ref ushort newgraphic, ref ushort hue)
         {
-            if (!Enabled || !quickLookup.Contains(graphic))
-                return;
-
-            var filter = graphicChangeFilters[graphic];
-            newgraphic = filter.ReplacementGraphic;
-            if (filter.NewHue != ushort.MaxValue)
-                hue = filter.NewHue;
+            if (quickLookup.Contains(graphic))
+            {
+                var filter = graphicChangeFilters[graphic];
+                newgraphic = filter.ReplacementGraphic;
+                if (filter.NewHue != ushort.MaxValue)
+                    hue = filter.NewHue;
+            }
         }
 
         public static void ReplaceHue(ushort graphic, ref ushort hue)
         {
-            if (!Enabled || !quickLookup.Contains(graphic))
-                return;
-
-            var filter = graphicChangeFilters[graphic];
-            if (filter.NewHue != ushort.MaxValue)
-                hue = filter.NewHue;
+            if (quickLookup.Contains(graphic))
+            {
+                var filter = graphicChangeFilters[graphic];
+                if (filter.NewHue != ushort.MaxValue)
+                    hue = filter.NewHue;
+            }
         }
 
         public static void ResetLists()

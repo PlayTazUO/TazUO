@@ -23,18 +23,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private GraphicReplacementWindow() : base("Mobile Graphics Replacement")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
-            _enabled = GraphicsReplacement.Enabled; // Sync with manager state
         }
 
         public override void DrawContent()
         {
             ImGui.Spacing();
-
-            if (ImGui.Checkbox("Enable", ref _enabled))
-            {
-                GraphicsReplacement.Enabled = _enabled;
-            }
-
             ImGuiComponents.Tooltip("This can be used to replace graphics of mobiles with other graphics (For example if dragons are too big, replace them with wyverns).");
 
             if (!_enabled)
