@@ -49,7 +49,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     _preSelectIndex = 0; // General tab since spell indicators are now in General window
                     break;
                 case AssistantGump.PAGE.JournalFilter:
-                    _preSelectIndex = 4; // Filters tab since Journal Filter is now in Filters Window
+                    _preSelectIndex = 3; // Filters tab since Journal Filter is now in Filters Window
                     break;
                 case AssistantGump.PAGE.TitleBar:
                     break;

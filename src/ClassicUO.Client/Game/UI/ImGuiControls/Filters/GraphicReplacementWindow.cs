@@ -5,7 +5,6 @@ using System.Numerics;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
-using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.ImGuiControls
 {
