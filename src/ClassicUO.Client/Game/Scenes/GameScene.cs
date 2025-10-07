@@ -400,7 +400,8 @@ namespace ClassicUO.Game.Scenes
 
             PersistentVars.Unload();
             LegionScripting.LegionScripting.Unload();
-            BandageManager.Instance.Value.Dispose();
+            BandageManager.Instance.Dispose();
+            DressAgentManager.Instance.Unload();
 
             ProfileManager.CurrentProfile.GameWindowPosition = new Point(
                 Camera.Bounds.X,

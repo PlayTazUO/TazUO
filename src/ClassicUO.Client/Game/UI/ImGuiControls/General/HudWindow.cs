@@ -131,9 +131,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Spacing();
 
             // Additional information
-            ImGui.TextColored(ImGuiTheme.Colors.Primary, "Current Configuration:");
-            ImGui.Text($"Active flags: {CountActiveFlags()} / {hudFlagStates.Count - 2}"); // -2 to exclude None and All
-
             if (ImGui.CollapsingHeader("Advanced"))
             {
                 ImGui.Text($"Raw flag value: {profile.HideHudGumpFlags}");
@@ -161,43 +158,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
             if (enabled)
             {
                 profile.HideHudGumpFlags = ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)flag);
-
-                // If "All" is selected, select everything
-                if (flag == HideHudFlags.All)
-                {
-                    foreach (var otherFlag in hudFlagStates.Keys.ToList())
-                    {
-                        if (otherFlag == HideHudFlags.None) continue;
-                        hudFlagStates[otherFlag] = true;
-                        if (otherFlag != HideHudFlags.All)
-                            profile.HideHudGumpFlags = ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)otherFlag);
-                    }
-                }
             }
             else
             {
-                if (flag == HideHudFlags.All)
-                {
-                    // When "All" is unchecked, clear everything
-                    profile.HideHudGumpFlags = 0;
-                    foreach (var otherFlag in hudFlagStates.Keys.ToList())
-                    {
-                        hudFlagStates[otherFlag] = false;
-                    }
-                }
-                else
-                {
-                    profile.HideHudGumpFlags = ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)flag);
-                    // If any individual flag is unchecked, also uncheck "All"
-                    hudFlagStates[HideHudFlags.All] = false;
-                    profile.HideHudGumpFlags = ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)HideHudFlags.All);
-                }
+                profile.HideHudGumpFlags = flag == HideHudFlags.All ? (ulong)0 : ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)flag);
             }
-        }
-
-        private int CountActiveFlags()
-        {
-            return hudFlagStates.Count(kvp => kvp.Key != HideHudFlags.None && kvp.Key != HideHudFlags.All && kvp.Value);
         }
 
         private void AddTooltipForFlag(HideHudFlags flag)

@@ -14,7 +14,16 @@ namespace ClassicUO.Game.Managers
 {
     internal class OrganizerAgent
     {
-        public static OrganizerAgent Instance { get; private set; }
+        public static OrganizerAgent Instance
+        {
+            get
+            {
+                if (field == null)
+                    field = new();
+                return field;
+            }
+            private set => field = value;
+        }
 
         public List<OrganizerConfig> OrganizerConfigs { get; private set; } = new();
 

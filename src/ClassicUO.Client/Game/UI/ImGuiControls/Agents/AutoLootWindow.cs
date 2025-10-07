@@ -243,6 +243,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.TableNextColumn();
                     if (!DrawArt((ushort)entry.Graphic, new Vector2(50, 50)))
                         ImGui.Text($"{entry.Graphic:X4}");
+                    SetTooltip(entry.Name);
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists

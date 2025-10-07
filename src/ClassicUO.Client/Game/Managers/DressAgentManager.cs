@@ -16,7 +16,16 @@ namespace ClassicUO.Game.Managers
 {
     public class DressAgentManager
     {
-        public static DressAgentManager Instance { get; private set; } = new();
+        public static DressAgentManager Instance
+        {
+            get
+            {
+                if (field == null)
+                    field = new();
+                return field;
+            }
+            private set => field = value;
+        }
 
         public List<DressConfig> CurrentPlayerConfigs { get; private set; } = new();
         public List<DressConfig> OtherCharacterConfigs { get; private set; } = new();
@@ -61,6 +70,11 @@ namespace ClassicUO.Game.Managers
             LoadOtherCharacterConfigs();
 
             IsLoaded = true;
+        }
+
+        public void Unload()
+        {
+            Instance = null;
         }
 
         private void LoadOtherCharacterConfigs()

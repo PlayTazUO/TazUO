@@ -19,7 +19,16 @@ namespace ClassicUO.Game.Managers
     }
     public class BuySellAgent
     {
-        public static BuySellAgent Instance { get; private set; }
+        public static BuySellAgent Instance
+        {
+            get
+            {
+                if (field == null)
+                    field = new();
+                return field;
+            }
+            private set => field = value;
+        }
 
         public List<BuySellItemConfig> SellConfigs { get { return sellItems; } }
         public List<BuySellItemConfig> BuyConfigs { get { return buyItems; } }
@@ -113,7 +122,7 @@ namespace ClassicUO.Game.Managers
             bool limit_total_items = max_total_items > 0;
             int max_unique_items = ProfileManager.CurrentProfile.BuyAgentMaxUniques;
             bool limit_unique_items = max_unique_items > 0;
-            
+
             foreach (var buyConfigEntry in buyItems)
             {
                 if (!buyConfigEntry.Enabled) continue;
@@ -156,10 +165,10 @@ namespace ClassicUO.Game.Managers
                         val += item.Price * (ushort)amount_buyable;
                     }
                 }
-                
+
                 if (current_count > 0)
                     unique_items++;
-                    
+
                 total_count += current_count;
             }
 
@@ -222,7 +231,7 @@ namespace ClassicUO.Game.Managers
                 if (!sellConfig.Enabled) continue;
 
                 ushort current_count = 0;
-                
+
                 // Check minimum on hand logic
                 ushort backpackTotal = 0;
                 if (sellConfig.RestockUpTo > 0)
@@ -233,7 +242,7 @@ namespace ClassicUO.Game.Managers
                         continue; // Skip selling this item type - already at or below minimum
                     }
                 }
-                
+
                 foreach (var item in sellPackets[vendorSerial].AvailableItems)
                 {
                     if (!sellConfig.IsMatch(item.Graphic, item.Hue)) continue;
@@ -255,7 +264,7 @@ namespace ClassicUO.Game.Managers
                     {
                         int maxSellableBeforeMin = backpackTotal - sellConfig.RestockUpTo;
                         amount_sellable = Math.Min(amount_sellable, maxSellableBeforeMin - current_count);
-                        
+
                         if (amount_sellable <= 0)
                             break; // Can't sell more without going below minimum
                     }
@@ -267,10 +276,10 @@ namespace ClassicUO.Game.Managers
                         val += item.Price * (ushort)amount_sellable;
                     }
                 }
-                
+
                 if (current_count > 0)
                     unique_items++;
-                    
+
                 total_count += current_count;
             }
             sellPackets.Remove(vendorSerial);

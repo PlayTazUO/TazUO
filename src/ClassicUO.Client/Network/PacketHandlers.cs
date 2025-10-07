@@ -721,7 +721,7 @@ sealed class PacketHandlers
             // Check for bandage healing
             if (oldHits != mobile.Hits)
             {
-                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
+                BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
             }
         }
     }
@@ -1895,7 +1895,7 @@ sealed class PacketHandlers
             // Check for bandage healing
             if (oldHits != mobile.Hits)
             {
-                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
+                BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
             }
         }
     }
@@ -2842,78 +2842,78 @@ sealed class PacketHandlers
                 gump = new ShopGump(world, vendor, true, 150, 5);
                 UIManager.Add(gump);
             }
+        }
 
-            if (container.Layer == Layer.ShopBuyRestock || container.Layer == Layer.ShopBuy)
+        if (container.Layer == Layer.ShopBuyRestock || container.Layer == Layer.ShopBuy)
+        {
+            byte count = p.ReadUInt8();
+
+            LinkedObject first = container.Items;
+
+            if (first == null)
             {
-                byte count = p.ReadUInt8();
+                return;
+            }
 
-                LinkedObject first = container.Items;
+            bool reverse = false;
 
+            if (container.Graphic == 0x2AF8) //hardcoded logic in original client that we must match
+            {
+                //sort the contents
+                first = container.SortContents<Item>((x, y) => x.X - y.X);
+            }
+            else
+            {
+                //skip to last item and read in reverse later
+                reverse = true;
+
+                while (first?.Next != null)
+                {
+                    first = first.Next;
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
                 if (first == null)
                 {
-                    return;
+                    break;
                 }
 
-                bool reverse = false;
+                Item it = (Item)first;
 
-                if (container.Graphic == 0x2AF8) //hardcoded logic in original client that we must match
+                it.Price = p.ReadUInt32BE();
+                byte nameLen = p.ReadUInt8();
+                string name = p.ReadASCII(nameLen);
+
+                if (world.OPL.TryGetNameAndData(it.Serial, out string s, out _))
                 {
-                    //sort the contents
-                    first = container.SortContents<Item>((x, y) => x.X - y.X);
+                    it.Name = s;
+                }
+                else if (int.TryParse(name, out int cliloc))
+                {
+                    it.Name = Client.Game.UO.FileManager.Clilocs.Translate(
+                        cliloc,
+                        $"\t{it.ItemData.Name}: \t{it.Amount}",
+                        true
+                    );
+                }
+                else if (string.IsNullOrEmpty(name))
+                {
+                    it.Name = it.ItemData.Name;
                 }
                 else
                 {
-                    //skip to last item and read in reverse later
-                    reverse = true;
-
-                    while (first?.Next != null)
-                    {
-                        first = first.Next;
-                    }
+                    it.Name = name;
                 }
 
-                for (int i = 0; i < count; i++)
+                if (reverse)
                 {
-                    if (first == null)
-                    {
-                        break;
-                    }
-
-                    Item it = (Item)first;
-
-                    it.Price = p.ReadUInt32BE();
-                    byte nameLen = p.ReadUInt8();
-                    string name = p.ReadASCII(nameLen);
-
-                    if (world.OPL.TryGetNameAndData(it.Serial, out string s, out _))
-                    {
-                        it.Name = s;
-                    }
-                    else if (int.TryParse(name, out int cliloc))
-                    {
-                        it.Name = Client.Game.UO.FileManager.Clilocs.Translate(
-                            cliloc,
-                            $"\t{it.ItemData.Name}: \t{it.Amount}",
-                            true
-                        );
-                    }
-                    else if (string.IsNullOrEmpty(name))
-                    {
-                        it.Name = it.ItemData.Name;
-                    }
-                    else
-                    {
-                        it.Name = name;
-                    }
-
-                    if (reverse)
-                    {
-                        first = first.Previous;
-                    }
-                    else
-                    {
-                        first = first.Next;
-                    }
+                    first = first.Previous;
+                }
+                else
+                {
+                    first = first.Next;
                 }
             }
         }
@@ -3571,7 +3571,6 @@ sealed class PacketHandlers
             //if (string.IsNullOrEmpty(item.Name))
             //    item.Name = name;
             BuySellAgent.Instance?.HandleSellPacket(vendor, serial, graphic, hue, amount, price);
-
             if (ProfileManager.CurrentProfile.UseModernShopGump)
                 modernGump.AddItem
                     (
@@ -3635,7 +3634,7 @@ sealed class PacketHandlers
             Mobile mobile = entity as Mobile;
             if (mobile != null)
             {
-                BandageManager.Instance.Value.OnMobileHpChanged(mobile, oldHits, entity.Hits);
+                BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, entity.Hits);
             }
         }
     }
