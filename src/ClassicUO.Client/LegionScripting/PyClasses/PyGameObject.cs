@@ -54,7 +54,17 @@ public class PyGameObject
     /// <summary>
     /// The graphic ID of the object, representing its visual appearance.
     /// </summary>
-    public ushort Graphic;
+    public ushort Graphic { get => field;
+        set
+        {
+            if (_gameObject == null || _gameObject.IsDestroyed)
+                return;
+
+            MainThreadQueue.EnqueueAction(() => _gameObject.Graphic = value);
+
+            field = value;
+        }
+    }
 
     /// <summary>
     /// The hue (color tint) applied to the object.
