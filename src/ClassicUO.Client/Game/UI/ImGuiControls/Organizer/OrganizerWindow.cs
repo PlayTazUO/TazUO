@@ -47,7 +47,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawOrganizerList()
         {
-            ImGui.Text("Organizers");
 
             ImGui.Separator();
             if (ImGui.Button("Add Organizer"))
@@ -57,7 +56,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _selectedConfig = newConfig;
             }
 
-            ImGui.Separator();
+            ImGui.SeparatorText("List");
 
             // List existing organizers
             var configs = OrganizerAgent.Instance.OrganizerConfigs;
@@ -100,20 +99,22 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 return;
             }
 
-            // ImGui.Text($"Organizer Details: {_selectedConfig.Name}");
-            // ImGui.Separator();
 
-            // Name input
+            bool enabled = _selectedConfig.Enabled;
+            if (ImGui.Checkbox("Enabled", ref enabled))
+                _selectedConfig.Enabled = enabled;
+
             string name = _selectedConfig.Name;
+            ImGui.SeparatorText("Options:");
+
+            ImGui.SetNextItemWidth(150);
             if (ImGui.InputText("Name", ref name, 100))
             {
                 _selectedConfig.Name = name;
             }
 
-            ImGui.SameLine();
-            bool enabled = _selectedConfig.Enabled;
-            if(ImGui.Checkbox("Enabled", ref enabled))
-                _selectedConfig.Enabled = enabled;
+
+
 
             // Action buttons
             if (ImGui.Button("Run Organizer"))
@@ -133,6 +134,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             ImGui.SameLine();
+
             if (ImGui.Button("Create Macro"))
             {
                 OrganizerAgent.Instance?.CreateOrganizerMacroButton(_selectedConfig.Name);
@@ -148,14 +150,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _selectedConfigIndex = -1;
             }
             ImGui.PopStyleColor();
-            ImGui.NewLine();
-            ImGui.Separator();
 
             // Container settings
             DrawContainerSettings();
 
             ImGui.NewLine();
-            ImGui.Separator();
 
             // Items section
             DrawItemsSection();
@@ -163,7 +162,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawContainerSettings()
         {
-            ImGui.Text("Container Settings");
+            ImGui.SeparatorText("Container Settings:");
 
             if (ImGui.Button("Set Source Container"))
             {
@@ -220,8 +219,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawItemsSection()
         {
-            ImGui.Text("Items to Organize");
-
+            ImGui.SeparatorText("Items to Organize:");
+            ImGui.AlignTextToFramePadding();
             // Add item buttons
             if (ImGui.Button("Target Item to Add"))
             {
@@ -250,11 +249,16 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // Manual add item section
             if (_showAddItemManual)
             {
-                ImGui.InputText("Graphic (hex)", ref _addItemGraphicInput, 10);
-                ImGui.SameLine();
-                ImGui.InputText("Hue (-1 for any)", ref _addItemHueInput, 10);
-                ImGui.SameLine();
-                if (ImGui.Button("Add"))
+                ImGui.SeparatorText("Manual Entry:");
+                ImGui.Text("Graphic:");
+                ImGuiComponents.Tooltip("Hex value, e.g. 0x0EED.");
+                ImGui.SetNextItemWidth(110);
+                ImGui.InputText("##graphic", ref _addItemGraphicInput, 10);
+                ImGui.Text("Hue:");
+                ImGuiComponents.Tooltip("Set to -1 to match any hue.");
+                ImGui.SetNextItemWidth(110);
+                ImGui.InputText("##hue", ref _addItemHueInput, 10);
+                if (ImGui.Button(" Add "))
                 {
                     if (ushort.TryParse(_addItemGraphicInput, System.Globalization.NumberStyles.HexNumber, null, out ushort graphic))
                     {
@@ -271,9 +275,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         _showAddItemManual = false;
                     }
                 }
+                ImGui.SameLine();
+                if (ImGui.Button("Cancel"))
+                {
+                    _addItemGraphicInput = "";
+                    _addItemHueInput = "";
+                    _showAddItemManual = false;
+                }
             }
-
-            ImGui.Separator();
 
             // Items table
             if (ImGui.BeginTable("ItemsTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
