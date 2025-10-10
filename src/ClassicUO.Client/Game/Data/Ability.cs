@@ -215,8 +215,8 @@ namespace ClassicUO.Game.Data
             { 0x27AA, new (0x27AA, Ability.Disarm, Ability.ParalyzingBlow) },            // Fukya
             { 0x27AB, new (0x27AB, Ability.DualWield, Ability.TalonStrike) },            // Tekagi
             { 0x27AD, new (0x27AD, Ability.WhirlwindAttack, Ability.DefenseMastery) },   // Kama
-            { 0x27AE, new (0x27AE, Ability.Block, Ability.Feint) },                      // Nunchaku
-            { 0x27AF, new (0x27AF, Ability.Block, Ability.ArmorPierce) },                // Sai
+            { 0x27AE, new (0x27AE, Ability.Block, Ability.DoubleStrike) },                      // Nunchaku
+            { 0x27AF, new (0x27AF, Ability.DualWield, Ability.ArmorPierce) },                // Sai
             { 0x27ED, new (0x27ED, Ability.CrushingBlow, Ability.RidingSwipe) },         // also No-Dachi
             { 0x27EE, new (0x27EE, Ability.Feint, Ability.Block) },                      // also Tessen
             { 0x27EF, new (0x27EF, Ability.FrenziedWhirlwind, Ability.DoubleStrike) },   // also Wakizashi
@@ -228,8 +228,8 @@ namespace ClassicUO.Game.Data
             { 0x27F5, new (0x27F5, Ability.Disarm, Ability.ParalyzingBlow) },            // also Fukya
             { 0x27F6, new (0x27F6, Ability.DualWield, Ability.TalonStrike) },            // also Tekagi
             { 0x27F8, new (0x27F8, Ability.WhirlwindAttack, Ability.DefenseMastery) },   // Kama
-            { 0x27F9, new (0x27F9, Ability.Block, Ability.Feint) },                      // Nunchaku
-            { 0x27FA, new (0x27FA, Ability.Block, Ability.ArmorPierce) },                // Sai
+            { 0x27F9, new (0x27F9, Ability.Block, Ability.DoubleStrike) },                      // Nunchaku
+            { 0x27FA, new (0x27FA, Ability.DualWield, Ability.ArmorPierce) },                // Sai
             { 0x2D1E, new (0x2D1E, Ability.ForceArrow, Ability.SerpentArrow) },          // Elven Composite Longbows
             { 0x2D1F, new (0x2D1F, Ability.LightningArrow, Ability.PsychicAttack) },     // Magical Shortbows
             { 0x2D20, new (0x2D20, Ability.PsychicAttack, Ability.BleedAttack) },        // Elven Spellblades
