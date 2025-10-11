@@ -512,6 +512,7 @@ namespace ClassicUO
             Profiler.ExitContext("Draw-Scene");
 
             Profiler.EnterContext("Draw-UI");
+            UIManager.SetGameTime(gameTime);
             UIManager.Draw(_uoSpriteBatch);
             Profiler.ExitContext("Draw-UI");
 
@@ -524,9 +525,10 @@ namespace ClassicUO
             _uoSpriteBatch.End();
             Profiler.ExitContext("OutOfContext");
 
-            Profiler.EnterContext("ImGui");
-            ImGuiManager.Update(gameTime);
-            Profiler.ExitContext("ImGui");
+            // ImGui rendering is now handled by UIManager for proper z-ordering
+            //Profiler.EnterContext("ImGui");
+            //ImGuiManager.Update(gameTime);
+            //Profiler.ExitContext("ImGui");
 
             base.Draw(gameTime);
 

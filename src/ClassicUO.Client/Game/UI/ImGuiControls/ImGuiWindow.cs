@@ -12,6 +12,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private bool _isOpen = true;
         private bool _isVisible = true;
         private ImGuiWindowFlags _windowFlags = ImGuiWindowFlags.None;
+        private bool _wasFocused = false;
 
         protected ImGuiWindow(string title)
         {
@@ -32,6 +33,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
             set => _isVisible = value;
         }
 
+        public bool IsFocused { get; private set; }
+
+        public bool JustGotFocus { get; private set; }
+
         protected ImGuiWindowFlags WindowFlags
         {
             get => _windowFlags;
@@ -44,14 +49,38 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 return;
 
             bool rightclickClose = false;
+            JustGotFocus = false;
 
             try
             {
                 if (ImGui.Begin(Title, ref _isOpen, _windowFlags))
                 {
+                    // Check if window just gained focus
+                    // Use IsWindowFocused with any flags to detect any kind of focus (keyboard or mouse interaction)
+                    bool isFocusedNow = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
+
+                    // Also consider the window focused if it's being hovered and clicked
+                    if (!isFocusedNow && ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                    {
+                        isFocusedNow = true;
+                    }
+
+                    IsFocused = isFocusedNow;
+                    if (IsFocused && !_wasFocused)
+                    {
+                        JustGotFocus = true;
+                        OnFocusGained();
+                    }
+                    _wasFocused = IsFocused;
+
                     DrawContent();
 
-                    rightclickClose = ImGui.IsMouseClicked(ImGuiMouseButton.Right) && ImGui.IsWindowHovered() && ImGui.IsWindowFocused();
+                    rightclickClose = ImGui.IsMouseClicked(ImGuiMouseButton.Right) && ImGui.IsWindowHovered() && IsFocused;
+                }
+                else
+                {
+                    IsFocused = false;
+                    _wasFocused = false;
                 }
             }
             catch (Exception ex)
@@ -65,6 +94,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if(rightclickClose)
                 Dispose();
+        }
+
+        protected virtual void OnFocusGained()
+        {
         }
 
         public abstract void DrawContent();
