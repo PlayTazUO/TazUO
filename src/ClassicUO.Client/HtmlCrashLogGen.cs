@@ -7,6 +7,31 @@ namespace ClassicUO;
 
 public static class HtmlCrashLogGen
 {
+    private static string SafeHtmlEncode(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return text;
+        }
+
+        try
+        {
+            // Try using WebUtility.HtmlEncode first
+            return System.Net.WebUtility.HtmlEncode(text);
+        }
+        catch
+        {
+            // Fallback to manual encoding if WebUtility fails
+            // This avoids buffer pool issues that can occur with ValueStringBuilder
+            return text
+                .Replace("&", "&amp;")
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;")
+                .Replace("\"", "&quot;")
+                .Replace("'", "&#39;");
+        }
+    }
+
     public static void Generate(string stackTrace, string title = "TazUO Crash Report", string description = "Oh no! TazUO crashed.")
     {
         const string TEMPLATE = """
@@ -116,9 +141,15 @@ public static class HtmlCrashLogGen
                                 </html>
                                 """;
         stackTrace = stackTrace.Trim();
-        string html = TEMPLATE.Replace("[STACK TRACE]", System.Net.WebUtility.HtmlEncode(stackTrace));
-        html = html.Replace("[TITLE]", System.Net.WebUtility.HtmlEncode(title));
-        html = html.Replace("[DESCRIPTION]", System.Net.WebUtility.HtmlEncode(description));
+
+        // Use safe HTML encoding with fallback to avoid buffer pool issues
+        string encodedStackTrace = SafeHtmlEncode(stackTrace);
+        string encodedTitle = SafeHtmlEncode(title);
+        string encodedDescription = SafeHtmlEncode(description);
+
+        string html = TEMPLATE.Replace("[STACK TRACE]", encodedStackTrace);
+        html = html.Replace("[TITLE]", encodedTitle);
+        html = html.Replace("[DESCRIPTION]", encodedDescription);
 
         try
         {
