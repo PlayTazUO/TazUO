@@ -14,7 +14,7 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public class Gump : Control
+    public class Gump : Control, IGui
     {
         private bool isLocked = false;
 
@@ -282,6 +282,14 @@ namespace ClassicUO.Game.UI.Gumps
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             return IsVisible && base.Draw(batcher, x, y);
+        }
+
+        /// <summary>
+        /// IGui implementation - draws this Gump in the unified UI rendering pipeline.
+        /// </summary>
+        public void DrawGui(UltimaBatcher2D batcher)
+        {
+            Draw(batcher, X, Y);
         }
 
         public override void OnButtonClick(int buttonID)

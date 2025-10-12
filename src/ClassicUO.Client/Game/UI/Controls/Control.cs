@@ -72,9 +72,9 @@ namespace ClassicUO.Game.UI.Controls
 
         public Point Offset => _offset;
 
-        public bool IsDisposed { get; private set; }
+        public virtual bool IsDisposed { get; private set; }
 
-        public bool IsVisible { get; set; } = true;
+        public virtual bool IsVisible { get; set; } = true;
 
         public bool IsEnabled { get; set; }
 

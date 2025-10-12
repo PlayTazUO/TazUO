@@ -40,6 +40,8 @@ namespace ClassicUO.Game.Managers
 
         public static bool InGame;
 
+        private static GameTime _gameTime;
+
         public static bool IsMouseOverWorld
         {
             get
@@ -435,21 +437,85 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        public static void SetGameTime(GameTime gameTime)
+        {
+            _gameTime = gameTime;
+        }
+
         public static void Draw(UltimaBatcher2D batcher)
         {
             SortControlsByInfo();
-            if (InGame && ProfileManager.CurrentProfile.GlobalScaling)
-                batcher.Begin(null, Matrix.CreateScale(ProfileManager.CurrentProfile.GlobalScale));
-            else
-                batcher.Begin();
+
+            bool batcherStarted = false;
+            bool imguiStarted = false;
 
             for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
             {
                 Gump g = last.Value;
-                g.Draw(batcher, g.X, g.Y);
+
+                // Check if this is an ImGui window
+                bool isImGuiGump = g is UI.ImGuiControls.ImGuiGump;
+
+                if (isImGuiGump)
+                {
+                    // Need to draw ImGui window
+                    // First, end any active sprite batch
+                    if (batcherStarted)
+                    {
+                        batcher.End();
+                        batcherStarted = false;
+                    }
+
+                    // Start ImGui context if not already started
+                    if (!imguiStarted && UI.ImGuiManager.IsInitialized && _gameTime != null)
+                    {
+                        if (UI.ImGuiManager.Renderer.BeforeLayout(_gameTime))
+                        {
+                            imguiStarted = true;
+                        }
+                    }
+
+                    // Draw the ImGui window if context is ready
+                    if (imguiStarted)
+                    {
+                        g.Draw(batcher, g.X, g.Y);
+                    }
+                }
+                else
+                {
+                    // Need to draw regular Gump
+                    // First, end ImGui context if active
+                    if (imguiStarted)
+                    {
+                        UI.ImGuiManager.Renderer.AfterLayout();
+                        imguiStarted = false;
+                    }
+
+                    // Start sprite batch if not already started
+                    if (!batcherStarted)
+                    {
+                        if (InGame && ProfileManager.CurrentProfile.GlobalScaling)
+                            batcher.Begin(null, Matrix.CreateScale(ProfileManager.CurrentProfile.GlobalScale));
+                        else
+                            batcher.Begin();
+                        batcherStarted = true;
+                    }
+
+                    // Draw the gump
+                    g.Draw(batcher, g.X, g.Y);
+                }
             }
 
-            batcher.End();
+            // Clean up any active contexts
+            if (batcherStarted)
+            {
+                batcher.End();
+            }
+
+            if (imguiStarted)
+            {
+                UI.ImGuiManager.Renderer.AfterLayout();
+            }
         }
 
         public static void Add(Gump gump, bool front = true)
