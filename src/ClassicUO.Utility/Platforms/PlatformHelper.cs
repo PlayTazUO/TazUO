@@ -15,44 +15,50 @@ namespace ClassicUO.Utility.Platforms
         public static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
         public static readonly bool IsOSX = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
-        public static void LaunchBrowser(string url, bool localFile = false, bool retry = false)
+        public static void LaunchBrowser(string url, bool skipValidation = false, bool retry = false)
         {
             try
             {
-                if(!localFile)
-                    if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || (uri.Scheme != "http" && uri.Scheme != "https"))
+                if (!skipValidation)
+                {
+                    if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || (uri.Scheme != "http" && uri.Scheme != "https" && uri.Scheme != "file"))
                     {
                         Log.Error($"Invalid URL format: {url}, trying with https://..");
 
-                        if(!retry)
-                            LaunchBrowser("https://" + url, true);
+                        if (!retry)
+                        {
+                            LaunchBrowser("https://" + url, skipValidation: false, retry: true);
+                        }
 
                         return;
                     }
+                }
 
                 if (IsWindows)
                 {
+                    // Use shell execute - secure and prevents command injection
                     ProcessStartInfo psi = new ProcessStartInfo
                     {
-                        FileName = "cmd",
-                        Arguments = $"/c start \"\" \"{url}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
+                        FileName = url,
+                        UseShellExecute = true
                     };
-                    Process.Start(psi);
+                    using var process = Process.Start(psi);
+                    Log.Trace($"Launched browser (Windows) for: {url}");
                 }
                 else if (IsOSX)
                 {
-                    Process.Start("open", url);
+                    using var process = Process.Start("open", url);
+                    Log.Trace($"Launched browser (macOS) for: {url}");
                 }
                 else
                 {
-                    Process.Start("xdg-open", url);
+                    using var process = Process.Start("xdg-open", url);
+                    Log.Trace($"Launched browser (Linux) for: {url}");
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
+                Log.Error($"Failed to launch browser for '{url}': {ex}");
             }
         }
     }

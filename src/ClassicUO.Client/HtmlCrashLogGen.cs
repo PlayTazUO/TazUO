@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO;
@@ -83,9 +84,32 @@ public static class HtmlCrashLogGen
                                   <script>
                                     function copyStack() {
                                       const text = document.getElementById('stackTrace').textContent;
-                                      navigator.clipboard.writeText(text).then(() => {
+
+                                      // Try modern clipboard API first
+                                      if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        navigator.clipboard.writeText(text)
+                                          .then(() => alert('Stack trace copied to clipboard'))
+                                          .catch(() => fallbackCopy(text));
+                                      } else {
+                                        fallbackCopy(text);
+                                      }
+                                    }
+
+                                    function fallbackCopy(text) {
+                                      // Fallback for file:// protocol and older browsers
+                                      const textArea = document.createElement('textarea');
+                                      textArea.value = text;
+                                      textArea.style.position = 'fixed';
+                                      textArea.style.opacity = '0';
+                                      document.body.appendChild(textArea);
+                                      textArea.select();
+                                      try {
+                                        document.execCommand('copy');
                                         alert('Stack trace copied to clipboard');
-                                      });
+                                      } catch (err) {
+                                        alert('Failed to copy. Please select the text and copy manually (Ctrl+C).');
+                                      }
+                                      document.body.removeChild(textArea);
                                     }
                                   </script>
                                 </body>
@@ -93,20 +117,36 @@ public static class HtmlCrashLogGen
                                 """;
         stackTrace = stackTrace.Trim();
         string html = TEMPLATE.Replace("[STACK TRACE]", System.Net.WebUtility.HtmlEncode(stackTrace));
-        html = html.Replace("[TITLE]", title);
-        html = html.Replace("[DESCRIPTION]", description);
+        html = html.Replace("[TITLE]", System.Net.WebUtility.HtmlEncode(title));
+        html = html.Replace("[DESCRIPTION]", System.Net.WebUtility.HtmlEncode(description));
 
         try
         {
             Log.Trace("Generating HTML Crash report...");
-            var filePath = Path.GetTempFileName() + ".html";
+
+            // Create unique filename with proper path handling (avoids race condition)
+            var filePath = Path.Combine(Path.GetTempPath(), $"TazUO_Crash_{Guid.NewGuid():N}.html");
             File.WriteAllText(filePath, html);
-            Utility.Platforms.PlatformHelper.LaunchBrowser(new Uri(filePath).AbsoluteUri, true);
-            Log.Trace($"Saved to [{filePath}]...");
+
+            // Launch browser with proper file path (skipValidation: true for local files)
+            Utility.Platforms.PlatformHelper.LaunchBrowser(filePath, skipValidation: true);
+
+            Log.Trace($"Crash report saved to: {filePath}");
         }
         catch (Exception e)
         {
-            Log.Error(e.ToString());
+            Log.Error($"Failed to generate HTML crash report: {e}");
+            // Fallback to console output
+            try
+            {
+                Console.Error.WriteLine("===== CRASH REPORT =====");
+                Console.Error.WriteLine(stackTrace);
+                Console.Error.WriteLine("========================");
+            }
+            catch
+            {
+                // Nothing more we can do
+            }
         }
     }
 }
