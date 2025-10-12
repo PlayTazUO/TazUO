@@ -5586,12 +5586,17 @@ sealed class PacketHandlers
         }
 
         byte[] layoutBuffer = System.Buffers.ArrayPool<byte>.Shared.Rent(layoutDecompressedLen);
-        string layout;
+        string layout = null;
 
         try
         {
             ZLib.Decompress(p.Buffer.Slice(p.Position, (int)layoutCompressedLen), layoutBuffer.AsSpan(0, layoutDecompressedLen));
             layout = Encoding.UTF8.GetString(layoutBuffer.AsSpan(0, layoutDecompressedLen));
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Failed to decompress or decode gump layout: {ex.Message}");
+            return;
         }
         finally
         {

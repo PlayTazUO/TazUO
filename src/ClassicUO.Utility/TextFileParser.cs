@@ -163,6 +163,11 @@ namespace ClassicUO.Utility
 
         public List<string> GetTokens(string str, bool trim = true)
         {
+            if (str == null)
+            {
+                return new List<string>();
+            }
+
             _string = str;
             _Size = str.Length;
             _pos = 0;
