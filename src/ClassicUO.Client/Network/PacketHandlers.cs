@@ -5681,6 +5681,12 @@ sealed class PacketHandlers
                 }
             }
 
+            if (string.IsNullOrEmpty(layout))
+            {
+                Log.Error("Gump layout is null or empty. Unable to create gump.");
+                return;
+            }
+
             CreateGump(world, sender, gumpID, (int)x, (int)y, layout, lines);
         }
         catch (Exception e)
