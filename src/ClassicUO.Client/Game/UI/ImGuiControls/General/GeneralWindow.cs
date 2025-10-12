@@ -130,7 +130,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private readonly string _version = "TazUO Version: " + CUOEnviroment.Version; //Pre-cache to prevent reading var and string concatenation every frame
         private uint _lastObject = 0;
-        private string _lastObjectString = "Last Object:";
+        private string _lastObjectString = "Last Object: 0x00000000";
         private void DrawInfoTab()
         {
             if (World.Instance != null)
@@ -138,7 +138,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 if (_lastObject != World.Instance.LastObject)
                 {
                     _lastObject = World.Instance.LastObject;
-                    _lastObjectString = "Last Object: " + _lastObject;
+                    _lastObjectString = $"Last Object: 0x{_lastObject:X8}";
                 }
             }
 
@@ -149,7 +149,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text(_lastObjectString);
             if(ImGui.IsItemClicked())
             {
-                SDL3.SDL.SDL_SetClipboardText(_lastObject.ToString());
+                SDL3.SDL.SDL_SetClipboardText($"0x{_lastObject:X8}");
                 GameActions.Print("Copied last object to clipboard.", 62);
             }
             ImGui.Spacing();
