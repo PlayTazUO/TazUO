@@ -232,7 +232,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Dictionary<string, string> dict = new Dictionary<string, string>();
 
-            dict["Graphics"] = $"{obj.Graphic}";
+            dict["Graphics"] = $"0x{obj.Graphic:X4}";
             dict["Hue"] = $"{obj.Hue}";
             dict["Position"] = $"X={obj.X}, Y={obj.Y}, Z={obj.Z}";
             dict["PriorityZ"] = obj.PriorityZ.ToString();
@@ -272,7 +272,7 @@ namespace ClassicUO.Game.UI.Gumps
                     dict["HP"] = $"{it.Hits}/{it.HitsMax}";
                     dict["IsCoins"] = it.IsCoin.ToString();
                     dict["Amount"] = it.Amount.ToString();
-                    dict["Container"] = it.Container.ToString();
+                    dict["Container"] = $"0x{it.Container:X8}";
                     dict["Layer"] = it.Layer.ToString();
                     dict["Price"] = it.Price.ToString();
                     dict["Direction"] = it.Direction.ToString();
