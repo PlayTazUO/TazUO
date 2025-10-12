@@ -33,18 +33,38 @@ sealed class PacketHandlers
 
     private static uint _requestedGridLoot;
 
-    private static readonly TextFileParser _parser = new TextFileParser(
-        string.Empty,
-        new[] { ' ' },
-        new char[] { },
-        new[] { '{', '}' }
-    );
-    private static readonly TextFileParser _cmdparser = new TextFileParser(
-        string.Empty,
-        new[] { ' ', ',' },
-        new char[] { },
-        new[] { '@', '@' }
-    );
+    [ThreadStatic]
+    private static TextFileParser _parser;
+    [ThreadStatic]
+    private static TextFileParser _cmdparser;
+
+    private static TextFileParser GetParser()
+    {
+        if (_parser == null)
+        {
+            _parser = new TextFileParser(
+                string.Empty,
+                new[] { ' ' },
+                new char[] { },
+                new[] { '{', '}' }
+            );
+        }
+        return _parser;
+    }
+
+    private static TextFileParser GetCmdParser()
+    {
+        if (_cmdparser == null)
+        {
+            _cmdparser = new TextFileParser(
+                string.Empty,
+                new[] { ' ', ',' },
+                new char[] { },
+                new[] { '@', '@' }
+            );
+        }
+        return _cmdparser;
+    }
 
     private List<uint> _clilocRequests = new List<uint>();
     private List<uint> _customHouseRequests = new List<uint>();
@@ -6806,7 +6826,7 @@ sealed class PacketHandlers
         if (string.IsNullOrEmpty(layout))
             return null;
 
-        List<string> cmdlist = _parser.GetTokens(layout);
+        List<string> cmdlist = GetParser().GetTokens(layout);
         int cmdlen = cmdlist.Count;
 
         if (cmdlen <= 0)
@@ -6868,7 +6888,7 @@ sealed class PacketHandlers
 
         for (int cnt = 0; cnt < cmdlen; cnt++)
         {
-            List<string> gparams = _cmdparser.GetTokens(cmdlist[cnt], false);
+            List<string> gparams = GetCmdParser().GetTokens(cmdlist[cnt], false);
 
             if (gparams.Count == 0)
             {
