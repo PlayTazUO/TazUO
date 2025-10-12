@@ -1783,7 +1783,11 @@ namespace ClassicUO.LegionScripting
         public uint RequestTarget(double timeout = 5)
         {
             var expire = DateTime.Now.AddSeconds(timeout);
-            MainThreadQueue.InvokeOnMainThread(() => World.TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral));
+            MainThreadQueue.InvokeOnMainThread(() =>
+            {
+                World.TargetManager.LastTargetInfo.Clear();
+                World.TargetManager.SetTargeting(CursorTarget.Internal, CursorType.Target, TargetType.Neutral);
+            });
 
             while (DateTime.Now < expire)
                 if (!MainThreadQueue.InvokeOnMainThread(() => World.TargetManager.IsTargeting))
