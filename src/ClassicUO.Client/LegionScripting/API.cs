@@ -1299,31 +1299,26 @@ namespace ClassicUO.LegionScripting
                 item.Name = name;
             }
 
-            // Set position or container
-            if (onGround || container == 0xFFFFFFFF)
+            // Set position or container - container serial takes precedence over onGround flag
+            Entity containerEntity = container != 0xFFFFFFFF ? World.Get(container) : null;
+
+            if (containerEntity != null)
             {
-                // Use player position if x,y,z are all 0
+                // Container exists - place item in it
+                item.Container = container;
+                containerEntity.PushToBack(item);
+            }
+            else
+            {
+                // Place on ground (either explicitly requested or container doesn't exist)
                 if (x == 0 && y == 0 && z == 0)
                 {
                     x = World.Player.X;
                     y = World.Player.Y;
                     z = World.Player.Z;
                 }
-
                 item.Container = 0xFFFFFFFF;
                 item.SetInWorldTile(x, y, z);
-            }
-            else
-            {
-                // Place in container
-                item.Container = container;
-
-                // Add to container entity if it exists
-                Entity containerEntity = World.Get(container);
-                if (containerEntity != null)
-                {
-                    containerEntity.PushToBack(item);
-                }
             }
 
             // Make sure the item is marked as drawable
