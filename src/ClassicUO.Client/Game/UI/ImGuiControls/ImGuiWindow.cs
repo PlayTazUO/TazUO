@@ -61,10 +61,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     bool isFocusedNow = ImGui.IsWindowFocused(ImGuiFocusedFlags.RootAndChildWindows);
 
                     // Also consider the window focused if it's being hovered and clicked
-                    if (!isFocusedNow && ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                    {
-                        isFocusedNow = true;
-                    }
+                    // if (!isFocusedNow && ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                    // {
+                    //     isFocusedNow = true;
+                    // }
 
                     IsFocused = isFocusedNow;
                     if (IsFocused && !_wasFocused)

@@ -11,6 +11,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
     public class ImGuiGump : Gump
     {
         private readonly ImGuiWindow _window;
+        private bool _needsBringToFront;
 
         public ImGuiGump(ImGuiWindow window, UILayer layerOrder = UILayer.Default) : base(World.Instance, 0, 0)
         {
@@ -36,6 +37,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
             if (_window != null && _window.IsOpen && _window.IsVisible)
             {
                 _window.Draw();
+
+                // Set flag if focus was gained this frame
+                if (_window.JustGotFocus)
+                {
+                    _needsBringToFront = true;
+                }
 
                 return true;
             }
@@ -64,9 +71,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 return;
             }
 
-            // Bring this gump to front when the ImGui window gains focus
-            if (_window.JustGotFocus)
+            if (_needsBringToFront)
             {
+                _needsBringToFront = false;
                 Managers.UIManager.MakeTopMostGump(this);
             }
         }
