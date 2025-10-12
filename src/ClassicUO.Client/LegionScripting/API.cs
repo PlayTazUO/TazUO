@@ -1246,7 +1246,6 @@ namespace ClassicUO.LegionScripting
         /// <param name="x">X coordinate in world (default: player's X position)</param>
         /// <param name="y">Y coordinate in world (default: player's Y position)</param>
         /// <param name="z">Z coordinate in world (default: player's Z position)</param>
-        /// <param name="onGround">Whether the item should be placed on the ground (default: true)</param>
         /// <param name="container">Container serial to place the item in (default: 0xFFFFFFFF, item is on ground)</param>
         /// <param name="hue">Color/hue of the item (default: 0)</param>
         /// <param name="amount">Stack amount (default: 1)</param>
@@ -1257,7 +1256,6 @@ namespace ClassicUO.LegionScripting
             ushort x = 0,
             ushort y = 0,
             sbyte z = 0,
-            bool onGround = true,
             uint container = 0xFFFFFFFF,
             ushort hue = 0,
             ushort amount = 1,
