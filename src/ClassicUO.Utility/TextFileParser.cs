@@ -37,6 +37,12 @@ namespace ClassicUO.Utility
 
         private void GetEOL()
         {
+            if (_string == null)
+            {
+                _eol = 0;
+                return;
+            }
+
             for (int i = _pos; i < _Size; i++)
             {
                 if (_string[i] == '\n')
@@ -51,6 +57,9 @@ namespace ClassicUO.Utility
 
         private void SkipToData()
         {
+            if (_string == null)
+                return;
+
             while (_pos < _eol && IsDelimiter(_string[_pos]))
                 _pos++;
         }
@@ -65,6 +74,9 @@ namespace ClassicUO.Utility
 
         private bool IsComment()
         {
+            if (_string == null || _pos >= _Size)
+                return false;
+
             foreach (char c in _comments)
                 if (_string[_pos] == c)
                     return true;
@@ -73,6 +85,11 @@ namespace ClassicUO.Utility
 
         private bool TryGetQuotePair(out char startQuote, out char endQuote)
         {
+            startQuote = endQuote = '\0';
+
+            if (_string == null || _pos >= _Size)
+                return false;
+
             for (int i = 0; i + 1 < _quotes.Length; i += 2)
             {
                 if (_string[_pos] == _quotes[i])
@@ -83,12 +100,14 @@ namespace ClassicUO.Utility
                 }
             }
 
-            startQuote = endQuote = '\0';
             return false;
         }
 
         private void ObtainQuotedData(char endQuote, bool areTheSame)
         {
+            if (_string == null)
+                return;
+
             _pos++; // skip opening quote
 
             while (_pos < _eol)
@@ -107,6 +126,9 @@ namespace ClassicUO.Utility
 
         private void ObtainUnquotedData()
         {
+            if (_string == null)
+                return;
+
             while (_pos < _eol)
             {
                 if (IsDelimiter(_string[_pos]) || IsComment() || TryGetQuotePair(out _, out _))
@@ -122,7 +144,7 @@ namespace ClassicUO.Utility
             _trim = trim;
             List<string> result = new List<string>();
 
-            if (_pos >= _Size)
+            if (_string == null || _pos >= _Size)
                 return result;
 
             GetEOL(); // sets _eol to the end of the current line
