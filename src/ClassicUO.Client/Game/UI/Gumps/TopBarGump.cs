@@ -169,7 +169,9 @@ namespace ClassicUO.Game.UI.Gumps
             }, 1);
             lscript.MouseUp += (s, e) => {
                 UIManager.Add(new LegionScripting.ScriptManagerGump());
-                ScriptManagerWindow.Show();
+                var smw = ScriptManagerWindow.GetInstance();
+                UIManager.Add(new ImGuiGump(smw));
+                //ScriptManagerWindow.Show();
             };
             startX += largeWidth + 1;
 
