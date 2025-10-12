@@ -1228,6 +1228,113 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Creates a dummy item in the world that only exists client-side.
+        /// This is useful for testing or visualization purposes.
+        /// The item starts with serial uint.MaxValue and counts down, checking for existing items.
+        /// Example:
+        /// ```py
+        /// # Create a dummy item on the ground
+        /// item = API.CreateDummyItem(graphic=0x0EED, x=1000, y=1000, z=0, hue=0x44)
+        /// if item:
+        ///   API.SysMsg("Created dummy item with serial: " + str(item.Serial))
+        ///
+        /// # Create a dummy item in a container
+        /// item = API.CreateDummyItem(graphic=0x0F3F, container=API.Backpack, hue=0x66)
+        /// ```
+        /// </summary>
+        /// <param name="graphic">The graphic/type of the item (default: 0x0EED - gold coin)</param>
+        /// <param name="x">X coordinate in world (default: player's X position)</param>
+        /// <param name="y">Y coordinate in world (default: player's Y position)</param>
+        /// <param name="z">Z coordinate in world (default: player's Z position)</param>
+        /// <param name="onGround">Whether the item should be placed on the ground (default: true)</param>
+        /// <param name="container">Container serial to place the item in (default: 0xFFFFFFFF, item is on ground)</param>
+        /// <param name="hue">Color/hue of the item (default: 0)</param>
+        /// <param name="amount">Stack amount (default: 1)</param>
+        /// <param name="name">Name of the item (default: empty)</param>
+        /// <returns>The created dummy item as a PyItem, or null if creation failed</returns>
+        public PyItem CreateDummyItem(
+            ushort graphic = 0x0EED,
+            ushort x = 0,
+            ushort y = 0,
+            sbyte z = 0,
+            bool onGround = true,
+            uint container = 0xFFFFFFFF,
+            ushort hue = 0,
+            ushort amount = 1,
+            string name = ""
+        ) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (World.Player == null)
+            {
+                return null;
+            }
+
+            // Find an available serial starting from uint.MaxValue and working backwards
+            uint serial = uint.MaxValue;
+            while (World.Items.ContainsKey(serial) || World.Mobiles.ContainsKey(serial))
+            {
+                serial--;
+                if (serial == 0)
+                {
+                    // Couldn't find an available serial
+                    return null;
+                }
+            }
+
+            // Create the item using the World's GetOrCreateItem method
+            Item item = World.GetOrCreateItem(serial);
+
+            if (item == null)
+            {
+                return null;
+            }
+
+            // Set basic properties
+            item.Graphic = graphic;
+            item.Amount = amount;
+            item.Hue = hue;
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                item.Name = name;
+            }
+
+            // Set position or container
+            if (onGround || container == 0xFFFFFFFF)
+            {
+                // Use player position if x,y,z are all 0
+                if (x == 0 && y == 0 && z == 0)
+                {
+                    x = World.Player.X;
+                    y = World.Player.Y;
+                    z = World.Player.Z;
+                }
+
+                item.Container = 0xFFFFFFFF;
+                item.SetInWorldTile(x, y, z);
+            }
+            else
+            {
+                // Place in container
+                item.Container = container;
+
+                // Add to container entity if it exists
+                Entity containerEntity = World.Get(container);
+                if (containerEntity != null)
+                {
+                    containerEntity.PushToBack(item);
+                }
+            }
+
+            // Make sure the item is marked as drawable
+            item.CheckGraphicChange();
+            item.AllowedToDraw = true;
+
+            Found = item.Serial;
+            return new PyItem(item);
+        });
+
+        /// <summary>
         /// Get all items on the ground within specified range.
         /// Example:
         /// ```py
