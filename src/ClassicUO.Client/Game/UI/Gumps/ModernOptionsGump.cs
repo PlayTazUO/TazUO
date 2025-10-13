@@ -1273,6 +1273,64 @@ namespace ClassicUO.Game.UI.Gumps
 
             #endregion
 
+            #region Move Macro Up
+
+            page = ((int)PAGE.Macros + 1003);
+
+            content.AddToLeft
+            (
+                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, "Move Up", ThemeSettings.BUTTON_FONT_COLOR)
+                {
+                    ButtonParameter = page,
+                    IsSelectable = false
+                }
+            );
+
+            b.MouseUp += (ss, ee) =>
+            {
+                ModernButton nb = content.LeftArea.FindControls<ModernButton>().SingleOrDefault(a => a.IsSelected);
+
+                if (nb != null && nb.Tag is Macro macro)
+                {
+                    if (World.Macros.MoveMacroUp(macro))
+                    {
+                        RebuildMacroButtons(content, ref bParam);
+                        World.Macros.Save();
+                    }
+                }
+            };
+
+            #endregion
+
+            #region Move Macro Down
+
+            page = ((int)PAGE.Macros + 1004);
+
+            content.AddToLeft
+            (
+                b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.Activate, "Move Down", ThemeSettings.BUTTON_FONT_COLOR)
+                {
+                    ButtonParameter = page,
+                    IsSelectable = false
+                }
+            );
+
+            b.MouseUp += (ss, ee) =>
+            {
+                ModernButton nb = content.LeftArea.FindControls<ModernButton>().SingleOrDefault(a => a.IsSelected);
+
+                if (nb != null && nb.Tag is Macro macro)
+                {
+                    if (World.Macros.MoveMacroDown(macro))
+                    {
+                        RebuildMacroButtons(content, ref bParam);
+                        World.Macros.Save();
+                    }
+                }
+            };
+
+            #endregion
+
             content.AddToLeft(new Line(0, 0, content.LeftWidth, 1, Color.Gray.PackedValue));
 
             #region Macros
@@ -1301,6 +1359,82 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.Macros));
+        }
+
+        private void RebuildMacroButtons(LeftSideMenuRightSideContent content, ref int bParam)
+        {
+            Macro selectedMacro = null;
+            ModernButton selectedButton = content.LeftArea.FindControls<ModernButton>().SingleOrDefault(a => a.IsSelected);
+            if (selectedButton != null && selectedButton.Tag is Macro m)
+            {
+                selectedMacro = m;
+            }
+
+            var macroButtons = content.LeftArea.FindControls<ModernButton>().Where(btn => btn.Tag is Macro).ToList();
+            foreach (var btn in macroButtons)
+            {
+                btn.Dispose();
+            }
+
+            bParam = ((int)PAGE.Macros + 1002);
+            MacroManager macroManager = World.Macros;
+            ModernButton lastButton = null;
+
+            for (Macro macro = (Macro)macroManager.Items; macro != null; macro = (Macro)macro.Next)
+            {
+                ModernButton b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.SwitchPage, macro.Name, ThemeSettings.BUTTON_FONT_COLOR)
+                {
+                    ButtonParameter = bParam++,
+                    Tag = macro
+                };
+
+                content.AddToLeft(b);
+
+                MacroControl macroControl = content.RightArea.FindControls<MacroControl>().FirstOrDefault(mc => mc.Macro == macro);
+                if (macroControl == null)
+                {
+                    content.ResetRightSide();
+                    content.AddToRight(new MacroControl(World, macro.Name), true, b.ButtonParameter);
+                }
+                else
+                {
+                    macroControl.Page = b.ButtonParameter;
+                }
+
+                b.DragBegin += (sss, eee) =>
+                {
+                    ModernButton mupNiceButton = (ModernButton)sss;
+                    Macro dragMacro = mupNiceButton.Tag as Macro;
+
+                    if (dragMacro == null || UIManager.DraggingControl != this || UIManager.MouseOverControl != sss)
+                    {
+                        return;
+                    }
+
+                    UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == dragMacro)?.Dispose();
+                    MacroButtonGump macroButtonGump = new MacroButtonGump(World, dragMacro, Mouse.Position.X, Mouse.Position.Y);
+                    macroButtonGump.X = Mouse.Position.X - (macroButtonGump.Width >> 1);
+                    macroButtonGump.Y = Mouse.Position.Y - (macroButtonGump.Height >> 1);
+                    UIManager.Add(macroButtonGump);
+                    UIManager.AttemptDragControl(macroButtonGump, true);
+                };
+
+                if (macro == selectedMacro)
+                {
+                    b.IsSelected = true;
+                    content.ActivePage = b.ButtonParameter;
+                }
+
+                lastButton = b;
+            }
+
+            if (selectedMacro == null && lastButton != null)
+            {
+                lastButton.IsSelected = true;
+                content.ActivePage = lastButton.ButtonParameter;
+            }
+
+            content.RepositionLeftMenuChildren();
         }
 
         private void BuildInfoBar()

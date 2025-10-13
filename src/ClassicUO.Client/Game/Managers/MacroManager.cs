@@ -281,6 +281,47 @@ namespace ClassicUO.Game.Managers
             return macros;
         }
 
+        public bool MoveMacroUp(Macro macro)
+        {
+            if (macro == null || macro.Previous == null)
+            {
+                return false;
+            }
+
+            Macro prev = (Macro)macro.Previous;
+
+            Unlink(macro);
+
+            if (prev.Previous != null)
+            {
+                Insert(prev.Previous, macro);
+            }
+            else
+            {
+                macro.Next = prev;
+                macro.Previous = null;
+                prev.Previous = macro;
+                Items = macro;
+            }
+
+            return true;
+        }
+
+        public bool MoveMacroDown(Macro macro)
+        {
+            if (macro == null || macro.Next == null)
+            {
+                return false;
+            }
+
+            Macro next = (Macro)macro.Next;
+
+            Unlink(macro);
+            Insert(next, macro);
+
+            return true;
+        }
+
         public Macro FindMacro(SDL_GamepadButton button)
         {
             Macro obj = (Macro)Items;
