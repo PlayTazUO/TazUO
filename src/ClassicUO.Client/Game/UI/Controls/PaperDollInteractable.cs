@@ -233,7 +233,7 @@ namespace ClassicUO.Game.UI.Controls
 
             if (equipItem != null)
             {
-                if (robe != null && (robe.Graphic == 0xA2CB || robe.Graphic != 0xA2CA)) // parrot
+                if (robe != null && (robe.Graphic == 0xA2CB || robe.Graphic == 0xA2CA)) // parrot
                 {
                     layers = _layerOrder_parrot_fix;
                 }
