@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System.Collections.Generic;
 using ClassicUO.Assets;
@@ -233,7 +233,7 @@ namespace ClassicUO.Game.UI.Controls
 
             if (equipItem != null)
             {
-                if (robe != null && robe.Graphic == 0xA2CB) // parrot
+                if (robe != null && (robe.Graphic == 0xA2CB || robe.Graphic != 0xA2CA)) // parrot
                 {
                     layers = _layerOrder_parrot_fix;
                 }

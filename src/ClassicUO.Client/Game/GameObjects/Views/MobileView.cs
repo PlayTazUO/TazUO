@@ -1223,7 +1223,8 @@ namespace ClassicUO.Game.GameObjects
                             && robe.Graphic != 0x9985
                             && robe.Graphic != 0x9986
                             && robe.Graphic != 0xA412
-                            && robe.Graphic != 0xA2CB;
+                            && robe.Graphic != 0xA2CB
+                            && robe.Graphic != 0xA2CA;
                     }
 
                     break;
@@ -1238,6 +1239,7 @@ namespace ClassicUO.Game.GameObjects
                         && robe.Graphic != 0x9986
                         && robe.Graphic != 0xA412
                         && robe.Graphic != 0xA2CB
+                        && robe.Graphic != 0xA2CA
                     )
                     {
                         return true;
@@ -1270,7 +1272,8 @@ namespace ClassicUO.Game.GameObjects
                         && robe.Graphic != 0x9985
                         && robe.Graphic != 0x9986
                         && robe.Graphic != 0xA412
-                        && robe.Graphic != 0xA2CB;
+                        && robe.Graphic != 0xA2CB
+                        && robe.Graphic != 0xA2CA;
 
                 case Layer.Helmet:
                 case Layer.Hair:
