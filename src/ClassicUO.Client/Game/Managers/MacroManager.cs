@@ -1168,6 +1168,66 @@ namespace ClassicUO.Game.Managers
                     });
                     break;
 
+                case MacroType.ClearHands:
+                    var layersToClear = new List<Layer>();
+                    var mainHand = _world.Player.FindItemByLayer(Layer.OneHanded);
+                    var offHand = _world.Player.FindItemByLayer(Layer.TwoHanded);
+
+                    if (mainHand != null)
+                    {
+                        ProfileManager.CurrentProfile.SavedMainHandSerial = mainHand.Serial;
+                        layersToClear.Add(Layer.OneHanded);
+                    }
+                    else
+                    {
+                        ProfileManager.CurrentProfile.SavedMainHandSerial = 0;
+                    }
+
+                    if (offHand != null)
+                    {
+                        ProfileManager.CurrentProfile.SavedOffHandSerial = offHand.Serial;
+                        layersToClear.Add(Layer.TwoHanded);
+                    }
+                    else
+                    {
+                        ProfileManager.CurrentProfile.SavedOffHandSerial = 0;
+                    }
+
+                    if (layersToClear.Count > 0)
+                    {
+                        AsyncNetClient.Socket.Send_UnequipMacroKR(layersToClear.ToArray().AsSpan());
+                    }
+
+                    break;
+
+                case MacroType.EquipHands:
+                    var itemsToEquip = new List<uint>();
+
+                    if (ProfileManager.CurrentProfile.SavedMainHandSerial != 0)
+                    {
+                        var mainHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedMainHandSerial);
+                        if (mainHandItem != null && mainHandItem.Container != _world.Player?.Serial)
+                        {
+                            itemsToEquip.Add(mainHandItem.Serial);
+                        }
+                    }
+
+                    if (ProfileManager.CurrentProfile.SavedOffHandSerial != 0)
+                    {
+                        var offHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedOffHandSerial);
+                        if (offHandItem != null && offHandItem.Container != _world.Player?.Serial)
+                        {
+                            itemsToEquip.Add(offHandItem.Serial);
+                        }
+                    }
+
+                    if (itemsToEquip.Count > 0)
+                    {
+                        AsyncNetClient.Socket.Send_EquipMacroKR(itemsToEquip.ToArray().AsSpan());
+                    }
+
+                    break;
+
                 case MacroType.OpenDoor:
                     GameActions.OpenDoor();
 
@@ -2760,6 +2820,8 @@ namespace ClassicUO.Game.Managers
         RemoveFriend,
         ToggleHotkeys,
         ToggleMount,
+        ClearHands,
+        EquipHands,
     }
 
     public enum MacroSubType
