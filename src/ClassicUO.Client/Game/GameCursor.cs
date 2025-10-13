@@ -138,6 +138,7 @@ namespace ClassicUO.Game
         public bool IsLoading { get; set; }
         public bool IsDraggingCursorForced { get; set; }
         public bool AllowDrawSDLCursor { get; set; } = true;
+        public bool IsVisible { get; set; } = true;
 
         public ItemHold ItemHold { get; } = new ItemHold();
 
@@ -259,6 +260,12 @@ namespace ClassicUO.Game
 
         public void Draw(UltimaBatcher2D sb)
         {
+            // Check if mouse should be hidden via Hide HUD system
+            if (!IsVisible)
+            {
+                return;
+            }
+
             if (_world.InGame && _world.TargetManager.IsTargeting && ProfileManager.CurrentProfile != null)
             {
                 if (_world.TargetManager.TargetingState == CursorTarget.MultiPlacement)

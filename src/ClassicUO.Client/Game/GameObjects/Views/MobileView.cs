@@ -23,7 +23,13 @@ namespace ClassicUO.Game.GameObjects
 
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
-            if (IsDestroyed || !AllowedToDraw)
+            if (IsDestroyed || !AllowedToDraw || !IsVisible)
+            {
+                return false;
+            }
+
+            // Check if player character should be hidden via Hide HUD system
+            if (this is PlayerMobile player && !player.IsVisible)
             {
                 return false;
             }

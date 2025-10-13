@@ -190,6 +190,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 HideHudFlags.SpellIcons => "Spell icon buttons",
                 HideHudFlags.NameOverheadGump => "Name overhead displays",
                 HideHudFlags.ScriptManagerGump => "Script manager window",
+                HideHudFlags.PlayerChar => "Player character (your avatar in the game world)",
+                HideHudFlags.Mouse => "Mouse cursor",
                 HideHudFlags.All => "Select/deselect all HUD elements at once",
                 _ => null
             };

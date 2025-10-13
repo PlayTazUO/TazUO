@@ -4,6 +4,7 @@ using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Utility;
+using SDL3;
 
 namespace ClassicUO.Game.Managers;
 
@@ -19,6 +20,29 @@ public static class HideHudManager
     public static void ToggleHidden(ulong flags)
     {
         isVisible = !isVisible;
+
+        // Toggle player character visibility
+        if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.PlayerChar))
+        {
+            if (UIManager.World?.Player != null)
+            {
+                UIManager.World.Player.IsVisible = isVisible;
+            }
+        }
+
+        // Toggle mouse cursor visibility
+        if (ByteFlagHelper.HasFlag(flags, (ulong)HideHudFlags.Mouse))
+        {
+            if (Client.Game.UO?.GameCursor != null)
+            {
+                Client.Game.UO.GameCursor.IsVisible = isVisible;
+
+                if (!isVisible)
+                    SDL.SDL_HideCursor();
+                else
+                    SDL.SDL_ShowCursor();
+            }
+        }
 
         foreach (Gump gump in UIManager.Gumps)
         {
