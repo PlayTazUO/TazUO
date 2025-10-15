@@ -43,6 +43,27 @@ public class PyBaseGump(Gump gump) : PyBaseControl(gump), IPyGump
     }
 
     /// <summary>
+    /// Gets or Sets the ability to close the gump with a right click
+    /// </summary>
+    public bool CanCloseWithRightClick
+    {
+        get
+        {
+            if (!VerifyIntegrity())
+                return false;
+
+            return MainThreadQueue.InvokeOnMainThread(() => Gump.CanCloseWithRightClick);
+        }
+        set
+        {
+            if (!VerifyIntegrity())
+                return;
+
+            MainThreadQueue.EnqueueAction(() => Gump.CanCloseWithRightClick = value);
+        }
+    }
+
+    /// <summary>
     /// Gets the underlying Gump instance that this wrapper represents.
     /// Used internally by the scripting system to access the actual game object.
     /// </summary>
