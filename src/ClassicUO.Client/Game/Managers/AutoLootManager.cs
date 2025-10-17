@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ClassicUO.Game.Data;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
@@ -40,7 +41,7 @@ namespace ClassicUO.Game.Managers
 
         private HashSet<uint> quickContainsLookup = new ();
         private HashSet<uint> recentlyLooted = new();
-        private static Queue<uint> lootItems = new ();
+        private static Queue<(Item item, AutoLootConfigEntry entry)> lootItems = new ();
         private List<AutoLootConfigEntry> autoLootItems = new ();
         private bool loaded = false;
         private readonly string savePath;
@@ -66,15 +67,15 @@ namespace ClassicUO.Game.Managers
             var item = World.Items.Get(serial);
             if (item != null)
             {
-                LootItem(item);
+                LootItem(item, null);
             }
         }
 
-        public void LootItem(Item item)
+        public void LootItem(Item item, AutoLootConfigEntry entry = null)
         {
             if (item == null || !recentlyLooted.Add(item.Serial) || !quickContainsLookup.Add(item.Serial)) return;
 
-            lootItems.Enqueue(item);
+            lootItems.Enqueue((item, entry));
             currentLootTotalCount++;
             nextClearRecents = Time.Ticks + 5000;
         }
@@ -105,9 +106,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            if (IsOnLootList(i))
+            var entry = IsOnLootList(i);
+            if (entry != null)
             {
-                LootItem(i);
+                LootItem(i, entry);
             }
         }
 
@@ -115,19 +117,19 @@ namespace ClassicUO.Game.Managers
         /// Check if an item is on the auto loot list.
         /// </summary>
         /// <param name="i">The item to check the loot list against</param>
-        /// <returns></returns>
-        private bool IsOnLootList(Item i)
+        /// <returns>The matched AutoLootConfigEntry, or null if no match found</returns>
+        private AutoLootConfigEntry IsOnLootList(Item i)
         {
-            if (!loaded) return false;
+            if (!loaded) return null;
 
             foreach (var entry in autoLootItems)
             {
                 if (entry.Match(i))
                 {
-                    return true;
+                    return entry;
                 }
             }
-            return false;
+            return null;
         }
 
         /// <summary>
@@ -295,13 +297,13 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var moveItem = lootItems.Dequeue();
-            if (moveItem != 0)
+            var (moveItem, entry) = lootItems.Dequeue();
+            if (moveItem != null)
             {
                 if (lootItems.Count == 0) //Que emptied out
                     currentLootTotalCount = 0;
 
-                quickContainsLookup.Remove(moveItem);
+                quickContainsLookup.Remove(moveItem.Serial);
 
                 CreateProgressBar();
 
@@ -310,21 +312,52 @@ namespace ClassicUO.Game.Managers
                     progressBarGump.CurrentPercentage = 1 - ((double)lootItems.Count / (double)currentLootTotalCount);
                 }
 
-                Item m = World.Items.Get(moveItem);
-
-                if (m != null)
+                if (moveItem.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 {
-                    if (m.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
-                    {
-                        Item rc = World.Items.Get(m.RootContainer);
-                        if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
-                            return;
-                    }
-
-                    MoveItemQueue.Instance?.EnqueueQuick(m);
-
-                    nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
+                    Item rc = World.Items.Get(moveItem.RootContainer);
+                    if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
+                        return;
                 }
+
+                // Determine destination container with fallback logic:
+                // 1. Use per-item destination if set and container exists
+                // 2. Fall back to global grab bag if set and exists
+                // 3. Fall back to player's backpack
+                uint destinationSerial = 0;
+
+                if (entry != null && entry.DestinationContainer != 0)
+                {
+                    Item itemDestContainer = World.Items.Get(entry.DestinationContainer);
+                    if (itemDestContainer != null)
+                    {
+                        destinationSerial = entry.DestinationContainer;
+                    }
+                }
+
+                if (destinationSerial == 0 && ProfileManager.CurrentProfile.GrabBagSerial != 0)
+                {
+                    Item grabBag = World.Items.Get(ProfileManager.CurrentProfile.GrabBagSerial);
+                    if (grabBag != null)
+                    {
+                        destinationSerial = ProfileManager.CurrentProfile.GrabBagSerial;
+                    }
+                }
+
+                if (destinationSerial == 0)
+                {
+                    Item backpack = World.Player.FindItemByLayer(Layer.Backpack);
+                    if (backpack != null)
+                    {
+                        destinationSerial = backpack.Serial;
+                    }
+                }
+
+                if (destinationSerial != 0)
+                {
+                    MoveItemQueue.Instance?.Enqueue(moveItem.Serial, destinationSerial, moveItem.Amount, 0xFFFF, 0xFFFF);
+                }
+
+                nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
             }
         }
 
@@ -551,6 +584,7 @@ namespace ClassicUO.Game.Managers
             public int Graphic { get; set; } = 0;
             public ushort Hue { get; set; } = ushort.MaxValue;
             public string RegexSearch { get; set; } = string.Empty;
+            public uint DestinationContainer { get; set; } = 0;
             private bool RegexMatch => !string.IsNullOrEmpty(RegexSearch);
             /// <summary>
             /// Do not set this manually.

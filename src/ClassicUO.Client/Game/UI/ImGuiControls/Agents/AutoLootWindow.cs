@@ -30,6 +30,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private Dictionary<string, string> entryGraphicInputs = new Dictionary<string, string>();
         private Dictionary<string, string> entryHueInputs = new Dictionary<string, string>();
         private Dictionary<string, string> entryRegexInputs = new Dictionary<string, string>();
+        private Dictionary<string, string> entryDestinationInputs = new Dictionary<string, string>();
         private bool showCharacterImportPopup = false;
 
         private AutoLootWindow() : base("Auto Loot")
@@ -123,6 +124,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     entryGraphicInputs.Clear();
                     entryHueInputs.Clear();
                     entryRegexInputs.Clear();
+                    entryDestinationInputs.Clear();
                     lootEntries = AutoLootManager.Instance.AutoLootList;
                 }, "Import Autoloot Configuration");
             }
@@ -226,13 +228,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
             else
             // Table headers
-            if (ImGui.BeginTable("AutoLootTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
+            if (ImGui.BeginTable("AutoLootTable", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
             {
                 ImGui.TableSetupColumn(string.Empty, ImGuiTableColumnFlags.WidthFixed, 52);
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableSetupColumn("Hue", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
-                ImGui.TableSetupColumn("Regex", ImGuiTableColumnFlags.WidthFixed, 100);
-                ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
+                ImGui.TableSetupColumn("Regex", ImGuiTableColumnFlags.WidthFixed, 60);
+                ImGui.TableSetupColumn("Destination", ImGuiTableColumnFlags.WidthFixed, 150);
+                ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, 60);
                 ImGui.TableHeadersRow();
 
                 for (int i = lootEntries.Count - 1; i >= 0; i--)
@@ -311,7 +314,41 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         ImGui.EndPopup();
                     }
 
-
+                    ImGui.TableNextColumn();
+                    // Initialize input string if not exists
+                    if (!entryDestinationInputs.ContainsKey(entry.UID))
+                    {
+                        entryDestinationInputs[entry.UID] = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}";
+                    }
+                    string destStr = entryDestinationInputs[entry.UID];
+                    ImGui.SetNextItemWidth(80);
+                    if (ImGui.InputText($"##Dest{i}", ref destStr, 20))
+                    {
+                        entryDestinationInputs[entry.UID] = destStr;
+                        if (string.IsNullOrWhiteSpace(destStr))
+                        {
+                            entry.DestinationContainer = 0;
+                        }
+                        else if (uint.TryParse(destStr.Replace("0x", "").Replace("0X", ""), System.Globalization.NumberStyles.HexNumber, null, out uint destSerial))
+                        {
+                            entry.DestinationContainer = destSerial;
+                        }
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Target##Dest{i}"))
+                    {
+                        World.Instance.TargetManager.SetTargeting((targetedContainer) =>
+                        {
+                            if (targetedContainer != null && targetedContainer is Entity targetedEntity)
+                            {
+                                if (SerialHelper.IsItem(targetedEntity))
+                                {
+                                    entry.DestinationContainer = targetedEntity.Serial;
+                                    entryDestinationInputs[entry.UID] = $"0x{targetedEntity.Serial:X}";
+                                }
+                            }
+                        });
+                    }
 
                     ImGui.TableNextColumn();
                     if (ImGui.Button($"Delete##Delete{i}"))
@@ -321,6 +358,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         entryGraphicInputs.Remove(entry.UID);
                         entryHueInputs.Remove(entry.UID);
                         entryRegexInputs.Remove(entry.UID);
+                        entryDestinationInputs.Remove(entry.UID);
                         lootEntries = AutoLootManager.Instance.AutoLootList;
                     }
                 }
@@ -364,6 +402,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             entryGraphicInputs.Clear();
                             entryHueInputs.Clear();
                             entryRegexInputs.Clear();
+                            entryDestinationInputs.Clear();
                             lootEntries = AutoLootManager.Instance.AutoLootList;
                             ImGui.CloseCurrentPopup();
                         }
