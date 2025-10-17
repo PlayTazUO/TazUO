@@ -18,6 +18,7 @@ namespace ClassicUO.Game.Managers
 {
     [JsonSerializable(typeof(AutoLootManager.AutoLootConfigEntry))]
     [JsonSerializable(typeof(List<AutoLootManager.AutoLootConfigEntry>))]
+    [JsonSourceGenerationOptions(WriteIndented = true)]
     public partial class AutoLootJsonContext : JsonSerializerContext
     {
     }
@@ -432,8 +433,7 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                var options = new JsonSerializerOptions() { WriteIndented = true };
-                string fileData = JsonSerializer.Serialize(autoLootItems, options);
+                string fileData = JsonSerializer.Serialize(autoLootItems, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
                 File.WriteAllText(filePath, fileData);
                 GameActions.Print($"Autoloot configuration exported to: {filePath}", 0x48);
             }
@@ -454,11 +454,11 @@ namespace ClassicUO.Game.Managers
                 }
 
                 string data = File.ReadAllText(filePath);
-                AutoLootConfigEntry[] importedItems = JsonSerializer.Deserialize<AutoLootConfigEntry[]>(data);
+                List<AutoLootConfigEntry> importedItems = JsonSerializer.Deserialize(data, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
 
                 if (importedItems != null)
                 {
-                    ImportEntries(importedItems.ToList(), $"file: {filePath}");
+                    ImportEntries(importedItems, $"file: {filePath}");
                 }
             }
             catch (Exception e)
@@ -532,8 +532,8 @@ namespace ClassicUO.Game.Managers
                 if (File.Exists(configPath))
                 {
                     string data = File.ReadAllText(configPath);
-                    AutoLootConfigEntry[] items = JsonSerializer.Deserialize<AutoLootConfigEntry[]>(data);
-                    return items?.ToList() ?? new List<AutoLootConfigEntry>();
+                    List<AutoLootConfigEntry> items = JsonSerializer.Deserialize(data, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
+                    return items ?? new List<AutoLootConfigEntry>();
                 }
             }
             catch (Exception e)
