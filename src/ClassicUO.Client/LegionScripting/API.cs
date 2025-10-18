@@ -189,7 +189,7 @@ namespace ClassicUO.LegionScripting
             get
             {
                 if (backpack == null)
-                    backpack = MainThreadQueue.InvokeOnMainThread(() => World.Player.FindItemByLayer(Game.Data.Layer.Backpack));
+                    backpack = MainThreadQueue.InvokeOnMainThread(() => World.Player.Backpack);
 
                 return backpack;
             }
