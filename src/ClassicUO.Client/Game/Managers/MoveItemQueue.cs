@@ -40,7 +40,7 @@ namespace ClassicUO.Game.Managers
 
         public void EnqueueQuick(Item item)
         {
-            Item backpack = world.Player.FindItemByLayer(Layer.Backpack);
+            Item backpack = world.Player.Backpack;
 
             if (backpack == null)
             {

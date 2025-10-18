@@ -181,7 +181,7 @@ namespace ClassicUO.Game.Managers
 
         private ushort GetBackpackItemCount(ushort graphic, ushort hue)
         {
-            var backpack = World.Instance.Player?.FindItemByLayer(Data.Layer.Backpack);
+            var backpack = World.Instance.Player?.Backpack;
             if (backpack == null) return 0;
 
             ushort count = 0;

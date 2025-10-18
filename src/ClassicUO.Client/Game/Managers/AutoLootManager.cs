@@ -346,7 +346,7 @@ namespace ClassicUO.Game.Managers
 
                 if (destinationSerial == 0)
                 {
-                    Item backpack = World.Player.FindItemByLayer(Layer.Backpack);
+                    Item backpack = World.Player.Backpack;
                     if (backpack != null)
                     {
                         destinationSerial = backpack.Serial;

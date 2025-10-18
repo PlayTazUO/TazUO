@@ -113,6 +113,7 @@ namespace ClassicUO.Game.GameObjects
 
         public Mobile(World world) : base(world, 0) { }
 
+        public Item Backpack => FindItemByLayer(Layer.Backpack);
         public bool IsVisible { get; set; } = true;
         public Deque<Step> Steps { get; } = new Deque<Step>(Constants.MAX_STEP_COUNT);
         public bool IsParalyzed => (Flags & Flags.Frozen) != 0;

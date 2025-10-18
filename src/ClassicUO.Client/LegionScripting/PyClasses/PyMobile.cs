@@ -23,6 +23,7 @@ public class PyMobile : PyEntity
     public int Mana => GetMobile()?.Mana ?? 0;
     public bool IsRenamable => GetMobile()?.IsRenamable ?? false;
     public bool IsHuman => GetMobile()?.IsHuman ?? false;
+    public Item Backpack => GetMobile()?.Backpack;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyMobile"/> class from a <see cref="Mobile"/>.

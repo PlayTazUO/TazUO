@@ -345,7 +345,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            equipItem = mobile.FindItemByLayer(Layer.Backpack);
+            equipItem = mobile.Backpack;
 
             if (equipItem != null && equipItem.ItemData.AnimID != 0 && _paperDollGump != null)
             {

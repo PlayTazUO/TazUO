@@ -136,7 +136,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (useGridStyle != null)
                 UseOldContainerStyle = !useGridStyle;
 
-            IsPlayerBackpack = LocalSerial == World.Player.FindItemByLayer(Layer.Backpack).Serial;
+            IsPlayerBackpack = LocalSerial == World.Player.Backpack.Serial;
 
             gridContainerEntry = GridContainerSaveData.Instance.GetContainer(local);
 
@@ -246,7 +246,7 @@ namespace ClassicUO.Game.UI.Gumps
                 "Alt + Double Click to select all similar items\n" +
                 "Shift + Click to add an item to your auto loot list\n" +
                 "Sort and single click looting can be enabled with the icons on the right side");
-            quickDropBackpack = new ResizableStaticPic(World.Player.FindItemByLayer(Layer.Backpack).DisplayedGraphic, 20, 20)
+            quickDropBackpack = new ResizableStaticPic(World.Player.Backpack.DisplayedGraphic, 20, 20)
             {
                 X = Width - openRegularGump.Width - 20 - borderWidth,
                 Y = borderWidth
@@ -257,7 +257,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                     {
-                        GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.FindItemByLayer(Layer.Backpack));
+                        GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, World.Player.Backpack);
                     }
                     else if (isCorpse)
                     {
@@ -383,7 +383,7 @@ namespace ClassicUO.Game.UI.Gumps
                 GridHighlightMenu.Open(World);
             }));
 
-            if (container != World.Player.FindItemByLayer(Layer.Backpack))
+            if (container != World.Player.Backpack)
             {
                 control.Add(new ContextMenuItemEntry("Autoloot this container", () =>
                 {
@@ -997,7 +997,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _gridContainer.isCorpse &&
                     !_item.IsDestroyed &&
                     !_item.ItemData.IsContainer &&
-                    _container != _world.Player.FindItemByLayer(Layer.Backpack) &&
+                    _container != _world.Player.Backpack &&
                     !_item.IsLocked &&
                     _item.IsLootable)
                 {

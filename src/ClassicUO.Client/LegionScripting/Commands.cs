@@ -719,7 +719,7 @@ namespace ClassicUO.LegionScripting
                 Item i = World.Player.FindItemByLayer(hand);
                 if (i != null) //Item is in hand, lets unequip and save it
                 {
-                    GameActions.GrabItem(World, i, 0, World.Player.FindItemByLayer(Layer.Backpack));
+                    GameActions.GrabItem(World, i, 0, World.Player.Backpack);
                     Interpreter.SetAlias(Constants.LASTITEMINHAND + hand.ToString(), i);
                     return true;
                 }

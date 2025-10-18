@@ -124,7 +124,7 @@ namespace ClassicUO.Game.GameObjects
 
         public Item FindBandage()
         {
-            Item backpack = FindItemByLayer(Layer.Backpack);
+            Item backpack = Backpack;
             Item item = null;
 
             if (backpack != null)
@@ -137,7 +137,7 @@ namespace ClassicUO.Game.GameObjects
 
         public Item FindItemByGraphic(ushort graphic)
         {
-            Item backpack = FindItemByLayer(Layer.Backpack);
+            Item backpack = Backpack;
 
             if (backpack != null)
             {
@@ -149,7 +149,7 @@ namespace ClassicUO.Game.GameObjects
 
         public Item FindItemByCliloc(int cliloc)
         {
-            Item backpack = FindItemByLayer(Layer.Backpack);
+            Item backpack = Backpack;
 
             if (backpack != null)
             {

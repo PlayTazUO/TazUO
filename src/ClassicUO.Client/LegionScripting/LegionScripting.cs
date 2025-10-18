@@ -545,7 +545,7 @@ namespace ClassicUO.LegionScripting
             if (World.InGame)
                 switch (alias)
                 {
-                    case "backpack": return World.Player.FindItemByLayer(Layer.Backpack);
+                    case "backpack": return World.Player.Backpack;
                     case "bank": return World.Player.FindItemByLayer(Layer.Bank);
                     case "lastobject": return World.LastObject;
                     case "lasttarget": return World.TargetManager.LastTargetInfo.Serial;

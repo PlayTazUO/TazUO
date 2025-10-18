@@ -248,7 +248,7 @@ namespace ClassicUO.Game.Managers
 
         public uint GetUndressBag(DressConfig config)
         {
-            return config.UndressBagSerial != 0 ? config.UndressBagSerial : World.Instance.Player?.FindItemByLayer(Layer.Backpack)?.Serial ?? 0;
+            return config.UndressBagSerial != 0 ? config.UndressBagSerial : World.Instance.Player?.Backpack?.Serial ?? 0;
         }
 
         public void AddCurrentlyEquippedItems(DressConfig config)

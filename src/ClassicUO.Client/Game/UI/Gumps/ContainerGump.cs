@@ -49,7 +49,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // New Backpack gumps. Client Version 7.0.53.1
             if (
-                item == world.Player.FindItemByLayer(Layer.Backpack)
+                item == world.Player.Backpack
                 && Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_705301
                 && ProfileManager.CurrentProfile != null
             )

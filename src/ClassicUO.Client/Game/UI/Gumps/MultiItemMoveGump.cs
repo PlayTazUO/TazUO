@@ -151,7 +151,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var player = World.Player;
                     if (player == null) return;
-                    var bp = player.FindItemByLayer(Layer.Backpack);
+                    var bp = player.Backpack;
                     if (bp != null) ProcessItemMoves(World, bp);
                 }
             };

@@ -160,7 +160,7 @@ namespace ClassicUO.Game.Managers
 
         public void RunOrganizer()
         {
-            var backpack = World.Instance.Player?.FindItemByLayer(Data.Layer.Backpack);
+            var backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
                 GameActions.Print(World.Instance, "Cannot find player backpack.");
@@ -318,7 +318,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var backpack = World.Instance.Player?.FindItemByLayer(Data.Layer.Backpack);
+            var backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
                 GameActions.Print(World.Instance, "Cannot find player backpack.");

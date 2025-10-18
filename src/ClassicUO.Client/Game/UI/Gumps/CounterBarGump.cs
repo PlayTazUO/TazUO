@@ -429,7 +429,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return;
                 }
 
-                Item backpack = _gump.World.Player.FindItemByLayer(Layer.Backpack);
+                Item backpack = _gump.World.Player.Backpack;
 
                 if (backpack == null)
                 {
@@ -448,7 +448,7 @@ namespace ClassicUO.Game.UI.Gumps
             // {
             //     base.OnMouseOver(x, y);
 
-            //     if (_gump.World.Player.FindItemByLayer(Layer.Backpack)?.FindItem(Graphic, Hue) is {} item)
+            //     if (_gump.World.Player.Backpack?.FindItem(Graphic, Hue) is {} item)
             //         SetTooltip(item);
             // }
 

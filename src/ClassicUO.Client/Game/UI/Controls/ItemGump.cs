@@ -273,7 +273,7 @@ namespace ClassicUO.Game.UI.Controls
                 && !item.ItemData.IsContainer
                 && item.IsEmpty
                 && (container = _gump.World.Items.Get(item.RootContainer)) != null
-                && container != _gump.World.Player.FindItemByLayer(Layer.Backpack)
+                && container != _gump.World.Player.Backpack
             )
             {
                 GameActions.GrabItem(_gump.World, LocalSerial, item.Amount);

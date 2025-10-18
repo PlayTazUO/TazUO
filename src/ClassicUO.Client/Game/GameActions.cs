@@ -491,7 +491,7 @@ internal static class GameActions
     {
         Gump g;
 
-        Item backpack = world.Player.FindItemByLayer(Layer.Backpack);
+        Item backpack = world.Player.Backpack;
 
         if (backpack == null)
         {
@@ -515,7 +515,7 @@ internal static class GameActions
 
     internal static bool OpenBackpack(World world)
     {
-        Item backpack = world.Player.FindItemByLayer(Layer.Backpack);
+        Item backpack = world.Player.Backpack;
 
         if (backpack == null)
         {
@@ -1251,7 +1251,7 @@ internal static class GameActions
     {
         //Socket.Send(new PPickUpRequest(serial, amount));
 
-        Item backpack = world.Player.FindItemByLayer(Layer.Backpack);
+        Item backpack = world.Player.Backpack;
 
         if (backpack == null)
         {

@@ -884,7 +884,7 @@ namespace ClassicUO.Game.Managers
 
                                 case MacroSubType.Backpack:
 
-                                    Item backpack = _world.Player.FindItemByLayer(Layer.Backpack);
+                                    Item backpack = _world.Player.Backpack;
 
                                     if (backpack != null)
                                     {
@@ -1467,7 +1467,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        Item backpack = _world.Player.FindItemByLayer(Layer.Backpack);
+                        Item backpack = _world.Player.Backpack;
 
                         if (backpack == null)
                         {
