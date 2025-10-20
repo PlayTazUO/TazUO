@@ -285,11 +285,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             // Items table
-            if (ImGui.BeginTable("ItemsTable", 5, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
+            if (ImGui.BeginTable("ItemsTable", 6, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new Vector2(0, ImGuiTheme.Dimensions.STANDARD_TABLE_SCROLL_HEIGHT)))
             {
                 ImGui.TableSetupColumn("Graphic", ImGuiTableColumnFlags.WidthFixed, 55);
                 ImGui.TableSetupColumn("Hue", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
+                ImGui.TableSetupColumn("Destination", ImGuiTableColumnFlags.WidthFixed, 120);
                 ImGui.TableSetupColumn("Enabled", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableSetupColumn("Del", ImGuiTableColumnFlags.WidthFixed, ImGuiTheme.Dimensions.STANDARD_INPUT_WIDTH);
                 ImGui.TableHeadersRow();
@@ -328,11 +329,59 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     }
 
                     ImGui.TableSetColumnIndex(3);
+                    // Per-item destination
+                    if (itemConfig.DestContSerial != 0)
+                    {
+                        ImGui.Text($"{itemConfig.DestContSerial:X}");
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Per-item destination");
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.SmallButton($"X##ClearDest{i}"))
+                        {
+                            itemConfig.DestContSerial = 0;
+                        }
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Clear and use config destination");
+                        }
+                    }
+                    else
+                    {
+                        ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1.0f), "Config");
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Using configuration's destination");
+                        }
+                        ImGui.SameLine();
+                        if (ImGui.SmallButton($"Set##SetDest{i}"))
+                        {
+                            var currentItemConfig = itemConfig;
+                            GameActions.Print("Select [DESTINATION] Container for this item", 82);
+                            World.Instance.TargetManager.SetTargeting((destination) =>
+                            {
+                                if (destination == null || !(destination is Entity destEntity) || !SerialHelper.IsItem(destEntity))
+                                {
+                                    GameActions.Print("Only items can be selected!");
+                                    return;
+                                }
+                                currentItemConfig.DestContSerial = destEntity.Serial;
+                                GameActions.Print($"Per-item destination set to {destEntity.Serial:X}", 63);
+                            });
+                        }
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Set per-item destination");
+                        }
+                    }
+
+                    ImGui.TableSetColumnIndex(4);
                     bool enabled = itemConfig.Enabled;
                     if (ImGui.Checkbox($"##Enabled{i}", ref enabled))
                         itemConfig.Enabled = enabled;
 
-                    ImGui.TableSetColumnIndex(4);
+                    ImGui.TableSetColumnIndex(5);
                     ImGui.PushStyleColor(ImGuiCol.Button, new System.Numerics.Vector4(0.8f, 0.2f, 0.2f, 1.0f));
                     if (ImGui.Button($"X##Delete{i}"))
                     {

@@ -110,7 +110,8 @@ namespace ClassicUO.Game.Managers
                     Graphic = c.Graphic,
                     Hue = c.Hue,
                     Amount = c.Amount,
-                    Enabled = c.Enabled
+                    Enabled = c.Enabled,
+                    DestContSerial = c.DestContSerial
                 }).ToList()
             };
             OrganizerConfigs.Add(dupedConfig);
@@ -227,87 +228,109 @@ namespace ClassicUO.Game.Managers
 
         private int OrganizeItems(Item sourceCont, Item destCont, OrganizerConfig config)
         {
-            var itemsToMove = new List<(Item Item, ushort Amount)>();
+            var backpack = World.Instance.Player?.Backpack;
+
+            // Group items by destination (either per-item destination or config destination)
+            var itemsToMoveByDestination = new Dictionary<uint, List<(Item Item, ushort Amount, OrganizerItemConfig Config)>>();
 
             var sourceItems = (Item)sourceCont.Items;
 
-            var destItems = (Item)destCont.Items;
-
-            if (sourceCont.Serial == destCont.Serial)
+            // First pass: identify items to move and group by destination
+            for (var item = sourceItems; item != null; item = (Item)item.Next)
             {
-                for (var item = sourceItems; item != null; item = (Item)item.Next)
+                foreach (var itemConfig in config.ItemConfigs)
                 {
-                    foreach (var itemConfig in config.ItemConfigs)
+                    if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
                     {
-                        if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
-                        {
-                            if (!item.ItemData.IsStackable) break; // non-stackable items can't be organized in the same container
-                            if (itemConfig.Amount > 0)
-                                itemsToMove.Add((item, itemConfig.Amount));
-                            else
-                            {
-                                itemsToMove.Add((item, ushort.MaxValue));
-                            }
-                            break; // Avoid processing the same item multiple times
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Build a lookup of existing item counts in the destination container
-                var destItemCounts = new Dictionary<(ushort Graphic, ushort Hue), int>();
-                for (var item = destItems; item != null; item = (Item)item.Next)
-                {
-                    var key = (item.Graphic, item.Hue);
-                    if (destItemCounts.ContainsKey(key))
-                        destItemCounts[key] += item.Amount;
-                    else
-                        destItemCounts[key] = item.Amount;
-                }
+                        // Determine the destination for this item
+                        uint itemDestSerial = itemConfig.DestContSerial != 0 ? itemConfig.DestContSerial : destCont.Serial;
 
-                // Determine which items to move based on config and existing counts in destination
-                for (var item = sourceItems; item != null; item = (Item)item.Next)
-                {
-                    foreach (var itemConfig in config.ItemConfigs)
-                    {
-                        if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
-                        {
-                            if (itemConfig.Amount == 0)
-                            {
-                                // Move all items of this type
-                                itemsToMove.Add((item, ushort.MaxValue));
-                            }
-                            else
-                            {
-                                // Move up to the configured amount, considering existing items in destination
-                                destItemCounts.TryGetValue((item.Graphic, item.Hue), out int existingCount);
-                                int toMove = itemConfig.Amount - existingCount;
-                                if (toMove > 0)
-                                {
-                                    itemsToMove.Add((item, (ushort)Math.Min(toMove, item.Amount)));
-                                    // Update the count to avoid over-moving if multiple stacks exist in source
-                                    destItemCounts[(item.Graphic, item.Hue)] = (ushort)(existingCount + Math.Min(toMove, item.Amount));
-                                }
-                            }
-                        }
+                        if (!itemsToMoveByDestination.ContainsKey(itemDestSerial))
+                            itemsToMoveByDestination[itemDestSerial] = new List<(Item, ushort, OrganizerItemConfig)>();
+
+                        itemsToMoveByDestination[itemDestSerial].Add((item, 0, itemConfig)); // Amount will be calculated in second pass
+                        break; // Avoid processing the same item multiple times
                     }
                 }
             }
 
+            int totalItemsMoved = 0;
 
-            // Move matching items to target bag using MoveItemQueue
-            foreach (var itemToMove in itemsToMove)
+            // Second pass: process each destination group
+            foreach (var kvp in itemsToMoveByDestination)
             {
-                MoveItemQueue.Instance?.Enqueue(itemToMove.Item.Serial, destCont.Serial, itemToMove.Amount, 0xFFFF, 0xFFFF, 0);
+                uint destinationSerial = kvp.Key;
+                var itemsForThisDest = kvp.Value;
+
+                var thisDestCont = World.Instance.Items.Get(destinationSerial);
+                if (thisDestCont == null)
+                {
+                    GameActions.Print($"Cannot find destination container {destinationSerial:X}. Using backpack as default.");
+                    thisDestCont = backpack;
+                    if (thisDestCont == null) continue;
+                }
+
+                var destItems = (Item)thisDestCont.Items;
+                bool sameContainer = sourceCont.Serial == thisDestCont.Serial;
+
+                if (sameContainer)
+                {
+                    // Same container logic
+                    foreach (var (item, _, itemConfig) in itemsForThisDest)
+                    {
+                        if (!item.ItemData.IsStackable) continue; // non-stackable items can't be organized in the same container
+
+                        ushort amountToMove = itemConfig.Amount > 0 ? itemConfig.Amount : ushort.MaxValue;
+                        MoveItemQueue.Instance?.Enqueue(item.Serial, thisDestCont.Serial, amountToMove, 0xFFFF, 0xFFFF, 0);
+                        totalItemsMoved++;
+                    }
+                }
+                else
+                {
+                    // Build a lookup of existing item counts in the destination container
+                    var destItemCounts = new Dictionary<(ushort Graphic, ushort Hue), int>();
+                    for (var item = destItems; item != null; item = (Item)item.Next)
+                    {
+                        var key = (item.Graphic, item.Hue);
+                        if (destItemCounts.ContainsKey(key))
+                            destItemCounts[key] += item.Amount;
+                        else
+                            destItemCounts[key] = item.Amount;
+                    }
+
+                    // Determine which items to move based on config and existing counts in destination
+                    foreach (var (item, _, itemConfig) in itemsForThisDest)
+                    {
+                        if (itemConfig.Amount == 0)
+                        {
+                            // Move all items of this type
+                            MoveItemQueue.Instance?.Enqueue(item.Serial, thisDestCont.Serial, ushort.MaxValue, 0xFFFF, 0xFFFF, 0);
+                            totalItemsMoved++;
+                        }
+                        else
+                        {
+                            // Move up to the configured amount, considering existing items in destination
+                            destItemCounts.TryGetValue((item.Graphic, item.Hue), out int existingCount);
+                            int toMove = itemConfig.Amount - existingCount;
+                            if (toMove > 0)
+                            {
+                                ushort actualAmount = (ushort)Math.Min(toMove, item.Amount);
+                                MoveItemQueue.Instance?.Enqueue(item.Serial, thisDestCont.Serial, actualAmount, 0xFFFF, 0xFFFF, 0);
+                                // Update the count to avoid over-moving if multiple stacks exist in source
+                                destItemCounts[(item.Graphic, item.Hue)] = existingCount + actualAmount;
+                                totalItemsMoved++;
+                            }
+                        }
+                    }
+                }
             }
 
-            if (itemsToMove.Count > 0)
+            if (totalItemsMoved > 0)
             {
-                GameActions.Print($"Organizing {itemsToMove.Count} items from '{config.Name}' to destination container...", 63);
+                GameActions.Print($"Organizing {totalItemsMoved} items from '{config.Name}'...", 63);
             }
 
-            return itemsToMove.Count;
+            return totalItemsMoved;
         }
 
         private void RunSingleOrganizer(OrganizerConfig config, uint source = 0, uint dest = 0)
@@ -391,6 +414,7 @@ namespace ClassicUO.Game.Managers
         public ushort Hue { get; set; } = ushort.MaxValue;
         public ushort Amount { get; set; } = 0; // 0 = move all; otherwise move up to this amount
         public bool Enabled { get; set; } = true;
+        public uint DestContSerial { get; set; } = 0; // 0 = use configuration's destination
 
         public bool IsMatch(ushort graphic, ushort hue)
         {
