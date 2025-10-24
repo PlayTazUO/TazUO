@@ -123,7 +123,7 @@ namespace ClassicUO.LegionScripting
         private ConcurrentQueue<PyJournalEntry> journalEntries = new();
         private World World = Client.Game.UO.World;
         private Item backpack;
-        private PlayerMobile player;
+        private PyMobile player;
         private bool keyboardHooked = false;
         private readonly object hookLock = new object();
 
@@ -199,12 +199,12 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Returns the player character object
         /// </summary>
-        public PlayerMobile Player
+        public PyMobile Player
         {
             get
             {
                 if (player == null)
-                    player = MainThreadQueue.InvokeOnMainThread(() => World.Player);
+                    player = new PyMobile(MainThreadQueue.InvokeOnMainThread(() => World.Player));
 
                 return player;
             }
