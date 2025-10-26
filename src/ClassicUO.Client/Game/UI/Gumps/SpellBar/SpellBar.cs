@@ -3,6 +3,7 @@ using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.ImGuiControls;
 using ClassicUO.Input;

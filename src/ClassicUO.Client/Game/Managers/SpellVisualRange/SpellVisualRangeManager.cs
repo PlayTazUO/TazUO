@@ -13,6 +13,7 @@ using Timer = System.Timers.Timer;
 namespace ClassicUO.Game.Managers
 {
     using System.Text.Json.Serialization;
+    using ClassicUO.Game.Managers.SpellVisualRange;
     using ClassicUO.Utility.Logging;
 
     [JsonSerializable(typeof(SpellRangeInfo))]
@@ -144,10 +145,11 @@ namespace ClassicUO.Game.Managers
 
         private void EndRecovery(SpellRangeInfo spell)
         {
+            int endedSpellId = currentSpell?.ID ?? spell?.ID ?? 0;
             currentSpell = null;
             isCasting = false;
             World.Player.Flags &= ~Flags.Frozen;
-            EventSink.InvokeSpellCastEnd(currentSpell?.ID ?? 0);
+            EventSink.InvokeSpellCastEnd(endedSpellId);
         }
 
         public SpellRangeInfo GetCurrentSpell()

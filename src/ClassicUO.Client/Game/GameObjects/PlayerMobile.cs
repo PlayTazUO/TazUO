@@ -10,6 +10,7 @@ using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
+using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.GameObjects
 {
@@ -19,6 +20,7 @@ namespace ClassicUO.Game.GameObjects
 
         public PlayerMobile(World world, uint serial) : base(world, serial)
         {
+            AttachCastingEventHandlers();
             Skills = new Skill[Client.Game.UO.FileManager.Skills.SkillsCount];
 
             for (int i = 0; i < Skills.Length; i++)
@@ -121,7 +123,7 @@ namespace ClassicUO.Game.GameObjects
         public uint TithingPoints;
         public ushort Weight;
         public ushort WeightMax;
-        public bool IsCasting;
+        public bool IsCasting { get; private set; }
 
         public Item FindBandage(ushort graphic = 0x0E21)
         {
@@ -145,16 +147,26 @@ namespace ClassicUO.Game.GameObjects
             EventSink.SpellCastEnd += OnSpellCastEnd;
         }
 
+        public void DetachCastingEventHandlers()
+        {
+            EventSink.SpellCastBegin -= OnSpellCastBegin;
+            EventSink.SpellCastEnd -= OnSpellCastEnd;
+        }
+
         private void OnSpellCastBegin(object sender, int spellID)
         {
             if (World?.Player == this)
-                IsCasting = true; Log.Debug("IsCasting");
+            {
+                IsCasting = true;
+            }
         }
 
         private void OnSpellCastEnd(object sender, int spellID)
         {
             if (World?.Player == this)
+            {
                 IsCasting = false;
+            }
         }
 
         public Item FindItemByGraphic(ushort graphic)
@@ -399,6 +411,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             DeathScreenTimer = 0;
+            DetachCastingEventHandlers();
 
             Log.Warn("PlayerMobile disposed!");
             base.Destroy();

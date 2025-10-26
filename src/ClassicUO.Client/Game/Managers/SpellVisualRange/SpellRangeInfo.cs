@@ -1,8 +1,8 @@
-using ClassicUO;
-using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using System;
 using System.Linq;
+
+namespace ClassicUO.Game.Managers.SpellVisualRange;
 
 public class SpellRangeInfo
 {

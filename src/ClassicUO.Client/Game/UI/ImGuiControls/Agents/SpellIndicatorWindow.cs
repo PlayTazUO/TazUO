@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
+using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.UI.ImGuiControls
 {

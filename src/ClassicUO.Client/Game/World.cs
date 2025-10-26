@@ -9,14 +9,12 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Utility.Platforms;
 using Microsoft.Xna.Framework;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
-using ClassicUO.Network;
 using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game
@@ -231,7 +229,6 @@ namespace ClassicUO.Game
             }
 
             Player = new PlayerMobile(this, serial);
-            Player.AttachCastingEventHandlers();
             Mobiles.Add(Player);
             EventSink.InvokeOnPlayerCreated();
             Log.Trace($"Player [0x{serial:X8}] created");

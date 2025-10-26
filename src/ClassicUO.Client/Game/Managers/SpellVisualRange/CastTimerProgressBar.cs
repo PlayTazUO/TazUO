@@ -1,14 +1,12 @@
-using ClassicUO;
-using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Renderer;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using static ClassicUO.Game.Managers.SpellVisualRangeManager;
+
+namespace ClassicUO.Game.Managers.SpellVisualRange;
 
 public class CastTimerProgressBar : Gump
 {
@@ -25,13 +23,13 @@ public class CastTimerProgressBar : Gump
         CanCloseWithEsc = false;
         CanCloseWithRightClick = false;
 
-        ref readonly var gi = ref Client.Game.UO.Gumps.GetGump(0x0805);
-        background = gi.Texture;
-        barBounds = gi.UV;
+        ref readonly var giBg = ref Client.Game.UO.Gumps.GetGump(0x0805);
+        background = giBg.Texture;
+        barBounds = giBg.UV;
 
-        gi = ref Client.Game.UO.Gumps.GetGump(0x0806);
-        foreground = gi.Texture;
-        barBoundsF = gi.UV;
+        ref readonly var giFg = ref Client.Game.UO.Gumps.GetGump(0x0806);
+        foreground = giFg.Texture;
+        barBoundsF = giFg.UV;
 
         inCastingPhase = false;
         IsVisible = false;
@@ -46,6 +44,12 @@ public class CastTimerProgressBar : Gump
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
+        if (World?.Player == null)
+        {
+            IsVisible = false;
+            return false;
+        }
+
         SpellRangeInfo spell = Instance.GetCurrentSpell();
         if (spell == null)
         {
@@ -91,6 +95,9 @@ public class CastTimerProgressBar : Gump
         );
 
         WorldViewportGump vp = UIManager.GetGump<WorldViewportGump>();
+        if (vp == null)
+            return;
+
         x = vp.Location.X + (int)(m.RealScreenPosition.X - (m.Offset.X + 22 + 5));
         y = vp.Location.Y + (int)(m.RealScreenPosition.Y - ((m.Offset.Y - m.Offset.Z) - (height + centerY + 15) +
             (m.IsGargoyle && m.IsFlying ? -22 : !m.IsMounted ? 22 : 0)));
