@@ -148,6 +148,9 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public static event EventHandler<int> SpellCastBegin;
         public static void InvokeSpellCastBegin(int spell) => SpellCastBegin?.Invoke(null, spell);
+        public static event EventHandler<int> SpellCastEnd;
+        public static void InvokeSpellCastEnd(int spell) => SpellCastEnd?.Invoke(null, spell);
+
     }
 
     public class OPLEventArgs : EventArgs
