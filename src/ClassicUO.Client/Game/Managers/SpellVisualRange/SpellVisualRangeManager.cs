@@ -136,7 +136,7 @@ namespace ClassicUO.Game.Managers
             if (bar.Parent == null)
                 UIManager.Add(bar);
 
-            bar.OnRecoveryBegin(spell);
+            bar.OnRecoveryBegin();
 
             double recTime = spell.GetEffectiveRecoveryTime();
             await Task.Delay(TimeSpan.FromSeconds(recTime));

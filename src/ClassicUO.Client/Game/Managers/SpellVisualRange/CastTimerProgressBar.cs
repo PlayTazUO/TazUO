@@ -40,9 +40,12 @@ public class CastTimerProgressBar : Gump
     /// </summary>
     public void OnSpellCastBegin()
     {
-        phaseStartTime = DateTime.Now;
-        inCastingPhase = true;
-        IsVisible = true;
+        MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            phaseStartTime = DateTime.Now;
+            inCastingPhase = true;
+            IsVisible = true;
+        });
     }
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -63,6 +66,11 @@ public class CastTimerProgressBar : Gump
         IsVisible = true;
 
         double totalTime = inCastingPhase ? spell.GetEffectiveCastTime() : spell.GetEffectiveRecoveryTime();
+        if (totalTime <= 0)
+        {
+            if (!inCastingPhase) IsVisible = false;
+            return false;
+        }
         double elapsed = (DateTime.Now - phaseStartTime).TotalSeconds;
         double percent = Math.Min(elapsed / totalTime, 1.0);
 
@@ -86,11 +94,14 @@ public class CastTimerProgressBar : Gump
     /// Initiates the recovery phase progress visualization after a spell cast completes.
     /// </summary>
     /// <param name="spell">The spell that just finished casting.</param>
-    public void OnRecoveryBegin(SpellRangeInfo spell)
+    public void OnRecoveryBegin()
     {
-        phaseStartTime = DateTime.Now;
-        inCastingPhase = false;
-        IsVisible = true;
+        MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            phaseStartTime = DateTime.Now;
+            inCastingPhase = false;
+            IsVisible = true;
+        });
     }
 
     private void DrawProgressBar(UltimaBatcher2D batcher, int x, int y, double percent, Vector3 fillHue)
