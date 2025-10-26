@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private Dictionary<int, string> spellCastRangeInputs = new Dictionary<int, string>();
         private Dictionary<int, string> spellCastTimeInputs = new Dictionary<int, string>();
         private Dictionary<int, string> spellMaxDurationInputs = new Dictionary<int, string>();
-        private SpellVisualRangeManager.SpellRangeInfo selectedSpell = null;
+        private SpellRangeInfo selectedSpell = null;
 
         private SpellIndicatorWindow() : base("Spell Indicators")
         {
@@ -58,7 +58,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
                 else if (SpellDefinition.TryGetSpellFromName(spellSearchInput, out SpellDefinition spell))
                 {
-                    if (SpellVisualRangeManager.Instance.SpellRangeCache.TryGetValue(spell.ID, out SpellVisualRangeManager.SpellRangeInfo info))
+                    if (SpellVisualRangeManager.Instance.SpellRangeCache.TryGetValue(spell.ID, out SpellRangeInfo info))
                     {
                         selectedSpell = info;
                         InitializeInputs(info);
@@ -89,7 +89,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
         }
 
-        private void InitializeInputs(SpellVisualRangeManager.SpellRangeInfo spell)
+        private void InitializeInputs(SpellRangeInfo spell)
         {
             if (!spellNameInputs.ContainsKey(spell.ID))
                 spellNameInputs[spell.ID] = spell.Name;
@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 spellMaxDurationInputs[spell.ID] = spell.MaxDuration.ToString();
         }
 
-        private void DrawSpellEditor(SpellVisualRangeManager.SpellRangeInfo spell)
+        private void DrawSpellEditor(SpellRangeInfo spell)
         {
             InitializeInputs(spell);
 

@@ -411,7 +411,7 @@ public class SpellBar : Gump
                     return true;
                 }
 
-                SpellVisualRangeManager.SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
+                SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
 
                 if (i == null)
                 {
