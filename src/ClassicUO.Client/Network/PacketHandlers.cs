@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.UI.Gumps.Login;
+using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using Constants = ClassicUO.Game.Constants;
 
@@ -6369,6 +6370,9 @@ sealed class PacketHandlers
 
         container.PushToBack(item);
 
+        // Queue item for grid highlighting
+        GridHighlightData.ProcessItemOpl(world, serial);
+
         if (SerialHelper.IsMobile(containerSerial))
         {
             Mobile m = world.Mobiles.Get(containerSerial);
@@ -6613,6 +6617,9 @@ sealed class PacketHandlers
 
             // Update item database
             ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
+
+            // Queue item for grid highlighting
+            GridHighlightData.ProcessItemOpl(world, serial);
         }
         else
         {

@@ -18,6 +18,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private readonly GridHighlightSetupEntry _entry;
 
         private static readonly Queue<uint> _queue = new();
+        private static readonly HashSet<uint> _queuedItems = new();
         private static bool hasQueuedItems;
 
         private readonly Dictionary<string, string> _normalizeCache = new();
@@ -136,9 +137,25 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         }
 
 
-        public static void ProcessItemOpl(uint value)
+        public static void ProcessItemOpl(World world, uint serial)
         {
-            _queue.Enqueue(value);
+            // Only queue items if the server supports tooltips
+            if (!world.ClientFeatures.TooltipsEnabled)
+                return;
+
+            // Check if already queued to avoid duplicates
+            if (_queuedItems.Contains(serial))
+                return;
+
+            // Check if item exists and is not on ground or multi
+            if (!world.Items.TryGetValue(serial, out var item))
+                return;
+
+            if (item.OnGround || item.IsMulti)
+                return;
+
+            _queue.Enqueue(serial);
+            _queuedItems.Add(serial);
             hasQueuedItems = true;
         }
 
@@ -148,14 +165,42 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return;
 
             List<ItemPropertiesData> itemData = new(3);
+            List<uint> requeueItems = new();
 
             for (int i = 0; i < 3 && _queue.Count > 0; i++)
             {
                 uint ser = _queue.Dequeue();
-                if (World.Items.TryGetValue(ser, out var item))
-                    itemData.Add(new ItemPropertiesData(World, item));
+
+                // Check if item still exists
+                if (!World.Items.TryGetValue(ser, out var item))
+                {
+                    // Item was removed, remove from hashset and skip
+                    _queuedItems.Remove(ser);
+                    continue;
+                }
+
+                // Check if item is still valid for highlighting
+                if (item.OnGround || item.IsMulti)
+                {
+                    // Item moved to ground or is multi, remove from hashset and skip
+                    _queuedItems.Remove(ser);
+                    continue;
+                }
+
+                // Check if OPL data exists
+                if (!World.OPL.TryGetNameAndData(ser, out _, out _))
+                {
+                    // OPL data not available yet, requeue for later processing
+                    requeueItems.Add(ser);
+                    continue;
+                }
+
+                // OPL data exists, remove from hashset and create ItemPropertiesData
+                _queuedItems.Remove(ser);
+                itemData.Add(new ItemPropertiesData(World, item));
             }
 
+            // Process items with OPL data
             foreach (var data in itemData)
             {
                 var bestMatch = GetBestMatch(data);
@@ -174,8 +219,17 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 }
             }
 
+            // Requeue items that don't have OPL data yet
+            foreach (var ser in requeueItems)
+            {
+                _queue.Enqueue(ser);
+            }
+
             if (_queue.Count == 0)
+            {
                 hasQueuedItems = false;
+                _queuedItems.Clear(); // Clear hashset when queue is empty
+            }
         }
 
         public static GridHighlightData GetGridHighlightData(int index)
@@ -197,7 +251,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             foreach (var kvp in World.Instance.Items)
             {
                 if (kvp.Value.OnGround || kvp.Value.IsMulti) continue;
-                ProcessItemOpl(kvp.Key);
+                ProcessItemOpl(World.Instance, kvp.Key);
             }
         }
 
