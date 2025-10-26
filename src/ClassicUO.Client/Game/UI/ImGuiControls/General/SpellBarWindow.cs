@@ -132,25 +132,30 @@ namespace ClassicUO.Game.UI.ImGuiControls
             { ImGuiKey.Y, SDL.SDL_Keycode.SDLK_Y },
             { ImGuiKey.Z, SDL.SDL_Keycode.SDLK_Z },
             { ImGuiKey._1, SDL.SDL_Keycode.SDLK_1 },
-            { ImGuiKey._1, SDL.SDL_Keycode.SDLK_KP_1 },
             { ImGuiKey._2, SDL.SDL_Keycode.SDLK_2 },
-            { ImGuiKey._2, SDL.SDL_Keycode.SDLK_KP_2 },
             { ImGuiKey._3, SDL.SDL_Keycode.SDLK_3 },
-            { ImGuiKey._3, SDL.SDL_Keycode.SDLK_KP_3 },
             { ImGuiKey._4, SDL.SDL_Keycode.SDLK_4 },
-            { ImGuiKey._4, SDL.SDL_Keycode.SDLK_KP_4 },
             { ImGuiKey._5, SDL.SDL_Keycode.SDLK_5 },
-            { ImGuiKey._5, SDL.SDL_Keycode.SDLK_KP_5 },
             { ImGuiKey._6, SDL.SDL_Keycode.SDLK_6 },
-            { ImGuiKey._6, SDL.SDL_Keycode.SDLK_KP_6 },
             { ImGuiKey._7, SDL.SDL_Keycode.SDLK_7 },
-            { ImGuiKey._7, SDL.SDL_Keycode.SDLK_KP_7 },
             { ImGuiKey._8, SDL.SDL_Keycode.SDLK_8 },
-            { ImGuiKey._8, SDL.SDL_Keycode.SDLK_KP_8 },
             { ImGuiKey._9, SDL.SDL_Keycode.SDLK_9 },
-            { ImGuiKey._9, SDL.SDL_Keycode.SDLK_KP_9 },
-            { ImGuiKey._0, SDL.SDL_Keycode.SDLK_0 },
-            { ImGuiKey._0, SDL.SDL_Keycode.SDLK_KP_0}
+            { ImGuiKey._0, SDL.SDL_Keycode.SDLK_0 }
+        };
+
+        // Mapping for keypad number keys (checked separately to support both regular and keypad variants)
+        private static Dictionary<ImGuiKey, SDL.SDL_Keycode> keypadMap = new()
+        {
+            { ImGuiKey.Keypad1, SDL.SDL_Keycode.SDLK_KP_1 },
+            { ImGuiKey.Keypad2, SDL.SDL_Keycode.SDLK_KP_2 },
+            { ImGuiKey.Keypad3, SDL.SDL_Keycode.SDLK_KP_3 },
+            { ImGuiKey.Keypad4, SDL.SDL_Keycode.SDLK_KP_4 },
+            { ImGuiKey.Keypad5, SDL.SDL_Keycode.SDLK_KP_5 },
+            { ImGuiKey.Keypad6, SDL.SDL_Keycode.SDLK_KP_6 },
+            { ImGuiKey.Keypad7, SDL.SDL_Keycode.SDLK_KP_7 },
+            { ImGuiKey.Keypad8, SDL.SDL_Keycode.SDLK_KP_8 },
+            { ImGuiKey.Keypad9, SDL.SDL_Keycode.SDLK_KP_9 },
+            { ImGuiKey.Keypad0, SDL.SDL_Keycode.SDLK_KP_0 }
         };
 
         private void CaptureCurrentInput()
@@ -166,13 +171,26 @@ namespace ClassicUO.Game.UI.ImGuiControls
             if (ImGui.GetIO().KeyShift)
                 capturedMod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
 
-            // Capture keyboard input
+            // Capture keyboard input from regular keys
             foreach (var kvp in keyMap)
             {
                 if (ImGui.IsKeyPressed(kvp.Key))
                 {
                     capturedKey = kvp.Value;
                     break;
+                }
+            }
+
+            // Also check keypad keys separately to support both regular and keypad number keys
+            if (capturedKey == SDL.SDL_Keycode.SDLK_UNKNOWN)
+            {
+                foreach (var kvp in keypadMap)
+                {
+                    if (ImGui.IsKeyPressed(kvp.Key))
+                    {
+                        capturedKey = kvp.Value;
+                        break;
+                    }
                 }
             }
 
