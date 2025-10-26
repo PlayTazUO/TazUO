@@ -8,6 +8,9 @@ using static ClassicUO.Game.Managers.SpellVisualRangeManager;
 
 namespace ClassicUO.Game.Managers.SpellVisualRange;
 
+/// <summary>
+/// Displays a progress bar tracking spell casting and recovery phases.
+/// </summary>
 public class CastTimerProgressBar : Gump
 {
     private Rectangle barBounds, barBoundsF;
@@ -16,6 +19,13 @@ public class CastTimerProgressBar : Gump
     private bool inCastingPhase = true;
     private DateTime phaseStartTime;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CastTimerProgressBar"/> class.
+    /// Creates a non-interactive cast timer progress bar associated with the specified game world.
+    /// </summary>
+    /// <param name="world">
+    /// The <see cref="World"/> instance representing the current game world context used by this progress bar.
+    /// </param>
     public CastTimerProgressBar(World world) : base(world, 0, 0)
     {
         CanMove = false;
