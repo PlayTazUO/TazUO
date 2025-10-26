@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace ClassicUO.Game.Managers.SpellVisualRange;
 
+/// <summary>
+/// Encapsulates spell range, cast time, recovery time, and visual indicator configuration for a spell.
+/// </summary>
 public class SpellRangeInfo
 {
     public int ID { get; set; } = -1;
@@ -37,6 +40,11 @@ public class SpellRangeInfo
         return new SpellRangeInfo() { ID = spell.ID, Name = spell.Name, PowerWords = spell.PowerWords };
     }
 
+    /// <summary>
+    /// Calculates the effective cast time for this spell, accounting for the player's Faster Casting stat
+    /// and any school-specific caps (e.g., Chivalry with Magery/Mysticism requirements).
+    /// </summary>
+    /// <returns>The effective cast time in seconds, with a minimum of 0.25 seconds.</returns>
     public double GetEffectiveCastTime()
     {
         int maxFasterCasting = MaxFasterCasting;
@@ -52,6 +60,10 @@ public class SpellRangeInfo
         return time < 0.25 ? 0.25 : time;
     }
 
+    /// <summary>
+    /// Calculates the effective recovery time for this spell, accounting for the player's Faster Cast Recovery stat.
+    /// </summary>
+    /// <returns>The effective recovery time in seconds, with a minimum of 0 seconds.</returns>
     public double GetEffectiveRecoveryTime()
     {
         int fasterCastRecovery = Math.Min(World.Player.FasterCastRecovery, MaxFasterCastRecovery);

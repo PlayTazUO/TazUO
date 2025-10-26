@@ -35,6 +35,9 @@ public class CastTimerProgressBar : Gump
         IsVisible = false;
     }
 
+    /// <summary>
+    /// Initiates the casting phase progress visualization.
+    /// </summary>
     public void OnSpellCastBegin()
     {
         phaseStartTime = DateTime.Now;
@@ -79,6 +82,10 @@ public class CastTimerProgressBar : Gump
         return base.Draw(batcher, x, y);
     }
 
+    /// <summary>
+    /// Initiates the recovery phase progress visualization after a spell cast completes.
+    /// </summary>
+    /// <param name="spell">The spell that just finished casting.</param>
     public void OnRecoveryBegin(SpellRangeInfo spell)
     {
         phaseStartTime = DateTime.Now;
