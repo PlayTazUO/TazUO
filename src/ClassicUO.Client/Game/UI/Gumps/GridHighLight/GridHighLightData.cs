@@ -136,7 +136,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             list.Insert(up ? index - 1 : index + 1, _entry);
         }
 
-
         public static void ProcessItemOpl(World world, uint serial)
         {
             // Only queue items if the server supports tooltips
@@ -248,6 +247,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public static void RecheckMatchStatus()
         {
+            AllConfigs = null; //Reset configs
             foreach (var kvp in World.Instance.Items)
             {
                 if (kvp.Value.OnGround || kvp.Value.IsMulti) continue;
