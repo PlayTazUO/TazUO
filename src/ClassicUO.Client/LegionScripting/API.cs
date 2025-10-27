@@ -3697,7 +3697,7 @@ namespace ClassicUO.LegionScripting
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Script callback error: {ex}");
+                            GameActions.Print($"Script callback error: {ex}", 32);
                         }
                     }
                 );

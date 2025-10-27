@@ -16,6 +16,27 @@ description:  Base class for all Python-accessible game world objects.   Encapsu
  Check if the object is impassible or not based on item data.
 
 
+### `X`
+
+**Type:** `ushort`
+
+ The X-coordinate of the object in the game world.
+
+
+### `Y`
+
+**Type:** `ushort`
+
+ The Y-coordinate of the object in the game world.
+
+
+### `Z`
+
+**Type:** `sbyte`
+
+ The Z-coordinate (elevation) of the object in the game world.
+
+
 ### `Graphic`
 
 **Type:** `ushort`
@@ -41,27 +62,6 @@ description:  Base class for all Python-accessible game world objects.   Encapsu
  The Python-visible class name of this object.
  Accessible in Python as <c>obj.__class__</c> .
 
-
-
-### `X`
-
-**Type:** `ushort`
-
- The X-coordinate of the object in the game world.
-
-
-### `Y`
-
-**Type:** `ushort`
-
- The Y-coordinate of the object in the game world.
-
-
-### `Z`
-
-**Type:** `sbyte`
-
- The Z-coordinate (elevation) of the object in the game world.
 
 
 

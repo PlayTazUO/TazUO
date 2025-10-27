@@ -9,6 +9,18 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 
 ## Properties
+### `X`
+
+**Type:** `ushort`
+
+### `Y`
+
+**Type:** `ushort`
+
+### `Z`
+
+**Type:** `sbyte`
+
 ### `HitsDiff`
 
 **Type:** `int`

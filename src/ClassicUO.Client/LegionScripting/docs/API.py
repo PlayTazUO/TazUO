@@ -255,13 +255,13 @@ class PyEntity:
 
 class PyGameObject:
     Impassible: bool = None
+    X: int = None
+    Y: int = None
+    Z: int = None
     Graphic: int = None
     Hue: int = None
     Distance: int = None
     __class__: str = None
-    X: int = None
-    Y: int = None
-    Z: int = None
 
     def SetHue(self, hue: int) -> None:
         """
@@ -316,6 +316,9 @@ class PyLand:
     __class__: str = None
 
 class PyMobile:
+    X: int = None
+    Y: int = None
+    Z: int = None
     HitsDiff: int = None
     ManaDiff: int = None
     StamDiff: int = None
@@ -387,6 +390,9 @@ class ModernNineSliceGump:
         pass
 
 class PyPlayer:
+    X: int = None
+    Y: int = None
+    Z: int = None
     Strength: int = None
     Dexterity: int = None
     Intelligence: int = None
@@ -437,6 +443,7 @@ class PyPlayer:
     MaxHitPointsIncrease: int = None
     MaxManaIncrease: int = None
     MaxStaminaIncrease: int = None
+    IsHidden: bool = None
     InWarMode: bool = None
     __class__: str = None
 

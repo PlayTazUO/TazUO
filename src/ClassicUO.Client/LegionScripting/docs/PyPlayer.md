@@ -9,6 +9,18 @@ description:  Represents a Python-accessible player character with full stat and
 
 
 ## Properties
+### `X`
+
+**Type:** `ushort`
+
+### `Y`
+
+**Type:** `ushort`
+
+### `Z`
+
+**Type:** `sbyte`
+
 ### `Strength`
 
 **Type:** `ushort`
@@ -208,6 +220,10 @@ description:  Represents a Python-accessible player character with full stat and
 ### `MaxStaminaIncrease`
 
 **Type:** `short`
+
+### `IsHidden`
+
+**Type:** `bool`
 
 ### `InWarMode`
 
