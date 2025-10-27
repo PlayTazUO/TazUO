@@ -6619,7 +6619,8 @@ sealed class PacketHandlers
             ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
 
             // Queue item for grid highlighting
-            GridHighlightData.ProcessItemOpl(world, serial);
+            if(item.Container != 0xFFFF_FFFF)
+                GridHighlightData.ProcessItemOpl(world, serial);
         }
         else
         {

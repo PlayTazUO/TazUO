@@ -133,7 +133,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (!up && index == list.Count - 1) return;
 
             list.RemoveAt(index);
-            list.Insert(up ? index - 1 : index + 1, _entry);
+            list.Insert(up ? index - 1 : index + 1, _entry);;
         }
 
         public static void ProcessItemOpl(World world, uint serial)
@@ -143,18 +143,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return;
 
             // Check if already queued to avoid duplicates
-            if (_queuedItems.Contains(serial))
+            if (!_queuedItems.Add(serial))
                 return;
 
-            // Check if item exists and is not on ground or multi
-            if (!world.Items.TryGetValue(serial, out var item))
-                return;
-
-            if (item.OnGround || item.IsMulti)
-                return;
-
+            // Enqueue for processing - validation happens in ProcessQueue
             _queue.Enqueue(serial);
-            _queuedItems.Add(serial);
             hasQueuedItems = true;
         }
 
