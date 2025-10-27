@@ -55,7 +55,7 @@ namespace ClassicUO.LegionScripting
             }));
             refresh.ContextMenu.Add(new ContextMenuItemEntry("Public Script Browser", () =>
             {
-                UIManager.Add(new ScriptBrowser(World));
+                ScriptBrowser.Show();
             }));
             refresh.ContextMenu.Add(new ContextMenuItemEntry("Script Recording", () =>
             {

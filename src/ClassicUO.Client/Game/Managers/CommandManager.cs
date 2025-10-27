@@ -29,7 +29,7 @@ namespace ClassicUO.Game.Managers
 
         public void Initialize()
         {
-            Register("sb", (s)=>UIManager.Add(new ScriptBrowser(_world)));
+            Register("sb", (s)=>ScriptBrowser.Show());
 
             Register("updateapi", (s) =>
             {

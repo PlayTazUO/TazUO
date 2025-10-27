@@ -226,7 +226,7 @@ while True:
 
                 if (ImGui.MenuItem("Public Script Browser"))
                 {
-                    UIManager.Add(new ScriptBrowser(World.Instance));
+                    ScriptBrowser.Show();
                 }
 
                 if (ImGui.MenuItem("Script Recording"))
