@@ -131,7 +131,7 @@ public class CastTimerProgressBar : Gump
         double totalTime = inCastingPhase ? spell.GetEffectiveCastTime() : spell.GetEffectiveRecoveryTime();
         if (totalTime <= 0)
         {
-            IsVisible = inCastingPhase;
+            IsVisible = false;
             return false;
         }
         double elapsed = (DateTime.Now - phaseStartTime).TotalSeconds;
@@ -139,8 +139,7 @@ public class CastTimerProgressBar : Gump
 
         if (percent >= 1.0)
         {
-            IsVisible = inCastingPhase;
-
+            IsVisible = false;
             return false;
         }
         IsVisible = true;
