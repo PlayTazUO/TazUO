@@ -19,7 +19,6 @@ using ClassicUO.LegionScripting.PyClasses;
 using ClassicUO.Network;
 using ClassicUO.Utility;
 using FontStashSharp.RichText;
-using IronPython.Modules;
 using IronPython.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Utils;
@@ -123,7 +122,7 @@ namespace ClassicUO.LegionScripting
         private ConcurrentQueue<PyJournalEntry> journalEntries = new();
         private World World = Client.Game.UO.World;
         private Item backpack;
-        private PlayerMobile player;
+        private PyPlayer player;
         private bool keyboardHooked = false;
         private readonly object hookLock = new object();
 
@@ -199,12 +198,12 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Returns the player character object
         /// </summary>
-        public PlayerMobile Player
+        public PyPlayer Player
         {
             get
             {
                 if (player == null)
-                    player = MainThreadQueue.InvokeOnMainThread(() => World.Player);
+                    player = MainThreadQueue.InvokeOnMainThread(() => new PyPlayer(World.Player));
 
                 return player;
             }
