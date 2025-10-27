@@ -11,6 +11,11 @@ namespace ClassicUO.LegionScripting.PyClasses;
 /// </summary>
 public class PyPlayer : PyMobile
 {
+    // Location
+    public override ushort X => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.X ?? 0);
+    public override ushort Y => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Y ?? 0);
+    public override sbyte Z => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Z ?? 0);
+
     // Primary Stats
     public ushort Strength => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Strength ?? 0);
     public ushort Dexterity => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Dexterity ?? 0);

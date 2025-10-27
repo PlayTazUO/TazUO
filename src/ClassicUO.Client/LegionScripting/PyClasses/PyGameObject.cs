@@ -39,17 +39,17 @@ public class PyGameObject
     /// <summary>
     /// The X-coordinate of the object in the game world.
     /// </summary>
-    public ushort X;
+    public virtual ushort X { get; }
 
     /// <summary>
     /// The Y-coordinate of the object in the game world.
     /// </summary>
-    public ushort Y;
+    public virtual ushort Y { get; }
 
     /// <summary>
     /// The Z-coordinate (elevation) of the object in the game world.
     /// </summary>
-    public sbyte Z;
+    public virtual sbyte Z { get; }
 
     /// <summary>
     /// The graphic ID of the object, representing its visual appearance.

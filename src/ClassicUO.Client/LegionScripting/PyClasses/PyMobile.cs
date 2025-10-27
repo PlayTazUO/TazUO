@@ -10,6 +10,10 @@ namespace ClassicUO.LegionScripting.PyClasses;
 /// </summary>
 public class PyMobile : PyEntity
 {
+    public override ushort X => MainThreadQueue.InvokeOnMainThread(() => GetMobile()?.X ?? 0);
+    public override ushort Y => MainThreadQueue.InvokeOnMainThread(() => GetMobile()?.Y ?? 0);
+    public override sbyte Z => MainThreadQueue.InvokeOnMainThread(() => GetMobile()?.Z ?? 0);
+
     public int HitsDiff => GetMobile()?.HitsDiff ?? 0;
     public int ManaDiff => GetMobile()?.ManaDiff ?? 0;
     public int StamDiff => GetMobile()?.StamDiff ?? 0;
