@@ -16,7 +16,15 @@ public class CastTimerProgressBar : Gump
     private Rectangle barBounds, barBoundsF;
     private Texture2D background;
     private Texture2D foreground;
-    private Vector3 hue = ShaderHueTranslator.GetHueVector(0);
+    private bool inCastingPhase;
+    private DateTime phaseStartTime;
+    private static readonly Vector3 CastingHue = ShaderHueTranslator.GetHueVector(0x005F); // 95
+    private static readonly Vector3 RecoveryHue = ShaderHueTranslator.GetHueVector(0x0035); // 53
+    private static readonly Vector3 EmptyHue = ShaderHueTranslator.GetHueVector(0x0026);
+    private const int OffsetX = 27;   // 22 + 5
+    private const int OffsetY = 15;
+    private const int FlyingAdjust = 22;
+    private const int MountedAdjust = 22;
 
 
     public CastTimerProgressBar(World world) : base(world, 0, 0)
@@ -35,56 +43,95 @@ public class CastTimerProgressBar : Gump
         barBoundsF = gi.UV;
     }
 
+    /// <summary>
+    /// Initiates the casting phase progress visualization.
+    /// </summary>
+    public void OnSpellCastBegin() => MainThreadQueue.InvokeOnMainThread(() =>
+    {
+        phaseStartTime = DateTime.Now;
+        inCastingPhase = true;
+        IsVisible = true;
+    });
+
+    /// <summary>
+    /// Initiates the recovery phase progress visualization after a spell cast completes.
+    /// </summary>
+    /// <param name="spell">The spell that just finished casting.</param>
+    public void OnRecoveryBegin() => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            phaseStartTime = DateTime.Now;
+            inCastingPhase = false;
+            IsVisible = true;
+        });
+
+    private void DrawProgressBar(UltimaBatcher2D batcher, int x, int y, double percent, Vector3 fillHue)
+    {
+        Mobile m = World.Player;
+        Client.Game.UO.Animations.GetAnimationDimensions(
+            m.AnimIndex, m.GetGraphicForAnimation(), 0, 0, m.IsMounted, 0,
+            out int centerX, out int centerY, out int width, out int height
+        );
+
+        WorldViewportGump vp = UIManager.GetGump<WorldViewportGump>();
+        if (vp == null)
+            return;
+
+        x = vp.Location.X + (int)(m.RealScreenPosition.X - (m.Offset.X + OffsetX));
+        y = vp.Location.Y + (int)(m.RealScreenPosition.Y - ((m.Offset.Y - m.Offset.Z) - (height + centerY + OffsetY) +
+            (m.IsGargoyle && m.IsFlying ? -FlyingAdjust : !m.IsMounted ? MountedAdjust : 0)));
+
+        if (background == null || foreground == null)
+            return;
+
+        batcher.Draw(background, new Rectangle(x, y, barBounds.Width, barBounds.Height), barBounds, EmptyHue);
+
+        int widthFromPercent = (int)(barBounds.Width * percent);
+        if (widthFromPercent > 0)
+        {
+            batcher.DrawTiled(
+                foreground,
+                new Rectangle(x, y, widthFromPercent, barBoundsF.Height),
+                barBoundsF,
+                fillHue
+            );
+        }
+    }
+
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
-        if (SpellVisualRangeManager.Instance.IsCastingWithoutTarget())
+        if (World?.Player == null || SpellVisualRangeManager.Instance == null)
         {
-            SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
-            if (i != null)
-            {
-                if (i.CastTime > 0)
-                {
-                    if (background != null && foreground != null)
-                    {
-                        Mobile m = World.Player;
-                        Client.Game.UO.Animations.GetAnimationDimensions(
-                            m.AnimIndex,
-                            m.GetGraphicForAnimation(),
-                            0,
-                            0,
-                            m.IsMounted,
-                            0,
-                            out int centerX,
-                            out int centerY,
-                            out int width,
-                            out int height
-                        );
-
-                        WorldViewportGump vp = UIManager.GetGump<WorldViewportGump>();
-
-                        x = vp.Location.X + (int)(m.RealScreenPosition.X - (m.Offset.X + 22 + 5));
-                        y = vp.Location.Y + (int)(m.RealScreenPosition.Y - ((m.Offset.Y - m.Offset.Z) - (height + centerY + 15) + (m.IsGargoyle && m.IsFlying ? -22 : !m.IsMounted ? 22 : 0)));
-
-                        batcher.Draw(background, new Rectangle(x, y, barBounds.Width, barBounds.Height), barBounds, hue);
-
-                        double percent = (DateTime.Now - SpellVisualRangeManager.Instance.LastSpellTime).TotalSeconds / i.GetEffectiveCastTime();
-
-                        int widthFromPercent = (int)(barBounds.Width * percent);
-                        widthFromPercent = widthFromPercent > barBounds.Width ? barBounds.Width : widthFromPercent; //Max width is the bar width
-
-                        if (widthFromPercent > 0)
-                        {
-                            batcher.DrawTiled(foreground, new Rectangle(x, y, widthFromPercent, barBoundsF.Height), barBoundsF, hue);
-                        }
-
-                        if (percent <= 0 && i.FreezeCharacterWhileCasting)
-                        {
-                            World.Player.Flags &= ~Flags.Frozen;
-                        }
-                    }
-                }
-            }
+            IsVisible = false;
+            return false;
         }
+
+        SpellRangeInfo spell = SpellVisualRangeManager.Instance.GetCurrentSpell();
+        if (spell == null)
+        {
+            IsVisible = false;
+            return false;
+        }
+
+        IsVisible = true;
+
+        double totalTime = inCastingPhase ? spell.GetEffectiveCastTime() : spell.GetEffectiveRecoveryTime();
+        if (totalTime <= 0)
+        {
+            IsVisible = false;
+            return false;
+        }
+        double elapsed = (DateTime.Now - phaseStartTime).TotalSeconds;
+        double percent = Math.Min(elapsed / totalTime, 1.0);
+
+        if (percent >= 1.0)
+        {
+            IsVisible = false;
+            return false;
+        }
+        IsVisible = true;
+        Vector3 drawHue = inCastingPhase ? CastingHue : RecoveryHue;
+        DrawProgressBar(batcher, x, y, percent, drawHue);
+
         return base.Draw(batcher, x, y);
     }
 }

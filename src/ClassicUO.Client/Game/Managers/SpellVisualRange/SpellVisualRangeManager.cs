@@ -37,8 +37,12 @@ namespace ClassicUO.Game.Managers
         private bool loaded = false;
         private static SpellVisualRangeManager instance;
 
+        private readonly object _castingLock = new object();
         private bool isCasting { get; set; } = false;
         private SpellRangeInfo currentSpell { get; set; }
+        private bool frozenBySpell = false;
+        private System.Threading.CancellationTokenSource _castCts;
+        private System.Threading.CancellationTokenSource _recoveryCts;
 
         //Taken from Dust client
         private static readonly int[] stopAtClilocs = new int[]
@@ -92,26 +96,134 @@ namespace ClassicUO.Game.Managers
                                                                  }
                                                              });
 
+
         private void SetCasting(SpellRangeInfo spell)
         {
-            LastSpellTime = DateTime.Now;
-            currentSpell = spell;
-            isCasting = true;
+            lock (_castingLock)
+            {
+                LastSpellTime = DateTime.Now;
+                currentSpell = spell;
+                isCasting = true;
+            }
+
             if (currentSpell != null && currentSpell.FreezeCharacterWhileCasting)
             {
+                frozenBySpell = true;
                 World.Player.Flags |= Flags.Frozen;
             }
+
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnSpellCastBegin();
+            }
+
             EventSink.InvokeSpellCastBegin(spell.ID);
+
+            double castTime = spell.GetEffectiveCastTime();
+            _castCts?.Cancel();
+            _castCts?.Dispose();
+            _castCts = new System.Threading.CancellationTokenSource();
+            System.Threading.CancellationToken ct = _castCts.Token;
+            _ = Task.Run(async () =>
+                     {
+                         try
+                         {
+                             await Task.Delay(TimeSpan.FromSeconds(castTime), ct);
+                         }
+                         catch (TaskCanceledException) { return; }
+
+                         if (isCasting && currentSpell == spell)
+                         {
+                             if (spell.ExpectTargetCursor && World.TargetManager.IsTargeting)
+                                 return;
+
+                             ClearCasting();
+                         }
+                     }, ct);
         }
 
         public void ClearCasting()
         {
-            EventSink.InvokeSpellCastEnd();
+            SpellRangeInfo spellSnapshot;
+            lock (_castingLock)
+            {
+                if (frozenBySpell)
+                    World.Player.Flags &= ~Flags.Frozen;
+                frozenBySpell = false;
+                spellSnapshot = currentSpell;
+            }
 
-            isCasting = false;
-            currentSpell = null;
-            LastSpellTime = DateTime.MinValue;
-            World.Player.Flags &= ~Flags.Frozen;
+            if (spellSnapshot == null)
+            {
+                isCasting = false;
+                World.Player.Flags &= ~Flags.Frozen;
+                return;
+            }
+
+
+            if (spellSnapshot.RecoveryTime > 0)
+            {
+                _ = StartRecovery(spellSnapshot);
+            }
+            else
+            {
+                EndRecovery(spellSnapshot);
+            }
+        }
+
+        private async Task StartRecovery(SpellRangeInfo spell)
+        {
+            if (spell == null)
+                return;
+
+            EventSink.InvokeSpellCastEnd();
+            EventSink.InvokeSpellRecoveryBegin(spell.ID);
+
+            _recoveryCts?.Cancel();
+            _recoveryCts?.Dispose();
+            _recoveryCts = new System.Threading.CancellationTokenSource();
+
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnRecoveryBegin();
+            }
+
+            double recTime = spell.GetEffectiveRecoveryTime();
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(recTime), _recoveryCts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            EndRecovery(spell);
+        }
+
+        private void EndRecovery(SpellRangeInfo spell)
+        {
+            int endedSpellId;
+
+            lock (_castingLock)
+            {
+                endedSpellId = currentSpell?.ID ?? spell?.ID ?? 0;
+                currentSpell = null;
+                isCasting = false;
+                if (frozenBySpell)
+                {
+                    World.Player.Flags &= ~Flags.Frozen;
+                    frozenBySpell = false;
+                }
+                EventSink.InvokeSpellRecoveryEnd();
+            }
         }
 
         public SpellRangeInfo GetCurrentSpell() => currentSpell;
@@ -122,6 +234,10 @@ namespace ClassicUO.Game.Managers
         public void OnSceneUnload()
         {
             EventSink.RawMessageReceived -= OnRawMessageReceived;
+            _castCts?.Cancel();
+            _castCts?.Dispose();
+            _recoveryCts?.Cancel();
+            _recoveryCts?.Dispose();
             instance = null;
         }
         #endregion
@@ -448,7 +564,7 @@ namespace ClassicUO.Game.Managers
 
                 saveTimer = new Timer();
                 saveTimer.Interval = 500;
-                saveTimer.Elapsed += (_,_) => { PerformSave(); };
+                saveTimer.Elapsed += (_, _) => { PerformSave(); };
                 saveTimer.Start();
             }
         }
