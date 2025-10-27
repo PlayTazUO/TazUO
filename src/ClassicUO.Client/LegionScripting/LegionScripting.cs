@@ -523,9 +523,15 @@ namespace ClassicUO.LegionScripting
                 {
                     if (script.PythonThread is { IsAlive: true })
                     {
-                        script.scopedAPI.StopRequested = true;
-                        script.scopedAPI.CancellationToken.Cancel();
-                        script.pythonEngine.Runtime.Shutdown();
+                        if (script.scopedAPI != null)
+                        {
+                            script.scopedAPI.StopRequested = true;
+                            script.scopedAPI.CancellationToken.Cancel();
+                        }
+
+                        if (script.pythonEngine != null)
+                            script.pythonEngine.Runtime.Shutdown();
+
                         script.PythonThread.Interrupt();
                     }
                     else
