@@ -13,6 +13,9 @@ namespace ClassicUO.Network
 {
     public class LoginHandshake : IDisposable
     {
+        /// <summary>
+        /// LoginHandshake supports only one connection. Trying to connect multiple times in one client would need a rework.
+        /// </summary>
         public static LoginHandshake Instance {
             get
             {
@@ -38,13 +41,13 @@ namespace ClassicUO.Network
         public CityInfo[] Cities { get; set; }
         public string[] Characters { get; private set; }
         public byte ServerIndex { get; private set; }
-        public string Account { get; private set; }
-        private string Password { get; set; }
-        public string IP { get; set; }
-        public ushort Port { get; set; }
+        public static string Account { get; private set; }
+        private static string Password { get; set; }
+        public static string IP { get; set; }
+        public static ushort Port { get; set; }
         public (int min, int max) LoginDelay { get; private set; }
         public bool ShouldReconnect { get; set; }
-        public bool Reconnect { get; set; }
+        public static bool Reconnect { get; set; }
         public ushort LastServerNum { get; private set; }
         public string LastServerName { get; private set; }
         public byte ErrorPacket { get; private set; } = byte.MaxValue;
@@ -128,25 +131,28 @@ namespace ClassicUO.Network
         /// <param name="reconnectTime">In ms</param>
         public void HandleReconnect(int reconnectTime)
         {
-            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main)
-                && !AsyncNetClient.Socket.IsConnected)
+            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main) && !AsyncNetClient.Socket.IsConnected)
             {
-                if (_reconnectTime < Time.Ticks)
+                if (_reconnectTime >= Time.Ticks)
+                    return;
+
+                Log.TraceDebug($"[HandShake] Reconnecting...");
+                if (!string.IsNullOrEmpty(Account))
                 {
-                    Log.TraceDebug($"[HandShake] Reconnecting...");
-                    if (!string.IsNullOrEmpty(Account))
-                    {
-                        Connect(Account, Password, IP, Port);
-                    }
-
-                    if (reconnectTime < 1000)
-                    {
-                        reconnectTime = 1000;
-                    }
-
-                    _reconnectTime = (long)Time.Ticks + reconnectTime;
-                    _reconnectTryCounter++;
+                    Connect(Account, Password, IP, Port);
                 }
+                else
+                {
+                    Reconnect = false;
+                }
+
+                if (reconnectTime < 1000)
+                {
+                    reconnectTime = 1000;
+                }
+
+                _reconnectTime = (long)Time.Ticks + reconnectTime;
+                _reconnectTryCounter++;
             }
         }
 

@@ -489,6 +489,7 @@ namespace ClassicUO.Game.Scenes
             }
             if (Settings.GlobalSettings.Reconnect)
             {
+                LoginHandshake.Reconnect = true;
                 _forceStopScene = true;
             }
             else
