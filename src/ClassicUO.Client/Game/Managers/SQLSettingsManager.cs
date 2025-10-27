@@ -158,6 +158,12 @@ namespace ClassicUO.Game.Managers
                 if (type == typeof(ushort))
                     return (T)(object)ushort.Parse(value);
 
+                if (type == typeof(float))
+                    return (T)(object)float.Parse(value);
+
+                if (type == typeof(double))
+                    return (T)(object)double.Parse(value);
+
                 return defaultValue;
             }
             catch
