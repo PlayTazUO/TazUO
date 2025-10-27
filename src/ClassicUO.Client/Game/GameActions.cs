@@ -1063,6 +1063,9 @@ internal static class GameActions
 
     public static void Logout(World world)
     {
+        LoginHandshake.Reconnect = false;
+        WorldMapGump.ClearMapCache();
+
         if ((world.ClientFeatures.Flags & CharacterListFlags.CLF_OWERWRITE_CONFIGURATION_BUTTON) != 0)
         {
             Client.Game.GetScene<GameScene>().DisconnectionRequested = true;
@@ -1076,8 +1079,6 @@ internal static class GameActions
             Socket?.Disconnect();
             Socket = new AsyncNetClient();
         }
-
-        WorldMapGump.ClearMapCache();
     }
 
     internal static void UseSkill(int index)

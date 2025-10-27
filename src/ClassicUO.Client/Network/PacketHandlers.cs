@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.UI.Gumps.Login;
+using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using Constants = ClassicUO.Game.Constants;
 
@@ -6216,12 +6217,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ServerListReceived(ref p);
-        }
+        LoginHandshake.Instance?.ServerListReceived(ref p);
     }
 
     private static void ReceiveServerRelay(World world, ref StackDataReader p)
@@ -6231,12 +6227,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleRelayServerPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleRelayServerPacket(ref p, Settings.GlobalSettings.IgnoreRelayIp);
     }
 
     private static void UpdateCharacterList(World world, ref StackDataReader p)
@@ -6246,12 +6237,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.UpdateCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.UpdateCharacterList(ref p);
     }
 
     private static void ReceiveCharacterList(World world, ref StackDataReader p)
@@ -6261,12 +6247,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ReceiveCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.ReceiveCharacterList(ref p);
     }
 
     private static void LoginDelay(World world, ref StackDataReader p)
@@ -6276,12 +6257,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleLoginDelayPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleLoginDelayPacket(ref p);
     }
 
     private static void ReceiveLoginRejection(World world, ref StackDataReader p)
@@ -6291,12 +6267,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleErrorCode(ref p);
-        }
+        LoginHandshake.Instance?.HandleErrorCode(ref p);
     }
 
     private static void AddItemToContainer(
@@ -6368,6 +6339,9 @@ sealed class PacketHandlers
         }
 
         container.PushToBack(item);
+
+        // Queue item for grid highlighting
+        GridHighlightData.ProcessItemOpl(world, serial);
 
         if (SerialHelper.IsMobile(containerSerial))
         {
@@ -6613,6 +6587,10 @@ sealed class PacketHandlers
 
             // Update item database
             ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
+
+            // Queue item for grid highlighting
+            if(item.Container != 0xFFFF_FFFF)
+                GridHighlightData.ProcessItemOpl(world, serial);
         }
         else
         {

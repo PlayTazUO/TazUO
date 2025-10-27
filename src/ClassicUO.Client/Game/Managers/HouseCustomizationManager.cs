@@ -64,7 +64,7 @@ namespace ClassicUO.Game.Managers
 
 
             InitializeHouse();
-            
+
             GenerateFloorPlace(); //# HOUSE FIXES
         }
 
@@ -570,23 +570,16 @@ namespace ClassicUO.Game.Managers
 
                 for (int i = 1; i < CurrentFloor; i++)
                 {
-                    for (int x = StartPos.X; x < EndPos.X; x++)
+                    for (int x = _bounds.X; x < EndPos.X; x++)
                     {
-                        for (int y = StartPos.Y; y < EndPos.Y; y++)
+                        for (int y = _bounds.Y; y < EndPos.Y; y++)
                         {
-                            ushort tempColor = color;
-                            
-                            bool isOuter = (x == StartPos.X) || (y == StartPos.Y); //HOUSE FIXES
-                            
-                            if (x == StartPos.X || y == StartPos.Y)
-                            {
-                                tempColor++;
-                            }
+                            bool isOuter = (x == StartPos.X - 1) || (y == StartPos.Y - 1); //HOUSE FIXES
 
                             Multi mo = house.Add
                             (
                                 0x0496,
-                                isOuter ? (ushort)161 : tempColor, //HOUSE FIXES
+                                isOuter ? (ushort)161 : color, //HOUSE FIXES
                                 (ushort)(foundationItem.X + (x - foundationItem.X)),
                                 (ushort)(foundationItem.Y + (y - foundationItem.Y)),
                                 (sbyte) z,

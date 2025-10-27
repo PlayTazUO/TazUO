@@ -7,9 +7,9 @@ namespace ClassicUO.Game.Managers
     {
         public static bool Enabled { get; set; }
         public static uint Serial { get; set; }
-        public static int X { get; set; }
-        public static int Y { get; set; }
-        public static bool IsVisible { get; set; }
+        public static int? X { get; set; }
+        public static int? Y { get; set; }
+        public static bool? IsVisible { get; set; }
         public static bool AutoClose { get; set; }
         public static bool AutoRespond { get; set; }
         public static int AutoRespondButton { get; set; }
@@ -18,9 +18,9 @@ namespace ClassicUO.Game.Managers
         {
             Enabled = false;
             Serial = 0;
-            X = 0;
-            Y = 0;
-            IsVisible = true;
+            X = null;
+            Y = null;
+            IsVisible = null;
             AutoClose = false;
             AutoRespond = false;
             AutoRespondButton = 0;
@@ -39,10 +39,21 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            // Apply the configuration
-            gump.X = X;
-            gump.Y = Y;
-            gump.IsVisible = IsVisible;
+            // Apply the configuration conditionally
+            if (X.HasValue)
+            {
+                gump.X = X.Value;
+            }
+
+            if (Y.HasValue)
+            {
+                gump.Y = Y.Value;
+            }
+
+            if (IsVisible.HasValue)
+            {
+                gump.IsVisible = IsVisible.Value;
+            }
 
             if (AutoRespond)
             {

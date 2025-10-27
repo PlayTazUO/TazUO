@@ -226,7 +226,7 @@ while True:
 
                 if (ImGui.MenuItem("Public Script Browser"))
                 {
-                    UIManager.Add(new ScriptBrowser(World.Instance));
+                    ScriptBrowser.Show();
                 }
 
                 if (ImGui.MenuItem("Script Recording"))
@@ -242,6 +242,11 @@ while True:
                 if (ImGui.MenuItem("Persistent Variables"))
                 {
                     PersistentVarsWindow.Show();
+                }
+
+                if (ImGui.MenuItem("Running Scripts"))
+                {
+                    RunningScriptsWindow.Show();
                 }
 
                 bool disableCache = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;

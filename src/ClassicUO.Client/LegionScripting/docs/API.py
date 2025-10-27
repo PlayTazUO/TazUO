@@ -386,6 +386,60 @@ class ModernNineSliceGump:
     def SetResizeCallback(self, callback: Any) -> None:
         pass
 
+class PyPlayer:
+    Strength: int = None
+    Dexterity: int = None
+    Intelligence: int = None
+    StrengthIncrease: int = None
+    DexterityIncrease: int = None
+    IntelligenceIncrease: int = None
+    StrLock = None
+    DexLock = None
+    IntLock = None
+    HitPointsIncrease: int = None
+    ManaIncrease: int = None
+    StaminaIncrease: int = None
+    HitPointsRegeneration: int = None
+    ManaRegeneration: int = None
+    StaminaRegeneration: int = None
+    PhysicalResistance: int = None
+    FireResistance: int = None
+    ColdResistance: int = None
+    PoisonResistance: int = None
+    EnergyResistance: int = None
+    MaxPhysicResistence: int = None
+    MaxFireResistence: int = None
+    MaxColdResistence: int = None
+    MaxPoisonResistence: int = None
+    MaxEnergyResistence: int = None
+    DamageMin: int = None
+    DamageMax: int = None
+    DamageIncrease: int = None
+    HitChanceIncrease: int = None
+    SwingSpeedIncrease: int = None
+    DefenseChanceIncrease: int = None
+    MaxDefenseChanceIncrease: int = None
+    ReflectPhysicalDamage: int = None
+    SpellDamageIncrease: int = None
+    FasterCasting: int = None
+    FasterCastRecovery: int = None
+    LowerManaCost: int = None
+    LowerReagentCost: int = None
+    Luck: int = None
+    Gold: int = None
+    TithingPoints: int = None
+    Weight: int = None
+    WeightMax: int = None
+    StatsCap: int = None
+    Followers: int = None
+    FollowersMax: int = None
+    EnhancePotions: int = None
+    MaxHitPointsIncrease: int = None
+    MaxManaIncrease: int = None
+    MaxStaminaIncrease: int = None
+    InWarMode: bool = None
+    __class__: str = None
+
 class PyProfile:
     CharacterName: str = None
     ServerName: str = None

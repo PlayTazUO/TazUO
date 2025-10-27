@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `10/21/25`.*
+*This was generated on `10/26/25`.*
 
 ## Properties
 ### `JournalEntries`
@@ -37,7 +37,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### `Player`
 
-**Type:** `PlayerMobile`
+**Type:** `PyPlayer`
 
  Returns the player character object
 

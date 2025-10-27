@@ -8,6 +8,7 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
+using ClassicUO.Network;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
@@ -393,7 +394,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     switch (_entry.PingStatus)
                     {
                         case IPStatus.Success:
-                            _server_ping.Text = _entry.Ping == -1 ? "-" : _entry.Ping.ToString();
+                            _server_ping.Text = _entry.Ping == -1 ? $"-" : _entry.Ping.ToString();
 
                             break;
 
