@@ -129,10 +129,10 @@ public class SpellBar : Gump
         rowLabel.Y = (Height - rowLabel.Height) >> 1;
         Add(rowLabel);
 
-        PNGLoader.Instance.TryGetEmbeddedTexture("upicon.png", out var upTexture);
+        PNGLoader.Instance.TryGetEmbeddedTexture("upicon.png", out Microsoft.Xna.Framework.Graphics.Texture2D upTexture);
         var up = new EmbeddedGumpPic(Width - 31, 0, upTexture, 148);
         up.MouseUp += (sender, e) => { ChangeRow(false); };
-        PNGLoader.Instance.TryGetEmbeddedTexture("downicon.png", out var downTexture);
+        PNGLoader.Instance.TryGetEmbeddedTexture("downicon.png", out Microsoft.Xna.Framework.Graphics.Texture2D downTexture);
         var down = new EmbeddedGumpPic(Width - 31, Height - 16, downTexture, 148);
         down.MouseUp += (sender, e) => { ChangeRow(true); };
 
@@ -218,7 +218,7 @@ public class SpellBar : Gump
 
         if (button == MouseButtonType.Left && Keyboard.Alt && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
         {
-            ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
             if (texture.Texture != null)
             {
                 if (x >= 0 && x <= texture.UV.Width && y >= 0 && y <= texture.UV.Height)
@@ -253,7 +253,7 @@ public class SpellBar : Gump
         {
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-            ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
 
             if (texture.Texture != null)
             {
@@ -345,7 +345,7 @@ public class SpellBar : Gump
                 return;
             }
 
-            var keys = SpellBarManager.GetKetNames(slot);
+            string keys = SpellBarManager.GetKetNames(slot);
             if (string.IsNullOrEmpty(keys))
                 keys = SpellBarManager.GetControllerButtonsName(slot);
 
@@ -455,7 +455,7 @@ public class SpellBar : Gump
                 return true;
             }
 
-            var castTime = trackCasting ? i.GetEffectiveCastTime() : i.GetEffectiveRecoveryTime();
+            double castTime = trackCasting ? i.GetEffectiveCastTime() : i.GetEffectiveRecoveryTime();
             if (castTime > 0)
             {
                 double percent = (DateTime.Now - savedStateTime).TotalSeconds / castTime;

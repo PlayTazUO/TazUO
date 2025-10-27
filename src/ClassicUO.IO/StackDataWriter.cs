@@ -108,10 +108,7 @@ namespace ClassicUO.IO
         }
 
         [MethodImpl(IMPL_OPTION)]
-        public void WriteBool(bool b)
-        {
-            WriteUInt8(b ? (byte) 0x01 : (byte) 0x00);
-        }
+        public void WriteBool(bool b) => WriteUInt8(b ? (byte)0x01 : (byte)0x00);
 
 
 
@@ -185,10 +182,7 @@ namespace ClassicUO.IO
         }
 
         [MethodImpl(IMPL_OPTION)]
-        public void WriteUnicodeLE(string str, int length)
-        {
-            WriteString<char>(Encoding.Unicode, str, length);
-        }
+        public void WriteUnicodeLE(string str, int length) => WriteString<char>(Encoding.Unicode, str, length);
 
 
 
@@ -263,27 +257,21 @@ namespace ClassicUO.IO
         }
 
         [MethodImpl(IMPL_OPTION)]
-        public void WriteUnicodeBE(string str, int length)
-        {
-            WriteString<char>(Encoding.BigEndianUnicode, str, length);
-        }
+        public void WriteUnicodeBE(string str, int length) => WriteString<char>(Encoding.BigEndianUnicode, str, length);
 
-        
+
 
 
 
         [MethodImpl(IMPL_OPTION)]
-        public void WriteUTF8(string str, int len)
-        {
-            WriteString<byte>(Encoding.UTF8, str, len);
-        }
+        public void WriteUTF8(string str, int len) => WriteString<byte>(Encoding.UTF8, str, len);
 
         [MethodImpl(IMPL_OPTION)]
         public void WriteASCII(string str)
         {
             if (!string.IsNullOrEmpty(str))
             {
-                foreach (var b in StringHelper.StringToCp1252Bytes(str))
+                foreach (byte b in StringHelper.StringToCp1252Bytes(str))
                 {
                     WriteUInt8(b);
                 }
@@ -303,7 +291,7 @@ namespace ClassicUO.IO
             }
             else
             {
-                foreach (var b in StringHelper.StringToCp1252Bytes(str, length))
+                foreach (byte b in StringHelper.StringToCp1252Bytes(str, length))
                 {
                     WriteUInt8(b);
                 }
@@ -418,9 +406,6 @@ namespace ClassicUO.IO
         }
 
         [MethodImpl(IMPL_OPTION)]
-        public void Dispose()
-        {
-            Return();
-        }
+        public void Dispose() => Return();
     }
 }

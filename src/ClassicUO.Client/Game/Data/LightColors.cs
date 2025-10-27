@@ -337,7 +337,7 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(path) || force)
             {
-                using (StreamWriter writer = new StreamWriter(File.Create(path)))
+                using (var writer = new StreamWriter(File.Create(path)))
                 {
                     writer.WriteLine("# FORMAT");
 
@@ -353,7 +353,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            TextFileParser lightshadersParser = new TextFileParser(File.ReadAllText(path), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+            var lightshadersParser = new TextFileParser(File.ReadAllText(path), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
             while (!lightshadersParser.IsEOF())
             {
@@ -401,7 +401,7 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(lights))
             {
-                using (StreamWriter writer = new StreamWriter(lights))
+                using (var writer = new StreamWriter(lights))
                 {
                     writer.WriteLine("# FORMAT");
                     writer.WriteLine("# ITEM_ID LIGHT_SHADER_OR_HUE");
@@ -415,7 +415,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            TextFileParser itemlightsparser = new TextFileParser(File.ReadAllText(lights), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+            var itemlightsparser = new TextFileParser(File.ReadAllText(lights), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
             while (!itemlightsparser.IsEOF())
             {
@@ -423,7 +423,7 @@ namespace ClassicUO.Game.Data
 
                 if (ss != null && ss.Count != 0)
                 {
-                    ItemLightData entry = new ItemLightData();
+                    var entry = new ItemLightData();
 
                     ushort id = ss[0].StartsWith("0x") ? Convert.ToUInt16(ss[0], 16) : Convert.ToUInt16(ss[0]);
 

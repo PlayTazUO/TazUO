@@ -26,10 +26,7 @@ namespace ClassicUO.Game.Managers
             //Clear();
         }
 
-        public virtual void Update()
-        {
-            ProcessWorldText(false);
-        }
+        public virtual void Update() => ProcessWorldText(false);
 
         public virtual void Draw(UltimaBatcher2D batcher, int startX, int startY, bool isGump = false)
         {
@@ -184,7 +181,7 @@ namespace ClassicUO.Game.Managers
         {
             bool result = false;
 
-            Rectangle rect = new Rectangle
+            var rect = new Rectangle
             {
                 X = msg.RealScreenPosition.X,
                 Y = msg.RealScreenPosition.Y,

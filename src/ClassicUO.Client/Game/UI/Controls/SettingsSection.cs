@@ -15,7 +15,7 @@ public class SettingsSection : Control
         WantUpdateSize = true;
 
 
-        Label label = new Label(title, true, HUE_FONT, font: FONT);
+        var label = new Label(title, true, HUE_FONT, font: FONT);
         label.X = 5;
         base.Add(label);
 
@@ -39,15 +39,9 @@ public class SettingsSection : Control
         base.Add(_databox);
     }
 
-    public void PushIndent()
-    {
-        _indent += 40;
-    }
+    public void PushIndent() => _indent += 40;
 
-    public void PopIndent()
-    {
-        _indent -= 40;
-    }
+    public void PopIndent() => _indent -= 40;
 
 
     public void AddRight(Control c, int offset = 15)
@@ -70,10 +64,7 @@ public class SettingsSection : Control
         _databox.WantUpdateSize = true;
     }
 
-    public void BaseAdd(Control c, int page = 0)
-    {
-        base.Add(c, page);
-    }
+    public void BaseAdd(Control c, int page = 0) => base.Add(c, page);
 
     public override T Add<T>(T c, int page = 0)
     {

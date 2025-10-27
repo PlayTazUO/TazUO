@@ -47,7 +47,7 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(cave))
             {
-                using (StreamWriter writer = new StreamWriter(cave))
+                using (var writer = new StreamWriter(cave))
                 {
                     for (int i = 0x053B; i < 0x0553 + 1; i++)
                     {
@@ -61,7 +61,7 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(vegetation))
             {
-                using (StreamWriter writer = new StreamWriter(vegetation))
+                using (var writer = new StreamWriter(vegetation))
                 {
                     ushort[] vegetationTiles =
                     {
@@ -100,8 +100,8 @@ namespace ClassicUO.Game.Data
 
             if (!File.Exists(trees))
             {
-                using (StreamWriter writer = new StreamWriter(trees))
-                using (StreamWriter writerveg = new StreamWriter(vegetation, true))
+                using (var writer = new StreamWriter(trees))
+                using (var writerveg = new StreamWriter(vegetation, true))
                 {
                     ushort[] treeTiles =
                     {
@@ -153,7 +153,7 @@ namespace ClassicUO.Game.Data
             }
 
 
-            TextFileParser caveParser = new TextFileParser(File.ReadAllText(cave), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+            var caveParser = new TextFileParser(File.ReadAllText(cave), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
             while (!caveParser.IsEOF())
             {
@@ -170,7 +170,7 @@ namespace ClassicUO.Game.Data
             }
 
 
-            TextFileParser stumpsParser = new TextFileParser(File.ReadAllText(trees), new[] { ' ', '\t', ',', '=' }, new[] { '#', ';' }, new[] { '"', '"' });
+            var stumpsParser = new TextFileParser(File.ReadAllText(trees), new[] { ' ', '\t', ',', '=' }, new[] { '#', ';' }, new[] { '"', '"' });
 
             while (!stumpsParser.IsEOF())
             {
@@ -194,7 +194,7 @@ namespace ClassicUO.Game.Data
             }
 
 
-            TextFileParser vegetationParser = new TextFileParser(File.ReadAllText(vegetation), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+            var vegetationParser = new TextFileParser(File.ReadAllText(vegetation), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
             while (!vegetationParser.IsEOF())
             {
@@ -215,12 +215,12 @@ namespace ClassicUO.Game.Data
             Log.Trace("Applying statics border...");
 
             // Group graphics by their atlas texture to minimize GetData/SetData calls
-            var textureGroups = CaveTiles.GroupBy(graphic => Client.Game.UO.Arts.GetArt(graphic).Texture)
+            IEnumerable<IGrouping<Microsoft.Xna.Framework.Graphics.Texture2D, ushort>> textureGroups = CaveTiles.GroupBy(graphic => Client.Game.UO.Arts.GetArt(graphic).Texture)
                 .Where(g => g.Key != null);
 
-            foreach (var textureGroup in textureGroups)
+            foreach (IGrouping<Microsoft.Xna.Framework.Graphics.Texture2D, ushort> textureGroup in textureGroups)
             {
-                var atlasTexture = textureGroup.Key;
+                Microsoft.Xna.Framework.Graphics.Texture2D atlasTexture = textureGroup.Key;
                 uint[] atlasPixels = new uint[atlasTexture.Width * atlasTexture.Height];
                 atlasTexture.GetData(atlasPixels);
 
@@ -228,7 +228,7 @@ namespace ClassicUO.Game.Data
 
                 foreach (ushort graphic in textureGroup)
                 {
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                    ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                     if (ApplyBorderToAtlasRegion(atlasPixels, atlasTexture.Width, atlasTexture.Height, artInfo.UV))
                     {
@@ -347,16 +347,10 @@ namespace ClassicUO.Game.Data
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsVegetation(ushort g)
-        {
-            return (_filteredTiles[g] & STATIC_TILES_FILTER_FLAGS.STFF_VEGETATION) != 0;
-        }
+        public static bool IsVegetation(ushort g) => (_filteredTiles[g] & STATIC_TILES_FILTER_FLAGS.STFF_VEGETATION) != 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCave(ushort g)
-        {
-            return (_filteredTiles[g] & STATIC_TILES_FILTER_FLAGS.STFF_CAVE) != 0;
-        }
+        public static bool IsCave(ushort g) => (_filteredTiles[g] & STATIC_TILES_FILTER_FLAGS.STFF_CAVE) != 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsRock(ushort g)
@@ -378,46 +372,25 @@ namespace ClassicUO.Game.Data
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsField(ushort g)
-        {
-            return g >= 0x398C && g <= 0x399F || g >= 0x3967 && g <= 0x397A || g >= 0x3946 && g <= 0x3964 || g >= 0x3914 && g <= 0x3929;
-        }
+        public static bool IsField(ushort g) => g >= 0x398C && g <= 0x399F || g >= 0x3967 && g <= 0x397A || g >= 0x3946 && g <= 0x3964 || g >= 0x3914 && g <= 0x3929;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsFireField(ushort g)
-        {
-            return g >= 0x398C && g <= 0x399F;
-        }
+        public static bool IsFireField(ushort g) => g >= 0x398C && g <= 0x399F;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsParalyzeField(ushort g)
-        {
-            return g >= 0x3967 && g <= 0x397A;
-        }
+        public static bool IsParalyzeField(ushort g) => g >= 0x3967 && g <= 0x397A;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsEnergyField(ushort g)
-        {
-            return g >= 0x3946 && g <= 0x3964;
-        }
+        public static bool IsEnergyField(ushort g) => g >= 0x3946 && g <= 0x3964;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsPoisonField(ushort g)
-        {
-            return g >= 0x3914 && g <= 0x3929;
-        }
+        public static bool IsPoisonField(ushort g) => g >= 0x3914 && g <= 0x3929;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsWallOfStone(ushort g)
-        {
-            return g == 0x82;
-        }
+        public static bool IsWallOfStone(ushort g) => g == 0x82;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsOutStamina(World world)
-        {
-            return world.Player.Stamina != world.Player.StaminaMax;
-        }
+        public static bool IsOutStamina(World world) => world.Player.Stamina != world.Player.StaminaMax;
         // ## BEGIN - END ## // MISC2
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool isHumanAndMonster(ushort g)

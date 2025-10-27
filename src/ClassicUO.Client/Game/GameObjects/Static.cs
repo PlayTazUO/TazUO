@@ -41,7 +41,7 @@ namespace ClassicUO.Game.GameObjects
 
         public static Static Create(World world, ushort graphic, ushort hue, int index)
         {
-            Static s = new Static(world); // _pool.GetOne();
+            var s = new Static(world); // _pool.GetOne();
             s.Graphic = s.OriginalGraphic = graphic;
             s.Hue = hue;
             s.UpdateGraphicBySeason();
@@ -69,15 +69,9 @@ namespace ClassicUO.Game.GameObjects
             return s;
         }
 
-        public void SetGraphic(ushort g)
-        {
-            Graphic = g;
-        }
+        public void SetGraphic(ushort g) => Graphic = g;
 
-        public void RestoreOriginalGraphic()
-        {
-            Graphic = OriginalGraphic;
-        }
+        public void RestoreOriginalGraphic() => Graphic = OriginalGraphic;
 
         public override void UpdateGraphicBySeason()
         {

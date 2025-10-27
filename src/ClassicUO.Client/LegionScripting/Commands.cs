@@ -25,7 +25,7 @@ namespace ClassicUO.LegionScripting
             if (string.IsNullOrEmpty(text))
                 throw new RunTimeError(null, "Script name can't be empty.");
 
-            foreach (var script in LegionScripting.LoadedScripts)
+            foreach (ScriptFile script in LegionScripting.LoadedScripts)
             {
                 if (script.FileName == text)
                 {
@@ -302,7 +302,7 @@ namespace ClassicUO.LegionScripting
 
             if (gfx == Constants.MAX_SERIAL) gfx = uint.MaxValue;
 
-            var items = Utility.FindItems(gfx, parOrRootContainer: source, hue: hue);
+            System.Collections.Generic.List<Item> items = Utility.FindItems(gfx, parOrRootContainer: source, hue: hue);
 
             if (items.Count > 0)
             {
@@ -779,7 +779,7 @@ namespace ClassicUO.LegionScripting
 
             if (mm != null)
             {
-                var macro = mm.FindMacro(args[0].AsString());
+                Macro macro = mm.FindMacro(args[0].AsString());
                 if (macro != null)
                     mm.SetMacroToExecute(macro.Items as MacroObject);
             }

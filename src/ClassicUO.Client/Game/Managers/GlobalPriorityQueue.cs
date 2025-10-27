@@ -21,7 +21,7 @@ namespace ClassicUO.Game.Managers
             if (_isEmpty) return;
             if (GlobalActionCooldown.IsOnCooldown) return;
 
-            if (!_actions.TryDequeue(out var action))
+            if (!_actions.TryDequeue(out Action action))
                 return;
 
             action?.Invoke();
@@ -39,7 +39,7 @@ namespace ClassicUO.Game.Managers
 
         public void Clear()
         {
-            while (_actions.TryDequeue(out var _))
+            while (_actions.TryDequeue(out Action _))
             {
             }
             _isEmpty = true;

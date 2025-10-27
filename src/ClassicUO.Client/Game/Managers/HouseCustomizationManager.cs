@@ -45,7 +45,7 @@ namespace ClassicUO.Game.Managers
             _world = world;
             Serial = serial;
 
-            var fileManager = Client.Game.UO.FileManager;
+            UOFileManager fileManager = Client.Game.UO.FileManager;
             // TODO: don't load the file txt every time the housemanager get initialized
             ParseFileWithCategory<CustomHouseWall, CustomHouseWallCategory>(Walls, fileManager.GetUOFilePath("walls.txt"));
 
@@ -94,7 +94,7 @@ namespace ClassicUO.Game.Managers
 
             if (foundation.MultiInfo.HasValue)
             {
-                var multi = foundation.MultiInfo.Value;
+                Rectangle multi = foundation.MultiInfo.Value;
 
                 StartPos.X = foundation.X + multi.X + 1;
                 StartPos.Y = foundation.Y + multi.Y + 1;
@@ -885,7 +885,7 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            var foundationItem = _world.Items.Get(Serial);
+            Item foundationItem = _world.Items.Get(Serial);
 
             if (foundationItem == null || !_world.HouseManager.TryGetHouse(foundationItem, out House house))
                 return false;
@@ -1039,14 +1039,14 @@ namespace ClassicUO.Game.Managers
                 if (!_bounds.Contains(gobj.X, gobj.Y))
                     return false;
 
-                var minZ = foundationItem.Z + 0 + (CurrentFloor - 1) * 20;
-                var maxZ = minZ + 20;
+                int minZ = foundationItem.Z + 0 + (CurrentFloor - 1) * 20;
+                int maxZ = minZ + 20;
 
                 // var boundsOffset = State != CUSTOM_HOUSE_GUMP_STATE.CHGS_WALL ? 1 : 0;
 
-                for (var i = 0; i < list.Count; ++i)
+                for (int i = 0; i < list.Count; ++i)
                 {
-                    var item = list[i];
+                    CustomBuildObject item = list[i];
                     if (type == CUSTOM_HOUSE_BUILD_TYPE.CHBT_STAIR)
                     {
                         if (CombinedStair)
@@ -1075,7 +1075,7 @@ namespace ClassicUO.Game.Managers
 
                     if (type != CUSTOM_HOUSE_BUILD_TYPE.CHBT_FLOOR)
                     {
-                        foreach (var multi in house.GetMultiAt(gobj.X + item.X, gobj.Y + item.Y))
+                        foreach (Multi multi in house.GetMultiAt(gobj.X + item.X, gobj.Y + item.Y))
                         {
                             foreach (Multi multiObject in house.GetMultiAt(gobj.X + item.X, gobj.Y + item.Y)) //HOUSE FIXES Multi multiObject in house.Components.Where(s => s.X == gobj.X + item.X && s.Y == gobj.Y + item.Y))
                             {
@@ -1303,7 +1303,7 @@ namespace ClassicUO.Game.Managers
 
                     for (int i = 0; i < 4; i++)
                     {
-                        Point testPoint = new Point(item.X + table[i].X, item.Y + table[i].Y);
+                        var testPoint = new Point(item.X + table[i].X, item.Y + table[i].Y);
 
                         if (!existsInList(validatedFloors, testPoint))
                         {
@@ -1644,7 +1644,7 @@ namespace ClassicUO.Game.Managers
 
         private void ParseFile<T>(List<T> list, string path) where T : CustomHouseObject, new()
         {
-            FileInfo file = new FileInfo(path);
+            var file = new FileInfo(path);
 
             if (!file.Exists)
             {
@@ -1662,7 +1662,7 @@ namespace ClassicUO.Game.Managers
                         continue;
                     }
 
-                    T item = new T();
+                    var item = new T();
 
                     if (item.Parse(line))
                     {
@@ -1677,7 +1677,7 @@ namespace ClassicUO.Game.Managers
 
         private void ParseFileWithCategory<T, U>(List<U> list, string path) where T : CustomHouseObject, new() where U : CustomHouseObjectCategory<T>, new()
         {
-            FileInfo file = new FileInfo(path);
+            var file = new FileInfo(path);
 
             if (!file.Exists)
             {
@@ -1695,7 +1695,7 @@ namespace ClassicUO.Game.Managers
                         continue;
                     }
 
-                    T item = new T();
+                    var item = new T();
 
                     if (item.Parse(line))
                     {
@@ -1720,7 +1720,7 @@ namespace ClassicUO.Game.Managers
 
                         if (!found)
                         {
-                            U c = new U
+                            var c = new U
                             {
                                 Index = item.Category
                             };

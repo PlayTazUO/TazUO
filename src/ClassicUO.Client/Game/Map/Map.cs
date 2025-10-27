@@ -189,10 +189,7 @@ namespace ClassicUO.Game.Map
             return task;
         }
 
-        public GameObject GetTile(int x, int y, bool load = true)
-        {
-            return GetChunk(x, y, load)?.GetHeadObject(x % 8, y % 8);
-        }
+        public GameObject GetTile(int x, int y, bool load = true) => GetChunk(x, y, load)?.GetHeadObject(x % 8, y % 8);
 
         public sbyte GetTileZ(int x, int y)
         {
@@ -201,7 +198,7 @@ namespace ClassicUO.Game.Map
                 return -125;
             }
 
-            ref var blockIndex = ref GetIndex(x >> 3, y >> 3);
+            ref IndexMap blockIndex = ref GetIndex(x >> 3, y >> 3);
 
             if (!blockIndex.IsValid())
             {
@@ -246,10 +243,7 @@ namespace ClassicUO.Game.Map
             }
         }
 
-        public void ClearBockAccess()
-        {
-            _blockAccessList.AsSpan().Fill(false);
-        }
+        public void ClearBockAccess() => _blockAccessList.AsSpan().Fill(false);
 
         public sbyte CalculateNearZ(sbyte defaultZ, int x, int y, int z)
         {
@@ -320,10 +314,7 @@ namespace ClassicUO.Game.Map
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetBlock(int blockX, int blockY)
-        {
-            return blockX * Client.Game.UO.FileManager.Maps.MapBlocksSize[Index, 1] + blockY;
-        }
+        private int GetBlock(int blockX, int blockY) => blockX * Client.Game.UO.FileManager.Maps.MapBlocksSize[Index, 1] + blockY;
 
         public IEnumerable<Chunk> GetUsedChunks()
         {

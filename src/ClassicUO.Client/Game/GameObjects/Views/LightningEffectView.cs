@@ -27,7 +27,7 @@ namespace ClassicUO.Game.GameObjects
             Vector3 hueVec = ShaderHueTranslator.GetHueVector(hue, false, 1);
             hueVec.Y = hueVec.X > 1.0f ? ShaderHueTranslator.SHADER_LIGHTS : ShaderHueTranslator.SHADER_NONE;
 
-            ref var index = ref Client.Game.UO.FileManager.Gumps.File.GetValidRefEntry(AnimationGraphic);
+            ref UOFileIndex index = ref Client.Game.UO.FileManager.Gumps.File.GetValidRefEntry(AnimationGraphic);
 
             posX -= index.Width >> 1;
             posY -= index.Height;

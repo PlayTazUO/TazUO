@@ -226,10 +226,7 @@ namespace ClassicUO.Game.Data
 
             public string[] Labels { get; }
 
-            public int GetGraphic(int index)
-            {
-                return _ids[index];
-            }
+            public int GetGraphic(int index) => _ids[index];
         }
     }
 }

@@ -8,22 +8,13 @@ namespace ClassicUO.Game
     internal static class SerialHelper
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsValid(uint serial)
-        {
-            return serial > 0 && serial < 0x80000000;
-        }
+        public static bool IsValid(uint serial) => serial > 0 && serial < 0x80000000;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsMobile(uint serial)
-        {
-            return serial > 0 && serial < 0x40000000;
-        }
+        public static bool IsMobile(uint serial) => serial > 0 && serial < 0x40000000;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsItem(uint serial)
-        {
-            return serial >= 0x40000000 && serial < 0x80000000;
-        }
+        public static bool IsItem(uint serial) => serial >= 0x40000000 && serial < 0x80000000;
 
         public static uint Parse(string str)
         {

@@ -255,7 +255,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
                 {
-                    ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+                    ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
                     if (texture.Texture != null)
                     {
                         if (x >= 0 && x < texture.UV.Width && y >= 0 && y <= texture.UV.Height)
@@ -398,7 +398,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-                ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
 
                 if (texture.Texture != null)
                 {
@@ -608,7 +608,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _hpLineRed.IsVisible = entity.HitsMax > 0;
 
-                Mobile mobile = entity as Mobile;
+                var mobile = entity as Mobile;
 
                 if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
                 {
@@ -1225,7 +1225,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
-                    Mobile mobile = entity as Mobile;
+                    var mobile = entity as Mobile;
 
                     if (entity != null)
                     {
@@ -1371,10 +1371,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public override bool Contains(int x, int y)
-        {
-            return true;
-        }
+        public override bool Contains(int x, int y) => true;
 
         private class LineCHB : Line
         {
@@ -1689,7 +1686,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ushort textColor = 0x0386;
                     ushort hitsColor = 0x0386;
 
-                    Mobile mobile = entity as Mobile;
+                    var mobile = entity as Mobile;
 
                     if (entity != null)
                     {
@@ -1848,7 +1845,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _hpLineRed.IsVisible = entity.HitsMax > 0;
 
-                Mobile mobile = entity as Mobile;
+                var mobile = entity as Mobile;
 
                 if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && !inparty && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
                 {

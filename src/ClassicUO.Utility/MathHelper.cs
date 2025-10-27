@@ -12,10 +12,7 @@ namespace ClassicUO.Utility
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool InRange(int input, int low, int high)
-        {
-            return input >= low && input <= high;
-        }
+        public static bool InRange(int input, int low, int high) => input >= low && input <= high;
 
         public static int GetDistance(Point current, Point target)
         {
@@ -31,10 +28,7 @@ namespace ClassicUO.Utility
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong Combine(uint val1, uint val2)
-        {
-            return (ulong)(uint)val1 | ((ulong)(uint)val2 << 32);
-        }
+        public static ulong Combine(uint val1, uint val2) => (ulong)(uint)val1 | ((ulong)(uint)val2 << 32);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetNumbersFromCombine(ulong b, out int val1, out int val2)
@@ -76,16 +70,10 @@ namespace ClassicUO.Utility
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Hypotenuse(float a, float b)
-        {
-            return Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
-        }
+        public static double Hypotenuse(float a, float b) => Math.Sqrt(Math.Pow(a, 2) + Math.Pow(b, 2));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float AngleBetweenVectors(Vector2 from, Vector2 to)
-        {
-            return (float) Math.Atan2(to.Y - from.Y, to.X - from.X);
-        }
+        public static float AngleBetweenVectors(Vector2 from, Vector2 to) => (float)Math.Atan2(to.Y - from.Y, to.X - from.X);
 
         private static float GetMachineEpsilonFloat()
         {

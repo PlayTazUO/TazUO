@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             int sw = _bookPage.renderedText.GetCharWidth(' ');
 
             for (int i = 0, l = BookLines.Length; i < l; i++)
@@ -238,10 +238,7 @@ namespace ClassicUO.Game.UI.Gumps
             Client.Game.Audio.PlaySound(0x0055);
         }
 
-        private void PageZero_TextChanged(object sender, EventArgs e)
-        {
-            _pagesChanged[0] = true;
-        }
+        private void PageZero_TextChanged(object sender, EventArgs e) => _pagesChanged[0] = true;
 
         private void UpdatePageButtonVisibility()
         {

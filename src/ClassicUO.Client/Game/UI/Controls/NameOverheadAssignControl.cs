@@ -101,7 +101,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void SetupOptionCheckboxes()
         {
-            var y = 0;
+            int y = 0;
             AddLabel("Items", 75, y, true);
             y += 28;
 
@@ -185,7 +185,7 @@ namespace ClassicUO.Game.UI.Controls
 
             checkbox.ValueChanged += (sender, args) =>
             {
-                var isChecked = ((Checkbox)sender).IsChecked;
+                bool isChecked = ((Checkbox)sender).IsChecked;
 
                 if (isChecked)
                     Option.NameOverheadOptionFlags |= (int)optionFlag;
@@ -287,10 +287,10 @@ namespace ClassicUO.Game.UI.Controls
 
         private void UpdateCheckboxesByCurrentOptionFlags()
         {
-            foreach (var kvp in checkboxDict)
+            foreach (KeyValuePair<NameOverheadOptions, Checkbox> kvp in checkboxDict)
             {
-                var flag = kvp.Key;
-                var checkbox = kvp.Value;
+                NameOverheadOptions flag = kvp.Key;
+                Checkbox checkbox = kvp.Value;
 
                 checkbox.IsChecked = ((NameOverheadOptions)Option.NameOverheadOptionFlags).HasFlag(flag);
             }

@@ -126,9 +126,9 @@ sealed class WebSocketWrapper : SocketWrapper
 
     private async Task StartReceiveAsync()
     {
-        var buffer = Shared.Rent(4096);
-        var memory = buffer.AsMemory();
-        var position = 0;
+        byte[] buffer = Shared.Rent(4096);
+        Memory<byte> memory = buffer.AsMemory();
+        int position = 0;
 
         try
         {
@@ -136,7 +136,7 @@ sealed class WebSocketWrapper : SocketWrapper
             {
                 GrowReceiveBufferIfNeeded(ref buffer, ref memory);
 
-                var receiveResult = await _webSocket.ReceiveAsync(memory.Slice(position), _tokenSource.Token);
+                ValueWebSocketReceiveResult receiveResult = await _webSocket.ReceiveAsync(memory.Slice(position), _tokenSource.Token);
 
                 // Ignoring message types:
                 // 1. WebSocketMessageType.Text: shouldn't be sent by the server, though might be useful for multiplexing commands

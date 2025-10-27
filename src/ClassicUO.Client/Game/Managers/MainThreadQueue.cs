@@ -6,16 +6,20 @@ namespace ClassicUO.Game.Managers;
 
 public static class MainThreadQueue
 {
-    public static ConcurrentQueue<Action> QueuedActions { get; } = new();
+    private static int _threadId;
+    private static bool _isMainThread => Thread.CurrentThread.ManagedThreadId == _threadId;
+    private static ConcurrentQueue<Action> _queuedActions { get; } = new();
+
+    /// <summary>
+    /// Must be called from main thread
+    /// </summary>
+    public static void Load() => _threadId = Thread.CurrentThread.ManagedThreadId;
 
     /// <summary>
     /// This will not wait for the action to complete.
     /// </summary>
     /// <param name="action"></param>
-    public static void EnqueueAction(Action action)
-    {
-        QueuedActions.Enqueue(action);
-    }
+    public static void EnqueueAction(Action action) => _queuedActions.Enqueue(action);
 
     /// <summary>
     /// This will wait for the returned result.
@@ -25,6 +29,8 @@ public static class MainThreadQueue
     /// <returns></returns>
     public static T InvokeOnMainThread<T>(Func<T> func)
     {
+        if (_isMainThread) return func();
+
         var resultEvent = new ManualResetEvent(false);
         T result = default;
 
@@ -34,7 +40,7 @@ public static class MainThreadQueue
             resultEvent.Set();
         }
 
-        QueuedActions.Enqueue(action);
+        _queuedActions.Enqueue(action);
         resultEvent.WaitOne(); // Wait for the main thread to complete the operation
 
         return result;
@@ -46,12 +52,21 @@ public static class MainThreadQueue
     /// <param name="action"></param>
     public static void InvokeOnMainThread(Action action)
     {
-        QueuedActions.Enqueue(action);
+        if (_isMainThread)
+        {
+            action();
+            return;
+        }
+
+        _queuedActions.Enqueue(action);
     }
 
+    /// <summary>
+    /// Must only be called on the main thread
+    /// </summary>
     public static void ProcessQueue()
     {
-        while (QueuedActions.TryDequeue(out var action))
+        while (_queuedActions.TryDequeue(out Action action))
         {
             action();
         }
@@ -59,6 +74,6 @@ public static class MainThreadQueue
 
     public static void Reset()
     {
-        while (QueuedActions.TryDequeue(out _)) { }
+        while (_queuedActions.TryDequeue(out _)) { }
     }
 }

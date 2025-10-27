@@ -120,7 +120,7 @@ public partial class LocationGoGump : Gump
         point = new Point(-1, -1);
         try
         {
-            var match = PointCoordsRegex().Match(text);
+            Match match = PointCoordsRegex().Match(text);
 
             if (!match.Success)
             {
@@ -152,7 +152,7 @@ public partial class LocationGoGump : Gump
 
     private void OnTextChange(object obj, EventArgs eventArgs)
     {
-        var text = _textBox.Text;
+        string text = _textBox.Text;
 
         if (string.IsNullOrWhiteSpace(text))
             return;

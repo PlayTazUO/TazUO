@@ -96,7 +96,7 @@ namespace ClassicUO.LegionScripting
         public void Refresh()
         {
             Dispose();
-            ScriptManagerGump g = new ScriptManagerGump() { X = X, Y = Y };
+            var g = new ScriptManagerGump() { X = X, Y = Y };
             g.Width = Width;
             g.Height = Height;
             UIManager.Add(g);
@@ -104,7 +104,7 @@ namespace ClassicUO.LegionScripting
 
         private void BuildGump()
         {
-            Dictionary<string, Dictionary<string, List<ScriptFile>>> groupsMap = new Dictionary<string, Dictionary<string, List<ScriptFile>>>
+            var groupsMap = new Dictionary<string, Dictionary<string, List<ScriptFile>>>
             {
                 { "", new Dictionary<string, List<ScriptFile>>(){ { "", new List<ScriptFile>() } } }
             };
@@ -117,7 +117,7 @@ namespace ClassicUO.LegionScripting
                 if (!groupsMap[sf.Group].ContainsKey(sf.SubGroup))
                     groupsMap[sf.Group][sf.SubGroup] = new List<ScriptFile>();
 
-                var grouppath = Path.Combine(sf.Group, sf.SubGroup);
+                string grouppath = Path.Combine(sf.Group, sf.SubGroup);
                 if (!groups.Contains(grouppath))
                     groups.Add(grouppath);
 
@@ -126,7 +126,7 @@ namespace ClassicUO.LegionScripting
 
             int y = 0;
 
-            foreach (var group in groupsMap)
+            foreach (KeyValuePair<string, Dictionary<string, List<ScriptFile>>> group in groupsMap)
             {
                 var g = new GroupControl(World, this, group.Key == "" ? NOGROUPTEXT : group.Key, Width - 12 - 2 - GROUPINDENT) { Y = y }; // ModernScrollArea uses SCROLLBAR_WIDTH = 12
                 g.GroupExpandedShrunk += GroupExpandedShrunk;
@@ -137,10 +137,7 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        private void GroupExpandedShrunk(object sender, EventArgs e)
-        {
-            RepositionChildren();
-        }
+        private void GroupExpandedShrunk(object sender, EventArgs e) => RepositionChildren();
         public override void Save(XmlTextWriter writer)
         {
             base.Save(writer);
@@ -155,7 +152,7 @@ namespace ClassicUO.LegionScripting
             {
                 RefreshContent = false;
                 Dispose();
-                ScriptManagerGump g = new ScriptManagerGump() { X = X, Y = Y };
+                var g = new ScriptManagerGump() { X = X, Y = Y };
                 g.Width = Width;
                 g.Height = Height;
                 UIManager.Add(g);
@@ -291,7 +288,7 @@ while True:
                 options.ContextMenu = new ContextMenuControl(parentGump);
                 options.ContextMenu.Add(new ContextMenuItemEntry("New script", () =>
                 {
-                    InputRequest r = new InputRequest(world, "Enter a name for this script. \nUse /c[#da6e22].lscript/cd or /c[#da6e22].py", "Create", "Cancel", (r, s) =>
+                    var r = new InputRequest(world, "Enter a name for this script. \nUse /c[#da6e22].lscript/cd or /c[#da6e22].py", "Create", "Cancel", (r, s) =>
                     {
                         if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(s))
                         {
@@ -322,7 +319,7 @@ while True:
                 if (string.IsNullOrEmpty(parentGroup))
                     options.ContextMenu.Add(new ContextMenuItemEntry("New group", () =>
                     {
-                        InputRequest r = new InputRequest(world, "Enter a name for this group.", "Create", "Cancel", (r, s) =>
+                        var r = new InputRequest(world, "Enter a name for this group.", "Create", "Cancel", (r, s) =>
                         {
                             if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(s))
                             {
@@ -352,7 +349,7 @@ while True:
                 if (group != NOGROUPTEXT && group != "")
                     options.ContextMenu.Add(new ContextMenuItemEntry("Delete group", () =>
                     {
-                        QuestionGump g = new QuestionGump(world, "Delete group?", (r) =>
+                        var g = new QuestionGump(world, "Delete group?", (r) =>
                         {
                             if (r)
                             {
@@ -424,11 +421,11 @@ while True:
 
             public void AddGroups(Dictionary<string, List<ScriptFile>> groups)
             {
-                foreach (var obj in groups)
+                foreach (KeyValuePair<string, List<ScriptFile>> obj in groups)
                 {
                     if (!string.IsNullOrEmpty(obj.Key))
                     {
-                        GroupControl subG = new GroupControl(World, parentGump, obj.Key, Width - GROUPINDENT, group) { X = GROUPINDENT };
+                        var subG = new GroupControl(World, parentGump, obj.Key, Width - GROUPINDENT, group) { X = GROUPINDENT };
                         subG.AddItems(obj.Value);
                         subG.GroupExpandedShrunk += SubG_GroupExpandedShrunk;
                         dataBox.Add(subG);
@@ -545,7 +542,7 @@ while True:
                 }));
                 ContextMenu.Add(new ContextMenuItemEntry("Delete", () =>
                 {
-                    QuestionGump g = new QuestionGump(World, "Are you sure?", (r) =>
+                    var g = new QuestionGump(World, "Are you sure?", (r) =>
                     {
                         if (r)
                         {
@@ -572,15 +569,9 @@ while True:
                 LegionScripting.ScriptStartedEvent -= ScriptStarted;
             }
 
-            private void ScriptStopped(object sender, ScriptInfoEvent e)
-            {
-                SetBGColors();
-            }
+            private void ScriptStopped(object sender, ScriptInfoEvent e) => SetBGColors();
 
-            private void ScriptStarted(object sender, ScriptInfoEvent e)
-            {
-                SetBGColors();
-            }
+            private void ScriptStarted(object sender, ScriptInfoEvent e) => SetBGColors();
 
             private void SetMenuColor()
             {
@@ -617,7 +608,7 @@ while True:
             }
             private ContextMenuControl GenAutostartContext()
             {
-                ContextMenuControl context = new ContextMenuControl(parentGump);
+                var context = new ContextMenuControl(parentGump);
                 bool global = LegionScripting.AutoLoadEnabled(Script, true);
                 bool chara = LegionScripting.AutoLoadEnabled(Script, false);
 
@@ -657,7 +648,7 @@ while True:
                 label.Update(); //Force RTL to recreate the label so we can determine if we need to redo it..
                 if (label.RTL.Lines.Count > 1)
                 {
-                    var msize = label.RTL.Lines[0].Count;
+                    int msize = label.RTL.Lines[0].Count;
                     if (msize >= 3)
                         label.Text = ScriptDisplayName.Substring(0, msize - 3) + "...";
                 }

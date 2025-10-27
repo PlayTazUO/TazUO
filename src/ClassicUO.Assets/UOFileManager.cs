@@ -108,15 +108,15 @@ namespace ClassicUO.Assets
             //If the file with the given name doesn't exist, check for it with alternative casing if not on windows
             if (!PlatformHelper.IsWindows && !File.Exists(uoFilePath))
             {
-                FileInfo finfo = new FileInfo(uoFilePath);
-                var dir = Path.GetFullPath(finfo.DirectoryName ?? BasePath);
+                var finfo = new FileInfo(uoFilePath);
+                string dir = Path.GetFullPath(finfo.DirectoryName ?? BasePath);
 
                 if (Directory.Exists(dir))
                 {
-                    var files = Directory.GetFiles(dir);
-                    var matches = 0;
+                    string[] files = Directory.GetFiles(dir);
+                    int matches = 0;
 
-                    foreach (var f in files)
+                    foreach (string f in files)
                     {
                         if (string.Equals(f, uoFilePath, StringComparison.OrdinalIgnoreCase))
                         {
@@ -137,7 +137,7 @@ namespace ClassicUO.Assets
 
         public void Load(bool useVerdata, string lang, string mapsLayouts = "")
         {
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            var stopwatch = Stopwatch.StartNew();
 
             _overrideMap.Load(); // need to load this first so that it manages can perform the file overrides if needed
 
@@ -170,7 +170,7 @@ namespace ClassicUO.Assets
 
             ReadArtDefFile();
 
-            var verdata = Verdata.File;
+            UOFileMul verdata = Verdata.File;
             bool forceVerdata = Version < ClientVersion.CV_500A || verdata != null && verdata.Length != 0 && Verdata.Patches.Length != 0;
 
             if (!useVerdata && forceVerdata)
@@ -186,12 +186,12 @@ namespace ClassicUO.Assets
                 {
                     Log.Info(">> PATCHING WITH VERDATA.MUL");
 
-                    var buf = new byte[256];
+                    byte[] buf = new byte[256];
                     Span<VerdataHuesGroup> group = stackalloc VerdataHuesGroup[1];
 
                     for (int i = 0; i < Verdata.Patches.Length; i++)
                     {
-                        ref var vh = ref Verdata.Patches[i];
+                        ref UOFileIndex5D vh = ref Verdata.Patches[i];
                         Log.Info($">>> patching  FileID: {vh.FileID}  -  BlockID: {vh.BlockID}");
 
                         if (vh.FileID == 0)
@@ -240,7 +240,7 @@ namespace ClassicUO.Assets
                         }
                         else if (vh.FileID == 16 && vh.BlockID < Skills.SkillsCount)
                         {
-                            var skill = Skills.Skills[(int)vh.BlockID];
+                            SkillEntry skill = Skills.Skills[(int)vh.BlockID];
 
                             if (skill != null)
                             {
@@ -279,8 +279,8 @@ namespace ClassicUO.Assets
                                         flags = verdata.ReadUInt64();
                                     }
 
-                                    var textId = verdata.ReadUInt16();
-                                    var str = Encoding.ASCII.GetString(buf.AsSpan(0, 20));
+                                    ushort textId = verdata.ReadUInt16();
+                                    string str = Encoding.ASCII.GetString(buf.AsSpan(0, 20));
                                     TileData.LandData[offset + j] = new LandTiles(flags, textId, str);
                                 }
                             }
@@ -308,14 +308,14 @@ namespace ClassicUO.Assets
                                         flags = verdata.ReadUInt64();
                                     }
 
-                                    var weight = verdata.ReadUInt8();
-                                    var layer = verdata.ReadUInt8();
-                                    var count = verdata.ReadInt32();
-                                    var animId = verdata.ReadUInt16();
-                                    var hue = verdata.ReadUInt16();
-                                    var lightIdx = verdata.ReadUInt16();
-                                    var height = verdata.ReadUInt8();
-                                    var str = Encoding.ASCII.GetString(buf.AsSpan(0, 20));
+                                    byte weight = verdata.ReadUInt8();
+                                    byte layer = verdata.ReadUInt8();
+                                    int count = verdata.ReadInt32();
+                                    ushort animId = verdata.ReadUInt16();
+                                    ushort hue = verdata.ReadUInt16();
+                                    ushort lightIdx = verdata.ReadUInt16();
+                                    byte height = verdata.ReadUInt8();
+                                    string str = Encoding.ASCII.GetString(buf.AsSpan(0, 20));
 
                                     TileData.StaticData[offset + j] = new StaticTiles
                                     (

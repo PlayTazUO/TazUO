@@ -29,15 +29,9 @@ public class JournalFilterManager
         Load();
     }
 
-    public void AddFilter(string filter)
-    {
-        _filters.Add(filter);
-    }
+    public void AddFilter(string filter) => _filters.Add(filter);
 
-    public void RemoveFilter(string filter)
-    {
-        _filters.Remove(filter);
-    }
+    public void RemoveFilter(string filter) => _filters.Remove(filter);
 
     public bool IgnoreMessage(string message)
     {

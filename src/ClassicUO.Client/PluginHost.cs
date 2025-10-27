@@ -130,10 +130,7 @@ namespace ClassicUO
 
         public Dictionary<IntPtr, GraphicsResource> GfxResources { get; } = new Dictionary<nint, GraphicsResource>();
 
-        public void Closing()
-        {
-            _close?.Invoke();
-        }
+        public void Closing() => _close?.Invoke();
 
         public void GetCommandList(out IntPtr listPtr, out int listCount)
         {
@@ -142,35 +139,17 @@ namespace ClassicUO
             _cmdList?.Invoke(out listPtr, out listCount);
         }
 
-        public void Connected()
-        {
-            _connected?.Invoke();
-        }
+        public void Connected() => _connected?.Invoke();
 
-        public void Disconnected()
-        {
-            _disconnected?.Invoke();
-        }
+        public void Disconnected() => _disconnected?.Invoke();
 
-        public void FocusGained()
-        {
-            _focusGained?.Invoke();
-        }
+        public void FocusGained() => _focusGained?.Invoke();
 
-        public void FocusLost()
-        {
-            _focusLost?.Invoke();
-        }
+        public void FocusLost() => _focusLost?.Invoke();
 
-        public bool Hotkey(int key, int mod, bool pressed)
-        {
-            return _hotkey == null || _hotkey(key, mod, pressed);
-        }
+        public bool Hotkey(int key, int mod, bool pressed) => _hotkey == null || _hotkey(key, mod, pressed);
 
-        public void Mouse(int button, int wheel)
-        {
-            _mouse?.Invoke(button, wheel);
-        }
+        public void Mouse(int button, int wheel) => _mouse?.Invoke(button, wheel);
 
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -218,16 +197,13 @@ namespace ClassicUO
         private readonly dOnPluginReflectionCommand _reflectionCmd = reflectionCmd;
 
 
-        static short getPacketLength(int id)
-        {
-            return AsyncNetClient.PacketsTable.GetPacketLength(id);
-        }
+        static short getPacketLength(int id) => AsyncNetClient.PacketsTable.GetPacketLength(id);
 
         static void setWindowTitle(IntPtr ptr)
         {
             try
             {
-                var title = Marshal.PtrToStringUTF8(ptr);
+                string title = Marshal.PtrToStringUTF8(ptr);
                 if (!string.IsNullOrEmpty(title))
                     Client.Game.SetWindowTitle(title);
             }
@@ -252,8 +228,8 @@ namespace ClassicUO
 #pragma warning restore CS0618
                     break;
                 case 3:
-                    var subCmd = Unsafe.AsRef<(int, sbyte)>(cmd.ToPointer());
-                    var res = Client.Game.UO?.World?.Player?.Pathfinder?.AutoWalking ?? false;
+                    (int, sbyte) subCmd = Unsafe.AsRef<(int, sbyte)>(cmd.ToPointer());
+                    bool res = Client.Game.UO?.World?.Player?.Pathfinder?.AutoWalking ?? false;
 
                     switch (subCmd.Item2)
                     {
@@ -278,8 +254,8 @@ namespace ClassicUO
             if (_initialize == null)
                 return;
 
-            var mem = NativeMemory.AllocZeroed((nuint)sizeof(ClientBindings));
-            ref var cuoHost = ref Unsafe.AsRef<ClientBindings>(mem);
+            void* mem = NativeMemory.AllocZeroed((nuint)sizeof(ClientBindings));
+            ref ClientBindings cuoHost = ref Unsafe.AsRef<ClientBindings>(mem);
             cuoHost.PacketLengthFn = Marshal.GetFunctionPointerForDelegate(_packetLength);
             cuoHost.CastSpellFn = Marshal.GetFunctionPointerForDelegate(_castSpell);
             cuoHost.SetWindowTitleFn = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
@@ -297,8 +273,8 @@ namespace ClassicUO
             if (_loadPlugin == null)
                 return;
 
-            var pluginPathPtr = Marshal.StringToHGlobalAnsi(pluginPath);
-            var uoAssetsPtr = Marshal.StringToHGlobalAnsi(Settings.GlobalSettings.UltimaOnlineDirectory);
+            nint pluginPathPtr = Marshal.StringToHGlobalAnsi(pluginPath);
+            nint uoAssetsPtr = Marshal.StringToHGlobalAnsi(Settings.GlobalSettings.UltimaOnlineDirectory);
 
             _loadPlugin
             (
@@ -320,7 +296,7 @@ namespace ClassicUO
             if (_packetIn == null || buffer.Array == null || buffer.Count <= 0)
                 return true;
 
-            var len = buffer.Count;
+            int len = buffer.Count;
             fixed (byte* ptr = buffer.Array)
                 return _packetIn((IntPtr)ptr, ref len);
         }
@@ -330,25 +306,16 @@ namespace ClassicUO
             if (_packetOut == null || buffer.IsEmpty)
                 return true;
 
-            var len = buffer.Length;
+            int len = buffer.Length;
             fixed (byte* ptr = buffer)
                 return _packetOut((IntPtr)ptr, ref len);
         }
 
-        public unsafe int SdlEvent(SDL.SDL_Event* ev)
-        {
-            return _sdlEvent != null ? _sdlEvent((IntPtr)ev) : 0;
-        }
+        public unsafe int SdlEvent(SDL.SDL_Event* ev) => _sdlEvent != null ? _sdlEvent((IntPtr)ev) : 0;
 
-        public void Tick()
-        {
-            _tick?.Invoke();
-        }
+        public void Tick() => _tick?.Invoke();
 
-        public void UpdatePlayerPosition(int x, int y, int z)
-        {
-            _updatePlayerPos?.Invoke(x, y, z);
-        }
+        public void UpdatePlayerPosition(int x, int y, int z) => _updatePlayerPos?.Invoke(x, y, z);
     }
 
     interface IPluginHost

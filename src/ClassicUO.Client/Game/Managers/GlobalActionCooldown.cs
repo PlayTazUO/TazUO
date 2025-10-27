@@ -10,9 +10,6 @@ namespace ClassicUO.Game.Managers
 
         public static bool IsOnCooldown => Time.Ticks < nextActionTime;
 
-        public static void BeginCooldown()
-        {
-            nextActionTime = Time.Ticks + cooldownDuration;
-        }
+        public static void BeginCooldown() => nextActionTime = Time.Ticks + cooldownDuration;
     }
 }

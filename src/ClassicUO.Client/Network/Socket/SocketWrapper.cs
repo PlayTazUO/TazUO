@@ -32,18 +32,9 @@ abstract class SocketWrapper : IDisposable
 
     public abstract void Dispose();
 
-    protected virtual void InvokeOnConnected()
-    {
-        OnConnected?.Invoke(this, EventArgs.Empty);
-    }
+    protected virtual void InvokeOnConnected() => OnConnected?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void InvokeOnDisconnected()
-    {
-        OnDisconnected?.Invoke(this, EventArgs.Empty);
-    }
+    protected virtual void InvokeOnDisconnected() => OnDisconnected?.Invoke(this, EventArgs.Empty);
 
-    protected virtual void InvokeOnError(SocketError e)
-    {
-        OnError?.Invoke(this, e);
-    }
+    protected virtual void InvokeOnError(SocketError e) => OnError?.Invoke(this, e);
 }

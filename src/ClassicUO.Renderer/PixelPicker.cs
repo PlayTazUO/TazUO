@@ -111,10 +111,7 @@ namespace ClassicUO.Renderer
             m_IDs[textureID] = begin;
         }
 
-        bool Has(ulong textureID)
-        {
-            return m_IDs.ContainsKey(textureID);
-        }
+        bool Has(ulong textureID) => m_IDs.ContainsKey(textureID);
 
         void WriteIntegerToData(int value)
         {

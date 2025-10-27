@@ -83,10 +83,7 @@ internal static class Mounts
         _mounts[0x3EE2] = new(0x0679, 0x3EE2, 0); // Horse_Elemental_Air
     }
 
-    public static bool TryGet(ushort animId, out MountInfo mountInfo)
-    {
-        return _mounts.TryGetValue(animId, out mountInfo);
-    }
+    public static bool TryGet(ushort animId, out MountInfo mountInfo) => _mounts.TryGetValue(animId, out mountInfo);
 }
 
 internal readonly struct MountInfo

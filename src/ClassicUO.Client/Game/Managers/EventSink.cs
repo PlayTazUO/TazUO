@@ -151,14 +151,14 @@ namespace ClassicUO.Game.Managers
         /// <summary>Invokes <see cref="SpellCastBegin"/>.</summary>
         public static void InvokeSpellCastBegin(int spell) => SpellCastBegin?.Invoke(null, spell);
         /// <summary>
-        /// Called when the visual spell manager detects a spell done being cast. 
+        /// Called when the visual spell manager detects a spell done being cast.
         /// The event argument is the spell ID.
         /// </summary>
-        public static event EventHandler<int> SpellCastEnd;
+        public static event EventHandler SpellCastEnd;
         /// <summary>Invokes <see cref="SpellCastEnd"/>.</summary>
-        public static void InvokeSpellCastEnd(int spell) => SpellCastEnd?.Invoke(null, spell);
+        public static void InvokeSpellCastEnd() => SpellCastEnd?.Invoke(null, null);
         /// <summary>
-        /// Called when the visual spell manager detects a spell recovery phase. 
+        /// Called when the visual spell manager detects a spell recovery phase.
         /// The event argument is the spell ID.
         /// </summary>
         public static event EventHandler<int> SpellRecoveryBegin;
@@ -168,9 +168,9 @@ namespace ClassicUO.Game.Managers
         /// Called when the visual spell manager detects a spell recovery phase end.
         /// The event argument is the spell ID.
         /// </summary>
-        public static event EventHandler<int> SpellRecoveryEnd;
+        public static event EventHandler SpellRecoveryEnd;
         /// <summary>Invokes <see cref="SpellRecoveryEnd"/>.</summary>
-        public static void InvokeSpellRecoveryEnd(int spell) => SpellRecoveryEnd?.Invoke(null, spell);
+        public static void InvokeSpellRecoveryEnd() => SpellRecoveryEnd?.Invoke(null, null);
 
     }
 

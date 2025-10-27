@@ -45,7 +45,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (hasBackground)
             {
-                ResizePic background = new ResizePic(3000)
+                var background = new ResizePic(3000)
                 {
                     X = X + 30,
                     Y = Y + 40,

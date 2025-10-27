@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_ = TextBox.GetOne(message, TrueTypeLoader.EMBEDDED_FONT, 25, Color.White, options));
             Height += _.Height;
 
-            InputField input = new InputField
+            var input = new InputField
             (
                 0x0BB8,
                 0xFF,

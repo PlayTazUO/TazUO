@@ -47,11 +47,11 @@ public class PyPlayer : PyMobile
     public short EnergyResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.EnergyResistance ?? 0);
 
     // Max Resistances
-    public short MaxPhysicResistence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPhysicResistence ?? 0);
-    public short MaxFireResistence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxFireResistence ?? 0);
-    public short MaxColdResistence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxColdResistence ?? 0);
-    public short MaxPoisonResistence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPoisonResistence ?? 0);
-    public short MaxEnergyResistence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxEnergyResistence ?? 0);
+    public short MaxPhysicResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPhysicResistence ?? 0);
+    public short MaxFireResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxFireResistence ?? 0);
+    public short MaxColdResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxColdResistence ?? 0);
+    public short MaxPoisonResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPoisonResistence ?? 0);
+    public short MaxEnergyResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxEnergyResistence ?? 0);
 
     // Combat Stats
     public short DamageMin => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DamageMin ?? 0);

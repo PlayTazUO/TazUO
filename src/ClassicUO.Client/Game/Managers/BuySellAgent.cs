@@ -30,8 +30,8 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        public List<BuySellItemConfig> SellConfigs { get { return sellItems; } }
-        public List<BuySellItemConfig> BuyConfigs { get { return buyItems; } }
+        public List<BuySellItemConfig> SellConfigs => sellItems;
+        public List<BuySellItemConfig> BuyConfigs => buyItems;
 
         private List<BuySellItemConfig> sellItems;
         private List<BuySellItemConfig> buyItems;
@@ -114,7 +114,7 @@ namespace ClassicUO.Game.Managers
 
             if (buyItems == null) return;
 
-            List<Tuple<uint, ushort>> buyList = new List<Tuple<uint, ushort>>();
+            var buyList = new List<Tuple<uint, ushort>>();
             long val = 0;
             ushort total_count = 0;
             ushort unique_items = 0;
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.Managers
             int max_unique_items = ProfileManager.CurrentProfile.BuyAgentMaxUniques;
             bool limit_unique_items = max_unique_items > 0;
 
-            foreach (var buyConfigEntry in buyItems)
+            foreach (BuySellItemConfig buyConfigEntry in buyItems)
             {
                 if (!buyConfigEntry.Enabled) continue;
 
@@ -142,7 +142,7 @@ namespace ClassicUO.Game.Managers
                     maxToBuy = Math.Min(maxToBuy, buyConfigEntry.MaxAmount);
                 }
 
-                foreach (var item in items)
+                foreach (Item item in items)
                 {
                     if (!buyConfigEntry.IsMatch(item.Graphic, item.Hue)) continue;
 
@@ -181,7 +181,7 @@ namespace ClassicUO.Game.Managers
 
         private ushort GetBackpackItemCount(ushort graphic, ushort hue)
         {
-            var backpack = World.Instance.Player?.Backpack;
+            Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null) return 0;
 
             ushort count = 0;
@@ -217,7 +217,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            List<Tuple<uint, ushort>> sellList = new List<Tuple<uint, ushort>>();
+            var sellList = new List<Tuple<uint, ushort>>();
             long val = 0;
             ushort total_count = 0;
             ushort unique_items = 0;
@@ -226,7 +226,7 @@ namespace ClassicUO.Game.Managers
             int max_unique_items = ProfileManager.CurrentProfile.SellAgentMaxUniques;
             bool limit_unique_items = max_unique_items > 0;
 
-            foreach (var sellConfig in sellItems)
+            foreach (BuySellItemConfig sellConfig in sellItems)
             {
                 if (!sellConfig.Enabled) continue;
 
@@ -243,7 +243,7 @@ namespace ClassicUO.Game.Managers
                     }
                 }
 
-                foreach (var item in sellPackets[vendorSerial].AvailableItems)
+                foreach (VendorSellItemData item in sellPackets[vendorSerial].AvailableItems)
                 {
                     if (!sellConfig.IsMatch(item.Graphic, item.Hue)) continue;
 
@@ -300,19 +300,13 @@ namespace ClassicUO.Game.Managers
         public ushort RestockUpTo { get; set; } = 0;
         public bool Enabled { get; set; } = true;
 
-        public bool IsMatch(ushort graphic, ushort hue)
-        {
-            return graphic == Graphic && (hue == Hue || Hue == ushort.MaxValue);
-        }
+        public bool IsMatch(ushort graphic, ushort hue) => graphic == Graphic && (hue == Hue || Hue == ushort.MaxValue);
     }
 
     public class VendorSellInfo
     {
         public List<VendorSellItemData> AvailableItems { get; set; } = new List<VendorSellItemData>();
-        public void HandleSellPacketItem(uint serial, ushort graphic, ushort hue, ushort amount, uint price)
-        {
-            AvailableItems.Add(new VendorSellItemData(serial, graphic, hue, amount, price));
-        }
+        public void HandleSellPacketItem(uint serial, ushort graphic, ushort hue, ushort amount, uint price) => AvailableItems.Add(new VendorSellItemData(serial, graphic, hue, amount, price));
     }
 
     public class VendorSellItemData

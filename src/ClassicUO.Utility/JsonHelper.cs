@@ -61,15 +61,15 @@ namespace ClassicUO.Utility
             string tempPath = null;
             try
             {
-                var output = JsonSerializer.Serialize(obj, jsonTypeInfo);
+                string output = JsonSerializer.Serialize(obj, jsonTypeInfo);
 
                 tempPath = Path.GetTempFileName();
                 File.WriteAllText(tempPath, output);
 
                 // Rotate backups: backup2 -> backup3, backup1 -> backup2, main -> backup1
-                var backup3Path = GetBackupSavePath(pathAndFile, 3);
-                var backup2Path = GetBackupSavePath(pathAndFile, 2);
-                var backup1Path = GetBackupSavePath(pathAndFile, 1);
+                string backup3Path = GetBackupSavePath(pathAndFile, 3);
+                string backup2Path = GetBackupSavePath(pathAndFile, 2);
+                string backup1Path = GetBackupSavePath(pathAndFile, 1);
 
                 // Remove oldest backup
                 if (File.Exists(backup3Path))
@@ -110,16 +110,16 @@ namespace ClassicUO.Utility
         /// </summary>
         public static bool Load<T>(string path, JsonTypeInfo jsonTypeInfo, out T obj)
         {
-            var filesToTry = new[] { path, GetBackupSavePath(path, 1), GetBackupSavePath(path,2), GetBackupSavePath(path, 3) };
+            string[] filesToTry = new[] { path, GetBackupSavePath(path, 1), GetBackupSavePath(path,2), GetBackupSavePath(path, 3) };
 
-            foreach (var filePath in filesToTry)
+            foreach (string filePath in filesToTry)
             {
                 try
                 {
                     if (!File.Exists(filePath))
                         continue;
 
-                    var json = File.ReadAllText(filePath);
+                    string json = File.ReadAllText(filePath);
                     obj = (T)JsonSerializer.Deserialize(json, jsonTypeInfo);
 
                     return true;

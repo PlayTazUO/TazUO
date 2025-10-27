@@ -77,10 +77,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
         }
 
-        public virtual void Save(XmlTextWriter xml)
-        {
-            xml.WriteAttributeString("type", GetType().FullName);
-        }
+        public virtual void Save(XmlTextWriter xml) => xml.WriteAttributeString("type", GetType().FullName);
 
         public virtual void Load(XmlElement xml) { }
 
@@ -88,7 +85,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             OnWindowClosed();
 
-            foreach (var item in _texturePointerCache)
+            foreach (KeyValuePair<ushort, ArtPointerStruct> item in _texturePointerCache)
                 if(item.Value.Pointer != IntPtr.Zero)
                     ImGuiManager.Renderer.UnbindTexture(item.Value.Pointer);
 
@@ -107,7 +104,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         protected bool DrawArt(ushort graphic, Vector2 size, bool useSmallerIfGfxSmaller = true)
         {
-            var artInfo = Client.Game.UO.Arts.GetArt(graphic);
+            SpriteInfo artInfo = Client.Game.UO.Arts.GetArt(graphic);
 
             if(useSmallerIfGfxSmaller && artInfo.UV.Width < size.X && artInfo.UV.Height < size.Y)
                 size = new Vector2(artInfo.UV.Width, artInfo.UV.Height);
@@ -122,7 +119,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             {
                 var uv0 = new Vector2(artInfo.UV.X / (float)artInfo.Texture.Width, artInfo.UV.Y / (float)artInfo.Texture.Height);
                 var uv1 = new Vector2((artInfo.UV.X + artInfo.UV.Width) / (float)artInfo.Texture.Width, (artInfo.UV.Y + artInfo.UV.Height) / (float)artInfo.Texture.Height);
-                var pnt = ImGuiManager.Renderer.BindTexture(artInfo.Texture);
+                nint pnt = ImGuiManager.Renderer.BindTexture(artInfo.Texture);
 
                 _texturePointerCache.Add(graphic, new ArtPointerStruct(pnt, artInfo, uv0, uv1, size));
 

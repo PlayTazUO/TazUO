@@ -118,11 +118,9 @@ namespace ClassicUO.Game.Managers
             _fileWriter = null;
         }
 
-        public void Clear()
-        {
+        public void Clear() =>
             //Entries.Clear();
             CloseWriter();
-        }
     }
 
     public class JournalEntry

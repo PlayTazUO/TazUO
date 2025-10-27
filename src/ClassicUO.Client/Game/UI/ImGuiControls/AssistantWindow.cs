@@ -19,10 +19,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             AddTab("Item Database", DrawItemDatabase, ItemDatabaseSearchWindow.Show, () => ItemDatabaseSearchWindow.Instance?.Dispose());
         }
 
-        public void AddTab(string title, Action drawContent, Action showFullWindow, Action dispose)
-        {
-            _tabs.Add(new TabItem { Title = title, DrawContent = drawContent, ShowFullWindow = showFullWindow, Dispose = dispose});
-        }
+        public void AddTab(string title, Action drawContent, Action showFullWindow, Action dispose) => _tabs.Add(new TabItem { Title = title, DrawContent = drawContent, ShowFullWindow = showFullWindow, Dispose = dispose });
 
         public void RemoveTab(int index)
         {
@@ -32,10 +29,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
         }
 
-        public void ClearTabs()
-        {
-            _tabs.Clear();
-        }
+        public void ClearTabs() => _tabs.Clear();
 
         public override void DrawContent()
         {
@@ -80,7 +74,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         public override void Dispose()
         {
             base.Dispose();
-            foreach (var tab in _tabs)
+            foreach (TabItem tab in _tabs)
                 tab.Dispose?.Invoke();
             ClearTabs();
         }

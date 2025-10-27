@@ -61,7 +61,7 @@ namespace Microsoft.Xna.Framework.Graphics
                 return circleCache[circleKey];
             }
 
-            List<Vector2> vectors = new List<Vector2>();
+            var vectors = new List<Vector2>();
 
             const double max = 2.0 * Math.PI;
             double step = max / sides;
@@ -91,7 +91,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <returns>A list of vectors that, if connected, will create an arc</returns>
         private static List<Vector2> CreateArc(float radius, int sides, float startingAngle, float radians)
         {
-            List<Vector2> points = new List<Vector2>();
+            var points = new List<Vector2>();
             points.AddRange(CreateCircle(radius, sides));
             points.RemoveAt(points.Count - 1); // remove the last point because it's a duplicate of the first
 
@@ -167,10 +167,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="location">Where to draw</param>
         /// <param name="size">The size of the rectangle</param>
         /// <param name="color">The color to draw the rectangle in</param>
-        public static void FillRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color)
-        {
-            FillRectangle(spriteBatch, location, size, color, 0.0f);
-        }
+        public static void FillRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color) => FillRectangle(spriteBatch, location, size, color, 0.0f);
 
 
         /// <summary>
@@ -210,10 +207,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="w">Width</param>
         /// <param name="h">Height</param>
         /// <param name="color">The color to draw the rectangle in</param>
-        public static void FillRectangle(this SpriteBatch spriteBatch, float x, float y, float w, float h, Color color)
-        {
-            FillRectangle(spriteBatch, new Vector2(x, y), new Vector2(w, h), color, 0.0f);
-        }
+        public static void FillRectangle(this SpriteBatch spriteBatch, float x, float y, float w, float h, Color color) => FillRectangle(spriteBatch, new Vector2(x, y), new Vector2(w, h), color, 0.0f);
 
 
         /// <summary>
@@ -226,10 +220,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="h">Height</param>
         /// <param name="color">The color to draw the rectangle in</param>
         /// <param name="angle">The angle of the rectangle in radians</param>
-        public static void FillRectangle(this SpriteBatch spriteBatch, float x, float y, float w, float h, Color color, float angle)
-        {
-            FillRectangle(spriteBatch, new Vector2(x, y), new Vector2(w, h), color, angle);
-        }
+        public static void FillRectangle(this SpriteBatch spriteBatch, float x, float y, float w, float h, Color color, float angle) => FillRectangle(spriteBatch, new Vector2(x, y), new Vector2(w, h), color, angle);
 
         #endregion
 
@@ -242,10 +233,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="spriteBatch">The destination drawing surface</param>
         /// <param name="rect">The rectangle to draw</param>
         /// <param name="color">The color to draw the rectangle in</param>
-        public static void DrawRectangle(this SpriteBatch spriteBatch, Rectangle rect, Color color)
-        {
-            DrawRectangle(spriteBatch, rect, color, 1.0f);
-        }
+        public static void DrawRectangle(this SpriteBatch spriteBatch, Rectangle rect, Color color) => DrawRectangle(spriteBatch, rect, color, 1.0f);
 
 
         /// <summary>
@@ -275,10 +263,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="location">Where to draw</param>
         /// <param name="size">The size of the rectangle</param>
         /// <param name="color">The color to draw the rectangle in</param>
-        public static void DrawRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color)
-        {
-            DrawRectangle(spriteBatch, new Rectangle((int)location.X, (int)location.Y, (int)size.X, (int)size.Y), color, 1.0f);
-        }
+        public static void DrawRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color) => DrawRectangle(spriteBatch, new Rectangle((int)location.X, (int)location.Y, (int)size.X, (int)size.Y), color, 1.0f);
 
 
         /// <summary>
@@ -289,10 +274,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="size">The size of the rectangle</param>
         /// <param name="color">The color to draw the rectangle in</param>
         /// <param name="thickness">The thickness of the line</param>
-        public static void DrawRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color, float thickness)
-        {
-            DrawRectangle(spriteBatch, new Rectangle((int)location.X, (int)location.Y, (int)size.X, (int)size.Y), color, thickness);
-        }
+        public static void DrawRectangle(this SpriteBatch spriteBatch, Vector2 location, Vector2 size, Color color, float thickness) => DrawRectangle(spriteBatch, new Rectangle((int)location.X, (int)location.Y, (int)size.X, (int)size.Y), color, thickness);
 
         #endregion
 
@@ -308,10 +290,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="x2">The X coord of the second point</param>
         /// <param name="y2">The Y coord of the second point</param>
         /// <param name="color">The color to use</param>
-        public static void DrawLine(this SpriteBatch spriteBatch, float x1, float y1, float x2, float y2, Color color)
-        {
-            DrawLine(spriteBatch, new Vector2(x1, y1), new Vector2(x2, y2), color, 1.0f);
-        }
+        public static void DrawLine(this SpriteBatch spriteBatch, float x1, float y1, float x2, float y2, Color color) => DrawLine(spriteBatch, new Vector2(x1, y1), new Vector2(x2, y2), color, 1.0f);
 
 
         /// <summary>
@@ -324,10 +303,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="y2">The Y coord of the second point</param>
         /// <param name="color">The color to use</param>
         /// <param name="thickness">The thickness of the line</param>
-        public static void DrawLine(this SpriteBatch spriteBatch, float x1, float y1, float x2, float y2, Color color, float thickness)
-        {
-            DrawLine(spriteBatch, new Vector2(x1, y1), new Vector2(x2, y2), color, thickness);
-        }
+        public static void DrawLine(this SpriteBatch spriteBatch, float x1, float y1, float x2, float y2, Color color, float thickness) => DrawLine(spriteBatch, new Vector2(x1, y1), new Vector2(x2, y2), color, thickness);
 
 
         /// <summary>
@@ -337,10 +313,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="point1">The first point</param>
         /// <param name="point2">The second point</param>
         /// <param name="color">The color to use</param>
-        public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color)
-        {
-            DrawLine(spriteBatch, point1, point2, color, 1.0f);
-        }
+        public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color) => DrawLine(spriteBatch, point1, point2, color, 1.0f);
 
 
         /// <summary>
@@ -371,10 +344,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="length">The length of the line</param>
         /// <param name="angle">The angle of this line from the starting point in radians</param>
         /// <param name="color">The color to use</param>
-        public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point, float length, float angle, Color color)
-        {
-            DrawLine(spriteBatch, point, length, angle, color, 1.0f);
-        }
+        public static void DrawLine(this SpriteBatch spriteBatch, Vector2 point, float length, float angle, Color color) => DrawLine(spriteBatch, point, length, angle, color, 1.0f);
 
 
         /// <summary>
@@ -410,10 +380,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         #region PutPixel
 
-        public static void PutPixel(this SpriteBatch spriteBatch, float x, float y, Color color)
-        {
-            PutPixel(spriteBatch, new Vector2(x, y), color);
-        }
+        public static void PutPixel(this SpriteBatch spriteBatch, float x, float y, Color color) => PutPixel(spriteBatch, new Vector2(x, y), color);
 
 
         public static void PutPixel(this SpriteBatch spriteBatch, Vector2 position, Color color)
@@ -439,10 +406,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="radius">The radius of the circle</param>
         /// <param name="sides">The number of sides to generate</param>
         /// <param name="color">The color of the circle</param>
-        public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color)
-        {
-            DrawPoints(spriteBatch, center, CreateCircle(radius, sides), color, 1.0f);
-        }
+        public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color) => DrawPoints(spriteBatch, center, CreateCircle(radius, sides), color, 1.0f);
 
 
         /// <summary>
@@ -454,10 +418,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="sides">The number of sides to generate</param>
         /// <param name="color">The color of the circle</param>
         /// <param name="thickness">The thickness of the lines used</param>
-        public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color, float thickness)
-        {
-            DrawPoints(spriteBatch, center, CreateCircle(radius, sides), color, thickness);
-        }
+        public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color, float thickness) => DrawPoints(spriteBatch, center, CreateCircle(radius, sides), color, thickness);
 
 
         /// <summary>
@@ -469,10 +430,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="radius">The radius of the circle</param>
         /// <param name="sides">The number of sides to generate</param>
         /// <param name="color">The color of the circle</param>
-        public static void DrawCircle(this SpriteBatch spriteBatch, float x, float y, float radius, int sides, Color color)
-        {
-            DrawPoints(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, 1.0f);
-        }
+        public static void DrawCircle(this SpriteBatch spriteBatch, float x, float y, float radius, int sides, Color color) => DrawPoints(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, 1.0f);
 
 
         /// <summary>
@@ -485,10 +443,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="sides">The number of sides to generate</param>
         /// <param name="color">The color of the circle</param>
         /// <param name="thickness">The thickness of the lines used</param>
-        public static void DrawCircle(this SpriteBatch spriteBatch, float x, float y, float radius, int sides, Color color, float thickness)
-        {
-            DrawPoints(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, thickness);
-        }
+        public static void DrawCircle(this SpriteBatch spriteBatch, float x, float y, float radius, int sides, Color color, float thickness) => DrawPoints(spriteBatch, new Vector2(x, y), CreateCircle(radius, sides), color, thickness);
 
         #endregion
 
@@ -505,10 +460,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <param name="startingAngle">The starting angle of arc, 0 being to the east, increasing as you go clockwise</param>
         /// <param name="radians">The number of radians to draw, clockwise from the starting angle</param>
         /// <param name="color">The color of the arc</param>
-        public static void DrawArc(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, float startingAngle, float radians, Color color)
-        {
-            DrawArc(spriteBatch, center, radius, sides, startingAngle, radians, color, 1.0f);
-        }
+        public static void DrawArc(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, float startingAngle, float radians, Color color) => DrawArc(spriteBatch, center, radius, sides, startingAngle, radians, color, 1.0f);
 
 
         /// <summary>

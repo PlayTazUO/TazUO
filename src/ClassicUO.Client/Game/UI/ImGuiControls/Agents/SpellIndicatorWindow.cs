@@ -317,7 +317,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, 80);
                 ImGui.TableHeadersRow();
 
-                foreach (var spell in spells)
+                foreach (SpellRangeInfo spell in spells)
                 {
                     ImGui.TableNextRow();
 

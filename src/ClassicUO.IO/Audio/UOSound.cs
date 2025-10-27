@@ -58,9 +58,6 @@ namespace ClassicUO.IO.Audio
             //}
         }
 
-        protected override ArraySegment<byte> GetBuffer()
-        {
-            return _waveBuffer;
-        }
+        protected override ArraySegment<byte> GetBuffer() => _waveBuffer;
     }
 }

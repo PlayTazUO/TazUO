@@ -181,7 +181,7 @@ namespace ClassicUO.Renderer
                 int typeReaderIndex = reader.Read7BitEncodedInt();
                 reader.Read7BitEncodedInt();
 
-                SurfaceFormat format = (SurfaceFormat) reader.ReadInt32();
+                var format = (SurfaceFormat) reader.ReadInt32();
                 int width = reader.ReadInt32();
                 int height = reader.ReadInt32();
                 int levelCount = reader.ReadInt32();
@@ -199,7 +199,7 @@ namespace ClassicUO.Renderer
                     levelDataSizeInBytes = levelData.Length;
                 }
 
-                Texture2D texture = new Texture2D
+                var texture = new Texture2D
                 (
                     device,
                     width,
@@ -216,7 +216,7 @@ namespace ClassicUO.Renderer
 
                 reader.Read7BitEncodedInt();
                 int glyphCount = reader.ReadInt32();
-                List<Rectangle> glyphs = new List<Rectangle>(glyphCount);
+                var glyphs = new List<Rectangle>(glyphCount);
 
                 for (int i = 0; i < glyphCount; i++)
                 {
@@ -230,7 +230,7 @@ namespace ClassicUO.Renderer
 
                 reader.Read7BitEncodedInt();
                 int croppingCount = reader.ReadInt32();
-                List<Rectangle> croppings = new List<Rectangle>(croppingCount);
+                var croppings = new List<Rectangle>(croppingCount);
 
                 for (int i = 0; i < croppingCount; i++)
                 {
@@ -244,7 +244,7 @@ namespace ClassicUO.Renderer
 
                 reader.Read7BitEncodedInt();
                 int charCount = reader.ReadInt32();
-                List<char> charMap = new List<char>(charCount);
+                var charMap = new List<char>(charCount);
 
                 for (int i = 0; i < charCount; i++)
                 {
@@ -256,7 +256,7 @@ namespace ClassicUO.Renderer
 
                 reader.Read7BitEncodedInt();
                 int kerningCount = reader.ReadInt32();
-                List<Vector3> kernings = new List<Vector3>(croppingCount);
+                var kernings = new List<Vector3>(croppingCount);
 
                 for (int i = 0; i < kerningCount; i++)
                 {
@@ -291,7 +291,7 @@ namespace ClassicUO.Renderer
 
         private static byte[] DecompressDxt3(byte[] imageData, int width, int height)
         {
-            using (MemoryStream imageStream = new MemoryStream(imageData))
+            using (var imageStream = new MemoryStream(imageData))
             {
                 return DecompressDxt3(imageStream, width, height);
             }
@@ -301,7 +301,7 @@ namespace ClassicUO.Renderer
         {
             byte[] imageData = new byte[width * height * 4];
 
-            using (BinaryReader imageReader = new BinaryReader(imageStream))
+            using (var imageReader = new BinaryReader(imageStream))
             {
                 int blockCountX = (width + 3) >> 2;
                 int blockCountY = (height + 3) >> 2;
@@ -521,10 +521,7 @@ namespace ClassicUO.Renderer
             {
             }
 
-            public new int Read7BitEncodedInt()
-            {
-                return base.Read7BitEncodedInt();
-            }
+            public new int Read7BitEncodedInt() => base.Read7BitEncodedInt();
         }
     }
 }

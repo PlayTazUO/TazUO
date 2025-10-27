@@ -40,7 +40,7 @@ namespace ClassicUO.Game.UI.Gumps
                 false
             );
 
-            Label topText = new Label
+            var topText = new Label
             (
                 header,
                 true,
@@ -173,9 +173,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.Update();
         }
 
-        private void _textBox_TextChanged(object sender, EventArgs e)
-        {
-            _textBox.Height = Math.Max
+        private void _textBox_TextChanged(object sender, EventArgs e) => _textBox.Height = Math.Max
             (
                 Client.Game.UO.FileManager.Fonts.GetHeightUnicode
                 (
@@ -187,7 +185,6 @@ namespace ClassicUO.Game.UI.Gumps
                 ) + 5,
                 20
             );
-        }
 
         private void _hitBox_MouseUp(object sender, MouseEventArgs e)
         {

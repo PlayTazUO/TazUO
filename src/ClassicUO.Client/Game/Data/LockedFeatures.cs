@@ -51,9 +51,6 @@ namespace ClassicUO.Game.Data
     {
         public LockedFeatureFlags Flags { get; private set; }
 
-        public void SetFlags(LockedFeatureFlags flags)
-        {
-            Flags = flags;
-        }
+        public void SetFlags(LockedFeatureFlags flags) => Flags = flags;
     }
 }

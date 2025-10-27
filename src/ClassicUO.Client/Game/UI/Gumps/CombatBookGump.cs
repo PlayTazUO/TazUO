@@ -83,7 +83,7 @@ namespace ClassicUO.Game.UI.Gumps
                         spellsOnPage = 4;
                     }
 
-                    Label text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 6 };
+                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 6 };
                     Add(text, page);
 
                     for (int i = 0; i < spellsOnPage; i++)
@@ -184,11 +184,11 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
                 }
 
-                GumpPic icon = new GumpPic(62, 40, (ushort) (0x5200 + i), 0);
+                var icon = new GumpPic(62, 40, (ushort) (0x5200 + i), 0);
                 Add(icon, pageW);
                 icon.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(1061693 + i), 150);
 
-                Label text = new Label
+                var text = new Label
                 (
                     StringHelper.CapitalizeAllWords(AbilityData.Abilities[i].Name),
                     false,
@@ -307,7 +307,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             GetSpellFloatingButton(def.Index)?.Dispose();
 
-            UseAbilityButtonGump gump = new UseAbilityButtonGump(World, true)
+            var gump = new UseAbilityButtonGump(World, true)
             {
                 X = Mouse.LClickPosition.X - 22,
                 Y = Mouse.LClickPosition.Y - 22
@@ -328,7 +328,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             GetSpellFloatingButton(def.Index)?.Dispose();
 
-            UseAbilityButtonGump gump = new UseAbilityButtonGump(World, false)
+            var gump = new UseAbilityButtonGump(World, false)
             {
                 X = Mouse.LClickPosition.X - 22,
                 Y = Mouse.LClickPosition.Y - 22
@@ -451,7 +451,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private List<ushort> GetItemsList(byte index)
         {
-            List<ushort> list = new List<ushort>();
+            var list = new List<ushort>();
 
 
             switch (index)

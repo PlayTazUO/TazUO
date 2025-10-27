@@ -21,7 +21,7 @@ namespace ClassicUO.Renderer.MultiMaps
 
         public SpriteInfo GetMap(int? facet, int width, int height, int startX, int startY, int endX, int endY)
         {
-            var multiMapInfo = facet.HasValue && _multiMapLoader.HasFacet(facet.Value) ?
+            MultiMapInfo multiMapInfo = facet.HasValue && _multiMapLoader.HasFacet(facet.Value) ?
                 _multiMapLoader.LoadFacet(facet.Value, width, height, startX, startY, endX, endY) :
                 _multiMapLoader.LoadMap(width, height, startX, startY, endX, endY);
 

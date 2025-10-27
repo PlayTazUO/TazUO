@@ -41,7 +41,10 @@ namespace ClassicUO.Game.GameObjects
             };
 
             if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
+            {
                 UIManager.Add(new CastTimerProgressBar(world));
+                AttachCastingEventHandlers();
+            }
 
             IsPlayer = true;
         }
@@ -172,7 +175,7 @@ namespace ClassicUO.Game.GameObjects
             }
         }
 
-        private void OnSpellCastEnd(object sender, int spellID)
+        private void OnSpellCastEnd(object s, object o)
         {
             if (World?.Player == this)
             {
@@ -188,7 +191,7 @@ namespace ClassicUO.Game.GameObjects
             }
         }
 
-        private void OnSpellRecoveryEnd(object sender, int spellID)
+        private void OnSpellRecoveryEnd(object sender, object o)
         {
             if (World?.Player == this)
             {
@@ -228,7 +231,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 for (LinkedObject i = container.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
                     if (item.Graphic == graphic)
                     {
@@ -258,7 +261,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 for (LinkedObject i = container.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
 
                     if (cliloc == World.OPL.GetNameCliloc(item.Serial))
@@ -312,10 +315,7 @@ namespace ClassicUO.Game.GameObjects
             EventSink.InvokeOnBuffAdded(null, new BuffEventArgs(_buffIcons[type]));
         }
 
-        public bool IsBuffIconExists(BuffIconType graphic)
-        {
-            return _buffIcons.ContainsKey(graphic);
-        }
+        public bool IsBuffIconExists(BuffIconType graphic) => _buffIcons.ContainsKey(graphic);
 
         public void RemoveBuff(BuffIconType graphic)
         {
@@ -351,7 +351,7 @@ namespace ClassicUO.Game.GameObjects
                     animGraphic = (ushort)(weapon.OriginalGraphic + 1);
                 }
 
-                if (AbilityData.GraphicToAbilitiesMap.TryGetValue(weapon.OriginalGraphic, out var abilities) || AbilityData.GraphicToAbilitiesMap.TryGetValue(animGraphic, out abilities))
+                if (AbilityData.GraphicToAbilitiesMap.TryGetValue(weapon.OriginalGraphic, out ItemAbilities abilities) || AbilityData.GraphicToAbilitiesMap.TryGetValue(animGraphic, out abilities))
                 {
                     abilities.Set(Abilities);
                 }
@@ -452,11 +452,11 @@ namespace ClassicUO.Game.GameObjects
             {
                 if (!bank.IsEmpty)
                 {
-                    Item first = (Item)bank.Items;
+                    var first = (Item)bank.Items;
 
                     while (first != null)
                     {
-                        Item next = (Item)first.Next;
+                        var next = (Item)first.Next;
 
                         World.RemoveItem(first, true);
 
@@ -757,7 +757,7 @@ namespace ClassicUO.Game.GameObjects
                 }
 
 
-                var item = Walker.StepsCount;
+                int item = Walker.StepsCount;
 
                 ref StepInfo step = ref Walker.StepInfos[item];
                 step.Sequence = Walker.WalkSequence;
@@ -810,16 +810,10 @@ namespace ClassicUO.Game.GameObjects
 
         }
 
-        bool IsCardinalDirection(Direction direction)
-        {
-            return direction == Direction.North || direction == Direction.South ||
+        bool IsCardinalDirection(Direction direction) => direction == Direction.North || direction == Direction.South ||
                    direction == Direction.East || direction == Direction.West;
-        }
 
-        bool IsObstacle(Direction direction, int x, int y, sbyte z)
-        {
-            return !Pathfinder.CanWalk(ref direction, ref x, ref y, ref z);
-        }
+        bool IsObstacle(Direction direction, int x, int y, sbyte z) => !Pathfinder.CanWalk(ref direction, ref x, ref y, ref z);
 
         Direction TryToAvoid(Direction direction, int x, int y, sbyte z)
         {

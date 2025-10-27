@@ -59,11 +59,11 @@ internal static partial class Sextant
         xWidth = 5120;
         yHeight = 4096;
 
-        var mapWidth = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 0];
-        var mapHeight = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 1];
+        int mapWidth = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 0];
+        int mapHeight = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 1];
 
-        var isTrammel = map.Index == 0 && mapWidth == 7168 && mapHeight == 4096;
-        var isFelucca = map.Index == 1 && mapWidth == 7168 && mapHeight == 4096;
+        bool isTrammel = map.Index == 0 && mapWidth == 7168 && mapHeight == 4096;
+        bool isFelucca = map.Index == 1 && mapWidth == 7168 && mapHeight == 4096;
         
         if (isTrammel || isFelucca)
         {

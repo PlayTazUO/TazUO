@@ -14,15 +14,9 @@ namespace ClassicUO.Utility
 {
     public static class Exstentions
     {
-        public static void Raise(this EventHandler handler, object sender = null)
-        {
-            handler?.Invoke(sender, EventArgs.Empty);
-        }
+        public static void Raise(this EventHandler handler, object sender = null) => handler?.Invoke(sender, EventArgs.Empty);
 
-        public static void Raise<T>(this EventHandler<T> handler, T e, object sender = null)
-        {
-            handler?.Invoke(sender, e);
-        }
+        public static void Raise<T>(this EventHandler<T> handler, T e, object sender = null) => handler?.Invoke(sender, e);
 
         public static void RaiseAsync(this EventHandler handler, object sender = null)
         {
@@ -40,9 +34,7 @@ namespace ClassicUO.Utility
             }
         }
 
-        public static Task Catch(this Task task)
-        {
-            return task.ContinueWith
+        public static Task Catch(this Task task) => task.ContinueWith
             (
                 t =>
                 {
@@ -72,7 +64,6 @@ namespace ClassicUO.Utility
                 },
                 TaskContinuationOptions.OnlyOnFaulted
             );
-        }
 
         public static void Resize<T>(this List<T> list, int size, T element = default)
         {
@@ -173,28 +164,16 @@ namespace ClassicUO.Utility
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHex(this uint serial)
-        {
-            return $"0x{serial:X8}";
-        }
+        public static string ToHex(this uint serial) => $"0x{serial:X8}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHex(this ushort s)
-        {
-            return $"0x{s:X4}";
-        }
+        public static string ToHex(this ushort s) => $"0x{s:X4}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHex(this byte b)
-        {
-            return $"0x{b:X2}";
-        }
+        public static string ToHex(this byte b) => $"0x{b:X2}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToHtmlHex(this Color color)
-        {
-            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
-        }
+        public static string ToHtmlHex(this Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color FromHtmlHex(this string hex)

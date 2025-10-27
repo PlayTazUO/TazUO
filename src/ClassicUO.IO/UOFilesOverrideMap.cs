@@ -23,8 +23,8 @@ namespace ClassicUO.IO
 
             Log.Trace($"Loading Override File:\t\t{OverrideFile}");
 
-            using (FileStream stream = new FileStream(OverrideFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (StreamReader reader = new StreamReader(stream))
+            using (var stream = new FileStream(OverrideFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = new StreamReader(stream))
             {
                 // we will gracefully ignore any failures when trying to read
                 while (!reader.EndOfStream)

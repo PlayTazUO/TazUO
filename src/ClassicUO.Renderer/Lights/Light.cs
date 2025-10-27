@@ -22,11 +22,11 @@ namespace ClassicUO.Renderer.Lights
             if (idx >= _spriteInfos.Length)
                 return ref SpriteInfo.Empty;
 
-            ref var spriteInfo = ref _spriteInfos[idx];
+            ref SpriteInfo spriteInfo = ref _spriteInfos[idx];
 
             if (spriteInfo.Texture == null)
             {
-                var lightInfo = _lightsLoader.GetLight(idx);
+                LightInfo lightInfo = _lightsLoader.GetLight(idx);
                 if (!lightInfo.Pixels.IsEmpty)
                 {
                     spriteInfo.Texture = _atlas.AddSprite(

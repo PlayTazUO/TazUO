@@ -14,7 +14,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         public override void DrawContent()
         {
-            var runningScripts = LegionScripting.LegionScripting.RunningScripts;
+            System.Collections.Generic.List<ScriptFile> runningScripts = LegionScripting.LegionScripting.RunningScripts;
 
             if (runningScripts.Count == 0)
             {
@@ -22,7 +22,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
             else
             {
-                foreach (var script in runningScripts.ToArray())
+                foreach (ScriptFile script in runningScripts.ToArray())
                 {
                     if (script == null) continue;
 

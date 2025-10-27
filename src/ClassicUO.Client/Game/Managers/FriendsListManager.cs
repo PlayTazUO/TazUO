@@ -23,15 +23,9 @@ namespace ClassicUO.Game.Managers
             _loaded = false;
         }
 
-        public void OnSceneLoad()
-        {
-            Load();
-        }
+        public void OnSceneLoad() => Load();
 
-        public void OnSceneUnload()
-        {
-            Save();
-        }
+        public void OnSceneUnload() => Save();
 
         public void Load()
         {
@@ -112,7 +106,7 @@ namespace ClassicUO.Game.Managers
             if (!_loaded)
                 Load();
 
-            var friend = _friends.Find(f => f.Serial == serial);
+            FriendEntry friend = _friends.Find(f => f.Serial == serial);
             if (friend == null)
                 return false;
 
@@ -129,7 +123,7 @@ namespace ClassicUO.Game.Managers
             if (string.IsNullOrWhiteSpace(name))
                 return false;
 
-            var friend = _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
+            FriendEntry friend = _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
             if (friend == null)
                 return false;
 

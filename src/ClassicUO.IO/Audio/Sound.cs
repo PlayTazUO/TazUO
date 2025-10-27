@@ -76,10 +76,7 @@ namespace ClassicUO.IO.Audio
 
         public bool IsPlaying(uint curTime) => SoundInstance != null && SoundInstance.State == SoundState.Playing && DurationTime > curTime;
 
-        public int CompareTo(Sound other)
-        {
-            return other == null ? -1 : Index.CompareTo(other.Index);
-        }
+        public int CompareTo(Sound other) => other == null ? -1 : Index.CompareTo(other.Index);
 
         public void Dispose()
         {
@@ -137,7 +134,7 @@ namespace ClassicUO.IO.Audio
             }
 
 
-            var buffer = GetBuffer();
+            ArraySegment<byte> buffer = GetBuffer();
 
             if (buffer.Count > 0)
             {

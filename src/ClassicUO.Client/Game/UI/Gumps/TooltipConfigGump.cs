@@ -162,14 +162,14 @@ namespace ClassicUO.Game.UI.Gumps
         private void AddTooltipRow(int index)
         {
             var data = ToolTipOverrideData.Get(index);
-            var rowContainer = CreateTooltipRow(data, index);
+            Control rowContainer = CreateTooltipRow(data, index);
             dataContainer.Add(rowContainer);
         }
 
         private void AddNewTooltipRow(int index)
         {
             var data = ToolTipOverrideData.Get(index);
-            var rowContainer = CreateTooltipRow(data, index);
+            Control rowContainer = CreateTooltipRow(data, index);
             dataContainer.Add(rowContainer);
         }
 
@@ -228,7 +228,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             rowContainer.Add(minMaxLabel);
 
-            var min1Input = CreateNumericInput(data.Min1.ToString(), 50, 20, minMaxLabel.X + minMaxLabel.Width + 3, 25);
+            InputField min1Input = CreateNumericInput(data.Min1.ToString(), 50, 20, minMaxLabel.X + minMaxLabel.Width + 3, 25);
             min1Input.TextChanged += (s, e) => SaveWithDelay(() =>
             {
                 if (int.TryParse(min1Input.Text, out int val))
@@ -240,7 +240,7 @@ namespace ClassicUO.Game.UI.Gumps
             }, min1Input.Text);
             rowContainer.Add(min1Input);
 
-            var max1Input = CreateNumericInput(data.Max1.ToString(), 50, 20, min1Input.X + min1Input.Width + 3, 25);
+            InputField max1Input = CreateNumericInput(data.Max1.ToString(), 50, 20, min1Input.X + min1Input.Width + 3, 25);
             max1Input.TextChanged += (s, e) => SaveWithDelay(() =>
             {
                 if (int.TryParse(max1Input.Text, out int val))
@@ -259,7 +259,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             rowContainer.Add(minMaxLabel2);
 
-            var min2Input = CreateNumericInput(data.Min2.ToString(), 50, 20, minMaxLabel2.X + minMaxLabel2.Width + 3, 25);
+            InputField min2Input = CreateNumericInput(data.Min2.ToString(), 50, 20, minMaxLabel2.X + minMaxLabel2.Width + 3, 25);
             min2Input.TextChanged += (s, e) => SaveWithDelay(() =>
             {
                 if (int.TryParse(min2Input.Text, out int val))
@@ -271,7 +271,7 @@ namespace ClassicUO.Game.UI.Gumps
             }, min2Input.Text);
             rowContainer.Add(min2Input);
 
-            var max2Input = CreateNumericInput(data.Max2.ToString(), 50, 20, min2Input.X + min2Input.Width + 3, 25);
+            InputField max2Input = CreateNumericInput(data.Max2.ToString(), 50, 20, min2Input.X + min2Input.Width + 3, 25);
             max2Input.TextChanged += (s, e) => SaveWithDelay(() =>
             {
                 if (int.TryParse(max2Input.Text, out int val))
@@ -329,23 +329,17 @@ namespace ClassicUO.Game.UI.Gumps
             return input;
         }
 
-        private void SaveWithDelay(Action saveAction, string currentValue)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                System.Threading.Thread.Sleep(1500);
-                MainThreadQueue.EnqueueAction(saveAction);
-            });
-        }
+        private void SaveWithDelay(Action saveAction, string currentValue) => Task.Factory.StartNew(() =>
+                                                                                       {
+                                                                                           System.Threading.Thread.Sleep(1500);
+                                                                                           MainThreadQueue.EnqueueAction(saveAction);
+                                                                                       });
 
-        private void ShowSavedMessage(Control control)
+        private void ShowSavedMessage(Control control) => UIManager.Add(new SimpleTimedTextGump(World, "Saved", Color.LightGreen, TimeSpan.FromSeconds(1))
         {
-            UIManager.Add(new SimpleTimedTextGump(World, "Saved", Color.LightGreen, TimeSpan.FromSeconds(1))
-            {
-                X = control.ScreenCoordinateX,
-                Y = control.ScreenCoordinateY - 20
-            });
-        }
+            X = control.ScreenCoordinateX,
+            Y = control.ScreenCoordinateY - 20
+        });
 
         private void ClearAllTooltipData()
         {

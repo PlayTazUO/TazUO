@@ -176,7 +176,7 @@ namespace ClassicUO.Game.UI.Controls
                 Add(background = new ResizePic(0x0BB8));
                 background.AcceptMouseInput = false;
 
-                HoveredLabel[] labels = new HoveredLabel[items.Length];
+                var labels = new HoveredLabel[items.Length];
 
                 bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                     string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
@@ -194,7 +194,7 @@ namespace ClassicUO.Game.UI.Controls
                         item = string.Empty;
                     }
 
-                    HoveredLabel label = new HoveredLabel
+                    var label = new HoveredLabel
                     (
                         item,
                         unicode,
@@ -219,7 +219,7 @@ namespace ClassicUO.Game.UI.Controls
                 int totalHeight = Math.Min(maxHeight, labels.Max(o => o.Y + o.Height));
                 int maxWidth = Math.Max(width, labels.Max(o => o.X + o.Width));
 
-                ScrollArea area = new ScrollArea
+                var area = new ScrollArea
                 (
                     0,
                     0,

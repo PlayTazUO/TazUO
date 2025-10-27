@@ -125,9 +125,9 @@ namespace ClassicUO.Game.UI.Gumps
             _picBase?.Dispose();
             _hitBox?.Dispose();
 
-            var showPaperdollBooks =
+            bool showPaperdollBooks =
                 LocalSerial == World.Player && World.ClientFeatures.PaperdollBooks;
-            var showRacialAbilitiesBook =
+            bool showRacialAbilitiesBook =
                 showPaperdollBooks && Client.Game.UO.Version >= ClientVersion.CV_7000;
 
             if (LocalSerial == World.Player)
@@ -327,7 +327,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_slots[8] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 8, Layer.Talisman, this));
 
 
-            foreach (var slot in _slots)
+            foreach (EquipmentSlot slot in _slots)
             {
                 slot.ScaleWidthAndHeight(Scale).ScaleXAndY(Scale).SetInternalScale(Scale);
             }
@@ -350,7 +350,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_slots_right[7] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 7, Layer.Shoes, this));
 
-            foreach (var slot in _slots_right)
+            foreach (EquipmentSlot slot in _slots_right)
             {
                 slot.ScaleWidthAndHeight(Scale).ScaleXAndY(Scale).SetInternalScale(Scale);
             }
@@ -399,10 +399,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public void UpdateTitle(string text)
-        {
-            _titleLabel.Text = text;
-        }
+        public void UpdateTitle(string text) => _titleLabel.Text = text;
 
         private void VirtueMenu_MouseDoubleClickEvent(object sender, MouseDoubleClickEventArgs args)
         {
@@ -521,10 +518,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseExit(int x, int y)
-        {
-            _paperDollInteractable?.SetFakeItem(false);
-        }
+        protected override void OnMouseExit(int x, int y) => _paperDollInteractable?.SetFakeItem(false);
 
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
@@ -724,7 +718,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         UIManager.GetGump<BaseHealthBarGump>(LocalSerial)?.Dispose();
 
-                        StatusGumpBase status = StatusGumpBase.GetStatusGump();
+                        var status = StatusGumpBase.GetStatusGump();
 
                         if (status == null)
                         {
@@ -744,7 +738,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (ProfileManager.CurrentProfile.CustomBarsToggled)
                         {
-                            Rectangle bounds = new Rectangle(
+                            var bounds = new Rectangle(
                                 0,
                                 0,
                                 HealthBarGumpCustom.HPB_WIDTH,
@@ -761,7 +755,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                         else
                         {
-                            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0804);
+                            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0804);
 
                             UIManager.Add(
                                 new HealthBarGump(World,LocalSerial)
@@ -971,7 +965,7 @@ namespace ClassicUO.Game.UI.Gumps
                         true
                     );
 
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(item.DisplayedGraphic);
+                    ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(item.DisplayedGraphic);
 
                     if (artInfo.Texture != null)
                     {
@@ -998,10 +992,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
-                public override bool Contains(int x, int y)
-                {
-                    return true;
-                }
+                public override bool Contains(int x, int y) => true;
             }
         }
 

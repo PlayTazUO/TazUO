@@ -81,7 +81,7 @@ namespace ClassicUO.LegionScripting
 
             // Process main thread actions
             int processedCount = 0;
-            while (_mainThreadActions.TryDequeue(out var action) && processedCount < 10)
+            while (_mainThreadActions.TryDequeue(out Action action) && processedCount < 10)
             {
                 try
                 {
@@ -98,7 +98,7 @@ namespace ClassicUO.LegionScripting
         private void DrawDirectoryTree(string path, int depth)
         {
             // Get or create directory node
-            if (!directoryCache.TryGetValue(path, out var node))
+            if (!directoryCache.TryGetValue(path, out DirectoryNode node))
             {
                 node = new DirectoryNode { Path = path, IsLoaded = false };
                 directoryCache[path] = node;
@@ -120,12 +120,12 @@ namespace ClassicUO.LegionScripting
 
             // Draw directories
             var directories = node.Contents.Where(f => f.type == "dir").OrderBy(f => f.name).ToList();
-            foreach (var dir in directories)
+            foreach (GHFileObject dir in directories)
             {
                 ImGui.PushID(dir.path);
 
                 // Check if this directory is expanded
-                bool isExpanded = directoryCache.TryGetValue(dir.path, out var childNode) && childNode.IsExpanded;
+                bool isExpanded = directoryCache.TryGetValue(dir.path, out DirectoryNode childNode) && childNode.IsExpanded;
 
                 // Draw tree node
                 ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
@@ -152,7 +152,7 @@ namespace ClassicUO.LegionScripting
 
             // Draw script files
             var scriptFiles = node.Contents.Where(f => f.type == "file" && (f.name.EndsWith(".lscript") || f.name.EndsWith(".py"))).OrderBy(f => f.name).ToList();
-            foreach (var file in scriptFiles)
+            foreach (GHFileObject file in scriptFiles)
             {
                 ImGui.PushID(file.path);
 
@@ -174,7 +174,7 @@ namespace ClassicUO.LegionScripting
 
         private void LoadDirectoryAsync(string path)
         {
-            if (!directoryCache.TryGetValue(path, out var node))
+            if (!directoryCache.TryGetValue(path, out DirectoryNode node))
             {
                 node = new DirectoryNode { Path = path };
                 directoryCache[path] = node;
@@ -190,7 +190,7 @@ namespace ClassicUO.LegionScripting
             {
                 try
                 {
-                    var files = await cache.GetDirectoryContentsAsync(path);
+                    List<GHFileObject> files = await cache.GetDirectoryContentsAsync(path);
                     _mainThreadActions.Enqueue(() =>
                     {
                         node.Contents = files;
@@ -219,129 +219,126 @@ namespace ClassicUO.LegionScripting
             });
         }
 
-        private void DownloadAndOpenScript(GHFileObject file)
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    var content = await cache.GetFileContentAsync(file.download_url);
-                    _mainThreadActions.Enqueue(() =>
-                    {
-                        try
-                        {
-                            // Validate and sanitize the filename to prevent path traversal
-                            string sanitizedFileName = Path.GetFileName(file.name);
+        private void DownloadAndOpenScript(GHFileObject file) => Task.Run(async () =>
+                                                                          {
+                                                                              try
+                                                                              {
+                                                                                  string content = await cache.GetFileContentAsync(file.download_url);
+                                                                                  _mainThreadActions.Enqueue(() =>
+                                                                                  {
+                                                                                      try
+                                                                                      {
+                                                                                          // Validate and sanitize the filename to prevent path traversal
+                                                                                          string sanitizedFileName = Path.GetFileName(file.name);
 
-                            // Reject names that contain path separators, relative navigation, or are empty
-                            if (string.IsNullOrWhiteSpace(sanitizedFileName) ||
-                                sanitizedFileName != file.name ||
-                                sanitizedFileName.Contains("\\") ||
-                                sanitizedFileName.Contains("/") ||
-                                sanitizedFileName.Contains("..") ||
-                                sanitizedFileName == "." ||
-                                sanitizedFileName == "..")
-                            {
-                                GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters or path separators.", 32);
-                                Console.WriteLine($"Security: Rejected invalid filename: {file.name}");
-                                return;
-                            }
+                                                                                          // Reject names that contain path separators, relative navigation, or are empty
+                                                                                          if (string.IsNullOrWhiteSpace(sanitizedFileName) ||
+                                                                                              sanitizedFileName != file.name ||
+                                                                                              sanitizedFileName.Contains("\\") ||
+                                                                                              sanitizedFileName.Contains("/") ||
+                                                                                              sanitizedFileName.Contains("..") ||
+                                                                                              sanitizedFileName == "." ||
+                                                                                              sanitizedFileName == "..")
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters or path separators.", 32);
+                                                                                              Console.WriteLine($"Security: Rejected invalid filename: {file.name}");
+                                                                                              return;
+                                                                                          }
 
-                            // Check for invalid filename characters
-                            char[] invalidChars = Path.GetInvalidFileNameChars();
-                            if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
-                            {
-                                GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters.", 32);
-                                Console.WriteLine($"Security: Rejected filename with invalid characters: {file.name}");
-                                return;
-                            }
+                                                                                          // Check for invalid filename characters
+                                                                                          char[] invalidChars = Path.GetInvalidFileNameChars();
+                                                                                          if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters.", 32);
+                                                                                              Console.WriteLine($"Security: Rejected filename with invalid characters: {file.name}");
+                                                                                              return;
+                                                                                          }
 
-                            // Ensure the script directory exists
-                            if (!Directory.Exists(LegionScripting.ScriptPath))
-                            {
-                                Directory.CreateDirectory(LegionScripting.ScriptPath);
-                            }
+                                                                                          // Ensure the script directory exists
+                                                                                          if (!Directory.Exists(LegionScripting.ScriptPath))
+                                                                                          {
+                                                                                              Directory.CreateDirectory(LegionScripting.ScriptPath);
+                                                                                          }
 
-                            // Create the full file path
-                            var filePath = Path.Combine(LegionScripting.ScriptPath, sanitizedFileName);
+                                                                                          // Create the full file path
+                                                                                          string filePath = Path.Combine(LegionScripting.ScriptPath, sanitizedFileName);
 
-                            // Resolve to full path and verify it's within the scripts directory
-                            string fullFilePath = Path.GetFullPath(filePath);
-                            string fullScriptPath = Path.GetFullPath(LegionScripting.ScriptPath);
+                                                                                          // Resolve to full path and verify it's within the scripts directory
+                                                                                          string fullFilePath = Path.GetFullPath(filePath);
+                                                                                          string fullScriptPath = Path.GetFullPath(LegionScripting.ScriptPath);
 
-                            // Verify the resolved path starts with the scripts root directory
-                            if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                                !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
-                            {
-                                GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
-                                Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.name}, Resolved: {fullFilePath}");
-                                return;
-                            }
+                                                                                          // Verify the resolved path starts with the scripts root directory
+                                                                                          if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                                                                              !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
+                                                                                              Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.name}, Resolved: {fullFilePath}");
+                                                                                              return;
+                                                                                          }
 
-                            // Handle duplicate files by appending a number
-                            string finalFileName = sanitizedFileName;
-                            string finalFilePath = fullFilePath;
+                                                                                          // Handle duplicate files by appending a number
+                                                                                          string finalFileName = sanitizedFileName;
+                                                                                          string finalFilePath = fullFilePath;
 
-                            if (File.Exists(fullFilePath))
-                            {
-                                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sanitizedFileName);
-                                string extension = Path.GetExtension(sanitizedFileName);
-                                int counter = 1;
+                                                                                          if (File.Exists(fullFilePath))
+                                                                                          {
+                                                                                              string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sanitizedFileName);
+                                                                                              string extension = Path.GetExtension(sanitizedFileName);
+                                                                                              int counter = 1;
 
-                                do
-                                {
-                                    finalFileName = $"{fileNameWithoutExtension} ({counter}){extension}";
-                                    finalFilePath = Path.Combine(LegionScripting.ScriptPath, finalFileName);
+                                                                                              do
+                                                                                              {
+                                                                                                  finalFileName = $"{fileNameWithoutExtension} ({counter}){extension}";
+                                                                                                  finalFilePath = Path.Combine(LegionScripting.ScriptPath, finalFileName);
 
-                                    // Re-validate the new path
-                                    string fullFinalPath = Path.GetFullPath(finalFilePath);
-                                    if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-                                        !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
-                                        return;
-                                    }
+                                                                                                  // Re-validate the new path
+                                                                                                  string fullFinalPath = Path.GetFullPath(finalFilePath);
+                                                                                                  if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                                                                                      !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
+                                                                                                  {
+                                                                                                      GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
+                                                                                                      return;
+                                                                                                  }
 
-                                    finalFilePath = fullFinalPath;
-                                    counter++;
-                                } while (File.Exists(finalFilePath) && counter < 1000); // Limit to prevent infinite loop
+                                                                                                  finalFilePath = fullFinalPath;
+                                                                                                  counter++;
+                                                                                              } while (File.Exists(finalFilePath) && counter < 1000); // Limit to prevent infinite loop
 
-                                if (counter >= 1000)
-                                {
-                                    GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
-                                    return;
-                                }
-                            }
+                                                                                              if (counter >= 1000)
+                                                                                              {
+                                                                                                  GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
+                                                                                                  return;
+                                                                                              }
+                                                                                          }
 
-                            // Write the content to disk
-                            File.WriteAllText(finalFilePath, content, Encoding.UTF8);
+                                                                                          // Write the content to disk
+                                                                                          File.WriteAllText(finalFilePath, content, Encoding.UTF8);
 
-                            // Create ScriptFile object pointing to the saved file
-                            ScriptFile f = new ScriptFile(World.Instance, LegionScripting.ScriptPath, finalFileName);
-                            UIManager.Add(new ScriptEditor(World.Instance, f));
+                                                                                          // Create ScriptFile object pointing to the saved file
+                                                                                          var f = new ScriptFile(World.Instance, LegionScripting.ScriptPath, finalFileName);
+                                                                                          UIManager.Add(new ScriptEditor(World.Instance, f));
 
-                            GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
+                                                                                          GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
 
-                            // Refresh script manager if open
-                            ScriptManagerWindow.Instance?.Update();
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error creating script file: {ex.Message}");
-                            GameActions.Print(World.Instance, $"Error saving script: {file.name} - {ex.Message}");
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error loading file: {ex.Message}");
-                    _mainThreadActions.Enqueue(() =>
-                    {
-                        GameActions.Print(World.Instance, $"Error loading script: {file.name}");
-                    });
-                }
-            });
-        }
+                                                                                          // Refresh script manager if open
+                                                                                          ScriptManagerWindow.Instance?.Update();
+                                                                                      }
+                                                                                      catch (Exception ex)
+                                                                                      {
+                                                                                          Console.WriteLine($"Error creating script file: {ex.Message}");
+                                                                                          GameActions.Print(World.Instance, $"Error saving script: {file.name} - {ex.Message}");
+                                                                                      }
+                                                                                  });
+                                                                              }
+                                                                              catch (Exception ex)
+                                                                              {
+                                                                                  Console.WriteLine($"Error loading file: {ex.Message}");
+                                                                                  _mainThreadActions.Enqueue(() =>
+                                                                                  {
+                                                                                      GameActions.Print(World.Instance, $"Error loading script: {file.name}");
+                                                                                  });
+                                                                              }
+                                                                          });
 
         public override void Dispose()
         {
@@ -409,7 +406,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public async Task<List<ScriptBrowser.GHFileObject>> GetDirectoryContentsAsync(string path = "")
         {
-            var cacheKey = string.IsNullOrEmpty(path) ? "ROOT" : path;
+            string cacheKey = string.IsNullOrEmpty(path) ? "ROOT" : path;
 
             // Check if we have cached data that's still valid
             if (directoryCache.ContainsKey(cacheKey) &&
@@ -420,7 +417,7 @@ namespace ClassicUO.LegionScripting
             }
 
             // Fetch from API
-            var contents = await FetchDirectoryFromApi(path);
+            List<ScriptBrowser.GHFileObject> contents = await FetchDirectoryFromApi(path);
 
             // Cache the results
             directoryCache[cacheKey] = contents;
@@ -430,8 +427,8 @@ namespace ClassicUO.LegionScripting
             // Process sequentially to respect rate limiting (1 request per second)
             _ = Task.Run(async () =>
             {
-                var directories = contents.Where(f => f.type == "dir").Take(3); // Reduced from 5 to 3 to minimize initial load time
-                foreach (var dir in directories)
+                IEnumerable<ScriptBrowser.GHFileObject> directories = contents.Where(f => f.type == "dir").Take(3); // Reduced from 5 to 3 to minimize initial load time
+                foreach (ScriptBrowser.GHFileObject dir in directories)
                 {
                     try
                     {
@@ -460,7 +457,7 @@ namespace ClassicUO.LegionScripting
                 return fileContentCache[downloadUrl];
             }
 
-            var content = await DownloadStringAsync(downloadUrl);
+            string content = await DownloadStringAsync(downloadUrl);
             fileContentCache[downloadUrl] = content;
 
             return content;
@@ -473,15 +470,15 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                var url = string.IsNullOrEmpty(path) ? baseUrl : $"{baseUrl}/{path}";
-                var response = await DownloadStringAsync(url);
+                string url = string.IsNullOrEmpty(path) ? baseUrl : $"{baseUrl}/{path}";
+                string response = await DownloadStringAsync(url);
 
                 if (string.IsNullOrEmpty(response))
                 {
                     return new List<ScriptBrowser.GHFileObject>();
                 }
 
-                var files = JsonSerializer.Deserialize<List<ScriptBrowser.GHFileObject>>(response);
+                List<ScriptBrowser.GHFileObject> files = JsonSerializer.Deserialize<List<ScriptBrowser.GHFileObject>>(response);
                 return files ?? new List<ScriptBrowser.GHFileObject>();
             }
             catch (WebException webEx)
@@ -514,7 +511,7 @@ namespace ClassicUO.LegionScripting
 
             lock (rateLimitLock)
             {
-                var timeSinceLastCall = (int)(DateTime.Now - lastApiCallTime).TotalMilliseconds;
+                int timeSinceLastCall = (int)(DateTime.Now - lastApiCallTime).TotalMilliseconds;
                 if (timeSinceLastCall < MIN_MS_BETWEEN_REQUESTS)
                 {
                     delayNeeded = MIN_MS_BETWEEN_REQUESTS - timeSinceLastCall;
@@ -605,13 +602,13 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public void ClearExpiredCache()
         {
-            var now = DateTime.Now;
+            DateTime now = DateTime.Now;
             var expiredKeys = cacheTimestamps
                 .Where(kvp => now - kvp.Value >= cacheExpiration)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            foreach (var key in expiredKeys)
+            foreach (string key in expiredKeys)
             {
                 directoryCache.Remove(key);
                 cacheTimestamps.Remove(key);
@@ -623,15 +620,12 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public (int Directories, int Files, int Expired) GetCacheStats()
         {
-            var now = DateTime.Now;
-            var expired = cacheTimestamps.Count(kvp => now - kvp.Value >= cacheExpiration);
+            DateTime now = DateTime.Now;
+            int expired = cacheTimestamps.Count(kvp => now - kvp.Value >= cacheExpiration);
 
             return (directoryCache.Count, fileContentCache.Count, expired);
         }
 
-        public void Dispose()
-        {
-            ClearCache();
-        }
+        public void Dispose() => ClearCache();
     }
 }

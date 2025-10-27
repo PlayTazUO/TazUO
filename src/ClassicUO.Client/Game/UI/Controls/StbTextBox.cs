@@ -264,10 +264,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public int Length => Text?.Length ?? 0;
 
-        public float GetWidth(int index)
-        {
-            return _rendererText.GetCharWidthAtIndex(index);
-        }
+        public float GetWidth(int index) => _rendererText.GetCharWidthAtIndex(index);
 
         public TextEditRow LayoutRow(int startIndex)
         {
@@ -357,10 +354,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected void UpdateCaretScreenPosition()
-        {
-            _caretScreenPosition = _rendererText.GetCaretPosition(Stb.CursorIndex);
-        }
+        protected void UpdateCaretScreenPosition() => _caretScreenPosition = _rendererText.GetCaretPosition(Stb.CursorIndex);
 
         private ControlKeys ApplyShiftIfNecessary(ControlKeys k)
         {
@@ -372,10 +366,7 @@ namespace ClassicUO.Game.UI.Controls
             return k;
         }
 
-        private bool IsMaxCharReached(int count)
-        {
-            return _maxCharCount >= 0 && Length + count >= _maxCharCount;
-        }
+        private bool IsMaxCharReached(int count) => _maxCharCount >= 0 && Length + count >= _maxCharCount;
 
         private void Sanitize(ref string text)
         {
@@ -485,10 +476,7 @@ namespace ClassicUO.Game.UI.Controls
             UpdateCaretScreenPosition();
         }
 
-        protected MultilinesFontInfo GetInfo()
-        {
-            return _rendererText.GetInfo();
-        }
+        protected MultilinesFontInfo GetInfo() => _rendererText.GetInfo();
 
         internal override void OnFocusEnter()
         {
@@ -824,10 +812,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void AppendText(string text)
-        {
-            Stb.Paste(text);
-        }
+        public void AppendText(string text) => Stb.Paste(text);
 
 
         protected override void OnTextInput(string c)

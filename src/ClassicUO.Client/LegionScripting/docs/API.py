@@ -413,11 +413,11 @@ class PyPlayer:
     ColdResistance: int = None
     PoisonResistance: int = None
     EnergyResistance: int = None
-    MaxPhysicResistence: int = None
-    MaxFireResistence: int = None
-    MaxColdResistence: int = None
-    MaxPoisonResistence: int = None
-    MaxEnergyResistence: int = None
+    MaxPhysicResistance: int = None
+    MaxFireResistance: int = None
+    MaxColdResistance: int = None
+    MaxPoisonResistance: int = None
+    MaxEnergyResistance: int = None
     DamageMin: int = None
     DamageMax: int = None
     DamageIncrease: int = None
@@ -431,6 +431,8 @@ class PyPlayer:
     FasterCastRecovery: int = None
     LowerManaCost: int = None
     LowerReagentCost: int = None
+    IsCasting: bool = None
+    IsRecovering: bool = None
     Luck: int = None
     Gold: int = None
     TithingPoints: int = None
@@ -466,7 +468,7 @@ class PyStatic:
 
 JournalEntries = None
 Backpack: int = None
-Player = None
+Player: PyPlayer = None
 Bank: int = None
 Random = None
 LastTargetSerial: int = None

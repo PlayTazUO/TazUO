@@ -52,7 +52,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         public override void DrawContent()
         {
-            var currentProfile = ProfileManager.CurrentProfile;
+            Profile currentProfile = ProfileManager.CurrentProfile;
 
             ImGui.Spacing();
 
@@ -273,7 +273,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 for (int i = 0; i < _searchResults.Count; i++)
                 {
-                    var item = _searchResults[i];
+                    ItemInfo item = _searchResults[i];
                     ImGui.TableNextRow();
 
                     // Graphic column with image
@@ -281,7 +281,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     if (item.Graphic > 0)
                     {
                         DrawArt(item.Graphic, new Vector2(32, 32));
-                        if (ImGui.IsItemHovered() && _cachedGraphicTooltips.TryGetValue(item.Graphic, out var tooltip))
+                        if (ImGui.IsItemHovered() && _cachedGraphicTooltips.TryGetValue(item.Graphic, out string tooltip))
                             ImGui.SetTooltip(tooltip);
                     }
                     else
@@ -297,12 +297,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     // Hue
                     ImGui.TableSetColumnIndex(2);
-                    if (_cachedHueStrings.TryGetValue(item.Hue, out var hueStr))
+                    if (_cachedHueStrings.TryGetValue(item.Hue, out string hueStr))
                         ImGui.Text(hueStr);
 
                     // Layer
                     ImGui.TableSetColumnIndex(3);
-                    if (_cachedLayerStrings.TryGetValue(item.Layer, out var layerStr))
+                    if (_cachedLayerStrings.TryGetValue(item.Layer, out string layerStr))
                     {
                         ImGui.Text(layerStr);
                         if (ImGui.IsItemHovered())
@@ -311,12 +311,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     // Location
                     ImGui.TableSetColumnIndex(4);
-                    if (_cachedLocationStrings.TryGetValue(item.Serial, out var locationStr))
+                    if (_cachedLocationStrings.TryGetValue(item.Serial, out string locationStr))
                         ImGui.Text(locationStr);
 
                     // Container
                     ImGui.TableSetColumnIndex(5);
-                    if (_cachedContainerStrings.TryGetValue(item.Container, out var containerStr))
+                    if (_cachedContainerStrings.TryGetValue(item.Container, out string containerStr))
                         ImGui.Text(containerStr);
 
                     // Character
@@ -325,7 +325,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     // Updated time
                     ImGui.TableSetColumnIndex(7);
-                    if (_cachedTimeStrings.TryGetValue(item.UpdatedTime, out var timeStr))
+                    if (_cachedTimeStrings.TryGetValue(item.UpdatedTime, out string timeStr))
                         ImGui.Text(timeStr);
 
                     // Actions column
@@ -425,7 +425,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             _cachedContainerStrings.Clear();
             _cachedTimeStrings.Clear();
 
-            foreach (var item in _searchResults)
+            foreach (ItemInfo item in _searchResults)
             {
                 // Cache graphic tooltip
                 if (item.Graphic > 0 && !_cachedGraphicTooltips.ContainsKey(item.Graphic))
@@ -467,7 +467,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 // Cache time string - use DateTime as key
                 if (!_cachedTimeStrings.ContainsKey(item.UpdatedTime))
                 {
-                    var timeAgo = DateTime.Now - item.UpdatedTime;
+                    TimeSpan timeAgo = DateTime.Now - item.UpdatedTime;
                     string timeStr;
                     if (timeAgo.TotalDays >= 1)
                         timeStr = $"{timeAgo.Days}d ago";

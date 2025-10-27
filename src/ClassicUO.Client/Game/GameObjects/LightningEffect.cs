@@ -42,7 +42,7 @@ namespace ClassicUO.Game.GameObjects
                         NextChangeFrameTime = (long)Time.Ticks + IntervalInMs;
                     }
 
-                    (var x, var y, var z) = GetSource();
+                    (ushort x, ushort y, sbyte z) = GetSource();
 
                     if (X != x || Y != y || Z != z)
                     {

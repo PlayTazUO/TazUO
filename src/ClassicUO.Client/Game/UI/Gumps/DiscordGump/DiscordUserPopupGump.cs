@@ -60,7 +60,7 @@ public class DiscordUserPopupGump : Gump
         Add(name);
         y += name.Height + 5;
 
-        var presence = userHandle.GameActivity();
+        Activity presence = userHandle.GameActivity();
 
         if (presence != null)
         {
@@ -69,11 +69,11 @@ public class DiscordUserPopupGump : Gump
             y += c.Height + 5;
             Add(c);
 
-            var activitys = presence.Party();
+            ActivityParty activitys = presence.Party();
 
             if (activitys != null)
             {
-                ServerInfo data = ServerInfo.FromJson(activitys.Id());
+                var data = ServerInfo.FromJson(activitys.Id());
 
                 c = TextBox.GetOne(data.Name, TrueTypeLoader.EMBEDDED_FONT, 20f, Color.LightSlateGray, TextBox.RTLOptions.DefaultCentered(Width));
                 c.Y = y;

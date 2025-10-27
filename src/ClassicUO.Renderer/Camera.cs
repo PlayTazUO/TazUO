@@ -160,11 +160,11 @@ namespace ClassicUO.Renderer
 
         private void CalculatePeek(Vector2 origin)
         {
-            Vector2 target_offset = new Vector2();
+            var target_offset = new Vector2();
 
             if (PeekingToMouse)
             {
-                Vector2 target = new Vector2(_mousePos.X - Bounds.X, _mousePos.Y - Bounds.Y);
+                var target = new Vector2(_mousePos.X - Bounds.X, _mousePos.Y - Bounds.Y);
 
                 if (PeekBackwards)
                 {

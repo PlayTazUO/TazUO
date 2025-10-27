@@ -51,7 +51,7 @@ namespace ClassicUO.Game.Managers
                     CurrentPlayerConfigs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
 
                     // Ensure all configs have the correct character name
-                    foreach (var config in CurrentPlayerConfigs)
+                    foreach (DressConfig config in CurrentPlayerConfigs)
                     {
                         config.CharacterName = characterName;
                     }
@@ -72,10 +72,7 @@ namespace ClassicUO.Game.Managers
             IsLoaded = true;
         }
 
-        public void Unload()
-        {
-            Instance = null;
-        }
+        public void Unload() => Instance = null;
 
         private void LoadOtherCharacterConfigs()
         {
@@ -121,9 +118,9 @@ namespace ClassicUO.Game.Managers
                                 try
                                 {
                                     string json = File.ReadAllText(configFilePath);
-                                    var configs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
+                                    List<DressConfig> configs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
 
-                                    foreach (var config in configs)
+                                    foreach (DressConfig config in configs)
                                     {
                                         config.CharacterName = characterName; // Ensure character name is set
                                         OtherCharacterConfigs.Add(config);
@@ -155,7 +152,7 @@ namespace ClassicUO.Game.Managers
             string action = args[1].ToLower();
             string configName = string.Join(" ", args.Skip(2)).Trim('"');
 
-            var config = CurrentPlayerConfigs.FirstOrDefault(c => c.Name.Equals(configName, StringComparison.OrdinalIgnoreCase));
+            DressConfig config = CurrentPlayerConfigs.FirstOrDefault(c => c.Name.Equals(configName, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
                 GameActions.Print(World.Instance, $"Dress config '{configName}' not found");
@@ -217,7 +214,7 @@ namespace ClassicUO.Game.Managers
             if (config.Items.Any(i => i.Serial == serial))
                 return;
 
-            var item = World.Instance.Items.Get(serial);
+            Item item = World.Instance.Items.Get(serial);
             byte layer = item?.ItemData.Layer ?? 0;
 
             config.Items.Add(new DressItem { Serial = serial, Name = name, Layer = layer });
@@ -226,7 +223,7 @@ namespace ClassicUO.Game.Managers
 
         public void RemoveItemFromConfig(DressConfig config, uint serial)
         {
-            var item = config.Items.FirstOrDefault(i => i.Serial == serial);
+            DressItem item = config.Items.FirstOrDefault(i => i.Serial == serial);
             if (item != null)
             {
                 config.Items.Remove(item);
@@ -246,10 +243,7 @@ namespace ClassicUO.Game.Managers
             Save();
         }
 
-        public uint GetUndressBag(DressConfig config)
-        {
-            return config.UndressBagSerial != 0 ? config.UndressBagSerial : World.Instance.Player?.Backpack?.Serial ?? 0;
-        }
+        public uint GetUndressBag(DressConfig config) => config.UndressBagSerial != 0 ? config.UndressBagSerial : World.Instance.Player?.Backpack?.Serial ?? 0;
 
         public void AddCurrentlyEquippedItems(DressConfig config)
         {
@@ -258,11 +252,11 @@ namespace ClassicUO.Game.Managers
 
             for (int i = 0; i <= Constants.USED_LAYER_COUNT; i++)
             {
-                Layer layer = (Layer)i;
+                var layer = (Layer)i;
                 if (layer == Layer.Backpack || layer == Layer.Face || layer == Layer.Hair || layer == Layer.Beard)
                     continue;
 
-                var item = World.Instance.Player.FindItemByLayer(layer);
+                Item item = World.Instance.Player.FindItemByLayer(layer);
                 if (item != null)
                 {
                     AddItemToConfig(config, item.Serial, item.Name);
@@ -293,10 +287,10 @@ namespace ClassicUO.Game.Managers
                 // Then collect items to equip
                 var itemsToEquip = new List<uint>();
 
-                foreach (var dressItem in config.Items)
+                foreach (DressItem dressItem in config.Items)
                 {
                     // Check if the item is already equipped on the player
-                    var item = World.Instance.Items.Get(dressItem.Serial);
+                    Item item = World.Instance.Items.Get(dressItem.Serial);
                     if (item != null && item.Container == World.Instance.Player?.Serial)
                     {
                         continue;
@@ -316,7 +310,7 @@ namespace ClassicUO.Game.Managers
                 // Use traditional queue-based approach
                 // Collect layers that need to be unequipped
                 var layersToUnequip = new List<byte>();
-                foreach (var dressItem in config.Items)
+                foreach (DressItem dressItem in config.Items)
                 {
                     if (!layersToUnequip.Contains(dressItem.Layer))
                     {
@@ -332,10 +326,10 @@ namespace ClassicUO.Game.Managers
                 if (layersToUnequip.Count > 0)
                     UnequipLayers(layersToUnequip, config);
 
-                foreach (var dressItem in config.Items)
+                foreach (DressItem dressItem in config.Items)
                 {
                     // Check if the item is already equipped on the player
-                    var item = World.Instance.Items.Get(dressItem.Serial);
+                    Item item = World.Instance.Items.Get(dressItem.Serial);
                     if (item != null && item.Container == World.Instance.Player?.Serial)
                     {
                         continue;
@@ -354,9 +348,9 @@ namespace ClassicUO.Game.Managers
                 var layersToUnequip = new List<Layer>();
 
                 // Collect layers that are currently equipped with config items
-                foreach (var dressItem in config.Items)
+                foreach (DressItem dressItem in config.Items)
                 {
-                    var item = World.Instance.Items.Get(dressItem.Serial);
+                    Item item = World.Instance.Items.Get(dressItem.Serial);
                     if (item != null && item.Container == World.Instance.Player?.Serial)
                     {
                         var layer = (Layer)dressItem.Layer;
@@ -379,16 +373,16 @@ namespace ClassicUO.Game.Managers
                 var itemsToUnequip = new List<uint>();
 
                 // Collect items that are currently equipped
-                foreach (var dressItem in config.Items)
+                foreach (DressItem dressItem in config.Items)
                 {
-                    var item = World.Instance.Items.Get(dressItem.Serial);
+                    Item item = World.Instance.Items.Get(dressItem.Serial);
                     if (item != null && item.Container == World.Instance.Player?.Serial)
                     {
                         itemsToUnequip.Add(dressItem.Serial);
                     }
                 }
 
-                foreach (var serial in itemsToUnequip)
+                foreach (uint serial in itemsToUnequip)
                     UnequipItemAsync(serial, config);
             }
         }
@@ -397,9 +391,9 @@ namespace ClassicUO.Game.Managers
         {
             uint undressBag = GetUndressBag(config);
 
-            foreach (var layer in layers)
+            foreach (byte layer in layers)
             {
-                var currentlyEquipped = World.Instance.Player?.FindItemByLayer((Layer)layer);
+                Item currentlyEquipped = World.Instance.Player?.FindItemByLayer((Layer)layer);
                 if (currentlyEquipped != null && !config.Contains(currentlyEquipped.Serial))
                     MoveItemQueue.Instance.Enqueue(currentlyEquipped, undressBag);
             }
@@ -407,7 +401,7 @@ namespace ClassicUO.Game.Managers
 
         private void UnequipItemAsync(uint serial, DressConfig config)
         {
-            var item = World.Instance.Items.Get(serial);
+            Item item = World.Instance.Items.Get(serial);
 
             if (item != null && item.Container == World.Instance.Player?.Serial)
             {

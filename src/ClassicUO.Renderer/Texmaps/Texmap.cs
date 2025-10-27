@@ -22,11 +22,11 @@ namespace ClassicUO.Renderer.Texmaps
             if (idx >= _spriteInfos.Length)
                 return ref SpriteInfo.Empty;
 
-            ref var spriteInfo = ref _spriteInfos[idx];
+            ref SpriteInfo spriteInfo = ref _spriteInfos[idx];
 
             if (spriteInfo.Texture == null)
             {
-                var texmapInfo = _texmapsLoader.GetTexmap(idx);
+                TexmapInfo texmapInfo = _texmapsLoader.GetTexmap(idx);
                 if (!texmapInfo.Pixels.IsEmpty)
                 {
                     spriteInfo.Texture = _atlas.AddSprite(

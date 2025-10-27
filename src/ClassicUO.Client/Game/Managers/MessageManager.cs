@@ -42,8 +42,10 @@ namespace ClassicUO.Game.Managers
     {
         private readonly World _world;
 
-        public MessageManager(World world) => _world = world;
-
+        public MessageManager(World world)
+        {
+            _world = world;
+        }
 
         public PromptData PromptData { get; set; }
 
@@ -154,7 +156,7 @@ namespace ClassicUO.Game.Managers
                         {
                             if (currentProfile != null && currentProfile.EnabledSpellFormat && !string.IsNullOrWhiteSpace(currentProfile.SpellDisplayFormat))
                             {
-                                ValueStringBuilder sb = new ValueStringBuilder(currentProfile.SpellDisplayFormat.AsSpan());
+                                var sb = new ValueStringBuilder(currentProfile.SpellDisplayFormat.AsSpan());
                                 {
                                     sb.Replace("{power}".AsSpan(), spell.PowerWords.AsSpan());
                                     sb.Replace("{spell}".AsSpan(), spell.Name.AsSpan());
@@ -292,10 +294,7 @@ namespace ClassicUO.Game.Managers
             );
         }
 
-        public void OnLocalizedMessage(Entity entity, MessageEventArgs args)
-        {
-            LocalizedMessageReceived.Raise(args, entity);
-        }
+        public void OnLocalizedMessage(Entity entity, MessageEventArgs args) => LocalizedMessageReceived.Raise(args, entity);
 
         public TextObject CreateMessage
         (
@@ -325,7 +324,7 @@ namespace ClassicUO.Game.Managers
             }
 
 
-            TextObject textObject = TextObject.Create(_world);
+            var textObject = TextObject.Create(_world);
             textObject.Alpha = 0xFF;
             textObject.Type = type;
             //textObject.Hue = fixedColor;
@@ -336,7 +335,7 @@ namespace ClassicUO.Game.Managers
             }
 
             //Ignored the fixedColor in the textbox creation because it seems to interfere with correct colors, but if issues arrise I left the fixColor code here
-            var options = TextBox.RTLOptions.DefaultCenterStroked(ProfileManager.CurrentProfile.OverheadChatWidth).MouseInput(!ProfileManager.CurrentProfile.DisableMouseInteractionOverheadText);
+            TextBox.RTLOptions options = TextBox.RTLOptions.DefaultCenterStroked(ProfileManager.CurrentProfile.OverheadChatWidth).MouseInput(!ProfileManager.CurrentProfile.DisableMouseInteractionOverheadText);
 
             textObject.TextBox = TextBox.GetOne(msg, ProfileManager.CurrentProfile.OverheadChatFont, ProfileManager.CurrentProfile.OverheadChatFontSize, hue, options);
             textObject.Time = CalculateTimeToLive(textObject.TextBox);

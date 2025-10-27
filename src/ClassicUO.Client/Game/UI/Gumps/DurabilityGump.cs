@@ -31,11 +31,11 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             if (texture.Texture != null && DurabilityManager.HasDurabilityData)
             {
-                Rectangle rect = new Rectangle(x, y, Width, Height);
+                var rect = new Rectangle(x, y, Width, Height);
                 batcher.Draw(texture.Texture, rect, texture.UV, ShaderHueTranslator.GetHueVector(0));
             }
 
@@ -96,7 +96,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             BuildHeader();
 
-            ScrollArea area = new ScrollArea(10, 30, Width - 20, Height - 50, true)
+            var area = new ScrollArea(10, 30, Width - 20, Height - 50, true)
             {
                 ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways
             };
@@ -131,16 +131,16 @@ namespace ClassicUO.Game.UI.Gumps
             _dataBox.Clear();
             Rectangle barBounds = Client.Game.UO.Gumps.GetGump((uint)DurabilityColors.RED).UV;
 
-            var items = World.DurabilityManager?.Durabilities ?? new List<DurabiltyProp>();
+            List<DurabiltyProp> items = World.DurabilityManager?.Durabilities ?? new List<DurabiltyProp>();
 
-            foreach (var durability in items.OrderBy(d => d.Percentage))
+            foreach (DurabiltyProp durability in items.OrderBy(d => d.Percentage))
             {
                 if (durability.MaxDurabilty <= 0)
                 {
                     continue;
                 }
 
-                var item = World.Items.Get((uint)durability.Serial);
+                Item item = World.Items.Get((uint)durability.Serial);
 
                 if (item == null)
                 {
@@ -175,7 +175,7 @@ namespace ClassicUO.Game.UI.Gumps
                     a.Add(new GumpPicTiled(0, red.Y, (int)Math.Floor(barBounds.Width * durability.Percentage), barBounds.Height, (ushort)statusGump));
                 }
 
-                var durWidth = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(0, $"{durability.Durabilty} / {durability.MaxDurabilty}");
+                int durWidth = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(0, $"{durability.Durabilty} / {durability.MaxDurabilty}");
 
                 a.Add
                 (

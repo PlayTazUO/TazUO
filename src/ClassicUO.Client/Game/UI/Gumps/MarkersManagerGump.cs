@@ -48,7 +48,7 @@ namespace ClassicUO.Game.UI.Gumps
             CanMove = true;
             AcceptMouseInput = true;
 
-            var button_width = 50;
+            int button_width = 50;
             if (_markerFiles.Count > 0)
             {
                 _markers = _markerFiles[0].Markers;
@@ -120,7 +120,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
             #endregion
 
-            var initY = 10;
+            int initY = 10;
 
             #region Legend
 
@@ -160,8 +160,8 @@ namespace ClassicUO.Game.UI.Gumps
             if (_markerFiles.Count > 0)
                 DrawArea(_markerFiles[_categoryId].IsEditable);
 
-            var initX = 0;
-            foreach (var file in _markerFiles)
+            int initX = 0;
+            foreach (WMapMarkerFile file in _markerFiles)
             {
                 var b = new NiceButton(
                         button_width * initX,
@@ -288,20 +288,17 @@ namespace ClassicUO.Game.UI.Gumps
             DrawArea(_markerFiles[_categoryId].IsEditable);
         }
 
-        private void MarkerEditEventHandler(object sender, EventArgs e)
-        {
-            _isMarkerListModified = true;
-        }
+        private void MarkerEditEventHandler(object sender, EventArgs e) => _isMarkerListModified = true;
 
         public override void Dispose()
         {
             if (_isMarkerListModified)
             {
-                using (StreamWriter writer = new StreamWriter(_userMarkersFilePath, false))
+                using (var writer = new StreamWriter(_userMarkersFilePath, false))
                 {
-                    foreach (var marker in _markers)
+                    foreach (WMapMarker marker in _markers)
                     {
-                        var newLine = $"{marker.X},{marker.Y},{marker.MapId},{marker.Name},{marker.MarkerIconName},{marker.ColorName},4";
+                        string newLine = $"{marker.X},{marker.Y},{marker.MapId},{marker.Name},{marker.MarkerIconName},{marker.ColorName},4";
 
                         writer.WriteLine(newLine);
                     }
@@ -457,7 +454,7 @@ namespace ClassicUO.Game.UI.Gumps
                         RemoveMarkerEvent.Raise(_idx);
                         break;
                     case (int)ButtonsOption.GOTO_MARKER_BTN:
-                        var wmGump = UIManager.GetGump<WorldMapGump>();
+                        WorldMapGump wmGump = UIManager.GetGump<WorldMapGump>();
                         if (wmGump != null)
                         {
                             wmGump.GoToMarker(_marker.X, _marker.Y, false);
@@ -470,7 +467,7 @@ namespace ClassicUO.Game.UI.Gumps
         private sealed class SearchTextBoxControl : Control
         {
             private readonly StbTextBox _textBox;
-            public string SearchText { get => _textBox.Text; }
+            public string SearchText => _textBox.Text;
 
             public SearchTextBoxControl(int x, int y)
             {
@@ -540,10 +537,7 @@ namespace ClassicUO.Game.UI.Gumps
                 );
             }
 
-            public void ClearText()
-            {
-                _textBox.SetText("");
-            }
+            public void ClearText() => _textBox.SetText("");
         }
     }
 

@@ -25,15 +25,9 @@ namespace ClassicUO.Utility
             _string = str;
         }
 
-        public void Restart()
-        {
-            _pos = 0;
-        }
+        public void Restart() => _pos = 0;
 
-        public bool IsEOF()
-        {
-            return _pos >= _Size;
-        }
+        public bool IsEOF() => _pos >= _Size;
 
         private void GetEOL()
         {
@@ -142,7 +136,7 @@ namespace ClassicUO.Utility
         public List<string> ReadTokens(bool trim = true)
         {
             _trim = trim;
-            List<string> result = new List<string>();
+            var result = new List<string>();
 
             if (_string == null || _pos >= _Size)
                 return result;
@@ -194,7 +188,7 @@ namespace ClassicUO.Utility
             _Size = str.Length;
             _pos = 0;
 
-            List<string> result = new List<string>();
+            var result = new List<string>();
 
             while (_pos < _Size)
             {

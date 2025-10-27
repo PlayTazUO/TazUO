@@ -1,6 +1,7 @@
 using ClassicUO.Game.Data;
 using System;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace ClassicUO.Game.Managers.SpellVisualRange;
 
@@ -35,10 +36,7 @@ public class SpellRangeInfo
 
     public SpellRangeInfo() { }
 
-    public static SpellRangeInfo FromSpellDef(SpellDefinition spell)
-    {
-        return new SpellRangeInfo() { ID = spell.ID, Name = spell.Name, PowerWords = spell.PowerWords };
-    }
+    public static SpellRangeInfo FromSpellDef(SpellDefinition spell) => new SpellRangeInfo() { ID = spell.ID, Name = spell.Name, PowerWords = spell.PowerWords };
 
     /// <summary>
     /// Calculates the effective cast time for this spell, accounting for the player's Faster Casting stat
@@ -79,4 +77,10 @@ public class SpellRangeInfo
         double time = RecoveryTime - (0.25 * fasterCastRecovery);
         return time < 0 ? 0 : time;
     }
+}
+
+[JsonSerializable(typeof(SpellRangeInfo))]
+[JsonSerializable(typeof(SpellRangeInfo[]))]
+public partial class SpellRangeInfoJsonContext : JsonSerializerContext
+{
 }

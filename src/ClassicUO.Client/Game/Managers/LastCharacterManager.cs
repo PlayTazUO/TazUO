@@ -97,10 +97,7 @@ namespace ClassicUO.Game.Managers
             return lastChar != null ? lastChar.LastCharacterName : string.Empty;
         }
 
-        public static void OverrideLastCharacter(string name)
-        {
-            LastCharacterNameOverride = name;
-        }
+        public static void OverrideLastCharacter(string name) => LastCharacterNameOverride = name;
     }
 
     public class LastCharacterInfo

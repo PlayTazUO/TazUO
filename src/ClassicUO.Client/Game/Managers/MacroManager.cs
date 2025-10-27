@@ -72,7 +72,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
 
             try
             {
@@ -94,7 +94,7 @@ namespace ClassicUO.Game.Managers
             {
                 foreach (XmlElement xml in root.GetElementsByTagName("macro"))
                 {
-                    Macro macro = new Macro(xml.GetAttribute("name"));
+                    var macro = new Macro(xml.GetAttribute("name"));
                     macro.Load(xml);
                     PushToBack(macro);
                 }
@@ -122,7 +122,7 @@ namespace ClassicUO.Game.Managers
 
             try
             {
-                using (XmlTextWriter xml = new XmlTextWriter(tempPath, Encoding.UTF8) { Formatting = Formatting.Indented, IndentChar = '\t', Indentation = 1 })
+                using (var xml = new XmlTextWriter(tempPath, Encoding.UTF8) { Formatting = Formatting.Indented, IndentChar = '\t', Indentation = 1 })
                 {
                     xml.WriteStartDocument(true);
                     xml.WriteStartElement("macros");
@@ -255,14 +255,14 @@ namespace ClassicUO.Game.Managers
 
         public List<Macro> GetAllMacros()
         {
-            Macro m = (Macro)Items;
+            var m = (Macro)Items;
 
             while (m?.Previous != null)
             {
                 m = (Macro)m.Previous;
             }
 
-            List<Macro> macros = new List<Macro>();
+            var macros = new List<Macro>();
 
             while (true)
             {
@@ -288,7 +288,7 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            Macro prev = (Macro)macro.Previous;
+            var prev = (Macro)macro.Previous;
 
             Unlink(macro);
 
@@ -314,7 +314,7 @@ namespace ClassicUO.Game.Managers
                 return false;
             }
 
-            Macro next = (Macro)macro.Next;
+            var next = (Macro)macro.Next;
 
             Unlink(macro);
             Insert(next, macro);
@@ -324,7 +324,7 @@ namespace ClassicUO.Game.Managers
 
         public Macro FindMacro(SDL_GamepadButton button)
         {
-            Macro obj = (Macro)Items;
+            var obj = (Macro)Items;
 
             while (obj != null)
             {
@@ -347,7 +347,7 @@ namespace ClassicUO.Game.Managers
 
         public Macro FindMacro(SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift)
         {
-            Macro obj = (Macro)Items;
+            var obj = (Macro)Items;
 
             while (obj != null)
             {
@@ -364,7 +364,7 @@ namespace ClassicUO.Game.Managers
 
         public Macro FindMacro(MouseButtonType button, bool alt, bool ctrl, bool shift)
         {
-            Macro obj = (Macro)Items;
+            var obj = (Macro)Items;
 
             while (obj != null)
             {
@@ -381,7 +381,7 @@ namespace ClassicUO.Game.Managers
 
         public Macro FindMacro(bool wheelUp, bool alt, bool ctrl, bool shift)
         {
-            Macro obj = (Macro)Items;
+            var obj = (Macro)Items;
 
             while (obj != null)
             {
@@ -398,7 +398,7 @@ namespace ClassicUO.Game.Managers
 
         public Macro FindMacro(string name)
         {
-            Macro obj = (Macro)Items;
+            var obj = (Macro)Items;
 
             while (obj != null)
             {
@@ -413,10 +413,7 @@ namespace ClassicUO.Game.Managers
             return obj;
         }
 
-        public void SetMacroToExecute(MacroObject macro)
-        {
-            _lastMacro = macro;
-        }
+        public void SetMacroToExecute(MacroObject macro) => _lastMacro = macro;
 
         public void Update()
         {
@@ -744,7 +741,7 @@ namespace ClassicUO.Game.Managers
 
                                 case MacroSubType.Status:
 
-                                    StatusGumpBase status = StatusGumpBase.GetStatusGump();
+                                    var status = StatusGumpBase.GetStatusGump();
 
                                     if (macro.Code == MacroType.Close)
                                     {
@@ -1123,7 +1120,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.Dismount:
-                    var m = _world.Player.FindItemByLayer(Layer.Mount);
+                    Item m = _world.Player.FindItemByLayer(Layer.Mount);
                     if (m != null)
                     {
                         GameActions.DoubleClickQueued(_world.Player);
@@ -1211,8 +1208,8 @@ namespace ClassicUO.Game.Managers
 
                 case MacroType.ClearHands:
                     var layersToClear = new List<Layer>();
-                    var mainHand = _world.Player.FindItemByLayer(Layer.OneHanded);
-                    var offHand = _world.Player.FindItemByLayer(Layer.TwoHanded);
+                    Item mainHand = _world.Player.FindItemByLayer(Layer.OneHanded);
+                    Item offHand = _world.Player.FindItemByLayer(Layer.TwoHanded);
 
                     if (mainHand != null)
                     {
@@ -1246,7 +1243,7 @@ namespace ClassicUO.Game.Managers
 
                     if (ProfileManager.CurrentProfile.SavedMainHandSerial != 0)
                     {
-                        var mainHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedMainHandSerial);
+                        Item mainHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedMainHandSerial);
                         if (mainHandItem != null && mainHandItem.Container != _world.Player?.Serial)
                         {
                             itemsToEquip.Add(mainHandItem.Serial);
@@ -1255,7 +1252,7 @@ namespace ClassicUO.Game.Managers
 
                     if (ProfileManager.CurrentProfile.SavedOffHandSerial != 0)
                     {
-                        var offHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedOffHandSerial);
+                        Item offHandItem = _world.Items.Get(ProfileManager.CurrentProfile.SavedOffHandSerial);
                         if (offHandItem != null && offHandItem.Container != _world.Player?.Serial)
                         {
                             itemsToEquip.Add(offHandItem.Serial);
@@ -1536,7 +1533,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.Delay:
-                    MacroObjectString mosss = (MacroObjectString)macro;
+                    var mosss = (MacroObjectString)macro;
                     string str = mosss.Text;
 
                     if (!string.IsNullOrEmpty(str) && int.TryParse(str, out int rr))
@@ -1775,7 +1772,7 @@ namespace ClassicUO.Game.Managers
                     // 0 - SelectNext
                     // 1 - SelectPrevious
                     // 2 - SelectNearest
-                    ScanModeObject scanRange = (ScanModeObject)(macro.Code - MacroType.SelectNext);
+                    var scanRange = (ScanModeObject)(macro.Code - MacroType.SelectNext);
 
                     // scantype:
                     // 0 - Hostile (only hostile mobiles: gray, criminal, enemy, murderer)
@@ -1783,7 +1780,7 @@ namespace ClassicUO.Game.Managers
                     // 2 - Follower (only your followers)
                     // 3 - Object (???)
                     // 4 - Mobile (any mobiles)
-                    ScanTypeObject scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.Hostile);
+                    var scantype = (ScanTypeObject)(macro.SubCode - MacroSubType.Hostile);
 
                     if (scanRange == ScanModeObject.Nearest)
                     {
@@ -2109,7 +2106,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.CloseInactiveHealthBars:
                     IEnumerable<BaseHealthBarGump> inactiveHealthBarGumps = UIManager.Gumps.OfType<BaseHealthBarGump>().Where(hb => hb.IsInactive);
 
-                    foreach (var healthbar in inactiveHealthBarGumps)
+                    foreach (BaseHealthBarGump healthbar in inactiveHealthBarGumps)
                     {
                         if (healthbar.LocalSerial == _world.Player) continue;
 
@@ -2123,12 +2120,12 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.CloseCorpses:
-                    var gridLootType = ProfileManager.CurrentProfile?.GridLootType; // 0 = none, 1 = only grid, 2 = both
+                    int? gridLootType = ProfileManager.CurrentProfile?.GridLootType; // 0 = none, 1 = only grid, 2 = both
                     if (gridLootType == 0 || gridLootType == 2)
                     {
                         IEnumerable<ContainerGump> containerGumps = UIManager.Gumps.OfType<ContainerGump>().Where(cg => cg.Graphic == ContainerGump.CORPSES_GUMP);
 
-                        foreach (var containerGump in containerGumps)
+                        foreach (ContainerGump containerGump in containerGumps)
                         {
                             containerGump.Dispose();
                         }
@@ -2137,7 +2134,7 @@ namespace ClassicUO.Game.Managers
                     {
                         IEnumerable<GridLootGump> gridLootGumps = UIManager.Gumps.OfType<GridLootGump>();
 
-                        foreach (var gridLootGump in gridLootGumps)
+                        foreach (GridLootGump gridLootGump in gridLootGumps)
                         {
                             gridLootGump.Dispose();
                         }
@@ -2146,11 +2143,11 @@ namespace ClassicUO.Game.Managers
                     // Close GridContainer corpses
                     IEnumerable<GridContainer> gridContainerCorpses = UIManager.Gumps.OfType<GridContainer>().Where(gc =>
                     {
-                        var item = _world.Items.Get(gc.LocalSerial);
+                        Item item = _world.Items.Get(gc.LocalSerial);
                         return item != null && item.IsCorpse;
                     });
 
-                    foreach (var gridContainer in gridContainerCorpses)
+                    foreach (GridContainer gridContainer in gridContainerCorpses)
                     {
                         gridContainer.Dispose();
                     }
@@ -2377,7 +2374,7 @@ namespace ClassicUO.Game.Managers
 
             writer.WriteStartElement("actions");
 
-            for (MacroObject action = (MacroObject)Items; action != null; action = (MacroObject)action.Next)
+            for (var action = (MacroObject)Items; action != null; action = (MacroObject)action.Next)
             {
                 writer.WriteStartElement("action");
                 writer.WriteAttributeString("code", ((int)action.Code).ToString());
@@ -2397,7 +2394,7 @@ namespace ClassicUO.Game.Managers
             if (ControllerButtons != null)
             {
                 writer.WriteStartElement("controllerbuttons");
-                foreach (var b in ControllerButtons)
+                foreach (SDL_GamepadButton b in ControllerButtons)
                 {
                     writer.WriteElementString("button", ((int)b).ToString());
                 }
@@ -2426,7 +2423,7 @@ namespace ClassicUO.Game.Managers
             {
                 Scale = savedScale;
             }
-            if (ushort.TryParse(xml.GetAttribute("graphic"), out var graphic))
+            if (ushort.TryParse(xml.GetAttribute("graphic"), out ushort graphic))
             {
                 Graphic = graphic;
             }
@@ -2452,8 +2449,8 @@ namespace ClassicUO.Game.Managers
             {
                 foreach (XmlElement xmlAction in actions.GetElementsByTagName("action"))
                 {
-                    MacroType code = (MacroType)int.Parse(xmlAction.GetAttribute("code"));
-                    MacroSubType sub = (MacroSubType)int.Parse(xmlAction.GetAttribute("subcode"));
+                    var code = (MacroType)int.Parse(xmlAction.GetAttribute("code"));
+                    var sub = (MacroSubType)int.Parse(xmlAction.GetAttribute("subcode"));
 
                     // ########### PATCH ###########
                     // FIXME: path to remove the MovePlayer macro. This macro is not needed. We have Walk.
@@ -2557,7 +2554,7 @@ namespace ClassicUO.Game.Managers
 
         public static Macro CreateEmptyMacro(string name)
         {
-            Macro macro = new Macro
+            var macro = new Macro
             (
                 name,
                 (SDL.SDL_Keycode)0,
@@ -2566,7 +2563,7 @@ namespace ClassicUO.Game.Managers
                 false
             );
 
-            MacroObject item = new MacroObject(MacroType.None, MacroSubType.MSC_NONE);
+            var item = new MacroObject(MacroType.None, MacroSubType.MSC_NONE);
 
             macro.PushToBack(item);
 
@@ -2575,7 +2572,7 @@ namespace ClassicUO.Game.Managers
 
         public static Macro CreateFastMacro(string name, MacroType type, MacroSubType sub)
         {
-            Macro macro = new Macro
+            var macro = new Macro
               (
                   name,
                   (SDL.SDL_Keycode)0,
@@ -2584,7 +2581,7 @@ namespace ClassicUO.Game.Managers
                   false
               );
 
-            MacroObject item = new MacroObject(type, sub);
+            var item = new MacroObject(type, sub);
 
             macro.PushToBack(item);
 
@@ -2631,7 +2628,7 @@ namespace ClassicUO.Game.Managers
 
                 case MacroType.CastSpell:
                     offset = (int)MacroSubType.Clumsy;
-                    var countInitial = MacroSubType.Hostile - MacroSubType.Clumsy;
+                    int countInitial = MacroSubType.Hostile - MacroSubType.Clumsy;
                     //var countFinal = MacroSubType.DeathRay - MacroSubType.Boarding;
                     count = countInitial + 33 + 43;
                     break;
@@ -2737,10 +2734,7 @@ namespace ClassicUO.Game.Managers
         public MacroSubType SubCode { get; set; }
         public sbyte SubMenuType { get; set; }
 
-        public virtual bool HasString()
-        {
-            return false;
-        }
+        public virtual bool HasString() => false;
     }
 
     public class MacroObjectString : MacroObject
@@ -2752,10 +2746,7 @@ namespace ClassicUO.Game.Managers
 
         public string Text { get; set; }
 
-        public override bool HasString()
-        {
-            return true;
-        }
+        public override bool HasString() => true;
     }
 
     public enum MacroType

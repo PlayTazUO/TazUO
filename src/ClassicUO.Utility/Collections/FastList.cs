@@ -56,10 +56,7 @@ namespace ClassicUO.Utility.Collections
         /// <summary>
         /// works just like clear except it does not null our all the items in the buffer. Useful when dealing with structs.
         /// </summary>
-        public void Reset()
-        {
-            Length = 0;
-        }
+        public void Reset() => Length = 0;
 
 
         /// <summary>
@@ -79,8 +76,8 @@ namespace ClassicUO.Utility.Collections
         /// <param name="item">Item.</param>
         public void Remove(T item)
         {
-            var comp = EqualityComparer<T>.Default;
-            for (var i = 0; i < Length; ++i)
+            EqualityComparer<T> comp = EqualityComparer<T>.Default;
+            for (int i = 0; i < Length; ++i)
             {
                 if (comp.Equals(Buffer[i], item))
                 {
@@ -121,8 +118,8 @@ namespace ClassicUO.Utility.Collections
         /// <param name="item">Item.</param>
         public bool Contains(T item)
         {
-            var comp = EqualityComparer<T>.Default;
-            for (var i = 0; i < Length; ++i)
+            EqualityComparer<T> comp = EqualityComparer<T>.Default;
+            for (int i = 0; i < Length; ++i)
             {
                 if (comp.Equals(Buffer[i], item))
                     return true;
@@ -148,7 +145,7 @@ namespace ClassicUO.Utility.Collections
         /// <param name="array">Array.</param>
         public void AddRange(IEnumerable<T> array)
         {
-            foreach (var item in array)
+            foreach (T item in array)
                 Add(item);
         }
 
@@ -156,27 +153,18 @@ namespace ClassicUO.Utility.Collections
         /// <summary>
         /// sorts all items in the buffer up to length
         /// </summary>
-        public void Sort()
-        {
-            Array.Sort(Buffer, 0, Length);
-        }
+        public void Sort() => Array.Sort(Buffer, 0, Length);
 
 
         /// <summary>
         /// sorts all items in the buffer up to length
         /// </summary>
-        public void Sort(IComparer comparer)
-        {
-            Array.Sort(Buffer, 0, Length, comparer);
-        }
+        public void Sort(IComparer comparer) => Array.Sort(Buffer, 0, Length, comparer);
 
 
         /// <summary>
         /// sorts all items in the buffer up to length
         /// </summary>
-        public void Sort(IComparer<T> comparer)
-        {
-            Array.Sort(Buffer, 0, Length, comparer);
-        }
+        public void Sort(IComparer<T> comparer) => Array.Sort(Buffer, 0, Length, comparer);
     }
 }

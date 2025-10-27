@@ -99,7 +99,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildGeneral()
         {
-            LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+            var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
             Control c;
             int page;
 
@@ -772,7 +772,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildVideo()
         {
-            LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+            var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
 
             #region Game window
 
@@ -918,8 +918,8 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToLeft(SubCategoryButton(lang.ButtonZoom, page, content.LeftWidth));
             content.ResetRightSide();
 
-            var cameraZoomCount = (int)((Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.ZoomMin) / Client.Game.Scene.Camera.ZoomStep);
-            var cameraZoomIndex = cameraZoomCount - (int)((Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.Zoom) / Client.Game.Scene.Camera.ZoomStep);
+            int cameraZoomCount = (int)((Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.ZoomMin) / Client.Game.Scene.Camera.ZoomStep);
+            int cameraZoomIndex = cameraZoomCount - (int)((Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.Zoom) / Client.Game.Scene.Camera.ZoomStep);
 
             content.AddToRight
             (
@@ -1126,7 +1126,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildMacros()
         {
-            LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+            var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
             int page = ((int)PAGE.Macros + 1000);
             int bParam = page + 1;
 
@@ -1145,7 +1145,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             b.MouseUp += (sender, e) =>
             {
-                EntryDialog dialog = new EntryDialog
+                var dialog = new EntryDialog
                 (
                     World, 250, 150, ResGumps.MacroName, name =>
                     {
@@ -1163,7 +1163,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         ModernButton nb;
 
-                        MacroControl macroControl = new MacroControl(World, name);
+                        var macroControl = new MacroControl(World, name);
 
                         content.AddToLeft
                         (
@@ -1184,9 +1184,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                         nb.DragBegin += (sss, eee) =>
                         {
-                            ModernButton mupNiceButton = (ModernButton)sss;
+                            var mupNiceButton = (ModernButton)sss;
 
-                            Macro m = mupNiceButton.Tag as Macro;
+                            var m = mupNiceButton.Tag as Macro;
 
                             if (m == null)
                             {
@@ -1200,7 +1200,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                             UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == m)?.Dispose();
 
-                            MacroButtonGump macroButtonGump = new MacroButtonGump(World, m, Mouse.Position.X, Mouse.Position.Y);
+                            var macroButtonGump = new MacroButtonGump(World, m, Mouse.Position.X, Mouse.Position.Y);
 
                             macroButtonGump.X = Mouse.Position.X - (macroButtonGump.Width >> 1);
                             macroButtonGump.Y = Mouse.Position.Y - (macroButtonGump.Height >> 1);
@@ -1239,7 +1239,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (nb != null)
                 {
-                    QuestionGump dialog = new QuestionGump
+                    var dialog = new QuestionGump
                     (
                         World, ResGumps.MacroDeleteConfirmation, b =>
                         {
@@ -1253,7 +1253,7 @@ namespace ClassicUO.Game.UI.Gumps
                                 UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == macro)?.Dispose();
                                 World.Macros.Remove(macro);
 
-                                foreach (var c in content.RightArea.Children)
+                                foreach (Control c in content.RightArea.Children)
                                 {
                                     if (c.Page == nb.ButtonParameter)
                                     {
@@ -1338,7 +1338,7 @@ namespace ClassicUO.Game.UI.Gumps
             page = ((int)PAGE.Macros + 1002);
             MacroManager macroManager = World.Macros;
 
-            for (Macro macro = (Macro)macroManager.Items; macro != null; macro = (Macro)macro.Next)
+            for (var macro = (Macro)macroManager.Items; macro != null; macro = (Macro)macro.Next)
             {
                 content.AddToLeft
                 (
@@ -1371,7 +1371,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             var macroButtons = content.LeftArea.FindControls<ModernButton>().Where(btn => btn.Tag is Macro).ToList();
-            foreach (var btn in macroButtons)
+            foreach (ModernButton btn in macroButtons)
             {
                 btn.Dispose();
             }
@@ -1380,9 +1380,9 @@ namespace ClassicUO.Game.UI.Gumps
             MacroManager macroManager = World.Macros;
             ModernButton lastButton = null;
 
-            for (Macro macro = (Macro)macroManager.Items; macro != null; macro = (Macro)macro.Next)
+            for (var macro = (Macro)macroManager.Items; macro != null; macro = (Macro)macro.Next)
             {
-                ModernButton b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.SwitchPage, macro.Name, ThemeSettings.BUTTON_FONT_COLOR)
+                var b = new ModernButton(0, 0, content.LeftWidth, 40, ButtonAction.SwitchPage, macro.Name, ThemeSettings.BUTTON_FONT_COLOR)
                 {
                     ButtonParameter = bParam++,
                     Tag = macro
@@ -1403,8 +1403,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 b.DragBegin += (sss, eee) =>
                 {
-                    ModernButton mupNiceButton = (ModernButton)sss;
-                    Macro dragMacro = mupNiceButton.Tag as Macro;
+                    var mupNiceButton = (ModernButton)sss;
+                    var dragMacro = mupNiceButton.Tag as Macro;
 
                     if (dragMacro == null || UIManager.DraggingControl != this || UIManager.MouseOverControl != sss)
                     {
@@ -1412,7 +1412,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
                     UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == dragMacro)?.Dispose();
-                    MacroButtonGump macroButtonGump = new MacroButtonGump(World, dragMacro, Mouse.Position.X, Mouse.Position.Y);
+                    var macroButtonGump = new MacroButtonGump(World, dragMacro, Mouse.Position.X, Mouse.Position.Y);
                     macroButtonGump.X = Mouse.Position.X - (macroButtonGump.Width >> 1);
                     macroButtonGump.Y = Mouse.Position.Y - (macroButtonGump.Height >> 1);
                     UIManager.Add(macroButtonGump);
@@ -1439,7 +1439,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildInfoBar()
         {
-            mainScrollArea content = new mainScrollArea(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 1.0));
+            var content = new mainScrollArea(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 1.0));
             int page = ((int)PAGE.InfoBar + 1000);
 
             #region Active Info Bar
@@ -1508,7 +1508,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             #region Select type infobar
 
-            DataBox infoBarItems = new DataBox(0, 0, 0, 0)
+            var infoBarItems = new DataBox(0, 0, 0, 0)
             {
                 AcceptMouseInput = true
             };
@@ -1531,7 +1531,7 @@ namespace ClassicUO.Game.UI.Gumps
             addItem.MouseUp += (s, e) =>
             {
                 InfoBarItem ibi;
-                InfoBarBuilderControl ibbc = new InfoBarBuilderControl(World, ibi = new InfoBarItem("HP", InfoBarVars.HP, 0x3B9), content);
+                var ibbc = new InfoBarBuilderControl(World, ibi = new InfoBarItem("HP", InfoBarVars.HP, 0x3B9), content);
                 infoBarItems.Add(ibbc);
                 infoBarItems.ReArrangeChildren();
                 infoBarItems.ForceSizeUpdate();
@@ -1542,11 +1542,11 @@ namespace ClassicUO.Game.UI.Gumps
                 content.ForceSizeUpdate();
                 int yOffset = 0;
 
-                foreach (var child in content.Children)
+                foreach (Control child in content.Children)
                 {
                     if (child is ScrollArea scrollArea)
                     {
-                        foreach (var scrollChild in scrollArea.Children)
+                        foreach (Control scrollChild in scrollArea.Children)
                         {
                             if (scrollChild is InfoBarBuilderControl control)
                             {
@@ -1596,7 +1596,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (int i = 0; i < _infoBarItems.Count; i++)
             {
-                InfoBarBuilderControl ibbc = new InfoBarBuilderControl(World, _infoBarItems[i], content);
+                var ibbc = new InfoBarBuilderControl(World, _infoBarItems[i], content);
                 infoBarItems.ReArrangeChildren();
                 infoBarItems.ForceSizeUpdate();
                 infoBarItems.Parent?.ForceSizeUpdate();
@@ -1605,12 +1605,12 @@ namespace ClassicUO.Game.UI.Gumps
                 content.AddToLeft(ibbc);
                 content.ForceSizeUpdate();
 
-                foreach (var child in content.Children)
+                foreach (Control child in content.Children)
                 {
                     if (child is ScrollArea scrollArea)
                     {
                         // Iterar pelos filhos dentro de cada ScrollArea
-                        foreach (var scrollChild in scrollArea.Children)
+                        foreach (Control scrollChild in scrollArea.Children)
                         {
                             if (scrollChild is InfoBarBuilderControl control)
                             {
@@ -1909,7 +1909,7 @@ namespace ClassicUO.Game.UI.Gumps
             //SettingsOption s;
             PositionHelper.Reset();
 
-            ScrollArea scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height);
+            var scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height);
             options.Add(new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.CombatSpells));
 
             Control c;
@@ -2471,7 +2471,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildNameplates()
         {
-            LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+            var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
             int page = ((int)PAGE.NameplateOptions + 1000);
 
             #region New entry
@@ -2503,7 +2503,7 @@ namespace ClassicUO.Game.UI.Gumps
                             return;
                         }
 
-                        NameOverheadOption option = new NameOverheadOption(name);
+                        var option = new NameOverheadOption(name);
 
                         ModernButton nb;
 
@@ -2551,7 +2551,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (nb != null)
                 {
-                    QuestionGump dialog = new QuestionGump
+                    var dialog = new QuestionGump
                     (
                         World, ResGumps.MacroDeleteConfirmation, b =>
                         {
@@ -2576,12 +2576,12 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToLeft(new Line(0, 0, content.LeftWidth, 1, Color.Gray.PackedValue));
 
-            var opts = NameOverHeadManager.GetAllOptions();
+            List<NameOverheadOption> opts = NameOverHeadManager.GetAllOptions();
             ModernButton nb = null;
 
             for (int i = 0; i < opts.Count; i++)
             {
-                var option = opts[i];
+                NameOverheadOption option = opts[i];
 
                 if (option == null)
                 {
@@ -2677,7 +2677,7 @@ namespace ClassicUO.Game.UI.Gumps
             options.Add(s = new SettingsOption(lang.GetCooldowns.Conditions, new Area(false), MainContent.RightWidth, (int)PAGE.TUOCooldowns));
             PositionHelper.PositionControl(s.FullControl);
 
-            DataBox conditionsDataBox = new DataBox(0, 0, 0, 0)
+            var conditionsDataBox = new DataBox(0, 0, 0, 0)
             {
                 WantUpdateSize = true
             };
@@ -2726,7 +2726,7 @@ namespace ClassicUO.Game.UI.Gumps
             conditionsDataBox.ReArrangeChildren();
             conditionsDataBox.ForceSizeUpdate();
 
-            ScrollArea scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height - PositionHelper.Y)
+            var scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height - PositionHelper.Y)
             {
                 CanMove = true,
                 AcceptMouseInput = true
@@ -2740,7 +2740,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildTazUO()
         {
-            LeftSideMenuRightSideContent content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
+            var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height, (int)(MainContent.RightWidth * 0.3));
             Control c;
             int page;
 
@@ -3472,7 +3472,7 @@ namespace ClassicUO.Game.UI.Gumps
                             {
                                 if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(s))
                                 {
-                                    if (Uri.TryCreate(s, UriKind.Absolute, out var uri))
+                                    if (Uri.TryCreate(s, UriKind.Absolute, out Uri uri))
                                     {
                                         GameActions.Print(World, lang.GetTazUO.AttemptingToDownloadSpellConfig);
 
@@ -3481,7 +3481,7 @@ namespace ClassicUO.Game.UI.Gumps
                                         {
                                             try
                                             {
-                                                using HttpClient httpClient = new HttpClient();
+                                                using var httpClient = new HttpClient();
                                                 string result = httpClient.GetStringAsync(uri).Result;
 
                                                     if (SpellVisualRangeManager.Instance.LoadFromString(result))
@@ -3907,8 +3907,8 @@ namespace ClassicUO.Game.UI.Gumps
                 rootpath = Settings.GlobalSettings.ProfilesPath;
             }
 
-            List<ProfileLocationData> locations = new List<ProfileLocationData>();
-            List<ProfileLocationData> sameServerLocations = new List<ProfileLocationData>();
+            var locations = new List<ProfileLocationData>();
+            var sameServerLocations = new List<ProfileLocationData>();
             string[] allAccounts = Directory.GetDirectories(rootpath);
 
             foreach (string account in allAccounts)
@@ -4218,7 +4218,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void OverrideAllProfiles(List<ProfileLocationData> allProfiles)
         {
-            foreach (var profile in allProfiles)
+            foreach (ProfileLocationData profile in allProfiles)
             {
                 ProfileManager.CurrentProfile.Save(World, profile.ToString(), false);
             }
@@ -4234,17 +4234,17 @@ namespace ClassicUO.Game.UI.Gumps
 
         public Control GenConditionControl(int key, int width, bool createIfNotExists)
         {
-            CoolDownBar.CoolDownConditionData data = CoolDownBar.CoolDownConditionData.GetConditionData(key, createIfNotExists);
+            var data = CoolDownBar.CoolDownConditionData.GetConditionData(key, createIfNotExists);
 
-            Area main = new Area
+            var main = new Area
             {
                 Width = width
             };
 
-            AlphaBlendControl _background = new AlphaBlendControl();
+            var _background = new AlphaBlendControl();
             main.Add(_background);
 
-            ModernButton _delete = new ModernButton(1, 1, 30, 40, ButtonAction.Activate, "X", ThemeSettings.BUTTON_FONT_COLOR);
+            var _delete = new ModernButton(1, 1, 30, 40, ButtonAction.Activate, "X", ThemeSettings.BUTTON_FONT_COLOR);
             _delete.SetTooltip("Delete this cooldown bar");
 
             _delete.MouseUp += (sender, e) =>
@@ -4274,12 +4274,12 @@ namespace ClassicUO.Game.UI.Gumps
             main.Add(_delete);
 
 
-            TextBox _hueLabel = TextBox.GetOne("Hue:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.BUTTON_FONT_COLOR, TextBox.RTLOptions.Default());
+            var _hueLabel = TextBox.GetOne("Hue:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.BUTTON_FONT_COLOR, TextBox.RTLOptions.Default());
             _hueLabel.X = _delete.X + _delete.Width + 5;
             _hueLabel.Y = 10;
             main.Add(_hueLabel);
 
-            ModernColorPickerWithLabel _hueSelector = new ModernColorPickerWithLabel(World, string.Empty, data.hue)
+            var _hueSelector = new ModernColorPickerWithLabel(World, string.Empty, data.hue)
             {
                 X = _hueLabel.X + _hueLabel.Width + 5,
                 Y = 10
@@ -4287,7 +4287,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             main.Add(_hueSelector);
 
-            InputField _name = new InputField(140, 40, text: data.label)
+            var _name = new InputField(140, 40, text: data.label)
             {
                 X = _hueSelector.X + _hueSelector.Width + 10,
                 Y = 1
@@ -4295,14 +4295,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             main.Add(_name);
 
-            TextBox _cooldownLabel = TextBox.GetOne
+            var _cooldownLabel = TextBox.GetOne
                 ("Cooldown:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.BUTTON_FONT_COLOR, TextBox.RTLOptions.Default());
 
             _cooldownLabel.X = _name.X + _name.Width + 10;
             _cooldownLabel.Y = 10;
             main.Add(_cooldownLabel);
 
-            InputField _cooldown = new InputField(45, 40, numbersOnly: true, text: data.cooldown.ToString())
+            var _cooldown = new InputField(45, 40, numbersOnly: true, text: data.cooldown.ToString())
             {
                 Y = 1
             };
@@ -4310,7 +4310,7 @@ namespace ClassicUO.Game.UI.Gumps
             _cooldown.X = _cooldownLabel.X + _cooldownLabel.Width + 10;
             main.Add(_cooldown);
 
-            ComboBoxWithLabel _message_type = new ComboBoxWithLabel(World, string.Empty, 0, 85, new string[] { "All", "Self", "Other" }, data.message_type)
+            var _message_type = new ComboBoxWithLabel(World, string.Empty, 0, 85, new string[] { "All", "Self", "Other" }, data.message_type)
             {
                 X = _cooldown.X + _cooldown.Width + 10,
                 Y = 10
@@ -4318,7 +4318,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             main.Add(_message_type);
 
-            InputField _conditionText = new InputField(main.Width - 50, 40, text: data.trigger)
+            var _conditionText = new InputField(main.Width - 50, 40, text: data.trigger)
             {
                 X = 1,
                 Y = _delete.Height + 5
@@ -4326,7 +4326,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             main.Add(_conditionText);
 
-            CheckboxWithLabel _replaceIfExists = new CheckboxWithLabel(isChecked: data.replace_if_exists)
+            var _replaceIfExists = new CheckboxWithLabel(isChecked: data.replace_if_exists)
             {
                 X = _conditionText.X + _conditionText.Width + 2,
                 Y = _conditionText.Y + 5
@@ -4335,7 +4335,7 @@ namespace ClassicUO.Game.UI.Gumps
             _replaceIfExists.SetTooltip("Replace any active cooldown of this type with a new one if triggered again.");
             main.Add(_replaceIfExists);
 
-            ModernButton _save = new ModernButton(0, 1, 40, 40, ButtonAction.Activate, "Save", ThemeSettings.BUTTON_FONT_COLOR);
+            var _save = new ModernButton(0, 1, 40, 40, ButtonAction.Activate, "Save", ThemeSettings.BUTTON_FONT_COLOR);
             _save.X = main.Width - _save.Width;
             _save.IsSelectable = true;
             _save.IsSelected = true;
@@ -4348,7 +4348,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             main.Add(_save);
 
-            ModernButton _preview = new ModernButton(0, 1, 65, 40, ButtonAction.Activate, "Preview", ThemeSettings.BUTTON_FONT_COLOR);
+            var _preview = new ModernButton(0, 1, 65, 40, ButtonAction.Activate, "Preview", ThemeSettings.BUTTON_FONT_COLOR);
             _preview.X = _save.X - _preview.Width - 15;
             _preview.IsSelectable = true;
             _preview.IsSelected = true;
@@ -4373,7 +4373,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public Control GenHotKeyDisplay(string text, string hotkey, int width, bool enabled = true)
         {
-            Area d = new Area(false);
+            var d = new Area(false);
             d.Add(TextBox.GetOne(text, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
 
             var hk = TextBox.GetOne(hotkey, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
@@ -4462,7 +4462,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
 
 
-                ModernButton deleteButton = new ModernButton(390, 8, 60, 25, ButtonAction.Activate, "Delete", ThemeSettings.BUTTON_FONT_COLOR)
+                var deleteButton = new ModernButton(390, 8, 60, 25, ButtonAction.Activate, "Delete", ThemeSettings.BUTTON_FONT_COLOR)
                 {
                     ButtonParameter = 999
                 };
@@ -4486,11 +4486,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                     int yOffset = 0;
 
-                    foreach (var child in content.Children)
+                    foreach (Control child in content.Children)
                     {
                         if (child is ScrollArea scrollArea)
                         {
-                            foreach (var scrollChild in scrollArea.Children)
+                            foreach (Control scrollChild in scrollArea.Children)
                             {
                                 if (scrollChild is InfoBarBuilderControl control)
                                 {
@@ -4626,15 +4626,9 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
 
-            public void BlankLine()
-            {
-                rightY += ThemeSettings.BLANK_LINE;
-            }
+            public void BlankLine() => rightY += ThemeSettings.BLANK_LINE;
 
-            public void Indent()
-            {
-                rightX += ThemeSettings.INDENT_SPACE;
-            }
+            public void Indent() => rightX += ThemeSettings.INDENT_SPACE;
 
             public void RemoveIndent()
             {
@@ -4744,7 +4738,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             private void AddEmptyMacro()
             {
-                MacroObject ob = (MacroObject)Macro.Items;
+                var ob = (MacroObject)Macro.Items;
 
                 if (ob == null || ob.Code == MacroType.None)
                 {
@@ -4753,7 +4747,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 while (ob.Next != null)
                 {
-                    MacroObject next = (MacroObject)ob.Next;
+                    var next = (MacroObject)ob.Next;
 
                     if (next.Code == MacroType.None)
                     {
@@ -4807,7 +4801,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Macro.Items = Macro.Create(MacroType.None);
                 }
 
-                MacroObject obj = (MacroObject)Macro.Items;
+                var obj = (MacroObject)Macro.Items;
 
                 while (obj != null)
                 {
@@ -4968,7 +4962,7 @@ namespace ClassicUO.Game.UI.Gumps
                     case (int)buttonsOption.CreateNewMacro:
                         UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == Macro)?.Dispose();
 
-                        MacroButtonGump macroButtonGump = new MacroButtonGump(world, Macro, Mouse.Position.X, Mouse.Position.Y);
+                        var macroButtonGump = new MacroButtonGump(world, Macro, Mouse.Position.X, Mouse.Position.Y);
                         UIManager.Add(macroButtonGump);
 
                         break;
@@ -4994,8 +4988,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (btnEditorGump == null)
                 {
-                    var posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
-                    var posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
+                    int posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
+                    int posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
                     Gump opt = UIManager.GetGump<ModernOptionsGump>();
 
                     if (opt != null)
@@ -5085,7 +5079,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                             if (obj.Code == MacroType.CastSpell)
                             {
-                                List<string> namesList = new List<string>(names);
+                                var namesList = new List<string>(names);
 
                                 namesList.Remove("Hostile");
                                 namesList.Remove("Party");
@@ -5130,12 +5124,12 @@ namespace ClassicUO.Game.UI.Gumps
                                 names = namesList.ToArray();
                             }
 
-                            ComboBoxWithLabel sub = new ComboBoxWithLabel
+                            var sub = new ComboBoxWithLabel
                             (world,
                                 string.Empty, 0, 200, names, (int)obj.SubCode - offset, (i, s) =>
                                 {
                                     Macro.GetBoundByCode(obj.Code, ref count, ref offset);
-                                    MacroSubType subType = (MacroSubType)(offset + i);
+                                    var subType = (MacroSubType)(offset + i);
                                     obj.SubCode = subType;
                                 }
                             )
@@ -5151,7 +5145,7 @@ namespace ClassicUO.Game.UI.Gumps
                             break;
 
                         case 2:
-                            InputField textbox = new InputField
+                            var textbox = new InputField
                             (
                                 400, 40, 0, 80, obj.HasString() ? ((MacroObjectString)obj).Text : string.Empty, false, (s, e) =>
                                 {
@@ -5477,10 +5471,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             private void UpdateCheckboxesByCurrentOptionFlags()
             {
-                foreach (var kvp in checkboxDict)
+                foreach (KeyValuePair<NameOverheadOptions, CheckboxWithLabel> kvp in checkboxDict)
                 {
-                    var flag = kvp.Key;
-                    var checkbox = kvp.Value;
+                    NameOverheadOptions flag = kvp.Key;
+                    CheckboxWithLabel checkbox = kvp.Value;
 
                     checkbox.IsChecked = ((NameOverheadOptions)Option.NameOverheadOptionFlags).HasFlag(flag);
                 }
@@ -5502,10 +5496,7 @@ namespace ClassicUO.Game.UI.Gumps
                 this.Character = new DirectoryInfo(character);
             }
 
-            public override string ToString()
-            {
-                return Character.ToString();
-            }
+            public override string ToString() => Character.ToString();
         }
 
         private enum PAGE

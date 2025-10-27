@@ -42,7 +42,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // big
             int smallWidth = 50;
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x098B);
+            ref readonly Renderer.SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x098B);
             if (gumpInfo.Texture != null)
             {
                 smallWidth = gumpInfo.UV.Width;
@@ -66,7 +66,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new[] { 1, (int) Buttons.UOStore },
             };
 
-            var cliloc = Client.Game.UO.FileManager.Clilocs;
+            ClilocLoader cliloc = Client.Game.UO.FileManager.Clilocs;
 
             string[] texts =
             {
@@ -319,7 +319,7 @@ namespace ClassicUO.Game.UI.Gumps
             string[] xmls = XmlGumpHandler.GetAllXmlGumps();
 
             ContextMenuItemEntry ci = null;
-            foreach (var xml in xmls)
+            foreach (string xml in xmls)
             {
                 XmlGumps.ContextMenu.Add(ci = new ContextMenuItemEntry(xml, () =>
                 {
@@ -342,7 +342,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }, false, ProfileManager.CurrentProfile.AutoOpenXmlGumps.Contains(xml)));
             }
 
-            ContextMenuItemEntry reload = new ContextMenuItemEntry("Reload", RefreshXmlGumps);
+            var reload = new ContextMenuItemEntry("Reload", RefreshXmlGumps);
             XmlGumps.ContextMenu.Add(reload);
         }
 

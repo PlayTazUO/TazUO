@@ -88,10 +88,7 @@ namespace ClassicUO.Game.Managers
             return null;
         }
 
-        public void Clear()
-        {
-            _corpses.Clear();
-        }
+        public void Clear() => _corpses.Clear();
     }
 
     public struct CorpseInfo

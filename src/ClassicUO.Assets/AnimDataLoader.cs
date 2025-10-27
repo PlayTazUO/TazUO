@@ -21,7 +21,7 @@ namespace ClassicUO.Assets
 
         public override void Load()
         {
-            var path = FileManager.GetUOFilePath("animdata.mul");
+            string path = FileManager.GetUOFilePath("animdata.mul");
 
             if (File.Exists(path))
             {
@@ -34,7 +34,7 @@ namespace ClassicUO.Assets
             if (_file == null)
                 return default;
 
-            var pos = (graphic * 68 + 4 * ((graphic >> 3) + 1));
+            int pos = (graphic * 68 + 4 * ((graphic >> 3) + 1));
             if (pos >= _file.Length)
             {
                 return default;
@@ -45,7 +45,7 @@ namespace ClassicUO.Assets
             Span<byte> buf = stackalloc byte[Unsafe.SizeOf<AnimDataFrame>()];
             _file.Read(buf);
 
-            var span = MemoryMarshal.Cast<byte, AnimDataFrame>(buf);
+            Span<AnimDataFrame> span = MemoryMarshal.Cast<byte, AnimDataFrame>(buf);
             return span[0];
 
         }

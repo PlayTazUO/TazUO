@@ -9,8 +9,10 @@ namespace ClassicUO.Game.Managers
     {
         private readonly World _world;
 
-        public ChatManager(World world) => _world = world;
-
+        public ChatManager(World world)
+        {
+            _world = world;
+        }
 
         public readonly Dictionary<string, ChatChannel> Channels = new Dictionary<string, ChatChannel>();
         public ChatStatus ChatIsEnabled;
@@ -62,10 +64,7 @@ namespace ClassicUO.Game.Managers
         };
 
 
-        public static string GetMessage(int index)
-        {
-            return index < _messages.Length ? _messages[index] : string.Empty;
-        }
+        public static string GetMessage(int index) => index < _messages.Length ? _messages[index] : string.Empty;
 
         public void AddChannel(string text, bool hasPassword)
         {
@@ -84,10 +83,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void Clear()
-        {
-            Channels.Clear();
-        }
+        public void Clear() => Channels.Clear();
 
         //static ChatManager()
         //{

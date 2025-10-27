@@ -25,7 +25,7 @@ namespace ClassicUO.Game.Data
             bool isNewCliloc = mode >= 2;
             uint serial = p.ReadUInt32BE();
             byte count = p.ReadUInt8();
-            PopupMenuItem[] items = new PopupMenuItem[count];
+            var items = new PopupMenuItem[count];
 
             for (int i = 0; i < count; i++)
             {

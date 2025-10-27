@@ -132,30 +132,15 @@ namespace ClassicUO.LegionScripting
         }
 
         // Specific recording methods for common actions
-        public void RecordWalk(Direction direction)
-        {
-            RecordAction("walk", new Dictionary<string, object> { { "direction", direction } });
-        }
+        public void RecordWalk(Direction direction) => RecordAction("walk", new Dictionary<string, object> { { "direction", direction } });
 
-        public void RecordRun(Direction direction)
-        {
-            RecordAction("run", new Dictionary<string, object> { { "direction", direction } });
-        }
+        public void RecordRun(Direction direction) => RecordAction("run", new Dictionary<string, object> { { "direction", direction } });
 
-        public void RecordUseItem(uint serial)
-        {
-            RecordAction("useitem", new Dictionary<string, object> { { "serial", serial } });
-        }
+        public void RecordUseItem(uint serial) => RecordAction("useitem", new Dictionary<string, object> { { "serial", serial } });
 
-        public void RecordCastSpell(string spellName)
-        {
-            RecordAction("cast", new Dictionary<string, object> { { "spell", spellName } });
-        }
+        public void RecordCastSpell(string spellName) => RecordAction("cast", new Dictionary<string, object> { { "spell", spellName } });
 
-        public void RecordSay(string message)
-        {
-            RecordAction("say", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordSay(string message) => RecordAction("say", new Dictionary<string, object> { { "message", message } });
 
         public void RecordDragDrop(uint itemSerial, uint toSerial, int amount = -1, int x = -1, int y = -1)
         {
@@ -172,10 +157,7 @@ namespace ClassicUO.LegionScripting
             RecordAction("dragdrop", parameters);
         }
 
-        public void RecordTarget(uint serial)
-        {
-            RecordAction("target", new Dictionary<string, object> { { "serial", serial } });
-        }
+        public void RecordTarget(uint serial) => RecordAction("target", new Dictionary<string, object> { { "serial", serial } });
 
         public void RecordTargetLocation(ushort x, ushort y, short z, ushort graphic = 0)
         {
@@ -191,14 +173,11 @@ namespace ClassicUO.LegionScripting
             RecordAction("targetlocation", parameters);
         }
 
-        public void RecordCloseContainer(uint serial, string containerType = "container")
-        {
-            RecordAction("closecontainer", new Dictionary<string, object>
+        public void RecordCloseContainer(uint serial, string containerType = "container") => RecordAction("closecontainer", new Dictionary<string, object>
             {
                 { "serial", serial },
                 { "type", containerType }
             });
-        }
 
         public void UpdatePlayerPosition(int x, int y, Direction direction, bool isRunning)
         {
@@ -220,38 +199,23 @@ namespace ClassicUO.LegionScripting
             _lastDirection = direction;
         }
 
-        public void RecordAttack(uint serial)
-        {
-            RecordAction("attack", new Dictionary<string, object> { { "serial", serial } });
-        }
+        public void RecordAttack(uint serial) => RecordAction("attack", new Dictionary<string, object> { { "serial", serial } });
 
-        public void RecordBandageSelf()
-        {
-            RecordAction("bandageself", new Dictionary<string, object>());
-        }
+        public void RecordBandageSelf() => RecordAction("bandageself", new Dictionary<string, object>());
 
-        public void RecordContextMenu(uint serial, ushort index)
-        {
-            RecordAction("contextmenu", new Dictionary<string, object>
+        public void RecordContextMenu(uint serial, ushort index) => RecordAction("contextmenu", new Dictionary<string, object>
             {
                 { "serial", serial },
                 { "index", index }
             });
-        }
 
-        public void RecordUseSkill(string skillName)
-        {
-            RecordAction("useskill", new Dictionary<string, object> { { "skill", skillName } });
-        }
+        public void RecordUseSkill(string skillName) => RecordAction("useskill", new Dictionary<string, object> { { "skill", skillName } });
 
-        public void RecordEquipItem(uint serial, Layer layer)
-        {
-            RecordAction("equipitem", new Dictionary<string, object>
+        public void RecordEquipItem(uint serial, Layer layer) => RecordAction("equipitem", new Dictionary<string, object>
             {
                 { "serial", serial },
                 { "layer", layer.ToString() }
             });
-        }
 
         public void RecordReplyGump(uint gumpId, int button, uint[] switches = null, Tuple<ushort, string>[] entries = null)
         {
@@ -270,60 +234,27 @@ namespace ClassicUO.LegionScripting
             RecordAction("replygump", parameters);
         }
 
-        public void RecordPartyMsg(string message)
-        {
-            RecordAction("partymsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordPartyMsg(string message) => RecordAction("partymsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordGuildMsg(string message)
-        {
-            RecordAction("guildmsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordGuildMsg(string message) => RecordAction("guildmsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordAllyMsg(string message)
-        {
-            RecordAction("allymsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordAllyMsg(string message) => RecordAction("allymsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordWhisperMsg(string message)
-        {
-            RecordAction("whispermsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordWhisperMsg(string message) => RecordAction("whispermsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordYellMsg(string message)
-        {
-            RecordAction("yellmsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordYellMsg(string message) => RecordAction("yellmsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordEmoteMsg(string message)
-        {
-            RecordAction("emotemsg", new Dictionary<string, object> { { "message", message } });
-        }
+        public void RecordEmoteMsg(string message) => RecordAction("emotemsg", new Dictionary<string, object> { { "message", message } });
 
-        public void RecordMount(uint serial)
-        {
-            RecordAction("mount", new Dictionary<string, object> { { "serial", serial } });
-        }
+        public void RecordMount(uint serial) => RecordAction("mount", new Dictionary<string, object> { { "serial", serial } });
 
-        public void RecordDismount()
-        {
-            RecordAction("dismount", new Dictionary<string, object>());
-        }
+        public void RecordDismount() => RecordAction("dismount", new Dictionary<string, object>());
 
-        public void RecordAbility(string ability)
-        {
-            RecordAction("ability" , new Dictionary<string, object> { { "ability", ability } });
-        }
+        public void RecordAbility(string ability) => RecordAction("ability", new Dictionary<string, object> { { "ability", ability } });
 
-        public void RecordVirtue(string virtue)
-        {
-            RecordAction("virtue", new Dictionary<string, object> { { "virtue", virtue } });
-        }
+        public void RecordVirtue(string virtue) => RecordAction("virtue", new Dictionary<string, object> { { "virtue", virtue } });
 
-        public void RecordWaitForGump(string gumpid)
-        {
-            RecordAction("waitforgump", new Dictionary<string, object> { { "id", gumpid } });
-        }
+        public void RecordWaitForGump(string gumpid) => RecordAction("waitforgump", new Dictionary<string, object> { { "id", gumpid } });
 
         public List<RecordedAction> GetRecordedActions()
         {
@@ -352,7 +283,7 @@ namespace ClassicUO.LegionScripting
                     index2 >= 0 && index2 < _recordedActions.Count &&
                     index1 != index2)
                 {
-                    var temp = _recordedActions[index1];
+                    RecordedAction temp = _recordedActions[index1];
                     _recordedActions[index1] = _recordedActions[index2];
                     _recordedActions[index2] = temp;
                 }
@@ -380,7 +311,7 @@ namespace ClassicUO.LegionScripting
             script.AppendLine();
 
             bool firstAction = true;
-            foreach (var action in actions)
+            foreach (RecordedAction action in actions)
             {
                 // Add timing delay (skip for first action)
                 if (includePauses && !firstAction && action.DelayFromPrevious > 100) // Only add delays > 100ms
@@ -578,7 +509,7 @@ namespace ClassicUO.LegionScripting
 
         public override string ToString()
         {
-            var paramStr = string.Join(", ", Parameters.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+            string paramStr = string.Join(", ", Parameters.Select(kvp => $"{kvp.Key}={kvp.Value}"));
             return $"{ActionType}({paramStr})";
         }
     }

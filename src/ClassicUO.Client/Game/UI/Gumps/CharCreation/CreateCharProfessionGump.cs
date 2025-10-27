@@ -143,7 +143,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
 
             ClilocLoader localization = Client.Game.UO.FileManager.Clilocs;
 
-            ResizePic background = new ResizePic(3000)
+            var background = new ResizePic(3000)
             {
                 Width = 175,
                 Height = 34

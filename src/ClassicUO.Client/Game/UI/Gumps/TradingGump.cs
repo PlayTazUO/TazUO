@@ -163,9 +163,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
-                Item it = (Item)i;
+                var it = (Item)i;
 
-                ItemGump g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
+                var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
                     HighlightOnMouseOver = true
                 };
@@ -173,7 +173,7 @@ namespace ClassicUO.Game.UI.Gumps
                 int x = g.X;
                 int y = g.Y;
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(it.DisplayedGraphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(it.DisplayedGraphic);
 
                 if (artInfo.Texture != null)
                 {
@@ -218,9 +218,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
-                Item it = (Item)i;
+                var it = (Item)i;
 
-                ItemGump g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
+                var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
                     HighlightOnMouseOver = true
                 };
@@ -228,7 +228,7 @@ namespace ClassicUO.Game.UI.Gumps
                 int x = g.X;
                 int y = g.Y;
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(it.DisplayedGraphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(it.DisplayedGraphic);
 
                 if (artInfo.Texture != null)
                 {
@@ -271,7 +271,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (_myBox != null && _myBox.Bounds.Contains(x, y))
                     {
-                        ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(Client.Game.UO.GameCursor.ItemHold.DisplayedGraphic);
+                        ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(Client.Game.UO.GameCursor.ItemHold.DisplayedGraphic);
                         x -= _myBox.X;
                         y -= _myBox.Y;
 
@@ -459,7 +459,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 void OnTextChanged(object sender, EventArgs e)
                 {
-                    StbTextBox entry = (StbTextBox)sender;
+                    var entry = (StbTextBox)sender;
                     bool send = false;
 
                     if (entry != null)
@@ -597,9 +597,6 @@ namespace ClassicUO.Game.UI.Gumps
             GameActions.AcceptTrade(ID1, ImAccepting);
         }
 
-        private static string FormatAsCurrency(uint amount, bool useComma = true)
-        {
-            return amount.ToString("C0", CultureInfo.CurrentCulture);
-        }
+        private static string FormatAsCurrency(uint amount, bool useComma = true) => amount.ToString("C0", CultureInfo.CurrentCulture);
     }
 }

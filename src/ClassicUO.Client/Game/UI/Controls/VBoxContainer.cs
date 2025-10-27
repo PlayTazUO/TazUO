@@ -22,10 +22,7 @@ public class VBoxContainer : Control
         Add(c, page);
     }
 
-    public void BlankLine()
-    {
-        pos.BlankLine();
-    }
+    public void BlankLine() => pos.BlankLine();
 
     public override T Add<T>(T c, int page = 0)
     {

@@ -202,22 +202,16 @@ public class BaseOptionsGump : Gump
 
     #region Sub-Classes
 
-    protected ModernButton CategoryButton(string text, int page, int width, int height = 40)
+    protected ModernButton CategoryButton(string text, int page, int width, int height = 40) => new ModernButton(0, 0, width, height, ButtonAction.SwitchPage, text, ThemeSettings.BUTTON_FONT_COLOR)
     {
-        return new ModernButton(0, 0, width, height, ButtonAction.SwitchPage, text, ThemeSettings.BUTTON_FONT_COLOR)
-        {
-            ButtonParameter = page,
-            FullPageSwitch = true
-        };
-    }
+        ButtonParameter = page,
+        FullPageSwitch = true
+    };
 
-    protected ModernButton SubCategoryButton(string text, int page, int width, int height = 40)
+    protected ModernButton SubCategoryButton(string text, int page, int width, int height = 40) => new ModernButton(0, 0, width, height, ButtonAction.SwitchPage, text, ThemeSettings.BUTTON_FONT_COLOR)
     {
-        return new ModernButton(0, 0, width, height, ButtonAction.SwitchPage, text, ThemeSettings.BUTTON_FONT_COLOR)
-        {
-            ButtonParameter = page
-        };
-    }
+        ButtonParameter = page
+    };
 
     public static class ThemeSettings
     {
@@ -279,15 +273,9 @@ public class BaseOptionsGump : Gump
             Y += ThemeSettings.BLANK_LINE;
         }
 
-        public static void Indent()
-        {
-            X += ThemeSettings.INDENT_SPACE;
-        }
+        public static void Indent() => X += ThemeSettings.INDENT_SPACE;
 
-        public static void RemoveIndent()
-        {
-            X -= ThemeSettings.INDENT_SPACE;
-        }
+        public static void RemoveIndent() => X -= ThemeSettings.INDENT_SPACE;
 
         public static Control PositionControl(Control c)
         {
@@ -381,7 +369,7 @@ public class BaseOptionsGump : Gump
 
             int scrollAreaHeight = 100;
 
-            ScrollArea scrollArea = new ScrollArea(x, y, FullControl.Width, scrollAreaHeight, FullControl.Height)
+            var scrollArea = new ScrollArea(x, y, FullControl.Width, scrollAreaHeight, FullControl.Height)
             {
                 AcceptMouseInput = true
             };
@@ -479,7 +467,7 @@ public class BaseOptionsGump : Gump
             leftY = 0;
             leftX = 0;
 
-            foreach (var c in left.Children)
+            foreach (Control c in left.Children)
             {
                 if (c == null || c.IsDisposed || c is not ModernButton)
                     continue;
@@ -502,15 +490,9 @@ public class BaseOptionsGump : Gump
             right.Add(c, page);
         }
 
-        public void BlankLine()
-        {
-            rightY += ThemeSettings.BLANK_LINE;
-        }
+        public void BlankLine() => rightY += ThemeSettings.BLANK_LINE;
 
-        public void Indent()
-        {
-            rightX += ThemeSettings.INDENT_SPACE;
-        }
+        public void Indent() => rightX += ThemeSettings.INDENT_SPACE;
 
         public void RemoveIndent()
         {
@@ -560,7 +542,7 @@ public class BaseOptionsGump : Gump
             Width = 300;
             Height = 40;
 
-            AlphaBlendControl bg = new AlphaBlendControl()
+            var bg = new AlphaBlendControl()
             {
                 Width = 150,
                 Height = 40,
@@ -881,10 +863,7 @@ public class BaseOptionsGump : Gump
         }
 
 
-        public void SetText(string text)
-        {
-            _textbox.SetText(text);
-        }
+        public void SetText(string text) => _textbox.SetText(text);
 
         public void SetTooltip(string text)
         {
@@ -987,10 +966,7 @@ public class BaseOptionsGump : Gump
 
             public bool AllowSelection { get; set; } = true;
 
-            internal int TotalHeight
-            {
-                get { return _rendererText.Height; }
-            }
+            internal int TotalHeight => _rendererText.Height;
 
             public string Text
             {
@@ -1023,7 +999,7 @@ public class BaseOptionsGump : Gump
                 {
                     if (index < _rendererText.Text.Length)
                     {
-                        var glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
+                        FontStashSharp.RichText.TextChunkGlyph? glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
 
                         if (glyphRender != null)
                         {
@@ -1037,7 +1013,7 @@ public class BaseOptionsGump : Gump
 
             public TextEditRow LayoutRow(int startIndex)
             {
-                TextEditRow r = new TextEditRow()
+                var r = new TextEditRow()
                 {
                     num_chars = _rendererText.Text.Length
                 };
@@ -1069,10 +1045,7 @@ public class BaseOptionsGump : Gump
                 }
             }
 
-            protected void UpdateCaretScreenPosition()
-            {
-                _caretScreenPosition = GetCoordsForIndex(Stb.CursorIndex);
-            }
+            protected void UpdateCaretScreenPosition() => _caretScreenPosition = GetCoordsForIndex(Stb.CursorIndex);
 
             protected Point GetCoordsForIndex(int index)
             {
@@ -1082,7 +1055,7 @@ public class BaseOptionsGump : Gump
                 {
                     if (index < Text.Length)
                     {
-                        var glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
+                        FontStashSharp.RichText.TextChunkGlyph? glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
 
                         if (glyphRender != null)
                         {
@@ -1093,22 +1066,22 @@ public class BaseOptionsGump : Gump
                     else if (_rendererText.RTL.Lines != null && _rendererText.RTL.Lines.Count > 0)
                     {
                         // After last glyph
-                        var lastLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 1];
+                        FontStashSharp.RichText.TextLine lastLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 1];
 
                         if (lastLine.Count > 0)
                         {
-                            var glyphRender = lastLine.GetGlyphInfoByIndex(lastLine.Count - 1);
+                            FontStashSharp.RichText.TextChunkGlyph? glyphRender = lastLine.GetGlyphInfoByIndex(lastLine.Count - 1);
 
                             x += glyphRender.Value.Bounds.Right;
                             y += glyphRender.Value.LineTop;
                         }
                         else if (_rendererText.RTL.Lines.Count > 1)
                         {
-                            var previousLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 2];
+                            FontStashSharp.RichText.TextLine previousLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 2];
 
                             if (previousLine.Count > 0)
                             {
-                                var glyphRender = previousLine.GetGlyphInfoByIndex(0);
+                                FontStashSharp.RichText.TextChunkGlyph? glyphRender = previousLine.GetGlyphInfoByIndex(0);
                                 y += glyphRender.Value.LineTop + lastLine.Size.Y + _rendererText.RTL.VerticalSpacing;
                             }
                         }
@@ -1122,7 +1095,7 @@ public class BaseOptionsGump : Gump
             {
                 if (Text != null)
                 {
-                    var line = _rendererText.RTL.GetLineByY(coords.Y);
+                    FontStashSharp.RichText.TextLine line = _rendererText.RTL.GetLineByY(coords.Y);
 
                     if (line != null)
                     {
@@ -1142,7 +1115,7 @@ public class BaseOptionsGump : Gump
             {
                 if (Text != null)
                 {
-                    var line = _rendererText.RTL.GetLineByY(clicked.Y);
+                    FontStashSharp.RichText.TextLine line = _rendererText.RTL.GetLineByY(clicked.Y);
 
                     if (line != null)
                     {
@@ -1168,10 +1141,7 @@ public class BaseOptionsGump : Gump
                 return k;
             }
 
-            private bool IsMaxCharReached(int count)
-            {
-                return _maxCharCount >= 0 && Length + count >= _maxCharCount;
-            }
+            private bool IsMaxCharReached(int count) => _maxCharCount >= 0 && Length + count >= _maxCharCount;
 
             protected virtual void OnTextChanged()
             {
@@ -1487,10 +1457,7 @@ public class BaseOptionsGump : Gump
                 }
             }
 
-            public void AppendText(string text)
-            {
-                Stb.Paste(text);
-            }
+            public void AppendText(string text) => Stb.Paste(text);
 
             protected override void OnTextInput(string c)
             {
@@ -1881,15 +1848,9 @@ public class BaseOptionsGump : Gump
             return base.Draw(batcher, x, y);
         }
 
-        public bool Search(string text)
-        {
-            return TextLabel.Text.ToLower().Contains(text.ToLower());
-        }
+        public bool Search(string text) => TextLabel.Text.ToLower().Contains(text.ToLower());
 
-        public void OnSearchMatch()
-        {
-            TextLabel.Alpha = 1f;
-        }
+        public void OnSearchMatch() => TextLabel.Alpha = 1f;
     }
 
     public class ScrollArea : Control
@@ -2122,10 +2083,7 @@ public class BaseOptionsGump : Gump
                 return true; // base.Draw(batcher, x, y);
             }
 
-            protected override int GetScrollableArea()
-            {
-                return Height - _rectSlider.Height;
-            }
+            protected override int GetScrollableArea() => Height - _rectSlider.Height;
 
             protected override void OnMouseDown(int x, int y, MouseButtonType button)
             {
@@ -2172,10 +2130,7 @@ public class BaseOptionsGump : Gump
                 }
             }
 
-            public override bool Contains(int x, int y)
-            {
-                return x >= 0 && x <= Width && y >= 0 && y <= Height;
-            }
+            public override bool Contains(int x, int y) => x >= 0 && x <= Width && y >= 0 && y <= Height;
         }
     }
 
@@ -2254,10 +2209,7 @@ public class BaseOptionsGump : Gump
             return false;
         }
 
-        public void OnSearchMatch()
-        {
-            _label.Alpha = 1f;
-        }
+        public void OnSearchMatch() => _label.Alpha = 1f;
 
         public int SelectedIndex => _comboBox.SelectedIndex;
 
@@ -2371,7 +2323,7 @@ public class BaseOptionsGump : Gump
                     ColorBox cb;
                     Add(cb = new ColorBox(width, 0, ThemeSettings.BACKGROUND));
 
-                    HoveredLabel[] labels = new HoveredLabel[items.Length];
+                    var labels = new HoveredLabel[items.Length];
 
                     for (int i = 0; i < items.Length; i++)
                     {
@@ -2382,7 +2334,7 @@ public class BaseOptionsGump : Gump
                             item = string.Empty;
                         }
 
-                        HoveredLabel label = new HoveredLabel
+                        var label = new HoveredLabel
                             (item, ThemeSettings.DROPDOWN_OPTION_NORMAL_HUE, ThemeSettings.DROPDOWN_OPTION_HOVER_HUE, ThemeSettings.DROPDOWN_OPTION_SELECTED_HUE, width)
                             {
                                 X = 2,
@@ -2400,7 +2352,7 @@ public class BaseOptionsGump : Gump
                     int totalHeight = Math.Min(maxHeight, labels.Max(o => o.Y + o.Height));
                     int maxWidth = Math.Max(width, labels.Max(o => o.X + o.Width));
 
-                    ScrollArea area = new ScrollArea(0, 0, maxWidth + 15, totalHeight)
+                    var area = new ScrollArea(0, 0, maxWidth + 15, totalHeight)
                     {
                         AcceptMouseInput = true
                     };
@@ -2558,10 +2510,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        public void SetText(string text)
-        {
-            _inputField.SetText(text);
-        }
+        public void SetText(string text) => _inputField.SetText(text);
 
         public bool Search(string text)
         {
@@ -2573,10 +2522,7 @@ public class BaseOptionsGump : Gump
             return false;
         }
 
-        public void OnSearchMatch()
-        {
-            _label.Alpha = 1f;
-        }
+        public void OnSearchMatch() => _label.Alpha = 1f;
     }
 
     protected class ModernColorPickerWithLabel : Control, SearchableOption
@@ -2636,15 +2582,9 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        public bool Search(string text)
-        {
-            return _label.Text.ToLower().Contains(text.ToLower());
-        }
+        public bool Search(string text) => _label.Text.ToLower().Contains(text.ToLower());
 
-        public void OnSearchMatch()
-        {
-            _label.Alpha = 1f;
-        }
+        public void OnSearchMatch() => _label.Alpha = 1f;
     }
 
     public class CheckboxWithLabel : Control, SearchableOption
@@ -2741,10 +2681,7 @@ public class BaseOptionsGump : Gump
             return base.Draw(batcher, x, y);
         }
 
-        protected virtual void OnCheckedChanged()
-        {
-            ValueChanged?.Invoke(IsChecked);
-        }
+        protected virtual void OnCheckedChanged() => ValueChanged?.Invoke(IsChecked);
 
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
@@ -2761,15 +2698,9 @@ public class BaseOptionsGump : Gump
             SearchValueChanged -= ModernOptionsGump_SearchValueChanged;
         }
 
-        public bool Search(string text)
-        {
-            return _text.Text.ToLower().Contains(text.ToLower());
-        }
+        public bool Search(string text) => _text.Text.ToLower().Contains(text.ToLower());
 
-        public void OnSearchMatch()
-        {
-            _text.Alpha = 1f;
-        }
+        public void OnSearchMatch() => _text.Alpha = 1f;
     }
 
     protected class SliderWithLabel : Control, SearchableOption
@@ -2830,15 +2761,9 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        public bool Search(string text)
-        {
-            return _label.Text.ToLower().Contains(text.ToLower());
-        }
+        public bool Search(string text) => _label.Text.ToLower().Contains(text.ToLower());
 
-        public void OnSearchMatch()
-        {
-            _label.Alpha = 1f;
-        }
+        public void OnSearchMatch() => _label.Alpha = 1f;
 
         private class Slider : Control
         {

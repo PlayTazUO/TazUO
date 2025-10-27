@@ -101,23 +101,23 @@ description:  Represents a Python-accessible player character with full stat and
 
 **Type:** `short`
 
-### `MaxPhysicResistence`
+### `MaxPhysicResistance`
 
 **Type:** `short`
 
-### `MaxFireResistence`
+### `MaxFireResistance`
 
 **Type:** `short`
 
-### `MaxColdResistence`
+### `MaxColdResistance`
 
 **Type:** `short`
 
-### `MaxPoisonResistence`
+### `MaxPoisonResistance`
 
 **Type:** `short`
 
-### `MaxEnergyResistence`
+### `MaxEnergyResistance`
 
 **Type:** `short`
 
@@ -172,6 +172,14 @@ description:  Represents a Python-accessible player character with full stat and
 ### `LowerReagentCost`
 
 **Type:** `short`
+
+### `IsCasting`
+
+**Type:** `bool`
+
+### `IsRecovering`
+
+**Type:** `bool`
 
 ### `Luck`
 

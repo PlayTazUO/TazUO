@@ -106,11 +106,11 @@ namespace ClassicUO.Game.Managers
                 }
                 spell = spell.Trim();
 
-                if (SpellDefinition.TryGetSpellFromName(spell, out var spellDef))
+                if (SpellDefinition.TryGetSpellFromName(spell, out SpellDefinition spellDef))
                     GameActions.CastSpell(spellDef.ID);
             });
 
-            List<Skill> sortSkills = new List<Skill>(_world.Player.Skills);
+            var sortSkills = new List<Skill>(_world.Player.Skills);
 
             Register("skill", s =>
             {
@@ -147,15 +147,15 @@ namespace ClassicUO.Game.Managers
                     }
                     else if (s.Length == 4)
                     {
-                        if (int.TryParse(s[2], out var x))
-                            if (int.TryParse(s[3], out var y))
+                        if (int.TryParse(s[2], out int x))
+                            if (int.TryParse(s[3], out int y))
                                 TileMarkerManager.Instance.RemoveTile(x, y, _world.Map.Index);
                     }
                     else if (s.Length == 5)
                     {
-                        if (int.TryParse(s[2], out var x))
-                            if (int.TryParse(s[3], out var y))
-                                if (int.TryParse(s[4], out var m))
+                        if (int.TryParse(s[2], out int x))
+                            if (int.TryParse(s[3], out int y))
+                                if (int.TryParse(s[4], out int m))
                                     TileMarkerManager.Instance.RemoveTile(x, y, m);
                     }
                 }
@@ -172,17 +172,17 @@ namespace ClassicUO.Game.Managers
                     }
                     else if (s.Length == 4)
                     {
-                        if (int.TryParse(s[1], out var x))
-                            if (int.TryParse(s[2], out var y))
-                                if (ushort.TryParse(s[3], out var h))
+                        if (int.TryParse(s[1], out int x))
+                            if (int.TryParse(s[2], out int y))
+                                if (ushort.TryParse(s[3], out ushort h))
                                     TileMarkerManager.Instance.AddTile(x, y, _world.Map.Index, h);
                     }
                     else if (s.Length == 5)
                     {
-                        if (int.TryParse(s[1], out var x))
-                            if (int.TryParse(s[2], out var y))
-                                if (int.TryParse(s[3], out var m))
-                                    if (ushort.TryParse(s[4], out var h))
+                        if (int.TryParse(s[1], out int x))
+                            if (int.TryParse(s[2], out int y))
+                                if (int.TryParse(s[3], out int m))
+                                    if (ushort.TryParse(s[4], out ushort h))
                                         TileMarkerManager.Instance.AddTile(x, y, m, h);
                     }
                 }
@@ -195,12 +195,12 @@ namespace ClassicUO.Game.Managers
                     ProfileManager.CurrentProfile.DisplayRadius ^= true;
                 if (s.Length > 1)
                 {
-                    if (int.TryParse(s[1], out var dist))
+                    if (int.TryParse(s[1], out int dist))
                         ProfileManager.CurrentProfile.DisplayRadiusDistance = dist;
                     ProfileManager.CurrentProfile.DisplayRadius = true;
                 }
                 if (s.Length > 2)
-                    if (ushort.TryParse(s[2], out var h))
+                    if (ushort.TryParse(s[2], out ushort h))
                         ProfileManager.CurrentProfile.DisplayRadiusHue = h;
             });
 
@@ -307,10 +307,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void UnRegisterAll()
-        {
-            _commands.Clear();
-        }
+        public void UnRegisterAll() => _commands.Clear();
 
         public void Execute(string name, params string[] args)
         {

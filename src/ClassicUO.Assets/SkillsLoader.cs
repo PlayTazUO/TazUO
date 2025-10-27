@@ -37,10 +37,10 @@ namespace ClassicUO.Assets
             _file = new UOFileMul(path, pathidx);
             _file.FillEntries();
 
-            var buf = new byte[256];
+            byte[] buf = new byte[256];
             for (int i = 0, count = 0; i < _file.Entries.Length; i++)
             {
-                ref var entry = ref _file.GetValidRefEntry(i);
+                ref UOFileIndex entry = ref _file.GetValidRefEntry(i);
                 if (entry.Length <= 0) continue;
 
                 _file.Seek(entry.Offset, System.IO.SeekOrigin.Begin);
@@ -49,7 +49,7 @@ namespace ClassicUO.Assets
                     buf = new byte[entry.Length];
 
                 _file.Read(buf.AsSpan(0, entry.Length - 1));
-                var name = Encoding.ASCII.GetString(buf.AsSpan(0, entry.Length - 1)).TrimEnd('\0');
+                string name = Encoding.ASCII.GetString(buf.AsSpan(0, entry.Length - 1)).TrimEnd('\0');
 
                 Skills.Add(new SkillEntry(count++, name, hasAction));
             }
@@ -82,10 +82,7 @@ namespace ClassicUO.Assets
         public readonly int Index;
         public string Name;
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
 
         public enum HardCodedName
         {

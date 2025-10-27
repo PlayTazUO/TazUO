@@ -116,15 +116,12 @@ namespace ClassicUO.Renderer
         }
 
 
-        public void SetBrightlight(float f)
-        {
-            _basicUOEffect.Brighlight.SetValue(f);
-        }
+        public void SetBrightlight(float f) => _basicUOEffect.Brighlight.SetValue(f);
 
         // For IFontStashRenderer
         public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 scale, float depth)
         {
-            Vector3 hueVector = new Vector3(0, ShaderHueTranslator.SHADER_TEXT_HUE, MathHelper.Clamp(color.A / 255f, 0f, 1f));
+            var hueVector = new Vector3(0, ShaderHueTranslator.SHADER_TEXT_HUE, MathHelper.Clamp(color.A / 255f, 0f, 1f));
 
             float sourceX, sourceY, sourceW, sourceH;
             if (sourceRectangle.HasValue)
@@ -148,10 +145,10 @@ namespace ClassicUO.Renderer
 
             EnsureSize();
 
-            ref var sprite = ref _vertexInfo[_numSprites];
+            ref PositionNormalTextureColor4 sprite = ref _vertexInfo[_numSprites];
 
-            var rotationSin = (float)Math.Sin(rotation);
-            var rotationCos = (float)Math.Cos(rotation);
+            float rotationSin = (float)Math.Sin(rotation);
+            float rotationCos = (float)Math.Cos(rotation);
 
             sprite.Position0.X = position.X;
             sprite.Position0.Y = position.Y;
@@ -190,9 +187,9 @@ namespace ClassicUO.Renderer
             sprite.Hue2 = hueVector;
             sprite.Hue3 = hueVector;
 
-            var r = color.R / 255.0f;
-            var g = color.G / 255.0f;
-            var b = color.B / 255.0f;
+            float r = color.R / 255.0f;
+            float g = color.G / 255.0f;
+            float b = color.B / 255.0f;
 
             sprite.Normal0.X = r;
             sprite.Normal0.Y = g;
@@ -691,7 +688,7 @@ namespace ClassicUO.Renderer
             int h = destinationRectangle.Height;
 
             Rectangle rect = sourceRectangle;
-            Vector2 pos = new Vector2(destinationRectangle.X, destinationRectangle.Y);
+            var pos = new Vector2(destinationRectangle.X, destinationRectangle.Y);
 
             while (h > 0)
             {
@@ -732,7 +729,7 @@ namespace ClassicUO.Renderer
             float depth = 0f
         )
         {
-            Rectangle rect = new Rectangle(x, y, width, 1);
+            var rect = new Rectangle(x, y, width, 1);
             Draw(texture, rect, null, hue, 0f, Vector2.Zero, SpriteEffects.None, depth);
 
             rect.X += width;
@@ -764,8 +761,8 @@ namespace ClassicUO.Renderer
             float stroke
         )
         {
-            var radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
-            Vector2.Distance(ref start, ref end, out var length);
+            float radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
+            Vector2.Distance(ref start, ref end, out float length);
 
             Draw
             (
@@ -789,10 +786,7 @@ namespace ClassicUO.Renderer
             Texture2D texture,
             Vector2 position,
             Vector3 color
-        )
-        {
-            AddSprite(texture, 0f, 0f, 1f, 1f, position.X, position.Y, texture.Width, texture.Height, color, 0f, 0f, 0f, 1f, 0f, 0);
-        }
+        ) => AddSprite(texture, 0f, 0f, 1f, 1f, position.X, position.Y, texture.Width, texture.Height, color, 0f, 0f, 0f, 1f, 0f, 0);
 
         public void Draw
         (
@@ -943,9 +937,7 @@ namespace ClassicUO.Renderer
             Texture2D texture,
             Rectangle destinationRectangle,
             Vector3 color
-        )
-        {
-            AddSprite(
+        ) => AddSprite(
                 texture,
                 0.0f,
                 0.0f,
@@ -963,7 +955,6 @@ namespace ClassicUO.Renderer
                 0.0f,
                 0
             );
-        }
 
         public void Draw
         (
@@ -1103,15 +1094,9 @@ namespace ClassicUO.Renderer
         }
 
 
-        public void Begin()
-        {
-            Begin(null, Matrix.Identity);
-        }
+        public void Begin() => Begin(null, Matrix.Identity);
 
-        public void Begin(Effect effect)
-        {
-            Begin(effect, Matrix.Identity);
-        }
+        public void Begin(Effect effect) => Begin(effect, Matrix.Identity);
 
         public void Begin(Effect customEffect, Matrix transform_matrix)
         {

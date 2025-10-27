@@ -215,7 +215,7 @@ namespace ClassicUO.Game.UI.Gumps
             p.X = 244;
             p.Y = 112;
 
-            Label text = new Label(!string.IsNullOrEmpty(World.Player.Name) ? World.Player.Name : string.Empty, false, 0x0386, font: 1)
+            var text = new Label(!string.IsNullOrEmpty(World.Player.Name) ? World.Player.Name : string.Empty, false, 0x0386, font: 1)
             {
                 X = 86,
                 Y = 42
@@ -1399,7 +1399,7 @@ namespace ClassicUO.Game.UI.Gumps
                 hue = Settings.Hue_Text;
             }
 
-            Label label = new Label
+            var label = new Label
             (
                 text,
                 false,

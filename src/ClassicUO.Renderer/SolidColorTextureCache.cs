@@ -12,10 +12,7 @@ namespace ClassicUO.Renderer
 
         private static GraphicsDevice _device;
 
-        public static void Initialize(GraphicsDevice device)
-        {
-            _device = device;
-        }
+        public static void Initialize(GraphicsDevice device) => _device = device;
 
         public static Texture2D GetTexture(Color color)
         {

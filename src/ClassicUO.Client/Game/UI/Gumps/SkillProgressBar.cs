@@ -38,10 +38,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private int skillIndex { get; }
 
-        public void SetDuration(long ms)
-        {
-            expireAt = Time.Ticks + ms;
-        }
+        public void SetDuration(long ms) => expireAt = Time.Ticks + ms;
 
         protected override void OnMove(int x, int y)
         {
@@ -55,7 +52,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Skill s = World.Player.Skills[skillIndex];
 
-                TextBox tb = TextBox.GetOne
+                var tb = TextBox.GetOne
                 (
                     string.Format(ProfileManager.CurrentProfile.SkillBarFormat, s.Name, s.Value, s.Cap), ProfileManager.CurrentProfile.GameWindowSideChatFont,
                     ProfileManager.CurrentProfile.GameWindowSideChatFontSize, Color.White, TextBox.RTLOptions.Default()
@@ -138,7 +135,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return;
                 }
 
-                if (!skillProgressBars.TryDequeue(out var skillProgressBar))
+                if (!skillProgressBars.TryDequeue(out SkillProgressBar skillProgressBar))
                     return;
 
                 if (skillProgressBar == null)
@@ -153,7 +150,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 beingReset = true;
                 
-                while (skillProgressBars.TryDequeue(out var skillProgressBar))
+                while (skillProgressBars.TryDequeue(out SkillProgressBar skillProgressBar))
                     skillProgressBar?.Dispose();
 
                 skillProgressBars = new ConcurrentQueue<SkillProgressBar>();

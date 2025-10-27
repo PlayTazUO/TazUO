@@ -93,10 +93,7 @@ namespace ClassicUO.Game.UI.Controls
                 _scrollBar.X = Width - 19;
         }
 
-        public void ResetScrollbarPosition()
-        {
-            _scrollBar?.ResetScrollPosition();
-        }
+        public void ResetScrollbarPosition() => _scrollBar?.ResetScrollPosition();
 
         public int ScrollBarWidth()
         {
@@ -124,7 +121,7 @@ namespace ClassicUO.Game.UI.Controls
                 return false;
             }
 
-            ScrollBarBase scrollbar = (ScrollBarBase)Children[0];
+            var scrollbar = (ScrollBarBase)Children[0];
             scrollbar.Draw(batcher, x + scrollbar.X, y + scrollbar.Y);
 
             if (batcher.ClipBegin(x + ScissorRectangle.X, y + ScissorRectangle.Y, Width - 14 + ScissorRectangle.Width, Height + ScissorRectangle.Height))

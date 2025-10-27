@@ -32,7 +32,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             int y = Math.Max(0, Math.Min(anchor.Y, screenH - PreferredHeight));
 
-            var g = UIManager.GetGump<MultiItemMoveGump>();
+            MultiItemMoveGump g = UIManager.GetGump<MultiItemMoveGump>();
             if (g == null || g.IsDisposed)
             {
                 AddMultiItemMoveGumpToUI(x, y);
@@ -149,9 +149,9 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    var player = World.Player;
+                    PlayerMobile player = World.Player;
                     if (player == null) return;
-                    var bp = player.Backpack;
+                    Item bp = player.Backpack;
                     if (bp != null) ProcessItemMoves(World, bp);
                 }
             };
@@ -245,7 +245,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (SelectedCount > 0)
             {
-                var g = UIManager.GetGump<MultiItemMoveGump>();
+                MultiItemMoveGump g = UIManager.GetGump<MultiItemMoveGump>();
                 if (g == null || g.IsDisposed)
                     UIManager.Add(new MultiItemMoveGump(x, y));
             }
@@ -268,16 +268,10 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public static void OnContainerTarget(World world, int x, int y, int z)
-        {
-            ProcessItemMoves(world, x, y, z);
-        }
+        public static void OnContainerTarget(World world, int x, int y, int z) => ProcessItemMoves(world, x, y, z);
 
 
-        public static void OnTradeWindowTarget(World world, uint tradeID)
-        {
-            ProcessItemMoves(world, tradeID);
-        }
+        public static void OnTradeWindowTarget(World world, uint tradeID) => ProcessItemMoves(world, tradeID);
 
         // ===== Processing impl =====
 
@@ -333,7 +327,7 @@ namespace ClassicUO.Game.UI.Gumps
                     switch (processType)
                     {
                         case ProcessType.Ground:
-                            var itemData = Client.Game.UO.FileManager.TileData.StaticData[moveItem.Graphic];
+                            StaticTiles itemData = Client.Game.UO.FileManager.TileData.StaticData[moveItem.Graphic];
                             MoveItemQueue.Instance.Enqueue(
                                 moveItem.Serial,
                                 0,
@@ -398,7 +392,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private static string TextForHeader()
         {
-            var count = SelectedCount;
+            int count = SelectedCount;
             return processing ? $"Moving {count} items." : $"Selected {count} items.";
         }
 

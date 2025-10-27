@@ -104,10 +104,7 @@ namespace ClassicUO.Network
             _lastTotalPacketsSent = TotalPacketsSent;
         }
 
-        public override string ToString()
-        {
-            return $"Packets:\n >> {DeltaPacketsReceived}\n << {DeltaPacketsSent}\nBytes:\n >> {GetSizeAdaptive(DeltaBytesReceived)}\n << {GetSizeAdaptive(DeltaBytesSent)}";
-        }
+        public override string ToString() => $"Packets:\n >> {DeltaPacketsReceived}\n << {DeltaPacketsSent}\nBytes:\n >> {GetSizeAdaptive(DeltaBytesReceived)}\n << {GetSizeAdaptive(DeltaBytesSent)}";
 
         public static string GetSizeAdaptive(long bytes)
         {

@@ -25,7 +25,7 @@ namespace ClassicUO.Utility
                 }
             }
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             foreach (string part in parts)
             {

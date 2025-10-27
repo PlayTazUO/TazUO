@@ -168,10 +168,7 @@ namespace ClassicUO.Game.UI.Gumps
             last_y = Y;
         }
 
-        private void OnScrollSizeChanged(object sender, EventArgs e)
-        {
-            RepositionElements();
-        }
+        private void OnScrollSizeChanged(object sender, EventArgs e) => RepositionElements();
 
         public override GumpType GumpType => GumpType.SkillMenu;
 
@@ -231,14 +228,14 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (buttonID == 0)
             {
-                SkillsGroup g = new SkillsGroup
+                var g = new SkillsGroup
                 {
                     Name = ResGumps.NewGroup
                 };
 
                 World.SkillsGroupManager.Add(g);
 
-                SkillsGroupControl control = new SkillsGroupControl(this, g, 3, 3);
+                var control = new SkillsGroupControl(this, g, 3, 3);
                 _skillsControl.Add(control);
                 _container.Add(control);
                 control.IsMinimized = !g.IsMaximized;
@@ -274,7 +271,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 foreach (SkillsGroup g in World.SkillsGroupManager.Groups)
                 {
-                    SkillsGroupControl control = new SkillsGroupControl(this, g, 3, 3);
+                    var control = new SkillsGroupControl(this, g, 3, 3);
                     _skillsControl.Add(control);
                     _container.Add(control);
 
@@ -349,7 +346,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void UpdateSkillsValues(object sender, EventArgs e)
         {
-            Checkbox checkbox = (Checkbox) sender;
+            var checkbox = (Checkbox) sender;
 
             if (_checkReal.IsChecked && _checkCaps.IsChecked)
             {
@@ -385,10 +382,7 @@ namespace ClassicUO.Game.UI.Gumps
             RepositionElements();
         }
 
-        private void SumTotalSkills()
-        {
-            _skillsLabelSum.Text = World.Player.Skills.Sum(s => _checkReal.IsChecked ? s.Base : s.Value).ToString("F1");
-        }
+        private void SumTotalSkills() => _skillsLabelSum.Text = World.Player.Skills.Sum(s => _checkReal.IsChecked ? s.Base : s.Value).ToString("F1");
 
 
         private class SkillsGroupControl : Control
@@ -550,7 +544,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void AddSkill(int index, int x, int y)
             {
-                SkillItemControl c = new SkillItemControl(_gump, index, x, y);
+                var c = new SkillItemControl(_gump, index, x, y);
                 _skills.Add(c);
                 _box.Add(c);
                 _box.WantUpdateSize = true;
@@ -601,7 +595,7 @@ namespace ClassicUO.Game.UI.Gumps
                                     .Parent // skillgruop
                         != this)
                     {
-                        SkillsGroupControl originalGroup = (SkillsGroupControl) skillControl.Parent.Parent;
+                        var originalGroup = (SkillsGroupControl) skillControl.Parent.Parent;
 
                         if (originalGroup != null)
                         {
@@ -691,7 +685,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         while (_box.Children.Count != 0)
                         {
-                            SkillItemControl skillControl = (SkillItemControl) _box.Children[0];
+                            var skillControl = (SkillItemControl) _box.Children[0];
 
                             int itemCount = first._group.Count;
 
@@ -809,7 +803,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (skill.IsClickable)
                     {
-                        Button buttonUse = new Button(0, 0x0837, 0x0838, 0x0838)
+                        var buttonUse = new Button(0, 0x0837, 0x0838, 0x0838)
                         {
                             ButtonAction = ButtonAction.Activate,
                             X = 8

@@ -65,15 +65,11 @@ namespace ClassicUO.Game.UI.Controls
 
         public bool MultiLine { get { return Options.MultiLine; } set { Options.MultiLine = value; } }
 
-        public static TextBox CreateNew(string text, string font, float size, int hue, RTLOptions options)
-        {
-            return new TextBox(text, font, size, ConvertHueToColor(hue), options);
-        }
+        public static TextBox CreateNew(string text, string font, float size, int hue, RTLOptions options) => new TextBox(text, font, size, ConvertHueToColor(hue), options);
 
         public static TextBox GetOne(string text, string font, float size, int hue, RTLOptions options) => GetOne(text, font, size, ConvertHueToColor(hue), options);
 
-        public static TextBox GetOne(string text, string font, float size, Color hue, RTLOptions options)
-        {
+        public static TextBox GetOne(string text, string font, float size, Color hue, RTLOptions options) =>
             // if (_pool.Count > 0)
             // {
             //     TextBox tb = _pool.Dequeue();
@@ -97,8 +93,7 @@ namespace ClassicUO.Game.UI.Controls
             //     return tb;
             // }
 
-            return new TextBox(text, font, size, hue, options);
-        }
+            new TextBox(text, font, size, hue, options);
 
         private TextBox(string text, string font, float size, Color hue, RTLOptions options)
         {
@@ -255,7 +250,7 @@ namespace ClassicUO.Game.UI.Controls
             get => (int)_color.PackedValue;
             set
             {
-                var newVal = Client.Game.UO.FileManager.Hues.GetHueColorRgba8888(31, (ushort)value);
+                uint newVal = Client.Game.UO.FileManager.Hues.GetHueColorRgba8888(31, (ushort)value);
                 if (_color.PackedValue != newVal)
                 {
                     _color.PackedValue = newVal;
@@ -297,10 +292,7 @@ namespace ClassicUO.Game.UI.Controls
         /// Added in for Python API
         /// </summary>
         /// <param name="text"></param>
-        public void SetText(string text)
-        {
-            Text = text;
-        }
+        public void SetText(string text) => Text = text;
 
         public void Reset()
         {
@@ -368,7 +360,7 @@ namespace ClassicUO.Game.UI.Controls
                 "<BASEFONT>", string.Empty
             };
 
-            StringBuilder sb = new StringBuilder(finalString);
+            var sb = new StringBuilder(finalString);
             for (int i = 0; i < replacements.Length; i += 2)
                 sb.Replace(replacements[i], replacements[i + 1]);
 
@@ -379,7 +371,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (_dirty || WantUpdateSize)
             {
-                var text = _rtl?.Text ?? string.Empty;
+                string text = _rtl?.Text ?? string.Empty;
 
                 if (WantUpdateSize && Options != null)
                     Options.Width = null;
@@ -391,16 +383,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public override void Dispose()
-        {
-            base.Dispose();
-// #if DEBUG
-//             if (CUOEnviroment.Debug)
-//                 Log.Debug($"Returned to pool: [{Text}]");
-// #endif
-//             Reset();
-//             _pool.Enqueue(this);
-        }
+        public override void Dispose() => base.Dispose();// #if DEBUG//             if (CUOEnviroment.Debug)//                 Log.Debug($"Returned to pool: [{Text}]");// #endif//             Reset();//             _pool.Enqueue(this);
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {

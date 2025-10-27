@@ -225,7 +225,7 @@ namespace ClassicUO.Game.Managers
 
             if (button == MouseButtonType.Right)
             {
-                var mouseDownControl = _mouseDownControls[index];
+                Control mouseDownControl = _mouseDownControls[index];
                 // only attempt to close the gump if the mouse is still on the gump when right click mouse up occurs
                 if (mouseDownControl != null && MouseOverControl == mouseDownControl)
                 {
@@ -264,25 +264,13 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public static Control LastControlMouseDown(MouseButtonType button)
-        {
-            return _mouseDownControls[(int)button];
-        }
+        public static Control LastControlMouseDown(MouseButtonType button) => _mouseDownControls[(int)button];
 
-        public static void SavePosition(uint serverSerial, Point point)
-        {
-            _gumpPositionCache[serverSerial] = point;
-        }
+        public static void SavePosition(uint serverSerial, Point point) => _gumpPositionCache[serverSerial] = point;
 
-        public static bool RemovePosition(uint serverSerial)
-        {
-            return _gumpPositionCache.Remove(serverSerial, out _);
-        }
+        public static bool RemovePosition(uint serverSerial) => _gumpPositionCache.Remove(serverSerial, out _);
 
-        public static bool GetGumpCachePosition(uint id, out Point pos)
-        {
-            return _gumpPositionCache.TryGetValue(id, out pos);
-        }
+        public static bool GetGumpCachePosition(uint id, out Point pos) => _gumpPositionCache.TryGetValue(id, out pos);
 
         public static void ShowContextMenu(ContextMenuShowMenu menu)
         {
@@ -594,7 +582,7 @@ namespace ClassicUO.Game.Managers
 
         public static void MakeTopMostGump(Control control)
         {
-            Gump gump = control as Gump;
+            var gump = control as Gump;
             if (gump == null && control?.RootParent is Gump)
             {
                 gump = control.RootParent as Gump;

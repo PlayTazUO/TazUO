@@ -50,10 +50,7 @@ namespace ClassicUO.Assets
             public readonly int Right => X + Width;
             public readonly int Bottom => Y + Height;
 
-            public readonly bool Contains(int x, int y)
-            {
-                return (x >= X && x < Right && y >= Y && y < Bottom);
-            }
+            public readonly bool Contains(int x, int y) => (x >= X && x < Right && y >= Y && y < Bottom);
 
             public static readonly Margin Empty = new Margin();
         }
@@ -92,7 +89,7 @@ namespace ClassicUO.Assets
 
         public override unsafe void Load()
         {
-            UOFileMul fonts = new UOFileMul(FileManager.GetUOFilePath("fonts.mul"));
+            var fonts = new UOFileMul(FileManager.GetUOFilePath("fonts.mul"));
 
             for (int i = 0; i < 20; i++)
             {
@@ -172,7 +169,7 @@ namespace ClassicUO.Assets
                     byte w = fonts.ReadUInt8();
                     byte h = fonts.ReadUInt8();
                     fonts.ReadUInt8();
-                    var data = new ushort[w * h];
+                    ushort[] data = new ushort[w * h];
                     int read = fonts.Read(MemoryMarshal.AsBytes(data.AsSpan()));
                     _fontDataASCII[i, j] = new FontCharacterData(w, h, data);
                 }
@@ -198,7 +195,7 @@ namespace ClassicUO.Assets
                 return ref _nullChar;
             }
 
-            ref var cc = ref _fontDataUNICODE[font, index];
+            ref FontCharacterDataUnicode cc = ref _fontDataUNICODE[font, index];
 
             if (cc.Data == null)
             {
@@ -215,14 +212,14 @@ namespace ClassicUO.Assets
 
         private void LoadChar(byte font, int index)
         {
-            var file = _unicodeFontAddress[font];
+            UOFile file = _unicodeFontAddress[font];
 
             if (file == null)
             {
                 return;
             }
             file.Seek(index * 4, SeekOrigin.Begin);
-            var lookup = file.ReadInt32();
+            int lookup = file.ReadInt32();
 
             if (lookup == 0)
             {
@@ -231,7 +228,7 @@ namespace ClassicUO.Assets
 
             file.Seek(lookup, SeekOrigin.Begin);
 
-            ref var cc = ref _fontDataUNICODE[font, index];
+            ref FontCharacterDataUnicode cc = ref _fontDataUNICODE[font, index];
 
             cc.OffsetX = file.ReadInt8();
             cc.OffsetY = file.ReadInt8();
@@ -272,10 +269,7 @@ namespace ClassicUO.Assets
             }
         }
 
-        public bool UnicodeFontExists(byte font)
-        {
-            return font < 20 && _unicodeFontAddress[font] != null;
-        }
+        public bool UnicodeFontExists(byte font) => font < 20 && _unicodeFontAddress[font] != null;
 
         /// <summary> Get the index in ASCII fonts of a character. </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -523,7 +517,7 @@ namespace ClassicUO.Assets
             int strLen = str.Length;
 
             Span<char> span = stackalloc char[strLen];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
 
             if (IsUsingHTML)
             {
@@ -685,7 +679,7 @@ namespace ClassicUO.Assets
                             break;
                     }
 
-                    var count = ptr.Data.Length;
+                    int count = ptr.Data.Length;
 
                     for (int i = 0; i < count; i++)
                     {
@@ -755,7 +749,7 @@ namespace ClassicUO.Assets
                     info = null;
                 }
 
-                FontInfo fi = new FontInfo();
+                var fi = new FontInfo();
                 fi.LineCount = linesCount;
                 fi.Data = pData;
                 fi.Width = width;
@@ -815,7 +809,7 @@ namespace ClassicUO.Assets
                 return null;
             }
 
-            MultilinesFontInfo info = new MultilinesFontInfo();
+            var info = new MultilinesFontInfo();
             info.Reset();
             info.Align = align;
             MultilinesFontInfo ptr = info;
@@ -878,7 +872,7 @@ namespace ClassicUO.Assets
 
                         ptr.Data.Length = ptr.CharCount - newlineval;
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -907,7 +901,7 @@ namespace ClassicUO.Assets
                             ptr.MaxHeight = 14;
                         }
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -928,7 +922,7 @@ namespace ClassicUO.Assets
                     {
                         if (isFixed)
                         {
-                            MultilinesFontData mfd1 = new MultilinesFontData(
+                            var mfd1 = new MultilinesFontData(
                                 0xFFFFFFFF,
                                 flags,
                                 font,
@@ -975,7 +969,7 @@ namespace ClassicUO.Assets
                             break;
                         }
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -992,7 +986,7 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                MultilinesFontData mfd = new MultilinesFontData(0xFFFFFFFF, flags, font, si, 0);
+                var mfd = new MultilinesFontData(0xFFFFFFFF, flags, font, si, 0);
 
                 ptr.Data.Add(mfd);
                 readWidth += si == '\r' ? 0 : fcd.Width;
@@ -1147,7 +1141,7 @@ namespace ClassicUO.Assets
             int strLen = str.Length;
 
             Span<char> span = stackalloc char[strLen];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
 
             if (IsUsingHTML)
             {
@@ -1174,7 +1168,7 @@ namespace ClassicUO.Assets
 
             if (isCropped)
             {
-                ref var @char = ref GetCharUni(font, '.');
+                ref FontCharacterDataUnicode @char = ref GetCharUni(font, '.');
 
                 if (@char.Data != null)
                 {
@@ -1186,7 +1180,7 @@ namespace ClassicUO.Assets
 
             foreach (char c in str)
             {
-                ref var @char = ref GetCharUni(font, c);
+                ref FontCharacterDataUnicode @char = ref GetCharUni(font, c);
                 sbyte charWidth = 0;
 
                 if (@char.Data != null)
@@ -1245,7 +1239,7 @@ namespace ClassicUO.Assets
 
             foreach (char c in str)
             {
-                ref var @char = ref GetCharUni(font, c);
+                ref FontCharacterDataUnicode @char = ref GetCharUni(font, c);
 
                 if (c != '\r' && @char.Data != null)
                 {
@@ -1272,7 +1266,7 @@ namespace ClassicUO.Assets
                 return 0;
             }
 
-            ref var @char = ref GetCharUni(font, c);
+            ref FontCharacterDataUnicode @char = ref GetCharUni(font, c);
 
             if (@char.Data != null)
             {
@@ -1355,7 +1349,7 @@ namespace ClassicUO.Assets
                 return GetInfoHTML(font, str, len, align, flags, width);
             }
 
-            MultilinesFontInfo info = new MultilinesFontInfo();
+            var info = new MultilinesFontInfo();
             info.Reset();
             info.Align = align;
             MultilinesFontInfo ptr = info;
@@ -1388,15 +1382,15 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                ref var @char = ref GetCharUni(font, si);
+                ref FontCharacterDataUnicode @char = ref GetCharUni(font, si);
 
                 if (@char.Data == null && si != ' ' && si != '\n' && si != '\r')
                 {
                     continue;
                 }
 
-                var charWidth = @char.OffsetX + @char.Width + 1;
-                var charHeight = @char.OffsetY + @char.Height;
+                int charWidth = @char.OffsetX + @char.Width + 1;
+                int charHeight = @char.OffsetY + @char.Height;
 
                 if (si == ' ')
                 {
@@ -1435,7 +1429,7 @@ namespace ClassicUO.Assets
                         }
 
                         ptr.Data.Length = ptr.CharCount - newlineval;
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -1464,7 +1458,7 @@ namespace ClassicUO.Assets
                             ptr.MaxHeight = 14 + extraheight;
                         }
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -1488,7 +1482,7 @@ namespace ClassicUO.Assets
                     {
                         if (isFixed)
                         {
-                            MultilinesFontData mfd1 = new MultilinesFontData(
+                            var mfd1 = new MultilinesFontData(
                                 current_charcolor,
                                 current_flags,
                                 current_font,
@@ -1538,7 +1532,7 @@ namespace ClassicUO.Assets
                             break;
                         }
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -1559,7 +1553,7 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                MultilinesFontData mfd = new MultilinesFontData(
+                var mfd = new MultilinesFontData(
                     current_charcolor,
                     current_flags,
                     current_font,
@@ -1783,13 +1777,13 @@ namespace ClassicUO.Assets
                     }
 
                     ushort oldLink = 0;
-                    var dataSize = ptr.Data.Length;
+                    int dataSize = ptr.Data.Length;
 
                     for (int i = 0; i < dataSize; i++)
                     {
                         ref MultilinesFontData dataPtr = ref ptr.Data.Buffer[i];
                         char si = dataPtr.Item;
-                        ref var @char = ref GetCharUni(dataPtr.Font, si);
+                        ref FontCharacterDataUnicode @char = ref GetCharUni(dataPtr.Font, si);
 
                         if (!isLink)
                         {
@@ -1826,7 +1820,7 @@ namespace ClassicUO.Assets
                                 ofsX = @char.OffsetX;
                             }
 
-                            WebLinkRect wlr = new WebLinkRect
+                            var wlr = new WebLinkRect
                             {
                                 LinkID = oldLink,
                                 Bounds = new Margin(linkStartX, linkStartY, w - ofsX, linkHeight)
@@ -2175,7 +2169,7 @@ namespace ClassicUO.Assets
                         {
                             int minXOk = tmpW + offsX > 0 ? -1 : 0;
                             int maxXOk = w + offsX + dw < width ? 1 : 0;
-                            ref var @achar = ref GetCharUni(font, 'a');
+                            ref FontCharacterDataUnicode @achar = ref GetCharUni(font, 'a');
                             int testY = lineOffsY + @achar.OffsetY + @achar.Height;
 
                             if (testY >= height)
@@ -2235,7 +2229,7 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                FontInfo fi = new FontInfo();
+                var fi = new FontInfo();
 
                 fi.LineCount = linesCount;
                 fi.Width = width;
@@ -2273,7 +2267,7 @@ namespace ClassicUO.Assets
                 return null;
             }
 
-            MultilinesFontInfo info = new MultilinesFontInfo();
+            var info = new MultilinesFontInfo();
             info.Reset();
             info.Align = align;
             MultilinesFontInfo ptr = info;
@@ -2293,7 +2287,7 @@ namespace ClassicUO.Assets
             for (int i = 0; i < len; i++)
             {
                 char si = htmlData[i].Char;
-                ref var @char = ref GetCharUni(htmlData[i].Font, si);
+                ref FontCharacterDataUnicode @char = ref GetCharUni(htmlData[i].Font, si);
 
                 if (si == 0x000D || si == '\n')
                 {
@@ -2322,8 +2316,8 @@ namespace ClassicUO.Assets
                 }
 
                 int solidWidth = htmlData[i].Flags & UOFONT_SOLID;
-                var charWidth = @char.OffsetX + @char.Width + 1;
-                var charHeight = @char.OffsetY + @char.Height;
+                int charWidth = @char.OffsetX + @char.Width + 1;
+                int charHeight = @char.OffsetY + @char.Height;
 
                 if (ptr.Width + readWidth + charWidth + solidWidth > width || si == '\n')
                 {
@@ -2345,7 +2339,7 @@ namespace ClassicUO.Assets
 
                         ptr.MaxHeight = MAX_HTML_TEXT_HEIGHT;
                         ptr.Data.Length = ptr.CharCount;
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -2372,7 +2366,7 @@ namespace ClassicUO.Assets
                         }
 
                         ptr.MaxHeight = MAX_HTML_TEXT_HEIGHT;
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -2398,7 +2392,7 @@ namespace ClassicUO.Assets
                     {
                         if (isFixed)
                         {
-                            MultilinesFontData mfd1 = new MultilinesFontData(
+                            var mfd1 = new MultilinesFontData(
                                 htmlData[i].Color,
                                 htmlData[i].Flags,
                                 htmlData[i].Font,
@@ -2439,7 +2433,7 @@ namespace ClassicUO.Assets
                             break;
                         }
 
-                        MultilinesFontInfo newptr = new MultilinesFontInfo();
+                        var newptr = new MultilinesFontInfo();
                         newptr.Reset();
                         ptr.Next = newptr;
                         ptr = newptr;
@@ -2461,7 +2455,7 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                MultilinesFontData mfd = new MultilinesFontData(
+                var mfd = new MultilinesFontData(
                     htmlData[i].Color,
                     htmlData[i].Flags,
                     htmlData[i].Font,
@@ -2501,7 +2495,7 @@ namespace ClassicUO.Assets
         {
             int newlen = 0;
 
-            HTMLDataInfo info = new HTMLDataInfo
+            var info = new HTMLDataInfo
             {
                 Tag = HTML_TAG_TYPE.HTT_NONE,
                 Align = align,
@@ -2523,7 +2517,7 @@ namespace ClassicUO.Assets
                 {
                     bool endTag = false;
 
-                    HTMLDataInfo newInfo = new HTMLDataInfo
+                    var newInfo = new HTMLDataInfo
                     {
                         Tag = HTML_TAG_TYPE.HTT_NONE,
                         Align = TEXT_ALIGN_TYPE.TS_LEFT,
@@ -2568,7 +2562,7 @@ namespace ClassicUO.Assets
                     {
                         //int index = -1;
 
-                        for (var j = stack.Length - 1; j >= 1; j--)
+                        for (int j = stack.Length - 1; j >= 1; j--)
                         {
                             if (stack[j].Tag == tag)
                             {
@@ -2650,7 +2644,7 @@ namespace ClassicUO.Assets
 
             for (int i = 0; i < list.Length; i++)
             {
-                ref var current = ref list.Buffer[i];
+                ref HTMLDataInfo current = ref list.Buffer[i];
 
                 switch (current.Tag)
                 {
@@ -2987,11 +2981,11 @@ namespace ClassicUO.Assets
 
                 // Parse the attribute name (command)
                 ReadOnlySpan<char> command = ReadOnlySpan<char>.Empty;
-                var i = 0;
+                int i = 0;
 
                 for (; i < content.Length; i++)
                 {
-                    var c = content[i];
+                    char c = content[i];
 
                     if (char.IsWhiteSpace(c) || c == '=' || c == '\\')
                     {
@@ -3021,7 +3015,7 @@ namespace ClassicUO.Assets
                     if (!content.IsEmpty && content[0] == '"')
                     {
                         // Find end quote
-                        var endQuoteIndex = content.Slice(1).IndexOf('"') + 1;
+                        int endQuoteIndex = content.Slice(1).IndexOf('"') + 1;
                         if (endQuoteIndex > 0)
                         {
                             value = content.Slice(1, endQuoteIndex - 1);
@@ -3034,7 +3028,7 @@ namespace ClassicUO.Assets
                         i = 0;
                         for (; i < content.Length; i++)
                         {
-                            var c = content[i];
+                            char c = content[i];
                             if (char.IsWhiteSpace(c) || c == '\\' || c == '<' || c == '>' || c == '=')
                             {
                                 break;
@@ -3097,7 +3091,7 @@ namespace ClassicUO.Assets
                         }
                         else if (MemoryExtensions.Equals(command, "size", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            if (!byte.TryParse(value, out var font))
+                            if (!byte.TryParse(value, out byte font))
                             {
                                 if (MemoryExtensions.Equals(value, "big", StringComparison.InvariantCultureIgnoreCase))
                                     info.Font = 4;
@@ -3223,7 +3217,7 @@ namespace ClassicUO.Assets
                             buffer.Slice(startIndex),
                             NumberStyles.HexNumber,
                             CultureInfo.InvariantCulture,
-                            out var cc
+                            out uint cc
                         );
 
                         byte* clrbuf = (byte*)&cc;
@@ -3553,7 +3547,7 @@ namespace ClassicUO.Assets
                     for (int i = 0; i < len; i++)
                     {
                         char ch = info.Data[i].Item;
-                        ref var @char = ref GetCharUni(font, ch);
+                        ref FontCharacterDataUnicode @char = ref GetCharUni(font, ch);
                         if (ch != '\r' && @char.Data != null)
                         {
                             x += (sbyte)(@char.OffsetX + @char.Width + 1);

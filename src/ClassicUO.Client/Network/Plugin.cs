@@ -137,7 +137,7 @@ namespace ClassicUO.Network
 
             Log.Trace($"Loading plugin: {path}");
 
-            Plugin p = new Plugin(path);
+            var p = new Plugin(path);
             p.Load();
 
             if (!p.IsValid)
@@ -173,7 +173,7 @@ namespace ClassicUO.Network
 
             IntPtr hwnd = IntPtr.Zero;
 
-            PluginHeader header = new PluginHeader
+            var header = new PluginHeader
             {
                 ClientVersion = (int)Client.Game.UO.Version,
                 Recv = Marshal.GetFunctionPointerForDelegate(_recv),
@@ -206,19 +206,19 @@ namespace ClassicUO.Network
 
             try
             {
-                var assptr = Native.LoadLibrary(PluginPath);
+                nint assptr = Native.LoadLibrary(PluginPath);
 
                 Log.Trace($"assembly: {assptr}");
 
                 if (assptr == IntPtr.Zero)
                 {
-                    var err = Marshal.GetLastWin32Error().ToString();
+                    string err = Marshal.GetLastWin32Error().ToString();
                     throw new Exception("Invalid Assembly, Attempting managed load.");
                 }
 
                 Log.Trace($"Searching for 'Install' entry point  -  {assptr}");
 
-                var installPtr = Native.GetProcessAddress(assptr, "Install");
+                nint installPtr = Native.GetProcessAddress(assptr, "Install");
 
                 Log.Trace($"Entry point: {installPtr}");
 
@@ -244,7 +244,7 @@ namespace ClassicUO.Network
                     //};
                     //Client.Game.AssistantHost.Connect("127.0.0.1", 7777);
 
-                    Assembly asm = Assembly.LoadFile(PluginPath);
+                    var asm = Assembly.LoadFile(PluginPath);
                     Type type = asm.GetType("Assistant.Engine");
 
                     if (type == null)
@@ -393,15 +393,9 @@ namespace ClassicUO.Network
             }
         }
 
-        private static string GetUOFilePath()
-        {
-            return Settings.GlobalSettings.UltimaOnlineDirectory;
-        }
+        private static string GetUOFilePath() => Settings.GlobalSettings.UltimaOnlineDirectory;
 
-        private static void SetWindowTitle(string str)
-        {
-            Client.Game.SetWindowTitle(str);
-        }
+        private static void SetWindowTitle(string str) => Client.Game.SetWindowTitle(str);
 
         private static bool GetStaticData(
             int index,
@@ -470,10 +464,7 @@ namespace ClassicUO.Network
             //info.CompressedSize = compressedsize;
         }
 
-        internal static bool RequestMove(int dir, bool run)
-        {
-            return Client.Game.UO.World.Player.Walk((Direction)dir, run);
-        }
+        internal static bool RequestMove(int dir, bool run) => Client.Game.UO.World.Player.Walk((Direction)dir, run);
 
         internal static bool GetPlayerPosition(out int x, out int y, out int z)
         {
@@ -553,8 +544,8 @@ namespace ClassicUO.Network
             {
                 if (plugin._onSend_new != null)
                 {
-                    var tmp = message.ToArray();
-                    var length = tmp.Length;
+                    byte[] tmp = message.ToArray();
+                    int length = tmp.Length;
 
                     if (!plugin._onSend_new(tmp, ref length))
                     {
@@ -566,8 +557,8 @@ namespace ClassicUO.Network
                 }
                 else if (plugin._onSend != null)
                 {
-                    var tmp = message.ToArray();
-                    var length = tmp.Length;
+                    byte[] tmp = message.ToArray();
+                    int length = tmp.Length;
 
                     if (!plugin._onSend(ref tmp, ref length))
                     {
@@ -674,7 +665,7 @@ namespace ClassicUO.Network
                 return true;
             }
 
-            var ok = Client.Game.PluginHost?.Hotkey(key, mod, ispressed);
+            bool? ok = Client.Game.PluginHost?.Hotkey(key, mod, ispressed);
 
             bool result = ok ?? true;
 
@@ -708,7 +699,7 @@ namespace ClassicUO.Network
             if (!Enabled) return;
 
             IntPtr cmdList = IntPtr.Zero;
-            var len = 0;
+            int len = 0;
             Client.Game.PluginHost?.GetCommandList(out cmdList, out len);
             if (Client.Game.PluginHost != null && len != 0 && cmdList != IntPtr.Zero)
             {
@@ -734,7 +725,7 @@ namespace ClassicUO.Network
         {
             if (!Enabled) return 0;
 
-            var result = Client.Game.PluginHost?.SdlEvent(e) ?? 0;
+            int result = Client.Game.PluginHost?.SdlEvent(e) ?? 0;
 
             foreach (Plugin plugin in Plugins)
             {
@@ -772,10 +763,7 @@ namespace ClassicUO.Network
             }
         }
 
-        internal static short OnGetPacketLength(int id)
-        {
-            return AsyncNetClient.PacketsTable.GetPacketLength(id);
-        }
+        internal static short OnGetPacketLength(int id) => AsyncNetClient.PacketsTable.GetPacketLength(id);
 
         internal static bool OnPluginRecv(ref byte[] data, ref int length)
         {
@@ -848,10 +836,7 @@ namespace ClassicUO.Network
             }
         }
 
-        private static bool UnblockFile(string fileName)
-        {
-            return DeleteFile(fileName + ":Zone.Identifier");
-        }
+        private static bool UnblockFile(string fileName) => DeleteFile(fileName + ":Zone.Identifier");
 
         private static void HandleCmdList(
             GraphicsDevice device,
@@ -1096,7 +1081,7 @@ namespace ClassicUO.Network
                         ref SetVertexDataCommand setVertexDataCommand =
                             ref command.SetVertexDataCommand;
 
-                        VertexBuffer vertex_buffer =
+                        var vertex_buffer =
                             resources[setVertexDataCommand.id] as VertexBuffer;
 
                         vertex_buffer?.SetDataPointerEXT(
@@ -1113,7 +1098,7 @@ namespace ClassicUO.Network
                         ref SetIndexDataCommand setIndexDataCommand =
                             ref command.SetIndexDataCommand;
 
-                        IndexBuffer index_buffer = resources[setIndexDataCommand.id] as IndexBuffer;
+                        var index_buffer = resources[setIndexDataCommand.id] as IndexBuffer;
 
                         index_buffer?.SetDataPointerEXT(
                             0,
@@ -1129,7 +1114,7 @@ namespace ClassicUO.Network
                         ref CreateVertexBufferCommand createVertexBufferCommand =
                             ref command.CreateVertexBufferCommand;
 
-                        VertexElement[] elements = new VertexElement[
+                        var elements = new VertexElement[
                             createVertexBufferCommand.DeclarationCount
                         ];
 
@@ -1227,7 +1212,7 @@ namespace ClassicUO.Network
                         }
                         else
                         {
-                            BasicEffect be = res as BasicEffect;
+                            var be = res as BasicEffect;
                             be.World = createBasicEffectCommand.world;
                             be.View = createBasicEffectCommand.view;
                             be.Projection = createBasicEffectCommand.projection;

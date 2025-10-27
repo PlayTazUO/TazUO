@@ -158,16 +158,16 @@ namespace ClassicUO.Game.UI.Gumps
 
             try
             {
-                var dirc = _currentPath;
+                string dirc = _currentPath;
                 var dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, $"(Current Dir)", align: TEXT_ALIGN_TYPE.TS_LEFT, hue:693);
                 if (_type == FileSelectorType.Directory)
                     dirButtonUp.MouseUp += (sender, e) => SelectFile(dirc);
                 _scrollVBox.Add(dirButtonUp);
 
-                var parent = Directory.GetParent(_currentPath);
+                DirectoryInfo parent = Directory.GetParent(_currentPath);
                 if(parent != null)
                 {
-                    var dirp = parent.FullName;
+                    string dirp = parent.FullName;
                     dirButtonUp = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, $"(Parent Dir)",
                         align: TEXT_ALIGN_TYPE.TS_LEFT, hue: 693);
                     if (_type == FileSelectorType.Directory)
@@ -180,10 +180,10 @@ namespace ClassicUO.Game.UI.Gumps
                     // We're at root, show available drives
                     try
                     {
-                        var drives = DriveInfo.GetDrives();
-                        foreach (var drive in drives.Where(d => d.IsReady))
+                        DriveInfo[] drives = DriveInfo.GetDrives();
+                        foreach (DriveInfo drive in drives.Where(d => d.IsReady))
                         {
-                            var driveName = $"{drive.Name} ({drive.DriveType})";
+                            string driveName = $"{drive.Name} ({drive.DriveType})";
                             var driveButton = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, driveName,
                                 align: TEXT_ALIGN_TYPE.TS_LEFT, hue: 692);
                             
@@ -210,12 +210,12 @@ namespace ClassicUO.Game.UI.Gumps
                 int itemHeight = 20;
 
                 // Add directories first
-                var directories = Directory.EnumerateDirectories(_currentPath)
+                string[] directories = Directory.EnumerateDirectories(_currentPath)
                                            .Where(dir => !Path.GetFileName(dir).StartsWith("."))
                                            .ToArray();
-                foreach (var dir in directories.OrderBy(d => Path.GetFileName(d)))
+                foreach (string dir in directories.OrderBy(d => Path.GetFileName(d)))
                 {
-                    var dirName = Path.GetFileName(dir);
+                    string dirName = Path.GetFileName(dir);
                     var dirButton = new NiceButton(0, 0, BUTTON_WIDTH, 20, ButtonAction.Default, $"/{dirName}/", align: TEXT_ALIGN_TYPE.TS_LEFT, hue:691);
 
                     if (_type == FileSelectorType.Directory)
@@ -226,10 +226,10 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 // Add files
-                var files = GetFilteredFiles(_currentPath);
-                foreach (var file in files.OrderBy(f => Path.GetFileName(f)))
+                string[] files = GetFilteredFiles(_currentPath);
+                foreach (string file in files.OrderBy(f => Path.GetFileName(f)))
                 {
-                    var fileName = "/" + Path.GetFileName(file);
+                    string fileName = "/" + Path.GetFileName(file);
                     var fileButton = new NiceButton(0, 0, BUTTON_WIDTH, itemHeight, ButtonAction.Default, fileName, align: TEXT_ALIGN_TYPE.TS_LEFT, hue: 68);
                     if(_type == FileSelectorType.File)
                         fileButton.MouseUp += (sender, e) =>SelectFile(file);
@@ -251,9 +251,9 @@ namespace ClassicUO.Game.UI.Gumps
                 return [];
 
             var files = new List<string>();
-            foreach (var extension in _fileExtensions)
+            foreach (string extension in _fileExtensions)
             {
-                var pattern = extension.StartsWith("*.") ? extension : $"*.{extension.TrimStart('.')}";
+                string pattern = extension.StartsWith("*.") ? extension : $"*.{extension.TrimStart('.')}";
                 files.AddRange(Directory.GetFiles(path, pattern));
             }
 
@@ -291,7 +291,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Dispose();
                     break;
                 case 1: // Up directory
-                    var parent = Directory.GetParent(_currentPath);
+                    DirectoryInfo parent = Directory.GetParent(_currentPath);
                     if (parent != null)
                     {
                         _currentPath = parent.FullName;
@@ -315,7 +315,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (!string.IsNullOrEmpty(_filterTextBox.Text))
             {
-                var filterText = _filterTextBox.Text.Replace(" ", "");
+                string filterText = _filterTextBox.Text.Replace(" ", "");
                 if (string.IsNullOrEmpty(filterText) || filterText == "*.*" || filterText == "*")
                 {
                     _fileExtensions = null;

@@ -23,7 +23,7 @@ namespace ClassicUO.Utility
                 return string.Empty;
             }
 
-            StringBuilder sb = new StringBuilder(source.Length * 2 + 2);
+            var sb = new StringBuilder(source.Length * 2 + 2);
             sb.Append("1-");
 
             for (int i = 0; i < buff.Length; i++)
@@ -106,9 +106,6 @@ namespace ClassicUO.Utility
             return Encoding.ASCII.GetString(buff);
         }
 
-        private static string CalculateKey()
-        {
-            return Environment.MachineName;
-        }
+        private static string CalculateKey() => Environment.MachineName;
     }
 }

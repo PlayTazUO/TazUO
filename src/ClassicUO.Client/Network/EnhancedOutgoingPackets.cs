@@ -9,7 +9,7 @@ internal static class EnhancedOutgoingPackets
     public static HashSet<EnhancedPacketType> EnabledPackets = new();
     public static void SendEnhancedPacket(this AsyncNetClient socket)
     {
-        var id = EnhancedPacketType.EnableEnhancedPacket;
+        EnhancedPacketType id = EnhancedPacketType.EnableEnhancedPacket;
 
         if (!EnabledPackets.Contains(id))
             return;

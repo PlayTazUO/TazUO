@@ -68,10 +68,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public bool IsTileMarked(int x, int y, int map, out ushort hue)
-        {
-            return markedTiles.TryGetValue(new TileLocation(x, y, map), out hue);
-        }
+        public bool IsTileMarked(int x, int y, int map, out ushort hue) => markedTiles.TryGetValue(new TileLocation(x, y, map), out hue);
 
 
         public void Save()
@@ -96,7 +93,7 @@ namespace ClassicUO.Game.Managers
                 if (File.Exists(SavePath))
                 {
                     string json = File.ReadAllText(SavePath);
-                    var entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
+                    List<TileMarkerEntry> entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
                     markedTiles = entries.ToDictionary(e => e.Location, e => e.Hue);
                 }
                 else
@@ -125,10 +122,10 @@ namespace ClassicUO.Game.Managers
                         var bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
                         var oldData = (Dictionary<string, ushort>)bf.Deserialize(fs);
 
-                        foreach (var kvp in oldData)
+                        foreach (KeyValuePair<string, ushort> kvp in oldData)
                         {
                             // Parse old string key format "x.y.map"
-                            var parts = kvp.Key.Split('.');
+                            string[] parts = kvp.Key.Split('.');
                             if (parts.Length == 3 &&
                                 int.TryParse(parts[0], out int x) &&
                                 int.TryParse(parts[1], out int y) &&
@@ -154,7 +151,7 @@ namespace ClassicUO.Game.Managers
         {
             if (World.Instance.Map == null || World.Instance.Map.Index != map) return;
 
-            var chunk = World.Instance.Map.GetChunk(x, y, false);
+            Chunk chunk = World.Instance.Map.GetChunk(x, y, false);
             if (chunk == null) return;
 
             // Get all tiles at this location and update their hue

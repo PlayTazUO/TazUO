@@ -109,7 +109,7 @@ namespace ClassicUO.Game.GameObjects
                 depth
             );
 
-            ref var data = ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
+            ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
 
             if (data.IsLight && Source != null)
             {

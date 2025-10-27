@@ -67,7 +67,11 @@ namespace ClassicUO.Game.Managers
         public readonly int Y;
         public readonly int Z;
 
-        public Vector3Int(int x, int y, int z) => (X, Y, Z) = (x, y, z);
+        public Vector3Int(int x, int y, int z)
+        {
+            (X, Y, Z) = (x, y, z);
+        }
+
         public override string ToString() => $"({X}, {Y}, {Z})";
     }
 
@@ -265,10 +269,7 @@ namespace ClassicUO.Game.Managers
             _targetCursorId = cursorID;
         }
 
-        public static void SetAutoTarget(uint serial, TargetType targetType, CursorTarget cursorTarget)
-        {
-            NextAutoTarget.Set(serial, targetType, cursorTarget);
-        }
+        public static void SetAutoTarget(uint serial, TargetType targetType, CursorTarget cursorTarget) => NextAutoTarget.Set(serial, targetType, cursorTarget);
 
         public void CancelTarget()
         {
@@ -360,7 +361,7 @@ namespace ClassicUO.Game.Managers
 
                         if (SerialHelper.IsMobile(serial) && serial != _world.Player && (_world.Player.NotorietyFlag == NotorietyFlag.Innocent || _world.Player.NotorietyFlag == NotorietyFlag.Ally))
                         {
-                            Mobile mobile = entity as Mobile;
+                            var mobile = entity as Mobile;
 
                             if (mobile != null)
                             {
@@ -377,7 +378,7 @@ namespace ClassicUO.Game.Managers
 
                                 if (showCriminalQuery && UIManager.GetGump<QuestionGump>() == null)
                                 {
-                                    QuestionGump messageBox = new QuestionGump
+                                    var messageBox = new QuestionGump
                                     (
                                         _world,
                                         "This may flag\nyou criminal!",

@@ -239,10 +239,7 @@ namespace ClassicUO.Game.UI.Gumps
             _trans.Alpha = ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.HideChatGradient ? 0.0f : 0.5f;
         }
 
-        public void ToggleChatVisibility()
-        {
-            IsActive = !IsActive;
-        }
+        public void ToggleChatVisibility() => IsActive = !IsActive;
 
         private void ChatOnMessageReceived(object sender, MessageEventArgs e)
         {
@@ -356,7 +353,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
 
-            var last = _textEntries.Last?.Value;
+            ChatLineTime last = _textEntries.Last?.Value;
 
             if (last != null && last.Duplicate(text))
             {
@@ -627,8 +624,8 @@ namespace ClassicUO.Game.UI.Gumps
                             TextBoxControl?.SetText(s);
                         }
 
-                        SelectableItemListGump listGump = new SelectableItemListGump(autoComplete, selected, selected);
-                        var viewport = Client.Game.GetScene<GameScene>().Camera.GetViewport();
+                        var listGump = new SelectableItemListGump(autoComplete, selected, selected);
+                        Microsoft.Xna.Framework.Graphics.Viewport viewport = Client.Game.GetScene<GameScene>().Camera.GetViewport();
                         listGump.X = viewport.X + 10;
                         listGump.Y = viewport.Height - listGump.Height + viewport.Y - 20;
                         UIManager.Add(listGump);
@@ -658,11 +655,11 @@ namespace ClassicUO.Game.UI.Gumps
 
             bool sendAgain = false;
 
-            var fullText = text;
-            var modMode = sentMode;
+            string fullText = text;
+            ChatMode modMode = sentMode;
             if (sentMode == ChatMode.ServUOCommand || sentMode == ChatMode.PolCommand)
             {
-                var prefix = sentMode == ChatMode.ServUOCommand ? "[" : ".";
+                string prefix = sentMode == ChatMode.ServUOCommand ? "[" : ".";
                 fullText = $"{prefix}{command} {text}";
                 modMode = ChatMode.Default;
             }
@@ -1012,15 +1009,9 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
 
-            public bool Draw(UltimaBatcher2D batcher, int x, int y)
-            {
-                return !IsDisposed && textBox.Draw(batcher, x, y);
-            }
+            public bool Draw(UltimaBatcher2D batcher, int x, int y) => !IsDisposed && textBox.Draw(batcher, x, y);
 
-            public override string ToString()
-            {
-                return Text;
-            }
+            public override string ToString() => Text;
 
             public void Destroy()
             {

@@ -14,12 +14,12 @@ namespace ClassicUO.Game.UI.Gumps
         public QuestionGump(World world, string message, Action<bool> result) : base(world, 0, 0)
         {
             CanCloseWithRightClick = true;
-            AlphaBlendControl ab = new AlphaBlendControl(0.15f) { Width = Client.Game.Window.ClientBounds.Width, Height = Client.Game.Window.ClientBounds.Height };
+            var ab = new AlphaBlendControl(0.15f) { Width = Client.Game.Window.ClientBounds.Width, Height = Client.Game.Window.ClientBounds.Height };
             Add(ab);
 
             Add(new GumpPic(0, 0, 0x0816, 0));
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0816);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0816);
 
             Width = gumpInfo.UV.Width;
             Height = gumpInfo.UV.Height;

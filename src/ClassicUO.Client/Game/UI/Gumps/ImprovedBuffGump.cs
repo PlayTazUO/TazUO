@@ -34,7 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (icon != null)
             {
-                CoolDownBar coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), icon.Title.Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
+                var coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), icon.Title.Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
                 coolDownBar.SetTooltip(icon.Text);
                 BuffBarManager.AddCoolDownBar(coolDownBar, _direction, _box);
                 _box.Add(coolDownBar);
@@ -82,10 +82,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuffBarManager.UpdatePositions(_direction, _box);
         }
 
-        public override void Update()
-        {
-            base.Update();
-        }
+        public override void Update() => base.Update();
 
         public override void OnButtonClick(int buttonID)
         {
@@ -153,10 +150,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.Buff;
 
-        public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-        {
-            return base.Draw(batcher, x, y);
-        }
+        public override bool Draw(UltimaBatcher2D batcher, int x, int y) => base.Draw(batcher, x, y);
 
         private static class BuffBarManager
         {

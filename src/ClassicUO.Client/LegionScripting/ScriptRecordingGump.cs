@@ -182,10 +182,7 @@ namespace ClassicUO.LegionScripting
             ScriptRecorder.Instance.ActionRecorded -= OnActionRecorded;
         }
 
-        private void OnRecordingStateChanged(object sender, EventArgs e)
-        {
-            UpdateUI();
-        }
+        private void OnRecordingStateChanged(object sender, EventArgs e) => UpdateUI();
 
         private void OnActionRecorded(object sender, RecordedAction action)
         {
@@ -273,7 +270,7 @@ namespace ClassicUO.LegionScripting
             if (index > 0 && index < _displayedActions.Count)
             {
                 // Swap with previous action
-                var temp = _displayedActions[index];
+                RecordedAction temp = _displayedActions[index];
                 _displayedActions[index] = _displayedActions[index - 1];
                 _displayedActions[index - 1] = temp;
 
@@ -287,7 +284,7 @@ namespace ClassicUO.LegionScripting
             if (index >= 0 && index < _displayedActions.Count - 1)
             {
                 // Swap with next action
-                var temp = _displayedActions[index];
+                RecordedAction temp = _displayedActions[index];
                 _displayedActions[index] = _displayedActions[index + 1];
                 _displayedActions[index + 1] = temp;
 
@@ -298,7 +295,7 @@ namespace ClassicUO.LegionScripting
 
         private void UpdateUI()
         {
-            var recorder = ScriptRecorder.Instance;
+            ScriptRecorder recorder = ScriptRecorder.Instance;
 
             // Update title
             string status = recorder.IsRecording
@@ -330,10 +327,7 @@ namespace ClassicUO.LegionScripting
             _durationText.Text = $"Duration: {minutes}:{seconds:D2}";
         }
 
-        private void UpdateActionCount()
-        {
-            _actionCountText.Text = $"Actions: {ScriptRecorder.Instance.ActionCount}";
-        }
+        private void UpdateActionCount() => _actionCountText.Text = $"Actions: {ScriptRecorder.Instance.ActionCount}";
 
         private void UpdateActionList()
         {
@@ -342,7 +336,7 @@ namespace ClassicUO.LegionScripting
             // Show all actions, not just recent ones, to allow proper manipulation
             for (int i = 0; i < _displayedActions.Count; i++)
             {
-                var actionContainer = CreateActionRowContainer(_displayedActions[i], i);
+                Control actionContainer = CreateActionRowContainer(_displayedActions[i], i);
                 _actionList.Add(actionContainer);
             }
         }
@@ -400,101 +394,101 @@ namespace ClassicUO.LegionScripting
             switch (action.ActionType.ToLower())
             {
                 case "walk":
-                    var walkDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
+                    string walkDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
                     return $"Walk {walkDir}";
                 case "run":
-                    var runDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
+                    string runDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
                     return $"Run {runDir}";
                 case "cast":
-                    var spell = action.Parameters.ContainsKey("spell") ? action.Parameters["spell"] : "?";
+                    object spell = action.Parameters.ContainsKey("spell") ? action.Parameters["spell"] : "?";
                     return $"Cast \"{spell}\"";
                 case "say":
-                    var message = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string message = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (message.Length > 30)
                         message = message.Substring(0, 27) + "...";
                     return $"Say \"{message}\"";
                 case "useitem":
-                    var serial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object serial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     return $"Use Item 0x{serial:X8}";
                 case "dragdrop":
-                    var from = action.Parameters.ContainsKey("from") ? action.Parameters["from"] : "?";
-                    var to = action.Parameters.ContainsKey("to") ? action.Parameters["to"] : "?";
+                    object from = action.Parameters.ContainsKey("from") ? action.Parameters["from"] : "?";
+                    object to = action.Parameters.ContainsKey("to") ? action.Parameters["to"] : "?";
                     return $"DragDrop 0x{from:X8} → 0x{to:X8}";
                 case "target":
-                    var targetSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object targetSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     return $"Target 0x{targetSerial:X8}";
                 case "targetlocation":
-                    var targX = action.Parameters.ContainsKey("x") ? action.Parameters["x"] : "?";
-                    var targY = action.Parameters.ContainsKey("y") ? action.Parameters["y"] : "?";
-                    var targZ = action.Parameters.ContainsKey("z") ? action.Parameters["z"] : "?";
+                    object targX = action.Parameters.ContainsKey("x") ? action.Parameters["x"] : "?";
+                    object targY = action.Parameters.ContainsKey("y") ? action.Parameters["y"] : "?";
+                    object targZ = action.Parameters.ContainsKey("z") ? action.Parameters["z"] : "?";
                     return $"Target Loc ({targX}, {targY}, {targZ})";
                 case "opencontainer":
-                    var openSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    var openType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
+                    object openSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object openType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
                     return $"Open {openType} 0x{openSerial:X8}";
                 case "closecontainer":
-                    var closeSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    var closeType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
+                    object closeSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object closeType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
                     return $"Close {closeType} 0x{closeSerial:X8}";
                 case "attack":
-                    var attackSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object attackSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     return $"Attack 0x{attackSerial:X8}";
                 case "bandageself":
                     return "Bandage Self";
                 case "contextmenu":
-                    var contextSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    var contextIndex = action.Parameters.ContainsKey("index") ? action.Parameters["index"] : "?";
+                    object contextSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object contextIndex = action.Parameters.ContainsKey("index") ? action.Parameters["index"] : "?";
                     return $"Context Menu 0x{contextSerial:X8} [{contextIndex}]";
                 case "useskill":
-                    var skillName = action.Parameters.ContainsKey("skill") ? action.Parameters["skill"] : "?";
+                    object skillName = action.Parameters.ContainsKey("skill") ? action.Parameters["skill"] : "?";
                     return $"Use Skill \"{skillName}\"";
                 case "equipitem":
-                    var equipSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    var layer = action.Parameters.ContainsKey("layer") ? action.Parameters["layer"] : "?";
+                    object equipSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object layer = action.Parameters.ContainsKey("layer") ? action.Parameters["layer"] : "?";
                     return $"Equip 0x{equipSerial:X8} ({layer})";
                 case "replygump":
-                    var gumpButton = action.Parameters.ContainsKey("button") ? action.Parameters["button"] : "?";
-                    var gumpId = action.Parameters.ContainsKey("gumpid") ? action.Parameters["gumpid"] : "?";
+                    object gumpButton = action.Parameters.ContainsKey("button") ? action.Parameters["button"] : "?";
+                    object gumpId = action.Parameters.ContainsKey("gumpid") ? action.Parameters["gumpid"] : "?";
                     return $"Gump Button {gumpButton} (0x{gumpId:X8})";
                 case "headmsg":
-                    var headMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
-                    var headSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    string headMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    object headSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     if (headMsgText.Length > 20) headMsgText = headMsgText.Substring(0, 17) + "...";
                     return $"Head Msg \"{headMsgText}\" (0x{headSerial:X8})";
                 case "partymsg":
-                    var partyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string partyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (partyMsgText.Length > 25) partyMsgText = partyMsgText.Substring(0, 22) + "...";
                     return $"Party: \"{partyMsgText}\"";
                 case "guildmsg":
-                    var guildMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string guildMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (guildMsgText.Length > 25) guildMsgText = guildMsgText.Substring(0, 22) + "...";
                     return $"Guild: \"{guildMsgText}\"";
                 case "allymsg":
-                    var allyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string allyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (allyMsgText.Length > 25) allyMsgText = allyMsgText.Substring(0, 22) + "...";
                     return $"Ally: \"{allyMsgText}\"";
                 case "whispermsg":
-                    var whisperMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string whisperMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (whisperMsgText.Length > 25) whisperMsgText = whisperMsgText.Substring(0, 22) + "...";
                     return $"Whisper: \"{whisperMsgText}\"";
                 case "yellmsg":
-                    var yellMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string yellMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (yellMsgText.Length > 25) yellMsgText = yellMsgText.Substring(0, 22) + "...";
                     return $"Yell: \"{yellMsgText}\"";
                 case "emotemsg":
-                    var emoteMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
+                    string emoteMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (emoteMsgText.Length > 25) emoteMsgText = emoteMsgText.Substring(0, 22) + "...";
                     return $"Emote: \"{emoteMsgText}\"";
                 case "mount":
-                    var mountSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
+                    object mountSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     return $"Mount 0x{mountSerial:X8}";
                 case "dismount":
                     return "Dismount";
                 case "toggleability":
-                    var ability = action.Parameters.ContainsKey("ability") ? action.Parameters["ability"] : "?";
+                    object ability = action.Parameters.ContainsKey("ability") ? action.Parameters["ability"] : "?";
                     return $"Toggle Ability \"{ability}\"";
                 case "virtue":
-                    var virtue = action.Parameters.ContainsKey("virtue") ? action.Parameters["virtue"] : "?";
+                    object virtue = action.Parameters.ContainsKey("virtue") ? action.Parameters["virtue"] : "?";
                     return $"Invoke Virtue \"{virtue}\"";
                 case "waitforgump":
                     return "Wait for gump";

@@ -87,7 +87,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 1
             );
 
-            List<CharacterEntryGump> gumps = new List<CharacterEntryGump>();
+            var gumps = new List<CharacterEntryGump>();
 
             for (int i = 0, valid = 0; i < loginScene.Characters.Length; i++)
             {

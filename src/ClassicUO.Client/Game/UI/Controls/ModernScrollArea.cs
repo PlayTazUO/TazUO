@@ -102,10 +102,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void UpdateScrollbarPosition()
-        {
-            _scrollBar.X = Width - SCROLLBAR_WIDTH;
-        }
+        public void UpdateScrollbarPosition() => _scrollBar.X = Width - SCROLLBAR_WIDTH;
 
         public void UpdateHeight(int newHeight)
         {
@@ -125,10 +122,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void ResetScrollbarPosition()
-        {
-            _scrollBar?.ResetScrollPosition();
-        }
+        public void ResetScrollbarPosition() => _scrollBar?.ResetScrollPosition();
 
         public int ScrollBarWidth()
         {
@@ -156,7 +150,7 @@ namespace ClassicUO.Game.UI.Controls
 
             _scrollBar.Draw(batcher, x + _scrollBar.X, y + _scrollBar.Y);
 
-            var contentWidth = Width - (_scrollBar.IsVisible ? SCROLLBAR_WIDTH : 0);
+            int contentWidth = Width - (_scrollBar.IsVisible ? SCROLLBAR_WIDTH : 0);
 
             if (batcher.ClipBegin(
                 x + ScissorRectangle.X,

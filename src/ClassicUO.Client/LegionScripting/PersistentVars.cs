@@ -45,7 +45,7 @@ namespace ClassicUO.LegionScripting
             try
             {
                 // Ensure the Data directory exists
-                var dataDir = Path.GetDirectoryName(DataPath);
+                string dataDir = Path.GetDirectoryName(DataPath);
                 if (!Directory.Exists(dataDir))
                 {
                     Directory.CreateDirectory(dataDir);
@@ -55,7 +55,7 @@ namespace ClassicUO.LegionScripting
                 {
                     await connection.OpenAsync();
 
-                    var createTableCmd = connection.CreateCommand();
+                    SqliteCommand createTableCmd = connection.CreateCommand();
                     createTableCmd.CommandText = @"
                         CREATE TABLE IF NOT EXISTS persistent_vars (
                             scope TEXT NOT NULL,
@@ -67,7 +67,7 @@ namespace ClassicUO.LegionScripting
                     await createTableCmd.ExecuteNonQueryAsync();
 
                     // Create index for faster lookups
-                    var createIndexCmd = connection.CreateCommand();
+                    SqliteCommand createIndexCmd = connection.CreateCommand();
                     createIndexCmd.CommandText = @"
                         CREATE INDEX IF NOT EXISTS idx_scope_scopekey
                         ON persistent_vars(scope, scope_key)";
@@ -94,37 +94,37 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                var lines = await File.ReadAllLinesAsync(OldDataPath);
-                var migratedCount = 0;
+                string[] lines = await File.ReadAllLinesAsync(OldDataPath);
+                int migratedCount = 0;
 
                 using (var connection = new SqliteConnection(ConnectionString))
                 {
                     await connection.OpenAsync();
 
-                    using (var transaction = connection.BeginTransaction())
+                    using (SqliteTransaction transaction = connection.BeginTransaction())
                     {
-                        var insertCmd = connection.CreateCommand();
+                        SqliteCommand insertCmd = connection.CreateCommand();
                         insertCmd.Transaction = transaction;
                         insertCmd.CommandText = @"
                             INSERT OR REPLACE INTO persistent_vars (scope, scope_key, key, value)
                             VALUES ($scope, $scope_key, $key, $value)";
 
-                        var scopeParam = insertCmd.Parameters.Add("$scope", SqliteType.Text);
-                        var scopeKeyParam = insertCmd.Parameters.Add("$scope_key", SqliteType.Text);
-                        var keyParam = insertCmd.Parameters.Add("$key", SqliteType.Text);
-                        var valueParam = insertCmd.Parameters.Add("$value", SqliteType.Text);
+                        SqliteParameter scopeParam = insertCmd.Parameters.Add("$scope", SqliteType.Text);
+                        SqliteParameter scopeKeyParam = insertCmd.Parameters.Add("$scope_key", SqliteType.Text);
+                        SqliteParameter keyParam = insertCmd.Parameters.Add("$key", SqliteType.Text);
+                        SqliteParameter valueParam = insertCmd.Parameters.Add("$value", SqliteType.Text);
 
-                        foreach (var line in lines)
+                        foreach (string line in lines)
                         {
                             if (string.IsNullOrEmpty(line)) continue;
 
-                            var parts = line.Split(SEPARATOR);
+                            string[] parts = line.Split(SEPARATOR);
                             if (parts.Length >= 4)
                             {
                                 scopeParam.Value = parts[0];
                                 scopeKeyParam.Value = parts[1];
                                 keyParam.Value = parts[2];
-                                var value = parts.Length > 4 ? string.Join(SEPARATOR.ToString(), parts, 3, parts.Length - 3) : parts[3];
+                                string value = parts.Length > 4 ? string.Join(SEPARATOR.ToString(), parts, 3, parts.Length - 3) : parts[3];
                                 valueParam.Value = UnescapeValue(value);
 
                                 await insertCmd.ExecuteNonQueryAsync();
@@ -137,7 +137,7 @@ namespace ClassicUO.LegionScripting
                 }
 
                 // Backup old file and delete
-                var backupPath = OldDataPath + ".bak";
+                string backupPath = OldDataPath + ".bak";
                 if (File.Exists(backupPath))
                 {
                     File.Delete(backupPath);
@@ -179,15 +179,12 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static string GetVar(API.PersistentVar scope, string key, string defaultValue = "")
-        {
-            return GetVarAsync(scope, key, defaultValue).Result;
-        }
+        public static string GetVar(API.PersistentVar scope, string key, string defaultValue = "") => GetVarAsync(scope, key, defaultValue).Result;
 
         public static async Task<string> GetVarAsync(API.PersistentVar scope, string key, string defaultValue = "")
         {
-            var (s, scopeKey) = GetScopeKeyPair(scope);
-            var scopeStr = s.ToString();
+            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
             try
@@ -196,7 +193,7 @@ namespace ClassicUO.LegionScripting
                 {
                     await connection.OpenAsync();
 
-                    var cmd = connection.CreateCommand();
+                    SqliteCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                         SELECT value FROM persistent_vars
                         WHERE scope = $scope AND scope_key = $scope_key AND key = $key";
@@ -204,7 +201,7 @@ namespace ClassicUO.LegionScripting
                     cmd.Parameters.AddWithValue("$scope_key", scopeKey);
                     cmd.Parameters.AddWithValue("$key", key);
 
-                    var result = await cmd.ExecuteScalarAsync();
+                    object result = await cmd.ExecuteScalarAsync();
                     return result?.ToString() ?? defaultValue;
                 }
             }
@@ -219,20 +216,14 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static void SaveVar(API.PersistentVar scope, string key, string value)
-        {
-            SaveVarAsync(scope, key, value, null).ConfigureAwait(false);
-        }
+        public static void SaveVar(API.PersistentVar scope, string key, string value) => SaveVarAsync(scope, key, value, null).ConfigureAwait(false);
 
-        public static void SaveVar(API.PersistentVar scope, string key, string value, Action onComplete)
-        {
-            SaveVarAsync(scope, key, value, onComplete).ConfigureAwait(false);
-        }
+        public static void SaveVar(API.PersistentVar scope, string key, string value, Action onComplete) => SaveVarAsync(scope, key, value, onComplete).ConfigureAwait(false);
 
         public static async Task SaveVarAsync(API.PersistentVar scope, string key, string value, Action onComplete = null)
         {
-            var (s, scopeKey) = GetScopeKeyPair(scope);
-            var scopeStr = s.ToString();
+            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
             try
@@ -241,7 +232,7 @@ namespace ClassicUO.LegionScripting
                 {
                     await connection.OpenAsync();
 
-                    var cmd = connection.CreateCommand();
+                    SqliteCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                         INSERT OR REPLACE INTO persistent_vars (scope, scope_key, key, value)
                         VALUES ($scope, $scope_key, $key, $value)";
@@ -264,20 +255,14 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static void DeleteVar(API.PersistentVar scope, string key)
-        {
-            DeleteVarAsync(scope, key, null).ConfigureAwait(false);
-        }
+        public static void DeleteVar(API.PersistentVar scope, string key) => DeleteVarAsync(scope, key, null).ConfigureAwait(false);
 
-        public static void DeleteVar(API.PersistentVar scope, string key, Action onComplete)
-        {
-            DeleteVarAsync(scope, key, onComplete).ConfigureAwait(false);
-        }
+        public static void DeleteVar(API.PersistentVar scope, string key, Action onComplete) => DeleteVarAsync(scope, key, onComplete).ConfigureAwait(false);
 
         public static async Task DeleteVarAsync(API.PersistentVar scope, string key, Action onComplete = null)
         {
-            var (s, scopeKey) = GetScopeKeyPair(scope);
-            var scopeStr = s.ToString();
+            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
             try
@@ -286,7 +271,7 @@ namespace ClassicUO.LegionScripting
                 {
                     await connection.OpenAsync();
 
-                    var cmd = connection.CreateCommand();
+                    SqliteCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                         DELETE FROM persistent_vars
                         WHERE scope = $scope AND scope_key = $scope_key AND key = $key";
@@ -309,10 +294,7 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static Dictionary<string, string> GetAllVars(API.PersistentVar scope)
-        {
-            return GetAllVarsAsync(scope).Result;
-        }
+        public static Dictionary<string, string> GetAllVars(API.PersistentVar scope) => GetAllVarsAsync(scope).Result;
 
         public static void Unload()
         {
@@ -324,8 +306,8 @@ namespace ClassicUO.LegionScripting
 
         public static async Task<Dictionary<string, string>> GetAllVarsAsync(API.PersistentVar scope)
         {
-            var (s, scopeKey) = GetScopeKeyPair(scope);
-            var scopeStr = s.ToString();
+            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            string scopeStr = s.ToString();
             var result = new Dictionary<string, string>();
 
             await _dbLock.WaitAsync();
@@ -335,14 +317,14 @@ namespace ClassicUO.LegionScripting
                 {
                     await connection.OpenAsync();
 
-                    var cmd = connection.CreateCommand();
+                    SqliteCommand cmd = connection.CreateCommand();
                     cmd.CommandText = @"
                         SELECT key, value FROM persistent_vars
                         WHERE scope = $scope AND scope_key = $scope_key";
                     cmd.Parameters.AddWithValue("$scope", scopeStr);
                     cmd.Parameters.AddWithValue("$scope_key", scopeKey);
 
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    using (SqliteDataReader reader = await cmd.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
                         {

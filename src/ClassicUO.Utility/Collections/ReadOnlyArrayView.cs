@@ -44,20 +44,11 @@ namespace ClassicUO.Utility.Collections
             }
         }
 
-        public Enumerator GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
+        public Enumerator GetEnumerator() => new Enumerator(this);
 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public struct Enumerator : IEnumerator<T>
         {
@@ -85,10 +76,7 @@ namespace ClassicUO.Utility.Collections
                 return false;
             }
 
-            public void Reset()
-            {
-                _currentIndex = (int) _view._start;
-            }
+            public void Reset() => _currentIndex = (int)_view._start;
 
             public void Dispose()
             {

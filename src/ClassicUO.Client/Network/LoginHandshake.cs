@@ -84,7 +84,7 @@ namespace ClassicUO.Network
             AsyncNetClient.Socket = new AsyncNetClient();
             AsyncNetClient.Socket.Connected += OnNetClientConnected;
             AsyncNetClient.Socket.Disconnected += OnNetClientDisconnected;
-            var status = AsyncNetClient.Socket.Connect(ip, port);
+            System.Threading.Tasks.Task<bool> status = AsyncNetClient.Socket.Connect(ip, port);
         }
 
         public void Disconnect()
@@ -209,7 +209,7 @@ namespace ClassicUO.Network
 
         public void HandleLoginDelayPacket(ref StackDataReader p)
         {
-            var delay = p.ReadUInt8();
+            byte delay = p.ReadUInt8();
             LoginDelay = ((delay - 1) * 10, delay * 10);
         }
 
@@ -220,7 +220,7 @@ namespace ClassicUO.Network
             ushort port = p.ReadUInt16BE();
             uint seed = p.ReadUInt32BE();
 
-            var ipBytes = new byte[]
+            byte[] ipBytes = new byte[]
             {
                     (byte)(ip & 0xFF),
                     (byte)((ip >> 8) & 0xFF),

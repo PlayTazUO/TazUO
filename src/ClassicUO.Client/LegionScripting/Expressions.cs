@@ -25,7 +25,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length > 0)
                 serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
                 return m.HitsMax;
 
             return 0;
@@ -37,7 +37,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length > 0)
                 serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
                 return m.Hits;
 
             return 0;
@@ -68,7 +68,7 @@ namespace ClassicUO.LegionScripting
         {
             uint serial = args.Length > 0 ? args[0].AsSerial() : World.Player;
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
             {
                 return m.IsPoisoned;
             }
@@ -145,7 +145,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length < 2)
                 throw new RunTimeError(null, "Usage: property 'serial' 'text'");
 
-            if (World.Items.TryGetValue(args[0].AsSerial(), out var item))
+            if (World.Items.TryGetValue(args[0].AsSerial(), out Item item))
             {
                 return Utility.SearchItemNameAndProps(args[1].AsString(), item);
             }
@@ -159,7 +159,7 @@ namespace ClassicUO.LegionScripting
 
             uint serial = args[0].AsSerial();
 
-            foreach (var mem in World.Party.Members)
+            foreach (PartyMember mem in World.Party.Members)
             {
                 if (mem.Serial == serial)
                     return true;
@@ -185,12 +185,12 @@ namespace ClassicUO.LegionScripting
             {
                 if (SerialHelper.IsItem(serial))
                 {
-                    if (World.Items.TryGetValue(serial, out var item))
+                    if (World.Items.TryGetValue(serial, out Item item))
                         return (uint)item.Distance;
                 }
                 else if (SerialHelper.IsMobile(serial))
                 {
-                    if (World.Mobiles.TryGetValue(serial, out var mobile))
+                    if (World.Mobiles.TryGetValue(serial, out Mobile mobile))
                         return (uint)mobile.Distance;
                 }
             }
@@ -204,7 +204,7 @@ namespace ClassicUO.LegionScripting
 
 
 
-            if (World.Items.TryGetValue(args[0].AsSerial(), out var obj))
+            if (World.Items.TryGetValue(args[0].AsSerial(), out Item obj))
             {
                 if (args.Length > 1)
                 {
@@ -217,7 +217,7 @@ namespace ClassicUO.LegionScripting
                     return true;
             }
             else
-            if (World.Mobiles.TryGetValue(args[0].AsSerial(), out var m))
+            if (World.Mobiles.TryGetValue(args[0].AsSerial(), out Mobile m))
             {
                 return true;
             }
@@ -229,17 +229,14 @@ namespace ClassicUO.LegionScripting
             if (args.Length < 1)
                 throw new RunTimeError(null, "Usage: contents 'container'");
 
-            if (World.Items.TryGetValue(args[0].AsSerial(), out var item))
+            if (World.Items.TryGetValue(args[0].AsSerial(), out Item item))
             {
                 return Utility.ContentsCount(item);
             }
 
             return 0;
         }
-        public static bool CheckWar(string expression, Argument[] args, bool quiet)
-        {
-            return World.Player.InWarMode;
-        }
+        public static bool CheckWar(string expression, Argument[] args, bool quiet) => World.Player.InWarMode;
         public static bool InList(string expression, Argument[] args, bool quiet)
         {
             if (args.Length < 2)
@@ -338,11 +335,11 @@ namespace ClassicUO.LegionScripting
 
             int ground = args.Length > 3 ? args[3].AsInt() : int.MaxValue;
 
-            var items = Utility.FindItems(graphic, parOrRootContainer: source, hue: hue, groundRange: ground);
+            List<Item> items = Utility.FindItems(graphic, parOrRootContainer: source, hue: hue, groundRange: ground);
 
             int count = 0;
 
-            foreach (var item in items)
+            foreach (Item item in items)
             {
                 count += item.Amount == 0 ? 1 : item.Amount;
             }
@@ -361,7 +358,7 @@ namespace ClassicUO.LegionScripting
 
             uint m = World.FindNearest(ScanTypeObject.Hostile);
 
-            if (SerialHelper.IsMobile(m) && World.Mobiles.TryGetValue(m, out var mobile))
+            if (SerialHelper.IsMobile(m) && World.Mobiles.TryGetValue(m, out Mobile mobile))
             {
                 if (mobile.Distance <= maxDist && !Interpreter.InIgnoreList(m))
                 {
@@ -372,30 +369,21 @@ namespace ClassicUO.LegionScripting
 
             return false;
         }
-        public static bool IsMounted(string expression, Argument[] args, bool quiet)
-        {
-            return World.Player.FindItemByLayer(Layer.Mount) != null;
-        }
+        public static bool IsMounted(string expression, Argument[] args, bool quiet) => World.Player.FindItemByLayer(Layer.Mount) != null;
         public static bool IsParalyzed(string expression, Argument[] args, bool quiet)
         {
             uint serial = World.Player;
 
             if (args.Length > 0) serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m)) return m.IsParalyzed;
+            if (World.Mobiles.TryGetValue(serial, out Mobile m)) return m.IsParalyzed;
 
             return false;
         }
         public static int GetPlayerWeight(string expression, Argument[] args, bool quiet) => World.Player.Weight;
         public static int GetPlayerMaxWeight(string expression, Argument[] args, bool quiet) => World.Player.WeightMax;
-        public static bool SecondaryAbilityActive(string expression, Argument[] args, bool quiet)
-        {
-            return ((byte)World.Player.SecondaryAbility & 0x80) != 0;
-        }
-        public static bool PrimaryAbilityActive(string expression, Argument[] args, bool quiet)
-        {
-            return ((byte)World.Player.PrimaryAbility & 0x80) != 0;
-        }
+        public static bool SecondaryAbilityActive(string expression, Argument[] args, bool quiet) => ((byte)World.Player.SecondaryAbility & 0x80) != 0;
+        public static bool PrimaryAbilityActive(string expression, Argument[] args, bool quiet) => ((byte)World.Player.PrimaryAbility & 0x80) != 0;
         public static bool IsHidden(string expression, Argument[] args, bool quiet) => World.Player.IsHidden;
         public static int GetGold(string expression, Argument[] args, bool quiet) => (int)World.Player.Gold;
         public static int GetMaxFollowers(string expression, Argument[] args, bool quiet) => World.Player.FollowersMax;
@@ -410,7 +398,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length > 0)
                 serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
                 return m.HitsDiff;
 
             return 0;
@@ -422,7 +410,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length > 0)
                 serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
                 return m.StamDiff;
 
             return 0;
@@ -434,7 +422,7 @@ namespace ClassicUO.LegionScripting
             if (args.Length > 0)
                 serial = args[0].AsSerial();
 
-            if (World.Mobiles.TryGetValue(serial, out var m))
+            if (World.Mobiles.TryGetValue(serial, out Mobile m))
                 return m.ManaDiff;
 
             return 0;
@@ -476,15 +464,12 @@ namespace ClassicUO.LegionScripting
             if (args.Length < 1)
                 throw new RunTimeError(null, "Usage: itemamt 'serial'");
 
-            if (World.Items.TryGetValue(args[0].AsSerial(), out var item))
+            if (World.Items.TryGetValue(args[0].AsSerial(), out Item item))
                 return item.Amount < 1 ? (ushort)1 : item.Amount;
 
             return 0;
         }
-        public static uint Ping(string expression, Argument[] args, bool quiet)
-        {
-            return AsyncNetClient.Socket.Statistics.Ping;
-        }
+        public static uint Ping(string expression, Argument[] args, bool quiet) => AsyncNetClient.Socket.Statistics.Ping;
         public static bool IsPathfinding(string expression, Argument[] args, bool quiet) => World.Player.Pathfinder.AutoWalking;
         public static bool NearestCorpse(string expression, Argument[] args, bool quiet)
         {

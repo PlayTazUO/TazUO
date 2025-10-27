@@ -104,10 +104,7 @@ namespace ClassicUO.Game.Data
             AddToWatchedSpell();
         }
 
-        public bool Equals(SpellDefinition other)
-        {
-            return ID.Equals(other.ID);
-        }
+        public bool Equals(SpellDefinition other) => ID.Equals(other.ID);
 
         public readonly int GumpIconID;
         public readonly int GumpIconSmallID;
@@ -145,12 +142,12 @@ namespace ClassicUO.Game.Data
                 if (!File.Exists(path))
                     return;
 
-                var spells = JsonSerializer.Deserialize(path, SpellJsonContext.Default.ListSpellJson);
+                List<SpellJson> spells = JsonSerializer.Deserialize(path, SpellJsonContext.Default.ListSpellJson);
                 if(spells != null)
                 {
                     foreach (SpellJson spell in spells)
                     {
-                        SpellDefinition spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, spell.AllReagents);
+                        var spellDef = new SpellDefinition(spell.SpellName, spell.SpellIndex, spell.GumpIcon, spell.SmallGumpIcon, spell.PowerWords, spell.ManaCost, spell.MinSkill, spell.TithingCost, spell.TargetType, spell.AllReagents);
 
                         switch (spell.School)
                         {
@@ -205,7 +202,7 @@ namespace ClassicUO.Game.Data
 
         public static bool TryGetSpellFromName(string spellName, out SpellDefinition spell, bool partialMatch = true)
         {
-            foreach (var entry in SpellsMagery.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMagery.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -222,7 +219,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsNecromancy.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNecromancy.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -239,7 +236,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsChivalry.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsChivalry.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -256,7 +253,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsBushido.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsBushido.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -273,7 +270,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsNinjitsu.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNinjitsu.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -290,7 +287,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsSpellweaving.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsSpellweaving.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -307,7 +304,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsMysticism.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMysticism.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -324,7 +321,7 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            foreach (var entry in SpellsMastery.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMastery.GetAllSpells)
             {
                 if (partialMatch)
                 {
@@ -347,7 +344,7 @@ namespace ClassicUO.Game.Data
 
         public string CreateReagentListString(string separator)
         {
-            ValueStringBuilder sb = new ValueStringBuilder();
+            var sb = new ValueStringBuilder();
             {
                 for (int i = 0; i < Regs.Length; i++)
                 {
@@ -487,10 +484,7 @@ namespace ClassicUO.Game.Data
             return SpellsMastery.GetSpell(fullidx % 100);
         }
 
-        public static SpellDefinition[] GetAllSpells()
-        {
-            return
-            [
+        public static SpellDefinition[] GetAllSpells() => [
                 .. SpellsMagery.GetAllSpells.Values,
                 .. SpellsNecromancy.GetAllSpells.Values,
                 .. SpellsChivalry.GetAllSpells.Values,
@@ -500,11 +494,10 @@ namespace ClassicUO.Game.Data
                 .. SpellsMysticism.GetAllSpells.Values,
                 .. SpellsMastery.GetAllSpells.Values,
             ];
-        }
 
         public static void SaveAllSpellsToJson(World world)
         {
-            List<SpellJson> list = new List<SpellJson>();
+            var list = new List<SpellJson>();
 
             foreach (SpellDefinition spell in GetAllSpells())
             {
@@ -513,7 +506,7 @@ namespace ClassicUO.Game.Data
                     continue;
                 }
 
-                SpellJson spellJson = new SpellJson()
+                var spellJson = new SpellJson()
                 {
                     SpellName = spell.Name,
                     PowerWords = spell.PowerWords,

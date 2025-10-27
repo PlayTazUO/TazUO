@@ -154,7 +154,7 @@ namespace ClassicUO.Game.Managers
 
         private bool ShouldAttemptHeal(Mobile mobile)
         {
-            var player = World.Instance.Player;
+            PlayerMobile player = World.Instance.Player;
             if (player == null || mobile == null)
                 return false;
 
@@ -187,7 +187,7 @@ namespace ClassicUO.Game.Managers
             if (CheckHidden && mobile.IsHidden)
                 return false;
 
-            var currentHpPercentage = (int)((double)mobile.Hits / mobile.HitsMax * 100);
+            int currentHpPercentage = (int)((double)mobile.Hits / mobile.HitsMax * 100);
 
             // Check for poison status or HP threshold
             if ((!UseOnPoisoned || !mobile.IsPoisoned) &&

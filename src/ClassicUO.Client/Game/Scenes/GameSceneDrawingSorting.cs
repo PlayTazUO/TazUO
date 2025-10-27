@@ -317,7 +317,7 @@ namespace ClassicUO.Game.Scenes
 
                     if (check)
                     {
-                        var rect = Client.Game.UO.Arts.GetRealArtBounds(obj.Graphic);
+                        Rectangle rect = Client.Game.UO.Arts.GetRealArtBounds(obj.Graphic);
 
                         rect.X = obj.RealScreenPosition.X - (rect.Width >> 1) + rect.X;
                         rect.Y = obj.RealScreenPosition.Y - rect.Height + rect.Y;
@@ -381,7 +381,7 @@ namespace ClassicUO.Game.Scenes
                             allowSelection = itemData.IsDoor;
                             return true;
                         }
-                        if (itemData.IsFoliage || obj.Graphic == Constants.TREE_REPLACE_GRAPHIC || StaticFilters.IsTree(obj.Graphic, out var _) || (!itemData.IsMultiMovable && obj is Static stat && stat.IsVegetation) || (!itemData.IsMultiMovable && obj is Multi multi && multi.IsVegetation))
+                        if (itemData.IsFoliage || obj.Graphic == Constants.TREE_REPLACE_GRAPHIC || StaticFilters.IsTree(obj.Graphic, out int _) || (!itemData.IsMultiMovable && obj is Static stat && stat.IsVegetation) || (!itemData.IsMultiMovable && obj is Multi multi && multi.IsVegetation))
                         {
                             obj.AlphaHue = 65;
                             allowSelection = true;
@@ -452,7 +452,7 @@ namespace ClassicUO.Game.Scenes
             if (ProfileManager.CurrentProfile.UseCircleOfTransparency && obj.TransparentTest(maxZ))
             {
                 int maxDist = ProfileManager.CurrentProfile.CircleOfTransparencyRadius + 0;
-                Vector2 pos = new Vector2(obj.RealScreenPosition.X, obj.RealScreenPosition.Y - 44);
+                var pos = new Vector2(obj.RealScreenPosition.X, obj.RealScreenPosition.Y - 44);
                 Vector2.Distance(ref playerPos, ref pos, out float dist);
 
                 if (dist <= maxDist)
@@ -559,10 +559,7 @@ namespace ClassicUO.Game.Scenes
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsFoliageVisibleAtSeason(ref StaticTiles itemData, Season season)
-        {
-            return !(itemData.IsFoliage && !itemData.IsMultiMovable && season >= Season.Winter);
-        }
+        private static bool IsFoliageVisibleAtSeason(ref StaticTiles itemData, Season season) => !(itemData.IsFoliage && !itemData.IsMultiMovable && season >= Season.Winter);
 
         private bool HasSurfaceOverhead(Entity obj)
         {
@@ -585,11 +582,11 @@ namespace ClassicUO.Game.Scenes
 
                     while (tile != null)
                     {
-                        var next = tile.TNext;
+                        GameObject next = tile.TNext;
 
                         if (tile.Z > obj.Z && (tile is Static || tile is Multi))
                         {
-                            ref var itemData = ref Client.Game.UO.FileManager.TileData.StaticData[tile.Graphic];
+                            ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.StaticData[tile.Graphic];
 
                             if (itemData.IsNoShoot || itemData.IsWindow)
                             {
@@ -716,7 +713,7 @@ namespace ClassicUO.Game.Scenes
                         break;
                     case Static staticc:
                         {
-                            ref var itemData = ref staticc.ItemData;
+                            ref StaticTiles itemData = ref staticc.ItemData;
 
                             if (itemData.IsInternal)
                             {

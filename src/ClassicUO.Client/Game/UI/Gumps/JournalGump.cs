@@ -160,7 +160,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             void on_check_box(object sender, EventArgs e)
             {
-                Checkbox c = (Checkbox) sender;
+                var c = (Checkbox) sender;
 
                 if (c != null)
                 {
@@ -239,10 +239,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
-        {
-            _scrollBar.InvokeMouseWheel(delta);
-        }
+        protected override void OnMouseWheel(MouseEventType delta) => _scrollBar.InvokeMouseWheel(delta);
 
 
         public override void Dispose()
@@ -536,7 +533,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _text_types.RemoveFromFront();
                 }
 
-                RenderedText h = RenderedText.Create
+                var h = RenderedText.Create
                 (
                     $"{time:t} ",
                     1150,
@@ -547,7 +544,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _hours.AddToBack(h);
 
-                RenderedText rtext = RenderedText.Create
+                var rtext = RenderedText.Create
                 (
                     text,
                     hue,

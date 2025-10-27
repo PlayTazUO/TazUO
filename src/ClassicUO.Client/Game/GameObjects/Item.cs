@@ -225,7 +225,7 @@ namespace ClassicUO.Game.GameObjects
 
         public static Item Create(World world, uint serial)
         {
-            Item i = new Item(world); // _pool.GetOne();
+            var i = new Item(world); // _pool.GetOne();
             i.Serial = serial;
 
             return i;
@@ -282,12 +282,12 @@ namespace ClassicUO.Game.GameObjects
                 house.ClearComponents();
             }
 
-            var movable = false;
-            var multis = Client.Game.UO.FileManager.Multis.GetMultis(Graphic);
+            bool movable = false;
+            System.Collections.Generic.List<MultiInfo> multis = Client.Game.UO.FileManager.Multis.GetMultis(Graphic);
 
-            for (var i = 0; i < multis.Count; ++i)
+            for (int i = 0; i < multis.Count; ++i)
             {
-                var block = multis[i];
+                MultiInfo block = multis[i];
 
                 if (block.X < minX)
                 {
@@ -311,7 +311,7 @@ namespace ClassicUO.Game.GameObjects
 
                 if (block.IsVisible)
                 {
-                    Multi m = Multi.Create(World, block.ID);
+                    var m = Multi.Create(World, block.ID);
                     m.MultiOffsetX = block.X;
                     m.MultiOffsetY = block.Y;
                     m.MultiOffsetZ = block.Z;
@@ -429,7 +429,7 @@ namespace ClassicUO.Game.GameObjects
         }
         public override ushort GetGraphicForAnimation()
         {
-            var graphic = Graphic;
+            ushort graphic = Graphic;
 
             if (Layer == Layer.Mount)
             {
@@ -445,7 +445,7 @@ namespace ClassicUO.Game.GameObjects
                     return 0x00BF;
                 }
 
-                if (Mounts.TryGet(graphic, out var mountInfo))
+                if (Mounts.TryGet(graphic, out MountInfo mountInfo))
                 {
                     graphic = mountInfo.Graphic;
                 }
@@ -470,7 +470,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            TextObject last = (TextObject)TextContainer.Items;
+            var last = (TextObject)TextContainer.Items;
 
             while (last?.Next != null)
             {
@@ -488,7 +488,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 Point p = RealScreenPosition;
 
-                var bounds = Client.Game.UO.Arts.GetRealArtBounds(Graphic);
+                Rectangle bounds = Client.Game.UO.Arts.GetRealArtBounds(Graphic);
                 p.Y -= bounds.Height >> 1;
 
                 p.X += (int)Offset.X + 22;
@@ -543,7 +543,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            var dir = (byte)Layer;
+            byte dir = (byte)Layer;
 
             if (LastAnimationChangeTime < Time.Ticks)
             {
@@ -552,21 +552,21 @@ namespace ClassicUO.Game.GameObjects
 
                 bool mirror = false;
 
-                var animations = Client.Game.UO.Animations;
+                Renderer.Animations.Animations animations = Client.Game.UO.Animations;
                 animations.GetAnimDirection(ref dir, ref mirror);
 
                 if (id < animations.MaxAnimationCount && dir < 5)
                 {
                     animations.ConvertBodyIfNeeded(ref id);
-                    var animGroup = animations.GetAnimType(id);
-                    var animFlags = animations.GetAnimFlags(id);
+                    AnimationGroupsType animGroup = animations.GetAnimType(id);
+                    AnimationFlags animFlags = animations.GetAnimFlags(id);
                     byte action = Client.Game.UO.FileManager.Animations.GetDeathAction(
                         id,
                         animFlags,
                         animGroup,
                         UsedLayer
                     );
-                    var frames = animations.GetAnimationFrames(
+                    Span<Renderer.SpriteInfo> frames = animations.GetAnimationFrames(
                         id,
                         action,
                         dir,

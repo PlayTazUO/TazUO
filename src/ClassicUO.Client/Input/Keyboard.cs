@@ -21,11 +21,11 @@ namespace ClassicUO.Input
             if (string.IsNullOrWhiteSpace(input))
                 return string.Empty;
 
-            var parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
+            string[] parts = input.ToUpperInvariant().Replace(" ", "").Split('+');
             bool ctrl = false, shift = false, alt = false;
             string key = null;
 
-            foreach (var p in parts)
+            foreach (string p in parts)
             {
                 if (string.IsNullOrEmpty(p))
                     continue;
@@ -69,15 +69,9 @@ namespace ClassicUO.Input
             return string.Join("+", parts);
         }
 
-        public static void OnKeyUp(SDL.SDL_KeyboardEvent e)
-        {
-            OnKeyEvent(e, KeyUpEvent);
-        }
+        public static void OnKeyUp(SDL.SDL_KeyboardEvent e) => OnKeyEvent(e, KeyUpEvent);
 
-        public static void OnKeyDown(SDL.SDL_KeyboardEvent e)
-        {
-            OnKeyEvent(e, KeyDownEvent);
-        }
+        public static void OnKeyDown(SDL.SDL_KeyboardEvent e) => OnKeyEvent(e, KeyDownEvent);
 
         private static void OnKeyEvent(SDL.SDL_KeyboardEvent e, Action<string> keyboardEvent)
         {

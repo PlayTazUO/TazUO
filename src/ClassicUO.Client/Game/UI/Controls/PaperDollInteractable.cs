@@ -356,7 +356,7 @@ namespace ClassicUO.Game.UI.Controls
                 // If player, apply backpack skin
                 if (mobile.Serial == _paperDollGump.World.Player.Serial)
                 {
-                    var gump = Client.Game.UO.Gumps;
+                    Renderer.Gumps.Gump gump = Client.Game.UO.Gumps;
 
                     switch (ProfileManager.CurrentProfile.BackpackStyle)
                     {
@@ -415,10 +415,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void RequestUpdate()
-        {
-            _updateUI = true;
-        }
+        public void RequestUpdate() => _updateUI = true;
 
         protected static ushort GetAnimID(ushort mobileGraphic, ushort itemGraphic, ushort animID, bool isfemale)
         {
@@ -459,11 +456,11 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            if (Client.Game.UO.FileManager.TileArt.TryGetTileArtInfo(itemGraphic, out var tileArtInfo))
+            if (Client.Game.UO.FileManager.TileArt.TryGetTileArtInfo(itemGraphic, out TileArtInfo tileArtInfo))
             {
-                if (tileArtInfo.TryGetAppearance(mobileGraphic, out var appareanceId))
+                if (tileArtInfo.TryGetAppearance(mobileGraphic, out uint appareanceId))
                 {
-                    var gumpId = (ushort)(Constants.MALE_GUMP_OFFSET + appareanceId);
+                    ushort gumpId = (ushort)(Constants.MALE_GUMP_OFFSET + appareanceId);
                     if (Client.Game.UO.Gumps.GetGump(gumpId).Texture != null)
                     {
                         Log.Info($"Equip conversion through tileart.uop done: old {animID} -> new {appareanceId}");
@@ -585,10 +582,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            protected override void OnMouseOver(int x, int y)
-            {
-                SelectedObject.Object = _gump?.World?.Get(LocalSerial);
-            }
+            protected override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump?.World?.Get(LocalSerial);
         }
     }
 }

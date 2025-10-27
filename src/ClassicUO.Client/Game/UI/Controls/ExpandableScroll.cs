@@ -43,7 +43,7 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 0; i < 4; i++)
             {
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump((ushort)(graphic + i));
+                ref readonly Renderer.SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump((ushort)(graphic + i));
 
                 if (gumpInfo.Texture == null)
                 {

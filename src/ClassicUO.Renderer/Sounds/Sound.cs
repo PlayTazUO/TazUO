@@ -49,7 +49,7 @@ namespace ClassicUO.Renderer.Sounds
 
                 if (music == null && _soundsLoader.TryGetMusicData(index, out string name, out bool loop))
                 {
-                    var path = _useDigitalMusicFolder ? $"Music/Digital/{name}" : $"Music/{name}";
+                    string path = _useDigitalMusicFolder ? $"Music/Digital/{name}" : $"Music/{name}";
                     if (!path.EndsWith(".mp3", StringComparison.InvariantCultureIgnoreCase))
                     {
                         path += ".mp3";

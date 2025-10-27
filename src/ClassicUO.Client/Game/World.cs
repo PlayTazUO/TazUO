@@ -213,17 +213,6 @@ namespace ClassicUO.Game
 
         public string ServerName { get; set; } = "_";
 
-        /// <summary>Validates the provided World instance is not null.</summary>
-        /// <param name="world">World to validate.</param>
-        /// <returns>The same non-null World instance.</returns>
-        /// <exception cref="ArgumentNullException">Thrown when <paramref name="world"/> is null.</exception>
-        public static World ValidateWorld(World world)
-        {
-            if (world == null)
-                throw new ArgumentNullException(nameof(world));
-            return world;
-        }
-
         public void CreatePlayer(uint serial)
         {
             if (ProfileManager.CurrentProfile == null)
@@ -674,9 +663,7 @@ namespace ClassicUO.Game
             bool doesExplode,
             bool hasparticles,
             GraphicEffectBlendMode blendmode
-        )
-        {
-            _effectManager.CreateEffect
+        ) => _effectManager.CreateEffect
             (
                 type,
                 source,
@@ -696,7 +683,6 @@ namespace ClassicUO.Game
                 hasparticles,
                 blendmode
             );
-        }
 
         public uint FindNearest(ScanTypeObject scanType)
         {
@@ -770,7 +756,7 @@ namespace ClassicUO.Game
 
             if (scanType == ScanTypeObject.Objects)
             {
-                var items = reverse ? Items.Values.Reverse() : Items.Values;
+                IEnumerable<Item> items = reverse ? Items.Values.Reverse() : Items.Values;
                 foreach (Item item in items)
                 {
                     if (item.IsMulti || item.IsDestroyed || !item.OnGround)

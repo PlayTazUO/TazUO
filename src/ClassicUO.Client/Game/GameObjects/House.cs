@@ -26,18 +26,12 @@ namespace ClassicUO.Game.GameObjects
 
         public Rectangle Bounds;
 
-        public bool Equals(uint other)
-        {
-            return Serial == other;
-        }
+        public bool Equals(uint other) => Serial == other;
 
         public bool IsCustom;
         public uint Revision;
 
-        public IEnumerable<Multi> GetMultiAt(int x, int y)
-        {
-            return Components.Where(s => !s.IsDestroyed && s.X == x && s.Y == y);
-        }
+        public IEnumerable<Multi> GetMultiAt(int x, int y) => Components.Where(s => !s.IsDestroyed && s.X == x && s.Y == y);
 
         public Multi Add
         (
@@ -50,7 +44,7 @@ namespace ClassicUO.Game.GameObjects
             bool ismovable
         )
         {
-            Multi m = Multi.Create(_world, graphic);
+            var m = Multi.Create(_world, graphic);
             m.Hue = hue;
             m.IsCustom = iscustom;
             m.IsMovable = ismovable;
@@ -61,7 +55,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (ProfileManager.CurrentProfile.ForceHouseTransparency)
             {
-                var tile = _world.Map.GetTile(x, y);
+                GameObject tile = _world.Map.GetTile(x, y);
                 tile.Hue = ProfileManager.CurrentProfile.ForcedTransparencyHouseTileHue;
                 Multi.ForcedTransparency = ProfileManager.CurrentProfile.ForcedHouseTransparency;
                 m.ForceTransparentHouse = true;

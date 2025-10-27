@@ -84,7 +84,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 Span<char> span = stackalloc char[128];
-                ValueStringBuilder sb = new ValueStringBuilder(span);
+                var sb = new ValueStringBuilder(span);
 
                 if (IsMinimized)
                 {

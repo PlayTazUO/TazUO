@@ -28,7 +28,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 _graphic = value;
 
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
 
                 if (gumpInfo.Texture == null)
                 {
@@ -46,7 +46,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public override bool Contains(int x, int y)
         {
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
 
             if (gumpInfo.Texture == null)
             {
@@ -148,10 +148,7 @@ namespace ClassicUO.Game.UI.Controls
         
         public bool ContainsByBounds { get; set; }
 
-        public override bool Contains(int x, int y)
-        {
-            return ContainsByBounds || base.Contains(x, y);
-        }
+        public override bool Contains(int x, int y) => ContainsByBounds || base.Contains(x, y);
 
         private static ushort TransformHue(ushort hue)
         {
@@ -174,7 +171,7 @@ namespace ClassicUO.Game.UI.Controls
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, IsPartialHue, Alpha, true);
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             if (gumpInfo.Texture != null)
             {
@@ -259,10 +256,7 @@ namespace ClassicUO.Game.UI.Controls
             )
         { }
 
-        public override bool Contains(int x, int y)
-        {
-            return true;
-        }
+        public override bool Contains(int x, int y) => true;
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
@@ -273,7 +267,7 @@ namespace ClassicUO.Game.UI.Controls
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, false, Alpha, true);
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             var sourceBounds = new Rectangle(gumpInfo.UV.X + _picInPicBounds.X, gumpInfo.UV.Y + _picInPicBounds.Y, _picInPicBounds.Width, _picInPicBounds.Height);
 

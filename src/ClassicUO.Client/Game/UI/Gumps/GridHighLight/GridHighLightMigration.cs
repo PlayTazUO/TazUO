@@ -29,9 +29,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     Properties = new List<GridHighlightProperty>()
                 };
 
-                var names = profile.GridHighlight_PropNames.ElementAtOrDefault(i) ?? new();
-                var mins = profile.GridHighlight_PropMinVal.ElementAtOrDefault(i) ?? new();
-                var opts = profile.GridHighlight_IsOptionalProperties.ElementAtOrDefault(i);
+                List<string> names = profile.GridHighlight_PropNames.ElementAtOrDefault(i) ?? new();
+                List<int> mins = profile.GridHighlight_PropMinVal.ElementAtOrDefault(i) ?? new();
+                List<bool> opts = profile.GridHighlight_IsOptionalProperties.ElementAtOrDefault(i);
 
                 for (int j = 0; j < names.Count; j++)
                 {

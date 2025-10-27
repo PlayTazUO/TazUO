@@ -87,7 +87,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _scale = value;
 
-                var factor = value / 100F;
+                float factor = value / 100F;
 
                 Width = (int)(Width * factor);
                 Height = (int)(Height * factor);
@@ -102,12 +102,12 @@ namespace ClassicUO.Game.UI.Gumps
             set
             {
                 _graphic = value;
-                var factor = Scale / 100F;
-                Rectangle _bounds = new Rectangle(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+                float factor = Scale / 100F;
+                var _bounds = new Rectangle(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
 
                 if (value.HasValue)
                 {
-                    ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(value.Value);
+                    ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(value.Value);
                     _bounds = texture.UV;
                     IsPartialHue = texture.Texture == null ? false : Client.Game.UO.FileManager.TileData.StaticData[value.Value].IsPartialHue;
                 }
@@ -203,10 +203,10 @@ namespace ClassicUO.Game.UI.Gumps
             if (Graphic.HasValue)
             {
                 //var texture = GumpsLoader.Instance.GetGumpTexture(, out Rectangle bounds);
-                ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(Graphic.Value);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(Graphic.Value);
                 if (texture.Texture != null)
                 {
-                    Rectangle rect = new Rectangle(x, y, Width, Height);
+                    var rect = new Rectangle(x, y, Width, Height);
                     batcher.Draw
                     (
                         texture.Texture,

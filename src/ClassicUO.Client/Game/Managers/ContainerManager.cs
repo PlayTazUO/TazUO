@@ -69,7 +69,7 @@ namespace ClassicUO.Game.Managers
             }
             else
             {
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(g);
+                ref readonly Renderer.SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(g);
 
                 if (gumpInfo.Texture != null)
                 {
@@ -194,7 +194,7 @@ namespace ClassicUO.Game.Managers
             }
 
             Item bank = _world.Player.FindItemByLayer(Layer.Bank);
-            var camera = Client.Game.Scene.Camera;
+            Renderer.Camera camera = Client.Game.Scene.Camera;
 
             if (bank != null && serial == bank)
             {

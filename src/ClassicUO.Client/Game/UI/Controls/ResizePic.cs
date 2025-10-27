@@ -45,15 +45,15 @@ namespace ClassicUO.Game.UI.Controls
             x -= Offset.X;
             y -= Offset.Y;
 
-            var texture0 = GetTexture(0, out var bounds0);
-            var texture1 = GetTexture(1, out var bounds1);
-            var texture2 = GetTexture(2, out var bounds2);
-            var texture3 = GetTexture(3, out var bounds3);
-            var texture4 = GetTexture(4, out var bounds4);
-            var texture5 = GetTexture(5, out var bounds5);
-            var texture6 = GetTexture(6, out var bounds6);
-            var texture7 = GetTexture(7, out var bounds7);
-            var texture8 = GetTexture(8, out var bounds8);
+            Texture2D texture0 = GetTexture(0, out Rectangle bounds0);
+            Texture2D texture1 = GetTexture(1, out Rectangle bounds1);
+            Texture2D texture2 = GetTexture(2, out Rectangle bounds2);
+            Texture2D texture3 = GetTexture(3, out Rectangle bounds3);
+            Texture2D texture4 = GetTexture(4, out Rectangle bounds4);
+            Texture2D texture5 = GetTexture(5, out Rectangle bounds5);
+            Texture2D texture6 = GetTexture(6, out Rectangle bounds6);
+            Texture2D texture7 = GetTexture(7, out Rectangle bounds7);
+            Texture2D texture8 = GetTexture(8, out Rectangle bounds8);
 
             int offsetTop = Math.Max(bounds0.Height, bounds2.Height) - bounds1.Height;
             int offsetBottom = Math.Max(bounds5.Height, bounds7.Height) - bounds6.Height;
@@ -252,15 +252,15 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawInternal(UltimaBatcher2D batcher, int x, int y, Vector3 color)
         {
-            var texture0 = GetTexture(0, out var bounds0);
-            var texture1 = GetTexture(1, out var bounds1);
-            var texture2 = GetTexture(2, out var bounds2);
-            var texture3 = GetTexture(3, out var bounds3);
-            var texture4 = GetTexture(4, out var bounds4);
-            var texture5 = GetTexture(5, out var bounds5);
-            var texture6 = GetTexture(6, out var bounds6);
-            var texture7 = GetTexture(7, out var bounds7);
-            var texture8 = GetTexture(8, out var bounds8);
+            Texture2D texture0 = GetTexture(0, out Rectangle bounds0);
+            Texture2D texture1 = GetTexture(1, out Rectangle bounds1);
+            Texture2D texture2 = GetTexture(2, out Rectangle bounds2);
+            Texture2D texture3 = GetTexture(3, out Rectangle bounds3);
+            Texture2D texture4 = GetTexture(4, out Rectangle bounds4);
+            Texture2D texture5 = GetTexture(5, out Rectangle bounds5);
+            Texture2D texture6 = GetTexture(6, out Rectangle bounds6);
+            Texture2D texture7 = GetTexture(7, out Rectangle bounds7);
+            Texture2D texture8 = GetTexture(8, out Rectangle bounds8);
 
             int offsetTop = Math.Max(bounds0.Height, bounds2.Height) - bounds1.Height;
             int offsetBottom = Math.Max(bounds5.Height, bounds7.Height) - bounds6.Height;
@@ -391,7 +391,7 @@ namespace ClassicUO.Game.UI.Controls
                     ++index;
                 }
 
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(
                     (ushort)(Graphic + index)
                 );
 

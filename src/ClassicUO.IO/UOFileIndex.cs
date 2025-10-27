@@ -52,10 +52,7 @@ namespace ClassicUO.IO
             0
         );
 
-        public bool Equals(UOFileIndex other)
-        {
-            return (File, Offset, Length, DecompressedLength) == (File, other.Offset, other.Length, other.DecompressedLength);
-        }
+        public bool Equals(UOFileIndex other) => (File, Offset, Length, DecompressedLength) == (File, other.Offset, other.Length, other.DecompressedLength);
     }
 
     [StructLayout(LayoutKind.Sequential)]

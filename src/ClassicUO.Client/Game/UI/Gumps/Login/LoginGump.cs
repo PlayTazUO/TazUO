@@ -471,7 +471,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 Utility.Platforms.PlatformHelper.LaunchBrowser("https://discord.gg/QvqzkB95G4");
             };
 
-            Checkbox loginmusic_checkbox = new Checkbox
+            var loginmusic_checkbox = new Checkbox
             (
                 0x00D2,
                 0x00D3,
@@ -488,7 +488,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Add(loginmusic_checkbox);
 
-            HSliderBar login_music = new HSliderBar
+            var login_music = new HSliderBar
             (
                 loginmusic_checkbox.X + loginmusic_checkbox.Width + 10,
                 loginmusic_checkbox.Y + 4,
@@ -741,10 +741,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 base.Dispose();
             }
 
-            protected override void OnTextInput(string c)
-            {
-                base.OnTextInput(c);
-            }
+            protected override void OnTextInput(string c) => base.OnTextInput(c);
 
             protected override void OnTextChanged()
             {
@@ -768,10 +765,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 UpdateCaretScreenPosition();
             }
 
-            private new void UpdateCaretScreenPosition()
-            {
-                _caretScreenPosition = _rendererText.GetCaretPosition(Stb.CursorIndex);
-            }
+            private new void UpdateCaretScreenPosition() => _caretScreenPosition = _rendererText.GetCaretPosition(Stb.CursorIndex);
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {

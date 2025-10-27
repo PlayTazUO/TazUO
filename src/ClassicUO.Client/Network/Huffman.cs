@@ -279,7 +279,7 @@ namespace ClassicUO.Network
 
         public bool Decompress(Span<byte> src, Span<byte> dest, ref int size)
         {
-            var destIndex = 0;
+            int destIndex = 0;
             dest.Clear();
 
             while (true)

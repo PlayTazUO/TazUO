@@ -54,9 +54,6 @@ namespace ClassicUO.Utility
             }
         }
 
-        public void Clear()
-        {
-            _pool.Clear();
-        }
+        public void Clear() => _pool.Clear();
     }
 }

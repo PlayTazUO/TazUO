@@ -17,42 +17,38 @@ namespace ClassicUO.Game.Managers
             EventSink.MessageReceived += MessageManager_MessageReceived;
         }
 
-        private void MessageManager_MessageReceived(object sender, MessageEventArgs e)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                int count = ProfileManager.CurrentProfile.CoolDownConditionCount;
-                for (int i = 0; i < count; i++)
-                {
-                    switch (ProfileManager.CurrentProfile.Condition_Type[i])
-                    {
-                        default:
-                        case 0:
-                            break;
-                        case 1: //self
-                            if (e.Parent != null && e.Parent.Serial != World.Player.Serial)
-                                return;
-                            break;
-                        case 2:
-                            if (e.Parent != null && e.Parent.Serial == World.Player.Serial)
-                                return;
-                            break;
+        private void MessageManager_MessageReceived(object sender, MessageEventArgs e) => Task.Factory.StartNew(() =>
+                                                                                                   {
+                                                                                                       int count = ProfileManager.CurrentProfile.CoolDownConditionCount;
+                                                                                                       for (int i = 0; i < count; i++)
+                                                                                                       {
+                                                                                                           switch (ProfileManager.CurrentProfile.Condition_Type[i])
+                                                                                                           {
+                                                                                                               default:
+                                                                                                               case 0:
+                                                                                                                   break;
+                                                                                                               case 1: //self
+                                                                                                                   if (e.Parent != null && e.Parent.Serial != World.Player.Serial)
+                                                                                                                       return;
+                                                                                                                   break;
+                                                                                                               case 2:
+                                                                                                                   if (e.Parent != null && e.Parent.Serial == World.Player.Serial)
+                                                                                                                       return;
+                                                                                                                   break;
 
-                    }
-                    if (e.Text.Contains(ProfileManager.CurrentProfile.Condition_Trigger[i]))
-                    {
-                        AddCoolDownBar(
-                            World,
-                            TimeSpan.FromSeconds(ProfileManager.CurrentProfile.Condition_Duration[i]),
-                            ProfileManager.CurrentProfile.Condition_Label[i],
-                            ProfileManager.CurrentProfile.Condition_Hue[i],
-                            ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > i ? ProfileManager.CurrentProfile.Condition_ReplaceIfExists[i] : false
-                            );
-                    }
-                }
-            });
-
-        }
+                                                                                                           }
+                                                                                                           if (e.Text.Contains(ProfileManager.CurrentProfile.Condition_Trigger[i]))
+                                                                                                           {
+                                                                                                               AddCoolDownBar(
+                                                                                                                   World,
+                                                                                                                   TimeSpan.FromSeconds(ProfileManager.CurrentProfile.Condition_Duration[i]),
+                                                                                                                   ProfileManager.CurrentProfile.Condition_Label[i],
+                                                                                                                   ProfileManager.CurrentProfile.Condition_Hue[i],
+                                                                                                                   ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > i ? ProfileManager.CurrentProfile.Condition_ReplaceIfExists[i] : false
+                                                                                                                   );
+                                                                                                           }
+                                                                                                       }
+                                                                                                   });
 
         public static void AddCoolDownBar(World world, TimeSpan _duration, string _name, ushort _hue, bool replace)
         {

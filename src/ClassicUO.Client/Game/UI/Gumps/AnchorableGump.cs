@@ -102,7 +102,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (button == MouseButtonType.Left && ShowLock)
             {
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
                 if (gumpInfo.Texture != null)
                 {
                     if (
@@ -129,7 +129,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (ShowLock)
             {
                 hueVector = ShaderHueTranslator.GetHueVector(0);
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
 
                 if (gumpInfo.Texture != null)
                 {

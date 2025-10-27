@@ -41,7 +41,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             int startY = 25;
 
-            Label text = new Label
+            var text = new Label
             (
                 ResGumps.Channels,
                 false,
@@ -73,7 +73,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(new AlphaBlendControl(1f) { X = 64, Y = startY, Width = 220, Height = 200 });
 
-            ScrollArea area = new ScrollArea
+            var area = new ScrollArea
             (
                 64,
                 startY,
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             foreach (KeyValuePair<string, ChatChannel> k in World.ChatManager.Channels)
             {
-                ChannelListItemControl chan = new ChannelListItemControl(k.Key, 195);
+                var chan = new ChannelListItemControl(k.Key, 195);
                 _databox.Add(chan);
                 _channelList.Add(chan);
             }
@@ -139,7 +139,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             startY = 337;
 
-            Button button = new Button(0, 0x0845, 0x0846, 0x0845)
+            var button = new Button(0, 0x0845, 0x0846, 0x0845)
             {
                 X = 48,
                 Y = startY + 5,
@@ -259,7 +259,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             foreach (KeyValuePair<string, ChatChannel> k in World.ChatManager.Channels)
             {
-                ChannelListItemControl c = new ChannelListItemControl(k.Key, 195);
+                var c = new ChannelListItemControl(k.Key, 195);
                 _databox.Add(c);
                 _channelList.Add(c);
             }
@@ -311,7 +311,7 @@ namespace ClassicUO.Game.UI.Gumps
                     )
                 );
 
-                Label text = new Label
+                var text = new Label
                 (
                     ResGumps.CreateAChannel,
                     true,

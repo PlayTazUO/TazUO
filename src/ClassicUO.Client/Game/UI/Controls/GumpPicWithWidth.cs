@@ -22,7 +22,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue);
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             if (gumpInfo.Texture != null)
             {

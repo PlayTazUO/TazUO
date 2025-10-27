@@ -41,9 +41,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void UpdateHotkeyLabels()
         {
-            var controllerHotkeys = SpellBarManager.GetControllerButtons();
-            var hotkeys = SpellBarManager.GetHotKeys();
-            var keymods = SpellBarManager.GetModKeys();
+            SDL.SDL_GamepadButton[][] controllerHotkeys = SpellBarManager.GetControllerButtons();
+            SDL.SDL_Keycode[] hotkeys = SpellBarManager.GetHotKeys();
+            SDL.SDL_Keymod[] keymods = SpellBarManager.GetModKeys();
 
             for (int i = 0; i < 10; i++)
             {
@@ -172,7 +172,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 capturedMod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
 
             // Capture keyboard input from regular keys
-            foreach (var kvp in keyMap)
+            foreach (KeyValuePair<ImGuiKey, SDL.SDL_Keycode> kvp in keyMap)
             {
                 if (ImGui.IsKeyPressed(kvp.Key))
                 {
@@ -184,7 +184,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // Also check keypad keys separately to support both regular and keypad number keys
             if (capturedKey == SDL.SDL_Keycode.SDLK_UNKNOWN)
             {
-                foreach (var kvp in keypadMap)
+                foreach (KeyValuePair<ImGuiKey, SDL.SDL_Keycode> kvp in keypadMap)
                 {
                     if (ImGui.IsKeyPressed(kvp.Key))
                     {
@@ -195,7 +195,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             // Capture gamepad button input using TazUO's existing controller system
-            var pressedButtons = Controller.PressedButtons();
+            SDL.SDL_GamepadButton[] pressedButtons = Controller.PressedButtons();
             if (pressedButtons.Length > 0)
             {
                 capturedButtons.Clear();

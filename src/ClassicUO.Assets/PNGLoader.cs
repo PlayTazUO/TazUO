@@ -54,7 +54,7 @@ namespace ClassicUO.Assets
                 FileStream titleStream = File.OpenRead(fullImagePath);
                 texture = Texture2D.FromStream(GraphicsDevice, titleStream);
                 titleStream.Close();
-                Color[] buffer = new Color[texture.Width * texture.Height];
+                var buffer = new Color[texture.Width * texture.Height];
                 texture.GetData(buffer);
 
                 for (int i = 0; i < buffer.Length; i++)
@@ -76,7 +76,7 @@ namespace ClassicUO.Assets
             if (index == -1)
                 return new GumpInfo();
 
-            if (gump_textureCache.TryGetValue(graphic, out var cached))
+            if (gump_textureCache.TryGetValue(graphic, out (uint[] pixels, int width, int height) cached))
             {
                 return new GumpInfo()
                 {
@@ -93,7 +93,7 @@ namespace ClassicUO.Assets
                 if (File.Exists(fullImagePath))
                 {
                     FileStream titleStream = File.OpenRead(fullImagePath);
-                    Texture2D tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
+                    var tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
                     titleStream.Close();
                     
                     if (tempTexture == null)
@@ -129,7 +129,7 @@ namespace ClassicUO.Assets
             if (index == -1)
                 return new ArtInfo();
 
-            if (art_textureCache.TryGetValue(graphic, out var cached))
+            if (art_textureCache.TryGetValue(graphic, out (uint[] pixels, int width, int height) cached))
             {
                 return new ArtInfo()
                 {
@@ -182,7 +182,7 @@ namespace ClassicUO.Assets
                 return new uint[0];
             }
 
-            Color[] pixelColors = new Color[texture.Width * texture.Height];
+            var pixelColors = new Color[texture.Width * texture.Height];
             texture.GetData<Color>(pixelColors);
 
             uint[] pixels = new uint[pixelColors.Length];
@@ -243,13 +243,13 @@ namespace ClassicUO.Assets
         {
             Log.Debug("Loading resource assets");
 
-            var assembly = GetType().Assembly;
+            System.Reflection.Assembly assembly = GetType().Assembly;
 
             //Load the custom gump art included with TUO
             for (uint i = 40303; i <= 40312; i++)
             {
                 //Check if the art already exists
-                var gumpInfo = LoadGumpTexture(i);
+                GumpInfo gumpInfo = LoadGumpTexture(i);
 
                 if (gumpInfo.Pixels.IsEmpty)
                 {
@@ -265,7 +265,7 @@ namespace ClassicUO.Assets
                     continue;
                 }
 
-                var resourceName = assembly.GetName().Name + $".gumpartassets.{i}.png";
+                string resourceName = assembly.GetName().Name + $".gumpartassets.{i}.png";
 
                 try
                 {
@@ -273,7 +273,7 @@ namespace ClassicUO.Assets
 
                     if (stream != null)
                     {
-                        Texture2D tempTexture = Texture2D.FromStream(GraphicsDevice, stream);
+                        var tempTexture = Texture2D.FromStream(GraphicsDevice, stream);
                         
                         if (tempTexture == null)
                         {
@@ -313,15 +313,15 @@ namespace ClassicUO.Assets
             }
 
             //Load all embedded art in gumpartassets folder
-            var resourceNames = assembly.GetManifestResourceNames();
+            string[] resourceNames = assembly.GetManifestResourceNames();
 
-            foreach (var resourceName in resourceNames)
+            foreach (string resourceName in resourceNames)
             {
                 string path = assembly.GetName().Name + ".gumpartassets.";
 
                 if (resourceName.IndexOf(path) == 0 && resourceName.EndsWith(".png"))
                 {
-                    var fName = resourceName.Substring(path.Length);
+                    string fName = resourceName.Substring(path.Length);
                     Log.Debug("Loading PNG: " + fName);
 
                     try
@@ -330,7 +330,7 @@ namespace ClassicUO.Assets
 
                         if (stream != null)
                         {
-                            Texture2D texture = Texture2D.FromStream(GraphicsDevice, stream);
+                            var texture = Texture2D.FromStream(GraphicsDevice, stream);
                             
                             if (texture == null)
                             {
@@ -353,7 +353,7 @@ namespace ClassicUO.Assets
 
         private static void FixPNGAlpha(ref Texture2D texture)
         {
-            Color[] buffer = new Color[texture.Width * texture.Height];
+            var buffer = new Color[texture.Width * texture.Height];
             texture.GetData(buffer);
 
             for (int i = 0; i < buffer.Length; i++)
@@ -362,15 +362,9 @@ namespace ClassicUO.Assets
             texture.SetData(buffer);
         }
 
-        public void ClearArtPixelCache(uint graphic)
-        {
-            art_textureCache.Remove(graphic);
-        }
+        public void ClearArtPixelCache(uint graphic) => art_textureCache.Remove(graphic);
 
-        public void ClearGumpPixelCache(uint graphic)
-        {
-            gump_textureCache.Remove(graphic);
-        }
+        public void ClearGumpPixelCache(uint graphic) => gump_textureCache.Remove(graphic);
 
         public void ClearAllPixelCaches()
         {

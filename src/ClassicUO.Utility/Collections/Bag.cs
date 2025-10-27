@@ -39,15 +39,9 @@ namespace ClassicUO.Utility.Collections
             }
         }
 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return new BagEnumerator(this);
-        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => new BagEnumerator(this);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return new BagEnumerator(this);
-        }
+        IEnumerator IEnumerable.GetEnumerator() => new BagEnumerator(this);
 
         public void Add(T element)
         {
@@ -171,10 +165,7 @@ namespace ClassicUO.Utility.Collections
 
             object IEnumerator.Current => _bag[_index];
 
-            public bool MoveNext()
-            {
-                return ++_index < _bag.Count;
-            }
+            public bool MoveNext() => ++_index < _bag.Count;
 
             public void Dispose()
             {

@@ -32,9 +32,9 @@ namespace ClassicUO.Game.Managers
         {
             if (_texture == null || _texture.IsDisposed)
             {
-                var w = _radius * 2;
-                var h = _radius * 2;
-                var data = GenerateBlendedCircleColors(_radius);
+                int w = _radius * 2;
+                int h = _radius * 2;
+                Color[] data = GenerateBlendedCircleColors(_radius);
 
                 _texture?.Dispose();
                 _texture = new Texture2D(batcher.GraphicsDevice, w, h, false, SurfaceFormat.Color);
@@ -53,8 +53,8 @@ namespace ClassicUO.Game.Managers
 
         private Color[] GenerateBlendedCircleColors(int radius)
         {
-            var width = radius * 2;
-            var height = radius * 2;
+            int width = radius * 2;
+            int height = radius * 2;
 
             var blendedColors = new Color[width * height];
 
@@ -62,7 +62,7 @@ namespace ClassicUO.Game.Managers
             {
                 for (int x = 0; x < width; x++)
                 {
-                    var distance = (int)Math.Sqrt(Math.Pow(x - radius, 2) + Math.Pow(y - radius, 2));
+                    int distance = (int)Math.Sqrt(Math.Pow(x - radius, 2) + Math.Pow(y - radius, 2));
 
                     if (distance > radius)
                     {
@@ -70,7 +70,7 @@ namespace ClassicUO.Game.Managers
                         continue;
                     }
 
-                    var opacityFactor = 1f - distance / (float)radius;
+                    float opacityFactor = 1f - distance / (float)radius;
 
                     blendedColors[x + y * width] = new Color(opacityFactor, opacityFactor, opacityFactor, opacityFactor);
                 }
@@ -136,9 +136,6 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void Draw(UltimaBatcher2D batcher, int x, int y, ushort hue, float depth)
-        {
-            _aura.Draw(batcher, x, y, hue, depth);
-        }
+        public void Draw(UltimaBatcher2D batcher, int x, int y, ushort hue, float depth) => _aura.Draw(batcher, x, y, hue, depth);
     }
 }

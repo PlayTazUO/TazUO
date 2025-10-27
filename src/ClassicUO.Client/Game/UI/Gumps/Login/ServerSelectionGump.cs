@@ -163,7 +163,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             );
 
             // Sever Scroll Area
-            ScrollArea scrollArea = new ScrollArea
+            var scrollArea = new ScrollArea
             (
                 150,
                 90,
@@ -172,7 +172,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 true
             );
 
-            DataBox databox = new DataBox(0, 0, 1, 1);
+            var databox = new DataBox(0, 0, 1, 1);
             databox.WantUpdateSize = true;
             LoginScene loginScene = Client.Game.GetScene<LoginScene>();
 

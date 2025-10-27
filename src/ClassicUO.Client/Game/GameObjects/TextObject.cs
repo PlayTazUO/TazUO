@@ -52,10 +52,7 @@ namespace ClassicUO.Game.GameObjects
         public int X, Y, OffsetY;
 
 
-        public static TextObject Create(World world)
-        {
-            return new TextObject(world) { Alpha = 0xFF }; // _queue.GetOne();
-        }
+        public static TextObject Create(World world) => new TextObject(world) { Alpha = 0xFF }; // _queue.GetOne();
 
 
         public virtual void Destroy()
@@ -106,7 +103,7 @@ namespace ClassicUO.Game.GameObjects
                 obj = obj.DLeft;
             }
 
-            TextRenderer next = (TextRenderer) obj;
+            var next = (TextRenderer) obj;
             next.MoveToTop(this);
         }
     }

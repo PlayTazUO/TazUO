@@ -56,15 +56,9 @@ namespace ClassicUO.Configuration
             Client.Game?.SetVSync(CurrentProfile.EnableVSync);
         }
 
-        public static void SetProfileAsDefault(Profile profile)
-        {
-            profile.SaveAs(RootPath, "default.json");
-        }
+        public static void SetProfileAsDefault(Profile profile) => profile.SaveAs(RootPath, "default.json");
 
-        public static Profile NewFromDefault()
-        {
-            return ConfigurationResolver.Load<Profile>(Path.Combine(RootPath, "default.json"), ProfileJsonContext.DefaultToUse.Profile) ?? new Profile();
-        }
+        public static Profile NewFromDefault() => ConfigurationResolver.Load<Profile>(Path.Combine(RootPath, "default.json"), ProfileJsonContext.DefaultToUse.Profile) ?? new Profile();
 
         private static void ValidateFields(Profile profile)
         {
@@ -99,9 +93,6 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public static void UnLoadProfile()
-        {
-            CurrentProfile = null;
-        }
+        public static void UnLoadProfile() => CurrentProfile = null;
     }
 }

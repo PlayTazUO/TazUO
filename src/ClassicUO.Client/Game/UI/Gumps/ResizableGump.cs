@@ -20,7 +20,7 @@ namespace ClassicUO.Game.UI.Gumps
         protected bool _isLocked = false;
         protected bool? _prevCanMove = null, _prevCloseWithRightClick = null, _prevBorder = null;
 
-        public BorderControl BorderControl { get { return _borderControl; } }
+        public BorderControl BorderControl => _borderControl;
 
         protected ResizableGump
         (
@@ -185,7 +185,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (button == MouseButtonType.Left && Keyboard.Alt && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
-                ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
                 if (texture.Texture != null)
                 {
                     if (x >= 0 && x <= texture.UV.Width && y >= 0 && y <= texture.UV.Height)
@@ -204,7 +204,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-                ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
 
                 if (texture.Texture != null)
                 {

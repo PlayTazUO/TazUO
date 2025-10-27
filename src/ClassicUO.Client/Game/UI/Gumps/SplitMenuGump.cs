@@ -35,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
             AcceptMouseInput = false;
             CanCloseWithRightClick = true;
 
-            GumpPic background = new GumpPic(0, 0, 0x085C, 0) { ContainsByBounds = true };
+            var background = new GumpPic(0, 0, 0x085C, 0) { ContainsByBounds = true };
             Add(background);
 
             Add
@@ -146,10 +146,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public override void OnKeyboardReturn(int textID, string text)
-        {
-            PickUp();
-        }
+        public override void OnKeyboardReturn(int textID, string text) => PickUp();
 
         private void PickUp()
         {

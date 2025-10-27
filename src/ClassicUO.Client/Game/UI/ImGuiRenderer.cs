@@ -44,7 +44,7 @@ namespace ClassicUO.Game.UI
 
         public ImGuiRenderer(Microsoft.Xna.Framework.Game game)
         {
-            var context = ImGui.CreateContext();
+            nint context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
 
             _game = game ?? throw new ArgumentNullException(nameof(game));
@@ -71,10 +71,10 @@ namespace ClassicUO.Game.UI
 
         private void WindowOnClientSizeChanged(object sender, EventArgs e)
         {
-            var bounds = Client.Game.Window.ClientBounds;
+            Rectangle bounds = Client.Game.Window.ClientBounds;
             _displaySize = new(bounds.Width < 1 ? 1 : bounds.Width, bounds.Height < 1 ? 1 : bounds.Height);
 
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
             io.DisplaySize = _displaySize;
         }
 
@@ -92,11 +92,11 @@ namespace ClassicUO.Game.UI
         public virtual unsafe void RebuildFontAtlas()
         {
             // Get font texture from ImGui
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
             io.Fonts.GetTexDataAsRGBA32(out byte* pixelData, out int width, out int height, out int bytesPerPixel);
 
             // Copy the data to a managed array
-            var pixels = new byte[width * height * bytesPerPixel];
+            byte[] pixels = new byte[width * height * bytesPerPixel];
             unsafe { Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length); }
 
             // Create and register the texture as an XNA texture
@@ -119,7 +119,7 @@ namespace ClassicUO.Game.UI
         /// </summary>
         public virtual IntPtr BindTexture(Texture2D texture)
         {
-            var id = new IntPtr(_textureId++);
+            nint id = new IntPtr(_textureId++);
 
             _loadedTextures.Add(id, texture);
 
@@ -129,17 +129,14 @@ namespace ClassicUO.Game.UI
         /// <summary>
         /// Removes a previously created texture pointer, releasing its reference and allowing it to be deallocated
         /// </summary>
-        public virtual void UnbindTexture(IntPtr textureId)
-        {
-            _loadedTextures.Remove(textureId);
-        }
+        public virtual void UnbindTexture(IntPtr textureId) => _loadedTextures.Remove(textureId);
 
         /// <summary>
         /// Sets up ImGui for a new frame, should be called at frame start
         /// </summary>
         public virtual bool BeforeLayout(GameTime gameTime)
         {
-            var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             if (dt <= 0) return false;
 
@@ -171,7 +168,7 @@ namespace ClassicUO.Game.UI
         /// </summary>
         protected virtual void SetupInput()
         {
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
 
             // FNA-specific ///////////////////////////
             TextInputEXT.TextInput += TextInput;
@@ -192,7 +189,7 @@ namespace ClassicUO.Game.UI
         {
             _effect = _effect ?? new BasicEffect(_graphicsDevice);
 
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
 
             _effect.World = Matrix.Identity;
             _effect.View = Matrix.Identity;
@@ -211,10 +208,10 @@ namespace ClassicUO.Game.UI
         {
             if(!Client.Game.IsActive) return;
 
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
 
-            var mouse = Mouse.GetState();
-            var keyboard = Keyboard.GetState();
+            MouseState mouse = Mouse.GetState();
+            KeyboardState keyboard = Keyboard.GetState();
             io.AddMousePosEvent(mouse.X, mouse.Y);
             io.AddMouseButtonEvent(0, mouse.LeftButton == ButtonState.Pressed);
             io.AddMouseButtonEvent(1, mouse.RightButton == ButtonState.Pressed);
@@ -227,7 +224,7 @@ namespace ClassicUO.Game.UI
                 (mouse.ScrollWheelValue - _scrollWheelValue) / WHEEL_DELTA);
             _scrollWheelValue = mouse.ScrollWheelValue;
 
-            foreach (var key in _allKeys)
+            foreach (Keys key in _allKeys)
             {
                 if (TryMapKeys(key, out ImGuiKey imguikey))
                 {
@@ -309,12 +306,12 @@ namespace ClassicUO.Game.UI
         private void RenderDrawData(ImDrawDataPtr drawData)
         {
             // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, vertex/texcoord/color pointers
-            var lastViewport = _graphicsDevice.Viewport;
-            var lastScissorBox = _graphicsDevice.ScissorRectangle;
-            var lastRasterizer = _graphicsDevice.RasterizerState;
-            var lastDepthStencil = _graphicsDevice.DepthStencilState;
-            var lastBlendFactor = _graphicsDevice.BlendFactor;
-            var lastBlendState = _graphicsDevice.BlendState;
+            Viewport lastViewport = _graphicsDevice.Viewport;
+            Rectangle lastScissorBox = _graphicsDevice.ScissorRectangle;
+            RasterizerState lastRasterizer = _graphicsDevice.RasterizerState;
+            DepthStencilState lastDepthStencil = _graphicsDevice.DepthStencilState;
+            Color lastBlendFactor = _graphicsDevice.BlendFactor;
+            BlendState lastBlendState = _graphicsDevice.BlendState;
 
             _graphicsDevice.BlendFactor = Color.White;
             _graphicsDevice.BlendState = BlendState.NonPremultiplied;
@@ -423,9 +420,9 @@ namespace ClassicUO.Game.UI
                         (int)(drawCmd.ClipRect.W - drawCmd.ClipRect.Y)
                     );
 
-                    var effect = UpdateEffect(_loadedTextures[drawCmd.TextureId]);
+                    Effect effect = UpdateEffect(_loadedTextures[drawCmd.TextureId]);
 
-                    foreach (var pass in effect.CurrentTechnique.Passes)
+                    foreach (EffectPass pass in effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
 

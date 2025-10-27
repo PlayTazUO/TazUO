@@ -34,10 +34,10 @@ namespace ClassicUO.Game.UI.Gumps
             X = x;
             Y = y;
 
-            GumpPic background = new GumpPic(0, 0, 0x0474, 0);
+            var background = new GumpPic(0, 0, 0x0474, 0);
             Add(background);
 
-            Label label = new Label(text, false, 0x0386, font: 2, maxwidth: background.Width - 110)
+            var label = new Label(text, false, 0x0386, font: 2, maxwidth: background.Width - 110)
             {
                 X = 60, Y = 50
             };

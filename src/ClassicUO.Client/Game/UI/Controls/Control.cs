@@ -558,10 +558,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void BringOnTop()
-        {
-            UIManager.MakeTopMostGump(this);
-        }
+        public void BringOnTop() => UIManager.MakeTopMostGump(this);
 
         public void SetTooltip(string text, int maxWidth = 0)
         {
@@ -580,10 +577,7 @@ namespace ClassicUO.Game.UI.Controls
             Tooltip = entity;
         }
 
-        public void ClearTooltip()
-        {
-            Tooltip = null;
-        }
+        public void ClearTooltip() => Tooltip = null;
 
         public void SetKeyboardFocus()
         {
@@ -644,10 +638,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void HitTest(Point position, ref Control res)
-        {
-            HitTest(position.X, position.Y, ref res);
-        }
+        public void HitTest(Point position, ref Control res) => HitTest(position.X, position.Y, ref res);
 
         public virtual void OnHitTestSuccess(int x, int y, ref Control res)
         {
@@ -727,15 +718,9 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public T[] GetControls<T>() where T : Control
-        {
-            return Children.OfType<T>().Where(s => !s.IsDisposed).ToArray();
-        }
+        public T[] GetControls<T>() where T : Control => Children.OfType<T>().Where(s => !s.IsDisposed).ToArray();
 
-        public IEnumerable<T> FindControls<T>() where T : Control
-        {
-            return Children.OfType<T>().Where(s => !s.IsDisposed);
-        }
+        public IEnumerable<T> FindControls<T>() where T : Control => Children.OfType<T>().Where(s => !s.IsDisposed);
 
 
         public void InvokeMouseDown(Point position, MouseButtonType button)
@@ -792,29 +777,26 @@ namespace ClassicUO.Game.UI.Controls
             int y = position.Y - Y - ParentY;
             bool result = OnMouseDoubleClick(x, y, button);
 
-            MouseDoubleClickEventArgs arg = new MouseDoubleClickEventArgs(x, y, button);
+            var arg = new MouseDoubleClickEventArgs(x, y, button);
             MouseDoubleClick.Raise(arg, this);
             result |= arg.Result;
 
             return result;
         }
 
-        public void InvokeTextInput(string c)
-        {
-            OnTextInput(c);
-        }
+        public void InvokeTextInput(string c) => OnTextInput(c);
 
         public void InvokeKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
             OnKeyDown(key, mod);
-            KeyboardEventArgs arg = new KeyboardEventArgs(key, mod, KeyboardEventType.Down);
+            var arg = new KeyboardEventArgs(key, mod, KeyboardEventType.Down);
             KeyDown?.Raise(arg);
         }
 
         public void InvokeKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
             OnKeyUp(key, mod);
-            KeyboardEventArgs arg = new KeyboardEventArgs(key, mod, KeyboardEventType.Up);
+            var arg = new KeyboardEventArgs(key, mod, KeyboardEventType.Up);
             KeyUp?.Raise(arg);
         }
 
@@ -851,10 +833,7 @@ namespace ClassicUO.Game.UI.Controls
             OnMove(x, y);
         }
 
-        protected virtual void OnMouseDown(int x, int y, MouseButtonType button)
-        {
-            Parent?.OnMouseDown(X + x, Y + y, button);
-        }
+        protected virtual void OnMouseDown(int x, int y, MouseButtonType button) => Parent?.OnMouseDown(X + x, Y + y, button);
 
         protected virtual void OnMouseUp(int x, int y, MouseButtonType button)
         {
@@ -866,15 +845,9 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected virtual void OnMouseWheel(MouseEventType delta)
-        {
-            Parent?.OnMouseWheel(delta);
-        }
+        protected virtual void OnMouseWheel(MouseEventType delta) => Parent?.OnMouseWheel(delta);
 
-        protected virtual void OnMouseOver(int x, int y)
-        {
-            Parent?.OnMouseOver(X + x, Y + y);
-        }
+        protected virtual void OnMouseOver(int x, int y) => Parent?.OnMouseOver(X + x, Y + y);
 
         protected virtual void OnMouseEnter(int x, int y)
         {
@@ -884,10 +857,7 @@ namespace ClassicUO.Game.UI.Controls
         {
         }
 
-        protected virtual bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
-        {
-            return Parent?.OnMouseDoubleClick(X + x, Y + y, button) ?? false;
-        }
+        protected virtual bool OnMouseDoubleClick(int x, int y, MouseButtonType button) => Parent?.OnMouseDoubleClick(X + x, Y + y, button) ?? false;
 
         protected virtual void OnDragBegin(int x, int y)
         {
@@ -901,24 +871,15 @@ namespace ClassicUO.Game.UI.Controls
         {
         }
 
-        protected virtual void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
-        {
-            Parent?.OnKeyDown(key, mod);
-        }
+        protected virtual void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) => Parent?.OnKeyDown(key, mod);
 
-        protected virtual void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
-        {
-            Parent?.OnKeyUp(key, mod);
-        }
+        protected virtual void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) => Parent?.OnKeyUp(key, mod);
 
         protected virtual void OnControllerButtonUp(SDL.SDL_GamepadButton button) { }
 
         protected virtual void OnControllerButtonDown(SDL.SDL_GamepadButton button) { }
 
-        public virtual bool Contains(int x, int y)
-        {
-            return !IsDisposed;
-        }
+        public virtual bool Contains(int x, int y) => !IsDisposed;
 
         protected virtual void OnMove(int x, int y)
         {
@@ -1006,20 +967,11 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public virtual void OnButtonClick(int buttonID)
-        {
-            Parent?.OnButtonClick(buttonID);
-        }
+        public virtual void OnButtonClick(int buttonID) => Parent?.OnButtonClick(buttonID);
 
-        public virtual void OnKeyboardReturn(int textID, string text)
-        {
-            Parent?.OnKeyboardReturn(textID, text);
-        }
+        public virtual void OnKeyboardReturn(int textID, string text) => Parent?.OnKeyboardReturn(textID, text);
 
-        public virtual void ChangePage(int pageIndex)
-        {
-            Parent?.ChangePage(pageIndex);
-        }
+        public virtual void ChangePage(int pageIndex) => Parent?.ChangePage(pageIndex);
 
         public virtual void Dispose()
         {

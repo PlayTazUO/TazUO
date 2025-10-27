@@ -29,26 +29,14 @@ namespace ClassicUO.Game.Scenes
             IsDestroyed = true;
         }
 
-        public virtual void Update()
-        {
-            Camera.Update(true, Time.Delta, Mouse.Position);
-        }
+        public virtual void Update() => Camera.Update(true, Time.Delta, Mouse.Position);
 
-        public virtual bool Draw(UltimaBatcher2D batcher)
-        {
-            return true;
-        }
+        public virtual bool Draw(UltimaBatcher2D batcher) => true;
 
 
-        public virtual void Load()
-        {
-            IsLoaded = true;
-        }
+        public virtual void Load() => IsLoaded = true;
 
-        public virtual void Unload()
-        {
-            IsLoaded = false;
-        }
+        public virtual void Unload() => IsLoaded = false;
 
 
         internal virtual bool OnMouseUp(MouseButtonType button) => false;

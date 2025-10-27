@@ -38,7 +38,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     ("Negatives", GridHighlightRules.NegativeProperties),
                     ("Rarity", GridHighlightRules.RarityProperties)
                 };
-            foreach (var (labelText, propSet) in categories)
+            foreach ((string labelText, HashSet<string> propSet) in categories)
             {
                 Add(label = new Label(labelText, true, 0xffff) { X = lastXitem, Y = lastYitem });
                 ScrollArea propertiesScrollArea;
@@ -47,20 +47,20 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 propertiesScrollArea.Add(propertiesPropInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 175 - 13, (HEIGHT - lastYitem - 20) * 10) { Y = 0 });
                 string s = string.Join("\n", propSet);
                 propertiesPropInput.SetText(s);
-                CancellationTokenSource cts = new CancellationTokenSource();
+                var cts = new CancellationTokenSource();
                 propertiesPropInput.TextChanged += async (s, e) =>
                 {
                     CancellationTokenSource oldToken = cts;
                     oldToken?.Cancel();
                     cts = new CancellationTokenSource();
-                    var token = cts.Token;
+                    CancellationToken token = cts.Token;
 
                     try
                     {
                         await Task.Delay(500, token);
                         if (!token.IsCancellationRequested)
                         {
-                            var text = propertiesPropInput.Text;
+                            string text = propertiesPropInput.Text;
                             var parsed = text
                                 .Split(new[] { ',', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                                 .Select(p => p.Trim())

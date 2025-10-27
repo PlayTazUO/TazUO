@@ -80,7 +80,7 @@ namespace ClassicUO.Game.Managers
             if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                 return;
 
-            if (!_queue.TryDequeue(out var request))
+            if (!_queue.TryDequeue(out MoveRequest request))
                 return;
 
             AsyncNetClient.Socket.Send_PickUpRequest(request.Serial, request.Amount);
@@ -100,7 +100,7 @@ namespace ClassicUO.Game.Managers
 
         public void Clear()
         {
-            while (_queue.TryDequeue(out var _))
+            while (_queue.TryDequeue(out MoveRequest _))
             {
             }
             _isEmpty = true;

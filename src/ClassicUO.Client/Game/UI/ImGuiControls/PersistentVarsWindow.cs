@@ -97,7 +97,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void DrawVariablesTable()
         {
-            var variables = GetVariablesForScope();
+            Dictionary<string, string> variables = GetVariablesForScope();
 
             // Apply filter
             if (!string.IsNullOrWhiteSpace(_filterText))
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.TableSetupScrollFreeze(0, 1); // Freeze header row
                 ImGui.TableHeadersRow();
 
-                foreach (var kvp in variables)
+                foreach (KeyValuePair<string, string> kvp in variables)
                 {
                     ImGui.TableNextRow();
                     ImGui.PushID(kvp.Key);
@@ -270,10 +270,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
         }
 
-        private Dictionary<string, string> GetVariablesForScope()
-        {
-            return PersistentVars.GetAllVars(_selectedScope);
-        }
+        private Dictionary<string, string> GetVariablesForScope() => PersistentVars.GetAllVars(_selectedScope);
 
         private string GetScopeDescription()
         {

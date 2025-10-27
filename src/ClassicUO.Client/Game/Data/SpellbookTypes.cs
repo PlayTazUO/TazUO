@@ -32,7 +32,7 @@ namespace ClassicUO.Game.Data
 
         public static int GetSpellsGroup(int spellID)
         {
-            var spellsGroup = spellID / 100;
+            int spellsGroup = spellID / 100;
 
             switch (spellsGroup)
             {

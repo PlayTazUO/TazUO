@@ -101,10 +101,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }
         }
 
-        public void SetText(string text)
-        {
-            _label.Text = text;
-        }
+        public void SetText(string text) => _label.Text = text;
 
         protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {

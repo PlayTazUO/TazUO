@@ -20,7 +20,7 @@ namespace ClassicUO.Configuration
                 return null;
             }
 
-            var text = File.ReadAllText(file);
+            string text = File.ReadAllText(file);
 
             text = Regex.Replace
             (
@@ -48,11 +48,11 @@ namespace ClassicUO.Configuration
                 }
 
                 // Create temporary file in system temp directory
-                var tempFile = Path.GetTempFileName();
+                string tempFile = Path.GetTempFileName();
 
                 try
                 {
-                    var json = JsonSerializer.Serialize(obj, ctx);
+                    string json = JsonSerializer.Serialize(obj, ctx);
                     File.WriteAllText(tempFile, json);
 
                     if (File.Exists(file))

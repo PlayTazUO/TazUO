@@ -83,7 +83,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 posY += Z * Z_TO_PIXEL_MULTIPLIER;
 
-                ref readonly var texmapInfo = ref Client.Game.UO.Texmaps.GetTexmap(
+                ref readonly SpriteInfo texmapInfo = ref Client.Game.UO.Texmaps.GetTexmap(
                     Client.Game.UO.FileManager.TileData.LandData[Graphic].TexID
                 );
 
@@ -117,12 +117,12 @@ namespace ClassicUO.Game.GameObjects
             }
             else
             {
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetLand(Graphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetLand(Graphic);
 
                 if (artInfo.Texture != null)
                 {
                     var pos = new Vector2(posX, posY);
-                    var scale = Vector2.One;
+                    Vector2 scale = Vector2.One;
 
                     if (_profile.AnimatedWaterEffect && TileData.IsWet)
                     {

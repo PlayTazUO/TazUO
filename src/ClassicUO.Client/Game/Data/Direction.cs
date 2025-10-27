@@ -23,10 +23,7 @@ namespace ClassicUO.Game.Data
 
     internal static class DirectionHelper
     {
-        public static Direction DirectionFromPoints(Point from, Point to)
-        {
-            return DirectionFromVectors(new Vector2(from.X, from.Y), new Vector2(to.X, to.Y));
-        }
+        public static Direction DirectionFromPoints(Point from, Point to) => DirectionFromVectors(new Vector2(from.X, from.Y), new Vector2(to.X, to.Y));
 
         public static Direction DirectionFromVectors(Vector2 fromPosition, Vector2 toPosition)
         {
@@ -183,14 +180,8 @@ namespace ClassicUO.Game.Data
             return (Direction) direction;
         }
 
-        public static Direction GetCardinal(Direction inDirection)
-        {
-            return inDirection & (Direction) 0x6;
-        }
+        public static Direction GetCardinal(Direction inDirection) => inDirection & (Direction)0x6;
 
-        public static Direction Reverse(Direction inDirection)
-        {
-            return (Direction) ((int) inDirection + 0x04) & Direction.Up;
-        }
+        public static Direction Reverse(Direction inDirection) => (Direction)((int)inDirection + 0x04) & Direction.Up;
     }
 }

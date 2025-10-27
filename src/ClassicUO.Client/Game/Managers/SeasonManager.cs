@@ -47,7 +47,7 @@ namespace ClassicUO.Game.Managers
                 CreateDefaultSeasonsFile();
             }
 
-            using (StreamReader reader = new StreamReader(_seasonsFile))
+            using (var reader = new StreamReader(_seasonsFile))
             {
                 while (!reader.EndOfStream)
                 {
@@ -182,7 +182,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            using (StreamWriter writer = new StreamWriter(_seasonsFile))
+            using (var writer = new StreamWriter(_seasonsFile))
             {
                 writer.WriteLine("spring,static,0x0CA7,0x0C84");
                 writer.WriteLine("spring,static,0x0CAC,0x0C46");

@@ -21,26 +21,17 @@ namespace ClassicUO.Game.UI.Controls
             _gump = gump;
         }
 
-        public void Add(string text, Action action, bool canBeSelected = false, bool defaultValue = false)
-        {
-            _items.Add(new ContextMenuItemEntry(text, action, canBeSelected, defaultValue));
-        }
+        public void Add(string text, Action action, bool canBeSelected = false, bool defaultValue = false) => _items.Add(new ContextMenuItemEntry(text, action, canBeSelected, defaultValue));
 
-        public void Add(ContextMenuItemEntry entry)
-        {
-            _items.Add(entry);
-        }
+        public void Add(ContextMenuItemEntry entry) => _items.Add(entry);
 
-        public void Add(string text, List<ContextMenuItemEntry> entries)
-        {
-            _items.Add
+        public void Add(string text, List<ContextMenuItemEntry> entries) => _items.Add
             (
                 new ContextMenuItemEntry(text)
                 {
                     Items = entries
                 }
             );
-        }
 
         public void Show()
         {
@@ -80,10 +71,7 @@ namespace ClassicUO.Game.UI.Controls
         public List<ContextMenuItemEntry> Items = new List<ContextMenuItemEntry>();
         public string Text;
 
-        public void Add(ContextMenuItemEntry subEntry)
-        {
-            Items.Add(subEntry);
-        }
+        public void Add(ContextMenuItemEntry subEntry) => Items.Add(subEntry);
     }
 
 
@@ -107,14 +95,14 @@ namespace ClassicUO.Game.UI.Controls
             _background = new AlphaBlendControl(0.7f);
             Add(_background);
 
-            ScrollArea _scroll = new ScrollArea(0, 0, 0, 0, true);
+            var _scroll = new ScrollArea(0, 0, 0, 0, true);
             Add(_scroll);
 
             int y = 0;
 
             for (int i = 0; i < list.Count; i++)
             {
-                ContextMenuItem item = new ContextMenuItem(this, list[i]);
+                var item = new ContextMenuItem(this, list[i]);
 
                 if (i > 0)
                 {

@@ -231,10 +231,7 @@ namespace ClassicUO.Game
             return p;
         }
 
-        public MultilinesFontInfo GetInfo()
-        {
-            return _info;
-        }
+        public MultilinesFontInfo GetInfo() => _info;
 
         public bool PixelCheck(int x, int y)
         {
@@ -264,7 +261,7 @@ namespace ClassicUO.Game
 
         public TextEditRow GetLayoutRow(int startIndex)
         {
-            TextEditRow r = new TextEditRow();
+            var r = new TextEditRow();
 
             if (string.IsNullOrEmpty(Text))
             {
@@ -434,7 +431,7 @@ namespace ClassicUO.Game
                 --hue;
             }
 
-            Vector3 hueVector = new Vector3(hue, 0, 1f);
+            var hueVector = new Vector3(hue, 0, 1f);
 
             if (hue != 0)
             {
@@ -497,7 +494,7 @@ namespace ClassicUO.Game
                 --hue;
             }
 
-            Vector3 hueVector = new Vector3(hue, 0, 1f);
+            var hueVector = new Vector3(hue, 0, 1f);
 
             if (hue != -1)
             {
@@ -551,7 +548,7 @@ namespace ClassicUO.Game
                 --hue;
             }
 
-            Vector3 hueVector = new Vector3(hue, 0, alpha);
+            var hueVector = new Vector3(hue, 0, alpha);
 
             if (hue != 0)
             {
@@ -624,7 +621,7 @@ namespace ClassicUO.Game
 
             if (SaveHitMap)
             {
-                var b = (ulong)(
+                ulong b = (ulong)(
                     Text.GetHashCode()
                     ^ Hue
                     ^ ((int)Align)
@@ -635,7 +632,7 @@ namespace ClassicUO.Game
                 _picker.Set(b, fi.Width, fi.Height, fi.Data);
             }
 
-            var isValid = fi.Data != null && fi.Data.Length > 0;
+            bool isValid = fi.Data != null && fi.Data.Length > 0;
 
             if (isValid && (Texture == null || Texture.IsDisposed))
             {

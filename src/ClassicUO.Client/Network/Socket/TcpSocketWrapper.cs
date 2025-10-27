@@ -49,7 +49,7 @@ sealed class TcpSocketWrapper : SocketWrapper
 
     public override void Send(byte[] buffer, int offset, int count)
     {
-        var stream = _socket.GetStream();
+        NetworkStream stream = _socket.GetStream();
         stream.Write(buffer, offset, count);
         stream.Flush();
     }
@@ -59,15 +59,15 @@ sealed class TcpSocketWrapper : SocketWrapper
         if (!IsConnected)
             return 0;
 
-        var available = Math.Min(buffer.Length, _socket.Available);
-        var done = 0;
+        int available = Math.Min(buffer.Length, _socket.Available);
+        int done = 0;
 
-        var stream = _socket.GetStream();
+        NetworkStream stream = _socket.GetStream();
 
         while (done < available)
         {
-            var toRead = Math.Min(buffer.Length, available - done);
-            var read = stream.Read(buffer, done, toRead);
+            int toRead = Math.Min(buffer.Length, available - done);
+            int read = stream.Read(buffer, done, toRead);
 
             if (read <= 0)
             {
@@ -89,8 +89,5 @@ sealed class TcpSocketWrapper : SocketWrapper
         Dispose();
     }
 
-    public override void Dispose()
-    {
-        _socket?.Dispose();
-    }
+    public override void Dispose() => _socket?.Dispose();
 }

@@ -134,18 +134,15 @@ namespace ClassicUO.Game.GameObjects
             }
         }
 
-        protected (ushort x, ushort y, sbyte z) GetSource()
-        {
-            return Source == null ? (X, Y, Z) : (Source.X, Source.Y, Source.Z);
-        }
+        protected (ushort x, ushort y, sbyte z) GetSource() => Source == null ? (X, Y, Z) : (Source.X, Source.Y, Source.Z);
 
         protected void CreateExplosionEffect()
         {
             if (CanCreateExplosionEffect)
             {
-                (var targetX, var targetY, var targetZ) = GetTarget();
+                (ushort targetX, ushort targetY, sbyte targetZ) = GetTarget();
 
-                FixedEffect effect = new FixedEffect(World, _manager, 0x36CB, Hue, 400, 0);
+                var effect = new FixedEffect(World, _manager, 0x36CB, Hue, 400, 0);
                 effect.Blend = Blend;
                 effect.SetSource(targetX, targetY, targetZ);
 
@@ -166,15 +163,9 @@ namespace ClassicUO.Game.GameObjects
             SetInWorldTile(x, y,z);
         }
 
-        protected (ushort x, ushort y, sbyte z) GetTarget()
-        {
-            return Target == null ? (TargetX, TargetY, TargetZ) : (Target.X, Target.Y, Target.Z);
-        }
+        protected (ushort x, ushort y, sbyte z) GetTarget() => Target == null ? (TargetX, TargetY, TargetZ) : (Target.X, Target.Y, Target.Z);
 
-        public void SetTarget(GameObject target)
-        {
-            Target = target;
-        }
+        public void SetTarget(GameObject target) => Target = target;
 
         public void SetTarget(ushort x, ushort y, sbyte z)
         {

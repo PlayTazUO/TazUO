@@ -36,7 +36,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             Clear();
             int y = 0;
             {
-                SettingsSection section = new SettingsSection("Grid highlighting settings", Width - (BorderSize * 2));
+                var section = new SettingsSection("Grid highlighting settings", Width - (BorderSize * 2));
                 section.X = BorderSize;
                 section.Y = BorderSize;
                 section.Add(new Label("You can add object properties that you would like the grid to be highlighted for here.", true, 0xffff, section.Width - 15));
@@ -100,9 +100,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private Area NewAreaSection(int keyLoc, int y)
         {
-            Positioner pos = new Positioner(0, 0, 0, 0);
-            GridHighlightData data = GridHighlightData.GetGridHighlightData(keyLoc);
-            Area area = new Area() { Y = y, X = BorderSize };
+            var pos = new Positioner(0, 0, 0, 0);
+            var data = GridHighlightData.GetGridHighlightData(keyLoc);
+            var area = new Area() { Y = y, X = BorderSize };
             area.Width = highlightSectionScroll.Width - 18 - 15;
             area.Height = 150;
             y = 0;
@@ -195,10 +195,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return area;
         }
 
-        private static void SaveProfile()
-        {
-            GridHighlightRules.SaveGridHighlightConfiguration();
-        }
+        private static void SaveProfile() => GridHighlightRules.SaveGridHighlightConfiguration();
 
         public static void Open(World world)
         {
@@ -208,7 +205,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private static void ExportGridHighlightSettings(World world)
         {
-            var data = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> data = ProfileManager.CurrentProfile.GridHighlightSetup;
 
             RunFileDialog(world, true, "Save grid highlight settings", file =>
             {
@@ -223,43 +220,37 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     file += ".json";
                 }
 
-                var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(file, json);
                 GameActions.Print(world, $"Saved highlight export to: {file}");
             });
         }
 
-        private static void ImportGridHighlightSettings(World world)
-        {
-            RunFileDialog(world, false, "Import grid highlight settings", file =>
-            {
-                try
-                {
-                    if (!File.Exists(file))
-                        return;
+        private static void ImportGridHighlightSettings(World world) => RunFileDialog(world, false, "Import grid highlight settings", file =>
+                                                                                 {
+                                                                                     try
+                                                                                     {
+                                                                                         if (!File.Exists(file))
+                                                                                             return;
 
-                    string json = File.ReadAllText(file);
-                    var imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
-                    if (imported != null)
-                    {
-                        ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
-                        SaveProfile();
-                        UIManager.GetGump<GridHighlightMenu>()?.Dispose();
-                        UIManager.Add(new GridHighlightMenu(world));
-                        GameActions.Print(world, $"Imported highlight config from: {file}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    GameActions.Print(world, "Error importing highlight config", 32);
-                    Log.Error(ex.ToString());
-                }
-            });
-        }
+                                                                                         string json = File.ReadAllText(file);
+                                                                                         List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
+                                                                                         if (imported != null)
+                                                                                         {
+                                                                                             ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
+                                                                                             SaveProfile();
+                                                                                             UIManager.GetGump<GridHighlightMenu>()?.Dispose();
+                                                                                             UIManager.Add(new GridHighlightMenu(world));
+                                                                                             GameActions.Print(world, $"Imported highlight config from: {file}");
+                                                                                         }
+                                                                                     }
+                                                                                     catch (Exception ex)
+                                                                                     {
+                                                                                         GameActions.Print(world, "Error importing highlight config", 32);
+                                                                                         Log.Error(ex.ToString());
+                                                                                     }
+                                                                                 });
 
-        private static void RunFileDialog(World world, bool save, string title, Action<string> onResult)
-        {
-            FileSelector.ShowFileBrowser(world, save ? FileSelectorType.Directory : FileSelectorType.File, null, save ? null : ["*.json"], onResult, title);
-        }
+        private static void RunFileDialog(World world, bool save, string title, Action<string> onResult) => FileSelector.ShowFileBrowser(world, save ? FileSelectorType.Directory : FileSelectorType.File, null, save ? null : ["*.json"], onResult, title);
     }
 }

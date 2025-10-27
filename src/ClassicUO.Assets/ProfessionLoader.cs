@@ -62,7 +62,7 @@ namespace ClassicUO.Assets
         {
             bool result = false;
 
-            FileInfo file = new FileInfo(FileManager.GetUOFilePath("Prof.txt"));
+            var file = new FileInfo(FileManager.GetUOFilePath("Prof.txt"));
 
             if (file.Exists)
             {
@@ -72,7 +72,7 @@ namespace ClassicUO.Assets
                 }
 
                 //what if file doesn't exist? we skip section completely...directly into advanced selection
-                TextFileParser read = new TextFileParser(File.ReadAllText(file.FullName), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+                var read = new TextFileParser(File.ReadAllText(file.FullName), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
                 while (!read.IsEOF())
                 {
@@ -137,7 +137,7 @@ namespace ClassicUO.Assets
 
         private bool ParseFilePart(TextFileParser file)
         {
-            List<string> childrens = new List<string>();
+            var childrens = new List<string>();
             PROF_TYPE type = PROF_TYPE.NO_PROF;
             string name = string.Empty;
             string trueName = string.Empty;
@@ -258,7 +258,7 @@ namespace ClassicUO.Assets
 
                             for (int j = 0; j < FileManager.Skills.SkillsCount; j++)
                             {
-                                var skill = FileManager.Skills.Skills[j];
+                                    SkillEntry skill = FileManager.Skills.Skills[j];
 
                                 if (strings[1] == skill.Name || ((SkillEntry.HardCodedName) skill.Index).ToString().ToLower() == strings[1].ToLower())
                                 {

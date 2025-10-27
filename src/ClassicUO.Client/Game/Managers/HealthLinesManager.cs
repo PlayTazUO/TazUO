@@ -27,7 +27,7 @@ namespace ClassicUO.Game.Managers
 
         public void Draw(UltimaBatcher2D batcher)
         {
-            var camera = Client.Game.Scene.Camera;
+            Camera camera = Client.Game.Scene.Camera;
 
             // if (SerialHelper.IsMobile(_world.TargetManager.LastTargetInfo.Serial))
             // {
@@ -75,9 +75,9 @@ namespace ClassicUO.Game.Managers
             }
 
             int showWhen = ProfileManager.CurrentProfile.MobileHPShowWhen;
-            var useNewTargetSystem = ProfileManager.CurrentProfile.UseNewTargetSystem;
-            var animations = Client.Game.UO.Animations;
-            var isEnabled = IsEnabled;
+            bool useNewTargetSystem = ProfileManager.CurrentProfile.UseNewTargetSystem;
+            Renderer.Animations.Animations animations = Client.Game.UO.Animations;
+            bool isEnabled = IsEnabled;
 
             foreach (Mobile mobile in _world.Mobiles.Values)
             {
@@ -86,9 +86,9 @@ namespace ClassicUO.Game.Managers
                     continue;
                 }
 
-                var newTargSystem = false;
-                var forceDraw = false;
-                var passive = mobile.Serial != _world.Player.Serial;
+                bool newTargSystem = false;
+                bool forceDraw = false;
+                bool passive = mobile.Serial != _world.Player.Serial;
 
                 if (_world.TargetManager.LastTargetInfo.Serial == mobile ||
                     _world.TargetManager.LastAttack == mobile ||
@@ -119,7 +119,7 @@ namespace ClassicUO.Game.Managers
                 Point p = mobile.RealScreenPosition;
                 p.X += (int)mobile.Offset.X + 22 + 5;
                 p.Y += (int)(mobile.Offset.Y - mobile.Offset.Z) + 22 + 5;
-                var offsetY = 0;
+                int offsetY = 0;
 
                 if (isEnabled)
                 {
@@ -222,7 +222,7 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
-            ref readonly var indicatorInfo = ref Client.Game.UO.Gumps.GetGump(0x756F);
+            ref readonly SpriteInfo indicatorInfo = ref Client.Game.UO.Gumps.GetGump(0x756F);
             if (indicatorInfo.Texture != null)
             {
                 Point p = entity.RealScreenPosition;
@@ -305,7 +305,7 @@ namespace ClassicUO.Game.Managers
                 offset = per;
             }
 
-            Mobile mobile = entity as Mobile;
+            var mobile = entity as Mobile;
 
             float alpha = passive && !newTargetSystem ? 0.5f : 1.0f;
             ushort hue =
@@ -355,11 +355,11 @@ namespace ClassicUO.Game.Managers
                     bottomGump = 0x756C;
                 }
 
-                ref readonly var hueGumpInfo = ref Client.Game.UO.Gumps.GetGump(gumpHue);
-                var targetX = x + BAR_WIDTH_HALF - hueGumpInfo.UV.Width / 2f;
-                var topTargetY = height + centerY + 8 + 22 + offsetY;
+                ref readonly SpriteInfo hueGumpInfo = ref Client.Game.UO.Gumps.GetGump(gumpHue);
+                float targetX = x + BAR_WIDTH_HALF - hueGumpInfo.UV.Width / 2f;
+                int topTargetY = height + centerY + 8 + 22 + offsetY;
 
-                ref readonly var newTargGumpInfo = ref Client.Game.UO.Gumps.GetGump(topGump);
+                ref readonly SpriteInfo newTargGumpInfo = ref Client.Game.UO.Gumps.GetGump(topGump);
                 if (newTargGumpInfo.Texture != null)
                     batcher.Draw(
                         newTargGumpInfo.Texture,
@@ -389,7 +389,7 @@ namespace ClassicUO.Game.Managers
             }
 
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(BACKGROUND_GRAPHIC);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(BACKGROUND_GRAPHIC);
             Rectangle bounds = gumpInfo.UV;
 
             if (multiplier > 1)

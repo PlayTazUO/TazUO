@@ -531,7 +531,7 @@ namespace ClassicUO.Game.GameObjects
                 graphic = mobile.GetGraphicForAnimation();
             }
 
-            var animations = Client.Game.UO.Animations;
+            Animations animations = Client.Game.UO.Animations;
             if (graphic >= animations.MaxAnimationCount)
             {
                 return 0;
@@ -1441,7 +1441,7 @@ namespace ClassicUO.Game.GameObjects
         {
             if (anim < Client.Game.UO.FileManager.Animations.GroupReplaces.Length)
             {
-                foreach (var tuple in Client.Game.UO.FileManager.Animations.GroupReplaces[anim])
+                foreach ((ushort, byte) tuple in Client.Game.UO.FileManager.Animations.GroupReplaces[anim])
                 {
                     if (tuple.Item1 == v13)
                     {
@@ -1457,7 +1457,7 @@ namespace ClassicUO.Game.GameObjects
         {
             ushort getReplacedGroup(List<(ushort, byte)> list, ushort idx, ushort walkIdx)
             {
-                foreach (var item in list)
+                foreach ((ushort, byte) item in list)
                 {
                     if (item.Item1 == idx)
                     {
@@ -1511,7 +1511,7 @@ namespace ClassicUO.Game.GameObjects
             byte mode
         )
         {
-            var animations = Client.Game.UO.Animations;
+            Animations animations = Client.Game.UO.Animations;
             if (mobile.Graphic >= animations.MaxAnimationCount)
             {
                 return 0;

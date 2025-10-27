@@ -75,10 +75,7 @@ namespace StbTextEditSharp
             }
         }
 
-        public void MakeUndoInsert(int where, int length)
-        {
-            UndoState.CreateUndo(where, 0, length);
-        }
+        public void MakeUndoInsert(int where, int length) => UndoState.CreateUndo(where, 0, length);
 
         public void ClearState(bool is_single_line)
         {
@@ -109,7 +106,7 @@ namespace StbTextEditSharp
         {
             int count = start + length;
 
-            ValueStringBuilder sb = new ValueStringBuilder(count);
+            var sb = new ValueStringBuilder(count);
             for (int i = start; i < count; ++i)
             {
                 sb.Append(char.ConvertFromUtf32(codepoints[i]));
@@ -150,7 +147,7 @@ namespace StbTextEditSharp
 
         public int LocateCoord(float x, float y)
         {
-            TextEditRow r = new TextEditRow();
+            var r = new TextEditRow();
             int n = Length;
             float base_y = 0;
             int i = 0;
@@ -324,15 +321,9 @@ namespace StbTextEditSharp
             }
         }
 
-        private static bool IsSpace(int codepoint)
-        {
-            return char.IsWhiteSpace((char) codepoint);
-        }
+        private static bool IsSpace(int codepoint) => char.IsWhiteSpace((char)codepoint);
 
-        public bool IsWordBoundary(int idx)
-        {
-            return idx > 0 ? IsSpace(text[idx - 1]) && !IsSpace(text[idx]) : true;
-        }
+        public bool IsWordBoundary(int idx) => idx > 0 ? IsSpace(text[idx - 1]) && !IsSpace(text[idx]) : true;
 
         public int MoveToPreviousWord(int c)
         {
@@ -563,8 +554,8 @@ namespace StbTextEditSharp
                 case ControlKeys.Down:
                 case ControlKeys.Down | ControlKeys.Shift:
                 {
-                    FindState find = new FindState();
-                    TextEditRow row = new TextEditRow();
+                    var find = new FindState();
+                    var row = new TextEditRow();
                     bool sel = (key & ControlKeys.Shift) != 0;
 
                     if (SingleLine)
@@ -624,8 +615,8 @@ namespace StbTextEditSharp
                 case ControlKeys.Up:
                 case ControlKeys.Up | ControlKeys.Shift:
                 {
-                    FindState find = new FindState();
-                    TextEditRow row = new TextEditRow();
+                    var find = new FindState();
+                    var row = new TextEditRow();
                     int i = 0;
                     bool sel = (key & ControlKeys.Shift) != 0;
 
@@ -849,7 +840,7 @@ namespace StbTextEditSharp
                 return;
             }
 
-            UndoRecord u = new UndoRecord();
+            var u = new UndoRecord();
             u = s.undo_rec[s.undo_point - 1];
             int rpos = s.redo_point - 1;
 
@@ -910,7 +901,7 @@ namespace StbTextEditSharp
         public void Redo()
         {
             UndoState s = UndoState;
-            UndoRecord r = new UndoRecord();
+            var r = new UndoRecord();
 
             if (s.redo_point == 99)
             {
@@ -995,9 +986,6 @@ namespace StbTextEditSharp
             }
         }
 
-        public int Paste(string ctext)
-        {
-            return PasteInternal(ctext);
-        }
+        public int Paste(string ctext) => PasteInternal(ctext);
     }
 }

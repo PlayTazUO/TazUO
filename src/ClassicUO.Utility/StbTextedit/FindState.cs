@@ -13,7 +13,7 @@ namespace StbTextEditSharp
 
         public void FindCharPosition(TextEdit str, int n, bool single_line)
         {
-            TextEditRow r = new TextEditRow();
+            var r = new TextEditRow();
             int prev_start = 0;
             int z = str.Length;
             int i = 0;

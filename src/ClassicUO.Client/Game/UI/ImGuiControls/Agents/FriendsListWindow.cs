@@ -21,10 +21,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             RefreshFriendsList();
         }
 
-        private void RefreshFriendsList()
-        {
-            friendEntries = FriendsListManager.Instance.GetFriends();
-        }
+        private void RefreshFriendsList() => friendEntries = FriendsListManager.Instance.GetFriends();
 
         public override void DrawContent()
         {
@@ -87,7 +84,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     for (int i = friendEntries.Count - 1; i >= 0; i--)
                     {
-                        var friend = friendEntries[i];
+                        FriendEntry friend = friendEntries[i];
                         ImGui.TableNextRow();
 
                         ImGui.TableNextColumn();

@@ -232,10 +232,7 @@ namespace ClassicUO.Game.UI.Gumps
             RefreshItemsList();
         }
 
-        private void AddButton(string text, System.Action action, ushort hue = ushort.MaxValue)
-        {
-            AddButton(text, hue, action);
-        }
+        private void AddButton(string text, System.Action action, ushort hue = ushort.MaxValue) => AddButton(text, hue, action);
 
         private void AddButton(string text, ushort hue, System.Action action)
         {
@@ -248,7 +245,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (selectedIndex >= 0 && selectedIndex < _allConfigs.Count)
             {
-                var newConfig = _allConfigs[selectedIndex];
+                DressConfig newConfig = _allConfigs[selectedIndex];
 
                 if (newConfig == _config) return;
 
@@ -277,7 +274,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             // Create the new config
-            var newConfig = DressAgentManager.Instance.CreateNewConfig(newName);
+            DressConfig newConfig = DressAgentManager.Instance.CreateNewConfig(newName);
 
             // Switch to the new config
             _config = newConfig;
@@ -344,7 +341,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (_config.Items.Count > 0)
             {
-                foreach (var item in _config.Items)
+                foreach (DressItem item in _config.Items)
                 {
                     var itemArea = new Area { Width = 330, Height = 25 };
 
@@ -384,7 +381,7 @@ namespace ClassicUO.Game.UI.Gumps
             // Undress bag info
             if (_config.UndressBagSerial != 0)
             {
-                var bagItem = World.Items.TryGetValue(_config.UndressBagSerial, out var item) ? item : null;
+                Item bagItem = World.Items.TryGetValue(_config.UndressBagSerial, out Item item) ? item : null;
                 string bagName = bagItem?.Name ?? "Unknown";
                 _itemsList.Add(new Label($"Undress Bag: {bagName} ({_config.UndressBagSerial})", true, 53, font: 1));
             }

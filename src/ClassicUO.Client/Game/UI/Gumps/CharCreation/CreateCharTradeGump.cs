@@ -96,7 +96,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             // sliders for attributes
             _attributeSliders = new HSliderBar[3];
 
-            (var defSkillsValues, var defStatsValues) = ProfessionInfo.GetDefaults(Client.Game.UO.Version);
+            (int[,] defSkillsValues, int[] defStatsValues) = ProfessionInfo.GetDefaults(Client.Game.UO.Version);
 
             Add
             (
@@ -143,7 +143,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                 )
             );
 
-            var clientFlags = World.ClientLockedFeatures.Flags;
+            LockedFeatureFlags clientFlags = World.ClientLockedFeatures.Flags;
 
             _skillList = Client.Game.UO.FileManager.Skills.SortedSkills
                          .Where(s =>
@@ -183,14 +183,14 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             // do not include archer if it's a gargoyle
             if (character.Race == RaceType.GARGOYLE)
             {
-                var archeryEntry = _skillList.FirstOrDefault(s => s.Index == 31);
+                SkillEntry archeryEntry = _skillList.FirstOrDefault(s => s.Index == 31);
                 if (archeryEntry != null)
                 {
                     _skillList.Remove(archeryEntry);
                 }
             }
 
-            var skillNames = _skillList.Select(s => s.Name).ToArray();
+            string[] skillNames = _skillList.Select(s => s.Name).ToArray();
 
             int y = 172;
             _skillSliders = new HSliderBar[CharCreationGump._skillsCount];

@@ -59,7 +59,7 @@ public class SpellQuickSearch : NineSliceGump
 
         if(searchField?.Text.Length > 0)
         {
-            if (SpellDefinition.TryGetSpellFromName(searchField?.Text, out var spell))
+            if (SpellDefinition.TryGetSpellFromName(searchField?.Text, out SpellDefinition spell))
                 spellDisplay.SetSpell(spell);
         }
         else
@@ -99,10 +99,7 @@ public class SpellQuickSearch : NineSliceGump
                 Parent?.Dispose();
         }
 
-        public void InvokeAction()
-        {
-            onClick?.Invoke(Spell);
-        }
+        public void InvokeAction() => onClick?.Invoke(Spell);
 
         public void ClearSpell()
         {

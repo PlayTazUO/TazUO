@@ -181,7 +181,7 @@ namespace ClassicUO.LegionScripting
 
             List<string> groups = [ScriptPath, .. HandleScriptsInDirectory(ScriptPath)];
 
-            List<string> subgroups = new List<string>();
+            var subgroups = new List<string>();
 
             //First level directory(groups)
             foreach (string file in groups)
@@ -206,12 +206,12 @@ namespace ClassicUO.LegionScripting
         /// <returns></returns>
         private static List<string> HandleScriptsInDirectory(string path)
         {
-            HashSet<string> loadedScripts = new HashSet<string>();
+            var loadedScripts = new HashSet<string>();
 
             foreach (ScriptFile script in LoadedScripts)
                 loadedScripts.Add(script.FullPath);
 
-            List<string> groups = new List<string>();
+            var groups = new List<string>();
 
             foreach (string file in Directory.EnumerateFileSystemEntries(path))
             {
@@ -287,7 +287,7 @@ namespace ClassicUO.LegionScripting
                 return lScriptSettings.GlobalAutoStartScripts.Contains(script.FileName);
             else
             {
-                if (lScriptSettings.CharAutoStartScripts.TryGetValue(GetAccountCharName(), out var scripts))
+                if (lScriptSettings.CharAutoStartScripts.TryGetValue(GetAccountCharName(), out List<string> scripts))
                 {
                     return scripts.Contains(script.FileName);
                 }
@@ -311,21 +311,18 @@ namespace ClassicUO.LegionScripting
             if (World.Player == null)
                 return;
 
-            if (lScriptSettings.CharAutoStartScripts.TryGetValue(GetAccountCharName(), out var scripts))
+            if (lScriptSettings.CharAutoStartScripts.TryGetValue(GetAccountCharName(), out List<string> scripts))
                 foreach (ScriptFile f in LoadedScripts)
                     if (scripts.Contains(f.FileName))
                         PlayScript(f);
 
         }
 
-        private static string GetAccountCharName()
-        {
-            return ProfileManager.CurrentProfile.Username + ProfileManager.CurrentProfile.CharacterName;
-        }
+        private static string GetAccountCharName() => ProfileManager.CurrentProfile.Username + ProfileManager.CurrentProfile.CharacterName;
 
         public static bool IsGroupCollapsed(string group, string subgroup = "")
         {
-            var path = group;
+            string path = group;
 
             if (!string.IsNullOrEmpty(subgroup))
                 path += "/" + subgroup;
@@ -338,7 +335,7 @@ namespace ClassicUO.LegionScripting
 
         public static void SetGroupCollapsed(string group, string subgroup = "", bool expanded = false)
         {
-            var path = group;
+            string path = group;
 
             if (!string.IsNullOrEmpty(subgroup))
                 path += "/" + subgroup;
@@ -358,7 +355,7 @@ namespace ClassicUO.LegionScripting
 
                     for (int i = 0; i < lScriptSettings.CharAutoStartScripts.Count; i++)
                     {
-                        var val = lScriptSettings.CharAutoStartScripts.ElementAt(i);
+                        KeyValuePair<string, List<string>> val = lScriptSettings.CharAutoStartScripts.ElementAt(i);
                         val.Value.RemoveAll(script => !LoadedScripts.Any(s => s.FileName == script));
                     }
 
@@ -729,29 +726,19 @@ namespace ClassicUO.LegionScripting
         }
 
         public static bool ReturnTrue() //Avoids creating a bunch of functions that need to be GC'ed
-        {
-            return true;
-        }
+=> true;
 
-        public static void LScriptError(string msg)
-        {
-            GameActions.Print(World, $"[{Interpreter.ActiveScript.CurrentLine}][LScript Error]" + msg);
-        }
+        public static void LScriptError(string msg) => GameActions.Print(World, $"[{Interpreter.ActiveScript.CurrentLine}][LScript Error]" + msg);
 
-        public static void LScriptWarning(string msg)
-        {
-            GameActions.Print(World, $"[{Interpreter.ActiveScript.CurrentLine}][LScript Warning]" + msg);
-        }
+        public static void LScriptWarning(string msg) => GameActions.Print(World, $"[{Interpreter.ActiveScript.CurrentLine}][LScript Warning]" + msg);
 
-        public static void DownloadAPIPy()
-        {
-            Task.Run
+        public static void DownloadAPIPy() => Task.Run
             (() =>
                 {
                     try
                     {
                         var client = new System.Net.WebClient();
-                        var api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
+                        string api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
                         File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "API.py"), api);
                         MainThreadQueue.EnqueueAction(() => { GameActions.Print(World, "Updated API!"); });
                     }
@@ -763,7 +750,6 @@ namespace ClassicUO.LegionScripting
 
                 }
             );
-        }
     }
 
     public class ScriptInfoEvent
@@ -816,13 +802,13 @@ namespace ClassicUO.LegionScripting
             World = world;
             Path = path;
 
-            var cleanPath = path.Replace(System.IO.Path.DirectorySeparatorChar, '/');
-            var cleanBasePath = LegionScripting.ScriptPath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
+            string cleanPath = path.Replace(System.IO.Path.DirectorySeparatorChar, '/');
+            string cleanBasePath = LegionScripting.ScriptPath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
             cleanPath = cleanPath.Substring(cleanPath.IndexOf(cleanBasePath) + cleanBasePath.Length);
 
             if (cleanPath.Length > 0)
             {
-                var paths = cleanPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
+                string[] paths = cleanPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
                 if (paths.Length > 0)
                     Group = paths[0];
                 if (paths.Length > 1)
@@ -860,7 +846,7 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                var c = File.ReadAllLines(FullPath, Encoding.UTF8);
+                string[] c = File.ReadAllLines(FullPath, Encoding.UTF8);
                 FileContentsJoined = string.Join("\n", c);
                 if (ScriptType == ScriptType.Python)
                 {
@@ -893,10 +879,7 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public bool FileExists()
-        {
-            return File.Exists(FullPath);
-        }
+        public bool FileExists() => File.Exists(FullPath);
 
         public void SetupPythonEngine()
         {

@@ -103,7 +103,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             );
 
-            ScrollArea scrollArea = new ScrollArea
+            var scrollArea = new ScrollArea
             (
                 20,
                 35,
@@ -117,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(scrollArea);
 
-            DataBox databox = new DataBox(0, 0, 1, 1);
+            var databox = new DataBox(0, 0, 1, 1);
             databox.WantUpdateSize = true;
             scrollArea.Add(databox);
 
@@ -130,7 +130,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 foreach (KeyValuePair<string, string> item in dict.OrderBy(s => s.Key))
                 {
-                    Label label = new Label
+                    var label = new Label
                     (
                         item.Key + ":",
                         true,
@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (dict != null)
                 {
-                    using (LogFile writer = new LogFile(CUOEnviroment.ExecutablePath, "dump_gameobject.txt"))
+                    using (var writer = new LogFile(CUOEnviroment.ExecutablePath, "dump_gameobject.txt"))
                     {
                         writer.Write("###################################################");
                         writer.Write($"CUO version: {CUOEnviroment.Version}");
@@ -219,7 +219,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void OnLabelClick(object sender, MouseEventArgs e)
         {
-            Label l = (Label) sender;
+            var l = (Label) sender;
 
             if (e.Button == MouseButtonType.Left && l != null)
             {
@@ -230,7 +230,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private Dictionary<string, string> GetGameObjectProperties(GameObject obj)
         {
-            Dictionary<string, string> dict = new Dictionary<string, string>();
+            var dict = new Dictionary<string, string>();
 
             dict["Graphics"] = $"0x{obj.Graphic:X4}";
             dict["Hue"] = $"{obj.Hue}";

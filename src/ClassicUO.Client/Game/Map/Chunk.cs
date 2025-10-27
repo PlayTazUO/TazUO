@@ -44,7 +44,7 @@ namespace ClassicUO.Game.Map
 
         public static Chunk Create(World world, int x, int y)
         {
-            Chunk c = new Chunk(world); // _pool.GetOne();
+            var c = new Chunk(world); // _pool.GetOne();
             c.LastAccessTime = Time.Ticks + Constants.CLEAR_TEXTURES_DELAY;
             c.X = x;
             c.Y = y;
@@ -59,7 +59,7 @@ namespace ClassicUO.Game.Map
 
             Map map = _world.Map;
 
-            ref var im = ref GetIndex(index);
+            ref IndexMap im = ref GetIndex(index);
 
             if (!im.IsValid())
             {
@@ -67,15 +67,15 @@ namespace ClassicUO.Game.Map
             }
 
             im.MapFile.Seek((long)im.MapAddress, System.IO.SeekOrigin.Begin);
-            var block = im.MapFile.Read<MapBlock>();
+            MapBlock block = im.MapFile.Read<MapBlock>();
 
-            var cells = block.Cells;
+            MapCellsArray cells = block.Cells;
             int bx = X << 3;
             int by = Y << 3;
 
             uint[] bufferBlock = new uint[64];
             sbyte[] bufferBlockZ = new sbyte[64];
-            var huesLoader = Client.Game.UO.FileManager.Hues;
+            HuesLoader huesLoader = Client.Game.UO.FileManager.Hues;
 
             for (int y = 0; y < 8; ++y)
             {
@@ -88,7 +88,7 @@ namespace ClassicUO.Game.Map
 
                     sbyte z = cells[pos].Z;
 
-                    Land land = Land.Create(_world, tileID);
+                    var land = Land.Create(_world, tileID);
 
                     ushort tileX = (ushort)(bx + x);
 
@@ -98,7 +98,7 @@ namespace ClassicUO.Game.Map
                     land.Z = z;
                     land.UpdateScreenPosition();
 
-                    if (TileMarkerManager.Instance.IsTileMarked(land.X, land.Y, map.Index, out var hue))
+                    if (TileMarkerManager.Instance.IsTileMarked(land.X, land.Y, map.Index, out ushort hue))
                         land.Hue = hue;
 
                     AddGameObject(land, x, y);
@@ -117,12 +117,12 @@ namespace ClassicUO.Game.Map
             //If Ultima Live is on, the statics of the first map block explored could be saved to StaticAdress 0, because the static file could be empty, so we can't check StaticAdress != 0
             if (im.StaticAddress >= 0 && im.StaticCount > 0)
             {
-                var staticsBlockBuffer = ArrayPool<StaticsBlock>.Shared.Rent((int)im.StaticCount);
-                var staticsSpan = staticsBlockBuffer.AsSpan(0, (int)im.StaticCount);
+                StaticsBlock[] staticsBlockBuffer = ArrayPool<StaticsBlock>.Shared.Rent((int)im.StaticCount);
+                Span<StaticsBlock> staticsSpan = staticsBlockBuffer.AsSpan(0, (int)im.StaticCount);
                 im.StaticFile.Seek((long)im.StaticAddress, System.IO.SeekOrigin.Begin);
                 im.StaticFile.Read(MemoryMarshal.AsBytes(staticsSpan));
 
-                foreach (ref var sb in staticsSpan)
+                foreach (ref StaticsBlock sb in staticsSpan)
                 {
                     if (sb.Color != 0 && sb.Color != 0xFFFF)
                     {
@@ -133,13 +133,13 @@ namespace ClassicUO.Game.Map
                             continue;
                         }
 
-                        Static staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
+                        var staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
                         staticObject.X = (ushort)(bx + sb.X);
                         staticObject.Y = (ushort)(by + sb.Y);
                         staticObject.Z = sb.Z;
                         staticObject.UpdateScreenPosition();
 
-                        if (TileMarkerManager.Instance.IsTileMarked(staticObject.X, staticObject.Y, map.Index, out var hue))
+                        if (TileMarkerManager.Instance.IsTileMarked(staticObject.X, staticObject.Y, map.Index, out ushort hue))
                             staticObject.Hue = hue;
 
                         AddGameObject(staticObject, sb.X, sb.Y);

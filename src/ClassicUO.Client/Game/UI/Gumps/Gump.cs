@@ -173,7 +173,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void CenterXInViewPort()
         {
-            var camera = Client.Game.Scene.Camera;
+            Camera camera = Client.Game.Scene.Camera;
             if (ProfileManager.CurrentProfile.GlobalScaling)
             {
                 float scale = ProfileManager.CurrentProfile.GlobalScale;
@@ -190,7 +190,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void CenterYInViewPort()
         {
-            var camera = Client.Game.Scene.Camera;
+            Camera camera = Client.Game.Scene.Camera;
             if (ProfileManager.CurrentProfile.GlobalScaling)
             {
                 float scale = ProfileManager.CurrentProfile.GlobalScale;
@@ -230,10 +230,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public void RequestUpdateContents()
-        {
-            InvalidateContents = true;
-        }
+        public void RequestUpdateContents() => InvalidateContents = true;
 
         protected virtual void UpdateContents()
         {
@@ -279,17 +276,14 @@ namespace ClassicUO.Game.UI.Gumps
         {
         }
 
-        public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-        {
-            return IsVisible && base.Draw(batcher, x, y);
-        }
+        public override bool Draw(UltimaBatcher2D batcher, int x, int y) => IsVisible && base.Draw(batcher, x, y);
 
         public override void OnButtonClick(int buttonID)
         {
             if (!IsDisposed && LocalSerial != 0)
             {
-                List<uint> switches = new List<uint>();
-                List<Tuple<ushort, string>> entries = new List<Tuple<ushort, string>>();
+                var switches = new List<uint>();
+                var entries = new List<Tuple<ushort, string>>();
 
                 foreach (Control control in Children)
                 {
@@ -346,10 +340,8 @@ namespace ClassicUO.Game.UI.Gumps
             base.CloseWithRightClick();
         }
 
-        public override void ChangePage(int pageIndex)
-        {
+        public override void ChangePage(int pageIndex) =>
             // For a gump, Page is the page that is drawing.
             ActivePage = pageIndex;
-        }
     }
 }

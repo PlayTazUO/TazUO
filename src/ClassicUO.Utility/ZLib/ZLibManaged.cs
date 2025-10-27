@@ -18,9 +18,9 @@ namespace ClassicUO.Utility
             int length
         )
         {
-            using (MemoryStream stream = new MemoryStream(source, sourceStart, sourceLength - offset, true))
+            using (var stream = new MemoryStream(source, sourceStart, sourceLength - offset, true))
             {
-                using (ZLibStream ds = new ZLibStream(stream, CompressionMode.Decompress))
+                using (var ds = new ZLibStream(stream, CompressionMode.Decompress))
                 {
                     int totalRead = 0;
 
@@ -61,9 +61,9 @@ namespace ClassicUO.Utility
 
         public static void Compress(byte[] dest, ref int destLength, byte[] source)
         {
-            using (MemoryStream stream = new MemoryStream(dest, true))
+            using (var stream = new MemoryStream(dest, true))
             {
-                using (ZLibStream ds = new ZLibStream(stream, CompressionMode.Compress, true))
+                using (var ds = new ZLibStream(stream, CompressionMode.Compress, true))
                 {
                     ds.Write(source, 0, source.Length);
                     ds.Flush();

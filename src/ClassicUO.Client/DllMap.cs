@@ -27,7 +27,7 @@ namespace ClassicUO
             string wordsize = (IntPtr.Size * 8).ToString();
 
             // Get the executing assembly
-            Assembly assembly = Assembly.GetAssembly(typeof(Microsoft.Xna.Framework.Graphics.ColorWriteChannels));
+            var assembly = Assembly.GetAssembly(typeof(Microsoft.Xna.Framework.Graphics.ColorWriteChannels));
 
             // Locate the config file
             string xmlPath = Path.Combine(AppContext.BaseDirectory, "FNA.dll.config");
@@ -39,7 +39,7 @@ namespace ClassicUO
             }
 
             // Load the XML
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             xmlDoc.Load(xmlPath);
 
             // The NativeLibrary API cannot remap function names. :(

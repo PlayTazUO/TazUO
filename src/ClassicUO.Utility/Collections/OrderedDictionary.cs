@@ -18,19 +18,13 @@ namespace ClassicUO.Utility.Collections
     {
         #region IEnumerable<KeyValuePair<TKey, TValue>>
 
-        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => GetEnumerator();
 
         #endregion
 
         #region IEnumerable
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion
 
@@ -118,20 +112,11 @@ namespace ClassicUO.Utility.Collections
             }
         }
 
-        public void Add(TKey key, TValue value)
-        {
-            _keyedCollection.Add(new KeyValuePair<TKey, TValue>(key, value));
-        }
+        public void Add(TKey key, TValue value) => _keyedCollection.Add(new KeyValuePair<TKey, TValue>(key, value));
 
-        public void Clear()
-        {
-            _keyedCollection.Clear();
-        }
+        public void Clear() => _keyedCollection.Clear();
 
-        public void Insert(int index, TKey key, TValue value)
-        {
-            _keyedCollection.Insert(index, new KeyValuePair<TKey, TValue>(key, value));
-        }
+        public void Insert(int index, TKey key, TValue value) => _keyedCollection.Insert(index, new KeyValuePair<TKey, TValue>(key, value));
 
         public int IndexOf(TKey key)
         {
@@ -143,20 +128,11 @@ namespace ClassicUO.Utility.Collections
             return -1;
         }
 
-        public bool ContainsValue(TValue value)
-        {
-            return Values.Contains(value);
-        }
+        public bool ContainsValue(TValue value) => Values.Contains(value);
 
-        public bool ContainsValue(TValue value, IEqualityComparer<TValue> comparer)
-        {
-            return Values.Contains(value, comparer);
-        }
+        public bool ContainsValue(TValue value, IEqualityComparer<TValue> comparer) => Values.Contains(value, comparer);
 
-        public bool ContainsKey(TKey key)
-        {
-            return _keyedCollection.Contains(key);
-        }
+        public bool ContainsKey(TKey key) => _keyedCollection.Contains(key);
 
         public KeyValuePair<TKey, TValue> GetItem(int index)
         {
@@ -183,20 +159,14 @@ namespace ClassicUO.Utility.Collections
                 throw new ArgumentException($"The index is outside the bounds of the dictionary: {index}");
             }
 
-            KeyValuePair<TKey, TValue> kvp = new KeyValuePair<TKey, TValue>(_keyedCollection[index].Key, value);
+            var kvp = new KeyValuePair<TKey, TValue>(_keyedCollection[index].Key, value);
 
             _keyedCollection[index] = kvp;
         }
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            return _keyedCollection.GetEnumerator();
-        }
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _keyedCollection.GetEnumerator();
 
-        public bool Remove(TKey key)
-        {
-            return _keyedCollection.Remove(key);
-        }
+        public bool Remove(TKey key) => _keyedCollection.Remove(key);
 
         public void RemoveAt(int index)
         {
@@ -231,7 +201,7 @@ namespace ClassicUO.Utility.Collections
         /// <param name="value">The the value to set.</param>
         public void SetValue(TKey key, TValue value)
         {
-            KeyValuePair<TKey, TValue> kvp = new KeyValuePair<TKey, TValue>(key, value);
+            var kvp = new KeyValuePair<TKey, TValue>(key, value);
             int idx = IndexOf(key);
 
             if (idx > -1)
@@ -262,20 +232,11 @@ namespace ClassicUO.Utility.Collections
 
         #region sorting
 
-        public void SortKeys()
-        {
-            _keyedCollection.SortByKeys();
-        }
+        public void SortKeys() => _keyedCollection.SortByKeys();
 
-        public void SortKeys(IComparer<TKey> comparer)
-        {
-            _keyedCollection.SortByKeys(comparer);
-        }
+        public void SortKeys(IComparer<TKey> comparer) => _keyedCollection.SortByKeys(comparer);
 
-        public void SortKeys(Comparison<TKey> comparison)
-        {
-            _keyedCollection.SortByKeys(comparison);
-        }
+        public void SortKeys(Comparison<TKey> comparison) => _keyedCollection.SortByKeys(comparison);
 
         public void SortValues()
         {
@@ -283,41 +244,23 @@ namespace ClassicUO.Utility.Collections
             SortValues(comparer);
         }
 
-        public void SortValues(IComparer<TValue> comparer)
-        {
-            _keyedCollection.Sort((x, y) => comparer.Compare(x.Value, y.Value));
-        }
+        public void SortValues(IComparer<TValue> comparer) => _keyedCollection.Sort((x, y) => comparer.Compare(x.Value, y.Value));
 
-        public void SortValues(Comparison<TValue> comparison)
-        {
-            _keyedCollection.Sort((x, y) => comparison(x.Value, y.Value));
-        }
+        public void SortValues(Comparison<TValue> comparison) => _keyedCollection.Sort((x, y) => comparison(x.Value, y.Value));
 
         #endregion
 
         #region IDictionary<TKey, TValue>
 
-        void IDictionary<TKey, TValue>.Add(TKey key, TValue value)
-        {
-            Add(key, value);
-        }
+        void IDictionary<TKey, TValue>.Add(TKey key, TValue value) => Add(key, value);
 
-        bool IDictionary<TKey, TValue>.ContainsKey(TKey key)
-        {
-            return ContainsKey(key);
-        }
+        bool IDictionary<TKey, TValue>.ContainsKey(TKey key) => ContainsKey(key);
 
         ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
 
-        bool IDictionary<TKey, TValue>.Remove(TKey key)
-        {
-            return Remove(key);
-        }
+        bool IDictionary<TKey, TValue>.Remove(TKey key) => Remove(key);
 
-        bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value)
-        {
-            return TryGetValue(key, out value);
-        }
+        bool IDictionary<TKey, TValue>.TryGetValue(TKey key, out TValue value) => TryGetValue(key, out value);
 
         ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
 
@@ -331,53 +274,29 @@ namespace ClassicUO.Utility.Collections
 
         #region ICollection<KeyValuePair<TKey, TValue>>
 
-        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
-        {
-            _keyedCollection.Add(item);
-        }
+        void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item) => _keyedCollection.Add(item);
 
-        void ICollection<KeyValuePair<TKey, TValue>>.Clear()
-        {
-            _keyedCollection.Clear();
-        }
+        void ICollection<KeyValuePair<TKey, TValue>>.Clear() => _keyedCollection.Clear();
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
-        {
-            return _keyedCollection.Contains(item);
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item) => _keyedCollection.Contains(item);
 
-        void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-        {
-            _keyedCollection.CopyTo(array, arrayIndex);
-        }
+        void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex) => _keyedCollection.CopyTo(array, arrayIndex);
 
         int ICollection<KeyValuePair<TKey, TValue>>.Count => _keyedCollection.Count;
 
         bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item)
-        {
-            return _keyedCollection.Remove(item);
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.Remove(KeyValuePair<TKey, TValue> item) => _keyedCollection.Remove(item);
 
         #endregion
 
         #region IOrderedDictionary
 
-        IDictionaryEnumerator IOrderedDictionary.GetEnumerator()
-        {
-            return new DictionaryEnumerator<TKey, TValue>(this);
-        }
+        IDictionaryEnumerator IOrderedDictionary.GetEnumerator() => new DictionaryEnumerator<TKey, TValue>(this);
 
-        void IOrderedDictionary.Insert(int index, object key, object value)
-        {
-            Insert(index, (TKey) key, (TValue) value);
-        }
+        void IOrderedDictionary.Insert(int index, object key, object value) => Insert(index, (TKey)key, (TValue)value);
 
-        void IOrderedDictionary.RemoveAt(int index)
-        {
-            RemoveAt(index);
-        }
+        void IOrderedDictionary.RemoveAt(int index) => RemoveAt(index);
 
         object IOrderedDictionary.this[int index]
         {
@@ -389,25 +308,13 @@ namespace ClassicUO.Utility.Collections
 
         #region IDictionary
 
-        void IDictionary.Add(object key, object value)
-        {
-            Add((TKey) key, (TValue) value);
-        }
+        void IDictionary.Add(object key, object value) => Add((TKey)key, (TValue)value);
 
-        void IDictionary.Clear()
-        {
-            Clear();
-        }
+        void IDictionary.Clear() => Clear();
 
-        bool IDictionary.Contains(object key)
-        {
-            return _keyedCollection.Contains((TKey) key);
-        }
+        bool IDictionary.Contains(object key) => _keyedCollection.Contains((TKey)key);
 
-        IDictionaryEnumerator IDictionary.GetEnumerator()
-        {
-            return new DictionaryEnumerator<TKey, TValue>(this);
-        }
+        IDictionaryEnumerator IDictionary.GetEnumerator() => new DictionaryEnumerator<TKey, TValue>(this);
 
         bool IDictionary.IsFixedSize => false;
 
@@ -415,10 +322,7 @@ namespace ClassicUO.Utility.Collections
 
         ICollection IDictionary.Keys => (ICollection) Keys;
 
-        void IDictionary.Remove(object key)
-        {
-            Remove((TKey) key);
-        }
+        void IDictionary.Remove(object key) => Remove((TKey)key);
 
         ICollection IDictionary.Values => (ICollection) Values;
 
@@ -432,10 +336,7 @@ namespace ClassicUO.Utility.Collections
 
         #region ICollection
 
-        void ICollection.CopyTo(Array array, int index)
-        {
-            ((ICollection) _keyedCollection).CopyTo(array, index);
-        }
+        void ICollection.CopyTo(Array array, int index) => ((ICollection)_keyedCollection).CopyTo(array, index);
 
         int ICollection.Count => ((ICollection) _keyedCollection).Count;
 
@@ -461,10 +362,7 @@ namespace ClassicUO.Utility.Collections
             _getKeyForItemDelegate = getKeyForItemDelegate ?? throw new ArgumentNullException(DelegateNullExceptionMessage);
         }
 
-        protected override TKey GetKeyForItem(TItem item)
-        {
-            return _getKeyForItemDelegate(item);
-        }
+        protected override TKey GetKeyForItem(TItem item) => _getKeyForItemDelegate(item);
 
         public void SortByKeys()
         {
@@ -474,14 +372,14 @@ namespace ClassicUO.Utility.Collections
 
         public void SortByKeys(IComparer<TKey> keyComparer)
         {
-            Comparer2<TItem> comparer = new Comparer2<TItem>((x, y) => keyComparer.Compare(GetKeyForItem(x), GetKeyForItem(y)));
+            var comparer = new Comparer2<TItem>((x, y) => keyComparer.Compare(GetKeyForItem(x), GetKeyForItem(y)));
 
             Sort(comparer);
         }
 
         public void SortByKeys(Comparison<TKey> keyComparison)
         {
-            Comparer2<TItem> comparer = new Comparer2<TItem>((x, y) => keyComparison(GetKeyForItem(x), GetKeyForItem(y)));
+            var comparer = new Comparer2<TItem>((x, y) => keyComparison(GetKeyForItem(x), GetKeyForItem(y)));
 
             Sort(comparer);
         }
@@ -494,13 +392,13 @@ namespace ClassicUO.Utility.Collections
 
         public void Sort(Comparison<TItem> comparison)
         {
-            Comparer2<TItem> newComparer = new Comparer2<TItem>((x, y) => comparison(x, y));
+            var newComparer = new Comparer2<TItem>((x, y) => comparison(x, y));
             Sort(newComparer);
         }
 
         public void Sort(IComparer<TItem> comparer)
         {
-            List<TItem> list = Items as List<TItem>;
+            var list = Items as List<TItem>;
 
             if (list != null)
             {
@@ -523,10 +421,7 @@ namespace ClassicUO.Utility.Collections
 
         #endregion
 
-        public override int Compare(T arg1, T arg2)
-        {
-            return _compareFunction(arg1, arg2);
-        }
+        public override int Compare(T arg1, T arg2) => _compareFunction(arg1, arg2);
     }
 
     public class DictionaryEnumerator<TKey, TValue> : IDictionaryEnumerator, IDisposable
@@ -538,15 +433,9 @@ namespace ClassicUO.Utility.Collections
             impl = value.GetEnumerator();
         }
 
-        public void Reset()
-        {
-            impl.Reset();
-        }
+        public void Reset() => impl.Reset();
 
-        public bool MoveNext()
-        {
-            return impl.MoveNext();
-        }
+        public bool MoveNext() => impl.MoveNext();
 
         public DictionaryEntry Entry
         {
@@ -562,10 +451,7 @@ namespace ClassicUO.Utility.Collections
         public object Value => impl.Current.Value;
         public object Current => Entry;
 
-        public void Dispose()
-        {
-            impl.Dispose();
-        }
+        public void Dispose() => impl.Dispose();
     }
 
     public interface IOrderedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IOrderedDictionary

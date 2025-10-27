@@ -64,10 +64,10 @@ namespace ClassicUO.Renderer
 
         public static Rectangle CalculateScissors(Matrix batchTransform, int sx, int sy, int sw, int sh)
         {
-            Vector2 tmp = new Vector2(sx, sy);
+            var tmp = new Vector2(sx, sy);
             Vector2.Transform(ref tmp, ref batchTransform, out tmp);
 
-            Rectangle newScissor = new Rectangle
+            var newScissor = new Rectangle
             {
                 X = (int) tmp.X, Y = (int) tmp.Y
             };

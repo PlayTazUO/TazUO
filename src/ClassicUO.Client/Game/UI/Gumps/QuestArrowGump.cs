@@ -51,7 +51,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            Direction dir = (Direction) GameCursor.GetMouseDirection
+            var dir = (Direction) GameCursor.GetMouseDirection
             (
                 World.Player.X,
                 World.Player.Y,
@@ -136,9 +136,9 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
             }
 
-            var camera = scene.Camera;
+            Renderer.Camera camera = scene.Camera;
 
-            Point p = new Point(x, y);
+            var p = new Point(x, y);
             p = Client.Game.Scene.Camera.WorldToScreen(p);
             p.X += camera.Bounds.X;
             p.Y += camera.Bounds.Y;

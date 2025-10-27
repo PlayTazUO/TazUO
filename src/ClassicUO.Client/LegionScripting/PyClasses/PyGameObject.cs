@@ -128,10 +128,7 @@ public class PyGameObject
     /// Returns a readable string representation of the game object.
     /// Used when printing or converting the object to a string in Python scripts.
     /// </summary>
-    public override string ToString()
-    {
-        return $"<{__class__} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
-    }
+    public override string ToString() => $"<{__class__} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
 
     /// <summary>
     /// The Python-visible class name of this object.

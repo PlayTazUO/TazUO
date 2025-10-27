@@ -603,150 +603,78 @@ namespace ClassicUO.Network.Encryption
         private static readonly int MDS_GF_FDBK = 0x169; /* primitive polynomial for GF(256)*/
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int LFSR1(int x)
-        {
-            return (x >> 1) ^ ((x & 0x01) == 0x01 ? MDS_GF_FDBK / 2 : 0);
-        }
+        private static int LFSR1(int x) => (x >> 1) ^ ((x & 0x01) == 0x01 ? MDS_GF_FDBK / 2 : 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int LFSR2(int x)
-        {
-            return (x >> 2) ^ ((x & 0x02) == 0x02 ? MDS_GF_FDBK / 2 : 0) ^ ((x & 0x01) == 0x01 ? MDS_GF_FDBK / 4 : 0);
-        }
+        private static int LFSR2(int x) => (x >> 2) ^ ((x & 0x02) == 0x02 ? MDS_GF_FDBK / 2 : 0) ^ ((x & 0x01) == 0x01 ? MDS_GF_FDBK / 4 : 0);
 
         // TODO: not the most efficient use of code but it allows us to update the code a lot quicker we can possibly optimize this code once we have got it all working
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mx_1(int x)
-        {
-            return x; /* force result to int so << will work */
-        }
+        private static int Mx_1(int x) => x; /* force result to int so << will work */
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mx_X(int x)
-        {
-            return x ^ LFSR2(x); /* 5B */
-        }
+        private static int Mx_X(int x) => x ^ LFSR2(x); /* 5B */
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mx_Y(int x)
-        {
-            return x ^ LFSR1(x) ^ LFSR2(x); /* EF */
-        }
+        private static int Mx_Y(int x) => x ^ LFSR1(x) ^ LFSR2(x); /* EF */
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M00(int x)
-        {
-            return Mul_1(x);
-        }
+        private static int M00(int x) => Mul_1(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M01(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M01(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M02(int x)
-        {
-            return Mul_X(x);
-        }
+        private static int M02(int x) => Mul_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M03(int x)
-        {
-            return Mul_X(x);
-        }
+        private static int M03(int x) => Mul_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M10(int x)
-        {
-            return Mul_X(x);
-        }
+        private static int M10(int x) => Mul_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M11(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M11(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M12(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M12(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M13(int x)
-        {
-            return Mul_1(x);
-        }
+        private static int M13(int x) => Mul_1(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M20(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M20(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M21(int x)
-        {
-            return Mul_X(x);
-        }
+        private static int M21(int x) => Mul_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M22(int x)
-        {
-            return Mul_1(x);
-        }
+        private static int M22(int x) => Mul_1(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M23(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M23(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M30(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M30(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M31(int x)
-        {
-            return Mul_1(x);
-        }
+        private static int M31(int x) => Mul_1(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M32(int x)
-        {
-            return Mul_Y(x);
-        }
+        private static int M32(int x) => Mul_Y(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int M33(int x)
-        {
-            return Mul_X(x);
-        }
+        private static int M33(int x) => Mul_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mul_1(int x)
-        {
-            return Mx_1(x);
-        }
+        private static int Mul_1(int x) => Mx_1(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mul_X(int x)
-        {
-            return Mx_X(x);
-        }
+        private static int Mul_X(int x) => Mx_X(x);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int Mul_Y(int x)
-        {
-            return Mx_Y(x);
-        }
+        private static int Mul_Y(int x) => Mx_Y(x);
 
         /*	Define the fixed p0/p1 permutations used in keyed S-box lookup.
             By changing the following constant definitions for P_ij, the S-boxes will
@@ -885,45 +813,27 @@ namespace ClassicUO.Network.Encryption
 
         // left rotation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ROL(uint x, int n)
-        {
-            return (x << (n & 0x1F)) | (x >> (32 - (n & 0x1F)));
-        }
+        private static uint ROL(uint x, int n) => (x << (n & 0x1F)) | (x >> (32 - (n & 0x1F)));
 
         // right rotation
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static uint ROR(uint x, int n)
-        {
-            return (x >> (n & 0x1F)) | (x << (32 - (n & 0x1F)));
-        }
+        private static uint ROR(uint x, int n) => (x >> (n & 0x1F)) | (x << (32 - (n & 0x1F)));
 
         // first byte
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static byte b0(uint x)
-        {
-            return (byte)x; //& 0xFF);
-        }
+        protected static byte b0(uint x) => (byte)x; //& 0xFF);
 
         // second byte
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static byte b1(uint x)
-        {
-            return (byte)(x >> 8); // & (0xFF));
-        }
+        protected static byte b1(uint x) => (byte)(x >> 8); // & (0xFF));
 
         // third byte
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static byte b2(uint x)
-        {
-            return (byte)(x >> 16); // & (0xFF));
-        }
+        protected static byte b2(uint x) => (byte)(x >> 16); // & (0xFF));
 
         // fourth byte
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static byte b3(uint x)
-        {
-            return (byte)(x >> 24); // & (0xFF));
-        }
+        protected static byte b3(uint x) => (byte)(x >> 24); // & (0xFF));
 
         #endregion
     }

@@ -215,14 +215,14 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 for (LinkedObject i = _corpse.Items; i != null; i = i.Next)
                 {
-                    Item it = (Item)i;
+                    var it = (Item)i;
 
                     if (!ItemBelongsToGroup(it, displayGroup) || !it.IsLootable)
                     {
                         continue;
                     }
 
-                    GridLootItem gridItem = new GridLootItem(this, it, GRID_ITEM_SIZE);
+                    var gridItem = new GridLootItem(this, it, GRID_ITEM_SIZE);
 
                     if (x >= MAX_WIDTH - 20)
                     {
@@ -406,10 +406,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private string GetCorpseName()
-        {
-            return _corpse.Name?.Length > 0 ? _corpse.Name : "a corpse";
-        }
+        private string GetCorpseName() => _corpse.Name?.Length > 0 ? _corpse.Name : "a corpse";
 
         private class GridLootItem : Control
         {
@@ -432,7 +429,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 CanMove = false;
 
-                HSliderBar amount = new HSliderBar(
+                var amount = new HSliderBar(
                     0,
                     0,
                     size,
@@ -452,7 +449,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 amount.IsVisible = amount.IsEnabled = amount.MaxValue > 1;
 
-                AlphaBlendControl background = new AlphaBlendControl();
+                var background = new AlphaBlendControl();
                 background.Y = 15;
                 background.Width = size;
                 background.Height = size;
@@ -490,9 +487,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (item != null)
                 {
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(item.DisplayedGraphic);
+                    ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(item.DisplayedGraphic);
 
-                    var rect = Client.Game.UO.Arts.GetRealArtBounds(item.DisplayedGraphic);
+                    Rectangle rect = Client.Game.UO.Arts.GetRealArtBounds(item.DisplayedGraphic);
 
                     hueVector = ShaderHueTranslator.GetHueVector(
                         item.Hue,
@@ -500,8 +497,8 @@ namespace ClassicUO.Game.UI.Gumps
                         1f
                     );
 
-                    Point originalSize = new Point(_hit.Width, _hit.Height);
-                    Point point = new Point();
+                    var originalSize = new Point(_hit.Width, _hit.Height);
+                    var point = new Point();
 
                     if (rect.Width < _hit.Width)
                     {
