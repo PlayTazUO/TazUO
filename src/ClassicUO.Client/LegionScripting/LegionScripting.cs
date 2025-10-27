@@ -33,12 +33,13 @@ namespace ClassicUO.LegionScripting
 
         private static bool _enabled, _loaded;
 
-        private static List<ScriptFile> runningScripts = new List<ScriptFile>();
-        private static List<ScriptFile> removeRunningScripts = new List<ScriptFile>();
+        private static List<ScriptFile> runningScripts = new();
+        private static List<ScriptFile> removeRunningScripts = new();
         private static LScriptSettings lScriptSettings;
 
         public static LScriptSettings LScriptSettings => lScriptSettings;
-        public static List<ScriptFile> LoadedScripts = new List<ScriptFile>();
+        public static List<ScriptFile> LoadedScripts = new();
+        public static List<ScriptFile> RunningScripts => runningScripts;
 
         public static event EventHandler<ScriptInfoEvent> ScriptStartedEvent;
         public static event EventHandler<ScriptInfoEvent> ScriptStoppedEvent;
