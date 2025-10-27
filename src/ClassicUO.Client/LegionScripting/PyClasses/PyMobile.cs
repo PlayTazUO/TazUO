@@ -69,6 +69,6 @@ public class PyMobile : PyEntity
             return mobile = m;
         }
 
-        return mobile = null;
+        return null;
     }
 }
