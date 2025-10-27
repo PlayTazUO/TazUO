@@ -20,7 +20,6 @@ namespace ClassicUO.Game.GameObjects
 
         public PlayerMobile(World world, uint serial) : base(world, serial)
         {
-            AttachCastingEventHandlers();
             Skills = new Skill[Client.Game.UO.FileManager.Skills.SkillsCount];
 
             for (int i = 0; i < Skills.Length; i++)
