@@ -30,13 +30,10 @@ public class SpellRangeInfo
 
     private int? _mageryIndex;
     private int? _mysticismIndex;
-    private World world;
+    private World world => Client.Game.UO.World;
     private const float ChivalrySkillThreshold = 70.0f;
 
-    public SpellRangeInfo()
-    {
-        world = World.ValidateWorld(Client.Game.UO.World);
-    }
+    public SpellRangeInfo() { }
 
     public static SpellRangeInfo FromSpellDef(SpellDefinition spell)
     {

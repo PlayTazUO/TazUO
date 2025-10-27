@@ -38,6 +38,7 @@ public class SpellBar : Gump
         Build();
 
         EventSink.SpellCastBegin += EventSinkOnSpellCastBegin;
+        EventSink.SpellRecoveryBegin += EventSinkOnSpellRecoveryBegin;
     }
 
     private void EventSinkOnSpellCastBegin(object sender, int e)
@@ -47,6 +48,17 @@ public class SpellBar : Gump
             if (entry.CurrentSpellID == e)
             {
                 entry.BeginTrackingCasting();
+            }
+        }
+    }
+
+    private void EventSinkOnSpellRecoveryBegin(object sender, int e)
+    {
+        foreach (SpellEntry entry in spellEntries)
+        {
+            if (entry.CurrentSpellID == e)
+            {
+                entry.BeginTrackingRecovery();
             }
         }
     }
@@ -99,7 +111,7 @@ public class SpellBar : Gump
 
         int x = 2;
 
-        if(SpellBarManager.CurrentRow > SpellBarManager.SpellBarRows.Count - 1)
+        if (SpellBarManager.CurrentRow > SpellBarManager.SpellBarRows.Count - 1)
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
 
         background.Hue = SpellBarManager.SpellBarRows[SpellBarManager.CurrentRow].RowHue;
@@ -127,9 +139,9 @@ public class SpellBar : Gump
         Add(up);
         Add(down);
 
-        NiceButton menu = new (Width - 15, 0, 15, Height, ButtonAction.Default, "+");
+        NiceButton menu = new(Width - 15, 0, 15, Height, ButtonAction.Default, "+");
 
-        ContextMenuItemEntry import = new ("Import preset");
+        ContextMenuItemEntry import = new("Import preset");
 
         menu.MouseUp += (sender, e) =>
         {
@@ -147,7 +159,7 @@ public class SpellBar : Gump
             Gump g;
             UIManager.Add(g = new InputRequest(World, "Preset name", "Save", "Cancel", (r, n) =>
             {
-                if(r == InputRequest.Result.BUTTON1)
+                if (r == InputRequest.Result.BUTTON1)
                     SpellBarManager.SaveCurrentRowPreset(n);
             }));
             g.CenterXInViewPort();
@@ -229,6 +241,7 @@ public class SpellBar : Gump
     {
         base.Dispose();
         EventSink.SpellCastBegin -= EventSinkOnSpellCastBegin;
+        EventSink.SpellRecoveryBegin -= EventSinkOnSpellRecoveryBegin;
     }
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -271,9 +284,14 @@ public class SpellBar : Gump
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
+        private bool trackRecovery;
         private World World;
         private Gump parentGump;
         private TextBox hotkeyLabel;
+        private Microsoft.Xna.Framework.Graphics.Texture2D castingTexture = SolidColorTextureCache.GetTexture(Color.Black);
+        private Microsoft.Xna.Framework.Graphics.Texture2D recoveryTexture = SolidColorTextureCache.GetTexture(Color.Black);
+        private DateTime savedStateTime;
+
         public SpellEntry(World world, Gump parent)
         {
             CanMove = true;
@@ -294,7 +312,7 @@ public class SpellBar : Gump
             this.col = col;
             background.Hue = SpellBarManager.SpellBarRows[row].RowHue;
             SpellBarManager.SpellBarRows[row].SpellSlot[col] = spell;
-            if(spell != null && spell != SpellDefinition.EmptySpell)
+            if (spell != null && spell != SpellDefinition.EmptySpell)
             {
                 icon.Graphic = (ushort)spell.GumpIconSmallID;
                 icon.IsVisible = true;
@@ -339,8 +357,20 @@ public class SpellBar : Gump
         /// </summary>
         public void BeginTrackingCasting()
         {
+            savedStateTime = DateTime.Now;
             trackCasting = true;
         }
+
+        /// <summary>
+        /// Only call this when you're sure to be in a recovery phase.
+        /// </summary>
+        public void BeginTrackingRecovery()
+        {
+            savedStateTime = DateTime.Now;
+            trackCasting = false;
+            trackRecovery = true;
+        }
+
         public void Cast()
         {
             if (spell != null && spell != SpellDefinition.EmptySpell)
@@ -352,7 +382,7 @@ public class SpellBar : Gump
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
-            if(button == MouseButtonType.Right)
+            if (button == MouseButtonType.Right)
                 ContextMenu?.Show();
 
             if (button == MouseButtonType.Left && !Keyboard.Alt && !Keyboard.Ctrl)
@@ -366,7 +396,7 @@ public class SpellBar : Gump
             hotkeyLabel?.Dispose();
             if (ProfileManager.CurrentProfile.SpellBar_ShowHotkeys)
             {
-                Add(hotkeyLabel = TextBox.GetOne(string.Empty, "uo-unicode-1", 18, Color.White, TextBox.RTLOptions.DefaultCenterStroked(44)));;
+                Add(hotkeyLabel = TextBox.GetOne(string.Empty, "uo-unicode-1", 18, Color.White, TextBox.RTLOptions.DefaultCenterStroked(44))); ;
                 hotkeyLabel.Y = 46;
                 SetHotkeyText(col);
             }
@@ -375,7 +405,7 @@ public class SpellBar : Gump
         private void Build()
         {
             Add(background = new AlphaBlendControl() { Width = 44, Height = 44, X = 1, Y = 1 });
-            Add(icon = new GumpPic(1, 1, 0x5000, 0) {IsVisible = false, AcceptMouseInput = false});
+            Add(icon = new GumpPic(1, 1, 0x5000, 0) { IsVisible = false, AcceptMouseInput = false });
             BuildHotkeyLabel();
 
             ContextMenu = new(parentGump);
@@ -398,50 +428,54 @@ public class SpellBar : Gump
             }));
         }
 
+        private void resetStates()
+        {
+            trackCasting = false;
+            trackRecovery = false;
+        }
+
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
             if (!base.Draw(batcher, x, y))
                 return false;
 
-            if (trackCasting)
+            if (!trackCasting && !trackRecovery)
+                return true;
+
+            if (trackCasting && !SpellVisualRangeManager.Instance.IsCastingWithoutTarget())
             {
-                if (!SpellVisualRangeManager.Instance.IsCastingWithoutTarget())
-                {
-                    trackCasting = false;
-
-                    return true;
-                }
-
-                SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
-
-                if (i == null)
-                {
-                    trackCasting = false;
-                    return true;
-                }
-
-
-                if (i.CastTime > 0)
-                {
-                    double percent = (DateTime.Now - SpellVisualRangeManager.Instance.LastSpellTime).TotalSeconds / i.CastTime;
-                    if(percent < 0)
-                        percent = 0;
-
-                    if (percent > 1)
-                        percent = 1;
-
-                    int filledHeight = (int)(Height * percent);
-                    int yb = Height - filledHeight; // This shifts the rect up as it grows
-
-                    Rectangle rect = new(x, y + yb, Width, filledHeight);
-                    batcher.Draw(SolidColorTextureCache.GetTexture(Color.Black), rect, new Vector3(0, 0, 0.65f));
-                }
-                else
-                {
-                    trackCasting = false;
-                }
-
+                resetStates();
+                return true;
             }
+
+            SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
+            if (i == null)
+            {
+                resetStates();
+                return true;
+            }
+
+            var castTime = trackCasting ? i.GetEffectiveCastTime() : i.GetEffectiveRecoveryTime();
+            if (castTime > 0)
+            {
+                double percent = (DateTime.Now - savedStateTime).TotalSeconds / castTime;
+                if (percent < 0)
+                    percent = 0;
+
+                if (percent > 1)
+                    percent = 1;
+
+                int filledHeight = (int)(Height * percent);
+                int yb = Height - filledHeight; // This shifts the rect up as it grows
+
+                Rectangle rect = new(x, y + yb, Width, filledHeight);
+                batcher.Draw(trackCasting ? castingTexture : recoveryTexture, rect, new Vector3(0, 0, 0.65f));
+            }
+            else
+            {
+                resetStates();
+            }
+
 
             return true;
         }

@@ -4,7 +4,6 @@ using System.Linq;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Utility.Logging;
 using LScript;
 using Microsoft.Xna.Framework;
 

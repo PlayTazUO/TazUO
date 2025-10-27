@@ -352,6 +352,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private void SaveSpell()
         {
             SpellVisualRangeManager.Instance.DelayedSave();
+            if (selectedSpell != null)
+                SpellVisualRangeManager.Instance.ReindexSpellPowerWords(selectedSpell);
         }
     }
 }

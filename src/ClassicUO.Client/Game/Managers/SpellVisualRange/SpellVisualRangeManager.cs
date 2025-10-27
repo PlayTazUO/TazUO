@@ -72,6 +72,19 @@ namespace ClassicUO.Game.Managers
             Load();
         }
 
+        /// <summary>
+        /// Reindexes the PowerWords mapping for the provided spell in the runtime cache.
+        /// </summary>
+        public void ReindexSpellPowerWords(SpellRangeInfo info)
+        {
+            if (info == null || string.IsNullOrWhiteSpace(info.PowerWords))
+                return;
+            if (spellRangePowerWordCache.ContainsKey(info.PowerWords))
+                spellRangePowerWordCache[info.PowerWords] = info;
+            else
+                spellRangePowerWordCache.Add(info.PowerWords, info);
+        }
+
         private void OnRawMessageReceived(object sender, MessageEventArgs e)
         {
             Task.Run(() =>
@@ -115,10 +128,13 @@ namespace ClassicUO.Game.Managers
                 World.Player.Flags |= Flags.Frozen;
             }
 
-            CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
-            if (bar.Parent == null)
-                UIManager.Add(bar);
-            bar.OnSpellCastBegin();
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnSpellCastBegin();
+            }
 
             EventSink.InvokeSpellCastBegin(spell.ID);
 
@@ -147,15 +163,16 @@ namespace ClassicUO.Game.Managers
 
         public void ClearCasting()
         {
+            SpellRangeInfo spellSnapshot;
             lock (_castingLock)
             {
                 if (frozenBySpell)
                     World.Player.Flags &= ~Flags.Frozen;
                 frozenBySpell = false;
-
+                spellSnapshot = currentSpell;
             }
 
-            if (currentSpell == null)
+            if (spellSnapshot == null)
             {
                 isCasting = false;
                 World.Player.Flags &= ~Flags.Frozen;
@@ -163,13 +180,13 @@ namespace ClassicUO.Game.Managers
             }
 
 
-            if (currentSpell.RecoveryTime > 0)
+            if (spellSnapshot.RecoveryTime > 0)
             {
-                _ = StartRecovery(currentSpell);
+                _ = StartRecovery(spellSnapshot);
             }
             else
             {
-                EndRecovery(currentSpell);
+                EndRecovery(spellSnapshot);
             }
         }
 
@@ -178,15 +195,20 @@ namespace ClassicUO.Game.Managers
             if (spell == null)
                 return;
 
+            EventSink.InvokeSpellCastEnd(spell.ID);
+            EventSink.InvokeSpellRecoveryBegin(spell.ID);
+
             _recoveryCts?.Cancel();
             _recoveryCts?.Dispose();
             _recoveryCts = new System.Threading.CancellationTokenSource();
 
-            CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
-            if (bar.Parent == null)
-                UIManager.Add(bar);
-
-            bar.OnRecoveryBegin();
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnRecoveryBegin();
+            }
 
             double recTime = spell.GetEffectiveRecoveryTime();
 
@@ -216,8 +238,8 @@ namespace ClassicUO.Game.Managers
                     World.Player.Flags &= ~Flags.Frozen;
                     frozenBySpell = false;
                 }
+                EventSink.InvokeSpellRecoveryEnd(spell.ID);
             }
-            EventSink.InvokeSpellCastEnd(endedSpellId);
         }
 
         public SpellRangeInfo GetCurrentSpell()
@@ -404,19 +426,22 @@ namespace ClassicUO.Game.Managers
         {
             spellRangeOverrideCache.Clear();
 
-            if (File.Exists(overridePath))
+            string path = string.IsNullOrEmpty(ProfileManager.ProfilePath)
+                ? null
+                : Path.Combine(ProfileManager.ProfilePath, "SpellVisualRange.json");
+            if (path != null && File.Exists(path))
             {
                 try
                 {
-                    string data = File.ReadAllText(overridePath);
+                    string data = File.ReadAllText(path);
                     SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
 
-                    foreach (var entry in fileData)
+                    foreach (SpellRangeInfo entry in fileData)
                     {
                         spellRangeOverrideCache.Add(entry.ID, entry);
                     }
 
-                    foreach (var entry in spellRangeOverrideCache.Values)
+                    foreach (SpellRangeInfo entry in spellRangeOverrideCache.Values)
                     {
                         if (string.IsNullOrEmpty(entry.PowerWords))
                         {
@@ -549,9 +574,12 @@ namespace ClassicUO.Game.Managers
 
                 saveTimer?.Dispose();
 
-                saveTimer = new Timer();
-                saveTimer.Interval = 500;
-                saveTimer.Elapsed += (_, _) => { PerformSave(); };
+                saveTimer = new Timer { Interval = 500, AutoReset = false };
+                saveTimer.Elapsed += (_, _) =>
+                {
+                    saveTimer?.Stop();
+                    PerformSave();
+                };
                 saveTimer.Start();
             }
         }
@@ -567,15 +595,19 @@ namespace ClassicUO.Game.Managers
             }
 
             string tempPath = null;
+            string destPath = !string.IsNullOrEmpty(ProfileManager.ProfilePath)
+                ? Path.Combine(ProfileManager.ProfilePath, "SpellVisualRange.json")
+                : savePath;
             try
             {
                 tempPath = Path.GetTempFileName();
                 string fileData = JsonSerializer.Serialize(spellRangeCache.Values.ToArray(), SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
                 File.WriteAllText(tempPath, fileData);
 
-                if (File.Exists(savePath))
-                    File.Delete(savePath);
-                File.Move(tempPath, savePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+                if (File.Exists(destPath))
+                    File.Delete(destPath);
+                File.Move(tempPath, destPath);
             }
             catch (Exception e)
             {

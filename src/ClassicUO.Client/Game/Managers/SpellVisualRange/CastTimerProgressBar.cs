@@ -4,7 +4,6 @@ using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using static ClassicUO.Game.Managers.SpellVisualRangeManager;
 
 namespace ClassicUO.Game.Managers.SpellVisualRange;
 
@@ -16,10 +15,10 @@ public class CastTimerProgressBar : Gump
     private Rectangle barBounds, barBoundsF;
     private Texture2D background;
     private Texture2D foreground;
-    private bool inCastingPhase = true;
+    private bool inCastingPhase;
     private DateTime phaseStartTime;
-    private static readonly Vector3 CastingHue = ShaderHueTranslator.GetHueVector(0x005F);
-    private static readonly Vector3 RecoveryHue = ShaderHueTranslator.GetHueVector(0x0035);
+    private static readonly Vector3 CastingHue = ShaderHueTranslator.GetHueVector(0x005F); // 95
+    private static readonly Vector3 RecoveryHue = ShaderHueTranslator.GetHueVector(0x0035); // 53
     private static readonly Vector3 EmptyHue = ShaderHueTranslator.GetHueVector(0x0026);
     private const int OffsetX = 27;   // 22 + 5
     private const int OffsetY = 15;
@@ -63,45 +62,6 @@ public class CastTimerProgressBar : Gump
             inCastingPhase = true;
             IsVisible = true;
         });
-    }
-
-    public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-    {
-        if (World?.Player == null || SpellVisualRangeManager.Instance == null)
-        {
-            IsVisible = false;
-            return false;
-        }
-
-        SpellRangeInfo spell = SpellVisualRangeManager.Instance.GetCurrentSpell();
-        if (spell == null)
-        {
-            IsVisible = false;
-            return false;
-        }
-
-        IsVisible = true;
-
-        double totalTime = inCastingPhase ? spell.GetEffectiveCastTime() : spell.GetEffectiveRecoveryTime();
-        if (totalTime <= 0)
-        {
-            IsVisible = inCastingPhase;
-            return false;
-        }
-        double elapsed = (DateTime.Now - phaseStartTime).TotalSeconds;
-        double percent = Math.Min(elapsed / totalTime, 1.0);
-
-        if (percent >= 1.0)
-        {
-            IsVisible = inCastingPhase;
-
-            return false;
-        }
-        IsVisible = true;
-        Vector3 drawHue = inCastingPhase ? CastingHue : RecoveryHue;
-        DrawProgressBar(batcher, x, y, percent, drawHue);
-
-        return base.Draw(batcher, x, y);
     }
 
     /// <summary>
@@ -149,5 +109,44 @@ public class CastTimerProgressBar : Gump
                 fillHue
             );
         }
+    }
+
+    public override bool Draw(UltimaBatcher2D batcher, int x, int y)
+    {
+        if (World?.Player == null || SpellVisualRangeManager.Instance == null)
+        {
+            IsVisible = false;
+            return false;
+        }
+
+        SpellRangeInfo spell = SpellVisualRangeManager.Instance.GetCurrentSpell();
+        if (spell == null)
+        {
+            IsVisible = false;
+            return false;
+        }
+
+        IsVisible = true;
+
+        double totalTime = inCastingPhase ? spell.GetEffectiveCastTime() : spell.GetEffectiveRecoveryTime();
+        if (totalTime <= 0)
+        {
+            IsVisible = inCastingPhase;
+            return false;
+        }
+        double elapsed = (DateTime.Now - phaseStartTime).TotalSeconds;
+        double percent = Math.Min(elapsed / totalTime, 1.0);
+
+        if (percent >= 1.0)
+        {
+            IsVisible = inCastingPhase;
+
+            return false;
+        }
+        IsVisible = true;
+        Vector3 drawHue = inCastingPhase ? CastingHue : RecoveryHue;
+        DrawProgressBar(batcher, x, y, percent, drawHue);
+
+        return base.Draw(batcher, x, y);
     }
 }

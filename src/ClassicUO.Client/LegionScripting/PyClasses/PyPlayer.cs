@@ -64,6 +64,8 @@ public class PyPlayer : PyMobile
     public short FasterCastRecovery => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.FasterCastRecovery ?? 0);
     public short LowerManaCost => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.LowerManaCost ?? 0);
     public short LowerReagentCost => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.LowerReagentCost ?? 0);
+    public bool IsCasting => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsCasting ?? false);
+    public bool IsRecovering => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsRecovering ?? false);
 
     // Other Stats
     public ushort Luck => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Luck ?? 0);

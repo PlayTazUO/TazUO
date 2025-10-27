@@ -123,7 +123,14 @@ namespace ClassicUO.Game.GameObjects
         public uint TithingPoints;
         public ushort Weight;
         public ushort WeightMax;
+        /// <summary>
+        /// True while a spell is being cast.
+        /// </summary>
         public bool IsCasting { get; private set; }
+        /// <summary>
+        /// True while a spell is in recovery phase.
+        /// </summary>
+        public bool IsRecovering { get; private set; }
 
         public Item FindBandage(ushort graphic = 0x0E21)
         {
@@ -141,16 +148,20 @@ namespace ClassicUO.Game.GameObjects
             return item;
         }
 
-        public void AttachCastingEventHandlers()
+        private void AttachCastingEventHandlers()
         {
             EventSink.SpellCastBegin += OnSpellCastBegin;
             EventSink.SpellCastEnd += OnSpellCastEnd;
+            EventSink.SpellRecoveryBegin += OnSpellRecoveryBegin;
+            EventSink.SpellRecoveryEnd += OnSpellRecoveryEnd;
         }
 
-        public void DetachCastingEventHandlers()
+        private void DetachCastingEventHandlers()
         {
             EventSink.SpellCastBegin -= OnSpellCastBegin;
             EventSink.SpellCastEnd -= OnSpellCastEnd;
+            EventSink.SpellRecoveryBegin -= OnSpellRecoveryBegin;
+            EventSink.SpellRecoveryEnd -= OnSpellRecoveryEnd;
         }
 
         private void OnSpellCastBegin(object sender, int spellID)
@@ -166,6 +177,22 @@ namespace ClassicUO.Game.GameObjects
             if (World?.Player == this)
             {
                 IsCasting = false;
+            }
+        }
+
+        private void OnSpellRecoveryBegin(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsRecovering = true;
+            }
+        }
+
+        private void OnSpellRecoveryEnd(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsRecovering = false;
             }
         }
 

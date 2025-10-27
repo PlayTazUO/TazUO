@@ -213,6 +213,10 @@ namespace ClassicUO.Game
 
         public string ServerName { get; set; } = "_";
 
+        /// <summary>Validates the provided World instance is not null.</summary>
+        /// <param name="world">World to validate.</param>
+        /// <returns>The same non-null World instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="world"/> is null.</exception>
         public static World ValidateWorld(World world)
         {
             if (world == null)
