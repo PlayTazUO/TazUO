@@ -9,14 +9,12 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Utility.Platforms;
 using Microsoft.Xna.Framework;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
-using ClassicUO.Network;
 using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game
@@ -215,7 +213,12 @@ namespace ClassicUO.Game
 
         public string ServerName { get; set; } = "_";
 
-
+        public static World ValidateWorld(World world)
+        {
+            if (world == null)
+                throw new ArgumentNullException(nameof(world));
+            return world;
+        }
 
         public void CreatePlayer(uint serial)
         {

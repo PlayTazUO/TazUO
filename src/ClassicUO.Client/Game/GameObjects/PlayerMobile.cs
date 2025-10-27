@@ -10,6 +10,7 @@ using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
+using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.GameObjects
 {
@@ -19,6 +20,7 @@ namespace ClassicUO.Game.GameObjects
 
         public PlayerMobile(World world, uint serial) : base(world, serial)
         {
+            AttachCastingEventHandlers();
             Skills = new Skill[Client.Game.UO.FileManager.Skills.SkillsCount];
 
             for (int i = 0; i < Skills.Length; i++)
@@ -38,8 +40,8 @@ namespace ClassicUO.Game.GameObjects
                 }
             };
 
-            if(ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
-                UIManager.Add(new SpellVisualRangeManager.CastTimerProgressBar(world));
+            if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
+                UIManager.Add(new CastTimerProgressBar(world));
 
             IsPlayer = true;
         }
@@ -121,6 +123,7 @@ namespace ClassicUO.Game.GameObjects
         public uint TithingPoints;
         public ushort Weight;
         public ushort WeightMax;
+        public bool IsCasting { get; private set; }
 
         public Item FindBandage(ushort graphic = 0x0E21)
         {
@@ -136,6 +139,34 @@ namespace ClassicUO.Game.GameObjects
                 item = FindItemByLayer(Layer.Waist)?.FindItem(graphic);
 
             return item;
+        }
+
+        public void AttachCastingEventHandlers()
+        {
+            EventSink.SpellCastBegin += OnSpellCastBegin;
+            EventSink.SpellCastEnd += OnSpellCastEnd;
+        }
+
+        public void DetachCastingEventHandlers()
+        {
+            EventSink.SpellCastBegin -= OnSpellCastBegin;
+            EventSink.SpellCastEnd -= OnSpellCastEnd;
+        }
+
+        private void OnSpellCastBegin(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsCasting = true;
+            }
+        }
+
+        private void OnSpellCastEnd(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsCasting = false;
+            }
         }
 
         public Item FindItemByGraphic(ushort graphic)
@@ -380,6 +411,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             DeathScreenTimer = 0;
+            DetachCastingEventHandlers();
 
             Log.Warn("PlayerMobile disposed!");
             base.Destroy();
@@ -566,7 +598,7 @@ namespace ClassicUO.Game.GameObjects
         //}
         // #############################################
 
-         public bool Walk(Direction direction, bool run)
+        public bool Walk(Direction direction, bool run)
         {
             if (!ProfileManager.CurrentProfile.AutoAvoidObstacules || Pathfinder.AutoWalking)
             {
@@ -806,7 +838,7 @@ namespace ClassicUO.Game.GameObjects
                 x = walkStep.X;
                 y = walkStep.Y;
                 z = walkStep.Z;
-                oldDirection = (Direction) walkStep.Direction;
+                oldDirection = (Direction)walkStep.Direction;
             }
 
             sbyte oldZ = z;
@@ -835,7 +867,7 @@ namespace ClassicUO.Game.GameObjects
                     y = newY;
                     z = newZ;
 
-                    walkTime = (ushort) MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
+                    walkTime = (ushort)MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
                 }
             }
             else
@@ -859,7 +891,7 @@ namespace ClassicUO.Game.GameObjects
                     y = newY;
                     z = newZ;
 
-                    walkTime = (ushort) MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
+                    walkTime = (ushort)MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
                 }
 
                 direction = newDir;
@@ -881,13 +913,13 @@ namespace ClassicUO.Game.GameObjects
             step.Sequence = Walker.WalkSequence;
             step.Accepted = false;
             step.Running = run;
-            step.OldDirection = (byte) (oldDirection & Direction.Mask);
-            step.Direction = (byte) direction;
+            step.OldDirection = (byte)(oldDirection & Direction.Mask);
+            step.Direction = (byte)direction;
             step.Timer = Time.Ticks;
-            step.X = (ushort) x;
-            step.Y = (ushort) y;
+            step.X = (ushort)x;
+            step.Y = (ushort)y;
             step.Z = z;
-            step.NoRotation = step.OldDirection == (byte) direction && oldZ - z >= 11;
+            step.NoRotation = step.OldDirection == (byte)direction && oldZ - z >= 11;
 
             Walker.StepsCount++;
 
@@ -898,7 +930,7 @@ namespace ClassicUO.Game.GameObjects
                     X = x,
                     Y = y,
                     Z = z,
-                    Direction = (byte) direction,
+                    Direction = (byte)direction,
                     Run = run
                 }
             );

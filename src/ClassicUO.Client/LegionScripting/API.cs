@@ -1120,9 +1120,14 @@ namespace ClassicUO.LegionScripting
         {
             Item i = World.Items.Get(serial);
 
-            Found = i != null ? i.Serial : 0;
+            if (i != null)
+            {
+                Found = i.Serial;
+                return new PyItem(i);
+            }
 
-            return new PyItem(i);
+            Found = 0;
+            return null;
         });
 
         /// <summary>
