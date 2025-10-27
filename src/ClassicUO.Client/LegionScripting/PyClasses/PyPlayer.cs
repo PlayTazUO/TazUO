@@ -120,9 +120,9 @@ public class PyPlayer : PyMobile
     {
         if (player != null && player.Serial == Serial) return player;
 
-        if (Client.Game.UO.World.Mobiles.TryGetValue(Serial, out Mobile m) && m is PlayerMobile pm)
+        if (World.Instance.Player != null)
         {
-            return player = pm;
+            return player = World.Instance.Player;
         }
 
         return null;
