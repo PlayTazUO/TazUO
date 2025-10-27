@@ -6217,12 +6217,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ServerListReceived(ref p);
-        }
+        LoginHandshake.Instance?.ServerListReceived(ref p);
     }
 
     private static void ReceiveServerRelay(World world, ref StackDataReader p)
@@ -6232,12 +6227,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleRelayServerPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleRelayServerPacket(ref p, Settings.GlobalSettings.IgnoreRelayIp);
     }
 
     private static void UpdateCharacterList(World world, ref StackDataReader p)
@@ -6247,12 +6237,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.UpdateCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.UpdateCharacterList(ref p);
     }
 
     private static void ReceiveCharacterList(World world, ref StackDataReader p)
@@ -6262,12 +6247,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ReceiveCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.ReceiveCharacterList(ref p);
     }
 
     private static void LoginDelay(World world, ref StackDataReader p)
@@ -6277,12 +6257,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleLoginDelayPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleLoginDelayPacket(ref p);
     }
 
     private static void ReceiveLoginRejection(World world, ref StackDataReader p)
@@ -6292,12 +6267,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleErrorCode(ref p);
-        }
+        LoginHandshake.Instance?.HandleErrorCode(ref p);
     }
 
     private static void AddItemToContainer(
