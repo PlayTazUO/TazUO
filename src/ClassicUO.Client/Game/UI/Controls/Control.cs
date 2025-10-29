@@ -534,8 +534,8 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (Children[i]?.IsDisposed == true)
                 {
-                    OnChildRemoved();
                     Children.RemoveAt(i);
+                    OnChildRemoved();
                 }
             }
         }
