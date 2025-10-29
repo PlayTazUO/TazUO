@@ -89,6 +89,7 @@ public class PyPlayer : PyMobile
     public short MaxStaminaIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxStaminaIncrease ?? 0);
 
     public bool IsHidden =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsHidden ?? false);
+    public bool IsWalking =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsWalking ?? false);
 
     public bool InWarMode
     {
