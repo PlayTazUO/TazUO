@@ -41,15 +41,12 @@ public class PyMobile : PyEntity
     /// <summary>
     /// Get the mobile's Mount item (if mounted)
     /// </summary>
-    public PyItem Mount
+    public PyItem Mount => MainThreadQueue.InvokeOnMainThread(() =>
     {
-        get
-        {
-            Item mount = GetMobile()?.Mount;
+        Item mount = GetMobileUnsafe()?.Mount;
 
-            return mount != null ? new PyItem(mount) : null;
-        }
-    }
+        return mount != null ? new PyItem(mount) : null;
+    });
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PyMobile"/> class from a <see cref="Mobile"/>.
