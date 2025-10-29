@@ -391,6 +391,13 @@ namespace ClassicUO.Game.UI.Gumps
                     AutoLootManager.Instance.ForceLootContainer(LocalSerial);
                 }));
             }
+
+            // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
+            control.Add(new ContextMenuItemEntry("Refresh item highlights", () =>
+            {
+                GridHighlightData.RecheckMatchStatus(true);
+            }));
+
             return control;
         }
 
@@ -1255,7 +1262,7 @@ namespace ClassicUO.Game.UI.Gumps
                             var i2 = new ItemPropertiesData(_world, compItem);
 
                             if (i1.GenerateComparisonTooltip(i2, out string compileToolTip))
-                                GameActions.Print(_world,compileToolTip);
+                                GameActions.Print(_world, compileToolTip);
                         }
 
                         // Add second weapon comparison if both hands have weapons
@@ -1278,7 +1285,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Vector3 hueVector = _borderHueVec;
 
-                if(_hasItem)
+                if (_hasItem)
                 {
                     if (ItemGridLocked)
                         hueVector = ShaderHueTranslator.GetHueVector(0x2, false, (float)_profile.GridBorderAlpha / 100);
