@@ -532,7 +532,8 @@ namespace ClassicUO.Game.UI.Controls
         {
             for (int i = Children.Count - 1; i >= 0; i--)
             {
-                if (Children[i]?.IsDisposed == true)
+                // Check bounds in case the list was modified during iteration
+                if (i < Children.Count && Children[i]?.IsDisposed == true)
                 {
                     OnChildRemoved();
                     Children.RemoveAt(i);
