@@ -392,9 +392,12 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            foreach (Item item in World.Items.Values)
+            // Use the optimized corpse collection instead of iterating all items
+            Item[] corpses = World.GetCorpseSnapshot();
+
+            foreach (Item item in corpses)
             {
-                if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
+                if (!item.IsDestroyed && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
                 {
                     // Check if this is the player's own corpse
                     bool isOwnCorpse = !string.IsNullOrEmpty(item.Name) &&

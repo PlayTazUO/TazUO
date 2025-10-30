@@ -222,6 +222,7 @@ namespace ClassicUO.Game.GameObjects
         public bool WantUpdateMulti = true;
 
         private bool _isLight;
+        private bool _wasCorpse; // Track if this item was previously a corpse
 
         public static Item Create(World world, uint serial)
         {
@@ -231,11 +232,39 @@ namespace ClassicUO.Game.GameObjects
             return i;
         }
 
+        public override void OnGraphicSet(ushort newGraphic)
+        {
+            base.OnGraphicSet(newGraphic);
+
+            // Check if this item became a corpse or stopped being a corpse
+            bool isNowCorpse = newGraphic == 0x2006;
+
+            if (isNowCorpse && !_wasCorpse)
+            {
+                // Item became a corpse, add to corpse collection
+                World.AddCorpse(this);
+                _wasCorpse = true;
+            }
+            else if (!isNowCorpse && _wasCorpse)
+            {
+                // Item is no longer a corpse, remove from collection
+                World.RemoveCorpse(this);
+                _wasCorpse = false;
+            }
+        }
+
         public override void Destroy()
         {
             if (IsDestroyed)
             {
                 return;
+            }
+
+            // Remove from corpse collection if this was a corpse
+            if (_wasCorpse)
+            {
+                World.RemoveCorpse(this);
+                _wasCorpse = false;
             }
 
             if (Opened)
