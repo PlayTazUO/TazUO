@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Utility;
@@ -82,7 +83,12 @@ namespace ClassicUO.Game.Managers
                 {
                     string path = FileSystemHelper.CreateFolderIfNotExists(Path.Combine(CUOEnviroment.ExecutablePath, "Data"), "Client", "JournalLogs");
 
-                    _fileWriter = new StreamWriter(File.Open(Path.Combine(path, $"{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_journal.txt"), FileMode.Create, FileAccess.Write, FileShare.Read))
+                    // Get character name and sanitize it for use in filename
+                    string characterName = World.Player?.Name ?? "Unknown";
+                    characterName = SanitizeFilename(characterName);
+
+                    string filename = $"{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_{characterName}_journal.txt";
+                    _fileWriter = new StreamWriter(File.Open(Path.Combine(path, filename), FileMode.Create, FileAccess.Write, FileShare.Read))
                     {
                         AutoFlush = true
                     };
@@ -109,6 +115,14 @@ namespace ClassicUO.Game.Managers
                     _writerHasException = true;
                 }
             }
+        }
+
+        private static string SanitizeFilename(string filename)
+        {
+            // Replace invalid filename characters with underscore
+            string invalid = new string(Path.GetInvalidFileNameChars());
+            string pattern = $"[{Regex.Escape(invalid)}]";
+            return Regex.Replace(filename, pattern, "_");
         }
 
         public void CloseWriter()
