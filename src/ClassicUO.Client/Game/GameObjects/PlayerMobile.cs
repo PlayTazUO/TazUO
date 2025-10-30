@@ -386,6 +386,12 @@ namespace ClassicUO.Game.GameObjects
 
         public void TryOpenCorpses()
         {
+            // Early return if both auto-open settings are disabled
+            if (!ProfileManager.CurrentProfile.AutoOpenCorpses && !ProfileManager.CurrentProfile.AutoOpenOwnCorpse)
+            {
+                return;
+            }
+
             foreach (Item item in World.Items.Values)
             {
                 if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
