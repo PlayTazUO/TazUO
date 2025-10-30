@@ -395,7 +395,7 @@ namespace ClassicUO.Game.UI.Gumps
             // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
             control.Add(new ContextMenuItemEntry("Refresh item highlights", () =>
             {
-                GridHighlightData.RecheckMatchStatus(true);
+                GridHighlightData.RecheckMatchStatus();
             }));
 
             return control;

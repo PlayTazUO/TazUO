@@ -21,26 +21,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private readonly Dictionary<string, string> _normalizeCache = new();
 
-        static GridHighlightData()
-        {
-            EventSink.OPLOnReceive += OnOPLReceived;
-        }
-
-        private static void OnOPLReceived(object sender, OPLEventArgs e)
-        {
-            World world = World.Instance;
-            if (world == null)
-                return;
-
-            if (!world.Items.TryGetValue(e.Serial, out Item item))
-                return;
-
-            if (item.OnGround || item.IsMulti)
-                return;
-
-            ProcessItemOpl(world, e.Serial);
-        }
-
         public static GridHighlightData[] AllConfigs
         {
             get
@@ -256,7 +236,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return data;
         }
 
-        public static void RecheckMatchStatus(bool clearExistingHighlights = false)
+        public static void RecheckMatchStatus()
         {
             AllConfigs = null; // Reset configs
 
@@ -271,12 +251,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (item.OnGround || item.IsMulti)
                     continue;
 
-                if (clearExistingHighlights)
-                {
-                    item.MatchesHighlightData = false;
-                    item.HighlightName = null;
-                    item.HighlightColor = Color.Transparent;
-                }
+                item.MatchesHighlightData = false;
+                item.HighlightName = null;
+                item.HighlightColor = Color.Transparent;
 
                 ProcessItemOpl(world, kvp.Key);
             }
