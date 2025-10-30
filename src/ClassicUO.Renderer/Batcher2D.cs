@@ -121,6 +121,12 @@ namespace ClassicUO.Renderer
         // For IFontStashRenderer
         public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 scale, float depth)
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             var hueVector = new Vector3(0, ShaderHueTranslator.SHADER_TEXT_HUE, MathHelper.Clamp(color.A / 255f, 0f, 1f));
 
             float sourceX, sourceY, sourceW, sourceH;
@@ -224,6 +230,12 @@ namespace ClassicUO.Renderer
             EnsureSize();
 
             Texture2D textureValue = spriteFont.Texture;
+
+            // Skip if the font texture is null or disposed
+            if (textureValue == null || textureValue.IsDisposed)
+            {
+                return;
+            }
             List<Rectangle> glyphData = spriteFont.GlyphData;
             List<Rectangle> croppingData = spriteFont.CroppingData;
             List<Vector3> kerning = spriteFont.Kerning;
@@ -336,6 +348,12 @@ namespace ClassicUO.Renderer
             float depth
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             ref PositionNormalTextureColor4 vertex = ref _vertexInfo[_numSprites];
@@ -393,6 +411,12 @@ namespace ClassicUO.Renderer
 
         public void DrawShadow(Texture2D texture, Vector2 position, Rectangle sourceRect, bool flip, float depth)
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             float width = sourceRect.Width;
             float height = sourceRect.Height * 0.5f;
             float translatedY = position.Y + height - 10;
@@ -473,6 +497,12 @@ namespace ClassicUO.Renderer
             float depth
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             float h03 = sourceRect.Height * mod.X;
@@ -685,6 +715,12 @@ namespace ClassicUO.Renderer
             Vector3 hue
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             int h = destinationRectangle.Height;
 
             Rectangle rect = sourceRectangle;
@@ -729,6 +765,12 @@ namespace ClassicUO.Renderer
             float depth = 0f
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return false;
+            }
+
             var rect = new Rectangle(x, y, width, 1);
             Draw(texture, rect, null, hue, 0f, Vector2.Zero, SpriteEffects.None, depth);
 
@@ -761,6 +803,12 @@ namespace ClassicUO.Renderer
             float stroke
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             float radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
             Vector2.Distance(ref start, ref end, out float length);
 
@@ -1076,6 +1124,12 @@ namespace ClassicUO.Renderer
             byte effects
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             SetVertex
@@ -1305,13 +1359,21 @@ namespace ClassicUO.Renderer
                 if (tex != curTexture)
                 {
                     ++TextureSwitches;
-                    InternalDraw(curTexture, baseOff + offset, i - offset);
+                    // Only draw if we have a valid texture
+                    if (curTexture != null && !curTexture.IsDisposed)
+                    {
+                        InternalDraw(curTexture, baseOff + offset, i - offset);
+                    }
                     curTexture = tex;
                     offset = i;
                 }
             }
 
-            InternalDraw(curTexture, baseOff + offset, batchSize - offset);
+            // Only draw the final batch if we have a valid texture
+            if (curTexture != null && !curTexture.IsDisposed)
+            {
+                InternalDraw(curTexture, baseOff + offset, batchSize - offset);
+            }
 
             if (_numSprites > MAX_SPRITES)
             {
