@@ -1341,6 +1341,11 @@ namespace ClassicUO.Renderer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalDraw(Texture texture, int baseSprite, int batchSize)
         {
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             GraphicsDevice.Textures[0] = texture;
 
             if (_customEffect != null)
