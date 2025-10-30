@@ -7,6 +7,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.ImGuiControls;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
@@ -61,19 +62,19 @@ internal static class GameActions
 
     internal static void OpenDurabilityGump(World world) => UIManager.Add(new DurabilitysGump(world));
 
-    internal static void OpenLegionScriptingGump(World world) => UIManager.Add(new ScriptManagerGump());
+    internal static void OpenLegionScriptingGump(World world) => ScriptManagerWindow.Show();
 
     /// <summary>
     ///
     /// </summary>
-    /// <returns>False if no nearby loot gump was open</returns>
+    /// <returns>False if no script manager window was open</returns>
     internal static bool CloseLegionScriptingGump()
     {
-        Gump g = UIManager.GetGump<ScriptManagerGump>();
+        var window = ScriptManagerWindow.Instance;
 
-        if (g != null)
+        if (window != null && window.IsVisible)
         {
-            g.Dispose();
+            window.IsVisible = false;
             return true;
         }
 

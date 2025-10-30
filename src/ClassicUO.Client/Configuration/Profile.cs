@@ -1086,7 +1086,7 @@ namespace ClassicUO.Configuration
                                     gump = new DurabilitysGump(world);
                                     break;
                                 case GumpType.ScriptManager:
-                                    gump = new LegionScripting.ScriptManagerGump();
+                                    // ScriptManagerGump removed - use ScriptManagerWindow instead
                                     break;
                             }
 
