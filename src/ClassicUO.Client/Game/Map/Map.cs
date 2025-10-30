@@ -124,7 +124,7 @@ namespace ClassicUO.Game.Map
 
             ref Chunk chunk = ref _terrainChunks[block];
 
-            if (chunk is { IsDestroyed: false })
+            if (chunk is { IsDestroyed: false, IsLoading: false })
             {
                 chunk.LastAccessTime = Time.Ticks;
                 return chunk;
@@ -152,7 +152,7 @@ namespace ClassicUO.Game.Map
                     if (chunk == null)
                     {
                         LinkedListNode<int> node = _usedIndices.AddLast(block);
-                        chunk = Chunk.Create(_world, chunkX, chunkY);
+                        chunk = Chunk.Create(_world, chunkX, chunkY, isAsync: true);
                         chunk.Load(Index);
                         chunk.Node = node;
                         chunk.LastAccessTime = Time.Ticks;
@@ -168,6 +168,7 @@ namespace ClassicUO.Game.Map
                         LinkedListNode<int> node = _usedIndices.AddLast(block);
                         chunk.X = chunkX;
                         chunk.Y = chunkY;
+                        chunk.IsLoading = true;
                         chunk.Load(Index);
                         chunk.Node = node;
                         chunk.LastAccessTime = Time.Ticks;

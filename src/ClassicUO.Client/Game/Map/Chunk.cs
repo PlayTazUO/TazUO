@@ -34,6 +34,7 @@ namespace ClassicUO.Game.Map
 
         public GameObject[,] Tiles { get; } = new GameObject[8, 8];
         public bool IsDestroyed;
+        public bool IsLoading;
         public long LastAccessTime;
         public LinkedListNode<int> Node;
 
@@ -42,12 +43,13 @@ namespace ClassicUO.Game.Map
         public int Y;
 
 
-        public static Chunk Create(World world, int x, int y)
+        public static Chunk Create(World world, int x, int y, bool isAsync = false)
         {
             var c = new Chunk(world); // _pool.GetOne();
             c.LastAccessTime = Time.Ticks + Constants.CLEAR_TEXTURES_DELAY;
             c.X = x;
             c.Y = y;
+            c.IsLoading = isAsync;
 
             return c;
         }
@@ -55,6 +57,7 @@ namespace ClassicUO.Game.Map
 
         public unsafe void Load(int index, bool updateWorldMap = false)
         {
+            IsLoading = true;
             IsDestroyed = false;
 
             Map map = _world.Map;
@@ -63,6 +66,7 @@ namespace ClassicUO.Game.Map
 
             if (!im.IsValid())
             {
+                IsLoading = false;
                 return;
             }
 
@@ -221,6 +225,8 @@ namespace ClassicUO.Game.Map
 
                 UIManager.GetGump<WorldMapGump>()?.UpdateWorldMapChunk(X, Y, bufferBlock);
             }
+
+            IsLoading = false;
         }
 
 
