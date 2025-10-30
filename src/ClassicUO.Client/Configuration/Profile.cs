@@ -211,6 +211,7 @@ namespace ClassicUO.Configuration
         public int AutoOpenCorpseRange { get; set; } = 2;
         public int CorpseOpenOptions { get; set; } = 3;
         public bool SkipEmptyCorpse { get; set; }
+        public bool AutoOpenOwnCorpse { get; set; } = true;
         public bool DisableDefaultHotkeys { get; set; }
         public bool DisableArrowBtn { get; set; }
         public bool DisableTabBtn { get; set; }

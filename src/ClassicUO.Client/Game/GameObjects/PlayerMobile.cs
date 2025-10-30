@@ -386,22 +386,35 @@ namespace ClassicUO.Game.GameObjects
 
         public void TryOpenCorpses()
         {
-            if (ProfileManager.CurrentProfile.AutoOpenCorpses)
+            foreach (Item item in World.Items.Values)
             {
-                if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 1 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && World.TargetManager.IsTargeting)
+                if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
                 {
-                    return;
-                }
+                    // Check if this is the player's own corpse
+                    bool isOwnCorpse = !string.IsNullOrEmpty(item.Name) &&
+                                       !string.IsNullOrEmpty(Name) &&
+                                       item.Name.Equals($"the remains of {Name}", System.StringComparison.OrdinalIgnoreCase);
 
-                if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 2 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && IsHidden)
-                {
-                    return;
-                }
+                    // Open if it's own corpse and AutoOpenOwnCorpse is enabled, or if AutoOpenCorpses is enabled
+                    bool shouldOpen = (isOwnCorpse && ProfileManager.CurrentProfile.AutoOpenOwnCorpse) ||
+                                      ProfileManager.CurrentProfile.AutoOpenCorpses;
 
-                foreach (Item item in World.Items.Values)
-                {
-                    if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
+                    if (shouldOpen)
                     {
+                        // Check targeting and hidden restrictions only for auto open corpses (not own corpse)
+                        if (!isOwnCorpse || !ProfileManager.CurrentProfile.AutoOpenOwnCorpse)
+                        {
+                            if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 1 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && World.TargetManager.IsTargeting)
+                            {
+                                continue;
+                            }
+
+                            if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 2 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && IsHidden)
+                            {
+                                continue;
+                            }
+                        }
+
                         AutoOpenedCorpses.Add(item.Serial);
                         GameActions.DoubleClickQueued(item.Serial);
                     }
