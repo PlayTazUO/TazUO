@@ -27,6 +27,7 @@ public class PyMobile : PyEntity
     public int Mana => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Mana ?? 0);
     public bool IsRenamable => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRenamable ?? false);
     public bool IsHuman => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHuman ?? false);
+    public virtual bool InWarMode => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.InWarMode ?? false);
 
     /// <summary>
     /// Get the mobile's Backpack item
