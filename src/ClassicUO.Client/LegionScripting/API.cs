@@ -2635,7 +2635,7 @@ namespace ClassicUO.LegionScripting
         {
             var entries = new PythonList();
 
-            DateTime cutoff = DateTime.UtcNow - TimeSpan.FromSeconds(seconds);
+            DateTime cutoff = DateTime.Now - TimeSpan.FromSeconds(seconds);
 
             bool checkMatches = !string.IsNullOrEmpty(matchingText);
 

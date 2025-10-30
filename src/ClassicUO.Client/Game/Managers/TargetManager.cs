@@ -247,6 +247,7 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
+            NextAutoTarget.Clear();
 
             bool lastTargetting = IsTargeting;
             IsTargeting = cursorType < TargetType.Cancel;
@@ -300,6 +301,7 @@ namespace ClassicUO.Game.Managers
             }
 
             Reset();
+            NextAutoTarget.Clear();
         }
 
         public void SetTargetingMulti

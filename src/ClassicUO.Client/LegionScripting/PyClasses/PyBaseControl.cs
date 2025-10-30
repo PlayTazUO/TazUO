@@ -168,6 +168,16 @@ public class PyBaseControl(Control control)
     }
 
     /// <summary>
+    /// Clears all child controls from this control.
+    /// Used in python API
+    /// </summary>
+    public void Clear()
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(() => control?.Clear());
+    }
+
+    /// <summary>
     /// Close/Destroy the control
     /// </summary>
     public void Dispose()

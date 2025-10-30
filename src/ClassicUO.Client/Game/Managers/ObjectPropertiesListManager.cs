@@ -41,6 +41,8 @@ namespace ClassicUO.Game.Managers
             Item item = _world.Items.Get(serial);
             if(item != null)
                 ItemDatabaseManager.Instance.AddOrUpdateItem(item, _world);
+
+            GridHighlightData.ProcessItemOpl(_world, serial);
         }
 
         public bool Contains(uint serial)
