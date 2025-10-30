@@ -84,7 +84,7 @@ namespace ClassicUO.Game.Managers
                     string path = FileSystemHelper.CreateFolderIfNotExists(Path.Combine(CUOEnviroment.ExecutablePath, "Data"), "Client", "JournalLogs");
 
                     // Get character name and sanitize it for use in filename
-                    string characterName = World.Player?.Name ?? "Unknown";
+                    string characterName = World.Instance.Player?.Name ?? "Unknown";
                     characterName = SanitizeFilename(characterName);
 
                     string filename = $"{DateTime.Now:yyyy_MM_dd_HH_mm_ss}_{characterName}_journal.txt";
