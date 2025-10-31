@@ -2212,7 +2212,7 @@ namespace ClassicUO.LegionScripting
         public uint HasGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread<uint>
         (() =>
             {
-                if (World.Player.HasGump && (World.Player.LastGumpID == ID || ID == uint.MaxValue))
+                if (World.Player != null && World.Player.HasGump && (World.Player.LastGumpID == ID || ID == uint.MaxValue))
                 {
                     if(UIManager.GetGumpServer(World.Player.LastGumpID) is { IsDisposed:false })
                         return World.Player.LastGumpID;
@@ -2238,6 +2238,9 @@ namespace ClassicUO.LegionScripting
         public bool ReplyGump(int button, uint gump = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
+                if (World.Player == null)
+                    return false;
+
                 Gump g = UIManager.GetGumpServer(gump == uint.MaxValue ? World.Player.LastGumpID : gump);
 
                 if (g != null)
@@ -2263,6 +2266,9 @@ namespace ClassicUO.LegionScripting
         public void CloseGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
+                if (World.Player == null)
+                    return;
+
                 uint gump = ID != uint.MaxValue ? ID : World.Player.LastGumpID;
                 UIManager.GetGumpServer(gump)?.Dispose();
             }
@@ -2354,6 +2360,9 @@ namespace ClassicUO.LegionScripting
         public bool GumpContains(string text, uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
+                if (World.Player == null)
+                    return false;
+
                 Gump g = UIManager.GetGumpServer(ID == uint.MaxValue ? World.Player.LastGumpID : ID);
 
                 if (g == null)
@@ -2388,6 +2397,9 @@ namespace ClassicUO.LegionScripting
         /// <returns></returns>
         public string GetGumpContents(uint ID = uint.MaxValue)
         {
+            if (World.Player == null)
+                return string.Empty;
+
             Gump g = UIManager.GetGumpServer(ID == uint.MaxValue ? World.Player.LastGumpID : ID);
 
             if (g == null)
@@ -2421,6 +2433,9 @@ namespace ClassicUO.LegionScripting
         public Gump GetGump(uint ID = uint.MaxValue) => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
+                if (World.Player == null)
+                    return null;
+
                 Gump g = UIManager.GetGumpServer(ID == uint.MaxValue ? World.Player.LastGumpID : ID);
 
                 return g;
@@ -2458,6 +2473,9 @@ namespace ClassicUO.LegionScripting
         /// <returns></returns>
         public bool WaitForGump(uint ID = uint.MaxValue, double delay = 5)
         {
+            if (World.Player == null)
+                return false;
+
             DateTime expire = DateTime.UtcNow.AddSeconds(delay);
 
             if (ID == uint.MaxValue)
@@ -2482,7 +2500,7 @@ namespace ClassicUO.LegionScripting
         public void ToggleFly() => MainThreadQueue.InvokeOnMainThread
         (() =>
             {
-                if (World.Player.Race == RaceType.GARGOYLE)
+                if (World.Player != null && World.Player.Race == RaceType.GARGOYLE)
                     AsyncNetClient.Socket.Send_ToggleGargoyleFlying();
             }
         );
@@ -2522,7 +2540,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns>true/false</returns>
-        public bool PrimaryAbilityActive() => ((byte)World.Player.PrimaryAbility & 0x80) != 0;
+        public bool PrimaryAbilityActive() => World.Player != null && ((byte)World.Player.PrimaryAbility & 0x80) != 0;
 
         /// <summary>
         /// Check if your secondary ability is active.
@@ -2533,7 +2551,7 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns>true/false</returns>
-        public bool SecondaryAbilityActive() => ((byte)World.Player.SecondaryAbility & 0x80) != 0;
+        public bool SecondaryAbilityActive() => World.Player != null && ((byte)World.Player.SecondaryAbility & 0x80) != 0;
 
         /// <summary>
         /// Check if your journal contains a message.
