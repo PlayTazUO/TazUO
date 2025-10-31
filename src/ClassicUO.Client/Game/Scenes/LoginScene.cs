@@ -399,7 +399,7 @@ namespace ClassicUO.Game.Scenes
                 index = Settings.GlobalSettings.LastServerNum;
             }
 
-            if (index < 0 || index >= Servers.Length)
+            if (index < 0 || index > Servers.Length)
             {
                 index = 0;
             }
@@ -620,7 +620,15 @@ namespace ClassicUO.Game.Scenes
                 {
                     int index = GetServerIndexFromSettings();
 
-                    SelectServer((byte)Servers[index].Index);
+                    // Loop through servers to find the one with matching Index property
+                    for (int i = 0; i < Servers.Length; i++)
+                    {
+                        if (Servers[i].Index == index)
+                        {
+                            SelectServer((byte)index);
+                            break;
+                        }
+                    }
                 }
             }
         }
