@@ -107,7 +107,7 @@ namespace ClassicUO.Game.Managers
                             if (!Contains(serial))
                             {
                                 Members[i] = new PartyMember(_world, serial);
-                                var mob = _world.Mobiles.Get(serial);
+                                Mobile mob = _world.Mobiles.Get(serial);
                                 if (mob != null)
                                 {
                                     _ = FriendliesSQLManager.Instance.AddAsync(serial, mob.Name);
@@ -145,7 +145,7 @@ namespace ClassicUO.Game.Managers
                             {
                                 uint serial = Members[i].Serial;
 
-                                var mob = _world.Mobiles.Get(serial);
+                                Mobile mob = _world.Mobiles.Get(serial);
                                 if (mob != null)
                                     mob.InParty = false;
 

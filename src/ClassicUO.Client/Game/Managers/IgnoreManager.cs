@@ -26,10 +26,7 @@ namespace ClassicUO.Game.Managers
         /// Initialize Ignore Manager
         /// - Load List from XML file
         /// </summary>
-        public void Initialize()
-        {
-            ReadIgnoreList();
-        }
+        public void Initialize() => ReadIgnoreList();
 
         /// <summary>
         /// Add Char to ignored list
@@ -39,7 +36,7 @@ namespace ClassicUO.Game.Managers
         {
             if (entity is Mobile m && !m.IsYellowHits && m.Serial != _world.Player.Serial)
             {
-                var charName = m.Name;
+                string charName = m.Name;
 
                 if (IgnoredCharsList.Contains(charName))
                 {
@@ -73,7 +70,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ReadIgnoreList()
         {
-            HashSet<string> list = new HashSet<string>();
+            var list = new HashSet<string>();
 
             string ignoreXmlPath = Path.Combine(ProfileManager.ProfilePath, "ignore_list.xml");
 
@@ -82,7 +79,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
 
             try
             {
@@ -119,7 +116,7 @@ namespace ClassicUO.Game.Managers
         {
             string ignoreXmlPath = Path.Combine(ProfileManager.ProfilePath, "ignore_list.xml");
 
-            using (XmlTextWriter xml = new XmlTextWriter(ignoreXmlPath, Encoding.UTF8)
+            using (var xml = new XmlTextWriter(ignoreXmlPath, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
                 IndentChar = '\t',
@@ -129,7 +126,7 @@ namespace ClassicUO.Game.Managers
                 xml.WriteStartDocument(true);
                 xml.WriteStartElement("ignore");
 
-                foreach (var ch in IgnoredCharsList)
+                foreach (string ch in IgnoredCharsList)
                 {
                     xml.WriteStartElement("info");
                     xml.WriteAttributeString("charname", ch);

@@ -78,7 +78,7 @@ namespace ClassicUO.Network
 
                         for (int j = 0; j < 16 && i + j < message.Length; ++j)
                         {
-                            var c = message[i + j];
+                            byte c = message[i + j];
 
                             if (c >= 0x20 && c < 0x80)
                             {
@@ -97,7 +97,7 @@ namespace ClassicUO.Network
                 output.Append('\n');
                 output.Append('\n');
 
-                var s = output.ToString();
+                string s = output.ToString();
 
                 if (_logFile != null)
                 {

@@ -39,7 +39,7 @@ namespace ClassicUO.IO
         public int Read(Span<byte> buffer) { _position += buffer.Length; return Reader.Read(buffer); }
         public unsafe T Read<T>() where T : unmanaged
         {
-            Unsafe.SkipInit<T>(out var v);
+            Unsafe.SkipInit<T>(out T v);
             var p = new Span<byte>(&v, sizeof(T));
             Read(p);
             return v;

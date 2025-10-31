@@ -23,7 +23,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 _loaded = true;
             }
 
-            var list = getList();
+            List<string> list = getList();
             return list != null && list.Count > 0
                 ? new HashSet<string>(list, StringComparer.OrdinalIgnoreCase)
                 : defaultSet;
@@ -42,7 +42,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 Rarities = ProfileManager.CurrentProfile.ConfigurableRarities?.ToList()
             };
 
-            var path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
+            string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
             try
             {
                 string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
@@ -56,12 +56,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public static void LoadGridHighlightConfiguration()
         {
-            var path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
+            string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
 
             if (!File.Exists(path))
             {
                 // Ensure directory exists
-                var dir = Path.GetDirectoryName(path);
+                string dir = Path.GetDirectoryName(path);
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
@@ -83,7 +83,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             try
             {
                 string json = File.ReadAllText(path);
-                var config = JsonSerializer.Deserialize<GridHighlightSettings>(json);
+                GridHighlightSettings config = JsonSerializer.Deserialize<GridHighlightSettings>(json);
 
                 if (config != null && ProfileManager.CurrentProfile != null)
                 {
@@ -248,13 +248,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 "Legendary Artifact"
             };
 
-        public static string[] FlattenAndDistinctParameters(params HashSet<string>[] propertySets)
-        {
-            return propertySets
+        public static string[] FlattenAndDistinctParameters(params HashSet<string>[] propertySets) => propertySets
                 .SelectMany(set => set)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
                 .ToArray();
-        }
     }
 }

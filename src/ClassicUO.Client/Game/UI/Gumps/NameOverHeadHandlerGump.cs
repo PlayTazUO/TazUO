@@ -111,7 +111,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void UpdateCheckboxes()
         {
-            foreach (var button in _overheadButtons)
+            foreach (RadioButton button in _overheadButtons)
             {
                 button.IsChecked = NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == button.Text;
             }
@@ -119,7 +119,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void RedrawOverheadOptions()
         {
-            foreach (var button in _overheadButtons)
+            foreach (RadioButton button in _overheadButtons)
                 Remove(button);
 
             DrawChoiceButtons();
@@ -128,7 +128,7 @@ namespace ClassicUO.Game.UI.Gumps
         private void DrawChoiceButtons()
         {
             int biggestWidth = 100;
-            var options = NameOverHeadManager.GetAllOptions();
+            List<NameOverheadOption> options = NameOverHeadManager.GetAllOptions();
 
             for (int i = 0; i < options.Count; i++)
             {

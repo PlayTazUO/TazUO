@@ -76,10 +76,7 @@ namespace ClassicUO.Game.GameObjects
         public RenderedText HitsTexture => _hitsPercText[HitsPercentage % _hitsPercText.Length];
 
 
-        public bool Equals(Entity e)
-        {
-            return e != null && Serial == e.Serial;
-        }
+        public bool Equals(Entity e) => e != null && Serial == e.Serial;
 
         public void FixHue(ushort hue)
         {
@@ -108,7 +105,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 HitsPercentage = perc;
 
-                ref var rtext = ref _hitsPercText[perc % _hitsPercText.Length];
+                ref RenderedText rtext = ref _hitsPercText[perc % _hitsPercText.Length];
 
                 if (rtext == null || rtext.IsDestroyed)
                 {
@@ -157,7 +154,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (HitsMax > 0)
             {
-                var perc = MathHelper.PercetangeOf(Hits, HitsMax);
+                int perc = MathHelper.PercetangeOf(Hits, HitsMax);
                 perc = perc > 100 ? 100 : perc < 0 ? 0 : perc;
 
                 UpdateHits((byte)perc);
@@ -184,7 +181,7 @@ namespace ClassicUO.Game.GameObjects
 
                 for (LinkedObject i = Items; i != null; i = i.Next)
                 {
-                    Item it = (Item) i;
+                    var it = (Item) i;
 
                     if (it.Graphic == graphic)
                     {
@@ -211,7 +208,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 for (LinkedObject i = Items; i != null; i = i.Next)
                 {
-                    Item it = (Item) i;
+                    var it = (Item) i;
 
                     if (it.Graphic == graphic && it.Hue == hue)
                     {
@@ -237,7 +234,7 @@ namespace ClassicUO.Game.GameObjects
         {
             for (LinkedObject i = Items; i != null; i = i.Next)
             {
-                Item item = (Item) i;
+                var item = (Item) i;
 
                 if (item.Graphic == graphic)
                 {
@@ -248,7 +245,7 @@ namespace ClassicUO.Game.GameObjects
                 {
                     for (LinkedObject ic = Items; ic != null; ic = ic.Next)
                     {
-                        Item childItem = (Item) ic;
+                        var childItem = (Item) ic;
 
                         Item res = childItem.GetItemByGraphic(graphic, deepsearch);
 
@@ -268,7 +265,7 @@ namespace ClassicUO.Game.GameObjects
         {
             for (LinkedObject i = Items; i != null; i = i.Next)
             {
-                Item it = (Item) i;
+                var it = (Item) i;
 
                 if (!it.IsDestroyed && it.Layer == layer)
                 {
@@ -294,15 +291,9 @@ namespace ClassicUO.Game.GameObjects
             return !Equals(e, s);
         }
 
-        public override bool Equals(object obj)
-        {
-            return obj is Entity ent && Equals(ent);
-        }
+        public override bool Equals(object obj) => obj is Entity ent && Equals(ent);
 
-        public override int GetHashCode()
-        {
-            return (int) Serial;
-        }
+        public override int GetHashCode() => (int)Serial;
 
         public abstract void ProcessAnimation(bool evalutate = false);
 

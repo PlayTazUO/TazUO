@@ -42,7 +42,7 @@ namespace ClassicUO.Game.Managers
             if(item != null)
                 ItemDatabaseManager.Instance.AddOrUpdateItem(item, _world);
 
-            GridHighlightData.ProcessItemOpl(serial);
+            GridHighlightData.ProcessItemOpl(_world, serial);
         }
 
         public bool Contains(uint serial)
@@ -119,15 +119,9 @@ namespace ClassicUO.Game.Managers
             return null;
         }
 
-        public void Remove(uint serial)
-        {
-            _itemsProperties.Remove(serial);
-        }
+        public void Remove(uint serial) => _itemsProperties.Remove(serial);
 
-        public void Clear()
-        {
-            _itemsProperties.Clear();
-        }
+        public void Clear() => _itemsProperties.Clear();
     }
 
     public class ItemProperty
@@ -139,10 +133,7 @@ namespace ClassicUO.Game.Managers
         public uint Serial;
         public int NameCliloc;
 
-        public string CreateData(bool extended)
-        {
-            return string.Empty;
-        }
+        public string CreateData(bool extended) => string.Empty;
     }
 
     public class ItemPropertiesData
@@ -212,7 +203,7 @@ namespace ClassicUO.Game.Managers
         {
             if (itemComparedTo == null) return;
 
-            ItemPropertiesData itemPropertiesData = new ItemPropertiesData(world, itemComparedTo);
+            var itemPropertiesData = new ItemPropertiesData(world, itemComparedTo);
             if (itemPropertiesData.HasData)
             {
                 foreach (SinglePropertyData thisItem in singlePropertyData)

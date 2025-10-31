@@ -62,13 +62,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return 0;
             }
         }
-        private ushort genderTextGraphic
-        {
-            get
-            {
-                return (ushort)(isFemale ? 0x70D : 0x710);
-            }
-        }
+        private ushort genderTextGraphic => (ushort)(isFemale ? 0x70D : 0x710);
         #endregion
 
         public RaceChangeGump(World world, bool isFemale, byte race) : base(world, 0, 0)
@@ -653,10 +647,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            private void ColorPickerBoxOnColorSelectedIndex(object sender, EventArgs e)
-            {
-                ColorSelected?.Invoke(this, new ColorSelectedEventArgs(_layer, _colorPickerBox.Hues, _colorPickerBox.SelectedIndex));
-            }
+            private void ColorPickerBoxOnColorSelectedIndex(object sender, EventArgs e) => ColorSelected?.Invoke(this, new ColorSelectedEventArgs(_layer, _colorPickerBox.Hues, _colorPickerBox.SelectedIndex));
         }
 
         /// <summary>
@@ -812,10 +803,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            public new void RequestUpdate()
-            {
-                requestUpdate = true;
-            }
+            public new void RequestUpdate() => requestUpdate = true;
 
             public override void Update()
             {

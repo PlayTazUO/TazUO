@@ -14,7 +14,7 @@ namespace ClassicUO.Game.Managers
 
         public void Read(UOFileManager fileManager)
         {
-            var filePath = fileManager.GetUOFilePath("stitchin.def");
+            string filePath = fileManager.GetUOFilePath("stitchin.def");
 
             if (!File.Exists(filePath))
             {
@@ -26,11 +26,11 @@ namespace ClassicUO.Game.Managers
             using (var reader = new StreamReader(File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
             {
                 var list = new List<string>();
-                var started = false;
+                bool started = false;
 
                 while (!reader.EndOfStream)
                 {
-                    var line = reader.ReadLine();
+                    string line = reader.ReadLine();
 
                     if (string.IsNullOrWhiteSpace(line) || line.StartsWith("//"))
                     {
@@ -64,9 +64,9 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            foreach (var line in list)
+            foreach (string line in list)
             {
-                var args = line.Split(_split, StringSplitOptions.RemoveEmptyEntries);
+                string[] args = line.Split(_split, StringSplitOptions.RemoveEmptyEntries);
 
                 BuildCommand(args);
             }
@@ -79,7 +79,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var cmd = arguments[0];
+            string cmd = arguments[0];
 
             switch (cmd)
             {
@@ -88,7 +88,7 @@ namespace ClassicUO.Game.Managers
 
                     for (int i = 1; i < arguments.Length; ++i)
                     {
-                        var layer = GetLayer(arguments[i]);
+                        Layer? layer = GetLayer(arguments[i]);
                     }
 
                     break;
@@ -98,15 +98,15 @@ namespace ClassicUO.Game.Managers
 
                     for (int i = 1; i < arguments.Length; ++i)
                     {
-                        var layer = GetLayer(arguments[i]);
+                        Layer? layer = GetLayer(arguments[i]);
                     }
 
                     break;
 
                 // replace XXX with YYY
                 case "replace" when arguments.Length == 4:
-                    var item0 = arguments[1];
-                    var item1 = arguments[3];
+                    string item0 = arguments[1];
+                    string item1 = arguments[3];
                     break;
 
                 // remove XXX YYY ZZZ ...

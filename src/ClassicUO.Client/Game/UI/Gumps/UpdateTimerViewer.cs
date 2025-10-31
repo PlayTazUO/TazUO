@@ -40,7 +40,7 @@ namespace ClassicUO.Game.UI.Gumps
             dataBox.Clear();
 
 
-            Dictionary<Type, double> sortedDict = new Dictionary<Type, double>();
+            var sortedDict = new Dictionary<Type, double>();
 
             foreach (KeyValuePair<Type, double> kvp in UIManager.UpdateTimerTotalTime)
             {

@@ -68,7 +68,7 @@ namespace ClassicUO.Game.UI.Gumps
             FillHueDisplays();
             NiceButton prev, next;
 
-            Label page = new Label(cPage.ToString(), true, 0xffff, 30, align: TEXT_ALIGN_TYPE.TS_CENTER);
+            var page = new Label(cPage.ToString(), true, 0xffff, 30, align: TEXT_ALIGN_TYPE.TS_CENTER);
             page.X = (WIDTH / 2) - 10;
             page.Y = HEIGHT - borderSize - 20;
             Add(page);
@@ -136,7 +136,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 this.world = world;
                 hueVector = ShaderHueTranslator.GetHueVector(hue, true, 1);
-                ref readonly var staticArt = ref Client.Game.UO.Arts.GetArt(0x0FAB);
+                ref readonly SpriteInfo staticArt = ref Client.Game.UO.Arts.GetArt(0x0FAB);
                 texture = staticArt.Texture;
                 rect = Client.Game.UO.Arts.GetRealArtBounds(0x0FAB);
                 Width = 18;

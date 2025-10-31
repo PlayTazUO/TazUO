@@ -34,7 +34,7 @@ namespace ClassicUO.Renderer
             out Rectangle pr
         )
         {
-            var index = _textureList.Count - 1;
+            int index = _textureList.Count - 1;
 
             if (index < 0)
             {
@@ -61,7 +61,7 @@ namespace ClassicUO.Renderer
         private void CreateNewTexture2D()
         {
             Utility.Logging.Log.Trace($"creating texture: {_width}x{_height} {_format}");
-            Texture2D texture = new Texture2D(_device, _width, _height, false, _format);
+            var texture = new Texture2D(_device, _width, _height, false, _format);
             _textureList.Add(texture);
 
             _packer?.Dispose();
@@ -72,9 +72,9 @@ namespace ClassicUO.Renderer
         {
             for (int i = 0, count = TexturesCount; i < count; ++i)
             {
-                var texture = _textureList[i];
+                Texture2D texture = _textureList[i];
 
-                using (var stream = System.IO.File.Create($"atlas/{name}_atlas_{i}.png"))
+                using (System.IO.FileStream stream = System.IO.File.Create($"atlas/{name}_atlas_{i}.png"))
                 {
                     texture.SaveAsPng(stream, texture.Width, texture.Height);
                 }

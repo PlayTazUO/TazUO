@@ -10,8 +10,8 @@ namespace ClassicUO.Game.UI.Gumps
     public class CoolDownBar : Gump
     {
         public const int COOL_DOWN_WIDTH = 180, COOL_DOWN_HEIGHT = 30;
-        public static int DEFAULT_X { get { return ProfileManager.CurrentProfile.CoolDownX; } }
-        public static int DEFAULT_Y { get { return ProfileManager.CurrentProfile.CoolDownY; } }
+        public static int DEFAULT_X => ProfileManager.CurrentProfile.CoolDownX;
+        public static int DEFAULT_Y => ProfileManager.CurrentProfile.CoolDownY;
 
         private AlphaBlendControl background, foreground;
         public readonly Label textLabel, cooldownLabel;
@@ -170,7 +170,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public static CoolDownConditionData GetConditionData(int key, bool createIfNotExist)
             {
-                CoolDownConditionData data = new CoolDownConditionData();
+                var data = new CoolDownConditionData();
                 if (ProfileManager.CurrentProfile.CoolDownConditionCount > key)
                 {
                     data.hue = ProfileManager.CurrentProfile.Condition_Hue[key];

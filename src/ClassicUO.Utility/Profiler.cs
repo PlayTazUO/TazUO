@@ -256,10 +256,7 @@ namespace ClassicUO.Utility
                 Tick = tick;
             }
 
-            public override string ToString()
-            {
-                return string.Format("{0} [{1}]", Name, Tick);
-            }
+            public override string ToString() => string.Format("{0} [{1}]", Name, Tick);
         }
     }
 }

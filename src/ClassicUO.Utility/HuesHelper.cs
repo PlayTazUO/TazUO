@@ -14,23 +14,14 @@ namespace ClassicUO.Utility
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint RgbaToArgb(uint rgba)
-        {
-            return (rgba >> 8) | (rgba << 24);
-        }
+        public static uint RgbaToArgb(uint rgba) => (rgba >> 8) | (rgba << 24);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint Color16To32(ushort c)
-        {
-            return (uint) (_table[(c >> 10) & 0x1F] | (_table[(c >> 5) & 0x1F] << 8) | (_table[c & 0x1F] << 16) | ((c >> 15) * 0xFF) << 24);
-        }
+        public static uint Color16To32(ushort c) => (uint)(_table[(c >> 10) & 0x1F] | (_table[(c >> 5) & 0x1F] << 8) | (_table[c & 0x1F] << 16) | ((c >> 15) * 0xFF) << 24);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort Color32To16(uint c)
-        {
-            return (ushort) ((((c & 0xFF) << 5) >> 8) | (((((c >> 16) & 0xFF) << 5) >> 8) << 10) | (((((c >> 8) & 0xFF) << 5) >> 8) << 5));
-        }
-        
+        public static ushort Color32To16(uint c) => (ushort)((((c & 0xFF) << 5) >> 8) | (((((c >> 16) & 0xFF) << 5) >> 8) << 10) | (((((c >> 8) & 0xFF) << 5) >> 8) << 5));
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ColorToHue(Color c)
         {

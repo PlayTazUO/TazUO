@@ -27,7 +27,7 @@ namespace ClassicUO.IO
 
             for (int i = 0; i < Entries.Length; i++)
             {
-                ref var e = ref Entries[i];
+                ref UOFileIndex e = ref Entries[i];
                 e.File = this;   // .mul mmf address
                 e.Offset = f.ReadUInt32(); // .idx offset
                 e.Length = f.ReadInt32();  // .idx length

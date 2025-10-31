@@ -158,6 +158,12 @@ namespace ClassicUO.Game.Managers
                 if (type == typeof(ushort))
                     return (T)(object)ushort.Parse(value);
 
+                if (type == typeof(float))
+                    return (T)(object)float.Parse(value);
+
+                if (type == typeof(double))
+                    return (T)(object)double.Parse(value);
+
                 return defaultValue;
             }
             catch
@@ -194,10 +200,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="name">The name of the setting</param>
         /// <param name="defaultValue">The default value to return if the setting doesn't exist</param>
         /// <returns>The setting value or the default value if not found</returns>
-        public string Get(SettingsScope scope, string name, string defaultValue = "")
-        {
-            return GetAsync(scope, name, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public string Get(SettingsScope scope, string name, string defaultValue = "") => GetAsync(scope, name, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
         /// Synchronously retrieves a strongly-typed setting value from the database.
@@ -207,10 +210,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="name">The name of the setting</param>
         /// <param name="defaultValue">The default value to return if the setting doesn't exist or parsing fails</param>
         /// <returns>The parsed setting value or the default value if not found or parsing fails</returns>
-        public T Get<T>(SettingsScope scope, string name, T defaultValue = default)
-        {
-            return GetAsync(scope, name, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public T Get<T>(SettingsScope scope, string name, T defaultValue = default) => GetAsync(scope, name, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
         /// Asynchronously retrieves a setting value from the database.
@@ -219,10 +219,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="name">The name of the setting</param>
         /// <param name="defaultValue">The default value to return if the setting doesn't exist</param>
         /// <returns>A task that represents the asynchronous operation, containing the setting value or the default value if not found</returns>
-        public async Task<string> GetAsync(SettingsScope scope, string name, string defaultValue = "")
-        {
-            return await GetAsync(scope, name, defaultValue, null);
-        }
+        public async Task<string> GetAsync(SettingsScope scope, string name, string defaultValue = "") => await GetAsync(scope, name, defaultValue, null);
 
         /// <summary>
         /// Asynchronously retrieves a strongly-typed setting value from the database.
@@ -311,10 +308,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
         /// <param name="name">The name of the setting</param>
         /// <param name="value">The value to store</param>
-        public void Set(SettingsScope scope, string name, string value)
-        {
-            SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public void Set(SettingsScope scope, string name, string value) => SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
         /// Synchronously sets a strongly-typed setting value in the database.
@@ -323,10 +317,7 @@ namespace ClassicUO.Game.Managers
         /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
         /// <param name="name">The name of the setting</param>
         /// <param name="value">The value to store</param>
-        public void Set<T>(SettingsScope scope, string name, T value)
-        {
-            SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public void Set<T>(SettingsScope scope, string name, T value) => SetAsync(scope, name, value).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
         /// Asynchronously sets a setting value in the database, inserting or replacing as needed.
@@ -436,10 +427,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
         /// <returns>A dictionary of all setting name-value pairs for the scope</returns>
-        public Dictionary<string, string> GetAll(SettingsScope scope)
-        {
-            return GetAllAsync(scope).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public Dictionary<string, string> GetAll(SettingsScope scope) => GetAllAsync(scope).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
         /// Releases resources used by the SQLSettingsManager.

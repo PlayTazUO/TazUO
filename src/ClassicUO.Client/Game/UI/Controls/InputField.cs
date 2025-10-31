@@ -26,7 +26,7 @@ public class InputField : Control
         Width = width;
         Height = height;
 
-        ResizePic background = new ResizePic(backgroundGraphic)
+        var background = new ResizePic(backgroundGraphic)
         {
             Width = width,
             Height = height
@@ -81,8 +81,5 @@ public class InputField : Control
     }
 
 
-    public void SetText(string text)
-    {
-        _textbox.SetText(text);
-    }
+    public void SetText(string text) => _textbox.SetText(text);
 }

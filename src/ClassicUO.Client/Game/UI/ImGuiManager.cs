@@ -57,7 +57,7 @@ namespace ClassicUO.Game.UI
         {
             lock (_windowsLock)
             {
-                foreach (var window in _windows)
+                foreach (ImGuiWindow window in _windows)
                 {
                     window?.Dispose();
                 }
@@ -66,9 +66,11 @@ namespace ClassicUO.Game.UI
             }
         }
 
+        public static void UpdateTheme(float alpha) => ApplyThemeColors(alpha);
+
         private static void SetTazUOTheme()
         {
-            var io = ImGui.GetIO();
+            ImGuiIOPtr io = ImGui.GetIO();
             unsafe
             {
                 fixed (byte* fontPtr = TrueTypeLoader.Instance.ImGuiFont)
@@ -81,7 +83,7 @@ namespace ClassicUO.Game.UI
                 }
             }
 
-            var style = ImGui.GetStyle();
+            ImGuiStylePtr style = ImGui.GetStyle();
 
             // Style settings
             style.WindowRounding = 5.0f;
@@ -95,18 +97,35 @@ namespace ClassicUO.Game.UI
             style.ItemSpacing = new System.Numerics.Vector2(8, 6);
             style.TabBorderSize = 1.0f;
 
+            float alpha = Client.Settings?.Get(SettingsScope.Global, "imgui_window_alpha", 1.0f) ?? 1.0f;
+            ApplyThemeColors(alpha);
+        }
 
+        private static void ApplyThemeColors(float alpha)
+        {
             // TazUO color scheme
-            var colors = style.Colors;
+            RangeAccessor<System.Numerics.Vector4> colors = ImGui.GetStyle().Colors;
 
-            // Primary background
-            colors[(int)ImGuiCol.WindowBg] = ImGuiTheme.Colors.Base100;
+            // Primary background - apply alpha
+            System.Numerics.Vector4 windowBg = ImGuiTheme.Colors.Base100;
+            windowBg.W = alpha;
+            colors[(int)ImGuiCol.WindowBg] = windowBg;
+
             colors[(int)ImGuiCol.MenuBarBg] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.PopupBg] = ImGuiTheme.Colors.Base100;
 
-            // Headers
-            colors[(int)ImGuiCol.Header] = ImGuiTheme.Colors.Base100;
-            colors[(int)ImGuiCol.HeaderHovered] = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 popupBg = ImGuiTheme.Colors.Base100;
+            popupBg.W = alpha;
+            colors[(int)ImGuiCol.PopupBg] = popupBg;
+
+            // Headers - apply alpha to backgrounds
+            System.Numerics.Vector4 header = ImGuiTheme.Colors.Base100;
+            header.W = alpha;
+            colors[(int)ImGuiCol.Header] = header;
+
+            System.Numerics.Vector4 headerHovered = ImGuiTheme.Colors.Base100;
+            headerHovered.W = alpha;
+            colors[(int)ImGuiCol.HeaderHovered] = headerHovered;
+
             colors[(int)ImGuiCol.HeaderActive] = ImGuiTheme.Colors.Primary;
 
             // Buttons
@@ -119,16 +138,24 @@ namespace ClassicUO.Game.UI
             colors[(int)ImGuiCol.FrameBgHovered] = ImGuiTheme.Colors.Base300;
             colors[(int)ImGuiCol.FrameBgActive] = ImGuiTheme.Colors.Primary;
 
-            // Tabs
-            colors[(int)ImGuiCol.Tab] = ImGuiTheme.Colors.Base100;
+            // Tabs - apply alpha to backgrounds
+            System.Numerics.Vector4 tab = ImGuiTheme.Colors.Base100;
+            tab.W = alpha;
+            colors[(int)ImGuiCol.Tab] = tab;
+
             colors[(int)ImGuiCol.TabHovered] = ImGuiTheme.Colors.Primary;
             colors[(int)ImGuiCol.TabSelected] = ImGuiTheme.Colors.Primary;
 
+            // Title - apply alpha to backgrounds
+            System.Numerics.Vector4 titleBg = ImGuiTheme.Colors.Base100;
+            titleBg.W = alpha;
+            colors[(int)ImGuiCol.TitleBg] = titleBg;
 
-            // Title
-            colors[(int)ImGuiCol.TitleBg] = ImGuiTheme.Colors.Base100;
             colors[(int)ImGuiCol.TitleBgActive] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.TitleBgCollapsed] = ImGuiTheme.Colors.Base100;
+
+            System.Numerics.Vector4 titleBgCollapsed = ImGuiTheme.Colors.Base100;
+            titleBgCollapsed.W = alpha;
+            colors[(int)ImGuiCol.TitleBgCollapsed] = titleBgCollapsed;
 
             // Borders
             colors[(int)ImGuiCol.Border] = ImGuiTheme.Colors.Primary;
@@ -201,7 +228,7 @@ namespace ClassicUO.Game.UI
             {
                 for (int i = _windows.Count - 1; i >= 0; i--)
                 {
-                    var window = _windows[i];
+                    ImGuiWindow window = _windows[i];
                     if (window != null)
                     {
                         if (window.IsOpen)

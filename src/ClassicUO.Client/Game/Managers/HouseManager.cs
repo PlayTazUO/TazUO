@@ -18,15 +18,9 @@ namespace ClassicUO.Game.Managers
 
         public IReadOnlyCollection<House> Houses => _houses.Values;
 
-        public void Add(uint serial, House revision)
-        {
-            _houses[serial] = revision;
-        }
+        public void Add(uint serial, House revision) => _houses[serial] = revision;
 
-        public bool TryGetHouse(uint serial, out House house)
-        {
-            return _houses.TryGetValue(serial, out house);
-        }
+        public bool TryGetHouse(uint serial, out House house) => _houses.TryGetValue(serial, out house);
 
         public bool TryToRemove(uint serial, int distance)
         {
@@ -120,10 +114,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public bool Exists(uint serial)
-        {
-            return _houses.ContainsKey(serial);
-        }
+        public bool Exists(uint serial) => _houses.ContainsKey(serial);
 
         public void Clear()
         {

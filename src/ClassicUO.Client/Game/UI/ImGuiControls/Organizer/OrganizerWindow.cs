@@ -51,7 +51,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Separator();
             if (ImGui.Button("Add Organizer"))
             {
-                var newConfig = OrganizerAgent.Instance.NewOrganizerConfig();
+                OrganizerConfig newConfig = OrganizerAgent.Instance.NewOrganizerConfig();
                 _selectedConfigIndex = OrganizerAgent.Instance.OrganizerConfigs.IndexOf(newConfig);
                 _selectedConfig = newConfig;
             }
@@ -59,10 +59,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SeparatorText("List");
 
             // List existing organizers
-            var configs = OrganizerAgent.Instance.OrganizerConfigs;
+            System.Collections.Generic.List<OrganizerConfig> configs = OrganizerAgent.Instance.OrganizerConfigs;
             for (int i = 0; i < configs.Count; i++)
             {
-                var config = configs[i];
+                OrganizerConfig config = configs[i];
                 bool isSelected = i == _selectedConfigIndex;
 
                 string label = $"{config.Name}##Config{i}";
@@ -125,7 +125,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.SameLine();
             if (ImGui.Button("Duplicate"))
             {
-                var duplicated = OrganizerAgent.Instance?.DupeConfig(_selectedConfig);
+                OrganizerConfig duplicated = OrganizerAgent.Instance?.DupeConfig(_selectedConfig);
                 if (duplicated != null)
                 {
                     _selectedConfigIndex = OrganizerAgent.Instance.OrganizerConfigs.IndexOf(duplicated);
@@ -232,7 +232,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         return;
                     }
 
-                    var newItemConfig = _selectedConfig.NewItemConfig();
+                    OrganizerItemConfig newItemConfig = _selectedConfig.NewItemConfig();
                     newItemConfig.Graphic = objEntity.Graphic;
                     newItemConfig.Hue = objEntity.Hue;
 
@@ -262,7 +262,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     if (ushort.TryParse(_addItemGraphicInput, System.Globalization.NumberStyles.HexNumber, null, out ushort graphic))
                     {
-                        var newItemConfig = _selectedConfig.NewItemConfig();
+                        OrganizerItemConfig newItemConfig = _selectedConfig.NewItemConfig();
                         newItemConfig.Graphic = graphic;
 
                         if (int.TryParse(_addItemHueInput, out int hue) && hue >= -1)
@@ -297,7 +297,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 for (int i = _selectedConfig.ItemConfigs.Count - 1; i >= 0; i--)
                 {
-                    var itemConfig = _selectedConfig.ItemConfigs[i];
+                    OrganizerItemConfig itemConfig = _selectedConfig.ItemConfigs[i];
                     ImGui.TableNextRow();
 
                     ImGui.TableSetColumnIndex(0);
@@ -357,7 +357,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         ImGui.SameLine();
                         if (ImGui.SmallButton($"Set##SetDest{i}"))
                         {
-                            var currentItemConfig = itemConfig;
+                            OrganizerItemConfig currentItemConfig = itemConfig;
                             GameActions.Print("Select [DESTINATION] Container for this item", 82);
                             World.Instance.TargetManager.SetTargeting((destination) =>
                             {

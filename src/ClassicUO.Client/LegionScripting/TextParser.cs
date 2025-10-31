@@ -78,7 +78,7 @@ namespace LScript
 
         private string ObtainData()
         {
-            StringBuilder result = new StringBuilder();
+            var result = new StringBuilder();
 
             while (_pos < _Size && _string[_pos] != '\n')
             {
@@ -153,7 +153,7 @@ namespace LScript
         internal string[] GetTokens(string str, bool trim = true)
         {
             _trim = trim;
-            List<string> result = new List<string>();
+            var result = new List<string>();
 
             _pos = 0;
             _string = str;

@@ -45,7 +45,7 @@ namespace ClassicUO.Game.GameObjects
 
         public static Multi Create(World world, ushort graphic)
         {
-            Multi m = new Multi(world); // _pool.GetOne();
+            var m = new Multi(world); // _pool.GetOne();
             m.Graphic = m._originalGraphic = graphic;
             m.UpdateGraphicBySeason();
             m.AllowedToDraw = CanBeDrawn(world, m.Graphic);

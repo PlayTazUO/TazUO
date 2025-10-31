@@ -79,7 +79,7 @@ public class DiscordChannelListItem : Control
         selectedBackground.IsVisible = false;
         Add(selectedBackground);
 
-        var chanName = string.Empty;
+        string chanName = string.Empty;
 
         if (lobby != null)
             chanName = DiscordManager.Instance.GetLobbyName(lobby);

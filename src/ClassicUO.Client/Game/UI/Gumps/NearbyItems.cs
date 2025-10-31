@@ -47,7 +47,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildGump()
         {
-            List<NearbyItemDisplay> items = new List<NearbyItemDisplay>();
+            var items = new List<NearbyItemDisplay>();
 
             foreach (Item i in World.Items.Values)
             {
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.Gumps
             realArtRectBounds = Client.Game.UO.Arts.GetRealArtBounds((uint)item.DisplayedGraphic);
             itemSpriteInfo = Client.Game.UO.Arts.GetArt((uint)(item.DisplayedGraphic));
 
-            HitBox loot = new HitBox(0, 0, Width, Height / 2);
+            var loot = new HitBox(0, 0, Width, Height / 2);
             loot.Add(TextBox.GetOne("Loot", TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
             loot.MouseUp += (s, e) =>
             {
@@ -133,7 +133,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             Add(loot);
 
-            HitBox use = new HitBox(0, Height / 2, Width, Height / 2);
+            var use = new HitBox(0, Height / 2, Width, Height / 2);
             TextBox tb;
             use.Add(tb = TextBox.GetOne("Use", TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
             tb.Y = use.Height - tb.MeasuredSize.Y;

@@ -27,7 +27,7 @@ namespace ClassicUO.Game.UI.Gumps
             CanCloseWithRightClick = true;
             _data = data;
 
-            ResizePic pic = new ResizePic(0x0A3C)
+            var pic = new ResizePic(0x0A3C)
             {
                 Alpha = 0.75f
             };
@@ -52,7 +52,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Client.Game.UO.FileManager.Fonts.SetUseHTML(true, h);
                 }
 
-                Label label = new Label(text, true, hue, font: 1)
+                var label = new Label(text, true, hue, font: 1)
                 {
                     X = 10,
                     Y = offsetY
@@ -60,7 +60,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Client.Game.UO.FileManager.Fonts.SetUseHTML(false);
 
-                HitBox box = new HitBox(10, offsetY, label.Width, label.Height)
+                var box = new HitBox(10, offsetY, label.Width, label.Height)
                 {
                     Tag = item.Index
                 };

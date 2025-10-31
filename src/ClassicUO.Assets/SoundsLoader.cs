@@ -55,7 +55,7 @@ namespace ClassicUO.Assets
 
             if (File.Exists(def))
             {
-                using (DefReader reader = new DefReader(def))
+                using (var reader = new DefReader(def))
                 {
                     while (reader.Next())
                     {
@@ -208,7 +208,7 @@ namespace ClassicUO.Assets
                 return true;
             }
 
-            ref var entry = ref _file.GetValidRefEntry(sound);
+            ref UOFileIndex entry = ref _file.GetValidRefEntry(sound);
             if (entry.Length <= 0)
                 return false;
 
@@ -263,7 +263,7 @@ namespace ClassicUO.Assets
             // Enumerate all files in the directory, using the file name as a pattern
             // This will list all case variants of the filename even on file systems that
             // are case sensitive.
-            Regex pattern = new Regex($"^{name}.mp3", RegexOptions.IgnoreCase);
+            var pattern = new Regex($"^{name}.mp3", RegexOptions.IgnoreCase);
             //string[] fileList = Directory.GetFiles(dir, "*.mp3", SearchOption.AllDirectories).Where(path => pattern.IsMatch(Path.GetFileName(path))).ToArray();
             string[] fileList = Directory.GetFiles(dir, "*.mp3", SearchOption.AllDirectories);
             fileList = Array.FindAll(fileList, path => pattern.IsMatch(Path.GetFileName(path)));
@@ -304,9 +304,6 @@ namespace ClassicUO.Assets
             return false;
         }
 
-        public override void ClearResources()
-        {
-            _musicData.Clear();
-        }
+        public override void ClearResources() => _musicData.Clear();
     }
 }

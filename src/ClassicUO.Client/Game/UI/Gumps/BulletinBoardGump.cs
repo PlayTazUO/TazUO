@@ -26,7 +26,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(new GumpPic(0, 0, 0x087A, 0));
 
-            Label label = new Label
+            var label = new Label
             (
                 name,
                 true,
@@ -42,7 +42,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(label);
 
-            HitBox hitbox = new HitBox(15, 170, 80, 80)
+            var hitbox = new HitBox(15, 170, 80, 80)
             {
                 Alpha = 0f
             };
@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(hitbox);
 
-            ScrollArea area = new ScrollArea
+            var area = new ScrollArea
             (
                 127,
                 159,
@@ -131,7 +131,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            BulletinBoardObject obj = new BulletinBoardObject(serial, msg);
+            var obj = new BulletinBoardObject(serial, msg);
             _databox.Add(obj);
 
             _databox.WantUpdateSize = true;
@@ -177,7 +177,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_articleContainer);
 
-            ScrollArea area = new ScrollArea
+            var area = new ScrollArea
             (
                 0,
                 120,
@@ -203,7 +203,7 @@ namespace ClassicUO.Game.UI.Gumps
                 textColor = 0;
             }
 
-            Label text = new Label(ResGumps.Author, useUnicode, textColor, font: useUnicode ? unicodeFontIndex : (byte) 6)
+            var text = new Label(ResGumps.Author, useUnicode, textColor, font: useUnicode ? unicodeFontIndex : (byte) 6)
             {
                 X = 30,
                 Y = 40

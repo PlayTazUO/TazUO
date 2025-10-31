@@ -117,7 +117,7 @@ namespace ClassicUO.Utility.Collections
                 }
 
                 // Create the new _buffer and copy our existing range.
-                T[] newBuffer = new T[value];
+                var newBuffer = new T[value];
                 CopyToArray(newBuffer);
 
                 // Set up to use the new _buffer.
@@ -146,30 +146,21 @@ namespace ClassicUO.Utility.Collections
         /// </summary>
         /// <param name="index">The deque index.</param>
         /// <returns>The buffer index.</returns>
-        private int DequeIndexToBufferIndex(int index)
-        {
-            return (index + _offset) % Capacity;
-        }
+        private int DequeIndexToBufferIndex(int index) => (index + _offset) % Capacity;
 
         /// <summary>
         ///     Gets an element at the specified view index.
         /// </summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <returns>The element at the specified index.</returns>
-        private ref T DoGetItem(int index)
-        {
-            return ref _buffer[DequeIndexToBufferIndex(index)];
-        }
+        private ref T DoGetItem(int index) => ref _buffer[DequeIndexToBufferIndex(index)];
 
         /// <summary>
         ///     Sets an element at the specified view index.
         /// </summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <param name="item">The element to store in the list.</param>
-        private void DoSetItem(int index, T item)
-        {
-            _buffer[DequeIndexToBufferIndex(index)] = item;
-        }
+        private void DoSetItem(int index, T item) => _buffer[DequeIndexToBufferIndex(index)] = item;
 
         /// <summary>
         ///     Inserts an element at the specified view index.
@@ -547,7 +538,7 @@ namespace ClassicUO.Utility.Collections
         /// </summary>
         public T[] ToArray()
         {
-            T[] result = new T[Count];
+            var result = new T[Count];
             ((ICollection<T>) this).CopyTo(result, 0);
 
             return result;
@@ -597,20 +588,11 @@ namespace ClassicUO.Utility.Collections
             }
         }
 
-        public ref T GetAt(int index)
-        {
-            return ref _buffer[DequeIndexToBufferIndex(index)];
-        }
+        public ref T GetAt(int index) => ref _buffer[DequeIndexToBufferIndex(index)];
 
-        public ref T Front()
-        {
-            return ref DoGetItem(0);
-        }
+        public ref T Front() => ref DoGetItem(0);
 
-        public ref T Back()
-        {
-            return ref DoGetItem(Count - 1);
-        }
+        public ref T Back() => ref DoGetItem(Count - 1);
 
         /// <summary>
         ///     Inserts an item to this list at the specified index.
@@ -675,10 +657,7 @@ namespace ClassicUO.Utility.Collections
         /// <exception cref="T:System.NotSupportedException">
         ///     This list is read-only.
         /// </exception>
-        void ICollection<T>.Add(T item)
-        {
-            DoInsert(Count, item);
-        }
+        void ICollection<T>.Add(T item) => DoInsert(Count, item);
 
         /// <summary>
         ///     Determines whether this list contains a specific value.
@@ -831,10 +810,7 @@ namespace ClassicUO.Utility.Collections
         /// <returns>
         ///     An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.
         /// </returns>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion
 
@@ -872,15 +848,9 @@ namespace ClassicUO.Utility.Collections
             return Count - 1;
         }
 
-        bool IList.Contains(object value)
-        {
-            return IsT(value) && ((ICollection<T>) this).Contains((T) value);
-        }
+        bool IList.Contains(object value) => IsT(value) && ((ICollection<T>)this).Contains((T)value);
 
-        int IList.IndexOf(object value)
-        {
-            return IsT(value) ? IndexOf((T) value) : -1;
-        }
+        int IList.IndexOf(object value) => IsT(value) ? IndexOf((T)value) : -1;
 
         void IList.Insert(int index, object value)
         {

@@ -7,15 +7,11 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ClassicUO.Assets;
 using ClassicUO.Game;
-using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.UI.Controls;
-using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Input;
-using LScript;
-using Microsoft.Xna.Framework;
+using ClassicUO.Game.UI.ImGuiControls;
+using ImGuiNET;
+using System.Numerics;
 
 namespace ClassicUO.LegionScripting
 {
@@ -27,118 +23,56 @@ namespace ClassicUO.LegionScripting
     public partial class ScriptBrowserJsonContext : JsonSerializerContext
     {
     }
-        public class ScriptBrowser : NineSliceGump
+
+    public class ScriptBrowser : SingletonImGuiWindow<ScriptBrowser>
     {
-        private static ConcurrentQueue<Action> _mainThreadActions = new();
-        private const int WIDTH = 400;
-        private const int HEIGHT = 600;
+        private readonly ConcurrentQueue<Action> _mainThreadActions = new();
         private const string REPO = "PlayTazUO/PublicLegionScripts";
 
-        private ModernScrollArea scrollArea;
         private readonly GitHubContentCache cache;
-        private string currentPath = "";
-        private readonly Stack<string> navigationHistory = new Stack<string>();
-        private bool isLoading = false;
-        private TextBox loadingText;
-        private TextBox titleText;
+        private readonly Dictionary<string, DirectoryNode> directoryCache = new();
+        private bool isInitialLoading = false;
+        private string errorMessage = "";
 
-        public ScriptBrowser(World world) : base(world, 0, 0, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
+        private ScriptBrowser() : base("Public Script Browser")
         {
-            CanMove = true;
-            CanCloseWithRightClick = true;
-
             cache = new GitHubContentCache(REPO);
+            WindowFlags = ImGuiWindowFlags.None;
 
-            // Add title
-            titleText = TextBox.GetOne("Public Script Browser", TrueTypeLoader.EMBEDDED_FONT, 18, Color.DarkOrange, TextBox.RTLOptions.Default(Width - 2 * BorderSize));
-            titleText.X = BorderSize;
-            titleText.Y = BorderSize;
-            titleText.AcceptMouseInput = false;
-            Add(titleText);
+            // Start loading root directory
+            LoadDirectoryAsync("");
+        }
 
-            // Add scroll area with proper positioning
-            Add(scrollArea = new (BorderSize, titleText.Y + titleText.Height + 5, Width - (BorderSize * 2), Height - (BorderSize * 2) - titleText.Height - 5) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
-
-            // Add loading indicator
-            loadingText = GenTextBox("Loading...", 16);
-            loadingText.X = (scrollArea.Width - loadingText.MeasuredSize.X) / 2;
-            loadingText.Y = (scrollArea.Height - loadingText.MeasuredSize.Y) / 2;
-            scrollArea.Add(loadingText);
-
-            CenterXInViewPort();
-            CenterYInViewPort();
-
-            // Start loading after UI is set up
-            Task.Run(async () =>
+        public override void DrawContent()
+        {
+            // Show loading state
+            if (isInitialLoading)
             {
-                try
+                ImGui.Text("Loading repository contents...");
+                return;
+            }
+
+            // Show error message if any
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.4f, 0.4f, 1.0f));
+                ImGui.TextWrapped(errorMessage);
+                ImGui.PopStyleColor();
+
+                if (ImGui.Button("Retry"))
                 {
-                    await LoadCurrentDirectoryAsync();
+                    errorMessage = "";
+                    LoadDirectoryAsync("");
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error loading initial directory: {ex.Message}");
-                    _mainThreadActions.Enqueue(() => {
-                        ShowError($"Failed to load scripts: {ex.Message}");
-                        isLoading = false;
-                    });
-                }
-            });
-        }
-
-        protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
-        {
-            base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
-
-            // Recreate title text with new width if needed
-            if (titleText != null)
-            {
-                titleText.Dispose();
-                titleText = TextBox.GetOne("Public Script Browser", TrueTypeLoader.EMBEDDED_FONT, 18, Color.DarkOrange, TextBox.RTLOptions.Default(newWidth - 2 * BorderSize));
-                titleText.X = BorderSize;
-                titleText.Y = BorderSize;
-                titleText.AcceptMouseInput = false;
-                Add(titleText);
+                return;
             }
 
-            // Update scroll area size and position
-            if (scrollArea != null)
+            // Draw the tree view
+            if (ImGui.BeginChild("ScriptTreeView", new Vector2(0, 0), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
             {
-                scrollArea.UpdateWidth(newWidth - (BorderSize * 2));
-                scrollArea.UpdateHeight(newHeight - (BorderSize * 2) - titleText.Height - 5);
+                DrawDirectoryTree("", 0);
             }
-        }
-
-        private async Task LoadCurrentDirectoryAsync()
-        {
-            if (isLoading) return;
-            isLoading = true;
-
-            try
-            {
-                var files = await cache.GetDirectoryContentsAsync(currentPath);
-                _mainThreadActions.Enqueue(() => {
-                    SetFiles(files);
-                    isLoading = false;
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading directory: {ex.Message}");
-                _mainThreadActions.Enqueue(() => {
-                    ShowError($"Failed to load directory: {ex.Message}");
-                    isLoading = false;
-                });
-            }
-        }
-
-        private void ShowError(string message)
-        {
-            ClearScrollArea();
-            var errorText = GenTextBox(message, 14);
-            errorText.X = (scrollArea.Width - errorText.MeasuredSize.X) / 2;
-            errorText.Y = (scrollArea.Height - errorText.MeasuredSize.Y) / 2;
-            scrollArea.Add(errorText);
+            ImGui.EndChild();
         }
 
         public override void Update()
@@ -147,7 +81,7 @@ namespace ClassicUO.LegionScripting
 
             // Process main thread actions
             int processedCount = 0;
-            while(_mainThreadActions.TryDequeue(out var action) && processedCount < 10) // Limit to prevent frame drops
+            while (_mainThreadActions.TryDequeue(out Action action) && processedCount < 10)
             {
                 try
                 {
@@ -161,113 +95,250 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        private void ClearScrollArea()
+        private void DrawDirectoryTree(string path, int depth)
         {
-            // Remove all children except the first one (which should be the loading text initially)
-            var childrenToRemove = scrollArea.Children.Skip(1).ToList();
-            foreach (var child in childrenToRemove)
+            // Get or create directory node
+            if (!directoryCache.TryGetValue(path, out DirectoryNode node))
             {
-                child.Dispose();
-            }
-        }
-
-        public void SetFiles(List<GHFileObject> files)
-        {
-            ClearScrollArea();
-
-            // Add back button if not at root
-            if (!string.IsNullOrEmpty(currentPath))
-            {
-                var parentPath = Path.GetDirectoryName(currentPath)?.Replace('\\', '/') ?? "";
-                var backItem = new GHFileObject()
-                {
-                    type = "dir",
-                    name = $"<- Back{(string.IsNullOrEmpty(parentPath) ? "" : $" ({parentPath})")}",
-                    path = parentPath
-                };
-                scrollArea.Add(new ItemControl(World, backItem, this, true));
+                node = new DirectoryNode { Path = path, IsLoaded = false };
+                directoryCache[path] = node;
             }
 
-            // Add directories first, then files
-            var directories = files.Where(f => f.type == "dir").OrderBy(f => f.name);
-            var scriptFiles = files.Where(f => f.type == "file" && (f.name.EndsWith(".lscript") || f.name.EndsWith(".py"))).OrderBy(f => f.name);
-
-            foreach (var dir in directories)
+            // Load directory if not loaded
+            if (!node.IsLoaded && !node.IsLoading)
             {
-                scrollArea.Add(new ItemControl(World, dir, this));
+                LoadDirectoryAsync(path);
+                return;
             }
-
-            foreach (var file in scriptFiles)
-            {
-                scrollArea.Add(new ItemControl(World, file, this));
-            }
-
-            // Layout items
-            int y = 0;
-            foreach (Control c in scrollArea.Children)
-            {
-                if (c is not ItemControl)
-                    continue;
-
-                c.Y = y;
-                y += c.Height + 3;
-            }
-        }
-
-        public void NavigateToDirectory(string path, bool isBackNavigation = false)
-        {
-            if (isLoading) return;
-
-            // Add current path to history if not going back and not already the same
-            if (!isBackNavigation && currentPath != path)
-            {
-                navigationHistory.Push(currentPath);
-            }
-
-            currentPath = path ?? ""; // Ensure path is never null
 
             // Show loading state
-            ClearScrollArea();
-            loadingText = GenTextBox("Loading...", 16);
-            loadingText.X = (scrollArea.Width - loadingText.MeasuredSize.X) / 2;
-            loadingText.Y = (scrollArea.Height - loadingText.MeasuredSize.Y) / 2;
-            scrollArea.Add(loadingText);
+            if (node.IsLoading)
+            {
+                ImGui.Text("Loading...");
+                return;
+            }
 
-            // Load directory asynchronously
+            // Draw directories
+            var directories = node.Contents.Where(f => f.type == "dir").OrderBy(f => f.name).ToList();
+            foreach (GHFileObject dir in directories)
+            {
+                ImGui.PushID(dir.path);
+
+                // Check if this directory is expanded
+                bool isExpanded = directoryCache.TryGetValue(dir.path, out DirectoryNode childNode) && childNode.IsExpanded;
+
+                // Draw tree node
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.OpenOnDoubleClick;
+
+                bool nodeOpen = ImGui.TreeNodeEx($"{dir.name}", flags);
+
+                // Update expansion state
+                if (nodeOpen != isExpanded)
+                {
+                    if (!directoryCache.ContainsKey(dir.path))
+                        directoryCache[dir.path] = new DirectoryNode { Path = dir.path, IsLoaded = false };
+                    directoryCache[dir.path].IsExpanded = nodeOpen;
+                }
+
+                if (nodeOpen)
+                {
+                    // Draw subdirectory contents
+                    DrawDirectoryTree(dir.path, depth + 1);
+                    ImGui.TreePop();
+                }
+
+                ImGui.PopID();
+            }
+
+            // Draw script files
+            var scriptFiles = node.Contents.Where(f => f.type == "file" && (f.name.EndsWith(".lscript") || f.name.EndsWith(".py"))).OrderBy(f => f.name).ToList();
+            foreach (GHFileObject file in scriptFiles)
+            {
+                ImGui.PushID(file.path);
+
+                // Draw file as selectable
+                if (ImGui.Selectable($"    {file.name}"))
+                {
+                    DownloadAndOpenScript(file);
+                }
+
+                // Tooltip
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip($"Click to download and open\n{file.path}");
+                }
+
+                ImGui.PopID();
+            }
+        }
+
+        private void LoadDirectoryAsync(string path)
+        {
+            if (!directoryCache.TryGetValue(path, out DirectoryNode node))
+            {
+                node = new DirectoryNode { Path = path };
+                directoryCache[path] = node;
+            }
+
+            if (node.IsLoading || node.IsLoaded) return;
+
+            node.IsLoading = true;
+            if (string.IsNullOrEmpty(path))
+                isInitialLoading = true;
+
             Task.Run(async () =>
             {
                 try
                 {
-                    await LoadCurrentDirectoryAsync();
+                    List<GHFileObject> files = await cache.GetDirectoryContentsAsync(path);
+                    _mainThreadActions.Enqueue(() =>
+                    {
+                        node.Contents = files;
+                        node.IsLoaded = true;
+                        node.IsLoading = false;
+                        if (string.IsNullOrEmpty(path))
+                        {
+                            isInitialLoading = false;
+                            node.IsExpanded = true; // Auto-expand root
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error navigating to directory: {ex.Message}");
-                    _mainThreadActions.Enqueue(() => {
-                        ShowError($"Failed to load directory: {ex.Message}");
-                        isLoading = false;
+                    Console.WriteLine($"Error loading directory {path}: {ex.Message}");
+                    _mainThreadActions.Enqueue(() =>
+                    {
+                        node.IsLoading = false;
+                        if (string.IsNullOrEmpty(path))
+                        {
+                            isInitialLoading = false;
+                            errorMessage = $"Failed to load scripts: {ex.Message}";
+                        }
                     });
                 }
             });
         }
 
-        public void GoBack()
-        {
-            if (navigationHistory.Count > 0)
-            {
-                var previousPath = navigationHistory.Pop();
-                NavigateToDirectory(previousPath, true); // Pass true to indicate this is back navigation
-            }
-        }
+        private void DownloadAndOpenScript(GHFileObject file) => Task.Run(async () =>
+                                                                          {
+                                                                              try
+                                                                              {
+                                                                                  string content = await cache.GetFileContentAsync(file.download_url);
+                                                                                  _mainThreadActions.Enqueue(() =>
+                                                                                  {
+                                                                                      try
+                                                                                      {
+                                                                                          // Validate and sanitize the filename to prevent path traversal
+                                                                                          string sanitizedFileName = Path.GetFileName(file.name);
 
-        private TextBox GenTextBox(string text, int fontsize, int x = 0, int y = 0)
-        {
-            TextBox tb = TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, fontsize, Microsoft.Xna.Framework.Color.White, TextBox.RTLOptions.Default());
-            tb.X = x;
-            tb.Y = y;
-            tb.AcceptMouseInput = false;
-            return tb;
-        }
+                                                                                          // Reject names that contain path separators, relative navigation, or are empty
+                                                                                          if (string.IsNullOrWhiteSpace(sanitizedFileName) ||
+                                                                                              sanitizedFileName != file.name ||
+                                                                                              sanitizedFileName.Contains("\\") ||
+                                                                                              sanitizedFileName.Contains("/") ||
+                                                                                              sanitizedFileName.Contains("..") ||
+                                                                                              sanitizedFileName == "." ||
+                                                                                              sanitizedFileName == "..")
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters or path separators.", 32);
+                                                                                              Console.WriteLine($"Security: Rejected invalid filename: {file.name}");
+                                                                                              return;
+                                                                                          }
+
+                                                                                          // Check for invalid filename characters
+                                                                                          char[] invalidChars = Path.GetInvalidFileNameChars();
+                                                                                          if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Invalid script filename: {file.name}. Filename contains invalid characters.", 32);
+                                                                                              Console.WriteLine($"Security: Rejected filename with invalid characters: {file.name}");
+                                                                                              return;
+                                                                                          }
+
+                                                                                          // Ensure the script directory exists
+                                                                                          if (!Directory.Exists(LegionScripting.ScriptPath))
+                                                                                          {
+                                                                                              Directory.CreateDirectory(LegionScripting.ScriptPath);
+                                                                                          }
+
+                                                                                          // Create the full file path
+                                                                                          string filePath = Path.Combine(LegionScripting.ScriptPath, sanitizedFileName);
+
+                                                                                          // Resolve to full path and verify it's within the scripts directory
+                                                                                          string fullFilePath = Path.GetFullPath(filePath);
+                                                                                          string fullScriptPath = Path.GetFullPath(LegionScripting.ScriptPath);
+
+                                                                                          // Verify the resolved path starts with the scripts root directory
+                                                                                          if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                                                                              !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
+                                                                                          {
+                                                                                              GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
+                                                                                              Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.name}, Resolved: {fullFilePath}");
+                                                                                              return;
+                                                                                          }
+
+                                                                                          // Handle duplicate files by appending a number
+                                                                                          string finalFileName = sanitizedFileName;
+                                                                                          string finalFilePath = fullFilePath;
+
+                                                                                          if (File.Exists(fullFilePath))
+                                                                                          {
+                                                                                              string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sanitizedFileName);
+                                                                                              string extension = Path.GetExtension(sanitizedFileName);
+                                                                                              int counter = 1;
+
+                                                                                              do
+                                                                                              {
+                                                                                                  finalFileName = $"{fileNameWithoutExtension} ({counter}){extension}";
+                                                                                                  finalFilePath = Path.Combine(LegionScripting.ScriptPath, finalFileName);
+
+                                                                                                  // Re-validate the new path
+                                                                                                  string fullFinalPath = Path.GetFullPath(finalFilePath);
+                                                                                                  if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                                                                                                      !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
+                                                                                                  {
+                                                                                                      GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
+                                                                                                      return;
+                                                                                                  }
+
+                                                                                                  finalFilePath = fullFinalPath;
+                                                                                                  counter++;
+                                                                                              } while (File.Exists(finalFilePath) && counter < 1000); // Limit to prevent infinite loop
+
+                                                                                              if (counter >= 1000)
+                                                                                              {
+                                                                                                  GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
+                                                                                                  return;
+                                                                                              }
+                                                                                          }
+
+                                                                                          // Write the content to disk
+                                                                                          File.WriteAllText(finalFilePath, content, Encoding.UTF8);
+
+                                                                                          // Create ScriptFile object pointing to the saved file
+                                                                                          var f = new ScriptFile(World.Instance, LegionScripting.ScriptPath, finalFileName);
+                                                                                          UIManager.Add(new ScriptEditor(World.Instance, f));
+
+                                                                                          GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
+
+                                                                                          // Refresh script manager if open
+                                                                                          ScriptManagerWindow.Instance?.Update();
+                                                                                      }
+                                                                                      catch (Exception ex)
+                                                                                      {
+                                                                                          Console.WriteLine($"Error creating script file: {ex.Message}");
+                                                                                          GameActions.Print(World.Instance, $"Error saving script: {file.name} - {ex.Message}");
+                                                                                      }
+                                                                                  });
+                                                                              }
+                                                                              catch (Exception ex)
+                                                                              {
+                                                                                  Console.WriteLine($"Error loading file: {ex.Message}");
+                                                                                  _mainThreadActions.Enqueue(() =>
+                                                                                  {
+                                                                                      GameActions.Print(World.Instance, $"Error loading script: {file.name}");
+                                                                                  });
+                                                                              }
+                                                                          });
 
         public override void Dispose()
         {
@@ -275,124 +346,13 @@ namespace ClassicUO.LegionScripting
             base.Dispose();
         }
 
-        public class ItemControl : Control
+        private class DirectoryNode
         {
-            private readonly bool isBackButton;
-            private World World;
-
-            public ItemControl(World world, GHFileObject gHFileObject, ScriptBrowser scriptBrowser, bool isBackButton = false)
-            {
-                World = world;
-                Width = scriptBrowser.scrollArea.Width - 18;
-                Height = 50;
-                this.isBackButton = isBackButton;
-
-                Add(new AlphaBlendControl() { Width = Width, Height = Height });
-
-                GHFileObject = gHFileObject;
-                ScriptBrowser = scriptBrowser;
-
-                if (gHFileObject.type == "dir")
-                {
-                    var typeText = isBackButton ? "Back" : "Directory";
-                    Add(GenTextBox(typeText, 14, 5, 5));
-                    MouseDown += DirectoryMouseDown;
-                }
-                else if (gHFileObject.type == "file" && (gHFileObject.name.EndsWith(".lscript") || gHFileObject.name.EndsWith(".py")))
-                {
-                    Add(GenTextBox("Script", 14, 5, 5));
-                    MouseDown += FileMouseDown;
-                }
-
-                var tb = GenTextBox(gHFileObject.name, 20);
-                tb.X = Width - tb.MeasuredSize.X - 5;
-                tb.Y = (Height - tb.MeasuredSize.Y) / 2;
-                Add(tb);
-            }
-
-            private void FileMouseDown(object sender, MouseEventArgs e)
-            {
-                if (e.Button != MouseButtonType.Left) return;
-                // Run file loading asynchronously to prevent UI freezing
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        var content = await ScriptBrowser.cache.GetFileContentAsync(GHFileObject.download_url);
-                        _mainThreadActions.Enqueue(() =>
-                        {
-                            try
-                            {
-                                // Ensure the script directory exists
-                                if (!Directory.Exists(LegionScripting.ScriptPath))
-                                {
-                                    Directory.CreateDirectory(LegionScripting.ScriptPath);
-                                }
-
-                                // Create the full file path
-                                var filePath = Path.Combine(LegionScripting.ScriptPath, GHFileObject.name);
-
-                                // Write the content to disk
-                                File.WriteAllText(filePath, content, Encoding.UTF8);
-
-                                // Create ScriptFile object pointing to the saved file
-                                ScriptFile f = new ScriptFile(World, LegionScripting.ScriptPath, GHFileObject.name);
-                                UIManager.Add(new ScriptEditor(World, f));
-
-                                GameActions.Print(World, $"Downloaded script: {GHFileObject.name}");
-
-                                var scriptManager = UIManager.GetGump<ScriptManagerGump>();
-                                if(scriptManager != null)
-                                {
-                                    scriptManager.Refresh();
-                                }
-                                else
-                                {
-                                    ScriptManagerGump g = new ScriptManagerGump();
-                                    UIManager.Add(g);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Error creating script file: {ex.Message}");
-                                GameActions.Print(World, $"Error saving script: {GHFileObject.name} - {ex.Message}");
-                            }
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error loading file: {ex.Message}");
-                        _mainThreadActions.Enqueue(() =>
-                        {
-                            GameActions.Print(World, $"Error loading script: {GHFileObject.name}");
-                        });
-                    }
-                });
-            }
-
-            private void DirectoryMouseDown(object sender, MouseEventArgs e)
-            {
-                if (isBackButton)
-                {
-                    ScriptBrowser.GoBack();
-                }
-                else
-                {
-                    ScriptBrowser.NavigateToDirectory(GHFileObject.path);
-                }
-            }
-
-            private TextBox GenTextBox(string text, int fontsize, int x = 0, int y = 0)
-            {
-                TextBox tb = TextBox.GetOne(text, TrueTypeLoader.EMBEDDED_FONT, fontsize, Microsoft.Xna.Framework.Color.White, TextBox.RTLOptions.Default());
-                tb.X = x;
-                tb.Y = y;
-                tb.AcceptMouseInput = false;
-                return tb;
-            }
-
-            public GHFileObject GHFileObject { get; }
-            public ScriptBrowser ScriptBrowser { get; }
+            public string Path { get; set; }
+            public List<GHFileObject> Contents { get; set; } = new();
+            public bool IsLoaded { get; set; }
+            public bool IsLoading { get; set; }
+            public bool IsExpanded { get; set; }
         }
 
         public class GHFileObject
@@ -428,6 +388,9 @@ namespace ClassicUO.LegionScripting
         private readonly Dictionary<string, string> fileContentCache;
         private readonly Dictionary<string, DateTime> cacheTimestamps;
         private readonly TimeSpan cacheExpiration = TimeSpan.FromMinutes(10);
+        private DateTime lastApiCallTime = DateTime.MinValue;
+        private readonly object rateLimitLock = new object();
+        private const int MIN_MS_BETWEEN_REQUESTS = 1000; // 1 second between requests
 
         public GitHubContentCache(string repo)
         {
@@ -443,7 +406,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public async Task<List<ScriptBrowser.GHFileObject>> GetDirectoryContentsAsync(string path = "")
         {
-            var cacheKey = string.IsNullOrEmpty(path) ? "ROOT" : path;
+            string cacheKey = string.IsNullOrEmpty(path) ? "ROOT" : path;
 
             // Check if we have cached data that's still valid
             if (directoryCache.ContainsKey(cacheKey) &&
@@ -454,23 +417,24 @@ namespace ClassicUO.LegionScripting
             }
 
             // Fetch from API
-            var contents = await FetchDirectoryFromApi(path);
+            List<ScriptBrowser.GHFileObject> contents = await FetchDirectoryFromApi(path);
 
             // Cache the results
             directoryCache[cacheKey] = contents;
             cacheTimestamps[cacheKey] = DateTime.Now;
 
             // Pre-cache subdirectories in background for faster navigation
+            // Process sequentially to respect rate limiting (1 request per second)
             _ = Task.Run(async () =>
             {
-                var directories = contents.Where(f => f.type == "dir").Take(5);
-                foreach (var dir in directories)
+                IEnumerable<ScriptBrowser.GHFileObject> directories = contents.Where(f => f.type == "dir").Take(3); // Reduced from 5 to 3 to minimize initial load time
+                foreach (ScriptBrowser.GHFileObject dir in directories)
                 {
                     try
                     {
                         if (!directoryCache.ContainsKey(dir.path))
                         {
-                            await GetDirectoryContentsAsync(dir.path);
+                            await GetDirectoryContentsAsync(dir.path); // Rate limiting is enforced in DownloadStringAsync
                         }
                     }
                     catch
@@ -493,7 +457,7 @@ namespace ClassicUO.LegionScripting
                 return fileContentCache[downloadUrl];
             }
 
-            var content = await DownloadStringAsync(downloadUrl);
+            string content = await DownloadStringAsync(downloadUrl);
             fileContentCache[downloadUrl] = content;
 
             return content;
@@ -506,15 +470,15 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                var url = string.IsNullOrEmpty(path) ? baseUrl : $"{baseUrl}/{path}";
-                var response = await DownloadStringAsync(url);
+                string url = string.IsNullOrEmpty(path) ? baseUrl : $"{baseUrl}/{path}";
+                string response = await DownloadStringAsync(url);
 
                 if (string.IsNullOrEmpty(response))
                 {
                     return new List<ScriptBrowser.GHFileObject>();
                 }
 
-                var files = JsonSerializer.Deserialize<List<ScriptBrowser.GHFileObject>>(response);
+                List<ScriptBrowser.GHFileObject> files = JsonSerializer.Deserialize<List<ScriptBrowser.GHFileObject>>(response);
                 return files ?? new List<ScriptBrowser.GHFileObject>();
             }
             catch (WebException webEx)
@@ -539,10 +503,36 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Enforce rate limiting to ensure minimum delay between API calls
+        /// </summary>
+        private async Task EnforceRateLimitAsync()
+        {
+            int delayNeeded = 0;
+
+            lock (rateLimitLock)
+            {
+                int timeSinceLastCall = (int)(DateTime.Now - lastApiCallTime).TotalMilliseconds;
+                if (timeSinceLastCall < MIN_MS_BETWEEN_REQUESTS)
+                {
+                    delayNeeded = MIN_MS_BETWEEN_REQUESTS - timeSinceLastCall;
+                }
+                lastApiCallTime = DateTime.Now.AddMilliseconds(delayNeeded);
+            }
+
+            if (delayNeeded > 0)
+            {
+                await Task.Delay(delayNeeded);
+            }
+        }
+
+        /// <summary>
         /// Download string content using WebClient with proper async handling and timeout
         /// </summary>
-        private Task<string> DownloadStringAsync(string url)
+        private async Task<string> DownloadStringAsync(string url)
         {
+            // Enforce rate limiting before making the request
+            await EnforceRateLimitAsync();
+
             var tcs = new TaskCompletionSource<string>();
 
             var webClient = new WebClient();
@@ -594,7 +584,7 @@ namespace ClassicUO.LegionScripting
                 tcs.TrySetException(ex);
             }
 
-            return tcs.Task;
+            return tcs.Task.Result;
         }
 
         /// <summary>
@@ -612,13 +602,13 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public void ClearExpiredCache()
         {
-            var now = DateTime.Now;
+            DateTime now = DateTime.Now;
             var expiredKeys = cacheTimestamps
                 .Where(kvp => now - kvp.Value >= cacheExpiration)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            foreach (var key in expiredKeys)
+            foreach (string key in expiredKeys)
             {
                 directoryCache.Remove(key);
                 cacheTimestamps.Remove(key);
@@ -630,15 +620,12 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public (int Directories, int Files, int Expired) GetCacheStats()
         {
-            var now = DateTime.Now;
-            var expired = cacheTimestamps.Count(kvp => now - kvp.Value >= cacheExpiration);
+            DateTime now = DateTime.Now;
+            int expired = cacheTimestamps.Count(kvp => now - kvp.Value >= cacheExpiration);
 
             return (directoryCache.Count, fileContentCache.Count, expired);
         }
 
-        public void Dispose()
-        {
-            ClearCache();
-        }
+        public void Dispose() => ClearCache();
     }
 }

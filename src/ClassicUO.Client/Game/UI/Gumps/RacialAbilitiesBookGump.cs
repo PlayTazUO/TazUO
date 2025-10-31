@@ -77,7 +77,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
 
-                    Label text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 10 };
+                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6) { X = indexX, Y = 10 };
                     Add(text, page);
 
                     for (int i = 0; i < abilityOnPage; i++)
@@ -140,7 +140,7 @@ namespace ClassicUO.Game.UI.Gumps
                 bool passive = true;
                 string spellName = GetAbilityName(i, ref passive);
 
-                Label text = new Label
+                var text = new Label
                 (
                     spellName,
                     false,
@@ -164,7 +164,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 ushort graphic = (ushort) (iconStartGraphic + i);
 
-                GumpPic pic = new GumpPic(iconX, 40, graphic, 0)
+                var pic = new GumpPic(iconX, 40, graphic, 0)
                 {
                     LocalSerial = graphic
                 };
@@ -178,7 +178,7 @@ namespace ClassicUO.Game.UI.Gumps
                             return;
                         }
 
-                        RacialAbilityButton gump = new RacialAbilityButton(World, (ushort) ((GumpPic) sender).LocalSerial)
+                        var gump = new RacialAbilityButton(World, (ushort) ((GumpPic) sender).LocalSerial)
                         {
                             X = Mouse.LClickPosition.X - 20,
                             Y = Mouse.LClickPosition.Y - 20

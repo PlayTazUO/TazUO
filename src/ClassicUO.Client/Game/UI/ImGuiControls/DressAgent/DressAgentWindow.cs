@@ -55,7 +55,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Separator();
             if (ImGui.Button("Add Configuration"))
             {
-                var newConfig = DressAgentManager.Instance.CreateNewConfig($"Config {DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1}");
+                DressConfig newConfig = DressAgentManager.Instance.CreateNewConfig($"Config {DressAgentManager.Instance.CurrentPlayerConfigs.Count + 1}");
                 _selectedConfigIndex = DressAgentManager.Instance.CurrentPlayerConfigs.IndexOf(newConfig);
                 _selectedConfig = newConfig;
             }
@@ -63,10 +63,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Separator();
 
             // List existing configurations
-            var configs = DressAgentManager.Instance.CurrentPlayerConfigs;
+            System.Collections.Generic.List<DressConfig> configs = DressAgentManager.Instance.CurrentPlayerConfigs;
             for (int i = 0; i < configs.Count; i++)
             {
-                var config = configs[i];
+                DressConfig config = configs[i];
                 bool isSelected = i == _selectedConfigIndex;
 
                 string label = $"{config.Name} ({config.Items.Count} items)##Config{i}";
@@ -297,7 +297,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 for (int i = _selectedConfig.Items.Count - 1; i >= 0; i--)
                 {
-                    var item = _selectedConfig.Items[i];
+                    DressItem item = _selectedConfig.Items[i];
                     ImGui.TableNextRow();
 
                     ImGui.TableSetColumnIndex(0);

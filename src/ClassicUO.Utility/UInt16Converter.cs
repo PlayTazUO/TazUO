@@ -9,7 +9,7 @@ namespace ClassicUO.Utility
     {
         public static ushort Parse(ReadOnlySpan<char> str)
         {
-            var style = NumberStyles.Integer;
+            NumberStyles style = NumberStyles.Integer;
             if (str.StartsWith("0x"))
             {
                 str = str.Slice(2);
@@ -17,7 +17,7 @@ namespace ClassicUO.Utility
             }
             else if (str.Length > 1 && str[0] == '-')
             {
-                if (short.TryParse(str, out var res))
+                if (short.TryParse(str, out short res))
                 {
                     return (ushort)res;
                 }

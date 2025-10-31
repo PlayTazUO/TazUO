@@ -55,8 +55,8 @@ namespace ClassicUO.Assets
         {
             for (int i = 0; i < _files.Length; i++)
             {
-                var pathmul = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".mul");
-                var pathidx = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".idx");
+                string pathmul = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".mul");
+                string pathidx = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".idx");
 
                 if (File.Exists(pathmul) && File.Exists(pathidx))
                 {
@@ -66,11 +66,11 @@ namespace ClassicUO.Assets
 
             if (FileManager.IsUOPInstallation)
             {
-                var loaduop = false;
+                bool loaduop = false;
 
-                for (var i = 0; i < _filesUop.Length; ++i)
+                for (int i = 0; i < _filesUop.Length; ++i)
                 {
-                    var pathuop = FileManager.GetUOFilePath($"AnimationFrame{i + 1}.uop");
+                    string pathuop = FileManager.GetUOFilePath($"AnimationFrame{i + 1}.uop");
 
                     if (File.Exists(pathuop))
                     {
@@ -92,7 +92,7 @@ namespace ClassicUO.Assets
 
                 if (File.Exists(path))
                 {
-                    var typeNames = new string[5]
+                    string[] typeNames = new string[5]
                     {
                         "monster",
                         "sea_monster",
@@ -166,7 +166,7 @@ namespace ClassicUO.Assets
 
             if (File.Exists(file))
             {
-                using (DefReader defReader = new DefReader(file))
+                using (var defReader = new DefReader(file))
                 {
                     while (defReader.Next())
                     {
@@ -188,7 +188,7 @@ namespace ClassicUO.Assets
 
             if (File.Exists(file))
             {
-                using (DefReader defReader = new DefReader(file))
+                using (var defReader = new DefReader(file))
                 {
                     while (defReader.Next())
                     {
@@ -213,7 +213,7 @@ namespace ClassicUO.Assets
 
         public bool ReplaceBody(ref ushort body, ref ushort hue)
         {
-            if (_bodyInfos.TryGetValue(body, out var bodyInfo))
+            if (_bodyInfos.TryGetValue(body, out BodyInfo bodyInfo))
             {
                 body = bodyInfo.Graphic;
                 hue = bodyInfo.Hue;
@@ -226,7 +226,7 @@ namespace ClassicUO.Assets
 
         public bool ReplaceCorpse(ref ushort body, ref ushort hue)
         {
-            if (_corpseInfos.TryGetValue(body, out var bodyInfo))
+            if (_corpseInfos.TryGetValue(body, out BodyInfo bodyInfo))
             {
                 body = bodyInfo.Graphic;
                 hue = bodyInfo.Hue;
@@ -239,7 +239,7 @@ namespace ClassicUO.Assets
 
         public bool ReplaceUopGroup(ushort body, ref byte group)
         {
-            if (_uopInfos.TryGetValue(body, out var uopInfo))
+            if (_uopInfos.TryGetValue(body, out UopInfo uopInfo))
             {
                 group = (byte)uopInfo.ReplacedAnimations[group];
 
@@ -262,7 +262,7 @@ namespace ClassicUO.Assets
             fileIndex = 0;
             animType = AnimationGroupsType.Unknown;
 
-            if (!_mobTypes.TryGetValue(body, out var mobInfo))
+            if (!_mobTypes.TryGetValue(body, out MobTypeInfo mobInfo))
             {
                 mobInfo.Flags = AnimationFlags.None;
                 mobInfo.Type = AnimationGroupsType.Unknown;
@@ -275,25 +275,25 @@ namespace ClassicUO.Assets
                 if (animType == AnimationGroupsType.Unknown)
                     animType = mobInfo.Type != AnimationGroupsType.Unknown ? mobInfo.Type : CalculateTypeByGraphic(body);
 
-                var replaceFound = _uopInfos.TryGetValue(body, out var uopInfo);
-                var animIndices = Array.Empty<AnimationDirection>();
+                bool replaceFound = _uopInfos.TryGetValue(body, out UopInfo uopInfo);
+                AnimationDirection[] animIndices = Array.Empty<AnimationDirection>();
 
                 for (int actioIdx = 0; actioIdx < MAX_ACTIONS; ++actioIdx)
                 {
-                    var action = replaceFound ? uopInfo.ReplacedAnimations[actioIdx] : actioIdx;
-                    var hashString = $"build/animationlegacyframe/{body:D6}/{action:D2}.bin";
-                    var hash = UOFileUop.CreateHash(hashString);
+                    int action = replaceFound ? uopInfo.ReplacedAnimations[actioIdx] : actioIdx;
+                    string hashString = $"build/animationlegacyframe/{body:D6}/{action:D2}.bin";
+                    ulong hash = UOFileUop.CreateHash(hashString);
 
                     for (int index = 0; index < _filesUop.Length; ++index)
                     {
-                        if (_filesUop[index] != null && _filesUop[index].TryGetUOPData(hash, out var data))
+                        if (_filesUop[index] != null && _filesUop[index].TryGetUOPData(hash, out UOFileIndex data))
                         {
                             if (animIndices.Length == 0)
                                 animIndices = new AnimationDirection[MAX_ACTIONS];
 
                             fileIndex = index;
 
-                            ref var animIndex = ref animIndices[actioIdx];
+                            ref AnimationDirection animIndex = ref animIndices[actioIdx];
                             animIndex.Position = (uint)data.Offset;
                             animIndex.Size = (uint)data.Length;
                             animIndex.UncompressedSize = (uint)data.DecompressedLength;
@@ -307,7 +307,7 @@ namespace ClassicUO.Assets
                 return animIndices;
             }
 
-            if (_bodyConvInfos.TryGetValue(body, out var bodyConvInfo))
+            if (_bodyConvInfos.TryGetValue(body, out BodyConvInfo bodyConvInfo))
             {
                 hue = bodyConvInfo.Hue;
                 body = bodyConvInfo.Graphic;
@@ -320,11 +320,11 @@ namespace ClassicUO.Assets
             if (animType == AnimationGroupsType.Unknown)
                 animType = mobInfo.Type != AnimationGroupsType.Unknown ? mobInfo.Type : CalculateTypeByGraphic(body, fileIndex);
 
-            var fileIdx = _files[fileIndex].IdxFile;
-            var offsetAddress = CalculateOffset(body, animType, flags, out var actionCount);
+            UOFile fileIdx = _files[fileIndex].IdxFile;
+            long offsetAddress = CalculateOffset(body, animType, flags, out int actionCount);
 
-            var offset = fileIdx.Position + offsetAddress;
-            var end = fileIdx.Position + fileIdx.Length;
+            long offset = fileIdx.Position + offsetAddress;
+            long end = fileIdx.Position + fileIdx.Length;
 
             if (offset >= end)
             {
@@ -339,16 +339,16 @@ namespace ClassicUO.Assets
 
             fileIdx.Seek(offsetAddress, SeekOrigin.Begin);
 
-            var size = actionCount * MAX_DIRECTIONS;
+            int size = actionCount * MAX_DIRECTIONS;
 
-            var indicesBuf = ArrayPool<AnimIdxBlock>.Shared.Rent(size);
+            AnimIdxBlock[] indicesBuf = ArrayPool<AnimIdxBlock>.Shared.Rent(size);
             fileIdx.Read(MemoryMarshal.AsBytes(indicesBuf.AsSpan(0, size)));
 
             var directions = new AnimationDirection[size];
-            for (var i = 0; i < directions.Length; ++i)
+            for (int i = 0; i < directions.Length; ++i)
             {
-                ref var dir = ref directions[i];
-                ref var index = ref indicesBuf[i];
+                ref AnimationDirection dir = ref directions[i];
+                ref AnimIdxBlock index = ref indicesBuf[i];
                 dir.Position = index.Position;
                 dir.Size = index.Size;
                 dir.UncompressedSize = index.Unknown;
@@ -369,7 +369,7 @@ namespace ClassicUO.Assets
             long result = 0;
             groupCount = 0;
 
-            var group = AnimationGroups.None;
+            AnimationGroups group = AnimationGroups.None;
 
             switch (type)
             {
@@ -457,11 +457,11 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            var file = FileManager.GetUOFilePath("Equipconv.def");
+            string file = FileManager.GetUOFilePath("Equipconv.def");
 
             if (File.Exists(file))
             {
-                using (DefReader defReader = new DefReader(file, 5))
+                using (var defReader = new DefReader(file, 5))
                 {
                     while (defReader.Next())
                     {
@@ -486,7 +486,7 @@ namespace ClassicUO.Assets
 
                         ushort color = (ushort)defReader.ReadInt();
 
-                        if (!_equipConv.TryGetValue(body, out var dict))
+                        if (!_equipConv.TryGetValue(body, out Dictionary<ushort, EquipConvData> dict))
                         {
                             _equipConv[body] = (dict = new Dictionary<ushort, EquipConvData>());
                         }
@@ -504,7 +504,7 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            var file = FileManager.GetUOFilePath("Bodyconv.def");
+            string file = FileManager.GetUOFilePath("Bodyconv.def");
 
             if (!File.Exists(file))
                 return;
@@ -610,7 +610,7 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            var file = FileManager.GetUOFilePath("Body.def");
+            string file = FileManager.GetUOFilePath("Body.def");
 
             if (!File.Exists(file))
                 return;
@@ -621,7 +621,7 @@ namespace ClassicUO.Assets
                 {
                     int index = defReader.ReadInt();
 
-                    if (_bodyInfos.TryGetValue(index, out var info) && info.Graphic != 0)
+                    if (_bodyInfos.TryGetValue(index, out BodyInfo info) && info.Graphic != 0)
                     {
                         continue;
                     }
@@ -636,7 +636,7 @@ namespace ClassicUO.Assets
                     int color = defReader.ReadInt();
 
                     //Yes, this is actually how this is supposed to work.
-                    var checkIndex = group.Length >= 3 ? group[2] : group[0];
+                    int checkIndex = group.Length >= 3 ? group[2] : group[0];
 
                     _bodyInfos[index] = new BodyInfo()
                     {
@@ -654,7 +654,7 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            var file = FileManager.GetUOFilePath("Corpse.def");
+            string file = FileManager.GetUOFilePath("Corpse.def");
 
             if (!File.Exists(file))
                 return;
@@ -665,7 +665,7 @@ namespace ClassicUO.Assets
                 {
                     int index = defReader.ReadInt();
 
-                    if (_corpseInfos.TryGetValue(index, out var b) && b.Graphic != 0)
+                    if (_corpseInfos.TryGetValue(index, out BodyInfo b) && b.Graphic != 0)
                     {
                         continue;
                     }
@@ -696,7 +696,7 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            var animationSequencePath = FileManager.GetUOFilePath("AnimationSequence.uop");
+            string animationSequencePath = FileManager.GetUOFilePath("AnimationSequence.uop");
 
             if (!File.Exists(animationSequencePath))
             {
@@ -806,10 +806,10 @@ namespace ClassicUO.Assets
 
             animSeq.FillEntries();
 
-            var buf = new byte[1024];
-            var dbuf = new byte[1024];
+            byte[] buf = new byte[1024];
+            byte[] dbuf = new byte[1024];
 
-            foreach (var entry in animSeq.Entries)
+            foreach (UOFileIndex entry in animSeq.Entries)
             {
                 if (entry.Length == 0)
                     continue;
@@ -826,7 +826,7 @@ namespace ClassicUO.Assets
                     if (dbuf.Length <= entry.DecompressedLength)
                         dbuf = new byte[entry.DecompressedLength*2];
 
-                    var ok = ZLib.Decompress(buf.AsSpan(0, entry.Length), dbuf.AsSpan(0, entry.DecompressedLength));
+                    ZLib.ZLibError ok = ZLib.Decompress(buf.AsSpan(0, entry.Length), dbuf.AsSpan(0, entry.DecompressedLength));
                     if (ok != ZLib.ZLibError.Ok)
                         continue;
 
@@ -843,8 +843,8 @@ namespace ClassicUO.Assets
                 int replaces = reader.ReadInt32LE();
 
                 var uopInfo = new UopInfo();
-                var j = 0;
-                foreach (ref var idx in uopInfo.ReplacedAnimations)
+                int j = 0;
+                foreach (ref int idx in uopInfo.ReplacedAnimations)
                     idx = j++;
 
                 if (replaces != 48 && replaces != 68)
@@ -871,22 +871,13 @@ namespace ClassicUO.Assets
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe uint CalculatePeopleGroupOffset(ushort graphic)
-        {
-            return (uint)(((graphic - 400) * 175 + 35000) * sizeof(AnimIdxBlock));
-        }
+        private static unsafe uint CalculatePeopleGroupOffset(ushort graphic) => (uint)(((graphic - 400) * 175 + 35000) * sizeof(AnimIdxBlock));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe uint CalculateHighGroupOffset(ushort graphic)
-        {
-            return (uint)(graphic * 110 * sizeof(AnimIdxBlock));
-        }
+        private static unsafe uint CalculateHighGroupOffset(ushort graphic) => (uint)(graphic * 110 * sizeof(AnimIdxBlock));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe uint CalculateLowGroupOffset(ushort graphic)
-        {
-            return (uint)(((graphic - 200) * 65 + 22000) * sizeof(AnimIdxBlock));
-        }
+        private static unsafe uint CalculateLowGroupOffset(ushort graphic) => (uint)(((graphic - 200) * 65 + 22000) * sizeof(AnimIdxBlock));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private AnimationGroupsType CalculateTypeByGraphic(ushort graphic, int fileIndex = 0)
@@ -1254,7 +1245,7 @@ namespace ClassicUO.Assets
                 return Span<FrameInfo>.Empty;
             }
 
-            var file = _filesUop[fileIndex];
+            UOFileUop file = _filesUop[fileIndex];
 
             if (index.Position == 0 && index.Size == 0)
             {
@@ -1279,7 +1270,7 @@ namespace ClassicUO.Assets
             }
 
             file.Seek(index.Position, SeekOrigin.Begin);
-            var buf = ArrayPool<byte>.Shared.Rent((int)index.Size); //new byte[index.Size];
+            byte[] buf = ArrayPool<byte>.Shared.Rent((int)index.Size); //new byte[index.Size];
             file.Read(buf);
 
             var reader = new StackDataReader(buf);
@@ -1288,7 +1279,7 @@ namespace ClassicUO.Assets
             if (index.CompressionType >= CompressionType.Zlib)
             {
                 dbuf = ArrayPool<byte>.Shared.Rent((int)index.UncompressedSize); //new byte[(int)index.UncompressedSize];
-                var result = ZLib.Decompress(buf, dbuf);
+                ZLib.ZLibError result = ZLib.Decompress(buf, dbuf);
                 if (result != ZLib.ZLibError.Ok)
                 {
                     Log.Error($"error reading uop animation. AnimID: {animID} | Group: {animGroup} | Dir: {direction} | FileIndex: {fileIndex}");
@@ -1313,19 +1304,19 @@ namespace ClassicUO.Assets
             UOPFrameData[] sharedBuffer = ArrayPool<UOPFrameData>.Shared.Rent(fc);
             try
             {
-                var frameData = sharedBuffer.AsSpan(0, fc);
+                Span<UOPFrameData> frameData = sharedBuffer.AsSpan(0, fc);
                 frameData.Clear();
 
-                for (var i = 0; i < fc; ++i)
+                for (int i = 0; i < fc; ++i)
                 {
-                    var start = reader.Position;
+                    int start = reader.Position;
 
-                    var group = reader.ReadUInt16LE();
-                    var frameId = reader.ReadUInt16LE();
+                    ushort group = reader.ReadUInt16LE();
+                    ushort frameId = reader.ReadUInt16LE();
                     reader.ReadUInt64LE();
-                    var pixeloffset = reader.ReadUInt32LE();
+                    uint pixeloffset = reader.ReadUInt32LE();
 
-                    ref var frame = ref frameData[i];
+                    ref UOPFrameData frame = ref frameData[i];
                     frame.Position = start;
                     frame.Group = group;
                     frame.FrameID = frameId;
@@ -1333,8 +1324,8 @@ namespace ClassicUO.Assets
                 }
 
                 var list = new List<UOPFrameData>(fc);
-                var lastFrameId = 1;
-                for (var i = 0; i < fc; ++i)
+                int lastFrameId = 1;
+                for (int i = 0; i < fc; ++i)
                 {
                     while (frameData[i].FrameID - lastFrameId > 1)
                     {
@@ -1351,10 +1342,10 @@ namespace ClassicUO.Assets
                 }
 
                 frameData = CollectionsMarshal.AsSpan(list);
-                var maxFrameCount = frameData.Length;
+                int maxFrameCount = frameData.Length;
 
                 // Looks like the min amount of frames is 10 for equipment
-                var realFrameCount = type == AnimationGroupsType.Equipment ?
+                int realFrameCount = type == AnimationGroupsType.Equipment ?
                     Math.Max(10, (int)Math.Round(maxFrameCount / (float)MAX_DIRECTIONS))
                     :
                     (int)Math.Round(maxFrameCount / (float)MAX_DIRECTIONS);
@@ -1365,12 +1356,12 @@ namespace ClassicUO.Assets
                     _frames = new FrameInfo[realFrameCount];
                 }
 
-                var framesSpan = _frames.AsSpan(0, realFrameCount);
+                Span<FrameInfo> framesSpan = _frames.AsSpan(0, realFrameCount);
                 framesSpan.Clear();
 
                 // var dirFrameStartIdx = realFrameCount * direction;
 
-                foreach (ref readonly var frame in frameData)
+                foreach (ref readonly UOPFrameData frame in frameData)
                 {
                     // validate the group only if the frame is valid
                     if (frame.Position > 0)
@@ -1382,7 +1373,7 @@ namespace ClassicUO.Assets
                         }
                     }
 
-                    var frameDirection = (frame.FrameID - 1) / realFrameCount;
+                    int frameDirection = (frame.FrameID - 1) / realFrameCount;
 
                     if (frameDirection < direction)
                     {
@@ -1396,8 +1387,8 @@ namespace ClassicUO.Assets
                         break;
                     }
 
-                    var idx = (frame.FrameID - 1) % realFrameCount;
-                    ref var frameInfo = ref framesSpan[idx];
+                    int idx = (frame.FrameID - 1) % realFrameCount;
+                    ref FrameInfo frameInfo = ref framesSpan[idx];
 
                     // we need to zero-out the frame or we will see ghost animations coming from other animation queries
                     frameInfo.Num = idx;
@@ -1414,7 +1405,7 @@ namespace ClassicUO.Assets
 
                     reader.Seek(frame.Position + frame.PixelOffset);
 
-                    var palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
+                    ReadOnlySpan<ushort> palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
                     reader.Skip(512);
 
                     ReadSpriteData(ref reader, palette, ref frameInfo, true);
@@ -1448,7 +1439,7 @@ namespace ClassicUO.Assets
                 return Span<FrameInfo>.Empty;
             }
 
-            var file = _files[fileIndex];
+            UOFileMul file = _files[fileIndex];
 
             if (index.Position + index.Size > file.Length)
             {
@@ -1457,11 +1448,11 @@ namespace ClassicUO.Assets
 
             // TODO: check if UOFileIndex works
             file.Seek(index.Position, SeekOrigin.Begin);
-            var buf = new byte[index.Size];
+            byte[] buf = new byte[index.Size];
             file.Read(buf);
 
             var reader = new StackDataReader(buf);
-            var palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
+            ReadOnlySpan<ushort> palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
             reader.Skip(512);
 
             long dataStart = reader.Position;
@@ -1473,7 +1464,7 @@ namespace ClassicUO.Assets
                 _frames = new FrameInfo[frameCount];
             }
 
-            var frames = _frames.AsSpan(0, (int)frameCount);
+            Span<FrameInfo> frames = _frames.AsSpan(0, (int)frameCount);
 
             for (int i = 0; i < frameCount; i++)
             {
@@ -1786,20 +1777,11 @@ namespace ClassicUO.Assets
         public ushort Gump;
         public ushort Color;
 
-        public override int GetHashCode()
-        {
-            return (Graphic, Gump, Color).GetHashCode();
-        }
+        public override int GetHashCode() => (Graphic, Gump, Color).GetHashCode();
 
-        public override bool Equals(object obj)
-        {
-            return obj is EquipConvData v && Equals(v);
-        }
+        public override bool Equals(object obj) => obj is EquipConvData v && Equals(v);
 
-        public bool Equals(EquipConvData other)
-        {
-            return (Graphic, Gump, Color) == (other.Graphic, other.Gump, other.Color);
-        }
+        public bool Equals(EquipConvData other) => (Graphic, Gump, Color) == (other.Graphic, other.Gump, other.Color);
     }
 
     struct MobTypeInfo

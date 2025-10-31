@@ -37,13 +37,7 @@ namespace ClassicUO.Game.Managers
 
         private int _activeThreadCount;
 
-        public static ItemDatabaseManager Instance
-        {
-            get
-            {
-                return _instance.Value;
-            }
-        }
+        public static ItemDatabaseManager Instance => _instance.Value;
 
         private ItemDatabaseManager()
         {
@@ -140,7 +134,7 @@ namespace ClassicUO.Game.Managers
 
         public async Task AddOrUpdateItemsAsync(IEnumerable<ItemInfo> items)
         {
-            var profile = ProfileManager.CurrentProfile;
+            Profile profile = ProfileManager.CurrentProfile;
             if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
                 return;
 
@@ -153,9 +147,9 @@ namespace ClassicUO.Game.Managers
                         using var connection = new SqliteConnection(_connectionString);
                         connection.Open();
 
-                        using var transaction = connection.BeginTransaction();
+                        using SqliteTransaction transaction = connection.BeginTransaction();
 
-                        var itemList = items as List<ItemInfo> ?? items.ToList();
+                        List<ItemInfo> itemList = items as List<ItemInfo> ?? items.ToList();
                         if (itemList.Count == 0)
                         {
                             transaction.Commit();
@@ -174,7 +168,7 @@ namespace ClassicUO.Game.Managers
 
                         for (int i = 0; i < itemList.Count; i++)
                         {
-                            var item = itemList[i];
+                            ItemInfo item = itemList[i];
                             string suffix = i.ToString();
 
                             if (i > 0)
@@ -230,7 +224,7 @@ namespace ClassicUO.Game.Managers
 
         public void GetItemInfo(uint serial, Action<ItemInfo> onFound)
         {
-            var profile = ProfileManager.CurrentProfile;
+            Profile profile = ProfileManager.CurrentProfile;
             if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
             {
                 Task.Run(() => onFound?.Invoke(null));
@@ -257,7 +251,7 @@ namespace ClassicUO.Game.Managers
                         using var command = new SqliteCommand(selectQuery, connection);
                         command.Parameters.AddWithValue("@Serial", serial);
 
-                        using var reader = command.ExecuteReader();
+                        using SqliteDataReader reader = command.ExecuteReader();
                         if (reader.Read())
                         {
                             resultItem = CreateItemInfoFromReader(reader);
@@ -295,7 +289,7 @@ namespace ClassicUO.Game.Managers
             bool? onGround = null,
             int limit = 1000)
         {
-            var profile = ProfileManager.CurrentProfile;
+            Profile profile = ProfileManager.CurrentProfile;
             if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
             {
                 Task.Run(() => onResults?.Invoke(new List<ItemInfo>()));
@@ -310,7 +304,7 @@ namespace ClassicUO.Game.Managers
 
             Task.Run(() =>
             {
-                List<ItemInfo> results = new List<ItemInfo>();
+                var results = new List<ItemInfo>();
                 bool shouldInvokeCallback = false;
 
                 try
@@ -419,12 +413,12 @@ namespace ClassicUO.Game.Managers
 
                         using var command = new SqliteCommand(selectQuery, connection);
 
-                        foreach (var (paramName, paramValue) in parameters)
+                        foreach ((string paramName, object paramValue) in parameters)
                         {
                             command.Parameters.AddWithValue(paramName, paramValue);
                         }
 
-                        using var reader = command.ExecuteReader();
+                        using SqliteDataReader reader = command.ExecuteReader();
                         while (reader.Read())
                         {
                             results.Add(CreateItemInfoFromReader(reader));
@@ -456,30 +450,27 @@ namespace ClassicUO.Game.Managers
                        .Replace("_", "\\_");
         }
 
-        private ItemInfo CreateItemInfoFromReader(SqliteDataReader reader)
+        private ItemInfo CreateItemInfoFromReader(SqliteDataReader reader) => new ItemInfo
         {
-            return new ItemInfo
-            {
-                Serial = Convert.ToUInt32(reader["Serial"]),
-                Graphic = Convert.ToUInt16(reader["Graphic"]),
-                Hue = Convert.ToUInt16(reader["Hue"]),
-                Name = reader["Name"].ToString() ?? string.Empty,
-                Properties = reader["Properties"].ToString() ?? string.Empty,
-                Container = Convert.ToUInt32(reader["Container"]),
-                Layer = (Layer)Convert.ToInt32(reader["Layer"]),
-                UpdatedTime = DateTime.ParseExact(reader["UpdatedTime"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
-                Character = Convert.ToUInt32(reader["Character"]),
-                CharacterName = reader["CharacterName"].ToString() ?? string.Empty,
-                ServerName = reader["ServerName"].ToString() ?? string.Empty,
-                X = Convert.ToInt32(reader["X"]),
-                Y = Convert.ToInt32(reader["Y"]),
-                OnGround = Convert.ToInt32(reader["OnGround"]) == 1
-            };
-        }
+            Serial = Convert.ToUInt32(reader["Serial"]),
+            Graphic = Convert.ToUInt16(reader["Graphic"]),
+            Hue = Convert.ToUInt16(reader["Hue"]),
+            Name = reader["Name"].ToString() ?? string.Empty,
+            Properties = reader["Properties"].ToString() ?? string.Empty,
+            Container = Convert.ToUInt32(reader["Container"]),
+            Layer = (Layer)Convert.ToInt32(reader["Layer"]),
+            UpdatedTime = DateTime.ParseExact(reader["UpdatedTime"].ToString(), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+            Character = Convert.ToUInt32(reader["Character"]),
+            CharacterName = reader["CharacterName"].ToString() ?? string.Empty,
+            ServerName = reader["ServerName"].ToString() ?? string.Empty,
+            X = Convert.ToInt32(reader["X"]),
+            Y = Convert.ToInt32(reader["Y"]),
+            OnGround = Convert.ToInt32(reader["OnGround"]) == 1
+        };
 
         public async Task ClearOldDataAsync(TimeSpan maxAge)
         {
-            var profile = ProfileManager.CurrentProfile;
+            Profile profile = ProfileManager.CurrentProfile;
             if (!_initialized || profile == null || !profile.ItemDatabaseEnabled)
                 return;
 
@@ -573,20 +564,17 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private void PendingItemsTimerOnElapsed(object sender, ElapsedEventArgs e)
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    await BulkPendingAsync();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error in bulk pending items processing: {ex}");
-                }
-            });
-        }
+        private void PendingItemsTimerOnElapsed(object sender, ElapsedEventArgs e) => Task.Run(async () =>
+                                                                                               {
+                                                                                                   try
+                                                                                                   {
+                                                                                                       await BulkPendingAsync();
+                                                                                                   }
+                                                                                                   catch (Exception ex)
+                                                                                                   {
+                                                                                                       Log.Error($"Error in bulk pending items processing: {ex}");
+                                                                                                   }
+                                                                                               });
 
         private async Task BulkPendingAsync()
         {
@@ -646,7 +634,7 @@ namespace ClassicUO.Game.Managers
             if (!_pendingItems.IsEmpty)
             {
                 var remainingItems = new List<ItemInfo>();
-                while (_pendingItems.TryDequeue(out var item))
+                while (_pendingItems.TryDequeue(out ItemInfo item))
                 {
                     remainingItems.Add(item);
                 }

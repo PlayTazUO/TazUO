@@ -10,20 +10,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using Timer = System.Timers.Timer;
 
 namespace ClassicUO.Game.Managers
 {
     using System.Text.Json.Serialization;
-    using ClassicUO.Utility.Logging;
-
-    [JsonSerializable(typeof(SpellVisualRangeManager.SpellRangeInfo))]
-    [JsonSerializable(typeof(SpellVisualRangeManager.SpellRangeInfo[]))]
-    public partial class SpellVisualRangeJsonContext : JsonSerializerContext
-    {
-    }
+    using Utility.Logging;
 
     public class SpellVisualRangeManager
     {
@@ -43,8 +37,12 @@ namespace ClassicUO.Game.Managers
         private bool loaded = false;
         private static SpellVisualRangeManager instance;
 
+        private readonly object _castingLock = new object();
         private bool isCasting { get; set; } = false;
         private SpellRangeInfo currentSpell { get; set; }
+        private bool frozenBySpell = false;
+        private System.Threading.CancellationTokenSource _castCts;
+        private System.Threading.CancellationTokenSource _recoveryCts;
 
         //Taken from Dust client
         private static readonly int[] stopAtClilocs = new int[]
@@ -68,65 +66,178 @@ namespace ClassicUO.Game.Managers
             Load();
         }
 
-        private void OnRawMessageReceived(object sender, MessageEventArgs e)
+        /// <summary>
+        /// Reindexes the PowerWords mapping for the provided spell in the runtime cache.
+        /// </summary>
+        public void ReindexSpellPowerWords(SpellRangeInfo info)
         {
-            Task.Run(() =>
-            {
-                if (loaded && e.Parent != null && ReferenceEquals(e.Parent, World.Player))
-                {
-                    if (spellRangePowerWordCache.TryGetValue(e.Text.Trim(), out SpellRangeInfo spell))
-                    {
-                        SetCasting(spell);
-                    }
-                }
-            });
+            if (info == null || string.IsNullOrWhiteSpace(info.PowerWords))
+                return;
+
+            spellRangePowerWordCache[info.PowerWords] = info;
         }
 
-        public void OnClilocReceived(int cliloc)
-        {
-            Task.Factory.StartNew(() =>
-            {
-                if (isCasting && stopAtClilocs.Contains(cliloc))
-                {
-                    ClearCasting();
-                }
-            });
-        }
+        private void OnRawMessageReceived(object sender, MessageEventArgs e) => Task.Run(() =>
+                                                                                         {
+                                                                                             if (loaded && e.Parent != null && ReferenceEquals(e.Parent, World.Player))
+                                                                                             {
+                                                                                                 if (spellRangePowerWordCache.TryGetValue(e.Text.Trim(), out SpellRangeInfo spell))
+                                                                                                 {
+                                                                                                     SetCasting(spell);
+                                                                                                 }
+                                                                                             }
+                                                                                         });
+
+        public void OnClilocReceived(int cliloc) => Task.Factory.StartNew(() =>
+                                                             {
+                                                                 if (isCasting && stopAtClilocs.Contains(cliloc))
+                                                                 {
+                                                                     ClearCasting();
+                                                                 }
+                                                             });
+
 
         private void SetCasting(SpellRangeInfo spell)
         {
-            LastSpellTime = DateTime.Now;
-            currentSpell = spell;
-            isCasting = true;
+            lock (_castingLock)
+            {
+                LastSpellTime = DateTime.Now;
+                currentSpell = spell;
+                isCasting = true;
+            }
+
             if (currentSpell != null && currentSpell.FreezeCharacterWhileCasting)
             {
+                frozenBySpell = true;
                 World.Player.Flags |= Flags.Frozen;
             }
+
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnSpellCastBegin();
+            }
+
             EventSink.InvokeSpellCastBegin(spell.ID);
+
+            double castTime = spell.GetEffectiveCastTime();
+            _castCts?.Cancel();
+            _castCts?.Dispose();
+            _castCts = new System.Threading.CancellationTokenSource();
+            System.Threading.CancellationToken ct = _castCts.Token;
+            _ = Task.Run(async () =>
+                     {
+                         try
+                         {
+                             await Task.Delay(TimeSpan.FromSeconds(castTime), ct);
+                         }
+                         catch (TaskCanceledException) { return; }
+
+                         if (isCasting && currentSpell == spell)
+                         {
+                             if (spell.ExpectTargetCursor && World.TargetManager.IsTargeting)
+                                 return;
+
+                             ClearCasting();
+                         }
+                     }, ct);
         }
 
         public void ClearCasting()
         {
-            isCasting = false;
-            currentSpell = null;
-            LastSpellTime = DateTime.MinValue;
-            World.Player.Flags &= ~Flags.Frozen;
+            SpellRangeInfo spellSnapshot;
+            lock (_castingLock)
+            {
+                if (frozenBySpell)
+                    World.Player.Flags &= ~Flags.Frozen;
+                frozenBySpell = false;
+                spellSnapshot = currentSpell;
+            }
+
+            if (spellSnapshot == null)
+            {
+                isCasting = false;
+                World.Player.Flags &= ~Flags.Frozen;
+                return;
+            }
+
+
+            if (spellSnapshot.RecoveryTime > 0)
+            {
+                _ = StartRecovery(spellSnapshot);
+            }
+            else
+            {
+                EndRecovery(spellSnapshot);
+            }
         }
 
-        public SpellRangeInfo GetCurrentSpell()
+        private async Task StartRecovery(SpellRangeInfo spell)
         {
-            return currentSpell;
+            if (spell == null)
+                return;
+
+            EventSink.InvokeSpellCastEnd();
+            EventSink.InvokeSpellRecoveryBegin(spell.ID);
+
+            _recoveryCts?.Cancel();
+            _recoveryCts?.Dispose();
+            _recoveryCts = new System.Threading.CancellationTokenSource();
+
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators == true)
+            {
+                CastTimerProgressBar bar = UIManager.GetGump<CastTimerProgressBar>() ?? new CastTimerProgressBar(World);
+                if (bar.Parent == null)
+                    UIManager.Add(bar);
+                bar.OnRecoveryBegin();
+            }
+
+            double recTime = spell.GetEffectiveRecoveryTime();
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(recTime), _recoveryCts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+
+            EndRecovery(spell);
         }
+
+        private void EndRecovery(SpellRangeInfo spell)
+        {
+            int endedSpellId;
+
+            lock (_castingLock)
+            {
+                endedSpellId = currentSpell?.ID ?? spell?.ID ?? 0;
+                currentSpell = null;
+                isCasting = false;
+                if (frozenBySpell)
+                {
+                    World.Player.Flags &= ~Flags.Frozen;
+                    frozenBySpell = false;
+                }
+                EventSink.InvokeSpellRecoveryEnd();
+            }
+        }
+
+        public SpellRangeInfo GetCurrentSpell() => currentSpell;
 
         #region Load and unload
-        public void OnSceneLoad()
-        {
-            EventSink.RawMessageReceived += OnRawMessageReceived;
-        }
+        public void OnSceneLoad() => EventSink.RawMessageReceived += OnRawMessageReceived;
 
         public void OnSceneUnload()
         {
             EventSink.RawMessageReceived -= OnRawMessageReceived;
+            _castCts?.Cancel();
+            _castCts?.Dispose();
+            _recoveryCts?.Cancel();
+            _recoveryCts?.Dispose();
             instance = null;
         }
         #endregion
@@ -251,15 +362,15 @@ namespace ClassicUO.Game.Managers
                 if (!File.Exists(savePath))
                 {
                     //CreateAndLoadDataFile();
-                    var assembly = GetType().Assembly;
+                    System.Reflection.Assembly assembly = GetType().Assembly;
 
-                    var resourceName = "ClassicUO.Game.Managers.DefaultSpellIndicatorConfig.json";
+                    string resourceName = "ClassicUO.Game.Managers.DefaultSpellIndicatorConfig.json";
 
                     try
                     {
                         using Stream stream = assembly.GetManifestResourceStream(resourceName);
 
-                        using StreamReader reader = new StreamReader(stream);
+                        using var reader = new StreamReader(stream);
 
                         LoadFromString(reader.ReadToEnd());
                     }
@@ -278,9 +389,9 @@ namespace ClassicUO.Game.Managers
                     try
                     {
                         string data = File.ReadAllText(savePath);
-                        SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
+                        SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
 
-                        foreach (var entry in fileData)
+                        foreach (SpellRangeInfo entry in fileData)
                         {
                             spellRangeCache.Add(entry.ID, entry);
                         }
@@ -307,18 +418,18 @@ namespace ClassicUO.Game.Managers
                 try
                 {
                     string data = File.ReadAllText(overridePath);
-                    SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
+                    SpellRangeInfo[] fileData = JsonSerializer.Deserialize(data, SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
 
-                    foreach (var entry in fileData)
+                    foreach (SpellRangeInfo entry in fileData)
                     {
                         spellRangeOverrideCache.Add(entry.ID, entry);
                     }
 
-                    foreach (var entry in spellRangeOverrideCache.Values)
+                    foreach (SpellRangeInfo entry in spellRangeOverrideCache.Values)
                     {
                         if (string.IsNullOrEmpty(entry.PowerWords))
                         {
-                            SpellDefinition spellD = SpellDefinition.FullIndexGetSpell(entry.ID);
+                            var spellD = SpellDefinition.FullIndexGetSpell(entry.ID);
                             if (spellD == SpellDefinition.EmptySpell)
                             {
                                 SpellDefinition.TryGetSpellFromName(entry.Name, out spellD);
@@ -353,12 +464,12 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                SpellRangeInfo[] fileData = JsonSerializer.Deserialize(json, SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
+                SpellRangeInfo[] fileData = JsonSerializer.Deserialize(json, SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
 
                 loaded = false;
                 spellRangeCache.Clear();
 
-                foreach (var entry in fileData)
+                foreach (SpellRangeInfo entry in fileData)
                 {
                     spellRangeCache.Add(entry.ID, entry);
                 }
@@ -378,11 +489,11 @@ namespace ClassicUO.Game.Managers
         private void AfterLoad()
         {
             spellRangePowerWordCache.Clear();
-            foreach (var entry in spellRangeCache.Values)
+            foreach (SpellRangeInfo entry in spellRangeCache.Values)
             {
                 if (string.IsNullOrEmpty(entry.PowerWords))
                 {
-                    SpellDefinition spellD = SpellDefinition.FullIndexGetSpell(entry.ID);
+                    var spellD = SpellDefinition.FullIndexGetSpell(entry.ID);
                     if (spellD == SpellDefinition.EmptySpell)
                     {
                         SpellDefinition.TryGetSpellFromName(entry.Name, out spellD);
@@ -403,35 +514,35 @@ namespace ClassicUO.Game.Managers
 
         private void CreateAndLoadDataFile()
         {
-            foreach (var entry in SpellsMagery.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMagery.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsNecromancy.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNecromancy.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsChivalry.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsChivalry.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsBushido.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsBushido.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsNinjitsu.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsNinjitsu.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsSpellweaving.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsSpellweaving.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsMysticism.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMysticism.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
-            foreach (var entry in SpellsMastery.GetAllSpells)
+            foreach (KeyValuePair<int, SpellDefinition> entry in SpellsMastery.GetAllSpells)
             {
                 spellRangeCache.Add(entry.Value.ID, SpellRangeInfo.FromSpellDef(entry.Value));
             }
@@ -453,7 +564,7 @@ namespace ClassicUO.Game.Managers
 
                 saveTimer = new Timer();
                 saveTimer.Interval = 500;
-                saveTimer.Elapsed += (_,_) => { PerformSave(); };
+                saveTimer.Elapsed += (_, _) => { PerformSave(); };
                 saveTimer.Start();
             }
         }
@@ -472,7 +583,7 @@ namespace ClassicUO.Game.Managers
             try
             {
                 tempPath = Path.GetTempFileName();
-                string fileData = JsonSerializer.Serialize(spellRangeCache.Values.ToArray(), SpellVisualRangeJsonContext.Default.SpellRangeInfoArray);
+                string fileData = JsonSerializer.Serialize(spellRangeCache.Values.ToArray(), SpellRangeInfoJsonContext.Default.SpellRangeInfoArray);
                 File.WriteAllText(tempPath, fileData);
 
                 if (File.Exists(savePath))
@@ -508,109 +619,5 @@ namespace ClassicUO.Game.Managers
             EastWest,
             SouthNorth
         }
-
-        public class SpellRangeInfo
-        {
-            public int ID { get; set; } = -1;
-            public string Name { get; set; } = "";
-            public string PowerWords { get; set; } = "";
-            public int CursorSize { get; set; } = 0;
-            public int CastRange { get; set; } = 1;
-            public ushort Hue { get; set; } = 32;
-            public ushort CursorHue { get; set; } = 10;
-            public int MaxDuration { get; set; } = 10;
-            public bool IsLinear { get; set; } = false;
-            public double CastTime { get; set; } = 0.0;
-            public bool ShowCastRangeDuringCasting { get; set; } = false;
-            public bool FreezeCharacterWhileCasting { get; set; } = false;
-            public bool ExpectTargetCursor { get; set; } = false;
-
-            public static SpellRangeInfo FromSpellDef(SpellDefinition spell)
-            {
-                return new SpellRangeInfo() { ID = spell.ID, Name = spell.Name, PowerWords = spell.PowerWords };
-            }
-        }
-
-        #region Cast Timer Bar
-
-
-        public class CastTimerProgressBar : Gump
-        {
-            private Rectangle barBounds, barBoundsF;
-            private Texture2D background;
-            private Texture2D foreground;
-            private Vector3 hue = ShaderHueTranslator.GetHueVector(0);
-
-
-            public CastTimerProgressBar(World world) : base(world, 0, 0)
-            {
-                CanMove = false;
-                AcceptMouseInput = false;
-                CanCloseWithEsc = false;
-                CanCloseWithRightClick = false;
-
-                ref readonly var gi = ref Client.Game.UO.Gumps.GetGump(0x0805);
-                background = gi.Texture;
-                barBounds = gi.UV;
-
-                gi = ref Client.Game.UO.Gumps.GetGump(0x0806);
-                foreground = gi.Texture;
-                barBoundsF = gi.UV;
-            }
-
-            public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-            {
-                if (SpellVisualRangeManager.Instance.IsCastingWithoutTarget())
-                {
-                    SpellRangeInfo i = SpellVisualRangeManager.Instance.GetCurrentSpell();
-                    if (i != null)
-                    {
-                        if (i.CastTime > 0)
-                        {
-                            if (background != null && foreground != null)
-                            {
-                                Mobile m = World.Player;
-                                Client.Game.UO.Animations.GetAnimationDimensions(
-                                    m.AnimIndex,
-                                    m.GetGraphicForAnimation(),
-                                    0,
-                                    0,
-                                    m.IsMounted,
-                                    0,
-                                    out int centerX,
-                                    out int centerY,
-                                    out int width,
-                                    out int height
-                                );
-
-                                WorldViewportGump vp = UIManager.GetGump<WorldViewportGump>();
-
-                                x = vp.Location.X + (int)(m.RealScreenPosition.X - (m.Offset.X + 22 + 5));
-                                y = vp.Location.Y + (int)(m.RealScreenPosition.Y - ((m.Offset.Y - m.Offset.Z) - (height + centerY + 15) + (m.IsGargoyle && m.IsFlying ? -22 : !m.IsMounted ? 22 : 0)));
-
-                                batcher.Draw(background, new Rectangle(x, y, barBounds.Width, barBounds.Height), barBounds, hue);
-
-                                double percent = (DateTime.Now - SpellVisualRangeManager.Instance.LastSpellTime).TotalSeconds / i.CastTime;
-
-                                int widthFromPercent = (int)(barBounds.Width * percent);
-                                widthFromPercent = widthFromPercent > barBounds.Width ? barBounds.Width : widthFromPercent; //Max width is the bar width
-
-                                if (widthFromPercent > 0)
-                                {
-                                    batcher.DrawTiled(foreground, new Rectangle(x, y, widthFromPercent, barBoundsF.Height), barBoundsF, hue);
-                                }
-
-                                if (percent <= 0 && i.FreezeCharacterWhileCasting)
-                                {
-                                    World.Player.Flags &= ~Flags.Frozen;
-                                }
-                            }
-                        }
-                    }
-                }
-                return base.Draw(batcher, x, y);
-            }
-        }
-        #endregion
     }
 }

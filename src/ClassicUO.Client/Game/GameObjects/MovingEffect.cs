@@ -30,7 +30,7 @@ namespace ClassicUO.Game.GameObjects
             FixedDir = fixedDir;
 
             // we override interval time with speed
-            var d = Constants.ITEM_EFFECT_ANIMATION_DELAY * 2;
+            int d = Constants.ITEM_EFFECT_ANIMATION_DELAY * 2;
 
             IntervalInMs = (uint)(d + (speed * d));
 
@@ -94,16 +94,16 @@ namespace ClassicUO.Game.GameObjects
             int offsetTargetY = tY - playerY;
             int offsetTargetZ = tZ - playerZ;
 
-            Vector2 source = new Vector2((offsetSourceX - offsetSourceY) * 22, (offsetSourceX + offsetSourceY) * 22 - offsetSourceZ * 4);
+            var source = new Vector2((offsetSourceX - offsetSourceY) * 22, (offsetSourceX + offsetSourceY) * 22 - offsetSourceZ * 4);
 
             source.X += Offset.X;
             source.Y += Offset.Y;
 
-            Vector2 target = new Vector2((offsetTargetX - offsetTargetY) * 22, (offsetTargetX + offsetTargetY) * 22 - offsetTargetZ * 4);
+            var target = new Vector2((offsetTargetX - offsetTargetY) * 22, (offsetTargetX + offsetTargetY) * 22 - offsetTargetZ * 4);
 
-            var offset = target - source;
-            var distance = offset.Length();
-            var frameIndependentSpeed = IntervalInMs * Time.Delta;
+            Vector2 offset = target - source;
+            float distance = offset.Length();
+            float frameIndependentSpeed = IntervalInMs * Time.Delta;
             Vector2 s0;
 
             if (distance > frameIndependentSpeed)
@@ -148,7 +148,7 @@ namespace ClassicUO.Game.GameObjects
                 // TODO: Z is wrong. We have to calculate an average
                 SetSource((ushort) newX, (ushort) newY, (sbyte)sZ);
 
-                Vector2 nextSource = new Vector2((newCoordX - newCoordY) * 22, (newCoordX + newCoordY) * 22 - offsetSourceZ * 4);
+                var nextSource = new Vector2((newCoordX - newCoordY) * 22, (newCoordX + newCoordY) * 22 - offsetSourceZ * 4);
 
                 Offset.X = source.X - nextSource.X;
                 Offset.Y = source.Y - nextSource.Y;

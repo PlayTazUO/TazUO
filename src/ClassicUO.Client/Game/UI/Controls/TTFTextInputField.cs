@@ -18,7 +18,7 @@ namespace ClassicUO.Game.UI.Controls
         public event EventHandler TextChanged { add { TextBox.TextChanged += value; } remove { TextBox.TextChanged -= value; } }
         public new event EventHandler<KeyboardEventArgs> KeyDown { add { TextBox.KeyDown += value; } remove { TextBox.KeyDown -= value; } }
         public event EventHandler EnterPressed;
-        public int CaretIndex { get { return TextBox.CaretIndex; } }
+        public int CaretIndex => TextBox.CaretIndex;
         public bool ConvertHtmlColors { get { return TextBox.ConvertHtmlColors; } set { TextBox.ConvertHtmlColors = value; } }
         public TTFTextInputField
         (
@@ -52,10 +52,7 @@ namespace ClassicUO.Game.UI.Controls
             Add(TextBox);
         }
 
-        public void SetFocus()
-        {
-            TextBox.SetKeyboardFocus();
-        }
+        public void SetFocus() => TextBox.SetKeyboardFocus();
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
@@ -73,10 +70,7 @@ namespace ClassicUO.Game.UI.Controls
         /// Set to null to remove placeholder
         /// </summary>
         /// <param name="text"></param>
-        public void SetPlaceholder(string text)
-        {
-            TextBox.SetPlaceholder(text);
-        }
+        public void SetPlaceholder(string text) => TextBox.SetPlaceholder(text);
 
         private void UpdateBackground()
         {
@@ -106,10 +100,7 @@ namespace ClassicUO.Game.UI.Controls
             set => TextBox.NumbersOnly = value;
         }
 
-        public void SetText(string text)
-        {
-            TextBox.SetText(text);
-        }
+        public void SetText(string text) => TextBox.SetText(text);
 
         public override void OnKeyboardReturn(int textID, string text)
         {
@@ -230,13 +221,7 @@ namespace ClassicUO.Game.UI.Controls
 
             public bool AllowSelection { get; set; } = true;
 
-            internal int TotalHeight
-            {
-                get
-                {
-                    return _rendererText.MeasuredSize.Y;
-                }
-            }
+            internal int TotalHeight => _rendererText.MeasuredSize.Y;
 
             public string Text
             {
@@ -269,7 +254,7 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     if (index < _rendererText.Text.Length)
                     {
-                        var glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
+                        FontStashSharp.RichText.TextChunkGlyph? glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
                         if (glyphRender != null)
                         {
                             return glyphRender.Value.Bounds.Width;
@@ -281,7 +266,7 @@ namespace ClassicUO.Game.UI.Controls
 
             public TextEditRow LayoutRow(int startIndex)
             {
-                TextEditRow r = new TextEditRow() { num_chars = _rendererText.Text.Length };
+                var r = new TextEditRow() { num_chars = _rendererText.Text.Length };
 
                 int sx = ScreenCoordinateX;
                 int sy = ScreenCoordinateY;
@@ -310,10 +295,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            protected void UpdateCaretScreenPosition()
-            {
-                _caretScreenPosition = GetCoordsForIndex(Stb.CursorIndex);
-            }
+            protected void UpdateCaretScreenPosition() => _caretScreenPosition = GetCoordsForIndex(Stb.CursorIndex);
 
             protected Point GetCoordsForIndex(int index)
             {
@@ -323,7 +305,7 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     if (index < Text.Length)
                     {
-                        var glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
+                        FontStashSharp.RichText.TextChunkGlyph? glyphRender = _rendererText.RTL.GetGlyphInfoByIndex(index);
                         if (glyphRender != null)
                         {
                             x += glyphRender.Value.Bounds.Left;
@@ -333,20 +315,20 @@ namespace ClassicUO.Game.UI.Controls
                     else if (_rendererText.RTL.Lines != null && _rendererText.RTL.Lines.Count > 0)
                     {
                         // After last glyph
-                        var lastLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 1];
+                        FontStashSharp.RichText.TextLine lastLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 1];
                         if (lastLine.Count > 0)
                         {
-                            var glyphRender = lastLine.GetGlyphInfoByIndex(lastLine.Count - 1);
+                            FontStashSharp.RichText.TextChunkGlyph? glyphRender = lastLine.GetGlyphInfoByIndex(lastLine.Count - 1);
 
                             x += glyphRender.Value.Bounds.Right;
                             y += glyphRender.Value.LineTop;
                         }
                         else if (_rendererText.RTL.Lines.Count > 1)
                         {
-                            var previousLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 2];
+                            FontStashSharp.RichText.TextLine previousLine = _rendererText.RTL.Lines[_rendererText.RTL.Lines.Count - 2];
                             if (previousLine.Count > 0)
                             {
-                                var glyphRender = previousLine.GetGlyphInfoByIndex(previousLine.Count - 1);
+                                FontStashSharp.RichText.TextChunkGlyph? glyphRender = previousLine.GetGlyphInfoByIndex(previousLine.Count - 1);
                                 y += glyphRender.Value.LineTop + lastLine.Size.Y + _rendererText.RTL.VerticalSpacing;
                             }
                         }
@@ -360,7 +342,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (Text != null)
                 {
-                    var line = _rendererText.RTL.GetLineByY(coords.Y);
+                    FontStashSharp.RichText.TextLine line = _rendererText.RTL.GetLineByY(coords.Y);
                     if (line != null)
                     {
                         int? index = line.GetGlyphIndexByX(coords.X);
@@ -711,10 +693,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            public void AppendText(string text)
-            {
-                Stb.Paste(text);
-            }
+            public void AppendText(string text) => Stb.Paste(text);
 
             protected override void OnTextInput(string c)
             {

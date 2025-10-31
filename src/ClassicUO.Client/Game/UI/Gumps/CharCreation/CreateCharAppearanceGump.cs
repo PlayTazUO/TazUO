@@ -782,10 +782,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             return true;
         }
 
-        public static int Validate(string name)
-        {
-            return Validate(name, 2, 16, true, false, true, 1, _SpaceDashPeriodQuote, Client.Game.UO.Version >= ClientVersion.CV_5020 ? _Disallowed : new string[] { }, _StartDisallowed);
-        }
+        public static int Validate(string name) => Validate(name, 2, 16, true, false, true, 1, _SpaceDashPeriodQuote, Client.Game.UO.Version >= ClientVersion.CV_5020 ? _Disallowed : new string[] { }, _StartDisallowed);
 
         public static int Validate(string name, int minLength, int maxLength, bool allowLetters, bool allowDigits, bool noExceptionsAtStart, int maxExceptions, char[] exceptions, string[] disallowed, string[] startDisallowed)
         {
@@ -1143,10 +1140,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                 }
             }
 
-            private void ColorPickerBoxOnColorSelectedIndex(object sender, EventArgs e)
-            {
-                ColorSelected?.Invoke(this, new ColorSelectedEventArgs(_layer, _colorPickerBox.Hues, _colorPickerBox.SelectedIndex));
-            }
+            private void ColorPickerBoxOnColorSelectedIndex(object sender, EventArgs e) => ColorSelected?.Invoke(this, new ColorSelectedEventArgs(_layer, _colorPickerBox.Hues, _colorPickerBox.SelectedIndex));
         }
     }
 }

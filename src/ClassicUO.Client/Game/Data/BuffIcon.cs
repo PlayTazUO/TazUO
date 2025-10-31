@@ -15,10 +15,7 @@ namespace ClassicUO.Game.Data
             Title = title;
         }
 
-        public bool Equals(BuffIcon other)
-        {
-            return other != null && Type == other.Type;
-        }
+        public bool Equals(BuffIcon other) => other != null && Type == other.Type;
 
         public readonly ushort Graphic;
 

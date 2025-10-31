@@ -207,7 +207,7 @@ namespace ClassicUO.Game.GameObjects
 
         public static Mobile Create(World world, uint serial)
         {
-            Mobile mobile = new Mobile(world); // _pool.GetOne();
+            var mobile = new Mobile(world); // _pool.GetOne();
             mobile.Serial = serial;
 
             return mobile;
@@ -224,7 +224,7 @@ namespace ClassicUO.Game.GameObjects
         {
             for (LinkedObject i = Items; i != null; i = i.Next)
             {
-                Item it = (Item)i;
+                var it = (Item)i;
 
                 if (it.Graphic == 0x1E5E && it.Layer == 0)
                 {
@@ -235,10 +235,7 @@ namespace ClassicUO.Game.GameObjects
             return null;
         }
 
-        public void SetSAPoison(bool value)
-        {
-            _isSA_Poisoned = value;
-        }
+        public void SetSAPoison(bool value) => _isSA_Poisoned = value;
 
         private void CalculateRandomIdleTime()
         {
@@ -294,7 +291,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             Direction moveDir = DirectionHelper.CalculateDirection(endX, endY, x, y);
-            Step step = new Step();
+            var step = new Step();
 
             if (moveDir != Direction.NONE)
             {
@@ -389,7 +386,7 @@ namespace ClassicUO.Game.GameObjects
 
                 ushort graphic = GetGraphicForAnimation();
 
-                var animations = Client.Game.UO.Animations;
+                Renderer.Animations.Animations animations = Client.Game.UO.Animations;
                 if (graphic >= animations.MaxAnimationCount)
                 {
                     return;
@@ -519,11 +516,8 @@ namespace ClassicUO.Game.GameObjects
             }
         }
 
-        private bool NoIterateAnimIndex()
-        {
-            return !ExecuteAnimation
+        private bool NoIterateAnimIndex() => !ExecuteAnimation
                 || (LastStepTime > Time.Ticks - Constants.WALKING_DELAY && Steps.Count == 0);
-        }
 
         private void ProcessFootstepsSound()
         {
@@ -571,7 +565,7 @@ namespace ClassicUO.Game.GameObjects
 
         public override void ProcessAnimation(bool evalutate = false)
         {
-            ProcessSteps(out var dir, evalutate);
+            ProcessSteps(out byte dir, evalutate);
             ProcessFootstepsSound();
 
             if (LastAnimationChangeTime >= Time.Ticks || NoIterateAnimIndex())
@@ -579,7 +573,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            var animations = Client.Game.UO.Animations;
+            Renderer.Animations.Animations animations = Client.Game.UO.Animations;
 
             ushort id = GetGraphicForAnimation();
             byte action = GetGroupForAnimation(this, id, true);
@@ -590,7 +584,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (id < animations.MaxAnimationCount && dir < 5)
             {
-                var frames = animations.GetAnimationFrames(
+                Span<Renderer.SpriteInfo> frames = animations.GetAnimationFrames(
                     id,
                     action,
                     dir,
@@ -918,7 +912,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            TextObject last = (TextObject)TextContainer.Items;
+            var last = (TextObject)TextContainer.Items;
 
             while (last?.Next != null)
             {

@@ -78,9 +78,6 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }
         }
 
-        public override void OnButtonClick(int buttonID)
-        {
-            Client.Game.Exit();
-        }
+        public override void OnButtonClick(int buttonID) => Client.Game.Exit();
     }
 }

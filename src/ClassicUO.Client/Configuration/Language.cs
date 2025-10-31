@@ -54,7 +54,7 @@ namespace ClassicUO.Configuration
             File.WriteAllText(languageFilePath, language);
         }
 
-        private static string languageFilePath { get { return Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json"); } }
+        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
     }
 
     public class ModernOptionsGumpLanguage

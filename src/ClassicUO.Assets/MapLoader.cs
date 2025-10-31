@@ -66,15 +66,9 @@ namespace ClassicUO.Assets
         protected FileReader[] _currentMapFiles;
         protected FileReader[] _currentStaticsFiles, _currentIdxStaticsFiles;
 
-        public FileReader GetMapFile(int map)
-        {
-            return map < _currentMapFiles.Length ? _currentMapFiles[map] : null;
-        }
+        public FileReader GetMapFile(int map) => map < _currentMapFiles.Length ? _currentMapFiles[map] : null;
 
-        public FileReader GetStaticFile(int map)
-        {
-            return map < _currentStaticsFiles.Length ? _currentStaticsFiles[map] : null;
-        }
+        public FileReader GetStaticFile(int map) => map < _currentStaticsFiles.Length ? _currentStaticsFiles[map] : null;
 
         protected void Initialize()
         {
@@ -140,9 +134,9 @@ namespace ClassicUO.Assets
 
             Initialize();
 
-            for (var i = 0; i < MAPS_COUNT; ++i)
+            for (int i = 0; i < MAPS_COUNT; ++i)
             {
-                var path = FileManager.GetUOFilePath($"map{i}LegacyMUL.uop");
+                string path = FileManager.GetUOFilePath($"map{i}LegacyMUL.uop");
 
                 if (FileManager.IsUOPInstallation && File.Exists(path))
                 {
@@ -306,16 +300,16 @@ namespace ClassicUO.Assets
             MapBlocksSize[i, 0] = MapsDefaultSize[i, 0] >> 3;
             MapBlocksSize[i, 1] = MapsDefaultSize[i, 1] >> 3;
 
-            var mapblocksize = sizeof(MapBlock);
-            var staticidxblocksize = sizeof(StaidxBlock);
-            var staticblocksize = sizeof(StaticsBlock);
-            var width = MapBlocksSize[i, 0];
-            var height = MapBlocksSize[i, 1];
-            var maxblockcount = width * height;
+            int mapblocksize = sizeof(MapBlock);
+            int staticidxblocksize = sizeof(StaidxBlock);
+            int staticblocksize = sizeof(StaticsBlock);
+            int width = MapBlocksSize[i, 0];
+            int height = MapBlocksSize[i, 1];
+            int maxblockcount = width * height;
             BlockData[i] = new IndexMap[maxblockcount];
-            var file = _currentMapFiles[i];
-            var fileidx = _currentIdxStaticsFiles[i];
-            var staticfile = _currentStaticsFiles[i];
+            FileReader file = _currentMapFiles[i];
+            FileReader fileidx = _currentIdxStaticsFiles[i];
+            FileReader staticfile = _currentStaticsFiles[i];
 
             if (fileidx == null && i == 1)
             {
@@ -352,13 +346,13 @@ namespace ClassicUO.Assets
                     }
                 }
 
-                var mapPos = uopoffset + (ulong)(blocknum * mapblocksize);
-                var staticPos = 0ul;
-                var staticCount = 0u;
+                ulong mapPos = uopoffset + (ulong)(blocknum * mapblocksize);
+                ulong staticPos = 0ul;
+                uint staticCount = 0u;
 
                 fileidx.Seek(block * staticidxblocksize, SeekOrigin.Begin);
 
-                var st = fileidx.Read<StaidxBlock>();
+                StaidxBlock st = fileidx.Read<StaidxBlock>();
 
                 if (st.Size > 0 && st.Position != 0xFFFF_FFFF)
                 {
@@ -366,7 +360,7 @@ namespace ClassicUO.Assets
                     staticCount = Math.Min(1024, (uint)(st.Size / staticblocksize));
                 }
 
-                ref var data = ref BlockData[i][block];
+                ref IndexMap data = ref BlockData[i][block];
                 data.MapAddress = mapPos;
                 data.StaticAddress = staticPos;
                 data.StaticCount = staticCount;
@@ -528,7 +522,7 @@ namespace ClassicUO.Assets
                         }
 
                         uint blockIndex = difl.ReadUInt32();
-                        var st = difi.Read<StaidxBlock>();
+                        StaidxBlock st = difi.Read<StaidxBlock>();
 
                         if (blockIndex < maxBlockCount)
                         {

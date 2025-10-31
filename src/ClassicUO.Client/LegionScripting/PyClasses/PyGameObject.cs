@@ -39,17 +39,17 @@ public class PyGameObject
     /// <summary>
     /// The X-coordinate of the object in the game world.
     /// </summary>
-    public ushort X;
+    public virtual ushort X { get; }
 
     /// <summary>
     /// The Y-coordinate of the object in the game world.
     /// </summary>
-    public ushort Y;
+    public virtual ushort Y { get; }
 
     /// <summary>
     /// The Z-coordinate (elevation) of the object in the game world.
     /// </summary>
-    public sbyte Z;
+    public virtual sbyte Z { get; }
 
     /// <summary>
     /// The graphic ID of the object, representing its visual appearance.
@@ -128,10 +128,7 @@ public class PyGameObject
     /// Returns a readable string representation of the game object.
     /// Used when printing or converting the object to a string in Python scripts.
     /// </summary>
-    public override string ToString()
-    {
-        return $"<{__class__} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
-    }
+    public override string ToString() => $"<{__class__} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
 
     /// <summary>
     /// The Python-visible class name of this object.

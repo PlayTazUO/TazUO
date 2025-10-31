@@ -87,13 +87,12 @@ namespace ClassicUO
 
         private readonly List<(uint, Action)> _queuedActions = new();
 
-        public void EnqueueAction(uint time, Action action)
-        {
-            _queuedActions.Add((Time.Ticks + time, action));
-        }
+        public void EnqueueAction(uint time, Action action) => _queuedActions.Add((Time.Ticks + time, action));
 
         protected override void Initialize()
         {
+            MainThreadQueue.Load();
+
             PreloadSettings();
             if (GraphicManager.GraphicsDevice.Adapter.IsProfileSupported(GraphicsProfile.HiDef))
             {
@@ -110,12 +109,12 @@ namespace ClassicUO
             _filter = HandleSdlEvent;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
 
-            var displayId = SDL.SDL_GetDisplayForWindow(Window.Handle);
-            var displayMode = SDL.SDL_GetCurrentDisplayMode(displayId);
+            uint displayId = SDL.SDL_GetDisplayForWindow(Window.Handle);
+            nint displayMode = SDL.SDL_GetCurrentDisplayMode(displayId);
             if (displayMode != IntPtr.Zero)
             {
                 // Marshal the pointer to the display mode structure
-                var mode = Marshal.PtrToStructure<SDL.SDL_DisplayMode>(displayMode);
+                SDL_DisplayMode mode = Marshal.PtrToStructure<SDL.SDL_DisplayMode>(displayMode);
 
                 float refreshRate = mode.refresh_rate;
                 if (refreshRate > 0)
@@ -125,11 +124,8 @@ namespace ClassicUO
             base.Initialize();
         }
 
-        private void PreloadSettings()
-        {
-            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, false,
-                (b) => { if(b) ZLib.SetForceManagedZlib(b); });
-        }
+        private void PreloadSettings() => _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, false,
+                (b) => { if (b) ZLib.SetForceManagedZlib(b); });
 
         private const int MAX_PACKETS_PER_FRAME = 25;
 
@@ -160,7 +156,7 @@ namespace ClassicUO
 
             Audio = new AudioManager();
 
-            var bytes = Loader.GetBackgroundImage().ToArray();
+            byte[] bytes = Loader.GetBackgroundImage().ToArray();
             using var ms = new MemoryStream(bytes);
             _background = Texture2D.FromStream(GraphicsDevice, ms);
 
@@ -244,10 +240,7 @@ namespace ClassicUO
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetScene<T>() where T : Scene
-        {
-            return Scene as T;
-        }
+        public T GetScene<T>() where T : Scene => Scene as T;
 
         public void SetScene(Scene scene)
         {
@@ -299,10 +292,7 @@ namespace ClassicUO
             _intervalFixedUpdate[1] = 217; // 5 FPS
         }
 
-        private void SetWindowPosition(int x, int y)
-        {
-            SDL_SetWindowPosition(Window.Handle, x, y);
-        }
+        private void SetWindowPosition(int x, int y) => SDL_SetWindowPosition(Window.Handle, x, y);
 
         public void SetWindowSize(int width, int height)
         {
@@ -324,7 +314,7 @@ namespace ClassicUO
 
         public void SetWindowBorderless(bool borderless)
         {
-            SDL_WindowFlags flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
+            var flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
 
             if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) != 0 && borderless)
             {
@@ -384,15 +374,12 @@ namespace ClassicUO
 
         public bool IsWindowMaximized()
         {
-            SDL_WindowFlags flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
+            var flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
 
             return (flags & SDL_WindowFlags.SDL_WINDOW_MAXIMIZED) != 0;
         }
 
-        public void RestoreWindow()
-        {
-            SDL_RestoreWindow(Window.Handle);
-        }
+        public void RestoreWindow() => SDL_RestoreWindow(Window.Handle);
 
         public void SetWindowPositionBySettings()
         {
@@ -541,10 +528,7 @@ namespace ClassicUO
                 Plugin.ProcessDrawCmdList(GraphicsDevice);
         }
 
-        protected override bool BeginDraw()
-        {
-            return !_suppressedDraw && base.BeginDraw();
-        }
+        protected override bool BeginDraw() => !_suppressedDraw && base.BeginDraw();
 
         private void WindowOnClientSizeChanged(object sender, EventArgs e)
         {
@@ -638,7 +622,7 @@ namespace ClassicUO
                 case SDL_EventType.SDL_EVENT_KEY_UP:
                     if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureKeyboard) break;
 
-                    SDL_Keycode key = (SDL_Keycode)sdlEvent->key.key;
+                    var key = (SDL_Keycode)sdlEvent->key.key;
 
                     Keyboard.OnKeyUp(sdlEvent->key);
 
@@ -752,7 +736,7 @@ namespace ClassicUO
                         SDL_MouseButtonEvent mouse = sdlEvent->button;
 
                         // The values in MouseButtonType are chosen to exactly match the SDL values
-                        MouseButtonType buttonType = (MouseButtonType)mouse.button;
+                        var buttonType = (MouseButtonType)mouse.button;
 
                         uint lastClickTime = 0;
 
@@ -855,7 +839,7 @@ namespace ClassicUO
                         SDL_MouseButtonEvent mouse = sdlEvent->button;
 
                         // The values in MouseButtonType are chosen to exactly match the SDL values
-                        MouseButtonType buttonType = (MouseButtonType)mouse.button;
+                        var buttonType = (MouseButtonType)mouse.button;
 
                         uint lastClickTime = 0;
 
@@ -1015,14 +999,14 @@ namespace ClassicUO
                 $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
             );
 
-            Color[] colors = new Color[
+            var colors = new Color[
                 GraphicManager.PreferredBackBufferWidth * GraphicManager.PreferredBackBufferHeight
             ];
 
             GraphicsDevice.GetBackBufferData(colors);
 
             using (
-                Texture2D texture = new Texture2D(
+                var texture = new Texture2D(
                     GraphicsDevice,
                     GraphicManager.PreferredBackBufferWidth,
                     GraphicManager.PreferredBackBufferHeight,
@@ -1052,12 +1036,12 @@ namespace ClassicUO
 
         public void ClipboardScreenshot(Rectangle position, GraphicsDevice graphicDevice)
         {
-            Color[] colors = new Color[position.Width * position.Height];
+            var colors = new Color[position.Width * position.Height];
 
             graphicDevice.GetBackBufferData(position, colors, 0, colors.Length);
 
             using (
-                Texture2D texture = new Texture2D(
+                var texture = new Texture2D(
                     GraphicsDevice,
                     position.Width,
                     position.Height,

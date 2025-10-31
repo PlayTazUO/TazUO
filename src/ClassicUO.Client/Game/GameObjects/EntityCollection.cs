@@ -9,15 +9,12 @@ namespace ClassicUO.Game.GameObjects
     {
         public static T Get<T>(this Dictionary<uint, T> dict, uint serial) where T : Entity
         {
-            dict.TryGetValue(serial, out var v);
+            dict.TryGetValue(serial, out T v);
 
             return v;
         }
 
-        public static bool Contains<T>(this Dictionary<uint, T> dict, uint serial) where T : Entity
-        {
-            return dict.ContainsKey(serial);
-        }
+        public static bool Contains<T>(this Dictionary<uint, T> dict, uint serial) where T : Entity => dict.ContainsKey(serial);
 
         public static bool Add<T>(this Dictionary<uint, T> dict, T entity) where T : Entity
         {

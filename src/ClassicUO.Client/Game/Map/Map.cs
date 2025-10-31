@@ -124,7 +124,7 @@ namespace ClassicUO.Game.Map
 
             ref Chunk chunk = ref _terrainChunks[block];
 
-            if (chunk is { IsDestroyed: false })
+            if (chunk is { IsDestroyed: false, IsLoading: false })
             {
                 chunk.LastAccessTime = Time.Ticks;
                 return chunk;
@@ -152,7 +152,7 @@ namespace ClassicUO.Game.Map
                     if (chunk == null)
                     {
                         LinkedListNode<int> node = _usedIndices.AddLast(block);
-                        chunk = Chunk.Create(_world, chunkX, chunkY);
+                        chunk = Chunk.Create(_world, chunkX, chunkY, isAsync: true);
                         chunk.Load(Index);
                         chunk.Node = node;
                         chunk.LastAccessTime = Time.Ticks;
@@ -168,6 +168,7 @@ namespace ClassicUO.Game.Map
                         LinkedListNode<int> node = _usedIndices.AddLast(block);
                         chunk.X = chunkX;
                         chunk.Y = chunkY;
+                        chunk.IsLoading = true;
                         chunk.Load(Index);
                         chunk.Node = node;
                         chunk.LastAccessTime = Time.Ticks;
@@ -189,10 +190,7 @@ namespace ClassicUO.Game.Map
             return task;
         }
 
-        public GameObject GetTile(int x, int y, bool load = true)
-        {
-            return GetChunk(x, y, load)?.GetHeadObject(x % 8, y % 8);
-        }
+        public GameObject GetTile(int x, int y, bool load = true) => GetChunk(x, y, load)?.GetHeadObject(x % 8, y % 8);
 
         public sbyte GetTileZ(int x, int y)
         {
@@ -201,7 +199,7 @@ namespace ClassicUO.Game.Map
                 return -125;
             }
 
-            ref var blockIndex = ref GetIndex(x >> 3, y >> 3);
+            ref IndexMap blockIndex = ref GetIndex(x >> 3, y >> 3);
 
             if (!blockIndex.IsValid())
             {
@@ -246,10 +244,7 @@ namespace ClassicUO.Game.Map
             }
         }
 
-        public void ClearBockAccess()
-        {
-            _blockAccessList.AsSpan().Fill(false);
-        }
+        public void ClearBockAccess() => _blockAccessList.AsSpan().Fill(false);
 
         public sbyte CalculateNearZ(sbyte defaultZ, int x, int y, int z)
         {
@@ -320,10 +315,7 @@ namespace ClassicUO.Game.Map
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetBlock(int blockX, int blockY)
-        {
-            return blockX * Client.Game.UO.FileManager.Maps.MapBlocksSize[Index, 1] + blockY;
-        }
+        private int GetBlock(int blockX, int blockY) => blockX * Client.Game.UO.FileManager.Maps.MapBlocksSize[Index, 1] + blockY;
 
         public IEnumerable<Chunk> GetUsedChunks()
         {

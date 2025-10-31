@@ -99,7 +99,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
             #endregion
 
-            var initY = _gumpPosY + 10;
+            int initY = _gumpPosY + 10;
 
             #region Legend
 
@@ -159,7 +159,7 @@ namespace ClassicUO.Game.UI.Gumps
                 true
             );
 
-            var y = 0;
+            int y = 0;
             foreach (IgnoreListControl element in World.IgnoreManager.IgnoredCharsList.Select(m => new IgnoreListControl(this, m) { Y = y }))
             {
                 element.RemoveMarkerEvent += MarkerRemoveEventHandler;
@@ -176,10 +176,7 @@ namespace ClassicUO.Game.UI.Gumps
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void MarkerRemoveEventHandler(object sender, EventArgs e)
-        {
-            Redraw();
-        }
+        private void MarkerRemoveEventHandler(object sender, EventArgs e) => Redraw();
 
         /// <summary>
         /// Redraw ignored list

@@ -21,6 +21,10 @@ description:  Represents a Python-accessible static object (non-interactive scen
 
 **Type:** `bool`
 
+### `IsCave`
+
+**Type:** `bool`
+
 ### `Name`
 
 **Type:** `string`

@@ -60,7 +60,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void CreateMap()
         {
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(
                 _useLargeMap ? BIG_MAP_GRAPHIC : SMALL_MAP_GRAPHIC
             );
 
@@ -126,7 +126,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(
                 _useLargeMap ? BIG_MAP_GRAPHIC : SMALL_MAP_GRAPHIC
             );
 
@@ -199,10 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
             return false;
         }
 
-        protected override void UpdateContents()
-        {
-            CreateMap();
-        }
+        protected override void UpdateContents() => CreateMap();
 
         private unsafe void CreateMiniMapTexture(
             Texture2D texture,
@@ -275,7 +272,7 @@ namespace ClassicUO.Game.UI.Gumps
                         break;
                     }
 
-                    ref var indexMap = ref World.Map.GetIndex(i, j);
+                    ref IndexMap indexMap = ref World.Map.GetIndex(i, j);
 
                     if (!indexMap.IsValid())
                     {
@@ -285,7 +282,7 @@ namespace ClassicUO.Game.UI.Gumps
                     staticsZ.Fill(d);
                     indexMap.StaticFile.Seek((long)indexMap.StaticAddress, System.IO.SeekOrigin.Begin);
                     indexMap.MapFile.Seek((long)indexMap.MapAddress, System.IO.SeekOrigin.Begin);
-                    var cells = indexMap.MapFile.Read<MapBlock>().Cells;
+                    MapCellsArray cells = indexMap.MapFile.Read<MapBlock>().Cells;
 
                     Chunk block = World.Map.GetChunk(blockIndex);
                     int realBlockX = i << 3;
@@ -294,10 +291,10 @@ namespace ClassicUO.Game.UI.Gumps
 
                     for (int c = 0; c < indexMap.StaticCount; ++c)
                     {
-                        var stblock = indexMap.StaticFile.Read<StaticsBlock>();
+                        StaticsBlock stblock = indexMap.StaticFile.Read<StaticsBlock>();
                         if (stblock.Color > 0 && stblock.Color != 0xFFFF && GameObject.CanBeDrawn(World, stblock.Color))
                         {
-                            ref var st = ref staticsZ[stblock.Y * 8 + stblock.X];
+                            ref ColorInfo st = ref staticsZ[stblock.Y * 8 + stblock.X];
                             if (st.Z < stblock.Z)
                             {
                                 st.Color = stblock.Hue > 0 ? (ushort)(stblock.Hue + 0x4000) : stblock.Color;
@@ -313,12 +310,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                         for (int y = 0; y < 8; y++)
                         {
-                            ref readonly var cell = ref cells[(y << 3) + x];
+                            ref readonly MapCells cell = ref cells[(y << 3) + x];
                             int color = cell.TileID;
                             bool isLand = true;
                             int z = cell.Z;
 
-                            ref var stZ = ref staticsZ[y * 8 + x];
+                            ref ColorInfo stZ = ref staticsZ[y * 8 + x];
                             if (stZ.Z >= z)
                             {
                                 z = stZ.Z;

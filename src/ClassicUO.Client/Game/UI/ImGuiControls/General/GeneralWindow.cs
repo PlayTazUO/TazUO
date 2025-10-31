@@ -11,14 +11,18 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private int _objectMoveDelay;
         private bool _highlightObjects;
         private bool _showNames;
+        private bool _autoOpenOwnCorpse;
         private ushort _turnDelay;
+        private float _imguiWindowAlpha, _lastImguiWindowAlpha;
         private GeneralWindow() : base("General Tab")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
             _objectMoveDelay = _profile.MoveMultiObjectDelay;
             _highlightObjects = _profile.HighlightGameObjects;
             _showNames = _profile.NameOverheadToggled;
+            _autoOpenOwnCorpse = _profile.AutoOpenOwnCorpse;
             _turnDelay = _profile.TurnDelay;
+            _imguiWindowAlpha = _lastImguiWindowAlpha = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_ALPHA, 1.0f);
         }
 
         public override void DrawContent()
@@ -87,6 +91,19 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.AlignTextToFramePadding();
             ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Visual Config");
 
+            ImGui.SetNextItemWidth(125);
+            if (ImGui.SliderFloat("Assistant Alpha", ref _imguiWindowAlpha, 0.2f, 1.0f, "%.2f"))
+            {
+                if(Math.Abs(_imguiWindowAlpha - _lastImguiWindowAlpha) > 0.05)
+                {
+                    _imguiWindowAlpha = Math.Clamp(_imguiWindowAlpha, 0.2f, 1.0f);
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.IMGUI_ALPHA, _imguiWindowAlpha);
+                    ImGuiManager.UpdateTheme(_imguiWindowAlpha);
+                    _lastImguiWindowAlpha = _imguiWindowAlpha;
+                }
+            }
+            ImGuiComponents.Tooltip("Adjust the background transparency of all ImGui windows.");
+
             if (ImGui.Checkbox("Highlight game objects", ref _highlightObjects))
             {
                 _profile.HighlightGameObjects = _highlightObjects;
@@ -96,7 +113,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
             {
                 _profile.NameOverheadToggled = _showNames;
             }
-                ImGuiComponents.Tooltip("Toggle the display of names above characters and NPCs in the game world.");
+            ImGuiComponents.Tooltip("Toggle the display of names above characters and NPCs in the game world.");
+
+            if (ImGui.Checkbox("Auto open own corpse", ref _autoOpenOwnCorpse))
+            {
+                _profile.AutoOpenOwnCorpse = _autoOpenOwnCorpse;
+            }
+            ImGuiComponents.Tooltip("Automatically open your own corpse when you die, even if auto open corpses is disabled.");
+
             ImGui.EndGroup();
 
             ImGui.SameLine();

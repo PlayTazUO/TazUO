@@ -88,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps
                         hotKeyString += macro.WheelScroll;
                     }
 
-                    Label hotkeyLabel = new Label(hotKeyString, true, ProfileManager.CurrentProfile.SpellIcon_HotkeyHue, Width, style: FontStyle.BlackBorder);
+                    var hotkeyLabel = new Label(hotKeyString, true, ProfileManager.CurrentProfile.SpellIcon_HotkeyHue, Width, style: FontStyle.BlackBorder);
                     Add(hotkeyLabel);
                 }
             }
@@ -111,7 +111,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(LOCK_GRAPHIC);
 
                 if (gumpInfo.Texture != null)
                 {
@@ -141,7 +141,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private int GetSpellsId()
         {
-            var rawSpellId = _spell.ID % 100;
+            int rawSpellId = _spell.ID % 100;
             // Mysticism Spells Id start from 678
             if (rawSpellId > 78)
                 return rawSpellId - 78;
@@ -209,7 +209,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (button == MouseButtonType.Left && ShowEdit)
             {
-                Macro mCast = Macro.CreateFastMacro(
+                var mCast = Macro.CreateFastMacro(
                     _spell.Name,
                     MacroType.CastSpell,
                     (MacroSubType)GetSpellsId() + SpellBookDefinition.GetSpellsGroup(_spell.ID)

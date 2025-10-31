@@ -27,15 +27,9 @@ namespace ClassicUO.Input
 
         public static Dictionary<SDL.SDL_GamepadButton, bool> ButtonStates = new();
 
-        public static void OnButtonDown(SDL.SDL_GamepadButtonEvent e)
-        {
-            SetButtonState((SDL.SDL_GamepadButton)e.button, true);
-        }
+        public static void OnButtonDown(SDL.SDL_GamepadButtonEvent e) => SetButtonState((SDL.SDL_GamepadButton)e.button, true);
 
-        public static void OnButtonUp(SDL.SDL_GamepadButtonEvent e)
-        {
-            SetButtonState((SDL.SDL_GamepadButton)e.button, false);
-        }
+        public static void OnButtonUp(SDL.SDL_GamepadButtonEvent e) => SetButtonState((SDL.SDL_GamepadButton)e.button, false);
 
         private static void SetButtonState(SDL.SDL_GamepadButton button, bool state)
         {
@@ -92,10 +86,7 @@ namespace ClassicUO.Input
             }
         }
 
-        public static bool IsButtonPressed(SDL.SDL_GamepadButton button)
-        {
-            return ButtonStates.ContainsKey(button) && ButtonStates[button];
-        }
+        public static bool IsButtonPressed(SDL.SDL_GamepadButton button) => ButtonStates.ContainsKey(button) && ButtonStates[button];
 
         public static bool AreButtonsPressed(int[] buttons, bool exact = true) => AreButtonsPressed(buttons.Select(x => (SDL.SDL_GamepadButton)x).ToArray(), exact);
 
@@ -109,7 +100,7 @@ namespace ClassicUO.Input
         {
             bool finalstatus = true;
 
-            foreach (var button in buttons)
+            foreach (SDL.SDL_GamepadButton button in buttons)
             {
                 if (!IsButtonPressed(button))
                 {
@@ -120,7 +111,7 @@ namespace ClassicUO.Input
 
             if (exact)
             {
-                var allPressed = PressedButtons();
+                SDL.SDL_GamepadButton[] allPressed = PressedButtons();
 
                 if (allPressed.Length > buttons.Length)
                 {
@@ -137,7 +128,7 @@ namespace ClassicUO.Input
         {
             string keys = string.Empty;
 
-            foreach (var button in buttons)
+            foreach (SDL.SDL_GamepadButton button in buttons)
             {
                 switch (button)
                 {

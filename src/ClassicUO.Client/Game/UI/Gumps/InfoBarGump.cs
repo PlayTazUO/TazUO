@@ -54,17 +54,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (int i = 0; i < infoBarItems.Count; i++)
             {
-                InfoBarControl info = new InfoBarControl(this, infoBarItems[i].label, infoBarItems[i].var, infoBarItems[i].hue);
+                var info = new InfoBarControl(this, infoBarItems[i].label, infoBarItems[i].var, infoBarItems[i].hue);
 
                 _infobarControls.Add(info);
                 Add(info);
             }
         }
 
-        public void UpdateOptions()
-        {
-            ResetItems();
-        }
+        public void UpdateOptions() => ResetItems();
 
         public static void UpdateAllOptions()
         {

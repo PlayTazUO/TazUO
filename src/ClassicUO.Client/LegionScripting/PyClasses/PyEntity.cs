@@ -33,10 +33,7 @@ public class PyEntity : PyGameObject
     /// Returns a readable string representation of the entity.
     /// Used when printing or converting the object to a string in Python scripts.
     /// </summary>
-    public override string ToString()
-    {
-        return $"<{__class__} Serial=0x{Serial:X8} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
-    }
+    public override string ToString() => $"<{__class__} Serial=0x{Serial:X8} Graphic=0x{Graphic:X4} Hue=0x{Hue:X4} Pos=({X},{Y},{Z})>";
 
     /// <summary>
     /// Implicitly converts a <see cref="PyEntity"/> to its underlying <see cref="uint"/> serial.

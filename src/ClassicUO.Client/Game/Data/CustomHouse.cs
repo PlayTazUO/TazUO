@@ -10,10 +10,7 @@ namespace ClassicUO.Game.Data
         public int Category;
         public int FeatureMask;
 
-        public virtual bool Parse(string text)
-        {
-            return false;
-        }
+        public virtual bool Parse(string text) => false;
 
         public abstract int Contains(ushort graphic);
     }

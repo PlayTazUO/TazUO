@@ -13,6 +13,7 @@ using ClassicUO.Resources;
 using ClassicUO.Utility;
 using SDL3;
 using System.Collections.Generic;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.UI.Gumps.Login
 {
@@ -87,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 1
             );
 
-            List<CharacterEntryGump> gumps = new List<CharacterEntryGump>();
+            var gumps = new List<CharacterEntryGump>();
 
             for (int i = 0, valid = 0; i < loginScene.Characters.Length; i++)
             {
@@ -98,17 +99,11 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     valid++;
 
                     if (valid > World.ClientFeatures.MaxChars)
-                    {
                         break;
-                    }
 
                     if (World.ClientLockedFeatures.Flags != 0 && !World.ClientLockedFeatures.Flags.HasFlag(LockedFeatureFlags.SeventhCharacterSlot))
-                    {
                         if (valid == 6 && !World.ClientLockedFeatures.Flags.HasFlag(LockedFeatureFlags.SixthCharacterSlot))
-                        {
                             break;
-                        }
-                    }
 
                     CharacterEntryGump g;
                     Add

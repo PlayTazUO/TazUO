@@ -33,7 +33,7 @@ namespace ClassicUO.Utility
                 sb.Append(char.ConvertFromUtf32(Cp1252ToUnicode(strCp1252[i])));
             }
 
-            var str = sb.ToString();
+            string str = sb.ToString();
 
             sb.Dispose();
 
@@ -147,7 +147,7 @@ namespace ClassicUO.Utility
             }
 
             Span<char> span = stackalloc char[str.Length];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
             bool capitalizeNext = true;
 
             for (int i = 0; i < str.Length; i++)
@@ -175,7 +175,7 @@ namespace ClassicUO.Utility
             }
 
             Span<char> span = stackalloc char[str.Length];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
 
             bool capitalizeNext = true;
 
@@ -203,10 +203,7 @@ namespace ClassicUO.Utility
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsSafeChar(int c)
-        {
-            return c >= 0x20 && c < 0xFFFE;
-        }
+        public static bool IsSafeChar(int c) => c >= 0x20 && c < 0xFFFE;
 
         public static void AddSpaceBeforeCapital(string[] str, bool checkAcronyms = true)
         {
@@ -223,7 +220,7 @@ namespace ClassicUO.Utility
                 return "";
             }
 
-            ValueStringBuilder sb = new ValueStringBuilder(str.Length * 2);
+            var sb = new ValueStringBuilder(str.Length * 2);
             sb.Append(str[0]);
 
             for (int i = 1, len = str.Length - 1; i <= len; i++)
@@ -254,7 +251,7 @@ namespace ClassicUO.Utility
             }
 
             Span<char> span = stackalloc char[str.Length];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
 
             for (int i = 0; i < str.Length; i++)
             {
@@ -323,7 +320,7 @@ namespace ClassicUO.Utility
                 }
 
                 Span<char> span = stackalloc char[str.Length];
-                ValueStringBuilder sb = new ValueStringBuilder(span);
+                var sb = new ValueStringBuilder(span);
 
                 sb.Append(parts[0]);
 
@@ -365,8 +362,8 @@ namespace ClassicUO.Utility
         {
             for (int i = 0; i < length && i < str.Length; ++i)
             {
-                var c0 = char.IsLetter(buffer[i]) ? char.ToLowerInvariant(buffer[i]) : buffer[i];
-                var c1 = char.IsLetter(str[i]) ? char.ToLowerInvariant(str[i]) : str[i];
+                char c0 = char.IsLetter(buffer[i]) ? char.ToLowerInvariant(buffer[i]) : buffer[i];
+                char c1 = char.IsLetter(str[i]) ? char.ToLowerInvariant(str[i]) : str[i];
 
                 if (c0 != c1)
                 {

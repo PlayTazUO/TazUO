@@ -11,27 +11,15 @@ namespace ClassicUO.Utility
         /// <summary>
         ///     Returns a random number between low and high, inclusive of both low and high.
         /// </summary>
-        public static int GetValue(int low, int high)
-        {
-            return _random.Next(low, high + 1);
-        }
+        public static int GetValue(int low, int high) => _random.Next(low, high + 1);
 
         /// <summary>
         ///     Returns a non-negative random integer.
         /// </summary>
-        public static int GetValue()
-        {
-            return _random.Next();
-        }
+        public static int GetValue() => _random.Next();
 
-        public static int RandomList(params int[] list)
-        {
-            return list[_random.Next(list.Length)];
-        }
+        public static int RandomList(params int[] list) => list[_random.Next(list.Length)];
 
-        public static bool RandomBool()
-        {
-            return _random.NextDouble() >= 0.5;
-        }
+        public static bool RandomBool() => _random.NextDouble() >= 0.5;
     }
 }

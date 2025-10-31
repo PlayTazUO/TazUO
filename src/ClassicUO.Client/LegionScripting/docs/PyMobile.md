@@ -9,6 +9,18 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 
 ## Properties
+### `X`
+
+**Type:** `ushort`
+
+### `Y`
+
+**Type:** `ushort`
+
+### `Z`
+
+**Type:** `sbyte`
+
 ### `HitsDiff`
 
 **Type:** `int`
@@ -61,11 +73,22 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 
 **Type:** `bool`
 
+### `InWarMode`
+
+**Type:** `bool`
+
 ### `Backpack`
 
 **Type:** `PyItem`
 
  Get the mobile's Backpack item
+
+
+### `Mount`
+
+**Type:** `PyItem`
+
+ Get the mobile's Mount item (if mounted)
 
 
 ### `__class__`

@@ -201,7 +201,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (LinkedObject i = item.Items; i != null; i = i.Next)
             {
-                Item spell = (Item)i;
+                var spell = (Item)i;
                 int currentCount = spell.Amount;
 
                 if (currentCount > 0 && currentCount <= maxSpellsCount)
@@ -311,7 +311,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (page == 1 && _spellBookType == SpellBookType.Chivalry)
                     {
-                        Label label = new Label(
+                        var label = new Label(
                             ResGumps.TithingPointsAvailable + World.Player.TithingPoints,
                             false,
                             0x0288,
@@ -335,7 +335,7 @@ namespace ClassicUO.Game.UI.Gumps
                         dataX = 225;
                     }
 
-                    Label text = new Label(ResGumps.Index, false, 0x0288, font: 6)
+                    var text = new Label(ResGumps.Index, false, 0x0288, font: 6)
                     {
                         X = indexX,
                         Y = 10
@@ -402,7 +402,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                                                 int iconMY = 55 + 44 * k;
 
-                                                GumpPic icon = new GumpPic(
+                                                var icon = new GumpPic(
                                                     225,
                                                     iconMY,
                                                     iconGraphic,
@@ -617,7 +617,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     case SpellBookType.Magery:
                         {
-                            Label text = new Label(
+                            var text = new Label(
                                 SpellsMagery.CircleNames[i >> 3],
                                 false,
                                 0x0288,
@@ -655,7 +655,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     case SpellBookType.Mastery:
                         {
-                            Label text = new Label(
+                            var text = new Label(
                                 SpellsMastery.GetMasteryGroupByID(i + 1),
                                 false,
                                 0x0288,
@@ -697,7 +697,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     default:
                         {
-                            Label text = new Label(name, false, 0x0288, font: 6)
+                            var text = new Label(name, false, 0x0288, font: 6)
                             {
                                 X = topTextX,
                                 Y = topTextY
@@ -723,7 +723,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ushort iconGraphic;
                 int toolTipCliloc;
 
-                var spellDef = GetSpellDefinition(iconSerial);
+                SpellDefinition spellDef = GetSpellDefinition(iconSerial);
                 if (_spellBookType == SpellBookType.Mastery)
                 {
                     iconGraphic = (ushort)SpellsMastery.GetSpell(i + 1).GumpIconID;
@@ -736,7 +736,7 @@ namespace ClassicUO.Game.UI.Gumps
                     GetSpellToolTip(out toolTipCliloc);
                 }
 
-                HueGumpPic icon = new HueGumpPic(
+                var icon = new HueGumpPic(
                     this,
                     iconX,
                     40,
@@ -769,7 +769,7 @@ namespace ClassicUO.Game.UI.Gumps
                         _dataBox.Add(new GumpPicTiled(iconX, 88, 120, 5, 0x0835), page1);
                     }
 
-                    Label text = new Label(ResGumps.Reagents, false, 0x0288, font: 6)
+                    var text = new Label(ResGumps.Reagents, false, 0x0288, font: 6)
                     {
                         X = iconX,
                         Y = 92
@@ -786,7 +786,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     GetSpellRequires(i, out int requiriesY, out string requires);
 
-                    Label text = new Label(requires, false, 0x0288, font: 6)
+                    var text = new Label(requires, false, 0x0288, font: 6)
                     {
                         X = iconX,
                         Y = requiriesY
@@ -844,7 +844,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             GetSpellFloatingButton(def.ID)?.Dispose();
 
-            UseSpellButtonGump gump = new UseSpellButtonGump(World, def)
+            var gump = new UseSpellButtonGump(World, def)
             {
                 X = Mouse.LClickPosition.X - 22,
                 Y = Mouse.LClickPosition.Y - 22
@@ -1489,7 +1489,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-                    ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x09CF);
+                    ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x09CF);
 
                     if (gumpInfo.Texture != null)
                     {
@@ -1532,7 +1532,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (button == MouseButtonType.Left && ShowEdit)
                 {
-                    Macro mCast = Macro.CreateFastMacro(
+                    var mCast = Macro.CreateFastMacro(
                         _spellName,
                         MacroType.CastSpell,
                         (MacroSubType)GetSpellsId() + SpellBookDefinition.GetSpellsGroup(_spellID)
@@ -1549,10 +1549,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// Get Spell Id
             /// </summary>
             /// <returns></returns>
-            private int GetSpellsId()
-            {
-                return _spellID % 100;
-            }
+            private int GetSpellsId() => _spellID % 100;
         }
     }
 }

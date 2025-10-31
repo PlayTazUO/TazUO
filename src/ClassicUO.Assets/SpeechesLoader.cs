@@ -34,12 +34,12 @@ namespace ClassicUO.Assets
             var file = new UOFileMul(path);
             var entries = new List<SpeechEntry>();
 
-            var buf = new byte[256];
+            byte[] buf = new byte[256];
             while (file.Position < file.Length)
             {
                 file.Read(buf.AsSpan(0, sizeof(ushort) * 2));
-                var id = BinaryPrimitives.ReadUInt16BigEndian(buf);
-                var length = BinaryPrimitives.ReadUInt16BigEndian(buf.AsSpan(sizeof(ushort)));
+                ushort id = BinaryPrimitives.ReadUInt16BigEndian(buf);
+                ushort length = BinaryPrimitives.ReadUInt16BigEndian(buf.AsSpan(sizeof(ushort)));
 
                 if (length > 0)
                 {
@@ -47,7 +47,7 @@ namespace ClassicUO.Assets
                         buf = new byte[length];
 
                     file.Read(buf.AsSpan(0, length));
-                    var text = string.Intern(Encoding.UTF8.GetString(buf.AsSpan(0, length)));
+                    string text = string.Intern(Encoding.UTF8.GetString(buf.AsSpan(0, length)));
 
                     entries.Add(new SpeechEntry(id, text));
                 }
@@ -104,7 +104,7 @@ namespace ClassicUO.Assets
 
         public List<SpeechEntry> GetKeywords(string text)
         {
-            List<SpeechEntry> list = new List<SpeechEntry>();
+            var list = new List<SpeechEntry>();
 
             if (FileManager.Version < ClientVersion.CV_305D)
             {

@@ -22,7 +22,7 @@ namespace ClassicUO.Assets
 
         public override unsafe void Load()
         {
-            var uopPath = FileManager.GetUOFilePath("MultiCollection.uop");
+            string uopPath = FileManager.GetUOFilePath("MultiCollection.uop");
 
             if (FileManager.IsUOPInstallation && System.IO.File.Exists(uopPath))
             {
@@ -30,8 +30,8 @@ namespace ClassicUO.Assets
             }
             else
             {
-                var path = FileManager.GetUOFilePath("multi.mul");
-                var pathidx = FileManager.GetUOFilePath("multi.idx");
+                string path = FileManager.GetUOFilePath("multi.mul");
+                string pathidx = FileManager.GetUOFilePath("multi.idx");
 
                 if (System.IO.File.Exists(path) && System.IO.File.Exists(pathidx))
                 {
@@ -46,31 +46,31 @@ namespace ClassicUO.Assets
         {
             var list = new List<MultiInfo>();
 
-            var file = File;
-            ref var entry = ref file.GetValidRefEntry((int)idx);
+            UOFile file = File;
+            ref UOFileIndex entry = ref file.GetValidRefEntry((int)idx);
 
             if (entry.File != null)
                 file = entry.File;
 
             file.Seek(entry.Offset, System.IO.SeekOrigin.Begin);
 
-            var buf = new byte[entry.Length];
+            byte[] buf = new byte[entry.Length];
             file.Read(buf);
 
             var reader = new StackDataReader(buf);
             if (entry.CompressionFlag >= CompressionType.Zlib)
             {
-                var dbuf = new byte[entry.DecompressedLength];
-                var result = ZLib.Decompress(buf, dbuf);
+                byte[] dbuf = new byte[entry.DecompressedLength];
+                ZLib.ZLibError result = ZLib.Decompress(buf, dbuf);
                 reader = new StackDataReader(dbuf);
 
                 reader.Skip(sizeof(uint));
 
-                var count = reader.ReadInt32LE();
+                int count = reader.ReadInt32LE();
 
-                for (var i = 0; i < count; ++i)
+                for (int i = 0; i < count; ++i)
                 {
-                    var block = reader.Read<MultiBlockNew>();
+                    MultiBlockNew block = reader.Read<MultiBlockNew>();
 
                     if (block.Unknown != 0)
                     {
@@ -89,12 +89,12 @@ namespace ClassicUO.Assets
             }
             else
             {
-                var size = FileManager.Version >= ClientVersion.CV_7090 ? Unsafe.SizeOf<MultiBlockNew>() + 2 : Unsafe.SizeOf<MultiBlock>();
-                var count = entry.Length / size;
+                int size = FileManager.Version >= ClientVersion.CV_7090 ? Unsafe.SizeOf<MultiBlockNew>() + 2 : Unsafe.SizeOf<MultiBlock>();
+                int count = entry.Length / size;
 
-                for (var i = 0; i < count; ++i)
+                for (int i = 0; i < count; ++i)
                 {
-                    var block = reader.Read<MultiBlock>();
+                    MultiBlock block = reader.Read<MultiBlock>();
                     reader.Skip(size - Unsafe.SizeOf<MultiBlock>());
 
                     list.Add(new ()

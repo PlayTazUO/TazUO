@@ -42,7 +42,7 @@ namespace ClassicUO.Utility
         {
             while (_values.Count > 0 && (currentTicks - _values.Peek().Timestamp) > (currentTicks - _timeWindow.TotalMilliseconds))
             {
-                var oldItem = _values.Dequeue();
+                (uint Timestamp, double Value) oldItem = _values.Dequeue();
                 _sum -= oldItem.Value;
             }
         }

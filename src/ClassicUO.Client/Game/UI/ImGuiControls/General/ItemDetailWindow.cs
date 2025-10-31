@@ -102,7 +102,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text($"Serial: 0x{_itemInfo.Serial:X8}");
             ImGui.Text($"Layer: {_itemInfo.Layer} ({(int)_itemInfo.Layer})");
 
-            var timeAgo = DateTime.Now - _itemInfo.UpdatedTime;
+            TimeSpan timeAgo = DateTime.Now - _itemInfo.UpdatedTime;
             string timeText;
             if (timeAgo.TotalDays >= 1)
                 timeText = $"{timeAgo.Days}d ago";
@@ -136,7 +136,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.Text($"Container: 0x{_itemInfo.Container:X8}");
 
                     // Check if we can find root container information
-                    var containerItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Container);
+                    Item containerItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Container);
                     if (containerItem != null && containerItem.RootContainer != 0 && containerItem.RootContainer != _itemInfo.Container)
                     {
                         ImGui.Text($"Root Container: 0x{containerItem.RootContainer:X8}");
@@ -184,7 +184,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 SetTooltip("View detailed information about the container");
 
                 // Button to open root container if it exists and is different
-                var containerItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Container);
+                Item containerItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Container);
                 if (containerItem != null && containerItem.RootContainer != 0 && containerItem.RootContainer != _itemInfo.Container)
                 {
                     if (ImGui.Button("View Root Container"))
@@ -197,7 +197,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             // Button to locate item if it exists in the world
-            var worldItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Serial);
+            Item worldItem = Client.Game.UO?.World?.Items?.Get(_itemInfo.Serial);
             if (worldItem != null)
             {
                 if (ImGui.Button("Use Item"))
@@ -238,7 +238,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             try
             {
-                var world = Client.Game.UO?.World;
+                World world = Client.Game.UO?.World;
                 if (world?.Player == null)
                 {
                     Utility.Logging.Log.Warn("Cannot locate item: Player not available");
@@ -257,7 +257,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 else if (_itemInfo.Container != 0)
                 {
                     // Item is in a container, need to find the root container's location
-                    var containerItem = world.Items?.Get(_itemInfo.Container);
+                    Item containerItem = world.Items?.Get(_itemInfo.Container);
                     if (containerItem != null)
                     {
                         // Check if the root container is the player's backpack
@@ -270,7 +270,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         else
                         {
                             // Try to find the root container's position
-                            var rootContainer = world.Items?.Get(containerItem.RootContainer);
+                            Item rootContainer = world.Items?.Get(containerItem.RootContainer);
                             if (rootContainer != null && rootContainer.OnGround)
                             {
                                 targetX = rootContainer.X;
@@ -279,7 +279,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             else
                             {
                                 // Check if the root container is a Mobile
-                                var mobile = world.Mobiles?.Get(containerItem.RootContainer);
+                                Mobile mobile = world.Mobiles?.Get(containerItem.RootContainer);
                                 if (mobile != null)
                                 {
                                     targetX = mobile.X;
@@ -318,9 +318,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
         }
 
-        private void SearchDatabaseForContainerLocation(uint containerSerial)
-        {
-            ItemDatabaseManager.Instance.SearchItems(
+        private void SearchDatabaseForContainerLocation(uint containerSerial) => ItemDatabaseManager.Instance.SearchItems(
                 results =>
                 {
                     // Marshal UI interactions back to the main thread
@@ -328,7 +326,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     {
                         if (results != null && results.Count > 0)
                         {
-                            var containerInfo = results[0];
+                            ItemInfo containerInfo = results[0];
                             if (containerInfo.OnGround)
                             {
                                 CreateQuestArrow(containerInfo.X, containerInfo.Y);
@@ -336,7 +334,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             else
                             {
                                 // Container is also in another container, try to find its root
-                                var world = Client.Game.UO?.World;
+                                World world = Client.Game.UO?.World;
                                 if (world?.Player != null && containerInfo.Container == world.Player.Serial)
                                 {
                                     // Root is player
@@ -357,13 +355,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 serial: containerSerial,
                 limit: 1
             );
-        }
 
         private void CreateQuestArrow(int x, int y)
         {
             try
             {
-                var world = Client.Game.UO?.World;
+                World world = Client.Game.UO?.World;
                 if (world == null)
                 {
                     Utility.Logging.Log.Warn("Cannot create quest arrow: World not available");
@@ -371,7 +368,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
 
                 // Remove any existing quest arrow for this item
-                var existingArrow = UIManager.GetGump<QuestArrowGump>(_itemInfo.Serial);
+                QuestArrowGump existingArrow = UIManager.GetGump<QuestArrowGump>(_itemInfo.Serial);
                 if (existingArrow != null)
                 {
                     existingArrow.Dispose();
@@ -404,7 +401,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             if (results != null && results.Count > 0)
                             {
                                 // If we found the container in the database, open its detail window
-                                var containerInfo = results[0]; // Take the first (most recent) result
+                                ItemInfo containerInfo = results[0]; // Take the first (most recent) result
                                 var detailWindow = new ItemDetailWindow(containerInfo);
                                 ImGuiManager.AddWindow(detailWindow);
                             }

@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
             InitializeTexture();
             Add(backgroundImage = new EmbeddedGumpPic(0, 0, MordernPaperdollGump, ProfileManager.CurrentProfile.ModernPaperDollHue));
 
-            HitBox _menuHit = new HitBox(Width - 26, 1, 25, 16, alpha: 0f);
+            var _menuHit = new HitBox(Width - 26, 1, 25, 16, alpha: 0f);
             Add(_menuHit);
             _menuHit.SetTooltip("Open paperdoll menu");
             _menuHit.MouseUp += (sender, e) =>
@@ -158,7 +158,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             BuildLayerSlots();
 
-            HitBox _virtueHitBox = new HitBox((WIDTH / 2) - 16, 1, 32, 32, "Virtues menu", 0f);
+            var _virtueHitBox = new HitBox((WIDTH / 2) - 16, 1, 32, 32, "Virtues menu", 0f);
             _virtueHitBox.MouseDoubleClick += (s, e) =>
             {
                 GameActions.ReplyGump
@@ -178,7 +178,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(titleLabel = new Label("", true, 0xffff, maxwidth: WIDTH - 30, align: TEXT_ALIGN_TYPE.TS_CENTER) { X = 15, Y = 273 + CELL_SPACING + TOP_SPACING, AcceptMouseInput = false });
 
-            HitBox _minHit = new HitBox(1, 1, 14, 18, alpha: 0f);
+            var _minHit = new HitBox(1, 1, 14, 18, alpha: 0f);
             _minHit.SetTooltip("Minimize paperdoll");
             _minHit.MouseUp += (s, e) =>
             {
@@ -190,14 +190,11 @@ namespace ClassicUO.Game.UI.Gumps
             RequestUpdateContents();
         }
 
-        public void UpdateTitle(string text)
-        {
-            titleLabel.Text = text;
-        }
+        public void UpdateTitle(string text) => titleLabel.Text = text;
 
         private void BuildLayerSlots()
         {
-            foreach (var layerSlot in itemLayerSlots)
+            foreach (KeyValuePair<Layer[], ItemSlot> layerSlot in itemLayerSlots)
             {
                 Add(layerSlot.Value);
             }
@@ -206,7 +203,7 @@ namespace ClassicUO.Game.UI.Gumps
         public void HandleObjectMessage(Entity parent, string text, ushort hue)
         {
             if (parent != null)
-                foreach (var layerSlot in itemLayerSlots.Values)
+                foreach (ItemSlot layerSlot in itemLayerSlots.Values)
                     if (layerSlot.Item != null && layerSlot.Item.Serial == parent.Serial)
                     {
                         layerSlot.AddText(text, hue);
@@ -220,7 +217,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (World.Player == null)
                 return;
 
-            foreach (var layerSlot in itemLayerSlots)
+            foreach (KeyValuePair<Layer[], ItemSlot> layerSlot in itemLayerSlots)
             {
                 layerSlot.Value.ClearItems();
 
@@ -245,7 +242,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             backgroundImage.Hue = ProfileManager.CurrentProfile.ModernPaperDollHue;
             AnchorType = ProfileManager.CurrentProfile.ModernPaperdollAnchorEnabled ? ANCHOR_TYPE.NONE : ANCHOR_TYPE.DISABLED;
-            foreach (var layerSlot in itemLayerSlots)
+            foreach (KeyValuePair<Layer[], ItemSlot> layerSlot in itemLayerSlots)
             {
                 layerSlot.Value.UpdateOptions();
             }
@@ -377,17 +374,14 @@ this.world = world;
                 timedTexts.RemoveAll(tt => tt == null || tt.IsDisposed);
 
                 // Adjust the Y position of existing timed texts
-                foreach (var tt in timedTexts)
+                foreach (SimpleTimedTextGump tt in timedTexts)
                     tt.Y -= timedText.Height + 5;
 
                 timedTexts.Add(timedText);
                 UIManager.Add(timedText);
             }
 
-            public void UpdateOptions()
-            {
-                durablityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
-            }
+            public void UpdateOptions() => durablityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
 
             public void AddItem(World world, Gump gump, Item item)
             {
@@ -516,12 +510,12 @@ this.world = world;
                     true
                 );
 
-                ref readonly var texture = ref Client.Game.UO.Arts.GetArt((uint)item.DisplayedGraphic);
+                ref readonly SpriteInfo texture = ref Client.Game.UO.Arts.GetArt((uint)item.DisplayedGraphic);
                 Rectangle _rect = Client.Game.UO.Arts.GetRealArtBounds((uint)item.DisplayedGraphic);
 
 
-                Point _originalSize = new Point(Width, Height);
-                Point _point = new Point((Width >> 1) - (_originalSize.X >> 1), (Height >> 1) - (_originalSize.Y >> 1));
+                var _originalSize = new Point(Width, Height);
+                var _point = new Point((Width >> 1) - (_originalSize.X >> 1), (Height >> 1) - (_originalSize.Y >> 1));
 
                 if (_rect.Width < Width)
                 {
@@ -575,10 +569,7 @@ this.world = world;
                 return false;
             }
 
-            public override bool Contains(int x, int y)
-            {
-                return true;
-            }
+            public override bool Contains(int x, int y) => true;
         }
 
         private class MenuButton : Control
@@ -588,7 +579,7 @@ this.world = world;
                 Width = width;
                 Height = 16;
                 AcceptMouseInput = true;
-                Area _ = new Area() { Width = Width, Height = Height, AcceptMouseInput = false };
+                var _ = new Area() { Width = Width, Height = Height, AcceptMouseInput = false };
 
                 Add(_);
                 Add(new Line(2, 2, Width - 4, 2, hue) { Alpha = alpha, AcceptMouseInput = false });
@@ -598,10 +589,7 @@ this.world = world;
                 //_.SetTooltip(tooltip);
             }
 
-            public override bool Contains(int x, int y)
-            {
-                return true;
-            }
+            public override bool Contains(int x, int y) => true;
         }
 
         private class MenuGump : Gump
@@ -616,9 +604,9 @@ this.world = world;
 
                 Add(new AlphaBlendControl(0.85f) { Width = Width, Height = Height, AcceptMouseInput = false });
 
-                var i = 1;
+                int i = 1;
 
-                NiceButton preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, "Preview");
+                var preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, "Preview");
                 preview.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -629,7 +617,7 @@ this.world = world;
                 };
                 Add(preview);
 
-                NiceButton help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Help");
+                var help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Help");
                 help.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -639,7 +627,7 @@ this.world = world;
                 };
                 Add(help);
 
-                NiceButton options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Options");
+                var options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Options");
                 options.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -649,7 +637,7 @@ this.world = world;
                 };
                 Add(options);
 
-                NiceButton logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Log Out");
+                var logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Log Out");
                 logout.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -659,7 +647,7 @@ this.world = world;
                 };
                 Add(logout);
 
-                NiceButton quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Quests");
+                var quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Quests");
                 quests.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -669,7 +657,7 @@ this.world = world;
                 };
                 Add(quests);
 
-                NiceButton skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Skills");
+                var skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Skills");
                 skills.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -679,7 +667,7 @@ this.world = world;
                 };
                 Add(skills);
 
-                NiceButton guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Guild");
+                var guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Guild");
                 guild.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -689,7 +677,7 @@ this.world = world;
                 };
                 Add(guild);
 
-                NiceButton peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Peace/War");
+                var peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Peace/War");
                 peace.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -699,7 +687,7 @@ this.world = world;
                 };
                 Add(peace);
 
-                NiceButton durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Durability Tracker");
+                var durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Durability Tracker");
                 durability.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -710,7 +698,7 @@ this.world = world;
                 };
                 Add(durability);
 
-                NiceButton status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Status");
+                var status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Status");
                 status.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -719,7 +707,7 @@ this.world = world;
                         {
                             UIManager.GetGump<BaseHealthBarGump>(LocalSerial)?.Dispose();
 
-                            StatusGumpBase status = StatusGumpBase.GetStatusGump();
+                            var status = StatusGumpBase.GetStatusGump();
 
                             if (status == null)
                             {
@@ -739,7 +727,7 @@ this.world = world;
 
                             if (ProfileManager.CurrentProfile.CustomBarsToggled)
                             {
-                                Rectangle bounds = new Rectangle(0, 0, HealthBarGumpCustom.HPB_WIDTH, HealthBarGumpCustom.HPB_HEIGHT_SINGLELINE);
+                                var bounds = new Rectangle(0, 0, HealthBarGumpCustom.HPB_WIDTH, HealthBarGumpCustom.HPB_HEIGHT_SINGLELINE);
 
                                 UIManager.Add
                                 (
@@ -768,7 +756,7 @@ this.world = world;
                 };
                 Add(status);
 
-                NiceButton party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Party");
+                var party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Party");
                 party.MouseUp += (s, e) =>
                 {
                     PartyGump party = UIManager.GetGump<PartyGump>();
@@ -786,14 +774,14 @@ this.world = world;
                 };
                 Add(party);
 
-                NiceButton profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Profile");
+                var profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Profile");
                 profileEditor.MouseUp += (s, e) =>
                 {
                     GameActions.RequestProfile(LocalSerial);
                 };
                 Add(profileEditor);
 
-                NiceButton abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Abilities");
+                var abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Abilities");
                 abilities.MouseUp += (s, e) =>
                 {
                     if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
@@ -803,7 +791,7 @@ this.world = world;
                 };
                 Add(abilities);
 
-                NiceButton weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Weapon abilities");
+                var weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Weapon abilities");
                 weaponAbilities.MouseUp += (s, e) =>
                 {
                     GameActions.OpenAbilitiesBook(world);
@@ -870,7 +858,7 @@ this.world = world;
                     Dispose();
                     UIManager.GetGump<ModernPaperdoll>()?.Dispose();
 
-                    ModernPaperdoll pd = new ModernPaperdoll(World, LocalSerial);
+                    var pd = new ModernPaperdoll(World, LocalSerial);
 
                     if (ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc)
                     {

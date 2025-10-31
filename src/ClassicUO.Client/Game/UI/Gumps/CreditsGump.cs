@@ -46,7 +46,7 @@ Ultima Online(R) 2021 Electronic Arts Inc. All Rights Reserved.
             LayerOrder = UILayer.Over;
             CanCloseWithRightClick = true;
 
-            GumpPic background = new GumpPic(0, 0, BACKGROUND_IMG, 0);
+            var background = new GumpPic(0, 0, BACKGROUND_IMG, 0);
             Width = background.Width;
             Height = background.Height;
 

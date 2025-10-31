@@ -95,7 +95,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     {
                         if (SerialHelper.IsItem(targetedEntity))
                         {
-                            var newConfig = BuySellAgent.Instance.NewSellConfig();
+                            BuySellItemConfig newConfig = BuySellAgent.Instance.NewSellConfig();
                             newConfig.Graphic = targetedEntity.Graphic;
                             newConfig.Hue = targetedEntity.Hue;
                             _sellEntries = BuySellAgent.Instance.SellConfigs;
@@ -149,7 +149,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     if (StringHelper.TryParseGraphic(_newGraphicInput, out int graphic))
                     {
-                        var newConfig = BuySellAgent.Instance.NewSellConfig();
+                        BuySellItemConfig newConfig = BuySellAgent.Instance.NewSellConfig();
                         newConfig.Graphic = (ushort)graphic;
 
                         if (!string.IsNullOrEmpty(_newHueInput) && _newHueInput != "-1")
@@ -214,7 +214,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     for (int i = _sellEntries.Count - 1; i >= 0; i--)
                     {
-                        var entry = _sellEntries[i];
+                        BuySellItemConfig entry = _sellEntries[i];
                         ImGui.TableNextRow();
 
                         ImGui.TableNextColumn();

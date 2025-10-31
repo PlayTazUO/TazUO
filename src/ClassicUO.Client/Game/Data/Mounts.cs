@@ -75,7 +75,7 @@ internal static class Mounts
         _mounts[0x3EDA] = new(0x0590, 0x3EDA, 9); // Frostmites Beetles
         _mounts[0x3EDE] = new(0x0673, 0x3EDE, 0); // Clydesdale?
         _mounts[0x3EDC] = new(0x0666, 0x3EDC, 0); // Moldering Ursine?
-        _mounts[0x3EDB] = new(0x0611, 0x3EDB, 0); // Manticore
+        _mounts[0x3EDB] = new(0x0611, 0x3EDB, 9); // Manticore
         _mounts[0x3EDD] = new(0x0581, 0x3EDD, 0); // Dragon_Hildebrandt
         _mounts[0x3EDF] = new(0x0676, 0x3EDF, 0); // Horse_Elemental_Earth
         _mounts[0x3EE0] = new(0x0677, 0x3EE0, 0); // Horse_Elemental_Fire
@@ -83,10 +83,7 @@ internal static class Mounts
         _mounts[0x3EE2] = new(0x0679, 0x3EE2, 0); // Horse_Elemental_Air
     }
 
-    public static bool TryGet(ushort animId, out MountInfo mountInfo)
-    {
-        return _mounts.TryGetValue(animId, out mountInfo);
-    }
+    public static bool TryGet(ushort animId, out MountInfo mountInfo) => _mounts.TryGetValue(animId, out mountInfo);
 }
 
 internal readonly struct MountInfo

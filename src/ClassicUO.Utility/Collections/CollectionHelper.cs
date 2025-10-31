@@ -15,21 +15,21 @@ namespace ClassicUO.Utility.Collections
                 throw new ArgumentNullException(nameof(source));
             }
 
-            IReadOnlyCollection<T> result = source as IReadOnlyCollection<T>;
+            var result = source as IReadOnlyCollection<T>;
 
             if (result != null)
             {
                 return result;
             }
 
-            ICollection<T> collection = source as ICollection<T>;
+            var collection = source as ICollection<T>;
 
             if (collection != null)
             {
                 return new CollectionWrapper<T>(collection);
             }
 
-            ICollection nongenericCollection = source as ICollection;
+            var nongenericCollection = source as ICollection;
 
             if (nongenericCollection != null)
             {
@@ -63,10 +63,7 @@ namespace ClassicUO.Utility.Collections
                 }
             }
 
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return _collection.GetEnumerator();
-            }
+            IEnumerator IEnumerable.GetEnumerator() => _collection.GetEnumerator();
         }
 
         private sealed class CollectionWrapper<T> : IReadOnlyCollection<T>
@@ -85,15 +82,9 @@ namespace ClassicUO.Utility.Collections
 
             public int Count => _collection.Count;
 
-            public IEnumerator<T> GetEnumerator()
-            {
-                return _collection.GetEnumerator();
-            }
+            public IEnumerator<T> GetEnumerator() => _collection.GetEnumerator();
 
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return _collection.GetEnumerator();
-            }
+            IEnumerator IEnumerable.GetEnumerator() => _collection.GetEnumerator();
         }
     }
 }

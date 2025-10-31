@@ -169,24 +169,23 @@ namespace ClassicUO.Game.Managers
 
         private readonly World _world;
 
-        public SkillsGroupManager(World world) => _world = world;
-
+        public SkillsGroupManager(World world)
+        {
+            _world = world;
+        }
 
         public readonly List<SkillsGroup> Groups = new List<SkillsGroup>();
 
 
-        public void Add(SkillsGroup g)
-        {
-            Groups.Add(g);
-        }
+        public void Add(SkillsGroup g) => Groups.Add(g);
 
         public bool Remove(SkillsGroup g)
         {
             if (Groups[0] == g)
             {
-                var camera = Client.Game.Scene.Camera;
+                Renderer.Camera camera = Client.Game.Scene.Camera;
 
-                MessageBoxGump messageBox = new MessageBoxGump(_world, 200, 125, ResGeneral.CannotDeleteThisGroup, null)
+                var messageBox = new MessageBoxGump(_world, 200, 125, ResGeneral.CannotDeleteThisGroup, null)
                 {
                     X = camera.Bounds.X + camera.Bounds.Width / 2 - 100,
                     Y = camera.Bounds.Y + camera.Bounds.Height / 2 - 62
@@ -218,7 +217,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
 
             try
             {
@@ -241,7 +240,7 @@ namespace ClassicUO.Game.Managers
                 Boolean.TryParse(root.GetAttribute("isActive"), out _isActive);
                 foreach (XmlElement xml in root.GetElementsByTagName("group"))
                 {
-                    SkillsGroup g = new SkillsGroup();
+                    var g = new SkillsGroup();
                     g.Name = xml.GetAttribute("name");
 
                     Boolean.TryParse(xml.GetAttribute("isMaximized"), out g.IsMaximized);
@@ -267,7 +266,7 @@ namespace ClassicUO.Game.Managers
         {
             string path = Path.Combine(ProfileManager.ProfilePath, "skillsgroups.xml");
 
-            using (XmlTextWriter xml = new XmlTextWriter(path, Encoding.UTF8)
+            using (var xml = new XmlTextWriter(path, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
                 IndentChar = '\t',
@@ -314,7 +313,7 @@ namespace ClassicUO.Game.Managers
 
         private void MakeDefaultMiscellaneous()
         {
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Miscellaneous;
             g.Add(4);
             g.Add(6);
@@ -331,7 +330,7 @@ namespace ClassicUO.Game.Managers
         {
             int count = Client.Game.UO.FileManager.Skills.SkillsCount;
 
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Combat;
             g.Add(1);
             g.Add(31);
@@ -374,7 +373,7 @@ namespace ClassicUO.Game.Managers
 
         private void MakeDefaultTradeSkills()
         {
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.TradeSkills;
             g.Add(0);
             g.Add(7);
@@ -394,7 +393,7 @@ namespace ClassicUO.Game.Managers
         {
             int count = Client.Game.UO.FileManager.Skills.SkillsCount;
 
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Magic;
             g.Add(16);
 
@@ -430,7 +429,7 @@ namespace ClassicUO.Game.Managers
 
         private void MakeDefaultWilderness()
         {
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Wilderness;
             g.Add(2);
             g.Add(35);
@@ -444,7 +443,7 @@ namespace ClassicUO.Game.Managers
 
         private void MakeDefaultThieving()
         {
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Thieving;
             g.Add(14);
             g.Add(21);
@@ -460,7 +459,7 @@ namespace ClassicUO.Game.Managers
 
         private void MakeDefaultBard()
         {
-            SkillsGroup g = new SkillsGroup();
+            var g = new SkillsGroup();
             g.Name = ResGeneral.Bard;
             g.Add(15);
             g.Add(29);
@@ -472,7 +471,7 @@ namespace ClassicUO.Game.Managers
 
         private bool LoadMULFile(string path)
         {
-            FileInfo info = new FileInfo(path);
+            var info = new FileInfo(path);
 
             if (!info.Exists)
             {
@@ -484,7 +483,7 @@ namespace ClassicUO.Game.Managers
                 byte skillidx = 0;
                 bool unicode = false;
 
-                using (BinaryReader bin = new BinaryReader(File.OpenRead(info.FullName)))
+                using (var bin = new BinaryReader(File.OpenRead(info.FullName)))
                 {
                     int start = 4;
                     int strlen = 17;
@@ -499,12 +498,12 @@ namespace ClassicUO.Game.Managers
                     }
 
 
-                    StringBuilder sb = new StringBuilder(17);
+                    var sb = new StringBuilder(17);
 
-                    SkillsGroup g = new SkillsGroup();
+                    var g = new SkillsGroup();
                     g.Name = ResGeneral.Miscellaneous;
 
-                    SkillsGroup[] groups = new SkillsGroup[count];
+                    var groups = new SkillsGroup[count];
                     groups[0] = g;
 
                     for (int i = 0; i < count - 1; ++i)

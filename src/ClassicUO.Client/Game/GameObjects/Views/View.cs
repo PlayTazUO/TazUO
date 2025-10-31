@@ -115,10 +115,7 @@ namespace ClassicUO.Game.GameObjects
         /// </summary>
         /// <param name="z">The Z coordinate to test</param>
         /// <returns>True if transparent at this Z level, false otherwise</returns>
-        public virtual bool TransparentTest(int z)
-        {
-            return false;
-        }
+        public virtual bool TransparentTest(int z) => false;
 
         /// <summary>
         /// Updates cached water animation values if needed and returns the current scale.
@@ -145,11 +142,11 @@ namespace ClassicUO.Game.GameObjects
             bool isWet = false
         )
         {
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
             if (artInfo.Texture != null)
             {
-                ref var index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + ART_STATIC_OFFSET);
+                ref UOFileIndex index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + ART_STATIC_OFFSET);
                 index.Width = (short)((artInfo.UV.Width >> 1) - TILE_CENTER_OFFSET);
                 index.Height = (short)(artInfo.UV.Height - TILE_HEIGHT_OFFSET);
 
@@ -175,7 +172,7 @@ namespace ClassicUO.Game.GameObjects
                     );
 
                     // Draw animated water layer on top
-                    var scale = GetWaterAnimationScale();
+                    Vector2 scale = GetWaterAnimationScale();
                     batcher.Draw(
                         artInfo.Texture,
                         pos,
@@ -214,7 +211,7 @@ namespace ClassicUO.Game.GameObjects
             float depth
         )
         {
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(graphic);
 
             if (gumpInfo.Texture != null)
             {
@@ -244,11 +241,11 @@ namespace ClassicUO.Game.GameObjects
             bool isWet = false
         )
         {
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
             if (artInfo.Texture != null)
             {
-                ref var index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + ART_STATIC_OFFSET);
+                ref UOFileIndex index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + ART_STATIC_OFFSET);
                 index.Width = (short)((artInfo.UV.Width >> 1) - TILE_CENTER_OFFSET);
                 index.Height = (short)(artInfo.UV.Height - TILE_HEIGHT_OFFSET);
 
@@ -287,7 +284,7 @@ namespace ClassicUO.Game.GameObjects
 
             graphic = (ushort)(graphic + index.AnimOffset);
 
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
             if (artInfo.Texture != null)
             {
@@ -298,7 +295,7 @@ namespace ClassicUO.Game.GameObjects
                 x -= index.Width;
                 y -= index.Height;
 
-                Vector2 pos = new Vector2(x, y);
+                var pos = new Vector2(x, y);
                 float renderDepth = depth + DEPTH_RENDER_OFFSET;
 
                 if (shadow)
@@ -322,7 +319,7 @@ namespace ClassicUO.Game.GameObjects
                     );
 
                     // Draw animated water layer on top
-                    var scale = GetWaterAnimationScale();
+                    Vector2 scale = GetWaterAnimationScale();
                     batcher.Draw(
                         artInfo.Texture,
                         pos,

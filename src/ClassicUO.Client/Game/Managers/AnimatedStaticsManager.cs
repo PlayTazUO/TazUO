@@ -55,7 +55,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var file = Client.Game.UO.FileManager.AnimData.AnimDataFile;
+            UOFile file = Client.Game.UO.FileManager.AnimData.AnimDataFile;
 
             if (file == null)
             {
@@ -84,7 +84,7 @@ namespace ClassicUO.Game.Managers
                 {
                     uint addr = (uint)(o.Index * 68 + 4 * (o.Index / 8 + 1));
                     file.Seek(addr, System.IO.SeekOrigin.Begin);
-                    var info = file.Read<AnimDataFrame>();
+                    AnimDataFrame info = file.Read<AnimDataFrame>();
 
                     byte offset = o.AnimIndex;
 

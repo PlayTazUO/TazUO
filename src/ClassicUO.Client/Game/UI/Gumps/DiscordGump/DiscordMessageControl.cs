@@ -16,11 +16,11 @@ public class DiscordMessageControl : Control
 
         DateTime time = DateTimeOffset.FromUnixTimeMilliseconds((long)msg.SentTimestamp()).UtcDateTime.ToLocalTime();
 
-        var content = msg.Content();
+        string content = msg.Content();
 
         if (string.IsNullOrEmpty(content) && (msg.Metadata() == null || msg.Metadata().Count == 0) )
         {
-            var adtl = msg.AdditionalContent();
+            AdditionalContent adtl = msg.AdditionalContent();
 
             if (adtl == null)
             {
@@ -43,12 +43,12 @@ public class DiscordMessageControl : Control
         Add(name);
         Add(message);
 
-        var meta = msg.Metadata();
+        System.Collections.Generic.Dictionary<string, string> meta = msg.Metadata();
         if (meta != null && meta.Count > 0)
         {
-            if (meta.TryGetValue("graphic", out var graphic) && ushort.TryParse(graphic, out var g))
+            if (meta.TryGetValue("graphic", out string graphic) && ushort.TryParse(graphic, out ushort g))
             {
-                if(meta.TryGetValue("hue", out var hue) && ushort.TryParse(hue, out var hue2))
+                if(meta.TryGetValue("hue", out string hue) && ushort.TryParse(hue, out ushort hue2))
                 {
                     var item = new StaticPic(g, hue2);
                     item.X = name.Width;
@@ -57,7 +57,7 @@ public class DiscordMessageControl : Control
                     var hitbox = new HitBox(item.X, item.Y, Math.Max(item.Width, 50), Math.Max(item.Height, 50));
 
                     string ttip = meta["name"];
-                    if(meta.TryGetValue("data", out var data))
+                    if(meta.TryGetValue("data", out string data))
                         ttip += "\n" + data;
                     ttip = ToolTipOverrideData.ProcessTooltipText(ttip);
 

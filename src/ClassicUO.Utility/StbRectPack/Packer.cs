@@ -28,8 +28,8 @@ namespace StbRectPackSharp
 				throw new ArgumentOutOfRangeException(nameof(height));
 			}
 
-			// Initialize the context
-			var num_nodes = width;
+            // Initialize the context
+            int num_nodes = width;
 			_context = new stbrp_context(num_nodes);
 
 			fixed (stbrp_context* contextPtr = &_context)
@@ -38,18 +38,15 @@ namespace StbRectPackSharp
 			}
 		}
 
-		public void Dispose()
-		{
-			_context.Dispose();
-		}
+        public void Dispose() => _context.Dispose();
 
-		/// <summary>
-		/// Packs a rect. Returns null, if there's no more place left.
-		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <returns></returns>
-		public bool PackRect(int width, int height, out Rectangle packRectangle, int offset = 2)
+        /// <summary>
+        /// Packs a rect. Returns null, if there's no more place left.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <returns></returns>
+        public bool PackRect(int width, int height, out Rectangle packRectangle, int offset = 2)
 		{
 			var rect = new stbrp_rect
 			{

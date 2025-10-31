@@ -33,12 +33,12 @@ namespace ClassicUO.Game.GameObjects
 
         public new void Clear()
         {
-            TextObject item = (TextObject)Items;
+            var item = (TextObject)Items;
             Items = null;
 
             while (item != null)
             {
-                TextObject next = (TextObject)item.Next;
+                var next = (TextObject)item.Next;
                 item.Next = null;
                 item.Destroy();
                 Remove(item);
@@ -71,17 +71,14 @@ namespace ClassicUO.Game.GameObjects
         public bool IsEmpty => _messages.Count == 0;
 
 
-        public void SetParent(GameObject parent)
-        {
-            Parent = parent;
-        }
+        public void SetParent(GameObject parent) => Parent = parent;
 
 
         public void Add(int damage)
         {
             Parent.AddDamage(damage);
 
-            TextObject text_obj = TextObject.Create(_world);
+            var text_obj = TextObject.Create(_world);
 
             ushort hue = ProfileManager.CurrentProfile == null ? (ushort)0x0021 : ProfileManager.CurrentProfile.DamageHueOther;
             string name = string.Empty;
@@ -89,7 +86,7 @@ namespace ClassicUO.Game.GameObjects
                 hue = ProfileManager.CurrentProfile == null ? (ushort)0x0034 : ProfileManager.CurrentProfile.DamageHueSelf;
             else if (Parent is Mobile)
             {
-                Mobile _parent = (Mobile)Parent;
+                var _parent = (Mobile)Parent;
                 name = _parent.Name;
                 if (_parent.IsRenamable && _parent.NotorietyFlag != NotorietyFlag.Invulnerable && _parent.NotorietyFlag != NotorietyFlag.Enemy)
                     hue = ProfileManager.CurrentProfile == null ? (ushort)0x0033 : ProfileManager.CurrentProfile.DamageHuePet;
@@ -164,7 +161,7 @@ namespace ClassicUO.Game.GameObjects
 
             int offY = -NameOverheadGump.CurrentHeight;
 
-            Point p = new Point();
+            var p = new Point();
 
             if (Parent != null)
             {
@@ -206,7 +203,7 @@ namespace ClassicUO.Game.GameObjects
                 }
                 else
                 {
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(Parent.Graphic);
+                    ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(Parent.Graphic);
 
                     if (artInfo.Texture != null)
                     {

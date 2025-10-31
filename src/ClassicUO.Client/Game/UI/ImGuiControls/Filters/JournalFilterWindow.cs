@@ -31,7 +31,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             filterList = JournalFilterManager.Instance.Filters.ToList();
 
             // Initialize input dictionaries for existing filters
-            foreach (var filter in filterList)
+            foreach (string filter in filterList)
             {
                 if (!filterInputs.ContainsKey(filter))
                 {
@@ -78,7 +78,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     if (string.IsNullOrWhiteSpace(selectedFile)) return;
                     if (JsonHelper.Load(selectedFile, HashSetContext.Default.HashSetString, out HashSet<string> importedFilters))
                     {
-                        foreach (var filter in importedFilters)
+                        foreach (string filter in importedFilters)
                         {
                             JournalFilterManager.Instance.AddFilter(filter);
                         }
@@ -143,7 +143,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     for (int i = filterList.Count - 1; i >= 0; i--)
                     {
-                        var filter = filterList[i];
+                        string filter = filterList[i];
                         ImGui.TableNextRow();
 
                         ImGui.TableNextColumn();

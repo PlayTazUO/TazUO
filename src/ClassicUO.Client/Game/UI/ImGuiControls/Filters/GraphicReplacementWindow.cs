@@ -45,7 +45,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 {
                     if (targetedEntity != null && targetedEntity is Entity entity)
                     {
-                        var filter = GraphicsReplacement.NewFilter(entity.Graphic, entity.Graphic, entity.Hue);
+                        GraphicChangeFilter filter = GraphicsReplacement.NewFilter(entity.Graphic, entity.Graphic, entity.Hue);
                         if (filter != null)
                         {
                             // Initialize input strings for the new entry
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             ushort.TryParse(newHueInput, out newHue);
                         }
 
-                        var filter = GraphicsReplacement.NewFilter((ushort)originalGraphic, (ushort)replacementGraphic, newHue);
+                        GraphicChangeFilter filter = GraphicsReplacement.NewFilter((ushort)originalGraphic, (ushort)replacementGraphic, newHue);
                         if (filter != null)
                         {
                             // Initialize input strings for the new entry
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // List of current filters
             ImGui.Text("Current Graphic Replacements:");
 
-            var filters = GraphicsReplacement.GraphicFilters;
+            Dictionary<ushort, GraphicChangeFilter> filters = GraphicsReplacement.GraphicFilters;
             if (filters.Count == 0)
             {
                 ImGui.Text("No replacements configured");
@@ -142,7 +142,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     var filterList = filters.Values.ToList();
                     for (int i = filterList.Count - 1; i >= 0; i--)
                     {
-                        var filter = filterList[i];
+                        GraphicChangeFilter filter = filterList[i];
                         ImGui.TableNextRow();
 
                         ImGui.TableNextColumn();

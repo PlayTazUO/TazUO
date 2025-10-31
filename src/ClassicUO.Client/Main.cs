@@ -23,7 +23,7 @@ namespace ClassicUO
         [UnmanagedCallersOnly(EntryPoint = "Initialize", CallConvs = new Type[] { typeof(CallConvCdecl) })]
         static unsafe void Initialize(IntPtr* argv, int argc, HostBindings* hostSetup)
         {
-            var args = new string[argc];
+            string[] args = new string[argc];
             for (int i = 0; i < argc; i++)
             {
                 args[i] = Marshal.PtrToStringAnsi(argv[i]);
@@ -52,7 +52,7 @@ namespace ClassicUO
 
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                System.Text.StringBuilder sb = new System.Text.StringBuilder();
+                var sb = new System.Text.StringBuilder();
                 sb.AppendLine("######################## [START LOG] ########################");
 
 #if DEV_BUILD
@@ -88,7 +88,7 @@ namespace ClassicUO
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
 
-                using (LogFile crashfile = new LogFile(path, "crash.txt"))
+                using (var crashfile = new LogFile(path, "crash.txt"))
                 {
                     crashfile.WriteAsync(sb.ToString()).RunSynchronously();
                 }
@@ -461,7 +461,7 @@ namespace ClassicUO
 
                         if (!string.IsNullOrEmpty(value))
                         {
-                            var vals = value.Split(',');
+                            string[] vals = value.Split(',');
 
                             foreach (string val in vals)
                             {
@@ -516,9 +516,9 @@ namespace ClassicUO
         {
             string nativePath = Path.Combine(AppContext.BaseDirectory, GetPlatformFolder());
             if(Directory.Exists(nativePath))
-                foreach (var file in Directory.GetFiles(nativePath))
+                foreach (string file in Directory.GetFiles(nativePath))
                 {
-                    var path = Path.Combine(AppContext.BaseDirectory, Path.GetFileName(file));
+                    string path = Path.Combine(AppContext.BaseDirectory, Path.GetFileName(file));
                     bool copy = !File.Exists(path);
 
                     if (!copy) //If file exists, see if they are *most likely* the same file

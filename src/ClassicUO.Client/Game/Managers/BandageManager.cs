@@ -39,11 +39,25 @@ namespace ClassicUO.Game.Managers
         public bool CheckHidden => ProfileManager.CurrentProfile?.BandageAgentCheckHidden ?? false;
         public bool CheckInvul => ProfileManager.CurrentProfile?.BandageAgentCheckInvul ?? false;
         public bool HasBandagingBuff { get; set; } = false;
+        public bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
+        private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
 
         private BandageManager()
         {
             EventSink.OnBuffAdded += OnBuffAdded;
             EventSink.OnBuffRemoved += OnBuffRemoved;
+        }
+
+        public void SetPoisoned(uint serial, bool status)
+        {
+            if (!IsEnabled || !status) return;
+
+            Mobile mobile = World.Instance?.Mobiles?.Get(serial);
+
+            if (ShouldAttemptHeal(mobile))
+            {
+                AttemptHealMobile(mobile);
+            }
         }
 
         private void OnBuffAdded(object sender, BuffEventArgs e)
@@ -140,7 +154,7 @@ namespace ClassicUO.Game.Managers
 
         private bool ShouldAttemptHeal(Mobile mobile)
         {
-            var player = World.Instance.Player;
+            PlayerMobile player = World.Instance.Player;
             if (player == null || mobile == null)
                 return false;
 
@@ -151,6 +165,10 @@ namespace ClassicUO.Game.Managers
             bool isPlayer = mobile == player;
             bool isFriend = !isPlayer && FriendBandagingEnabled && FriendsListManager.Instance.IsFriend(mobile.Serial);
             if (!isPlayer && !isFriend)
+                return false;
+
+            // Check if self-healing is disabled
+            if (isPlayer && DisableSelfHeal)
                 return false;
 
             // Check distance for friends (within 3 tiles)
@@ -169,7 +187,7 @@ namespace ClassicUO.Game.Managers
             if (CheckHidden && mobile.IsHidden)
                 return false;
 
-            var currentHpPercentage = (int)((double)mobile.Hits / mobile.HitsMax * 100);
+            int currentHpPercentage = (int)((double)mobile.Hits / mobile.HitsMax * 100);
 
             // Check for poison status or HP threshold
             if ((!UseOnPoisoned || !mobile.IsPoisoned) &&
@@ -222,16 +240,19 @@ namespace ClassicUO.Game.Managers
             {
                 // Use the same pattern as BandageSelf but target the mobile
                 AsyncNetClient.Socket.Send_TargetSelectedObject(bandage.Serial, mobile.Serial);
-                _nextBandageTime = Time.Ticks + (CheckForBuff ? AsyncNetClient.Socket.Statistics.Ping + 10 : HealDelayMs);
             }
             else
             {
                 // Set up auto-target before double-clicking
-                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial, CursorTarget.Object);
+                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial);
 
                 GameActions.DoubleClick(World.Instance, bandage.Serial);
-                _nextBandageTime = Time.Ticks + (CheckForBuff ? AsyncNetClient.Socket.Statistics.Ping + 10 : HealDelayMs);
             }
+
+            if (UseDexFormula)
+                _nextBandageTime = Time.Ticks + GetDexHealingTime(mobile.Serial == World.Instance.Player);
+            else
+                _nextBandageTime = Time.Ticks + (CheckForBuff ? AsyncNetClient.Socket.Statistics.Ping + 10 : HealDelayMs);
 
             Log.Debug("Tried to heal someone");
 
@@ -244,7 +265,21 @@ namespace ClassicUO.Game.Managers
             if (World.Instance.Player?.FindItemByGraphic(BandageGraphic) is { } bandage)
                 return bandage;
 
-            return World.Instance.Player?.FindBandage();
+            return World.Instance.Player?.FindBandage(BandageGraphic);
+        }
+
+        /// <summary>
+        /// This includes your last ping to be on the safe side
+        /// </summary>
+        /// <returns></returns>
+        private int GetDexHealingTime(bool self)
+        {
+            if (!IsEnabled) return 0;
+
+            int diff = self ? World.Instance.Player.Dexterity / 20 : World.Instance.Player.Dexterity / 60;
+            int init = self ? 11 : 4;
+
+            return (int)(((init - diff) * 1000) + AsyncNetClient.Socket.Statistics.Ping + 10);
         }
 
         /// <summary>

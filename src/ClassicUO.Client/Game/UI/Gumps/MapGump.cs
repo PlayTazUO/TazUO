@@ -62,7 +62,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _hit.MouseUp += TextureControlOnMouseUp;
 
-            MenuButton menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = width + 44 - 43, Y = 6 };
+            var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = width + 44 - 43, Y = 6 };
 
             menu.MouseUp += (s, e) =>
             {
@@ -154,7 +154,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void AddPin(int x, int y)
         {
-            PinControl c = new PinControl(x, y);
+            var c = new PinControl(x, y);
             c.X += c.Width + 5;
             c.Y += c.Height;
             c.NumberText = (_container.Count + 1).ToString();
@@ -210,7 +210,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void OnButtonClick(int buttonID)
         {
-            ButtonType b = (ButtonType)buttonID;
+            var b = (ButtonType)buttonID;
 
             switch (b)
             {
@@ -313,7 +313,7 @@ namespace ClassicUO.Game.UI.Gumps
                 hueVector
             );
 
-            var texture = SolidColorTextureCache.GetTexture(Color.White);
+            Texture2D texture = SolidColorTextureCache.GetTexture(Color.White);
 
             for (int i = 0; i < _container.Count; i++)
             {
@@ -402,7 +402,7 @@ namespace ClassicUO.Game.UI.Gumps
             offsetX = (int)(tempX * cosA - tempY * sinA);
             offsetY = (int)(tempX * sinA + tempY * cosA);
 
-            Point mousePoint = new Point(x1 + offsetX, y1 + offsetY);
+            var mousePoint = new Point(x1 + offsetX, y1 + offsetY);
 
             const int POLY_OFFSET = 5;
 
@@ -411,7 +411,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (!inverseCheck)
             {
-                Rectangle rect = new Rectangle
+                var rect = new Rectangle
                 {
                     X = x1 - POLY_OFFSET,
                     Y = y1 - POLY_OFFSET,
@@ -428,7 +428,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                Rectangle rect = new Rectangle
+                var rect = new Rectangle
                 {
                     X = endX2 - POLY_OFFSET,
                     Y = endY2 - POLY_OFFSET,

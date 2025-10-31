@@ -207,10 +207,7 @@ namespace ClassicUO.Game.UI.Controls
             return (int) Math.Round(GetScrollableArea() * ((Value - MinValue) / (float) (MaxValue - MinValue)));
         }
 
-        public void ResetScrollPosition()
-        {
-            _value = _minValue;
-        }
+        public void ResetScrollPosition() => _value = _minValue;
 
 
         protected abstract int GetScrollableArea();

@@ -37,10 +37,7 @@ public class PyNineSliceGump : PyBaseControl, IPyGump
         }
     }
 
-    private static NineSliceGump CreateNineSliceGump(API api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight)
-    {
-        return new ModernNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight);
-    }
+    private static NineSliceGump CreateNineSliceGump(API api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight) => new ModernNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight);
 
     private void SetupResizeCallback()
     {
@@ -130,10 +127,7 @@ internal class ModernNineSliceGump : NineSliceGump
         _api = api;
     }
 
-    public void SetResizeCallback(object callback)
-    {
-        _resizeCallback = callback;
-    }
+    public void SetResizeCallback(object callback) => _resizeCallback = callback;
 
     protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
     {

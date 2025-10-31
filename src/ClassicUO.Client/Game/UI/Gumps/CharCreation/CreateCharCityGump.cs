@@ -5,6 +5,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
+using ClassicUO.Network;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
@@ -171,7 +172,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                     y = _townButtonsText[i].Y;
                 }
 
-                CityControl control = new CityControl(c, x, y, i);
+                var control = new CityControl(c, x, y, i);
                 Add(control);
                 _cityControls.Add(control);
             }
@@ -180,10 +181,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
         }
 
 
-        private void SetCity(int index)
-        {
-            SetCity(_scene.GetCity(index));
-        }
+        private void SetCity(int index) => SetCity(_scene.GetCity(index));
 
         private void SetCity(CityInfo city)
         {

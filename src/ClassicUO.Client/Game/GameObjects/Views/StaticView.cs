@@ -71,7 +71,7 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            var scene = Client.Game.GetScene<GameScene>();
+            GameScene scene = Client.Game.GetScene<GameScene>();
 
             ushort graphic = Graphic;
             ushort hue = Hue;
@@ -154,7 +154,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             // Early return if this is foliage and matches the current foliage index
-            var scene = Client.Game.GetScene<GameScene>();
+            GameScene scene = Client.Game.GetScene<GameScene>();
             if (FoliageIndex != -1 && scene != null && scene.FoliageIndex == FoliageIndex)
             {
                 return false;
@@ -163,7 +163,7 @@ namespace ClassicUO.Game.GameObjects
             // Get the display graphic (with tree-to-stump replacement if needed)
             ushort graphic = GetDisplayGraphic(Graphic);
 
-            ref var index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + 0x4000);
+            ref IO.UOFileIndex index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + 0x4000);
 
             Point position = RealScreenPosition;
             position.X -= index.Width;

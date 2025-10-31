@@ -13,6 +13,7 @@ using ClassicUO.Utility;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
@@ -67,7 +68,11 @@ namespace ClassicUO.Game.Managers
         public readonly int Y;
         public readonly int Z;
 
-        public Vector3Int(int x, int y, int z) => (X, Y, Z) = (x, y, z);
+        public Vector3Int(int x, int y, int z)
+        {
+            (X, Y, Z) = (x, y, z);
+        }
+
         public override string ToString() => $"({X}, {Y}, {Z})";
     }
 
@@ -128,21 +133,18 @@ namespace ClassicUO.Game.Managers
     {
         public uint TargetSerial { get; set; }
         public TargetType ExpectedTargetType { get; set; }
-        public CursorTarget ExpectedCursorTarget { get; set; }
         public bool IsSet => TargetSerial != 0;
 
-        public void Set(uint serial, TargetType targetType, CursorTarget cursorTarget)
+        public void Set(uint serial, TargetType targetType)
         {
             TargetSerial = serial;
             ExpectedTargetType = targetType;
-            ExpectedCursorTarget = cursorTarget;
         }
 
         public void Clear()
         {
             TargetSerial = 0;
             ExpectedTargetType = TargetType.Cancel;
-            ExpectedCursorTarget = CursorTarget.Invalid;
         }
     }
 
@@ -265,10 +267,7 @@ namespace ClassicUO.Game.Managers
             _targetCursorId = cursorID;
         }
 
-        public static void SetAutoTarget(uint serial, TargetType targetType, CursorTarget cursorTarget)
-        {
-            NextAutoTarget.Set(serial, targetType, cursorTarget);
-        }
+        public static void SetAutoTarget(uint serial, TargetType targetType) => NextAutoTarget.Set(serial, targetType);
 
         public void CancelTarget()
         {
@@ -299,6 +298,7 @@ namespace ClassicUO.Game.Managers
             }
 
             Reset();
+            NextAutoTarget.Clear();
         }
 
         public void SetTargetingMulti
@@ -331,8 +331,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordTarget(serial);
+            LegionScripting.ScriptRecorder.Instance.RecordTarget(serial);
 
             Entity entity = _world.InGame ? _world.Get(serial) : null;
 
@@ -360,7 +362,7 @@ namespace ClassicUO.Game.Managers
 
                         if (SerialHelper.IsMobile(serial) && serial != _world.Player && (_world.Player.NotorietyFlag == NotorietyFlag.Innocent || _world.Player.NotorietyFlag == NotorietyFlag.Ally))
                         {
-                            Mobile mobile = entity as Mobile;
+                            var mobile = entity as Mobile;
 
                             if (mobile != null)
                             {
@@ -377,7 +379,7 @@ namespace ClassicUO.Game.Managers
 
                                 if (showCriminalQuery && UIManager.GetGump<QuestionGump>() == null)
                                 {
-                                    QuestionGump messageBox = new QuestionGump
+                                    var messageBox = new QuestionGump
                                     (
                                         _world,
                                         "This may flag\nyou criminal!",
@@ -572,8 +574,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordTargetLocation(x, y, z, graphic);
+            LegionScripting.ScriptRecorder.Instance.RecordTargetLocation(x, y, z, graphic);
 
             switch (TargetingState)
             {
@@ -634,6 +638,8 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             _lastDataBuffer[0] = 0x6C;
             _lastDataBuffer[1] = (byte)TargetingState;
             _lastDataBuffer[2] = (byte)(_targetCursorId >> 24);
@@ -653,6 +659,8 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
+
+            NextAutoTarget.Clear();
 
             _lastDataBuffer[0] = 0x6C;
 

@@ -28,11 +28,9 @@ namespace ClassicUO.IO.Audio
 
         private string Path { get; }
 
-        public void Update()
-        {
+        public void Update() =>
             // sanity - if the buffer empties, we will lose our sound effect. Thus we must continually check if it is dead.
             OnBufferNeeded(null, null);
-        }
 
         protected override ArraySegment<byte> GetBuffer()
         {
@@ -84,7 +82,7 @@ namespace ClassicUO.IO.Audio
 
                 while (SoundInstance.PendingBufferCount < 3)
                 {
-                    var buffer = GetBuffer();
+                    ArraySegment<byte> buffer = GetBuffer();
 
                     if (SoundInstance.IsDisposed || buffer.Count == 0)
                     {

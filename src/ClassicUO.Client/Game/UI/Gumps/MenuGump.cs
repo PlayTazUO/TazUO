@@ -30,7 +30,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(new ColorBox(217, 49, 1) { X = 40, Y = 42 });
 
-            Label label = new Label(name, false, 0x0386, 200, 1, FontStyle.Fixed)
+            var label = new Label(name, false, 0x0386, 200, 1, FontStyle.Fixed)
             {
                 X = 39,
                 Y = 18
@@ -66,7 +66,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _container.Value = _slider.Value;
             };
 
-            HitBox left = new HitBox(25, 60, 10, 15) { Alpha = 0f };
+            var left = new HitBox(25, 60, 10, 15) { Alpha = 0f };
 
             left.MouseDown += (sender, e) =>
             {
@@ -80,7 +80,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             Add(left);
 
-            HitBox right = new HitBox(260, 60, 10, 15) { Alpha = 0f };
+            var right = new HitBox(260, 60, 10, 15) { Alpha = 0f };
 
             right.MouseDown += (sender, e) =>
             {
@@ -154,7 +154,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _graphic = graphic;
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
 
                 Width = artInfo.UV.Width;
                 Height = artInfo.UV.Height;
@@ -166,7 +166,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (_graphic != 0)
                 {
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
+                    ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
 
                     Vector3 hueVector = ShaderHueTranslator.GetHueVector(_hue, _isPartial, 1f);
 
@@ -283,7 +283,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public int AddItem(string name, int y)
         {
-            RadioButton radio = new RadioButton(0, 0x138A, 0x138B, name, 1, 0x0386, false, 330)
+            var radio = new RadioButton(0, 0x138A, 0x138B, name, 1, 0x0386, false, 330)
             {
                 X = 50,
                 Y = y

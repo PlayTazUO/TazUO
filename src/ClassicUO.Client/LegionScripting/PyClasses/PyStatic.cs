@@ -13,6 +13,7 @@ public class PyStatic : PyGameObject
     public bool IsImpassible { get; }
     public bool IsTree { get; }
     public bool IsVegetation { get; }
+    public bool IsCave { get; }
     public string Name { get; }
 
     /// <summary>
@@ -22,8 +23,9 @@ public class PyStatic : PyGameObject
     internal PyStatic(Static staticObj) : base(staticObj)
     {
         IsImpassible = staticObj.ItemData.IsImpassable;
-        IsTree = StaticFilters.IsTree(staticObj.Graphic, out _);
+        IsTree = StaticFilters.IsTree(staticObj.OriginalGraphic, out _);
         IsVegetation = staticObj.IsVegetation;
+        IsCave = StaticFilters.IsCave(staticObj.OriginalGraphic);
         Name = staticObj.Name;
     }
 

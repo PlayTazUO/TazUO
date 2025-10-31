@@ -32,7 +32,7 @@ namespace ClassicUO.Game.Scenes
 
         private static readonly Lazy<BlendState> _darknessBlend = new Lazy<BlendState>(() =>
         {
-            BlendState state = new BlendState();
+            var state = new BlendState();
             state.ColorSourceBlend = Blend.Zero;
             state.ColorDestinationBlend = Blend.SourceColor;
             state.ColorBlendFunction = BlendFunction.Add;
@@ -42,7 +42,7 @@ namespace ClassicUO.Game.Scenes
 
         private static readonly Lazy<BlendState> _altLightsBlend = new Lazy<BlendState>(() =>
         {
-            BlendState state = new BlendState();
+            var state = new BlendState();
             state.ColorSourceBlend = Blend.DestinationColor;
             state.ColorDestinationBlend = Blend.One;
             state.ColorBlendFunction = BlendFunction.Add;
@@ -177,10 +177,7 @@ namespace ClassicUO.Game.Scenes
         {
         }
 
-        public void DoubleClickDelayed(uint serial)
-        {
-            _useItemQueue.Add(serial);
-        }
+        public void DoubleClickDelayed(uint serial) => _useItemQueue.Add(serial);
 
         public override void Load()
         {
@@ -203,7 +200,7 @@ namespace ClassicUO.Game.Scenes
             _world.CommandManager.Initialize();
             ItemDatabaseManager.Instance.Initialize();
 
-            WorldViewportGump viewport = new WorldViewportGump(_world, this);
+            var viewport = new WorldViewportGump(_world, this);
             UIManager.Add(viewport, false);
 
             if (!ProfileManager.CurrentProfile.TopbarGumpIsDisabled)
@@ -224,7 +221,7 @@ namespace ClassicUO.Game.Scenes
             DressAgentManager.Instance.Load();
             FriendsListManager.Instance.OnSceneLoad();
 
-            foreach (var xml in ProfileManager.CurrentProfile.AutoOpenXmlGumps)
+            foreach (string xml in ProfileManager.CurrentProfile.AutoOpenXmlGumps)
             {
                 XmlGumpHandler.TryAutoOpenByName(_world, xml);
             }
@@ -489,6 +486,7 @@ namespace ClassicUO.Game.Scenes
             }
             if (Settings.GlobalSettings.Reconnect)
             {
+                LoginHandshake.Reconnect = true;
                 _forceStopScene = true;
             }
             else
@@ -514,9 +512,7 @@ namespace ClassicUO.Game.Scenes
             }
         }
 
-        public void RequestQuitGame()
-        {
-            UIManager.Add(
+        public void RequestQuitGame() => UIManager.Add(
                 new QuestionGump(
                     _world,
                     ResGeneral.QuitPrompt,
@@ -529,7 +525,6 @@ namespace ClassicUO.Game.Scenes
                     }
                 )
             );
-        }
 
         public void AddLight(GameObject obj, GameObject lightObject, int x, int y)
         {
@@ -709,7 +704,7 @@ namespace ClassicUO.Game.Scenes
 
             GetViewPort();
 
-            var useObjectHandles = NameOverHeadManager.IsShowing;
+            bool useObjectHandles = NameOverHeadManager.IsShowing;
             if (useObjectHandles != _useObjectHandles)
             {
                 _useObjectHandles = useObjectHandles;
@@ -748,8 +743,8 @@ namespace ClassicUO.Game.Scenes
             Vector2 playerPos = _world.Player.GetScreenPosition();
 
 
-            (var minChunkX, var minChunkY) = (minX >> 3, minY >> 3);
-            (var maxChunkX, var maxChunkY) = (maxX >> 3, maxY >> 3);
+            (int minChunkX, int minChunkY) = (minX >> 3, minY >> 3);
+            (int maxChunkX, int maxChunkY) = (maxX >> 3, maxY >> 3);
 
             Profiler.EnterContext("MapChunkLoop");
             int totalChunksX = maxChunkX - minChunkX + 1;
@@ -768,14 +763,14 @@ namespace ClassicUO.Game.Scenes
                         continue;
 
                     // Access tiles directly instead of calling GetHeadObject 64 times
-                    var tiles = chunk.Tiles;
+                    GameObject[,] tiles = chunk.Tiles;
                     for (int tileIdx = 0; tileIdx < 64; tileIdx++) // 8x8 = 64
                     {
                         int x = tileIdx & 7;        // tileIdx % 8
                         int y = tileIdx >> 3;       // tileIdx / 8
 
                         // Inline GetHeadObject logic for better performance
-                        var firstObj = tiles[x, y];
+                        GameObject firstObj = tiles[x, y];
                         while (firstObj?.TPrevious != null)
                         {
                             firstObj = firstObj.TPrevious;
@@ -861,7 +856,7 @@ namespace ClassicUO.Game.Scenes
 
             if (_forceStopScene)
             {
-                LoginScene loginScene = new LoginScene(_world);
+                var loginScene = new LoginScene(_world);
                 Client.Game.SetScene(loginScene);
                 loginScene.Reconnect = true;
 
@@ -1096,14 +1091,14 @@ namespace ClassicUO.Game.Scenes
                 return true;
             }
 
-            var profile = ProfileManager.CurrentProfile;
-            var gd = batcher.GraphicsDevice;
+            Profile profile = ProfileManager.CurrentProfile;
+            GraphicsDevice gd = batcher.GraphicsDevice;
 
             Viewport r_viewport = gd.Viewport;
             Viewport camera_viewport = Camera.GetViewport();
 
             bool can_draw_lights = false;
-            Vector3 hue = new Vector3(0, 0, 1);
+            var hue = new Vector3(0, 0, 1);
 
             EnsureRenderTargets(gd);
 
@@ -1208,9 +1203,9 @@ namespace ClassicUO.Game.Scenes
             int vpW = Camera.Bounds.Width;
             int vpH = Camera.Bounds.Height;
 
-            Vector2 vpCenter = new Vector2(vpW * 0.5f, vpH * 0.5f);
+            var vpCenter = new Vector2(vpW * 0.5f, vpH * 0.5f);
             Vector2 camOffset = Camera.Offset;
-            Vector2 rtCenter = new Vector2(rtW * 0.5f, rtH * 0.5f);
+            var rtCenter = new Vector2(rtW * 0.5f, rtH * 0.5f);
 
             Matrix.CreateTranslation(-vpCenter.X, -vpCenter.Y, 0f, out Matrix matTrans1);
             Matrix.CreateTranslation(-camOffset.X, -camOffset.Y, 0f, out Matrix matTrans2);
@@ -1366,7 +1361,7 @@ namespace ClassicUO.Game.Scenes
         {
             int done = 0;
 
-            foreach (var obj in renderList)
+            foreach (GameObject obj in renderList)
             {
                 if (obj.Z <= _maxGroundZ)
                 {
@@ -1424,7 +1419,7 @@ namespace ClassicUO.Game.Scenes
             for (int i = 0; i < _lightCount; i++)
             {
                 ref LightData l = ref _lights[i];
-                ref readonly var lightInfo = ref Client.Game.UO.Lights.GetLight(l.ID);
+                ref readonly SpriteInfo lightInfo = ref Client.Game.UO.Lights.GetLight(l.ID);
 
                 if (lightInfo.Texture == null)
                 {
@@ -1476,7 +1471,7 @@ namespace ClassicUO.Game.Scenes
         {
             if (_isSelectionActive)
             {
-                Vector3 selectionHue = new Vector3();
+                var selectionHue = new Vector3();
                 selectionHue.Z = 0.7f;
 
                 int minX = Math.Min(_selectionStart.X, Mouse.Position.X);
@@ -1484,7 +1479,7 @@ namespace ClassicUO.Game.Scenes
                 int minY = Math.Min(_selectionStart.Y, Mouse.Position.Y);
                 int maxY = Math.Max(_selectionStart.Y, Mouse.Position.Y);
 
-                Rectangle selectionRect = new Rectangle(
+                var selectionRect = new Rectangle(
                     minX - Camera.Bounds.X,
                     minY - Camera.Bounds.Y,
                     maxX - minX,
@@ -1512,7 +1507,7 @@ namespace ClassicUO.Game.Scenes
 
         private void EnsureRenderTargets(GraphicsDevice gd)
         {
-            var vp = Camera.GetViewport();
+            Viewport vp = Camera.GetViewport();
             Profile profile = ProfileManager.CurrentProfile;
             float scale = GetActiveScale();
 
@@ -1529,7 +1524,7 @@ namespace ClassicUO.Game.Scenes
                  ))
             {
                 _world_render_target?.Dispose();
-                var pp = gd.PresentationParameters;
+                PresentationParameters pp = gd.PresentationParameters;
                 _world_render_target = new RenderTarget2D(
                     gd, rtWidth, rtHeight, false,
                     pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount, pp.RenderTargetUsage);
@@ -1544,7 +1539,7 @@ namespace ClassicUO.Game.Scenes
                 || _light_render_target.Height != ltHeight)
             {
                 _light_render_target?.Dispose();
-                var pp = gd.PresentationParameters;
+                PresentationParameters pp = gd.PresentationParameters;
                 _light_render_target = new RenderTarget2D(
                     gd, ltWidth, ltHeight, false,
                     pp.BackBufferFormat, pp.DepthStencilFormat, pp.MultiSampleCount, pp.RenderTargetUsage);
@@ -1579,7 +1574,7 @@ namespace ClassicUO.Game.Scenes
                     if (_xbr == null)
                     {
                         _xbr = new XBREffect(gd);
-                        var tech = _xbr.Techniques?["T0"] ??
+                        EffectTechnique tech = _xbr.Techniques?["T0"] ??
                                    (_xbr.Techniques?.Count > 0 ? _xbr.Techniques[0] : null);
                         if (tech != null) _xbr.CurrentTechnique = tech;
                         else { _xbr = null; _postFx = null; _postSampler = SamplerState.PointClamp; break; }
@@ -1620,7 +1615,7 @@ namespace ClassicUO.Game.Scenes
             float w = _world_render_target.Width;
             float h = _world_render_target.Height;
 
-            var vp = gd.Viewport;
+            Viewport vp = gd.Viewport;
             var ortho = Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1);
             _xbr.MatrixTransform?.SetValue(ortho);
             _xbr.TextureSize?.SetValue(new Vector2(w, h));

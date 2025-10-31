@@ -38,7 +38,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (_healthBars[i] != null && World.Party.Members[i] != null)
                 {
-                    if (World.Mobiles.TryGetValue(World.Party.Members[i].Serial, out var mobile))
+                    if (World.Mobiles.TryGetValue(World.Party.Members[i].Serial, out GameObjects.Mobile mobile))
                     {
                         _healthBars[i].SetProgress(mobile.Hits, mobile.HitsMax);
                     }
@@ -186,7 +186,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // Health bar (only if party member exists in World.Mobiles)
                 if (World.Party.Members[i] != null)
                 {
-                    if (World.Mobiles.TryGetValue(World.Party.Members[i].Serial, out var mobile))
+                    if (World.Mobiles.TryGetValue(World.Party.Members[i].Serial, out GameObjects.Mobile mobile))
                     {
                         _healthBars[i] = new SimpleProgressBar("#FF1010", "#0000FF", 110, 18)
                         {

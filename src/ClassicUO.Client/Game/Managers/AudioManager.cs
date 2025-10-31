@@ -127,7 +127,7 @@ namespace ClassicUO.Game.Managers
                 volume = 0;
             }
 
-            UOSound sound = (UOSound) Client.Game.UO.Sounds.GetSound(index);
+            var sound = (UOSound) Client.Game.UO.Sounds.GetSound(index);
 
             if (sound != null)
             {
@@ -186,7 +186,7 @@ namespace ClassicUO.Game.Managers
                 volume = 0;
             }
 
-            UOSound sound = (UOSound)Client.Game.UO.Sounds.GetSound(index);
+            var sound = (UOSound)Client.Game.UO.Sounds.GetSound(index);
 
             if (sound != null)
             {
@@ -367,10 +367,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void StopWarMusic()
-        {
-            PlayMusic(_currentMusicIndices[0]);
-        }
+        public void StopWarMusic() => PlayMusic(_currentMusicIndices[0]);
 
         public void StopSounds()
         {

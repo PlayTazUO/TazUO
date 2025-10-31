@@ -20,7 +20,11 @@ namespace ClassicUO.Game.UI
         private string _textHTML;
         private readonly World _world;
 
-        public Tooltip(World world) => _world = world;
+        public Tooltip(World world)
+        {
+            _world = world;
+        }
+
         private bool _dirty = false;
 
         public static bool IsEnabled = false;
@@ -228,9 +232,9 @@ namespace ClassicUO.Game.UI
 
             if (SerialHelper.IsValid(serial) && _world.OPL.TryGetNameAndData(serial, out string name, out string data))
             {
-                ValueStringBuilder sbHTML = new ValueStringBuilder();
+                var sbHTML = new ValueStringBuilder();
                 {
-                    ValueStringBuilder sb = new ValueStringBuilder();
+                    var sb = new ValueStringBuilder();
                     {
                         if (!string.IsNullOrEmpty(name))
                         {

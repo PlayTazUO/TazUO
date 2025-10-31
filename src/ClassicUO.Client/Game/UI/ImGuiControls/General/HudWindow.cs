@@ -79,7 +79,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.TableSetupColumn("Column2", ImGuiTableColumnFlags.WidthStretch);
 
                 bool isFirstColumn = true;
-                foreach (var kvp in hudFlagStates.ToList())
+                foreach (KeyValuePair<HideHudFlags, bool> kvp in hudFlagStates.ToList())
                 {
                     HideHudFlags flag = kvp.Key;
                     if (flag == HideHudFlags.None) continue;
@@ -145,7 +145,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
         private void SetAllFlags(bool state)
         {
-            foreach (var flag in hudFlagStates.Keys.ToList())
+            foreach (HideHudFlags flag in hudFlagStates.Keys.ToList())
             {
                 if (flag == HideHudFlags.None) continue;
                 hudFlagStates[flag] = state;

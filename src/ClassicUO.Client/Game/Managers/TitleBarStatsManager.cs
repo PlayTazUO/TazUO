@@ -93,10 +93,7 @@ namespace ClassicUO.Game.Managers
             return result;
         }
 
-        public static void ForceUpdate()
-        {
-            UpdateTitleBar();
-        }
+        public static void ForceUpdate() => UpdateTitleBar();
 
         public static string GetPreviewText()
         {

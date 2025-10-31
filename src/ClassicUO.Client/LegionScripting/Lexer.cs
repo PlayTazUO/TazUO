@@ -146,7 +146,7 @@ namespace LScript
 
             int len = end - start + 1;
 
-            T[] slice = new T[len];
+            var slice = new T[len];
             for (int i = 0; i < len; i++)
             {
                 slice[i] = src[i + start];
@@ -157,13 +157,13 @@ namespace LScript
 
         public static ASTNode Lex(string[] lines)
         {
-            ASTNode node = new ASTNode(ASTNodeType.SCRIPT, null, null, 0);
+            var node = new ASTNode(ASTNodeType.SCRIPT, null, null, 0);
 
             try
             {
                 for (_curLine = 0; _curLine < lines.Length; _curLine++)
                 {
-                    foreach (var l in lines[_curLine].Split(';'))
+                    foreach (string l in lines[_curLine].Split(';'))
                     {
                         ParseLine(node, l);
                     }
@@ -183,7 +183,7 @@ namespace LScript
 
         public static ASTNode Lex(string fname)
         {
-            ASTNode node = new ASTNode(ASTNodeType.SCRIPT, null, null, 0);
+            var node = new ASTNode(ASTNodeType.SCRIPT, null, null, 0);
 
             using (var file = new StreamReader(fname))
             {
@@ -203,7 +203,7 @@ namespace LScript
                         if (line == null)
                             break;
 
-                        foreach (var l in line.Split(';'))
+                        foreach (string l in line.Split(';'))
                             ParseLine(node, line);
 
                         _curLine++;
@@ -231,7 +231,7 @@ namespace LScript
                 return;
 
             // Split the line by spaces (unless the space is in quotes)
-            var lexemes = _tfp.GetTokens(line, false);
+            string[] lexemes = _tfp.GetTokens(line, false);
 
             if (lexemes.Length == 0)
                 return;
@@ -330,7 +330,7 @@ namespace LScript
 
         private static void ParseStatement(ASTNode node, string[] lexemes)
         {
-            var statement = node.Push(ASTNodeType.STATEMENT, null, _curLine);
+            ASTNode statement = node.Push(ASTNodeType.STATEMENT, null, _curLine);
 
             // Examine the first word on the line
             switch (lexemes[0])
@@ -346,7 +346,7 @@ namespace LScript
                         if (lexemes.Length <= 1)
                             throw new SyntaxError(node, "Script compilation error");
 
-                        var t = statement.Push(ASTNodeType.IF, null, _curLine);
+                        ASTNode t = statement.Push(ASTNodeType.IF, null, _curLine);
                         ParseLogicalExpression(t, lexemes.Slice(1, lexemes.Length - 1));
                         break;
                     }
@@ -355,7 +355,7 @@ namespace LScript
                         if (lexemes.Length <= 1)
                             throw new SyntaxError(node, "Script compilation error");
 
-                        var t = statement.Push(ASTNodeType.ELSEIF, null, _curLine);
+                        ASTNode t = statement.Push(ASTNodeType.ELSEIF, null, _curLine);
                         ParseLogicalExpression(t, lexemes.Slice(1, lexemes.Length - 1));
                         break;
                     }
@@ -376,7 +376,7 @@ namespace LScript
                         if (lexemes.Length <= 1)
                             throw new SyntaxError(node, "Script compilation error");
 
-                        var t = statement.Push(ASTNodeType.WHILE, null, _curLine);
+                        ASTNode t = statement.Push(ASTNodeType.WHILE, null, _curLine);
                         ParseLogicalExpression(t, lexemes.Slice(1, lexemes.Length - 1));
                         break;
                     }
@@ -437,7 +437,7 @@ namespace LScript
                     // It's a regular statement.
                     ParseCommand(statement, lexemes[0]);
 
-                    foreach (var lexeme in lexemes.Slice(1, lexemes.Length - 1))
+                    foreach (string lexeme in lexemes.Slice(1, lexemes.Length - 1))
                     {
                         ParseValue(statement, lexeme, ASTNodeType.STRING);
                     }
@@ -468,7 +468,7 @@ namespace LScript
             // The steam language supports logical operators 'and' and 'or'.
             // Catch those and split the expression into pieces first.
             // Fortunately, it does not support parenthesis.
-            var expr = node;
+            ASTNode expr = node;
             bool logical = false;
             int start = 0;
 
@@ -502,7 +502,7 @@ namespace LScript
             bool unary = false;
             bool binary = false;
 
-            foreach (var lexeme in lexemes)
+            foreach (string lexeme in lexemes)
             {
                 if (lexeme == "not")
                 {
@@ -532,7 +532,7 @@ namespace LScript
 
         private static void ParseUnaryExpression(ASTNode node, string[] lexemes)
         {
-            var expr = node.Push(ASTNodeType.UNARY_EXPRESSION, null, _curLine);
+            ASTNode expr = node.Push(ASTNodeType.UNARY_EXPRESSION, null, _curLine);
 
             int i = 0;
 
@@ -552,7 +552,7 @@ namespace LScript
 
         private static void ParseBinaryExpression(ASTNode node, string[] lexemes)
         {
-            var expr = node.Push(ASTNodeType.BINARY_EXPRESSION, null, _curLine);
+            ASTNode expr = node.Push(ASTNodeType.BINARY_EXPRESSION, null, _curLine);
 
             int i = 0;
 
@@ -600,7 +600,7 @@ namespace LScript
             if (lexemes.Length == 1)
             {
                 // for X
-                var loop = statement.Push(ASTNodeType.FOR, null, _curLine);
+                ASTNode loop = statement.Push(ASTNodeType.FOR, null, _curLine);
 
                 ParseValue(loop, lexemes[0], ASTNodeType.STRING);
 
@@ -608,7 +608,7 @@ namespace LScript
             else if (lexemes.Length == 3 && lexemes[1] == "to")
             {
                 // for X to LIST
-                var loop = statement.Push(ASTNodeType.FOREACH, null, _curLine);
+                ASTNode loop = statement.Push(ASTNodeType.FOREACH, null, _curLine);
 
                 loop.Push(ASTNodeType.STRING, lexemes[2], _curLine);
                 loop.Push(ASTNodeType.LIST, lexemes[2].Substring(0, lexemes[2].Length - 2), _curLine);
@@ -622,7 +622,7 @@ namespace LScript
         private static void ParseForEachLoop(ASTNode statement, string[] lexemes)
         {
             // foreach X in LIST
-            var loop = statement.Push(ASTNodeType.FOREACH, null, _curLine);
+            ASTNode loop = statement.Push(ASTNodeType.FOREACH, null, _curLine);
 
             if (lexemes[1] != "in")
                 throw new SyntaxError(statement, "Invalid foreach loop");

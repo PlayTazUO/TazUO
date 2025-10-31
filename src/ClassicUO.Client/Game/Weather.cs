@@ -183,15 +183,9 @@ namespace ClassicUO.Game
             }
         }
 
-        private void PlayWind()
-        {
-            PlaySound(RandomHelper.RandomList(0x014, 0x015, 0x016));
-        }
+        private void PlayWind() => PlaySound(RandomHelper.RandomList(0x014, 0x015, 0x016));
 
-        private void PlayThunder()
-        {
-           PlaySound(RandomHelper.RandomList(0x028, 0x206));
-        }
+        private void PlayThunder() => PlaySound(RandomHelper.RandomList(0x028, 0x206));
 
         private void PlaySound(int sound)
         {
@@ -287,9 +281,9 @@ namespace ClassicUO.Game
             //}
 
             //Point winpos = ProfileManager.CurrentProfile.GameWindowPosition;
-            Point winsize = new Point(Client.Game.Scene.Camera.Bounds.Width, Client.Game.Scene.Camera.Bounds.Height);
+            var winsize = new Point(Client.Game.Scene.Camera.Bounds.Width, Client.Game.Scene.Camera.Bounds.Height);
 
-            Rectangle snowRect = new Rectangle(0, 0, 2, 2);
+            var snowRect = new Rectangle(0, 0, 2, 2);
 
             for (int i = 0; i < CurrentCount; i++)
             {
@@ -424,8 +418,8 @@ namespace ClassicUO.Game
                         else
                         {
 
-                            Vector2 start = new Vector2(x + oldX, y + oldY);
-                            Vector2 end = new Vector2(x + effect.X, y + effect.Y);
+                            var start = new Vector2(x + oldX, y + oldY);
+                            var end = new Vector2(x + effect.X, y + effect.Y);
 
                             batcher.DrawLine
                             (

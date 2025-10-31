@@ -60,7 +60,7 @@ namespace ClassicUO.Assets
                 return;
             }
 
-            using (DefReader defReader = new DefReader(pathdef, 3))
+            using (var defReader = new DefReader(pathdef, 3))
             {
                 while (defReader.Next())
                 {
@@ -108,7 +108,7 @@ namespace ClassicUO.Assets
 
         public GumpInfo GetGump(uint index)
         {
-            ref var entry = ref _file.GetValidRefEntry((int)index);
+            ref UOFileIndex entry = ref _file.GetValidRefEntry((int)index);
 
             if (entry.CompressionFlag != CompressionType.ZlibBwt && entry.Width <= 0 && entry.Height <= 0)
             {
@@ -117,23 +117,23 @@ namespace ClassicUO.Assets
 
             ushort color = entry.Hue;
 
-            var file = _file;
+            UOFile file = _file;
             if (entry.File != null)
                 file = entry.File;
 
             file.Seek(entry.Offset, SeekOrigin.Begin);
 
-            var buf = new byte[entry.Length];
+            byte[] buf = new byte[entry.Length];
             file.Read(buf);
 
             var reader = new StackDataReader(buf);
-            var w = (uint)entry.Width;
-            var h = (uint)entry.Height;
+            uint w = (uint)entry.Width;
+            uint h = (uint)entry.Height;
 
             if (entry.CompressionFlag >= CompressionType.Zlib)
             {
-                var dbuf = new byte[entry.DecompressedLength];
-                var result = ClassicUO.Utility.ZLib.Decompress(reader.Buffer.Slice(reader.Position), dbuf);
+                byte[] dbuf = new byte[entry.DecompressedLength];
+                ZLib.ZLibError result = ClassicUO.Utility.ZLib.Decompress(reader.Buffer.Slice(reader.Position), dbuf);
                 if (result != Utility.ZLib.ZLibError.Ok)
                 {
                     return default;
@@ -155,23 +155,23 @@ namespace ClassicUO.Assets
             }
 
             Span<uint> pixels = new uint[w * h];
-            var len = reader.Remaining;
-            var halfLen = len >> 2;
+            int len = reader.Remaining;
+            int halfLen = len >> 2;
 
-            var start = reader.Position;
-            var rowLookup = new int[h];
+            int start = reader.Position;
+            int[] rowLookup = new int[h];
             reader.Read(MemoryMarshal.AsBytes<int>(rowLookup.AsSpan()));
 
-            for (var y = 0; y < h; ++y)
+            for (int y = 0; y < h; ++y)
             {
                 reader.Seek(start + (rowLookup[y] << 2));
-                var pixelIndex = (int)(y * w);
-                var gsize = (y < h - 1) ? rowLookup[y + 1] - rowLookup[y] : halfLen - rowLookup[y];
-                for (var i = 0; i < gsize; ++i)
+                int pixelIndex = (int)(y * w);
+                int gsize = (y < h - 1) ? rowLookup[y + 1] - rowLookup[y] : halfLen - rowLookup[y];
+                for (int i = 0; i < gsize; ++i)
                 {
-                    var value = reader.ReadUInt16LE();
-                    var run = reader.ReadUInt16LE();
-                    var rbga = 0u;
+                    ushort value = reader.ReadUInt16LE();
+                    ushort run = reader.ReadUInt16LE();
+                    uint rbga = 0u;
 
                     if (color != 0 && value != 0)
                     {

@@ -234,7 +234,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawSliderTrack(UltimaBatcher2D batcher, int x, int y, int width, int height, Color baseColor, Vector3 hueVector)
         {
-            Rectangle trackRect = new Rectangle(x, y, width, height);
+            var trackRect = new Rectangle(x, y, width, height);
 
             int steps = width / 2;
             for (int i = 0; i < steps; i++)
@@ -251,7 +251,7 @@ namespace ClassicUO.Game.UI.Controls
                 else
                     gradientColor = new Color(_red, _green, _blue, (int)(255 * intensity));
 
-                Rectangle stepRect = new Rectangle(x + (i * 2), y, 2, height);
+                var stepRect = new Rectangle(x + (i * 2), y, 2, height);
                 batcher.Draw(SolidColorTextureCache.GetTexture(gradientColor), stepRect, hueVector);
             }
 
@@ -260,7 +260,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawPreview(UltimaBatcher2D batcher, int x, int y)
         {
-            Rectangle previewRect = new Rectangle(
+            var previewRect = new Rectangle(
                 x + _previewBounds.X,
                 y + _previewBounds.Y,
                 _previewBounds.Width,
@@ -300,7 +300,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawSliderHandle(UltimaBatcher2D batcher, int x, int y, Vector3 hueVector)
         {
-            Rectangle handle = new Rectangle(x - 3, y - 2, 6, SLIDER_HEIGHT + 4);
+            var handle = new Rectangle(x - 3, y - 2, 6, SLIDER_HEIGHT + 4);
             batcher.Draw(SolidColorTextureCache.GetTexture(Color.White), handle, hueVector);
             DrawRectangleBorder(batcher, handle, Color.Black, hueVector);
         }
@@ -310,7 +310,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (button == MouseButtonType.Left)
             {
-                Point localPos = new Point(x, y);
+                var localPos = new Point(x, y);
 
                 if (_redSliderBounds.Contains(localPos))
                 {
@@ -402,7 +402,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void UpdateColor()
         {
-            Color newColor = new Color(_red, _green, _blue, _alpha);
+            var newColor = new Color(_red, _green, _blue, _alpha);
             if (_selectedColor != newColor)
             {
                 _selectedColor = newColor;

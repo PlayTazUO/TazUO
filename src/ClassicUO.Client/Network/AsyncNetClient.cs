@@ -38,10 +38,10 @@ namespace ClassicUO.Network
                 _socket.NoDelay = true;
                 _cancellationTokenSource = new CancellationTokenSource();
 
-                var connectTask = _socket.ConnectAsync(ip, port);
+                Task connectTask = _socket.ConnectAsync(ip, port);
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(timeoutS), _cancellationTokenSource.Token); // set your timeout here
 
-                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+                Task completedTask = await Task.WhenAny(connectTask, timeoutTask);
 
                 if (completedTask == timeoutTask)
                 {
@@ -122,7 +122,7 @@ namespace ClassicUO.Network
 
                     if (bytesRead > 0 && !cancellationToken.IsCancellationRequested)
                     {
-                        var data = new byte[bytesRead];
+                        byte[] data = new byte[bytesRead];
                         Array.Copy(buffer, data, bytesRead);
                         _client.OnDataReceived(data);
                         //OnDataReceived?.Invoke(this, data);
@@ -285,7 +285,7 @@ namespace ClassicUO.Network
             _huffman.Reset();
             Statistics.Reset();
 
-            var success = await _socket.ConnectAsync(ip, port, cancellationToken);
+            bool success = await _socket.ConnectAsync(ip, port, cancellationToken);
 
             if (success)
             {
@@ -374,13 +374,13 @@ namespace ClassicUO.Network
             {
                 Statistics.TotalBytesReceived += (uint)data.Length;
 
-                var span = data.AsSpan();
+                Span<byte> span = data.AsSpan();
                 ProcessEncryption(span);
-                var decompressed = DecompressBuffer(span);
+                Span<byte> decompressed = DecompressBuffer(span);
 
                 if (!decompressed.IsEmpty)
                 {
-                    var message = decompressed.ToArray();
+                    byte[] message = decompressed.ToArray();
                     _incomingMessages.Enqueue(message);
                 }
             }
@@ -390,10 +390,7 @@ namespace ClassicUO.Network
             }
         }
 
-        public bool TryDequeuePacket(out byte[] packet)
-        {
-            return _incomingMessages.TryDequeue(out packet);
-        }
+        public bool TryDequeuePacket(out byte[] packet) => _incomingMessages.TryDequeue(out packet);
 
         public void ClearIncomingMessages()
         {
@@ -481,7 +478,7 @@ namespace ClassicUO.Network
             if (!_isCompressionEnabled)
                 return buffer;
 
-            var size = 65536;
+            int size = 65536;
 
             if (!_huffman.Decompress(buffer, _uncompressedBuffer, ref size))
             {

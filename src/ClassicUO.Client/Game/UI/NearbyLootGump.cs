@@ -134,15 +134,9 @@ namespace ClassicUO.Game.UI
                 RequestUpdateContents();
         }
 
-        private void EventSink_OnPositionChanged(object sender, PositionChangedArgs e)
-        {
-            RequestUpdateContents();
-        }
+        private void EventSink_OnPositionChanged(object sender, PositionChangedArgs e) => RequestUpdateContents();
 
-        private void ResizeDrag_MouseUp(object sender, MouseEventArgs e)
-        {
-            _dragging = false;
-        }
+        private void ResizeDrag_MouseUp(object sender, MouseEventArgs e) => _dragging = false;
 
         private void ResizeDrag_MouseDown(object sender, MouseEventArgs e)
         {
@@ -152,7 +146,7 @@ namespace ClassicUO.Game.UI
 
         private void EventSink_OnCorpseCreated(object sender, System.EventArgs e)
         {
-            Item item = (Item)sender;
+            var item = (Item)sender;
             if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange)
             {
                 TryRequestOpenCorpse(item);
@@ -182,7 +176,7 @@ namespace ClassicUO.Game.UI
             _dataBox.Clear();
             _openedCorpses.Clear();
 
-            List<Item> finalItemList = new List<Item>();
+            var finalItemList = new List<Item>();
 
             foreach (Item item in World.Items.Values)
             {
@@ -222,7 +216,7 @@ namespace ClassicUO.Game.UI
                 _openedCorpses.Add(corpse);
                 for (LinkedObject i = corpse.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
                     if (item.IsCorpse)
                         ProcessCorpse(item, ref itemList);
@@ -479,12 +473,12 @@ namespace ClassicUO.Game.UI
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(currentItem.Hue, currentItem.ItemData.IsPartialHue, 1, true);
 
-            ref readonly var texture = ref Client.Game.UO.Arts.GetArt((uint)currentItem.DisplayedGraphic);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Arts.GetArt((uint)currentItem.DisplayedGraphic);
             Rectangle _rect = Client.Game.UO.Arts.GetRealArtBounds((uint)currentItem.DisplayedGraphic);
 
 
-            Point _originalSize = new Point(ITEM_SIZE, ITEM_SIZE);
-            Point _point = new Point((ITEM_SIZE >> 1) - (_originalSize.X >> 1), (ITEM_SIZE >> 1) - (_originalSize.Y >> 1));
+            var _originalSize = new Point(ITEM_SIZE, ITEM_SIZE);
+            var _point = new Point((ITEM_SIZE >> 1) - (_originalSize.X >> 1), (ITEM_SIZE >> 1) - (_originalSize.Y >> 1));
 
             if (texture.Texture != null)
             {
@@ -538,8 +532,8 @@ namespace ClassicUO.Game.UI
                 int bx = x + 6;
                 int by = y + 6;
 
-                Vector3 borderHueVec = new Vector3(1, 0, 1);
-                var borderTexture = SolidColorTextureCache.GetTexture(currentItem.HighlightColor);
+                var borderHueVec = new Vector3(1, 0, 1);
+                Texture2D borderTexture = SolidColorTextureCache.GetTexture(currentItem.HighlightColor);
 
                 batcher.Draw( //Top bar
                     borderTexture,

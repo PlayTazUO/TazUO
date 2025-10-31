@@ -64,7 +64,7 @@ public class DiscordChatAreaControl : Control
         _chatInput.EnterPressed += ChatInputOnEnterPressed;
         Add(_chatInput);
 
-        NiceButton button = new NiceButton(Width - 150, 0, 125, 25, ButtonAction.Default, "Share Item");
+        var button = new NiceButton(Width - 150, 0, 125, 25, ButtonAction.Default, "Share Item");
         button.IsSelected = true;
         button.MouseUp += (sender, args) =>
         {
@@ -121,17 +121,17 @@ public class DiscordChatAreaControl : Control
                 if (isDM)
                     return false;
 
-                var lobby = DiscordManager.Instance.GetLobby(_selectedChannel);
+                LobbyHandle lobby = DiscordManager.Instance.GetLobby(_selectedChannel);
 
                 if (lobby == null)
                     return false;
 
-                var members = lobby?.LobbyMembers();
+                LobbyMemberHandle[] members = lobby?.LobbyMembers();
 
                 if (members == null)
                     return false;
 
-                var onlineMembers = string.Join(", ", members.Where(m => m?.User() != null).Select(m => $"[{m.User().DisplayName()}]"));
+                string onlineMembers = string.Join(", ", members.Where(m => m?.User() != null).Select(m => $"[{m.User().DisplayName()}]"));
 
                 AddMessageToChatBox(onlineMembers, Color.Goldenrod);
 
@@ -166,7 +166,7 @@ public class DiscordChatAreaControl : Control
         _chatDataBox.Clear();
 
         if (DiscordManager.Instance.MessageHistory.ContainsKey(channelId))
-            foreach (var m in DiscordManager.Instance.MessageHistory[channelId])
+            foreach (MessageHandle m in DiscordManager.Instance.MessageHistory[channelId])
                 AddMessageToChatBox(m, false);
         else
             AddMessageToChatBox("No messages yet..", Color.Gray, false);

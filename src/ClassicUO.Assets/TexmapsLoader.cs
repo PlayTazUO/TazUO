@@ -32,7 +32,7 @@ namespace ClassicUO.Assets
 
             if (System.IO.File.Exists(pathdef))
             {
-                using (DefReader defReader = new DefReader(pathdef))
+                using (var defReader = new DefReader(pathdef))
                 {
                     while (defReader.Next())
                     {
@@ -76,8 +76,8 @@ namespace ClassicUO.Assets
             }
 
             _file.Seek(entry.Offset, SeekOrigin.Begin);
-            var size = entry.Length == 0x2000 ? 64 : 128;
-            var data = new uint[size * size];
+            int size = entry.Length == 0x2000 ? 64 : 128;
+            uint[] data = new uint[size * size];
 
             for (int i = 0; i < size; ++i)
             {

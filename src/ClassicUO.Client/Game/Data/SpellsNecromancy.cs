@@ -280,19 +280,10 @@ namespace ClassicUO.Game.Data
         public static IReadOnlyDictionary<int, SpellDefinition> GetAllSpells => _spellsDict;
         internal static int MaxSpellCount => _spellsDict.Count;
 
-        public static SpellDefinition GetSpell(int spellIndex)
-        {
-            return _spellsDict.TryGetValue(spellIndex, out SpellDefinition spell) ? spell : SpellDefinition.EmptySpell;
-        }
+        public static SpellDefinition GetSpell(int spellIndex) => _spellsDict.TryGetValue(spellIndex, out SpellDefinition spell) ? spell : SpellDefinition.EmptySpell;
 
-        public static void SetSpell(int id, in SpellDefinition newspell)
-        {
-            _spellsDict[id] = newspell;
-        }
+        public static void SetSpell(int id, in SpellDefinition newspell) => _spellsDict[id] = newspell;
 
-        internal static void Clear()
-        {
-            _spellsDict.Clear();
-        }
+        internal static void Clear() => _spellsDict.Clear();
     }
 }

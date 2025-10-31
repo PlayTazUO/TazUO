@@ -39,7 +39,7 @@ public class RenderedMapArea : Control
     {
         if (!base.Draw(batcher, x, y)) return false;
 
-        if (!_textureCache.TryGetValue(_mapIndex, out var _texture)) return false;
+        if (!_textureCache.TryGetValue(_mapIndex, out Texture2D _texture)) return false;
 
         batcher.Draw(_texture, new Rectangle(x, y, Width, Height), new Rectangle(_mapRenderArea.Left, _mapRenderArea.Top, _mapRenderArea.Width, _mapRenderArea.Height), ShaderHueTranslator.GetHueVector(0, false, Alpha));
 
@@ -54,8 +54,8 @@ public class RenderedMapArea : Control
         int realWidth = Client.Game.UO.FileManager.Maps.MapsDefaultSize[mapIndex, 0];
         int realHeight = Client.Game.UO.FileManager.Maps.MapsDefaultSize[mapIndex, 1];
 
-        var _pixelBuffer = new uint[(realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX)];
-        var _zBuffer = new sbyte[(realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX)];
+        uint[] _pixelBuffer = new uint[(realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX)];
+        sbyte[] _zBuffer = new sbyte[(realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX)];
 
         int fixedWidth = Client.Game.UO.FileManager.Maps.MapBlocksSize[mapIndex, 0];
         int fixedHeight = Client.Game.UO.FileManager.Maps.MapBlocksSize[mapIndex, 1];
@@ -78,7 +78,7 @@ public class RenderedMapArea : Control
                         _mapTexture.SetDataPointerEXT(0, null, (IntPtr)pixels, sizeof(uint) * _mapTexture.Width * _mapTexture.Height);
                     }
 
-                    var huesLoader = Client.Game.UO.FileManager.Hues;
+                    HuesLoader huesLoader = Client.Game.UO.FileManager.Hues;
 
                     int bx, by, mapX = 0, mapY = 0, x, y;
 
@@ -95,8 +95,8 @@ public class RenderedMapArea : Control
                                 continue;
                             }
 
-                            MapBlock* mapBlock = (MapBlock*)indexMap.MapAddress;
-                            MapCells* cells = (MapCells*)&mapBlock->Cells;
+                            var mapBlock = (MapBlock*)indexMap.MapAddress;
+                            var cells = (MapCells*)&mapBlock->Cells;
 
                             mapY = by << 3;
 
@@ -116,7 +116,7 @@ public class RenderedMapArea : Control
                             }
 
 
-                            StaticsBlock* sb = (StaticsBlock*)indexMap.StaticAddress;
+                            var sb = (StaticsBlock*)indexMap.StaticAddress;
 
                             if (sb != null)
                             {

@@ -189,7 +189,7 @@ namespace ClassicUO.Game.Managers
 
         private static bool HandleCorpseOverhead(Item item)
         {
-            var isHumanCorpse = item.IsHumanCorpse;
+            bool isHumanCorpse = item.IsHumanCorpse;
 
             if (isHumanCorpse && ActiveOverheadOptions.HasFlag(NameOverheadOptions.HumanoidCorpses))
                 return true;
@@ -226,10 +226,7 @@ namespace ClassicUO.Game.Managers
             _gump.IsVisible = false;
         }
 
-        public void ToggleOverheads()
-        {
-            SetOverheadToggled(!IsPermaToggled);
-        }
+        public void ToggleOverheads() => SetOverheadToggled(!IsPermaToggled);
 
         public void SetOverheadToggled(bool toggled)
         {
@@ -294,7 +291,7 @@ namespace ClassicUO.Game.Managers
 
         public static void Save()
         {
-            var list = Options;
+            List<NameOverheadOption> list = Options;
 
             string path = Path.Combine(ProfileManager.ProfilePath, "nameoverhead.xml");
             string tempPath = path + ".tmp";
@@ -311,7 +308,7 @@ namespace ClassicUO.Game.Managers
                     xml.WriteStartDocument(true);
                     xml.WriteStartElement("nameoverhead");
 
-                    foreach (var option in list)
+                    foreach (NameOverheadOption option in list)
                     {
                         option.Save(xml);
                     }
@@ -347,9 +344,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private static void CreateDefaultEntries()
-        {
-            Options.AddRange
+        private static void CreateDefaultEntries() => Options.AddRange
             (
                 new[]
                 {
@@ -359,12 +354,8 @@ namespace ClassicUO.Game.Managers
                     new NameOverheadOption("Mobiles & Corpses only", (int)NameOverheadOptions.MobilesAndCorpses),
                 }
             );
-        }
 
-        public static NameOverheadOption FindOption(string name)
-        {
-            return Options.Find(o => o.Name == name);
-        }
+        public static NameOverheadOption FindOption(string name) => Options.Find(o => o.Name == name);
 
         public void AddOption(NameOverheadOption option)
         {
@@ -378,10 +369,7 @@ namespace ClassicUO.Game.Managers
             _gump?.RedrawOverheadOptions();
         }
 
-        public static NameOverheadOption FindOptionByHotkey(SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift)
-        {
-            return Options.FirstOrDefault(o => o.Key == key && o.Alt == alt && o.Ctrl == ctrl && o.Shift == shift);
-        }
+        public static NameOverheadOption FindOptionByHotkey(SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift) => Options.FirstOrDefault(o => o.Key == key && o.Alt == alt && o.Ctrl == ctrl && o.Shift == shift);
 
         public static List<NameOverheadOption> GetAllOptions() => Options;
 
@@ -397,7 +385,7 @@ namespace ClassicUO.Game.Managers
             bool alt = (mod & SDL.SDL_Keymod.SDL_KMOD_ALT) != SDL.SDL_Keymod.SDL_KMOD_NONE;
             bool ctrl = (mod & SDL.SDL_Keymod.SDL_KMOD_CTRL) != SDL.SDL_Keymod.SDL_KMOD_NONE;
 
-            var option = FindOptionByHotkey(key, alt, ctrl, shift);
+            NameOverheadOption option = FindOptionByHotkey(key, alt, ctrl, shift);
 
             if (option == null)
                 return;

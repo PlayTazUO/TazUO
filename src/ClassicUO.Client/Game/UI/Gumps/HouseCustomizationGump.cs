@@ -59,7 +59,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(new GumpPicTiled(153, 17, 333, 154, 0x55F1));
 
-            Button button = new Button(
+            var button = new Button(
                 (int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_WALL,
                 0x5654,
                 0x5656,
@@ -153,7 +153,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_textComponents);
 
-            Label text = new Label(":", false, 0x0481, font: 9) { X = 84, Y = 142 };
+            var text = new Label(":", false, 0x0481, font: 9) { X = 84, Y = 142 };
 
             Add(text);
 
@@ -203,7 +203,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void SetOtherHousesState(bool visible)
         {
-            foreach (var multi in World.HouseManager.Houses.Where(s => s.Serial != LocalSerial)
+            foreach (Multi multi in World.HouseManager.Houses.Where(s => s.Serial != LocalSerial)
                                        .SelectMany(s => s.Components))
             {
                 if (visible)
@@ -220,7 +220,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _gumpPic.Graphic = (ushort)(_customHouseManager.FloorCount == 4 ? 0x55F2 : 0x55F9);
 
-            Button button = new Button(
+            var button = new Button(
                 (int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_STATE_ERASE,
                 (ushort)(0x5666 + (_customHouseManager.Erasing ? 1 : 0)),
                 0x5668,
@@ -770,12 +770,12 @@ namespace ClassicUO.Game.UI.Gumps
                         continue;
                     }
 
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].East1);
+                    ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].East1);
 
                     int offsetX = x + 121 + (48 - artInfo.UV.Width) / 2;
                     int offsetY = y + 36;
 
-                    StaticPic pic = new StaticPic((ushort)vec[0].East1, 0)
+                    var pic = new StaticPic((ushort)vec[0].East1, 0)
                     {
                         X = offsetX,
                         Y = offsetY,
@@ -830,12 +830,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (graphic != 0)
                         {
-                            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                            ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                             int offsetX = x + 130 + (48 - artInfo.UV.Width) / 2;
                             int offsetY = y + 36 + (120 - artInfo.UV.Height) / 2;
 
-                            StaticPic pic = new StaticPic(graphic, 0)
+                            var pic = new StaticPic(graphic, 0)
                             {
                                 X = offsetX,
                                 Y = offsetY,
@@ -860,7 +860,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _dataBoxGUI.Add(new GumpPic(152, 0, 0x55F3, 0));
 
-                Button button = new Button(
+                var button = new Button(
                     (int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_GO_CATEGORY,
                     0x5622,
                     0x5624,
@@ -932,7 +932,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (graphic != 0)
                     {
-                        ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                        ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                         int offsetX = x + 138 + (48 - artInfo.UV.Width) / 2;
 
@@ -943,7 +943,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         int offsetY = y + 36 + (120 - artInfo.UV.Height) / 2;
 
-                        StaticPic pic = new StaticPic(graphic, 0)
+                        var pic = new StaticPic(graphic, 0)
                         {
                             X = offsetX,
                             Y = offsetY,
@@ -1077,12 +1077,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (graphic != 0)
                         {
-                            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                            ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                             int offsetX = x + 123 + (48 - artInfo.UV.Width) / 2;
                             int offsetY = y + 36 + (60 - artInfo.UV.Height) / 2;
 
-                            StaticPic pic = new StaticPic(graphic, 0)
+                            var pic = new StaticPic(graphic, 0)
                             {
                                 X = offsetX,
                                 Y = offsetY,
@@ -1127,7 +1127,7 @@ namespace ClassicUO.Game.UI.Gumps
                     // add scissor
                     _dataBox.Add(new ScissorControl(true, 121, 36 + y, 384, 60));
 
-                    Label text = new Label(
+                    var text = new Label(
                         Client.Game.UO.FileManager.Clilocs.GetString(1062113 + j),
                         true,
                         0xFFFF,
@@ -1151,12 +1151,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (graphic != 0)
                         {
-                            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                            ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                             int offsetX = x + 123 + (48 - artInfo.UV.Width) / 2;
                             int offsetY = y + 36 + (60 - artInfo.UV.Height) / 2;
 
-                            StaticPic pic = new StaticPic(graphic, 0)
+                            var pic = new StaticPic(graphic, 0)
                             {
                                 X = offsetX,
                                 Y = offsetY,
@@ -1212,12 +1212,12 @@ namespace ClassicUO.Game.UI.Gumps
                         continue;
                     }
 
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].NSCrosspiece);
+                    ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].NSCrosspiece);
 
                     int offsetX = x + 121 + (48 - artInfo.UV.Width) / 2;
                     int offsetY = y + 36;
 
-                    StaticPic pic = new StaticPic((ushort)vec[0].NSCrosspiece, 0)
+                    var pic = new StaticPic((ushort)vec[0].NSCrosspiece, 0)
                     {
                         X = offsetX,
                         Y = offsetY,
@@ -1277,12 +1277,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                             if (graphic != 0)
                             {
-                                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                                ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                                 int offsetX = x + 130 + (48 - artInfo.UV.Width) / 2;
                                 int offsetY = y + 44 + (60 - artInfo.UV.Height) / 2;
 
-                                StaticPic pic = new StaticPic(graphic, 0)
+                                var pic = new StaticPic(graphic, 0)
                                 {
                                     X = offsetX,
                                     Y = offsetY,
@@ -1314,7 +1314,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _dataBoxGUI.Add(new GumpPic(152, 0, 0x55F3, 0));
 
-                Button button = new Button(
+                var button = new Button(
                     (int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_GO_CATEGORY,
                     0x5622,
                     0x5624,
@@ -1361,7 +1361,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _dataBoxGUI.Add(new GumpPic(583, 4, 0x55F4, 0));
 
-                Label text = new Label(_customHouseManager.RoofZ.ToString(), false, 0x04E9, font: 3)
+                var text = new Label(_customHouseManager.RoofZ.ToString(), false, 0x04E9, font: 3)
                 {
                     X = 405,
                     Y = 15
@@ -1398,12 +1398,12 @@ namespace ClassicUO.Game.UI.Gumps
                         continue;
                     }
 
-                    ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].Piece5);
+                    ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt((uint)vec[0].Piece5);
 
                     int offsetX = x + 121 + (48 - artInfo.UV.Width) / 2;
                     int offsetY = y + 36;
 
-                    StaticPic pic = new StaticPic((ushort)vec[0].Piece5, 0)
+                    var pic = new StaticPic((ushort)vec[0].Piece5, 0)
                     {
                         X = offsetX,
                         Y = offsetY,
@@ -1459,12 +1459,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (graphic != 0)
                         {
-                            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                            ref readonly Renderer.SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                             int offsetX = x + 130 + (48 - artInfo.UV.Width) / 2;
                             int offsetY = y + 44 + (120 - artInfo.UV.Height) / 2;
 
-                            StaticPic pic = new StaticPic(graphic, 0)
+                            var pic = new StaticPic(graphic, 0)
                             {
                                 X = offsetX,
                                 Y = offsetY,
@@ -1502,7 +1502,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void AddMenu()
         {
-            Button button = new Button(
+            var button = new Button(
                 (int)ID_GUMP_CUSTOM_HOUSE.ID_GCH_MENU_BACKUP,
                 0x098D,
                 0x098D,
@@ -1631,7 +1631,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void OnButtonClick(int buttonID)
         {
-            ID_GUMP_CUSTOM_HOUSE idd = (ID_GUMP_CUSTOM_HOUSE)buttonID;
+            var idd = (ID_GUMP_CUSTOM_HOUSE)buttonID;
 
             if (idd >= ID_GUMP_CUSTOM_HOUSE.ID_GCH_ITEM_IN_LIST)
             {

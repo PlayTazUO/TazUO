@@ -156,7 +156,7 @@ public static class HtmlCrashLogGen
             Log.Trace("Generating HTML Crash report...");
 
             // Create unique filename with proper path handling (avoids race condition)
-            var filePath = Path.Combine(Path.GetTempPath(), $"TazUO_Crash_{Guid.NewGuid():N}.html");
+            string filePath = Path.Combine(Path.GetTempPath(), $"TazUO_Crash_{Guid.NewGuid():N}.html");
             File.WriteAllText(filePath, html);
 
             // Launch browser with proper file path (skipValidation: true for local files)

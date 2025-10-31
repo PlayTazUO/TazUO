@@ -13,7 +13,7 @@ namespace ClassicUO.Game.GameObjects
         (
             () =>
             {
-                BlendState state = new BlendState
+                var state = new BlendState
                 {
                     ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.Zero,
                     ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceColor
@@ -27,7 +27,7 @@ namespace ClassicUO.Game.GameObjects
         (
             () =>
             {
-                BlendState state = new BlendState
+                var state = new BlendState
                 {
                     ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.One,
                     ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.One
@@ -41,7 +41,7 @@ namespace ClassicUO.Game.GameObjects
         (
             () =>
             {
-                BlendState state = new BlendState
+                var state = new BlendState
                 {
                     ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.DestinationColor,
                     ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceAlpha
@@ -55,7 +55,7 @@ namespace ClassicUO.Game.GameObjects
         (
             () =>
             {
-                BlendState state = new BlendState
+                var state = new BlendState
                 {
                     ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.DestinationColor,
                     ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceColor
@@ -69,7 +69,7 @@ namespace ClassicUO.Game.GameObjects
         (
             () =>
             {
-                BlendState state = new BlendState
+                var state = new BlendState
                 {
                     ColorSourceBlend = Microsoft.Xna.Framework.Graphics.Blend.SourceColor,
                     ColorDestinationBlend = Microsoft.Xna.Framework.Graphics.Blend.InverseSourceColor,

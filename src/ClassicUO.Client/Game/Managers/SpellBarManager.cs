@@ -120,7 +120,7 @@ public class SpellBarManager
         if (!enabled || !spellBarSettings.Enabled)
             return;
 
-        var spell = GetSpell(row, col);
+        SpellDefinition spell = GetSpell(row, col);
 
         if (spell == null || spell == SpellDefinition.EmptySpell)
             return;
@@ -286,10 +286,7 @@ public class SpellBarManager
         }
     }
 
-    private static void SetDefaults()
-    {
-        SpellBarRows = [new SpellBarRow().SetSpell(0, SpellDefinition.FullIndexGetSpell(29)).SetSpell(1, SpellDefinition.FullIndexGetSpell(11)).SetSpell(2, SpellDefinition.FullIndexGetSpell(22))];
-    }
+    private static void SetDefaults() => SpellBarRows = [new SpellBarRow().SetSpell(0, SpellDefinition.FullIndexGetSpell(29)).SetSpell(1, SpellDefinition.FullIndexGetSpell(11)).SetSpell(2, SpellDefinition.FullIndexGetSpell(22))];
 }
 
 public class SpellBarRow()
@@ -300,7 +297,7 @@ public class SpellBarRow()
     public int[] SpellSlotIds {
         get
         {
-            List<int> ids = new List<int>();
+            var ids = new List<int>();
             foreach (SpellDefinition spell in SpellSlot)
             {
                 if (spell == null)

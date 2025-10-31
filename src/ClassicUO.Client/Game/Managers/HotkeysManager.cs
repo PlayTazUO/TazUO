@@ -281,15 +281,9 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
-        public Dictionary<HotkeyAction, Action> GetValues()
-        {
-            return _actions;
-        }
+        public Dictionary<HotkeyAction, Action> GetValues() => _actions;
 
-        private void Add(HotkeyAction action, Action handler)
-        {
-            _actions.Add(action, handler);
-        }
+        private void Add(HotkeyAction action, Action handler) => _actions.Add(action, handler);
     }
 
     public enum HotkeyAction

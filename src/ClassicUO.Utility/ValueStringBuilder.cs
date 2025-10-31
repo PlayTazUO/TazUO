@@ -64,10 +64,7 @@ namespace ClassicUO.Utility
         /// This overload is pattern matched in the C# 7.3+ compiler so you can omit
         /// the explicit method call, and write eg "fixed (char* c = builder)"
         /// </summary>
-        public ref char GetPinnableReference()
-        {
-            return ref MemoryMarshal.GetReference(_chars);
-        }
+        public ref char GetPinnableReference() => ref MemoryMarshal.GetReference(_chars);
 
         /// <summary>
         /// Get a pinnable reference to the builder.
@@ -246,17 +243,14 @@ namespace ClassicUO.Utility
             return _chars.Slice(origPos, length);
         }
 
-        public void Replace(ReadOnlySpan<char> oldChars, ReadOnlySpan<char> newChars)
-        {
-            Replace(oldChars, newChars, 0, _pos);
-        }
+        public void Replace(ReadOnlySpan<char> oldChars, ReadOnlySpan<char> newChars) => Replace(oldChars, newChars, 0, _pos);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Replace(ReadOnlySpan<char> oldChars, ReadOnlySpan<char> newChars, int startIndex, int count)
         {
-            var slice = _chars.Slice(startIndex, count);
+            Span<char> slice = _chars.Slice(startIndex, count);
 
-            var indexOf = slice.IndexOf(oldChars);
+            int indexOf = slice.IndexOf(oldChars);
 
             if (indexOf == -1)
             {
@@ -294,9 +288,9 @@ namespace ClassicUO.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Replace(char oldChar, char newChar)
         {
-            var slice = _chars;
+            Span<char> slice = _chars;
 
-            var indexOf = slice.IndexOf(oldChar);
+            int indexOf = slice.IndexOf(oldChar);
             if (indexOf == -1)
             {
                 return;

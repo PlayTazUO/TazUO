@@ -24,14 +24,8 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public bool IsActive(ushort id)
-        {
-            return _activeIcons.Count != 0 && _activeIcons.Contains(id);
-        }
+        public bool IsActive(ushort id) => _activeIcons.Count != 0 && _activeIcons.Contains(id);
 
-        public void Clear()
-        {
-            _activeIcons.Clear();
-        }
+        public void Clear() => _activeIcons.Clear();
     }
 }

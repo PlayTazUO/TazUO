@@ -55,10 +55,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override void UpdateContents()
-        {
-            BuildGump();
-        }
+        protected override void UpdateContents() => BuildGump();
 
         protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {

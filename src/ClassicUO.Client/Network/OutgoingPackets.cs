@@ -367,7 +367,7 @@ namespace ClassicUO.Network
             writer.WriteUInt8((byte)character.Dexterity);
             writer.WriteUInt8((byte)character.Intelligence);
 
-            List<Skill> skills = character.Skills.OrderByDescending(o => o.Value).Take(skillcount).ToList();
+            var skills = character.Skills.OrderByDescending(o => o.Value).Take(skillcount).ToList();
 
             foreach (Skill skill in skills)
             {
@@ -991,7 +991,7 @@ namespace ClassicUO.Network
 
             if (encoded)
             {
-                List<byte> codeBytes = new List<byte>();
+                var codeBytes = new List<byte>();
                 byte[] utf8 = Encoding.UTF8.GetBytes(text);
                 int len = entries.Count;
                 codeBytes.Add((byte)(len >> 4));
@@ -2402,15 +2402,15 @@ namespace ClassicUO.Network
             writer.Write(title);
             writer.WriteUInt8(0x00);
 
-            var lines = text.Split('\n');
+            string[] lines = text.Split('\n');
 
             if (lines.Length > 0)
             {
                 writer.WriteUInt8((byte)lines.Length);
 
-                foreach (var line in lines)
+                foreach (string line in lines)
                 {
-                    var bytes = Encoding.UTF8.GetBytes(line);
+                    byte[] bytes = Encoding.UTF8.GetBytes(line);
                     writer.WriteUInt8((byte)(bytes.Length + 1));
                     writer.Write(bytes.AsSpan());
                     writer.WriteUInt8(0x00);
@@ -2419,7 +2419,7 @@ namespace ClassicUO.Network
             else
             {
                 writer.WriteUInt8(0x01);
-                var bytes = Encoding.UTF8.GetBytes(text);
+                byte[] bytes = Encoding.UTF8.GetBytes(text);
                 writer.WriteUInt8((byte)(bytes.Length + 1));
                 writer.Write(bytes.AsSpan());
                 writer.WriteUInt8(0x00);
@@ -4492,7 +4492,7 @@ namespace ClassicUO.Network
             }
 
             writer.WriteUInt8((byte)serials.Length);
-            foreach (ref readonly var serial in serials)
+            foreach (ref readonly uint serial in serials)
                 writer.WriteUInt32BE(serial);
 
             if (length < 0)
@@ -4526,7 +4526,7 @@ namespace ClassicUO.Network
             }
 
             writer.WriteUInt8((byte)layers.Length);
-            foreach (ref readonly var layer in layers)
+            foreach (ref readonly Layer layer in layers)
                 writer.WriteUInt16BE((byte)layer);
 
             if (length < 0)

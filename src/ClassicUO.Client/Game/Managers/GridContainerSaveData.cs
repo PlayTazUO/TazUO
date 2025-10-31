@@ -44,18 +44,18 @@ public class GridContainerSaveData
 
     private void RemoveOldContainers()
     {
-        var cutoffTime = (DateTimeOffset.UtcNow - INACTIVE_CUTOFF).ToUnixTimeSeconds();
+        long cutoffTime = (DateTimeOffset.UtcNow - INACTIVE_CUTOFF).ToUnixTimeSeconds();
 
         List<GridContainerEntry> toRemove = new();
 
-        foreach (var entry in _entries.Values)
+        foreach (GridContainerEntry entry in _entries.Values)
         {
             // Only remove if LastOpened is valid (not 0) and actually old
             if (entry.LastOpened > 0 && entry.LastOpened < cutoffTime)
                 toRemove.Add(entry);
         }
 
-        foreach (var entry in toRemove)
+        foreach (GridContainerEntry entry in toRemove)
         {
             _entries.Remove(entry.Serial);
         }
@@ -69,16 +69,16 @@ public class GridContainerSaveData
         string tempPath = null;
         try
         {
-            var output = JsonSerializer.Serialize(_entries.Values.ToArray(),
+            string output = JsonSerializer.Serialize(_entries.Values.ToArray(),
                 GridContainerSerializerContext.Default.GridContainerEntryArray);
 
             tempPath = Path.GetTempFileName();
             File.WriteAllText(tempPath, output);
 
             // Rotate backups: backup2 -> backup3, backup1 -> backup2, main -> backup1
-            var backup3Path = GetBackupSavePath(3);
-            var backup2Path = GetBackupSavePath(2);
-            var backup1Path = GetBackupSavePath(1);
+            string backup3Path = GetBackupSavePath(3);
+            string backup2Path = GetBackupSavePath(2);
+            string backup1Path = GetBackupSavePath(1);
 
             // Remove oldest backup
             if (File.Exists(backup3Path))
@@ -117,22 +117,22 @@ public class GridContainerSaveData
     /// </summary>
     public void Load()
     {
-        var filesToTry = new[] { _savePath, GetBackupSavePath(1), GetBackupSavePath(2), GetBackupSavePath(3) };
+        string[] filesToTry = new[] { _savePath, GetBackupSavePath(1), GetBackupSavePath(2), GetBackupSavePath(3) };
 
-        foreach (var filePath in filesToTry)
+        foreach (string filePath in filesToTry)
         {
             try
             {
                 if (!File.Exists(filePath))
                     continue;
 
-                var json = File.ReadAllText(filePath);
-                var entries = JsonSerializer.Deserialize(json,
+                string json = File.ReadAllText(filePath);
+                GridContainerEntry[] entries = JsonSerializer.Deserialize(json,
                     GridContainerSerializerContext.Default.GridContainerEntryArray);
 
                 _entries?.Clear();
                 _entries = new();
-                foreach (var entry in entries)
+                foreach (GridContainerEntry entry in entries)
                 {
                     _entries[entry.Serial] = entry;
                 }
@@ -154,25 +154,25 @@ public class GridContainerSaveData
     {
         try
         {
-            var path = Path.Combine(ProfileManager.ProfilePath, "GridContainers.xml");
+            string path = Path.Combine(ProfileManager.ProfilePath, "GridContainers.xml");
             if (!File.Exists(path))
                 return false;
 
             var saveDocument = XDocument.Load(path);
-            var rootElement = saveDocument.Element("grid_gumps");
+            XElement rootElement = saveDocument.Element("grid_gumps");
             if (rootElement == null)
             {
                 File.Delete(path);
                 return false;
             }
 
-            foreach (var container in rootElement.Elements().ToList())
+            foreach (XElement container in rootElement.Elements().ToList())
             {
-                var name = container.Name.ToString();
+                string name = container.Name.ToString();
                 if (!name.StartsWith("container_")) continue;
                 if (!uint.TryParse(name.Replace("container_", string.Empty), out uint conSerial)) continue;
 
-                var entry = CreateEntry(conSerial);
+                GridContainerEntry entry = CreateEntry(conSerial);
 
                 XAttribute width, height;
                 width = container.Attribute("width");
@@ -230,7 +230,7 @@ public class GridContainerSaveData
                         if (int.TryParse(slot.Value, out int slotV))
                             if (uint.TryParse(serial.Value, out uint serialV))
                             {
-                                var slot1 = entry.GetSlot(serialV);
+                                GridContainerSlotEntry slot1 = entry.GetSlot(serialV);
                                 slot1.Slot = slotV;
                                 if (isLockedAttribute != null &&
                                     bool.TryParse(isLockedAttribute.Value, out bool isLocked))
@@ -253,10 +253,7 @@ public class GridContainerSaveData
     /// <summary>
     /// This does not save.
     /// </summary>
-    public static void Reset()
-    {
-        _instance = null;
-    }
+    public static void Reset() => _instance = null;
 
     public GridContainerEntry CreateEntry(uint serial)
     {
@@ -279,7 +276,7 @@ public class GridContainerSaveData
 
     public GridContainerEntry GetContainer(uint serial)
     {
-        if (_entries.TryGetValue(serial, out var entry))
+        if (_entries.TryGetValue(serial, out GridContainerEntry entry))
             return entry;
 
         return new GridContainerEntry();
@@ -312,7 +309,7 @@ public class GridContainerEntry
 
     public GridContainerSlotEntry GetSlot(uint serial)
     {
-        if (Slots.TryGetValue(serial, out var entry))
+        if (Slots.TryGetValue(serial, out GridContainerSlotEntry entry))
             return entry;
 
         GridContainerSlotEntry newEntry = new() { Serial = serial };
@@ -320,20 +317,11 @@ public class GridContainerEntry
         return newEntry;
     }
 
-    public Point GetPosition()
-    {
-        return new Point(X, Y);
-    }
+    public Point GetPosition() => new Point(X, Y);
 
-    public Point GetSize()
-    {
-        return new Point(Width, Height);
-    }
+    public Point GetSize() => new Point(Width, Height);
 
-    public void UpdateSaveDataEntry(GridContainer container)
-    {
-        GridContainerSaveData.Instance.AddOrReplaceContainer(container);
-    }
+    public void UpdateSaveDataEntry(GridContainer container) => GridContainerSaveData.Instance.AddOrReplaceContainer(container);
 
     public GridContainerEntry UpdateFromContainer(GridContainer container)
     {
@@ -349,7 +337,7 @@ public class GridContainerEntry
 
         // Sync all item positions from GridSlotManager to Slots
         // First, remove any entries for items no longer in ItemPositions (they were removed/moved)
-        var itemPositions = container.SlotManager?.ItemPositions;
+        Dictionary<int, uint> itemPositions = container.SlotManager?.ItemPositions;
         if (itemPositions != null)
         {
             // Get list of serials currently in ItemPositions
@@ -357,19 +345,19 @@ public class GridContainerEntry
 
             // Remove stale entries from Slots
             var staleSerials = Slots.Keys.Where(serial => !currentSerials.Contains(serial)).ToList();
-            foreach (var serial in staleSerials)
+            foreach (uint serial in staleSerials)
             {
                 Slots.Remove(serial);
             }
 
             // Now sync current positions
-            foreach (var kvp in itemPositions)
+            foreach (KeyValuePair<int, uint> kvp in itemPositions)
             {
                 int slotIndex = kvp.Key;
                 uint itemSerial = kvp.Value;
 
                 // Ensure this item has a slot entry with the correct position
-                var entry = GetSlot(itemSerial);
+                GridContainerSlotEntry entry = GetSlot(itemSerial);
                 entry.Slot = slotIndex;
             }
         }

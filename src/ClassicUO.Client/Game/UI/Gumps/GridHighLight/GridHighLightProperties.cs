@@ -172,7 +172,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 {
                     typeof(GridHighlightSlot).GetProperty(slotName).SetValue(data.EquipmentSlots, !otherCheckbox.IsChecked);
 
-                    if (slotCheckboxes.TryGetValue(slotName, out var cb))
+                    if (slotCheckboxes.TryGetValue(slotName, out Checkbox cb))
                     {
                         cb.IsChecked = !otherCheckbox.IsChecked;
                     }
@@ -190,7 +190,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 string slotName = slotNames[i];
                 bool isChecked = (bool)typeof(GridHighlightSlot).GetProperty(slotName).GetValue(data.EquipmentSlots);
 
-                Checkbox cb = new Checkbox(0x00D2, 0x00D3) { IsChecked = isChecked };
+                var cb = new Checkbox(0x00D2, 0x00D3) { IsChecked = isChecked };
                 cb.ValueChanged += (s, e) =>
                 {
                     typeof(GridHighlightSlot).GetProperty(slotName).SetValue(data.EquipmentSlots, cb.IsChecked);
@@ -198,7 +198,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 };
                 slotCheckboxes[slotName] = cb;
 
-                Label label = new Label(SplitCamelCase(slotName), true, 0xFFFF);
+                var label = new Label(SplitCamelCase(slotName), true, 0xFFFF);
 
                 mainScrollArea.Add(pos.Position(cb));
                 mainScrollArea.Add(pos.PositionRightOf(label, cb));
@@ -269,15 +269,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             #endregion Rarity
         }
 
-        private Control SectionDivider()
-        {
-            return new Line(0, 0, mainScrollArea.Width - 20, 1, Color.Gray.PackedValue);
-        }
+        private Control SectionDivider() => new Line(0, 0, mainScrollArea.Width - 20, 1, Color.Gray.PackedValue);
 
-        private string SplitCamelCase(string input)
-        {
-            return System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
-        }
+        private string SplitCamelCase(string input) => System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
 
         private void AddOther(List<string> others, int index, int y, HashSet<string>[] propertySets = null)
         {
@@ -295,7 +289,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 mainScrollArea.Add(propCombobox = new Combobox(0, y, propInput.Width + 15, values, 0, 200, true) { });
                 propCombobox.OnOptionSelected += (s, e) =>
                 {
-                    var tVal = propCombobox.SelectedIndex;
+                    int tVal = propCombobox.SelectedIndex;
 
                     string v = values[tVal];
                     propInput.SetText(v);
@@ -326,7 +320,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             while (properties.Count <= index)
             {
-                GridHighlightProperty property = new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false, };
+                var property = new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false, };
                 properties.Add(property);
             }
 
@@ -337,7 +331,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             mainScrollArea.Add(propCombobox = new Combobox(0, y, mainScrollArea.Width - 38 - 63 - 80, values, 0, 200, true) { });
             propCombobox.OnOptionSelected += (s, e) =>
             {
-                var tVal = propCombobox.SelectedIndex;
+                int tVal = propCombobox.SelectedIndex;
 
                 string v = values[tVal];
                 propInput.SetText(v);

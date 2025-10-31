@@ -122,10 +122,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildGump();
         }
 
-        protected override void UpdateContents()
-        {
-            BuildGump();
-        }
+        protected override void UpdateContents() => BuildGump();
 
         private void UpdateElements()
         {
@@ -256,7 +253,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (_updateTooltipTime < Time.Ticks && delta > 0)
                     {
-                        TimeSpan span = TimeSpan.FromMilliseconds(delta);
+                        var span = TimeSpan.FromMilliseconds(delta);
 
                         SetTooltip(
                             string.Format(
@@ -325,7 +322,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0, false, _alpha / 255f, true);
 
-                ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+                ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
                 if (gumpInfo.Texture != null)
                 {

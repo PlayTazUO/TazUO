@@ -46,6 +46,7 @@ using System.Linq;
 using System.Xml;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -58,7 +59,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         #region private static vars
         private static int lastX = 100, lastY = 100, lastCorpseX = 100, lastCorpseY = 100;
-        private static int gridItemSize { get { return (int)Math.Round(50 * (ProfileManager.CurrentProfile.GridContainersScale / 100f)); } }
+        private static int gridItemSize => (int)Math.Round(50 * (ProfileManager.CurrentProfile.GridContainersScale / 100f));
         private static int borderWidth = 4;
         #endregion
 
@@ -74,7 +75,7 @@ namespace ClassicUO.Game.UI.Gumps
         #endregion
 
         #region private vars
-        private Item container { get { return World.Items.Get(LocalSerial); } }
+        private Item container => World.Items.Get(LocalSerial);
         private float lastGridItemScale = (ProfileManager.CurrentProfile.GridContainersScale / 100f);
         private int lastWidth = GetWidth(), lastHeight = GetHeight();
         private bool quickLootThisContainer = false;
@@ -89,7 +90,7 @@ namespace ClassicUO.Game.UI.Gumps
         #endregion
 
         #region private tooltip vars
-        private string quickLootStatus { get { return ProfileManager.CurrentProfile.CorpseSingleClickLoot ? "<basefont color=\"green\">Enabled" : "<basefont color=\"red\">Disabled"; } }
+        private string quickLootStatus => ProfileManager.CurrentProfile.CorpseSingleClickLoot ? "<basefont color=\"green\">Enabled" : "<basefont color=\"red\">Disabled";
         private string quickLootTooltip
         {
             get
@@ -118,8 +119,8 @@ namespace ClassicUO.Game.UI.Gumps
         public GridContainerEntry GridContainerEntry => gridContainerEntry;
         public readonly bool IsPlayerBackpack = false;
         public bool StackNonStackableItems = false;
-        public bool AutoSortContainer { get { return autoSortContainer; } }
-        public GridSortMode SortMode { get { return sortMode; } }
+        public bool AutoSortContainer => autoSortContainer;
+        public GridSortMode SortMode => sortMode;
         public GridSlotManager SlotManager;
         #endregion
 
@@ -226,7 +227,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             searchClearButton.SetTooltip("Clear search");
 
-            var regularGumpIcon = Client.Game.UO.Gumps.GetGump(5839).Texture;
+            Texture2D regularGumpIcon = Client.Game.UO.Gumps.GetGump(5839).Texture;
             openRegularGump = new GumpPic(background.Width - 25 - borderWidth, borderWidth, regularGumpIcon == null ? (ushort)1209 : (ushort)5839, 0);
             openRegularGump.ContextMenu = GenContextMenu();
 
@@ -390,6 +391,13 @@ namespace ClassicUO.Game.UI.Gumps
                     AutoLootManager.Instance.ForceLootContainer(LocalSerial);
                 }));
             }
+
+            // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
+            control.Add(new ContextMenuItemEntry("Refresh item highlights", () =>
+            {
+                GridHighlightData.RecheckMatchStatus();
+            }));
+
             return control;
         }
 
@@ -456,7 +464,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ProfileManager.CurrentProfile.BackpackGridSize = new Point(Width, Height);
             }
 
-            var item = World.Items.Get(LocalSerial);
+            Item item = World.Items.Get(LocalSerial);
             if (item is not null)
             {
                 writer.WriteAttributeString("parent", item.Container.ToString());
@@ -552,7 +560,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (autoSortContainer)
                 overrideSort = true;
 
-            List<Item> sortedContents = ProfileManager.CurrentProfile is null || ProfileManager.CurrentProfile.GridContainerSearchMode == 0
+            List<Item> sortedContents = (ProfileManager.CurrentProfile is null || ProfileManager.CurrentProfile.GridContainerSearchMode == 0) && !string.IsNullOrEmpty(searchBox.Text)
                 ? SlotManager.SearchResults(searchBox.Text)
                 : GridSlotManager.GetItemsInContainer(World, container, sortMode, overrideSort);
 
@@ -605,7 +613,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     for (LinkedObject i = currentContainer.Items; i != null; i = i.Next)
                     {
-                        Item child = (Item)i;
+                        var child = (Item)i;
 
                         if (child.Container == currentContainer)
                         {
@@ -687,7 +695,6 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (SlotManager != null)
             {
-                SlotManager.UpdateItems();
                 containerName += $" ({SlotManager.ContainerContents.Count})";
             }
 
@@ -905,7 +912,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public void AddText(string text, ushort hue)
             {
-                SimpleTimedTextGump timedText = new SimpleTimedTextGump(_world, text, (uint)hue, TimeSpan.FromSeconds(2), 200)
+                var timedText = new SimpleTimedTextGump(_world, text, (uint)hue, TimeSpan.FromSeconds(2), 200)
                 {
                     X = ScreenCoordinateX,
                     Y = ScreenCoordinateY
@@ -915,7 +922,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _timedTexts.RemoveAll(tt => tt == null || tt.IsDisposed);
 
                 // Adjust the Y position of existing timed texts
-                foreach (var tt in _timedTexts)
+                foreach (SimpleTimedTextGump tt in _timedTexts)
                     tt.Y -= timedText.Height + 5;
 
                 _timedTexts.Add(timedText);
@@ -954,7 +961,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _hasItem = true;
                 CanMove = false;
                 _item = item;
-                ref readonly var text = ref Client.Game.UO.Arts.GetArt((uint)_item.DisplayedGraphic);
+                ref readonly SpriteInfo text = ref Client.Game.UO.Arts.GetArt((uint)_item.DisplayedGraphic);
                 _texture = text.Texture;
                 _bounds = text.UV;
                 _rect = Client.Game.UO.Arts.GetRealArtBounds(_item.DisplayedGraphic);
@@ -979,10 +986,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// <summary>
             /// Called when various cached settings like border hue and alpha are updated.
             /// </summary>
-            public static void StaticGridContainerSettingUpdated()
-            {
-                _borderHueVec = ShaderHueTranslator.GetHueVector(ProfileManager.CurrentProfile.GridBorderHue, false, (float)ProfileManager.CurrentProfile.GridBorderAlpha / 100);
-            }
+            public static void StaticGridContainerSettingUpdated() => _borderHueVec = ShaderHueTranslator.GetHueVector(ProfileManager.CurrentProfile.GridBorderHue, false, (float)ProfileManager.CurrentProfile.GridBorderAlpha / 100);
 
             protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType e)
             {
@@ -1007,11 +1011,11 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (MultiItemMoveGump.TrySelect(_item))
                         _selectHighlight = true;
-                    var graphic = _item.Graphic;
-                    var hue = _item.Hue;
-                    foreach (var gridItem in _gridContainer.SlotManager.GridSlots.Values)
+                    ushort graphic = _item.Graphic;
+                    ushort hue = _item.Hue;
+                    foreach (GridItem gridItem in _gridContainer.SlotManager.GridSlots.Values)
                     {
-                        var item = gridItem?._item;
+                        Item item = gridItem?._item;
                         if (item is null ||
                             graphic != item.Graphic ||
                             hue != item.Hue ||
@@ -1058,7 +1062,7 @@ namespace ClassicUO.Game.UI.Gumps
                         {
                             Rectangle containerBounds = _world.ContainerManager.Get(_container.Graphic).Bounds;
                             _gridContainer.SlotManager.AddItemSlot(Client.Game.UO.GameCursor.ItemHold.Serial, _slot);
-                            var pos = GetBoxPosition(_slot, Client.Game.UO.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
+                            (int X, int Y) pos = GetBoxPosition(_slot, Client.Game.UO.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
                             GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, pos.X, pos.Y, 0, _container.Serial);
                             Mouse.CancelDoubleClick = true;
                             _mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
@@ -1133,7 +1137,7 @@ namespace ClassicUO.Game.UI.Gumps
             private (int X, int Y) GetBoxPosition(int boxIndex, uint itemGraphic, int width, int height)
             {
                 if (_gridContainer.StackNonStackableItems)
-                    foreach (var gridSlot in _gridContainer.SlotManager.GridSlots.Values)
+                    foreach (GridItem gridSlot in _gridContainer.SlotManager.GridSlots.Values)
                     {
                         if (gridSlot._item != null && gridSlot._item.Graphic == itemGraphic)
                         {
@@ -1246,7 +1250,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (compItem != null && (Layer)_item.ItemData.Layer != Layer.Backpack)
                     {
                         ClearTooltip();
-                        List<CustomToolTip> toolTipList = new List<CustomToolTip>();
+                        var toolTipList = new List<CustomToolTip>();
                         _toolTipThis = new CustomToolTip(_world, _item, Mouse.Position.X + 5, Mouse.Position.Y + 5, this, compareTo: compItem);
                         toolTipList.Add(_toolTipThis);
                         _toolTipitem1 = new CustomToolTip(_world, compItem, _toolTipThis.X + _toolTipThis.Width + 10, _toolTipThis.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
@@ -1254,11 +1258,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (CUOEnviroment.Debug)
                         {
-                            ItemPropertiesData i1 = new ItemPropertiesData(_world, _item);
-                            ItemPropertiesData i2 = new ItemPropertiesData(_world, compItem);
+                            var i1 = new ItemPropertiesData(_world, _item);
+                            var i2 = new ItemPropertiesData(_world, compItem);
 
                             if (i1.GenerateComparisonTooltip(i2, out string compileToolTip))
-                                GameActions.Print(_world,compileToolTip);
+                                GameActions.Print(_world, compileToolTip);
                         }
 
                         // Add second weapon comparison if both hands have weapons
@@ -1268,7 +1272,7 @@ namespace ClassicUO.Game.UI.Gumps
                             toolTipList.Add(_toolTipitem2);
                         }
 
-                        MultipleToolTipGump multipleToolTipGump = new MultipleToolTipGump(_world, Mouse.Position.X + 10, Mouse.Position.Y + 10, toolTipList.ToArray(), this);
+                        var multipleToolTipGump = new MultipleToolTipGump(_world, Mouse.Position.X + 10, Mouse.Position.Y + 10, toolTipList.ToArray(), this);
                         UIManager.Add(multipleToolTipGump);
                     }
                 }
@@ -1281,7 +1285,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Vector3 hueVector = _borderHueVec;
 
-                if(_hasItem)
+                if (_hasItem)
                 {
                     if (ItemGridLocked)
                         hueVector = ShaderHueTranslator.GetHueVector(0x2, false, (float)_profile.GridBorderAlpha / 100);
@@ -1310,7 +1314,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                     Texture2D borderTexture = SolidColorTextureCache.GetTexture(_item.HighlightColor);
-                    Vector3 borderHueVec = new Vector3(1, 0, 1);
+                    var borderHueVec = new Vector3(1, 0, 1);
 
                     batcher.Draw( //Top bar
                         borderTexture,
@@ -1473,9 +1477,9 @@ namespace ClassicUO.Game.UI.Gumps
             private World world;
             private GridContainer gridContainer;
 
-            public Dictionary<int, GridItem> GridSlots { get { return gridSlots; } }
-            public List<Item> ContainerContents { get { return containerContents; } }
-            public Dictionary<int, uint> ItemPositions { get { return itemPositions; } }
+            public Dictionary<int, GridItem> GridSlots => gridSlots;
+            public List<Item> ContainerContents => containerContents;
+            public Dictionary<int, uint> ItemPositions => itemPositions;
 
             /// <summary>
             /// Get the GridItem of a serial if it exists
@@ -1488,7 +1492,7 @@ namespace ClassicUO.Game.UI.Gumps
                 this.world = world;
                 this.gridContainer = gridContainer;
                 area = controlArea;
-                foreach (var item in gridContainer.gridContainerEntry.Slots.Values)
+                foreach (GridContainerSlotEntry item in gridContainer.gridContainerEntry.Slots.Values)
                 {
                     ItemPositions[item.Slot] = item.Serial;
 
@@ -1516,7 +1520,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // If this item already has a saved position elsewhere, remove it to avoid duplicates
                 // Single-pass lookup: find the slot that currently contains this item
                 int? oldSlot = null;
-                foreach (var kvp in ItemPositions)
+                foreach (KeyValuePair<int, uint> kvp in ItemPositions)
                 {
                     if (kvp.Value == serial)
                     {
@@ -1557,14 +1561,14 @@ namespace ClassicUO.Game.UI.Gumps
                 SetupGridItemControls();
 
                 // Clear all grid slots by setting them to null
-                foreach (var slot in gridSlots)
+                foreach (KeyValuePair<int, GridItem> slot in gridSlots)
                 {
                     slot.Value.SetGridItem(null);
                 }
 
                 // First pass: Place items that have saved positions (and locked items if sorting)
                 // This maintains user-customized item positions unless auto-sort is overriding
-                foreach (var spot in itemPositions)
+                foreach (KeyValuePair<int, uint> spot in itemPositions)
                 {
                     Item i = world.Items.Get(spot.Value);
                     if (i != null)
@@ -1590,7 +1594,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // This includes new items or items being auto-sorted
                 foreach (Item i in filteredItems)
                 {
-                    foreach (var slot in gridSlots)
+                    foreach (KeyValuePair<int, GridItem> slot in gridSlots)
                     {
                         // Skip slots that already have items
                         if (slot.Value.SlotItem != null)
@@ -1607,7 +1611,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 bool searchTextEmpty = string.IsNullOrEmpty(searchText);
                 // Third pass: Handle search visibility and highlighting
-                foreach (var slot in gridSlots)
+                foreach (KeyValuePair<int, GridItem> slot in gridSlots)
                 {
                     // In "hide" search mode, hide all slots by default (they'll be shown if they match)
                     slot.Value.IsVisible = !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
@@ -1667,7 +1671,7 @@ namespace ClassicUO.Game.UI.Gumps
             public void SetGridPositions()
             {
                 int x = X_SPACING, y = 0;
-                foreach (var slot in gridSlots)
+                foreach (KeyValuePair<int, GridItem> slot in gridSlots)
                 {
                     if (!slot.Value.IsVisible)
                     {
@@ -1697,7 +1701,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (ProfileManager.CurrentProfile.GridContainerSearchMode == 0) //Hide search mode
                     {
-                        List<Item> filteredContents = new List<Item>();
+                        var filteredContents = new List<Item>();
                         foreach (Item i in containerContents)
                         {
                             if (SearchItemNameAndProps(search, i))
@@ -1734,20 +1738,17 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
             }
 
-            public void UpdateItems()
-            {
-                containerContents = GetItemsInContainer(world, container, gridContainer.SortMode, gridContainer.AutoSortContainer);
-            }
+            private void UpdateItems() => containerContents = GetItemsInContainer(world, container, gridContainer.SortMode, gridContainer.AutoSortContainer);
 
-            public static List<Item> GetItemsInContainer(World World, Item _container, GridSortMode sortMode = GridSortMode.GraphicAndHue, bool shouldSort = true)
+            public static List<Item> GetItemsInContainer(World world, Item container, GridSortMode sortMode = GridSortMode.GraphicAndHue, bool shouldSort = true)
             {
-                List<Item> contents = new List<Item>();
-                for (LinkedObject i = _container.Items; i != null; i = i.Next)
+                var contents = new List<Item>();
+                for (LinkedObject i = container.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
-                    Layer layer = (Layer)item.ItemData.Layer;
+                    var item = (Item)i;
+                    var layer = (Layer)item.ItemData.Layer;
 
-                    if (_container.IsCorpse && item.Layer > 0 && !Constants.BAD_CONTAINER_LAYERS[(int)layer])
+                    if (container.IsCorpse && item.Layer > 0 && !Constants.BAD_CONTAINER_LAYERS[(int)layer])
                         continue;
 
                     if (item.ItemData.IsWearable && (layer == Layer.Face || layer == Layer.Beard || layer == Layer.Hair))
@@ -1756,7 +1757,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (item.IsDestroyed)
                         continue;
 
-                    World.OPL.Contains(item); //Request tooltip data
+                    world.OPL.Contains(item); //Request tooltip data
 
                     contents.Add(item);
                 }
@@ -1795,7 +1796,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (gridSlots.ContainsKey(i)) continue;
 
-                    GridItem GI = new GridItem(world, 0, gridItemSize, container, gridContainer, i);
+                    var GI = new GridItem(world, 0, gridItemSize, container, gridContainer, i);
                     gridSlots.Add(i, GI);
                     area.Add(GI);
                 }
@@ -2036,14 +2037,14 @@ namespace ClassicUO.Game.UI.Gumps
                         for (LinkedObject i = _container.Items; i != null; i = i.Next)
                         {
 
-                            Item item = (Item)i;
+                            var item = (Item)i;
                             if (item == null)
                                 continue;
 
                             if (currentCount > 8)
                                 break;
 
-                            StaticPic gridItem = new StaticPic(item.DisplayedGraphic, item.Hue);
+                            var gridItem = new StaticPic(item.DisplayedGraphic, item.Hue);
                             gridItem.X = lastX;
                             if (gridItem.X + GRIDSIZE > WIDTH)
                             {

@@ -44,15 +44,9 @@ namespace ClassicUO.Utility
             SetupCompressor();
         }
 
-        public static ZLibError Decompress(byte[] source, int offset, byte[] dest, int length)
-        {
-            return _compressor.Decompress(dest, ref length, source, source.Length - offset);
-        }
+        public static ZLibError Decompress(byte[] source, int offset, byte[] dest, int length) => _compressor.Decompress(dest, ref length, source, source.Length - offset);
 
-        public static ZLibError Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length)
-        {
-            return _compressor.Decompress(dest, ref length, source, sourceLength - offset);
-        }
+        public static ZLibError Decompress(IntPtr source, int sourceLength, int offset, IntPtr dest, int length) => _compressor.Decompress(dest, ref length, source, sourceLength - offset);
 
         public static unsafe ZLibError Decompress(ReadOnlySpan<byte> source, Span<byte> dest)
         {
@@ -103,14 +97,9 @@ namespace ClassicUO.Utility
         {
             public string Version => SafeNativeMethods.zlibVersion();
 
-            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
-            {
-                return SafeNativeMethods.compress(dest, ref destLength, source, sourceLength);
-            }
+            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength) => SafeNativeMethods.compress(dest, ref destLength, source, sourceLength);
 
-            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality)
-            {
-                return SafeNativeMethods.compress2
+            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality) => SafeNativeMethods.compress2
                 (
                     dest,
                     ref destLength,
@@ -118,17 +107,10 @@ namespace ClassicUO.Utility
                     sourceLength,
                     quality
                 );
-            }
 
-            public ZLibError Decompress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
-            {
-                return SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
-            }
+            public ZLibError Decompress(byte[] dest, ref int destLength, byte[] source, int sourceLength) => SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
 
-            public ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength)
-            {
-                return SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
-            }
+            public ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength) => SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
 
             private class SafeNativeMethods
             {
@@ -189,10 +171,7 @@ namespace ClassicUO.Utility
                 return z;
             }
 
-            public ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength)
-            {
-                return SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
-            }
+            public ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength) => SafeNativeMethods.uncompress(dest, ref destLength, source, sourceLength);
 
             private class SafeNativeMethods
             {
@@ -224,10 +203,7 @@ namespace ClassicUO.Utility
                 return ZLibError.Ok;
             }
 
-            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality)
-            {
-                return Compress(dest, ref destLength, source, sourceLength);
-            }
+            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality) => Compress(dest, ref destLength, source, sourceLength);
 
             public ZLibError Decompress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
             {

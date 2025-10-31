@@ -40,7 +40,7 @@ namespace ClassicUO.Game.GameObjects
 
         public static Land Create(World world, ushort graphic)
         {
-            Land land = new Land(world); // _pool.GetOne();
+            var land = new Land(world); // _pool.GetOne();
             land.AlphaHue = 0xFF;
             land.Graphic = graphic;
             land.IsStretched = land.TileData.TexID == 0 && land.TileData.IsWet;
@@ -170,9 +170,9 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            Vector3 u = new Vector3();
-            Vector3 v = new Vector3();
-            Vector3 ret = new Vector3();
+            var u = new Vector3();
+            var v = new Vector3();
+            var ret = new Vector3();
 
 
             // ==========================

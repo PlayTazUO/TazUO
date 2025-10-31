@@ -21,20 +21,11 @@ namespace ClassicUO.Utility.Platforms
             }
         }
 
-        public static IntPtr LoadLibrary(string name)
-        {
-            return _loader.LoadLibrary(name);
-        }
+        public static IntPtr LoadLibrary(string name) => _loader.LoadLibrary(name);
 
-        public static IntPtr GetProcessAddress(IntPtr module, string name)
-        {
-            return _loader.GetProcessAddress(module, name);
-        }
+        public static IntPtr GetProcessAddress(IntPtr module, string name) => _loader.GetProcessAddress(module, name);
 
-        public static int FreeLibrary(IntPtr module)
-        {
-            return _loader.FreeLibrary(module);
-        }
+        public static int FreeLibrary(IntPtr module) => _loader.FreeLibrary(module);
 
 
         abstract class NativeLoader
@@ -58,20 +49,11 @@ namespace ClassicUO.Utility.Platforms
             private static extern int FreeLibrary_WIN(IntPtr module);
 
 
-            public override IntPtr LoadLibrary(string name)
-            {
-                return LoadLibraryExW(name, IntPtr.Zero, LOAD_WITH_ALTERED_SEARCH_PATH);
-            }
+            public override IntPtr LoadLibrary(string name) => LoadLibraryExW(name, IntPtr.Zero, LOAD_WITH_ALTERED_SEARCH_PATH);
 
-            public override IntPtr GetProcessAddress(IntPtr module, string name)
-            {
-                return GetProcAddress_WIN(module, name);
-            }
+            public override IntPtr GetProcessAddress(IntPtr module, string name) => GetProcAddress_WIN(module, name);
 
-            public override int FreeLibrary(IntPtr module)
-            {
-                return FreeLibrary_WIN(module);
-            }
+            public override int FreeLibrary(IntPtr module) => FreeLibrary_WIN(module);
         }
 
         private class UnixNativeLoader : NativeLoader
@@ -92,20 +74,11 @@ namespace ClassicUO.Utility.Platforms
             [DllImport(LibName)]
             private static extern string dlerror();
 
-            public override IntPtr LoadLibrary(string name)
-            {
-                return dlopen(name, RTLD_NOW);
-            }
+            public override IntPtr LoadLibrary(string name) => dlopen(name, RTLD_NOW);
 
-            public override IntPtr GetProcessAddress(IntPtr module, string name)
-            {
-                return dlsym(module, name);
-            }
+            public override IntPtr GetProcessAddress(IntPtr module, string name) => dlsym(module, name);
 
-            public override int FreeLibrary(IntPtr module)
-            {
-                return dlclose(module);
-            }
+            public override int FreeLibrary(IntPtr module) => dlclose(module);
         }
     }
 }

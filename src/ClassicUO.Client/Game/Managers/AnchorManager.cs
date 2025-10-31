@@ -125,16 +125,13 @@ namespace ClassicUO.Game.Managers
             return draggedControl.Location;
         }
 
-        public AnchorableGump GetAnchorableControlUnder(AnchorableGump draggedControl)
-        {
-            return ClosestOverlappingControl(draggedControl);
-        }
+        public AnchorableGump GetAnchorableControlUnder(AnchorableGump draggedControl) => ClosestOverlappingControl(draggedControl);
 
         public void DetachControl(AnchorableGump control)
         {
             if (this[control] != null)
             {
-                List<AnchorableGump> group = reverseMap.Where(o => o.Value == this[control]).Select(o => o.Key).ToList();
+                var group = reverseMap.Where(o => o.Value == this[control]).Select(o => o.Key).ToList();
 
                 if (group.Count == 2) // if detach 1+1 - need destroy all group
                 {
@@ -351,7 +348,7 @@ namespace ClassicUO.Game.Managers
                 {
                     updateCount++;
 
-                    HashSet<Control> visited = new HashSet<Control>();
+                    var visited = new HashSet<Control>();
 
                     for (int x = 0; x < controlMatrix.GetLength(0); x++)
                     {
@@ -474,7 +471,7 @@ namespace ClassicUO.Game.Managers
 
             public void ResizeMatrix(int xCount, int yCount, int xInitial, int yInitial)
             {
-                AnchorableGump[,] newMatrix = new AnchorableGump[xCount, yCount];
+                var newMatrix = new AnchorableGump[xCount, yCount];
 
                 for (int x = 0; x < controlMatrix.GetLength(0); x++)
                 {

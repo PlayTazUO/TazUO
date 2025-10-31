@@ -41,7 +41,7 @@ namespace ClassicUO.Game.UI.Controls
                 item.hue
             );
 
-            NiceButton deleteButton = new NiceButton
+            var deleteButton = new NiceButton
             (
                 390,
                 0,

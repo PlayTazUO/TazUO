@@ -37,12 +37,12 @@ namespace ClassicUO.Game.UI.Controls
                 return false;
             }
 
-            ref readonly var texture = ref Client.Game.UO.Arts.GetArt(graphic);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Arts.GetArt(graphic);
 
             Rectangle _rect = Client.Game.UO.Arts.GetRealArtBounds(graphic);
 
-            Point _originalSize = new Point(Width, Height);
-            Point _point = new Point((Width >> 1) - (_originalSize.X >> 1), (Height >> 1) - (_originalSize.Y >> 1));
+            var _originalSize = new Point(Width, Height);
+            var _point = new Point((Width >> 1) - (_originalSize.X >> 1), (Height >> 1) - (_originalSize.Y >> 1));
 
             if (_rect.Width < Width)
             {

@@ -31,7 +31,7 @@ namespace ClassicUO.Assets
 
         public LightInfo GetLight(uint idx)
         {
-            ref var entry = ref _file.GetValidRefEntry((int)idx);
+            ref UOFileIndex entry = ref _file.GetValidRefEntry((int)idx);
 
             if (entry.Width == 0 && entry.Height == 0)
             {
@@ -39,7 +39,7 @@ namespace ClassicUO.Assets
             }
 
             _file.Seek(entry.Offset, System.IO.SeekOrigin.Begin);
-            var buffer = new uint[entry.Width * entry.Height];
+            uint[] buffer = new uint[entry.Width * entry.Height];
 
             for (int i = 0; i < entry.Height; i++)
             {

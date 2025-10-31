@@ -70,7 +70,7 @@ public class WorldMapGump : ResizableGump
 
     private static Mobile following;
 
-    public Texture2D MapTexture { get { return _mapTexture; } }
+    public Texture2D MapTexture => _mapTexture;
 
     private Renderer.SpriteFont _markerFont = Fonts.Map1;
     private int _markerFontIndex = 1;
@@ -270,10 +270,7 @@ public class WorldMapGump : ResizableGump
         ProfileManager.CurrentProfile.WorldMapAllowPositionalTarget = _allowPositionalTarget;
     }
 
-    private bool ParseBool(string boolStr)
-    {
-        return bool.TryParse(boolStr, out bool value) && value;
-    }
+    private bool ParseBool(string boolStr) => bool.TryParse(boolStr, out bool value) && value;
 
     private void BuildGump()
     {
@@ -324,7 +321,7 @@ public class WorldMapGump : ResizableGump
 
         for (int i = 0; i < MapLoader.MAPS_COUNT; i++)
         {
-            var idx = i;
+            int idx = i;
 
             _options[$"free_view_map_{idx}"] = new ContextMenuItemEntry
             (
@@ -413,7 +410,7 @@ public class WorldMapGump : ResizableGump
 
     private void BuildContextMenuForZones(ContextMenuControl parent)
     {
-        ContextMenuItemEntry zoneOptions = new ContextMenuItemEntry(ResGumps.MapZoneOptions);
+        var zoneOptions = new ContextMenuItemEntry(ResGumps.MapZoneOptions);
 
         zoneOptions.Add(_options["show_grid_if_zoomed"]);
         zoneOptions.Add(new ContextMenuItemEntry(ResGumps.MapZoneReload, () => { LoadZones(); BuildContextMenu(); }));
@@ -473,10 +470,7 @@ public class WorldMapGump : ResizableGump
         return;
     }
 
-    public static void FollowMobile(Mobile m)
-    {
-        following = m;
-    }
+    public static void FollowMobile(Mobile m) => following = m;
 
     private void BuildContextMenu()
     {
@@ -485,7 +479,7 @@ public class WorldMapGump : ResizableGump
         ContextMenu?.Dispose();
         ContextMenu = new ContextMenuControl(this);
 
-        ContextMenuItemEntry follow = new ContextMenuItemEntry(Language.Instance.MapLanguage.Follow);
+        var follow = new ContextMenuItemEntry(Language.Instance.MapLanguage.Follow);
         follow.Add(new ContextMenuItemEntry(Language.Instance.MapLanguage.Yourself, () => { following = World.Player; }, true));
         if (World.Party != null && World.Party.Leader != 0)
         {
@@ -493,7 +487,7 @@ public class WorldMapGump : ResizableGump
             {
                 if (e != null && SerialHelper.IsValid(e.Serial))
                 {
-                    var mob = World.Mobiles.Get(e.Serial);
+                    Mobile mob = World.Mobiles.Get(e.Serial);
                     if (mob != null && mob.Serial != World.Player.Serial)
                     {
                         follow.Add(new ContextMenuItemEntry(e.Name, () => { following = mob; }, true));
@@ -503,7 +497,7 @@ public class WorldMapGump : ResizableGump
         }
         ContextMenu.Add(follow);
 
-        ContextMenuItemEntry markerFontEntry = new ContextMenuItemEntry(ResGumps.FontStyle);
+        var markerFontEntry = new ContextMenuItemEntry(ResGumps.FontStyle);
         markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 1), () => { SetFont(1); }));
         markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 2), () => { SetFont(2); }));
         markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 3), () => { SetFont(3); }));
@@ -511,7 +505,7 @@ public class WorldMapGump : ResizableGump
         markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 5), () => { SetFont(5); }));
         markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 6), () => { SetFont(6); }));
 
-        ContextMenuItemEntry markersEntry = new ContextMenuItemEntry(ResGumps.MapMarkerOptions);
+        var markersEntry = new ContextMenuItemEntry(ResGumps.MapMarkerOptions);
         markersEntry.Add(new ContextMenuItemEntry(ResGumps.ReloadMarkers, LoadMarkers));
 
         markersEntry.Add(markerFontEntry);
@@ -526,7 +520,7 @@ public class WorldMapGump : ResizableGump
         {
             foreach (WMapMarkerFile markerFile in _markerFiles)
             {
-                ContextMenuItemEntry entry = new ContextMenuItemEntry
+                var entry = new ContextMenuItemEntry
                 (
                     string.Format(ResGumps.ShowHide0, markerFile.Name),
                     () =>
@@ -565,7 +559,7 @@ public class WorldMapGump : ResizableGump
 
         BuildContextMenuForZones(ContextMenu);
 
-        ContextMenuItemEntry namesHpBarEntry = new ContextMenuItemEntry(ResGumps.NamesHealthbars);
+        var namesHpBarEntry = new ContextMenuItemEntry(ResGumps.NamesHealthbars);
         namesHpBarEntry.Add(_options["show_your_name"]);
         namesHpBarEntry.Add(_options["show_your_healthbar"]);
         namesHpBarEntry.Add(_options["show_party_name"]);
@@ -578,7 +572,7 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["flip_map"]);
         ContextMenu.Add(_options["top_most"]);
 
-        ContextMenuItemEntry freeView = new ContextMenuItemEntry(ResGumps.FreeView);
+        var freeView = new ContextMenuItemEntry(ResGumps.FreeView);
         freeView.Add(_options["free_view"]);
 
         for (int i = 0; i < MapLoader.MAPS_COUNT; i++)
@@ -708,25 +702,25 @@ public class WorldMapGump : ResizableGump
     )
     {
         // Scale width to Zoom
-        var newWidth = Width / Zoom;
-        var newHeight = Height / Zoom;
+        float newWidth = Width / Zoom;
+        float newHeight = Height / Zoom;
 
         // Scale mouse cords to Zoom
-        var newX = a_x / Zoom;
-        var newY = a_y / Zoom;
+        float newX = a_x / Zoom;
+        float newY = a_y / Zoom;
 
         // Rotate Cords if map fliped
         // x' = (x + y)/Sqrt(2)
         // y' = (y - x)/Sqrt(2)
         if (_flipMap)
         {
-            var nw = (newWidth + newHeight) / 1.41f;
-            var nh = (newHeight - newWidth) / 1.41f;
+            float nw = (newWidth + newHeight) / 1.41f;
+            float nh = (newHeight - newWidth) / 1.41f;
             newWidth = (int)nw;
             newHeight = (int)nh;
 
-            var nx = (newX + newY) / 1.41f;
-            var ny = (newY - newX) / 1.41f;
+            float nx = (newX + newY) / 1.41f;
+            float ny = (newY - newX) / 1.41f;
             newX = (int)nx;
             newY = (int)ny;
         }
@@ -766,7 +760,7 @@ public class WorldMapGump : ResizableGump
 
     internal void HandlePositionTarget()
     {
-        var position = Mouse.Position;
+        Point position = Mouse.Position;
         int x = position.X - X - ParentX;
         int y = position.Y - Y - ParentY;
         CanvasToWorld(x, y, out int xMap, out int yMap);
@@ -881,7 +875,7 @@ public class WorldMapGump : ResizableGump
             {
                 stream.Read(buffer, 0, buffer.Length);
 
-                StackDataReader reader = new StackDataReader(buffer.AsSpan(0, (int)stream.Length));
+                var reader = new StackDataReader(buffer.AsSpan(0, (int)stream.Length));
 
                 int bmp_pitch;
                 int i, pad;
@@ -1148,7 +1142,7 @@ public class WorldMapGump : ResizableGump
                     }
                 }
 
-                Texture2D texture = new Texture2D(Client.Game.GraphicsDevice, surface->w, surface->h);
+                var texture = new Texture2D(Client.Game.GraphicsDevice, surface->w, surface->h);
                 texture.SetDataPointerEXT(0, new Rectangle(0, 0, surface->w, surface->h), surface->pixels, len);
 
                 //SDL.SDL_FreeSurface((IntPtr)surface);
@@ -1209,10 +1203,10 @@ public class WorldMapGump : ResizableGump
 
             _mapTexture?.Dispose();
 
-            var mapFile = Client.Game.UO.FileManager.Maps.GetMapFile(mapIndex);
-            var staticFile = Client.Game.UO.FileManager.Maps.GetStaticFile(mapIndex);
+            FileReader mapFile = Client.Game.UO.FileManager.Maps.GetMapFile(mapIndex);
+            FileReader staticFile = Client.Game.UO.FileManager.Maps.GetStaticFile(mapIndex);
 
-            if (!_mapCache.TryGetValue(mapFile.FilePath, out var fileMapPath))
+            if (!_mapCache.TryGetValue(mapFile.FilePath, out string fileMapPath))
             {
                 using var mapReader = new BinaryReader(File.Open(mapFile.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
                 using var staticsReader = new BinaryReader(File.Open(staticFile.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
@@ -1222,7 +1216,7 @@ public class WorldMapGump : ResizableGump
                     var md5Ctx = new MD5Behaviour.MD5Context();
                     MD5Behaviour.Initialize(ref md5Ctx);
 
-                    var h = new byte[4096];
+                    byte[] h = new byte[4096];
                     int bytesRead;
                     while ((bytesRead = file.Read(h)) > 0)
                         MD5Behaviour.Update(ref md5Ctx, h.AsSpan(0, bytesRead));
@@ -1235,7 +1229,7 @@ public class WorldMapGump : ResizableGump
                     return strSb.ToString();
                 }
 
-                var sum = calculateMd5(mapReader) + calculateMd5(staticsReader);
+                string sum = calculateMd5(mapReader) + calculateMd5(staticsReader);
                 var md5Ctx = new MD5Behaviour.MD5Context();
                 MD5Behaviour.Initialize(ref md5Ctx);
                 MD5Behaviour.Update(ref md5Ctx, MemoryMarshal.AsBytes<char>(sum));
@@ -1243,7 +1237,7 @@ public class WorldMapGump : ResizableGump
                 var strSb = new StringBuilder();
                 for (int i = 0; i < 16; ++i)
                     strSb.AppendFormat("{0:x2}", md5Ctx.Digest(i));
-                var hash = strSb.ToString();
+                string hash = strSb.ToString();
 
                 fileMapPath = Path.Combine(_mapsCachePath, $"map{mapIndex}_{hash}.png");
                 _mapCache[mapFile.FilePath] = fileMapPath;
@@ -1257,11 +1251,11 @@ public class WorldMapGump : ResizableGump
 
                 try
                 {
-                    var map = _map;
+                    Map.Map map = _map;
                     Interlocked.Increment(ref _mapLoading);
 
-                    var size = (realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX);
-                    var allZ = new sbyte[size];
+                    int size = (realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX);
+                    sbyte[] allZ = new sbyte[size];
                     var staticBlocks = new StaticsBlock[32];
 
                     using var img = new SixLabors.ImageSharp.Image<Byte4>(new SixLabors.ImageSharp.Configuration()
@@ -1269,10 +1263,10 @@ public class WorldMapGump : ResizableGump
                         PreferContiguousImageBuffers = true
                     }, realWidth + OFFSET_PIX, realHeight + OFFSET_PIX);
 
-                    img.DangerousTryGetSinglePixelMemory(out var imgBuffer);
-                    var imgSpan = imgBuffer.Span;
+                    img.DangerousTryGetSinglePixelMemory(out Memory<Byte4> imgBuffer);
+                    Span<Byte4> imgSpan = imgBuffer.Span;
 
-                    var huesLoader = Client.Game.UO.FileManager.Hues;
+                    HuesLoader huesLoader = Client.Game.UO.FileManager.Hues;
 
                     int bx, by, mapX = 0, mapY = 0, x, y;
 
@@ -1286,7 +1280,7 @@ public class WorldMapGump : ResizableGump
 
                         for (by = 0; by < fixedHeight; ++by)
                         {
-                            ref var indexMap = ref map.GetIndex(bx, by);
+                            ref IndexMap indexMap = ref map.GetIndex(bx, by);
 
                             if (!indexMap.IsValid())
                             {
@@ -1299,14 +1293,14 @@ public class WorldMapGump : ResizableGump
                             }
 
                             fileMap.Seek((long)indexMap.MapAddress, System.IO.SeekOrigin.Begin);
-                            var cells = fileMap.Read<MapBlock>().Cells;
+                            MapCellsArray cells = fileMap.Read<MapBlock>().Cells;
 
                             mapY = by << 3;
 
                             for (y = 0; y < 8; ++y)
                             {
-                                var block = (mapY + y + OFFSET_PIX_HALF) * (realWidth + OFFSET_PIX) + mapX + OFFSET_PIX_HALF;
-                                var pos = y << 3;
+                                int block = (mapY + y + OFFSET_PIX_HALF) * (realWidth + OFFSET_PIX) + mapX + OFFSET_PIX_HALF;
+                                int pos = y << 3;
 
                                 for (x = 0; x < 8; ++x, ++pos, ++block)
                                 {
@@ -1330,10 +1324,10 @@ public class WorldMapGump : ResizableGump
                             if (staticBlocks.Length < indexMap.StaticCount)
                                 staticBlocks = new StaticsBlock[indexMap.StaticCount];
 
-                            var staticsBlocksSpan = staticBlocks.AsSpan(0, (int)indexMap.StaticCount);
+                            Span<StaticsBlock> staticsBlocksSpan = staticBlocks.AsSpan(0, (int)indexMap.StaticCount);
                             fileStatics.Read(MemoryMarshal.AsBytes(staticsBlocksSpan));
 
-                            foreach (ref var sb in staticsBlocksSpan)
+                            foreach (ref StaticsBlock sb in staticsBlocksSpan)
                             {
                                 if (sb.Color != 0 && sb.Color != 0xFFFF && GameObject.CanBeDrawn(World, sb.Color))
                                 {
@@ -1341,7 +1335,7 @@ public class WorldMapGump : ResizableGump
 
                                     if (sb.Z >= allZ[block])
                                     {
-                                        var color = (ushort)(0x8000 | (sb.Hue != 0 ? huesLoader.GetColor16(16384, sb.Hue) : huesLoader.GetRadarColorData(sb.Color + 0x4000)));
+                                        ushort color = (ushort)(0x8000 | (sb.Hue != 0 ? huesLoader.GetColor16(16384, sb.Hue) : huesLoader.GetRadarColorData(sb.Color + 0x4000)));
                                         //                                                    ushort color = (ushort)(0x8000 | (sb->Hue != 0 ? huesLoader.GetHueColorRgba5551(16, sb->Hue) : huesLoader.GetRadarColorData(sb->Color + 0x4000)));
 
                                         imgSpan[block].PackedValue = HuesHelper.Color16To32(color) | 0xFF_00_00_00;
@@ -1375,7 +1369,7 @@ public class WorldMapGump : ResizableGump
                                 continue;
                             }
 
-                            ref var cc = ref imgSpan[blockCurrent];
+                            ref Byte4 cc = ref imgSpan[blockCurrent];
                             if (cc.PackedValue == 0)
                             {
                                 continue;
@@ -1434,7 +1428,7 @@ public class WorldMapGump : ResizableGump
                     };
 
                     Directory.CreateDirectory(_mapsCachePath);
-                    using var stream2 = File.Create(fileMapPath);
+                    using FileStream stream2 = File.Create(fileMapPath);
                     img.Save(stream2, imageEncoder);
                 }
                 catch (Exception ex)
@@ -1451,7 +1445,7 @@ public class WorldMapGump : ResizableGump
 
             if (File.Exists(fileMapPath))
             {
-                using var stream = File.OpenRead(fileMapPath);
+                using FileStream stream = File.OpenRead(fileMapPath);
                 _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
             }
 
@@ -1502,10 +1496,7 @@ public class WorldMapGump : ResizableGump
         );
     }
 
-    public static void ClearMapCache()
-    {
-        _mapCache?.Clear();
-    }
+    public static void ClearMapCache() => _mapCache?.Clear();
 
     public class ZonesFileZoneData
     {
@@ -1543,7 +1534,7 @@ public class WorldMapGump : ResizableGump
 
             foreach (List<int> rawPoint in data.Polygon)
             {
-                Point p = new Point(rawPoint[0], rawPoint[1]);
+                var p = new Point(rawPoint[0], rawPoint[1]);
 
                 if (p.X < xmin) xmin = p.X;
                 if (p.X > xmax) xmax = p.X;
@@ -1576,12 +1567,10 @@ public class WorldMapGump : ResizableGump
             NiceFileName = MakeNiceFileName(filename);
         }
 
-        public static string MakeNiceFileName(string filename)
-        {
+        public static string MakeNiceFileName(string filename) =>
             // Yes, we invoke the same method twice, because our filenames have two layers of extension
             // we want to strip off (.zones.json)
-            return Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(filename));
-        }
+            Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(filename));
     }
 
     private class ZoneSets
@@ -1592,7 +1581,7 @@ public class WorldMapGump : ResizableGump
         {
             try
             {
-                var zf = System.Text.Json.JsonSerializer.Deserialize(File.ReadAllText(filename), ZonesJsonContext.Default.ZonesFile);
+                ZonesFile zf = System.Text.Json.JsonSerializer.Deserialize(File.ReadAllText(filename), ZonesJsonContext.Default.ZonesFile);
                 ZoneSetDict[filename] = new ZoneSet(zf, filename, hidden);
                 GameActions.Print(world, string.Format(ResGumps.MapZoneFileLoaded, ZoneSetDict[filename].NiceFileName), 0x3A /* yellow green */);
             }
@@ -1622,10 +1611,7 @@ public class WorldMapGump : ResizableGump
             }
         }
 
-        public void Clear()
-        {
-            ZoneSetDict.Clear();
-        }
+        public void Clear() => ZoneSetDict.Clear();
     }
 
     private void LoadZones()
@@ -1652,10 +1638,7 @@ public class WorldMapGump : ResizableGump
         }
     }
 
-    private bool ShouldDrawGrid()
-    {
-        return (_showGridIfZoomed && Zoom >= 4);
-    }
+    private bool ShouldDrawGrid() => (_showGridIfZoomed && Zoom >= 4);
 
     private void LoadMarkers()
     {
@@ -1706,8 +1689,8 @@ public class WorldMapGump : ResizableGump
 
                     foreach (string icon in mapIconPaths)
                     {
-                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
-                        MemoryStream ms = new MemoryStream();
+                        var fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
+                        var ms = new MemoryStream();
                         fs.CopyTo(ms);
                         ms.Seek(0, SeekOrigin.Begin);
 
@@ -1730,14 +1713,14 @@ public class WorldMapGump : ResizableGump
 
                     foreach (string icon in mapIconPathsPngJpg)
                     {
-                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
-                        MemoryStream ms = new MemoryStream();
+                        var fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
+                        var ms = new MemoryStream();
                         fs.CopyTo(ms);
                         ms.Seek(0, SeekOrigin.Begin);
 
                     try
                     {
-                        Texture2D texture = Texture2D.FromStream(Client.Game.GraphicsDevice, ms);
+                        var texture = Texture2D.FromStream(Client.Game.GraphicsDevice, ms);
 
                         _markerIcons.Add(Path.GetFileNameWithoutExtension(icon).ToLower(), texture);
                     }
@@ -1779,7 +1762,7 @@ public class WorldMapGump : ResizableGump
                 {
                     if (File.Exists(mapFile))
                     {
-                        WMapMarkerFile markerFile = new WMapMarkerFile
+                        var markerFile = new WMapMarkerFile
                         {
                             Hidden = false,
                             Name = Path.GetFileNameWithoutExtension(mapFile),
@@ -1797,13 +1780,13 @@ public class WorldMapGump : ResizableGump
 
                         if (mapFile != null && Path.GetExtension(mapFile).ToLower().Equals(".xml")) // Ultima Mapper
                         {
-                            using (XmlTextReader reader = new XmlTextReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                            using (var reader = new XmlTextReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                             {
                                 while (reader.Read())
                                 {
                                     if (reader.Name.Equals("Marker"))
                                     {
-                                        WMapMarker marker = new WMapMarker
+                                        var marker = new WMapMarker
                                         {
                                             X = int.Parse(reader.GetAttribute("X")),
                                             Y = int.Parse(reader.GetAttribute("Y")),
@@ -1828,7 +1811,7 @@ public class WorldMapGump : ResizableGump
                         }
                         else if (mapFile != null && Path.GetExtension(mapFile).ToLower().Equals(".map")) //UOAM
                         {
-                            using (StreamReader reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                            using (var reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                             {
                                 while (!reader.EndOfStream)
                                 {
@@ -1854,7 +1837,7 @@ public class WorldMapGump : ResizableGump
                                             continue;
                                         }
 
-                                        WMapMarker marker = new WMapMarker
+                                        var marker = new WMapMarker
                                         {
                                             X = int.Parse(splits[0]),
                                             Y = int.Parse(splits[1]),
@@ -1885,7 +1868,7 @@ public class WorldMapGump : ResizableGump
                         }
                         else if (mapFile != null) //CSV x,y,mapindex,name of marker,iconname,color,zoom
                         {
-                            using (StreamReader reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+                            using (var reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                             {
                                 while (!reader.EndOfStream)
                                 {
@@ -1903,7 +1886,7 @@ public class WorldMapGump : ResizableGump
                                         continue;
                                     }
 
-                                    WMapMarker marker = new WMapMarker
+                                    var marker = new WMapMarker
                                     {
                                         X = int.Parse(splits[0]),
                                         Y = int.Parse(splits[1]),
@@ -1977,13 +1960,13 @@ public class WorldMapGump : ResizableGump
             GameActions.Print(World, ResGumps.InvalidMarkerName, 0x2A);
         }
 
-        var markerColor = "blue";
-        var markerIcon = "";
-        var markerZoomLevel = 3;
+        string markerColor = "blue";
+        string markerIcon = "";
+        int markerZoomLevel = 3;
 
-        var markerCsv = $"{World.Player.X},{World.Player.Y},{_map.Index},{markerName},{markerIcon},{markerColor},{markerZoomLevel}";
+        string markerCsv = $"{World.Player.X},{World.Player.Y},{_map.Index},{markerName},{markerIcon},{markerColor},{markerZoomLevel}";
 
-        using (var fileStream = File.Open(UserMarkersFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
+        using (FileStream fileStream = File.Open(UserMarkersFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
         using (var streamWriter = new StreamWriter(fileStream))
         {
             streamWriter.BaseStream.Seek(0, SeekOrigin.End);
@@ -2007,7 +1990,7 @@ public class WorldMapGump : ResizableGump
             mapMarker.MarkerIcon = markerIconTexture;
         }
 
-        var mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
+        WMapMarkerFile mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
 
         mapMarkerFile?.Markers.Add(mapMarker);
     }
@@ -2027,9 +2010,9 @@ public class WorldMapGump : ResizableGump
 
             try
             {
-                var markerCsv = $"{x},{y},{map},{markerName}, ,{color},4";
+            string markerCsv = $"{x},{y},{map},{markerName}, ,{color},4";
 
-                using (var fileStream = File.Open(UserMarkersFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
+                using (FileStream fileStream = File.Open(UserMarkersFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
                 using (var streamWriter = new StreamWriter(fileStream))
                 {
                     streamWriter.BaseStream.Seek(0, SeekOrigin.End);
@@ -2059,7 +2042,7 @@ public class WorldMapGump : ResizableGump
             mapMarker.MarkerIcon = markerIconTexture;
         }
 
-        var mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
+        WMapMarkerFile mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
 
             mapMarkerFile?.Markers.Add(mapMarker);
         }
@@ -2071,7 +2054,7 @@ public class WorldMapGump : ResizableGump
                 return;
             }
 
-            var mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
+        WMapMarkerFile mapMarkerFile = _markerFiles.FirstOrDefault(x => x.FullPath == UserMarkersFilePath);
 
             if (mapMarkerFile == null)
                 return;
@@ -2081,18 +2064,18 @@ public class WorldMapGump : ResizableGump
              if (markersToRemove.Count == 0)
                  return;
 
-             foreach (var marker in markersToRemove)
+             foreach (WMapMarker marker in markersToRemove)
              {
                  mapMarkerFile.Markers.Remove(marker);
              }
 
              try
              {
-                 using (StreamWriter writer = new StreamWriter(UserMarkersFilePath, false))
+                 using (var writer = new StreamWriter(UserMarkersFilePath, false))
                  {
-                     foreach (var m in mapMarkerFile.Markers)
+                     foreach (WMapMarker m in mapMarkerFile.Markers)
                      {
-                         var newLine = $"{m.X},{m.Y},{m.MapId},{m.Name},{m.MarkerIconName},{m.ColorName},4";
+                    string newLine = $"{m.X},{m.Y},{m.MapId},{m.Name},{m.MarkerIconName},{m.ColorName},4";
 
                          writer.WriteLine(newLine);
                      }
@@ -2110,7 +2093,7 @@ public class WorldMapGump : ResizableGump
     /// </summary>
     internal static void ReloadUserMarkers()
     {
-        var userFile = _markerFiles.FirstOrDefault(f => f.Name == USER_MARKERS_FILE);
+        WMapMarkerFile userFile = _markerFiles.FirstOrDefault(f => f.Name == USER_MARKERS_FILE);
 
         if (userFile == null)
         {
@@ -2126,9 +2109,9 @@ public class WorldMapGump : ResizableGump
     /// <returns>List of loaded Markers</returns>
     internal static List<WMapMarker> LoadUserMarkers()
     {
-        List<WMapMarker> tempList = new List<WMapMarker>();
+        var tempList = new List<WMapMarker>();
 
-        using (StreamReader reader = new StreamReader(UserMarkersFilePath))
+        using (var reader = new StreamReader(UserMarkersFilePath))
         {
             while (!reader.EndOfStream)
             {
@@ -2214,14 +2197,14 @@ public class WorldMapGump : ResizableGump
         {
             if (batcher.ClipBegin(gX, gY, gWidth, gHeight))
             {
-                var str = "Please wait, I'm making the map file...".AsSpan();
+                ReadOnlySpan<char> str = "Please wait, I'm making the map file...".AsSpan();
                 //str = str[..(str.Length - (int)_mapLoadingTime % 3)];
 
                 //if (Time.Ticks > _mapLoadingTime)
                 //    _mapLoadingTime = Time.Ticks + 1000;
 
-                var strSize = Fonts.Bold.MeasureString(str);
-                var pos = strSize * -0.5f;
+                Vector2 strSize = Fonts.Bold.MeasureString(str);
+                Vector2 pos = strSize * -0.5f;
                 pos.X += gX + halfWidth;
                 pos.Y += gY + halfHeight;
                 batcher.DrawString(Fonts.Bold, str, pos, new Vector3(38, 1, 1));
@@ -2625,7 +2608,7 @@ public class WorldMapGump : ResizableGump
         {
             string text = $"{World.Player.X}, {World.Player.Y}, {World.Player.Z} [{_zoomIndex}]";
 
-            if (_showSextantCoordinates && Sextant.FormatString(new Point(World.Player.X, World.Player.Y), _map, out var sextantCoords))
+            if (_showSextantCoordinates && Sextant.FormatString(new Point(World.Player.X, World.Player.Y), _map, out string sextantCoords))
                 text += "\n" + sextantCoords;
 
             Vector3 hueVector = new(0f, 1f, 1f);
@@ -2641,7 +2624,7 @@ public class WorldMapGump : ResizableGump
 
             string mouseCoordinateString = $"{mouseWorldX} {mouseWorldY}";
 
-            if (_showSextantCoordinates && Sextant.FormatString(new Point(mouseWorldX, mouseWorldY), _map, out var sextantCoords))
+            if (_showSextantCoordinates && Sextant.FormatString(new Point(mouseWorldX, mouseWorldY), _map, out string sextantCoords))
                 mouseCoordinateString += "\n" + sextantCoords;
 
             Vector2 size = Fonts.Regular.MeasureString(mouseCoordinateString);
@@ -2961,7 +2944,7 @@ public class WorldMapGump : ResizableGump
         int xx = (int)(rot.X - size.X / 2);
         int yy = (int)(rot.Y - size.Y - 5);
 
-        Vector3 hueVector = new Vector3(0f, 1f, 0.5f);
+        var hueVector = new Vector3(0f, 1f, 0.5f);
 
         batcher.Draw
         (
@@ -3392,7 +3375,7 @@ public class WorldMapGump : ResizableGump
 
     protected override void OnMouseUp(int x, int y, MouseButtonType button)
     {
-        var allowTarget = _allowPositionalTarget && World.TargetManager.IsTargeting && World.TargetManager.TargetingState == CursorTarget.Position;
+        bool allowTarget = _allowPositionalTarget && World.TargetManager.IsTargeting && World.TargetManager.TargetingState == CursorTarget.Position;
         if (allowTarget && button == MouseButtonType.Left)
         {
             HandlePositionTarget();
@@ -3462,7 +3445,7 @@ public class WorldMapGump : ResizableGump
                     CanvasToWorld(x, y, out _mouseCenter.X, out _mouseCenter.Y);
 
                     // Check if file is loaded and contain markers
-                    var userFile = _markerFiles.Where(f => f.Name == USER_MARKERS_FILE).FirstOrDefault();
+                    WMapMarkerFile userFile = _markerFiles.Where(f => f.Name == USER_MARKERS_FILE).FirstOrDefault();
 
                     if (userFile == null)
                     {
@@ -3606,7 +3589,7 @@ public class WorldMapGump : ResizableGump
     /// <returns>Marker</returns>
     internal static WMapMarker ParseMarker(string[] splits)
     {
-        WMapMarker marker = new WMapMarker
+        var marker = new WMapMarker
         {
             X = int.Parse(Truncate(splits[0], 4)),
             Y = int.Parse(Truncate(splits[1], 4)),
@@ -3632,10 +3615,7 @@ public class WorldMapGump : ResizableGump
     /// <param name="s">String</param>
     /// <param name="maxLen">Max Length</param>
     /// <returns>Truncated String</returns>
-    private static string Truncate(string s, int maxLen)
-    {
-        return s.Length > maxLen ? s.Remove(maxLen) : s;
-    }
+    private static string Truncate(string s, int maxLen) => s.Length > maxLen ? s.Remove(maxLen) : s;
 
     /// <summary>
     /// Map Color name to Color in XNA
@@ -3657,10 +3637,7 @@ public class WorldMapGump : ResizableGump
     /// </summary>
     /// <param name="name">Color name</param>
     /// <returns>Color in XNA (RGBA)</returns>
-    public static Color GetColor(string name)
-    {
-        return _colorMap.TryGetValue(name, out var color) ? color : Color.White;
-    }
+    public static Color GetColor(string name) => _colorMap.TryGetValue(name, out Color color) ? color : Color.White;
 
     /// <summary>
     /// Converts latitudes and longitudes to X and Y locations based on Lord British's throne is located at 1323.1624 or 0° 0'N 0° 0'E

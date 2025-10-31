@@ -101,7 +101,7 @@ namespace ClassicUO.Game
                 {
                     ushort id = _cursorData[i, j];
 
-                    var surface = Client.Game.UO.Arts.CreateCursorSurfacePtr(
+                    nint surface = Client.Game.UO.Arts.CreateCursorSurfacePtr(
                         id,
                         (ushort)(i == 2 ? 0x0033 : 0),
                         out int hotX,
@@ -166,7 +166,7 @@ namespace ClassicUO.Game
                 return Point.Zero;
             }
 
-            ref readonly var artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(graphic) : ref Client.Game.UO.Arts.GetArt(graphic));
+            ref readonly SpriteInfo artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(graphic) : ref Client.Game.UO.Arts.GetArt(graphic));
 
             float scale = 1;
 
@@ -231,7 +231,7 @@ namespace ClassicUO.Game
             {
                 return;
             }
-            ref readonly var artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(draggingGraphic) : ref Client.Game.UO.Arts.GetArt(draggingGraphic));
+            ref readonly SpriteInfo artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(draggingGraphic) : ref Client.Game.UO.Arts.GetArt(draggingGraphic));
 
             Point offset = GetDraggingItemOffset();
 
@@ -295,7 +295,7 @@ namespace ClassicUO.Game
 
                             for (int i = 0; i < _componentsList.Count; i++)
                             {
-                                Multi m = Multi.Create(_world, _componentsList[i].Graphic);
+                                var m = Multi.Create(_world, _componentsList[i].Graphic);
                                 m.AlphaHue = 0xFF;
                                 m.Hue = hue;
                                 m.State = CUSTOM_HOUSE_MULTI_OBJECT_FLAGS.CHMOF_PREVIEW;
@@ -327,7 +327,7 @@ namespace ClassicUO.Game
 
                                 for (int i = 0; i < _componentsList.Count; i++)
                                 {
-                                    var item = _componentsList[i];
+                                    CustomBuildObject item = _componentsList[i];
 
                                     _temp[i].SetInWorldTile(
                                         (ushort)(selectedObj.X + item.X),
@@ -398,7 +398,7 @@ namespace ClassicUO.Game
                         {
                             string dist = obj.Distance.ToString();
 
-                            Vector3 hue = new Vector3(0, 1, 1f);
+                            var hue = new Vector3(0, 1, 1f);
                             sb.DrawString(
                                 Fonts.Bold,
                                 dist,
@@ -447,7 +447,7 @@ namespace ClassicUO.Game
 
                 ushort draggingGraphic = GetDraggingItemGraphic();
 
-                ref readonly var artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(draggingGraphic) : ref Client.Game.UO.Arts.GetArt(draggingGraphic));
+                ref readonly SpriteInfo artInfo = ref (ItemHold.IsGumpTexture ? ref Client.Game.UO.Gumps.GetGump(draggingGraphic) : ref Client.Game.UO.Arts.GetArt(draggingGraphic));
 
                 if (artInfo.Texture != null)
                 {
@@ -518,9 +518,9 @@ namespace ClassicUO.Game
                     hueVec = ShaderHueTranslator.GetHueVector(0);
                 }
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(Graphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(Graphic);
 
-                var rect = artInfo.UV;
+                Rectangle rect = artInfo.UV;
 
                 const int BORDER_SIZE = 1;
                 rect.X += BORDER_SIZE;
@@ -671,7 +671,7 @@ namespace ClassicUO.Game
                 return result;
             }
 
-            var camera = Client.Game.Scene.Camera;
+            Camera camera = Client.Game.Scene.Camera;
 
             int windowCenterX = camera.Bounds.X + (camera.Bounds.Width >> 1);
             int windowCenterY = camera.Bounds.Y + (camera.Bounds.Height >> 1);

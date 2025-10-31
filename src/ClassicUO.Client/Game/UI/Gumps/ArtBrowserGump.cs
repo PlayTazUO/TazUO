@@ -21,11 +21,11 @@ public class ArtBrowserGump : Gump
         Add(new AlphaBlendControl() { Width = Width, Height = Height });
         Add(dataBox);
 
-        NiceButton next = new NiceButton(Width - 100, Height - 20, 100, 20, ButtonAction.Default, ">>");
+        var next = new NiceButton(Width - 100, Height - 20, 100, 20, ButtonAction.Default, ">>");
         next.MouseDown += (s, e) => { Page++; BuildPage(); };
         Add(next);
 
-        NiceButton prev = new NiceButton(0, Height - 20, 100, 20, ButtonAction.Default, "<<");
+        var prev = new NiceButton(0, Height - 20, 100, 20, ButtonAction.Default, "<<");
         prev.MouseDown += (s, e) => { Page--; BuildPage(); };
         Add(prev);
 
@@ -55,7 +55,7 @@ public class ArtBrowserGump : Gump
             {
                 try
                 {
-                    var p = uint.Parse(graphicInput.Text.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
+                    uint p = uint.Parse(graphicInput.Text.Remove(0, 2), System.Globalization.NumberStyles.HexNumber);
                     Page = (int)p;
                     BuildPage();
                 }
@@ -111,10 +111,10 @@ public class ArtBrowserGump : Gump
         uint index = (uint)(Page * maxEntries);
         while (count < maxEntries)
         {
-            ref readonly var art = ref Client.Game.UO.Arts.GetArt(index);
+            ref readonly Renderer.SpriteInfo art = ref Client.Game.UO.Arts.GetArt(index);
             //if (art.Texture != null)
             {
-                var c = resizableStaticPics[count];
+                ResizableStaticPic c = resizableStaticPics[count];
                 c.Graphic = index;
                 c.SetTooltip($"Graphic: {index}\nDouble click to copy.");
                 count++;

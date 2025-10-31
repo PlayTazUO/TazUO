@@ -22,36 +22,21 @@ namespace ClassicUO.Game.Managers
             _world = world;
         }
 
-        public List<InfoBarItem> GetInfoBars()
-        {
-            return infoBarItems;
-        }
+        public List<InfoBarItem> GetInfoBars() => infoBarItems;
 
-        public static string[] GetVars()
-        {
-            return Enum.GetNames(typeof(InfoBarVars));
-        }
+        public static string[] GetVars() => Enum.GetNames(typeof(InfoBarVars));
 
-        public void AddItem(InfoBarItem ibi)
-        {
-            infoBarItems.Add(ibi);
-        }
+        public void AddItem(InfoBarItem ibi) => infoBarItems.Add(ibi);
 
-        public void RemoveItem(InfoBarItem item)
-        {
-            infoBarItems.Remove(item);
-        }
+        public void RemoveItem(InfoBarItem item) => infoBarItems.Remove(item);
 
-        public void Clear()
-        {
-            infoBarItems.Clear();
-        }
+        public void Clear() => infoBarItems.Clear();
 
         public void Save()
         {
             string path = Path.Combine(ProfileManager.ProfilePath, "infobar.xml");
 
-            using (XmlTextWriter xml = new XmlTextWriter(path, Encoding.UTF8)
+            using (var xml = new XmlTextWriter(path, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
                 IndentChar = '\t',
@@ -83,7 +68,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            XmlDocument doc = new XmlDocument();
+            var doc = new XmlDocument();
 
             try
             {
@@ -104,7 +89,7 @@ namespace ClassicUO.Game.Managers
             {
                 foreach (XmlElement xml in root.GetElementsByTagName("info"))
                 {
-                    InfoBarItem item = new InfoBarItem(xml);
+                    var item = new InfoBarItem(xml);
                     infoBarItems.Add(item);
                 }
             }

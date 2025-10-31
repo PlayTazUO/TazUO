@@ -78,7 +78,7 @@ namespace ClassicUO.Utility
 
             blockSize = ((blockSize + 7) & (-8));
 
-            UnmanagedMemoryPool pool = new UnmanagedMemoryPool();
+            var pool = new UnmanagedMemoryPool();
             pool.Free = null;
             pool.NumBlocks = numBlocks;
             pool.BlockSize = blockSize;
@@ -102,7 +102,7 @@ namespace ClassicUO.Utility
         {
             if (ptr != null)
             {
-                void** pHead = (void**) ptr;
+                var pHead = (void**) ptr;
                 *pHead = pool->Free;
                 pool->Free = pHead;
             }
@@ -112,7 +112,7 @@ namespace ClassicUO.Utility
         {
             if (ptr != null)
             {
-                void** pHead = (void**)ptr;
+                var pHead = (void**)ptr;
                 *pHead = pool.Free;
                 pool.Free = pHead;
             }
@@ -120,7 +120,7 @@ namespace ClassicUO.Utility
 
         public static void FreeAll(UnmanagedMemoryPool* pool)
         {
-            void** pCur = (void**) pool->Alloc;
+            var pCur = (void**) pool->Alloc;
             byte* pNext = pool->Alloc + pool->BlockSize;
 
             for (int i = 0, count = pool->NumBlocks - 1; i < count; ++i)

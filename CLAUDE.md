@@ -126,8 +126,8 @@ The build system automatically copies platform-specific native libraries:
 
 ### Script Management
 - **Editor**: Built-in script editor (`ScriptEditor.cs`)
-- **Browser**: Script file browser (`ScriptBrowser.cs`) 
-- **Manager**: Script execution manager (`ScriptManagerGump.cs`)
+- **Browser**: Script file browser (`ScriptBrowser.cs`)
+- **Manager**: Script execution manager (`ScriptManagerWindow.cs`)
 
 ## Asset System
 

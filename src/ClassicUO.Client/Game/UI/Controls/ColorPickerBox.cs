@@ -138,7 +138,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             Texture2D texture = SolidColorTextureCache.GetTexture(Color.White);
 
-            Rectangle rect = new Rectangle(0, 0, _cellWidth, _cellHeight);
+            var rect = new Rectangle(0, 0, _cellWidth, _cellHeight);
 
             Vector3 hueVector;
 

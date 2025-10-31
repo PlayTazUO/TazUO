@@ -18,7 +18,7 @@ namespace ClassicUO.Game.Managers
         {
             Serial = serial;
 
-            var mob = Client.Game.UO.World.Mobiles.Get(serial);
+            Mobile mob = Client.Game.UO.World.Mobiles.Get(serial);
 
             if (mob != null)
                 GetName();
@@ -55,23 +55,14 @@ namespace ClassicUO.Game.Managers
 
         public WorldMapEntityManager(World world) { _world = world; }
 
-        public bool Enabled
-        {
-            get
-            {
-                return ((_world.ClientFeatures.Flags & CharacterListFlags.CLF_NEW_MOVEMENT_SYSTEM) == 0 || _ackReceived) &&
+        public bool Enabled => ((_world.ClientFeatures.Flags & CharacterListFlags.CLF_NEW_MOVEMENT_SYSTEM) == 0 || _ackReceived) &&
                         (AsyncNetClient.Encryption == null || AsyncNetClient.Encryption.EncryptionType == 0) &&
                         ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.WorldMapShowParty &&
                         UIManager.GetGump<WorldMapGump>() != null; // horrible, but works
-            }
-        }
 
         public readonly Dictionary<uint, WMapEntity> Entities = new Dictionary<uint, WMapEntity>();
 
-        public void SetACKReceived()
-        {
-            _ackReceived = true;
-        }
+        public void SetACKReceived() => _ackReceived = true;
 
         public void SetEnable(bool v)
         {

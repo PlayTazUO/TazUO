@@ -23,7 +23,7 @@ namespace ClassicUO.Game.Scenes
 
         public override void Update()
         {
-            var keyboardState = Keyboard.GetState();
+            KeyboardState keyboardState = Keyboard.GetState();
 
             if (keyboardState.IsKeyDown(Keys.A))
             {

@@ -40,15 +40,9 @@ namespace ClassicUO.Utility.Logging
         // No volatile support for properties, let's use a private backing field.
         public LogTypes LogTypes { get; set; }
 
-        public void Start(LogFile logFile = null)
-        {
-            _isLogging = true;
-        }
+        public void Start(LogFile logFile = null) => _isLogging = true;
 
-        public void Stop()
-        {
-            _isLogging = false;
-        }
+        public void Stop() => _isLogging = false;
 
         public void Message(LogTypes logType, string text)
         {
@@ -66,15 +60,9 @@ namespace ClassicUO.Utility.Logging
             }
         }
 
-        public void Clear()
-        {
-            Console.Clear();
-        }
+        public void Clear() => Console.Clear();
 
-        public void PushIndent()
-        {
-            _indent++;
-        }
+        public void PushIndent() => _indent++;
 
         public void PopIndent()
         {

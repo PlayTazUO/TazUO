@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.ImGuiControls.Legion;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility.Logging;
@@ -177,12 +178,12 @@ while True:
             ImGui.SeparatorText("Scripts");
             ImGui.Spacing();
             // Create a scrollable child region for the script groups
-            var contentRegionAvail = ImGui.GetContentRegionAvail();
+            Vector2 contentRegionAvail = ImGui.GetContentRegionAvail();
 
             if (ImGui.BeginChild("ScriptGroupsScrollable", new Vector2(contentRegionAvail.X, contentRegionAvail.Y), ImGuiChildFlags.None, ImGuiWindowFlags.None))
             {
                 // Organize scripts by groups
-                var groupsMap = OrganizeScripts();
+                Dictionary<string, Dictionary<string, List<ScriptFile>>> groupsMap = OrganizeScripts();
 
                 // Draw script groups within the scrollable area
                 DrawScriptGroups(groupsMap);
@@ -226,7 +227,7 @@ while True:
 
                 if (ImGui.MenuItem("Public Script Browser"))
                 {
-                    UIManager.Add(new ScriptBrowser(World.Instance));
+                    ScriptBrowser.Show();
                 }
 
                 if (ImGui.MenuItem("Script Recording"))
@@ -242,6 +243,11 @@ while True:
                 if (ImGui.MenuItem("Persistent Variables"))
                 {
                     PersistentVarsWindow.Show();
+                }
+
+                if (ImGui.MenuItem("Running Scripts"))
+                {
+                    RunningScriptsWindow.Show();
                 }
 
                 bool disableCache = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;
@@ -276,7 +282,7 @@ while True:
 
         private void DrawScriptGroups(Dictionary<string, Dictionary<string, List<ScriptFile>>> groupsMap)
         {
-            foreach (var group in groupsMap)
+            foreach (KeyValuePair<string, Dictionary<string, List<ScriptFile>>> group in groupsMap)
             {
                 string groupName = string.IsNullOrEmpty(group.Key) ? NOGROUPTEXT : group.Key;
                 DrawGroup(groupName, group.Value, "");
@@ -336,15 +342,15 @@ while True:
             if (ImGui.BeginDragDropTarget())
             {
                 // Highlight the drop target area with primary theme color
-                var drawList = ImGui.GetWindowDrawList();
-                var itemMin = ImGui.GetItemRectMin();
-                var itemMax = ImGui.GetItemRectMax();
-                var highlightColor = ImGui.ColorConvertFloat4ToU32(ImGuiTheme.Colors.Primary * 0.5f); // Semi-transparent primary color
+                ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+                Vector2 itemMin = ImGui.GetItemRectMin();
+                Vector2 itemMax = ImGui.GetItemRectMax();
+                uint highlightColor = ImGui.ColorConvertFloat4ToU32(ImGuiTheme.Colors.Primary * 0.5f); // Semi-transparent primary color
                 drawList.AddRectFilled(itemMin, itemMax, highlightColor);
 
                 unsafe
                 {
-                    var payload = ImGui.AcceptDragDropPayload("SCRIPT_FILE");
+                    ImGuiPayloadPtr payload = ImGui.AcceptDragDropPayload("SCRIPT_FILE");
                     if (payload.NativePtr != null)
                     {
                         // Extract the script file path from payload
@@ -353,7 +359,7 @@ while True:
                         string scriptPath = System.Text.Encoding.UTF8.GetString(payloadData);
 
                         // Find the script and move it to this group
-                        var script = LegionScripting.LegionScripting.LoadedScripts.FirstOrDefault(s => s.FullPath == scriptPath);
+                        ScriptFile script = LegionScripting.LegionScripting.LoadedScripts.FirstOrDefault(s => s.FullPath == scriptPath);
                         if (script != null)
                         {
                             // Determine the correct target group hierarchy based on current level
@@ -383,7 +389,7 @@ while True:
             if (nodeOpen)
             {
                 // Draw subgroups and scripts
-                foreach (var subGroup in subGroups)
+                foreach (KeyValuePair<string, List<ScriptFile>> subGroup in subGroups)
                 {
                     if (!string.IsNullOrEmpty(subGroup.Key))
                     {
@@ -394,7 +400,7 @@ while True:
                     else
                     {
                         // These are scripts directly in this group
-                        foreach (var script in subGroup.Value)
+                        foreach (ScriptFile script in subGroup.Value)
                         {
                             DrawScript(script, parentSpacer);
                         }
@@ -789,6 +795,9 @@ while True:
             ImGui.Text(script.FileName);
             ImGui.SeparatorText("Options:");
 
+            if(ImGui.MenuItem("Edit Constants"))
+                ImGuiManager.AddWindow(new ScriptConstantsEditorWindow(script));
+
             if (ImGui.MenuItem("Rename"))
             {
                 // Start renaming the script
@@ -836,11 +845,11 @@ while True:
                 var mm = MacroManager.TryGetMacroManager(World.Instance);
                 if (mm != null)
                 {
-                    Macro mac = new Macro(script.FileName);
+                    var mac = new Macro(script.FileName);
                     mac.Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, "togglelscript " + script.FileName);
                     mm.PushToBack(mac);
 
-                    MacroButtonGump bg = new MacroButtonGump(World.Instance, mac, Mouse.Position.X, Mouse.Position.Y);
+                    var bg = new MacroButtonGump(World.Instance, mac, Mouse.Position.X, Mouse.Position.Y);
                     UIManager.Add(bg);
                 }
                 _showContextMenu = false;
@@ -1261,11 +1270,13 @@ while True:
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    Process.Start("xdg-open", filePath);
+                    ProcessStartInfo p = new() { FileName = "xdg-open", ArgumentList = { filePath }};
+                    Process.Start(p);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    Process.Start("open", filePath);
+                    ProcessStartInfo p = new() { FileName = "open", ArgumentList = { filePath }};
+                    Process.Start(p);
                 }
             }
             catch (Exception ex)

@@ -945,10 +945,7 @@ namespace ClassicUO.Game.Data
             }
         }
 
-        public static SpellDefinition GetSpell(int index)
-        {
-            return _spellsDict.TryGetValue(index, out SpellDefinition spell) ? spell : SpellDefinition.EmptySpell;
-        }
+        public static SpellDefinition GetSpell(int index) => _spellsDict.TryGetValue(index, out SpellDefinition spell) ? spell : SpellDefinition.EmptySpell;
 
         public static void SetSpell(int id, in SpellDefinition newspell)
         {
@@ -956,9 +953,6 @@ namespace ClassicUO.Game.Data
             _spellsDict[id] = newspell;
         }
 
-        internal static void Clear()
-        {
-            _spellsDict.Clear();
-        }
+        internal static void Clear() => _spellsDict.Clear();
     }
 }

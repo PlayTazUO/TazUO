@@ -110,15 +110,9 @@ namespace LScript
             return null;
         }
 
-        public void SetVar(string name, Argument val)
-        {
-            _namespace[name] = val;
-        }
+        public void SetVar(string name, Argument val) => _namespace[name] = val;
 
-        public void ClearVar(string name)
-        {
-            _namespace.Remove(name);
-        }
+        public void ClearVar(string name) => _namespace.Remove(name);
     }
 
     public class Argument
@@ -147,7 +141,7 @@ namespace LScript
                 throw new RunTimeError(_node, "Cannot convert argument to int");
 
             // Try to resolve it as a scoped variable first
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.AsInt();
 
@@ -161,7 +155,7 @@ namespace LScript
                 throw new RunTimeError(_node, "Cannot convert argument to uint");
 
             // Try to resolve it as a scoped variable first
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.AsUInt();
 
@@ -174,7 +168,7 @@ namespace LScript
                 throw new RunTimeError(_node, "Cannot convert argument to ushort");
 
             // Try to resolve it as a scoped variable first
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.AsUShort();
 
@@ -186,7 +180,7 @@ namespace LScript
             if (_node.Lexeme == null)
                 return false;
 
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.IsSerial();
 
@@ -204,7 +198,7 @@ namespace LScript
                 throw new RunTimeError(_node, "Cannot convert argument to serial");
 
             // Try to resolve it as a scoped variable first
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.AsSerial();
 
@@ -223,7 +217,7 @@ namespace LScript
                 throw new RunTimeError(_node, "Cannot convert argument to string");
 
             // Try to resolve it as a scoped variable first
-            var arg = _script.Lookup(_node.Lexeme);
+            Argument arg = _script.Lookup(_node.Lexeme);
             if (arg != null)
                 return arg.AsString();
 
@@ -243,7 +237,7 @@ namespace LScript
             if (obj == null)
                 return false;
 
-            Argument arg = obj as Argument;
+            var arg = obj as Argument;
 
             if (arg == null)
                 return false;
@@ -259,10 +253,7 @@ namespace LScript
             return (other._node.Lexeme == _node.Lexeme);
         }
 
-        public override int GetHashCode()
-        {
-            throw new NotImplementedException();
-        }
+        public override int GetHashCode() => throw new NotImplementedException();
     }
 
     public class Script
@@ -301,17 +292,11 @@ namespace LScript
 
         public ASTNode Root { get; private set; }
 
-        public int CurrentLine
-        {
-            get
-            {
-                return _statement == null ? 0 : _statement.LineNumber;
-            }
-        }
+        public int CurrentLine => _statement == null ? 0 : _statement.LineNumber;
 
         public Argument Lookup(string name)
         {
-            var scope = _scope;
+            Scope scope = _scope;
             Argument result = null;
 
             while (scope != null)
@@ -338,7 +323,7 @@ namespace LScript
 
         public bool SearchJournalEntries(string text)
         {
-            foreach (var entry in _journalEntries)
+            foreach (JournalEntry entry in _journalEntries)
             {
                 if (entry.Text.Contains(text)) return true;
             }
@@ -346,24 +331,15 @@ namespace LScript
             return false;
         }
 
-        public void ClearJournal()
-        {
-            _journalEntries.Clear();
-        }
+        public void ClearJournal() => _journalEntries.Clear();
 
-        private void PushScope(ASTNode node)
-        {
-            _scope = new Scope(_scope, node);
-        }
+        private void PushScope(ASTNode node) => _scope = new Scope(_scope, node);
 
-        private void PopScope()
-        {
-            _scope = _scope.Parent;
-        }
+        private void PopScope() => _scope = _scope.Parent;
 
         private Argument[] ConstructArguments(ref ASTNode node)
         {
-            List<Argument> args = new List<Argument>();
+            var args = new List<Argument>();
 
             node = node.Next();
 
@@ -447,7 +423,7 @@ namespace LScript
             if (_statement.Type != ASTNodeType.STATEMENT)
                 throw new RunTimeError(_statement, "Invalid script");
 
-            var node = _statement.FirstChild();
+            ASTNode node = _statement.FirstChild();
 
             if (node == null)
                 throw new RunTimeError(_statement, "Invalid statement");
@@ -463,8 +439,8 @@ namespace LScript
                     {
                         PushScope(node);
 
-                        var expr = node.FirstChild();
-                        var result = EvaluateExpression(ref expr);
+                        ASTNode expr = node.FirstChild();
+                        bool result = EvaluateExpression(ref expr);
 
                         // Advance to next statement
                         Advance();
@@ -594,8 +570,8 @@ namespace LScript
                             PushScope(node);
                         }
 
-                        var expr = node.FirstChild();
-                        var result = EvaluateExpression(ref expr);
+                        ASTNode expr = node.FirstChild();
+                        bool result = EvaluateExpression(ref expr);
 
                         // Advance to next statement
                         Advance();
@@ -664,7 +640,7 @@ namespace LScript
                 case ASTNodeType.FOR:
                     {
                         // The iterator variable's name is the hash code of the for loop's ASTNode.
-                        var iterName = node.GetHashCode().ToString();
+                        string iterName = node.GetHashCode().ToString();
 
                         // When we first enter the loop, push a new scope
                         if (_scope.StartNode != node)
@@ -672,7 +648,7 @@ namespace LScript
                             PushScope(node);
 
                             // Grab the arguments
-                            var max = node.FirstChild();
+                            ASTNode max = node.FirstChild();
 
                             if (max.Type != ASTNodeType.INTEGER)
                                 throw new RunTimeError(max, "Invalid for loop syntax");
@@ -685,7 +661,7 @@ namespace LScript
                         else
                         {
                             // Increment the iterator argument
-                            var arg = _scope.GetVar(iterName);
+                            Argument arg = _scope.GetVar(iterName);
 
                             var iter = new ASTNode(ASTNodeType.INTEGER, (arg.AsUInt() + 1).ToString(), node, 0);
 
@@ -693,7 +669,7 @@ namespace LScript
                         }
 
                         // Check loop condition
-                        var i = _scope.GetVar(iterName);
+                        Argument i = _scope.GetVar(iterName);
 
                         // Grab the max value to iterate to
                         node = node.FirstChild();
@@ -742,9 +718,9 @@ namespace LScript
                     {
                         // foreach VAR in LIST
                         // The iterator's name is the hash code of the for loop's ASTNode.
-                        var varName = node.FirstChild().Lexeme;
-                        var listName = node.FirstChild().Next().Lexeme;
-                        var iterName = node.GetHashCode().ToString();
+                        string varName = node.FirstChild().Lexeme;
+                        string listName = node.FirstChild().Next().Lexeme;
+                        string iterName = node.GetHashCode().ToString();
 
                         // When we first enter the loop, push a new scope
                         if (_scope.StartNode != node)
@@ -756,7 +732,7 @@ namespace LScript
                             _scope.SetVar(iterName, new Argument(this, iter));
 
                             // Make the user-chosen variable have the value for the front of the list
-                            var arg = Interpreter.GetListValue(listName, 0);
+                            Argument arg = Interpreter.GetListValue(listName, 0);
 
                             if (arg != null)
                                 _scope.SetVar(varName, arg);
@@ -766,12 +742,12 @@ namespace LScript
                         else
                         {
                             // Increment the iterator argument
-                            var idx = _scope.GetVar(iterName).AsInt() + 1;
+                            int idx = _scope.GetVar(iterName).AsInt() + 1;
                             var iter = new ASTNode(ASTNodeType.INTEGER, idx.ToString(), node, 0);
                             _scope.SetVar(iterName, new Argument(this, iter));
 
                             // Update the user-chosen variable
-                            var arg = Interpreter.GetListValue(listName, idx);
+                            Argument arg = Interpreter.GetListValue(listName, idx);
 
                             if (arg != null)
                                 _scope.SetVar(varName, arg);
@@ -780,7 +756,7 @@ namespace LScript
                         }
 
                         // Check loop condition
-                        var i = _scope.GetVar(varName);
+                        Argument i = _scope.GetVar(varName);
 
                         if (i != null)
                         {
@@ -988,12 +964,12 @@ namespace LScript
         {
             node = EvaluateModifiers(node, out bool quiet, out bool force, out _);
 
-            var handler = Interpreter.GetCommandHandler(node.Lexeme);
+            CommandHandler handler = Interpreter.GetCommandHandler(node.Lexeme);
 
             if (handler == null)
                 throw new RunTimeError(node, "Unknown command");
 
-            var cont = handler(node.Lexeme, ConstructArguments(ref node), quiet, force);
+            bool cont = handler(node.Lexeme, ConstructArguments(ref node), quiet, force);
 
             if (node != null)
                 throw new RunTimeError(node, "Command did not consume all available arguments");
@@ -1006,7 +982,7 @@ namespace LScript
             if (expr == null || (expr.Type != ASTNodeType.UNARY_EXPRESSION && expr.Type != ASTNodeType.BINARY_EXPRESSION && expr.Type != ASTNodeType.LOGICAL_EXPRESSION))
                 throw new RunTimeError(expr, "No expression following control statement");
 
-            var node = expr.FirstChild();
+            ASTNode node = expr.FirstChild();
 
             if (node == null)
                 throw new RunTimeError(expr, "Empty expression following control statement");
@@ -1026,7 +1002,7 @@ namespace LScript
             while (node != null)
             {
                 // Capture the operator
-                var op = node.Type;
+                ASTNodeType op = node.Type;
                 node = node.Next();
 
                 if (node == null)
@@ -1034,7 +1010,7 @@ namespace LScript
 
                 bool rhs;
 
-                var e = node.FirstChild();
+                ASTNode e = node.FirstChild();
 
                 switch (node.Type)
                 {
@@ -1080,12 +1056,12 @@ namespace LScript
                 else if (rhs is bool)
                 {
                     // Special case for rhs bools because we want to down-convert the lhs.
-                    var tmp = Convert.ChangeType(lhs, typeof(bool));
+                    object tmp = Convert.ChangeType(lhs, typeof(bool));
                     lhs = (IComparable)tmp;
                 }
                 else
                 {
-                    var tmp = Convert.ChangeType(rhs, lhs.GetType());
+                    object tmp = Convert.ChangeType(rhs, lhs.GetType());
                     rhs = (IComparable)tmp;
                 }
             }
@@ -1122,12 +1098,12 @@ namespace LScript
         {
             node = EvaluateModifiers(node, out bool quiet, out _, out bool not);
 
-            var handler = Interpreter.GetExpressionHandler(node.Lexeme);
+            ExpressionHandler handler = Interpreter.GetExpressionHandler(node.Lexeme);
 
             if (handler == null)
                 throw new RunTimeError(node, "Unknown expression");
 
-            var result = handler(node.Lexeme, ConstructArguments(ref node), quiet);
+            IComparable result = handler(node.Lexeme, ConstructArguments(ref node), quiet);
 
             if (not)
                 return CompareOperands(ASTNodeType.EQUAL, result, false);
@@ -1138,14 +1114,14 @@ namespace LScript
         private bool EvaluateBinaryExpression(ref ASTNode node)
         {
             // Evaluate the left hand side
-            var lhs = EvaluateBinaryOperand(ref node);
+            IComparable lhs = EvaluateBinaryOperand(ref node);
 
             // Capture the operator
-            var op = node.Type;
+            ASTNodeType op = node.Type;
             node = node.Next();
 
             // Evaluate the right hand side
-            var rhs = EvaluateBinaryOperand(ref node);
+            IComparable rhs = EvaluateBinaryOperand(ref node);
 
             return CompareOperands(op, lhs, rhs);
         }
@@ -1172,7 +1148,7 @@ namespace LScript
                 case ASTNodeType.OPERAND:
                     {
                         // This might be a registered keyword, so do a lookup
-                        var handler = Interpreter.GetExpressionHandler(node.Lexeme);
+                        ExpressionHandler handler = Interpreter.GetExpressionHandler(node.Lexeme);
 
                         if (handler == null)
                         {
@@ -1227,7 +1203,7 @@ namespace LScript
 
         private static Script _activeScript = null;
 
-        public static Script ActiveScript { get { return _activeScript; } }
+        public static Script ActiveScript => _activeScript;
 
         public delegate bool TimeoutCallback();
 
@@ -1240,14 +1216,11 @@ namespace LScript
             Culture.NumberFormat.NumberGroupSeparator = ",";
         }
 
-        public static void RegisterExpressionHandler<T>(string keyword, ExpressionHandler<T> handler) where T : IComparable
-        {
-            _exprHandlers[keyword] = (expression, args, quiet) => handler(expression, args, quiet);
-        }
+        public static void RegisterExpressionHandler<T>(string keyword, ExpressionHandler<T> handler) where T : IComparable => _exprHandlers[keyword] = (expression, args, quiet) => handler(expression, args, quiet);
 
         public static ExpressionHandler GetExpressionHandler(string keyword)
         {
-            _exprHandlers.TryGetValue(keyword, out var expression);
+            _exprHandlers.TryGetValue(keyword, out ExpressionHandler expression);
 
             return expression;
         }
@@ -1303,10 +1276,7 @@ namespace LScript
             ActiveScript.TargetRequested = targetRequested;
         }
 
-        public static void RegisterCommandHandler(string keyword, CommandHandler handler)
-        {
-            _commandHandlers[keyword] = handler;
-        }
+        public static void RegisterCommandHandler(string keyword, CommandHandler handler) => _commandHandlers[keyword] = handler;
 
         public static CommandHandler GetCommandHandler(string keyword)
         {
@@ -1315,15 +1285,9 @@ namespace LScript
             return handler;
         }
 
-        public static void RegisterAliasHandler(string keyword, AliasHandler handler)
-        {
-            _aliasHandlers[keyword] = handler;
-        }
+        public static void RegisterAliasHandler(string keyword, AliasHandler handler) => _aliasHandlers[keyword] = handler;
 
-        public static void UnregisterAliasHandler(string keyword)
-        {
-            _aliasHandlers.Remove(keyword);
-        }
+        public static void UnregisterAliasHandler(string keyword) => _aliasHandlers.Remove(keyword);
 
         public static uint GetAlias(string alias)
         {
@@ -1338,10 +1302,7 @@ namespace LScript
             return uint.MaxValue;
         }
 
-        public static void SetAlias(string alias, uint serial)
-        {
-            _aliases[alias] = serial;
-        }
+        public static void SetAlias(string alias, uint serial) => _aliases[alias] = serial;
 
         public static void RemoveAlias(string alias)
         {
@@ -1357,15 +1318,9 @@ namespace LScript
             _lists[name] = new List<Argument>();
         }
 
-        public static void DestroyList(string name)
-        {
-            _lists.Remove(name);
-        }
+        public static void DestroyList(string name) => _lists.Remove(name);
 
-        public static void ClearAllLists()
-        {
-            _lists.Clear();
-        }
+        public static void ClearAllLists() => _lists.Clear();
 
         public static void ClearList(string name)
         {
@@ -1383,10 +1338,7 @@ namespace LScript
             return null;
         }
 
-        public static bool ListExists(string name)
-        {
-            return _lists.ContainsKey(name);
-        }
+        public static bool ListExists(string name) => _lists.ContainsKey(name);
 
         public static bool ListContains(string name, Argument arg)
         {
@@ -1431,7 +1383,7 @@ namespace LScript
             if (!_lists.ContainsKey(name))
                 throw new RunTimeError(null, "List does not exist");
 
-            var idx = front ? 0 : _lists[name].Count - 1;
+            int idx = front ? 0 : _lists[name].Count - 1;
 
             _lists[name].RemoveAt(idx);
 
@@ -1443,7 +1395,7 @@ namespace LScript
             if (!_lists.ContainsKey(name))
                 throw new RunTimeError(null, "List does not exist");
 
-            var list = _lists[name];
+            List<Argument> list = _lists[name];
 
             if (idx < list.Count)
                 return list[idx];
@@ -1484,10 +1436,7 @@ namespace LScript
             _timers.Remove(name);
         }
 
-        public static bool TimerExists(string name)
-        {
-            return _timers.ContainsKey(name);
-        }
+        public static bool TimerExists(string name) => _timers.ContainsKey(name);
 
         public static void StopScript()
         {

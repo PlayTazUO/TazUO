@@ -4,6 +4,10 @@ description: PyBaseControl class documentation
 ---
 
 ## Properties
+### `IsVisible`
+
+**Type:** `bool`
+
 
 *No fields found.*
 
@@ -160,6 +164,16 @@ description: PyBaseControl class documentation
 ### CenterYInViewPort
 
  Centers a GUMP vertically in the viewport. Only works on Gump instances.
+ Used in python API
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### Clear
+
+ Clears all child controls from this control.
  Used in python API
 
 

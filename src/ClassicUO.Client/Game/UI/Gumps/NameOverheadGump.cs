@@ -82,11 +82,7 @@ namespace ClassicUO.Game.UI.Gumps
             SetName();
         }
 
-        private void EnsureTextBox(Entity entity)
-        {
-            _text = TextBox.GetOne(string.Empty, ProfileManager.CurrentProfile.NamePlateFont, ProfileManager.CurrentProfile.NamePlateFontSize, entity is Mobile m ? Notoriety.GetHue(m.NotorietyFlag) : (ushort)0x0481, TextBox.RTLOptions.DefaultCenterStroked());
-
-        }
+        private void EnsureTextBox(Entity entity) => _text = TextBox.GetOne(string.Empty, ProfileManager.CurrentProfile.NamePlateFont, ProfileManager.CurrentProfile.NamePlateFontSize, entity is Mobile m ? Notoriety.GetHue(m.NotorietyFlag) : (ushort)0x0481, TextBox.RTLOptions.DefaultCenterStroked());
 
         public bool SetName()
         {
@@ -208,7 +204,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void DoDrag()
         {
-            var delta = Mouse.Position - _lastLeftMousePositionDown;
+            Point delta = Mouse.Position - _lastLeftMousePositionDown;
 
             if (
                 Math.Abs(delta.X) <= Constants.MIN_GUMP_DRAG_DISTANCE
@@ -235,7 +231,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (ProfileManager.CurrentProfile.CustomBarsToggled)
                 {
-                    Rectangle rect = new Rectangle(
+                    var rect = new Rectangle(
                         0,
                         0,
                         HealthBarGumpCustom.HPB_WIDTH,
@@ -252,7 +248,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
-                    ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0804);
+                    ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0804);
 
                     UIManager.Add(
                         gump = new HealthBarGump(World, entity)
@@ -523,7 +519,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             var result = new List<NameOverheadGump>();
 
-            for (var node = UIManager.Gumps.First; node != null; node = node.Next)
+            for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
             {
                 if (node.Value is NameOverheadGump nameGump &&
                     !nameGump.IsDisposed &&
@@ -536,10 +532,7 @@ namespace ClassicUO.Game.UI.Gumps
             return result;
         }
 
-        private Rectangle GetBounds(int x, int y, int width, int height)
-        {
-            return new Rectangle(x, y, width, height);
-        }
+        private Rectangle GetBounds(int x, int y, int width, int height) => new Rectangle(x, y, width, height);
 
         private Point AdjustPositionToAvoidOverlap(int originalX, int originalY)
         {
@@ -548,23 +541,23 @@ namespace ClassicUO.Game.UI.Gumps
                 return new Point(originalX, originalY);
             }
 
-            var allNameOverheads = GetAllVisibleNameOverheads();
-            var adjustedX = originalX;
-            var adjustedY = originalY;
-            var maxIterations = 10;
-            var iterations = 0;
+            List<NameOverheadGump> allNameOverheads = GetAllVisibleNameOverheads();
+            int adjustedX = originalX;
+            int adjustedY = originalY;
+            int maxIterations = 10;
+            int iterations = 0;
 
             while (iterations < maxIterations)
             {
-                var proposedBounds = GetBounds(adjustedX, adjustedY, Width, Height);
+                Rectangle proposedBounds = GetBounds(adjustedX, adjustedY, Width, Height);
                 bool hasCollision = false;
 
-                foreach (var other in allNameOverheads)
+                foreach (NameOverheadGump other in allNameOverheads)
                 {
                     if (other == this || other.LocalSerial == this.LocalSerial)
                         continue;
 
-                    var otherBounds = GetBounds(other.X, other.Y, other.Width, other.Height);
+                    Rectangle otherBounds = GetBounds(other.X, other.Y, other.Width, other.Height);
 
                     if (proposedBounds.Intersects(otherBounds))
                     {
@@ -785,7 +778,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                var bounds = Client.Game.UO.Arts.GetRealArtBounds(item.Graphic);
+                Rectangle bounds = Client.Game.UO.Arts.GetRealArtBounds(item.Graphic);
 
                 x = item.RealScreenPosition.X + (int)item.Offset.X + 22 + 5;
                 y =
@@ -800,7 +793,7 @@ namespace ClassicUO.Game.UI.Gumps
             x = p.X - (Width >> 1);
             y = p.Y - (Height);// >> 1);
 
-            var camera = Client.Game.Scene.Camera;
+            Camera camera = Client.Game.Scene.Camera;
             x += camera.Bounds.X;
             y += camera.Bounds.Y;
 
@@ -814,7 +807,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
             }
 
-            var adjustedPos = AdjustPositionToAvoidOverlap(x, y);
+            Point adjustedPos = AdjustPositionToAvoidOverlap(x, y);
             x = adjustedPos.X;
             y = adjustedPos.Y;
 
@@ -838,14 +831,14 @@ namespace ClassicUO.Game.UI.Gumps
             if (ProfileManager.CurrentProfile.NamePlateHealthBar && _isMobile)
             {
                 Mobile m = World.Mobiles.Get(LocalSerial);
-                var isPlayer = m is PlayerMobile;
-                var isInParty = World.Party.Contains(m.Serial);
+                bool isPlayer = m is PlayerMobile;
+                bool isInParty = World.Party.Contains(m.Serial);
 
-                var _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
+                float _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
                 DrawResourceBar(batcher, m, x, y, Height / (isPlayer || isInParty ? 3 : 1), m =>
                 {
-                    var hpPercent = (double)m.Hits / (double)m.HitsMax;
-                    var _baseHue = hpPercent switch
+                    double hpPercent = (double)m.Hits / (double)m.HitsMax;
+                    int _baseHue = hpPercent switch
                     {
                         1 => (m is PlayerMobile || World.Party.Contains(m.Serial)) ? 0x0058 : Notoriety.GetHue(m.NotorietyFlag),
                         > .8 => 0x0058,
@@ -863,14 +856,14 @@ namespace ClassicUO.Game.UI.Gumps
                         hueVec = ShaderHueTranslator.GetHueVector(353, false, _alpha);
                     }
                     return (hueVec, hpPercent);
-                }, out var nY);
+                }, out int nY);
 
                 if (m is PlayerMobile || isInParty)
                 {
                     DrawResourceBar(batcher, m, x, nY, Height / 3, m =>
                     {
-                        var mpPercent = (double)m.Mana / (double)m.ManaMax;
-                        var _baseHue = mpPercent switch
+                        double mpPercent = (double)m.Mana / (double)m.ManaMax;
+                        int _baseHue = mpPercent switch
                         {
                             > .6 => 0x0058,
                             > .2 => 0x0030,
@@ -882,8 +875,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                     DrawResourceBar(batcher, m, x, nY, Height / 3, m =>
                     {
-                        var spPercent = (double)m.Stamina / (double)m.StaminaMax;
-                        var _baseHue = spPercent switch
+                        double spPercent = (double)m.Stamina / (double)m.StaminaMax;
+                        int _baseHue = spPercent switch
                         {
                             > .8 => 0x0058,
                             > .5 => 0x0030,
@@ -901,7 +894,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void DrawResourceBar(UltimaBatcher2D batcher, Mobile m, int x, int y, int height, Func<Mobile, (Vector3, double)> getHueVector, out int nY)
         {
-            var data = getHueVector == null ? (ShaderHueTranslator.GetHueVector(0x0058), 0) : getHueVector(m);
+            (Vector3, double) data = getHueVector == null ? (ShaderHueTranslator.GetHueVector(0x0058), 0) : getHueVector(m);
             batcher.DrawRectangle
             (
                 _borderColor,

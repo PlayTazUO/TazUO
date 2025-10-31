@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Settings.GlobalSettings.FPS < GameController.SupportedRefreshRate)
             {
-                Timer fps = new Timer(TimeSpan.FromSeconds(5));
+                var fps = new Timer(TimeSpan.FromSeconds(5));
                 fps.Elapsed += (sender, args) =>
                 {
                     if (World.Instance != null)
@@ -388,7 +388,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private Texture2D GetGumpTexture(uint g, out Rectangle bounds)
         {
-            ref readonly var texture = ref Client.Game.UO.Gumps.GetGump(g);
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(g);
             bounds = texture.UV;
             return texture.Texture;
         }
@@ -405,7 +405,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
             hueVector.Z = Alpha;
 
-            var texture = GetGumpTexture(h_border, out var bounds);
+            Texture2D texture = GetGumpTexture(h_border, out Rectangle bounds);
             if (texture != null)
             {
                 pos = new Rectangle

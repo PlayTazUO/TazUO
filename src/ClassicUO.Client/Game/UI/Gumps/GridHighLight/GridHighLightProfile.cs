@@ -27,15 +27,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public bool LootOnMatch { get; set; } = false;
         public bool IsHighlightProperties { get; set; } = true;
 
-        public Color GetHighlightColor()
-        {
-            return HighlightColor.FromHtmlHex();
-        }
+        public Color GetHighlightColor() => HighlightColor.FromHtmlHex();
 
-        public void SetHighlightColor(Color color)
-        {
-            HighlightColor = color.ToHtmlHex();
-        }
+        public void SetHighlightColor(Color color) => HighlightColor = color.ToHtmlHex();
     }
 
     public class GridHighlightSlot

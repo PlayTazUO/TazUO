@@ -9,7 +9,7 @@ public static class ModernUIConstants
     /// Standard Modern UI Panel. Used for a general gump background.
     /// Recommended to use with the NineSliceGump class.
     /// </summary>
-    public static Texture2D ModernUIPanel { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOGumpBg.png", out var texture); return texture; } }
+    public static Texture2D ModernUIPanel { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOGumpBg.png", out Texture2D texture); return texture; } }
 
     /// <summary>
     /// Border size of the modern ui panel, used for the NineSliceGump class.
@@ -21,8 +21,8 @@ public static class ModernUIConstants
     /// See ModernUIButtonDown for "clicked" texture.
     /// Recommended to use with the NineSliceGump class.
     /// </summary>
-    public static Texture2D ModernUIButtonUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonUp.png", out var texture); return texture; } }
-    public static Texture2D ModernUIButtonDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDown.png", out var texture); return texture; } }
+    public static Texture2D ModernUIButtonUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonUp.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDown.png", out Texture2D texture); return texture; } }
 
     public const int ModernUIButton_BorderSize = 4;
 }

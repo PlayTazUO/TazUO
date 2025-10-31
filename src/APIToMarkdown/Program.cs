@@ -10,19 +10,19 @@ public static class GenDoc
     public static Dictionary<string, Tuple<StringBuilder, StringBuilder>> GenerateMarkdown(string filePath)
     {
         Dictionary<string, Tuple<StringBuilder, StringBuilder>> classesDict = new();
-        var code = File.ReadAllText(filePath);
-        var tree = CSharpSyntaxTree.ParseText(code);
+        string code = File.ReadAllText(filePath);
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
         var root = (CompilationUnitSyntax)tree.GetRoot();
 
-        var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
+        IEnumerable<ClassDeclarationSyntax> classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
 
-        foreach (var classDeclaration in classes)
+        foreach (ClassDeclarationSyntax classDeclaration in classes)
         {
-            var className = classDeclaration.Identifier.Text;
+            string className = classDeclaration.Identifier.Text;
             isMainAPI = className == "API";
             classesDict.TryAdd(className, new Tuple<StringBuilder, StringBuilder>(new StringBuilder(), new StringBuilder()));
-            var sb = classesDict[className].Item1;
-            var python = classesDict[className].Item2;
+            StringBuilder sb = classesDict[className].Item1;
+            StringBuilder python = classesDict[className].Item2;
 
             if (isMainAPI)
                 GenUniversalMdHeader(sb);
@@ -57,7 +57,7 @@ public static class GenDoc
         sb.AppendLine();
 
         sb.AppendLine(":::tip[API.py File]");
-        sb.AppendLine("If you download the [API.py](API.py) file, put it in the same folder as your python scripts and add `import API` to your script, that will enable some mild form of autocomplete in an editor like VS Code.  ");
+        sb.AppendLine("If you download the [API.py](https://github.com/PlayTazUO/TazUO/blob/dev/src/ClassicUO.Client/LegionScripting/docs/API.py) file, put it in the same folder as your python scripts and add `import API` to your script, that will enable some mild form of autocomplete in an editor like VS Code.  ");
         sb.AppendLine();
         sb.AppendLine("You can now type `-updateapi` in game to download the latest API.py file.");
         sb.AppendLine(":::");
@@ -76,7 +76,7 @@ public static class GenDoc
             // Add Starlight frontmatter for non-main API classes
             sb.AppendLine("---");
             sb.AppendLine($"title: {classDeclaration.Identifier.Text}");
-            var classSummary = GetXmlSummary(classDeclaration);
+            string classSummary = GetXmlSummary(classDeclaration);
             if (!string.IsNullOrEmpty(classSummary))
             {
                 sb.AppendLine($"description: {classSummary.Replace('\n', ' ').Replace('\r', ' ')}");
@@ -107,15 +107,15 @@ public static class GenDoc
     {
         // List properties
         sb.AppendLine("## Properties");
-        var properties = classDeclaration.Members.OfType<PropertyDeclarationSyntax>();
+        IEnumerable<PropertyDeclarationSyntax> properties = classDeclaration.Members.OfType<PropertyDeclarationSyntax>();
         if (properties.Any())
         {
-            foreach (var property in properties)
+            foreach (PropertyDeclarationSyntax property in properties)
             {
                 if (!property.Modifiers.Any(SyntaxKind.PublicKeyword))
                     continue;
 
-                var propertySummary = GetXmlSummary(property);
+                string propertySummary = GetXmlSummary(property);
                 sb.AppendLine($"### `{property.Identifier.Text}`");
                 sb.AppendLine();
                 sb.AppendLine($"**Type:** `{property.Type}`");
@@ -131,7 +131,7 @@ public static class GenDoc
                 if (!isMainAPI)
                     space = "    ";
 
-                var pyType = MapCSharpTypeToPython(property.Type.ToString(), "");
+                string pyType = MapCSharpTypeToPython(property.Type.ToString(), "");
 
                 if (!string.IsNullOrEmpty(pyType))
                     pyType = ": " + pyType;
@@ -148,14 +148,14 @@ public static class GenDoc
 
     private static void GenClassFields(StringBuilder sb, StringBuilder python, ClassDeclarationSyntax classDeclaration)
     {
-        var fields = classDeclaration.Members.OfType<FieldDeclarationSyntax>();
+        IEnumerable<FieldDeclarationSyntax> fields = classDeclaration.Members.OfType<FieldDeclarationSyntax>();
         if (fields.Any())
         {
-            foreach (var field in fields)
+            foreach (FieldDeclarationSyntax field in fields)
             {
-                var typeSyntax = field.Declaration.Type;
+                TypeSyntax typeSyntax = field.Declaration.Type;
                 string typeName = typeSyntax.ToString();
-                foreach (var fieldVar in field.Declaration.Variables)
+                foreach (VariableDeclaratorSyntax fieldVar in field.Declaration.Variables)
                 {
                     if (!field.Modifiers.Any(SyntaxKind.PublicKeyword))
                         continue;
@@ -163,7 +163,7 @@ public static class GenDoc
                     if (fieldVar.Identifier.Text == "QueuedPythonActions")
                         continue;
 
-                    var fieldSummary = GetXmlSummary(field);
+                    string fieldSummary = GetXmlSummary(field);
                     sb.AppendLine($"### `{fieldVar.Identifier.Text}`");
                     sb.AppendLine();
                     sb.AppendLine($"**Type:** `{typeName}`");
@@ -180,7 +180,7 @@ public static class GenDoc
                     if (!isMainAPI)
                         space = "    ";
 
-                    var pyType = MapCSharpTypeToPython(typeName, "");
+                    string pyType = MapCSharpTypeToPython(typeName, "");
 
                     if (!string.IsNullOrEmpty(pyType))
                         pyType = ": " + pyType;
@@ -200,10 +200,10 @@ public static class GenDoc
     {
         // List enums
         sb.AppendLine("## Enums");
-        var enums = classDeclaration.Members.OfType<EnumDeclarationSyntax>();
+        IEnumerable<EnumDeclarationSyntax> enums = classDeclaration.Members.OfType<EnumDeclarationSyntax>();
         if (enums.Any())
         {
-            foreach (var enumDeclaration in enums)
+            foreach (EnumDeclarationSyntax enumDeclaration in enums)
             {
                 if (!enumDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
                     continue;
@@ -216,7 +216,7 @@ public static class GenDoc
                 sb.AppendLine($"### {enumDeclaration.Identifier.Text}");
                 sb.AppendLine();
 
-                var enumSummary = GetXmlSummary(enumDeclaration);
+                string enumSummary = GetXmlSummary(enumDeclaration);
                 if (!string.IsNullOrEmpty(enumSummary))
                 {
                     sb.AppendLine(":::note[Description]");
@@ -227,11 +227,11 @@ public static class GenDoc
 
                 sb.AppendLine("**Values:**");
                 byte last = 0;
-                foreach (var member in enumDeclaration.Members)
+                foreach (EnumMemberDeclarationSyntax member in enumDeclaration.Members)
                 {
                     sb.AppendLine($"- `{member.Identifier.Text}`");
 
-                    var value = last += 1;
+                    byte value = last += 1;
                     if (member.EqualsValue?.Value.ToString() != null)
                     {
                         if (byte.TryParse(member.EqualsValue?.Value.ToString(), out last))
@@ -254,15 +254,15 @@ public static class GenDoc
     {
         // List methods
         sb.AppendLine("## Methods");
-        var methods = classDeclaration.Members.OfType<MethodDeclarationSyntax>();
+        IEnumerable<MethodDeclarationSyntax> methods = classDeclaration.Members.OfType<MethodDeclarationSyntax>();
         if (methods.Any())
         {
-            foreach (var method in methods)
+            foreach (MethodDeclarationSyntax method in methods)
             {
                 if (!method.Modifiers.Any(SyntaxKind.PublicKeyword))
                     continue;
 
-                var methodSummary = GetXmlSummary(method);
+                string methodSummary = GetXmlSummary(method);
 
                 sb.AppendLine($"### {method.Identifier.Text}");
                 GenParametersParenthesis(method.ParameterList.Parameters, ref sb);
@@ -292,8 +292,8 @@ public static class GenDoc
                 if (!string.IsNullOrWhiteSpace(methodSummary))
                 {
                     // Indent and escape triple quotes in summary if present
-                    var pyDoc = methodSummary.Replace("\"\"\"", "\\\"\\\"\\\"");
-                    var indentedDoc = string.Join("\n", pyDoc.Split('\n').Select(line => $"{pySpace}    " + line.TrimEnd()));
+                    string pyDoc = methodSummary.Replace("\"\"\"", "\\\"\\\"\\\"");
+                    string indentedDoc = string.Join("\n", pyDoc.Split('\n').Select(line => $"{pySpace}    " + line.TrimEnd()));
                     python.AppendLine($"{pySpace}    \"\"\"");
                     python.AppendLine(indentedDoc);
                     python.AppendLine($"{pySpace}    \"\"\"");
@@ -310,14 +310,14 @@ public static class GenDoc
 
     private static string GetXmlSummary(SyntaxNode node)
     {
-        var trivia = node.GetLeadingTrivia()
+        DocumentationCommentTriviaSyntax? trivia = node.GetLeadingTrivia()
             .Select(i => i.GetStructure())
             .OfType<DocumentationCommentTriviaSyntax>()
             .FirstOrDefault();
 
         if (trivia != null)
         {
-            var summary = trivia.Content
+            XmlElementSyntax? summary = trivia.Content
                 .OfType<XmlElementSyntax>()
                 .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == "summary");
 
@@ -366,10 +366,10 @@ public static class GenDoc
         sb.AppendLine("| Name | Type | Optional | Description |");
         sb.AppendLine("| --- | --- | --- | --- |");
 
-        foreach (var param in parameters)
+        foreach (ParameterSyntax param in parameters)
         {
-            var isOptional = param.Default != null ? "✅ Yes" : "❌ No";
-            var paramSummary = GetXmlParamSummary(methodNode, param.Identifier.Text);
+            string isOptional = param.Default != null ? "✅ Yes" : "❌ No";
+            string paramSummary = GetXmlParamSummary(methodNode, param.Identifier.Text);
             sb.AppendLine($"| `{param.Identifier.Text}` | `{param.Type}` | {isOptional} | {paramSummary} |");
         }
 
@@ -378,14 +378,14 @@ public static class GenDoc
 
     private static string GetXmlParamSummary(SyntaxNode methodNode, string paramName)
     {
-        var trivia = methodNode.GetLeadingTrivia()
+        DocumentationCommentTriviaSyntax? trivia = methodNode.GetLeadingTrivia()
             .Select(i => i.GetStructure())
             .OfType<DocumentationCommentTriviaSyntax>()
             .FirstOrDefault();
 
         if (trivia != null)
         {
-            var paramElement = trivia.Content
+            XmlElementSyntax? paramElement = trivia.Content
                 .OfType<XmlElementSyntax>()
                 .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == "param" &&
                                      e.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
@@ -410,7 +410,7 @@ public static class GenDoc
 
         sb.Append("`(");
 
-        foreach (var param in parameters)
+        foreach (ParameterSyntax param in parameters)
         {
             sb.Append($"{param.Identifier.Text}, ");
         }
@@ -429,7 +429,7 @@ public static class GenDoc
         if(inClass)
             sb.Append("self, ");
 
-        foreach (var param in parameters)
+        foreach (ParameterSyntax param in parameters)
         {
             string pythonType = MapCSharpTypeToPython(param.Type!.ToString());
 
@@ -541,8 +541,8 @@ public static class GenDoc
         // Include fully qualified names if they might appear from ToString()
         return csharpType switch
         {
-            "int" or "Int32" or "System.Int32" => "int",
-            "uint" or "UInt32" or "System.UInt32" => "int", // Map unsigned to int
+            "int" or "int?" or "Int32" or "System.Int32" => "int",
+            "uint" or "uint?" or "UInt32" or "System.UInt32" => "int", // Map unsigned to int
             "short" or "Int16" or "System.Int16" => "int",
             "ushort" or "UInt16" or "System.UInt16" => "int",
             "long" or "Int64" or "System.Int64" => "int",
@@ -551,7 +551,7 @@ public static class GenDoc
             "sbyte" or "SByte" or "System.SByte" => "int",
             "string" or "String" or "System.String" => "str",
             "char" or "Char" or "System.Char" => "str", // Map C# char to Python str
-            "bool" or "Boolean" or "System.Boolean" => "bool",
+            "bool" or "bool?" or "Boolean" or "System.Boolean" => "bool",
             "double" or "Double" or "System.Double" => "float",
             "float" or "Single" or "System.Single" => "float", // C# float is System.Single
             "decimal" or "Decimal" or "System.Decimal" => "float", // Or use Python's Decimal type
@@ -579,6 +579,7 @@ public static class GenDoc
             "PyBaseGump" => "PyBaseGump",
             "PyScrollArea" => "PyScrollArea",
             "PythonList" => "List",
+            "PyPlayer" => "PyPlayer",
 
             // Fallback for unknown types
             _ => noMatch
@@ -595,11 +596,11 @@ class Program
 
         string docsDir = args[0];
 
-        var pyFilePath = Path.Combine(docsDir, "API.py");
+        string pyFilePath = Path.Combine(docsDir, "API.py");
         if (File.Exists(pyFilePath))
             File.Delete(pyFilePath);
 
-        foreach (var filePath in args.Skip(1))
+        foreach (string? filePath in args.Skip(1))
         {
             Console.WriteLine("Processing file: " + filePath);
 
@@ -609,12 +610,12 @@ class Program
             if (!File.Exists(filePath))
                 continue;
 
-            var gen = GenDoc.GenerateMarkdown(filePath);
+            Dictionary<string, Tuple<StringBuilder, StringBuilder>> gen = GenDoc.GenerateMarkdown(filePath);
             Console.WriteLine($"Generation complete for [{filePath}].");
 
             string path = Path.GetDirectoryName(filePath)!;
 
-            foreach (var kvp in gen)
+            foreach (KeyValuePair<string, Tuple<StringBuilder, StringBuilder>> kvp in gen)
             {
                 if (!Directory.Exists(docsDir))
                     Directory.CreateDirectory(docsDir);

@@ -27,11 +27,9 @@ public class DiscordChannelListControl : Control
         DiscordManager.Instance.OnLobbyDeleted += OnLobbyDeleted;
     }
 
-    private void OnLobbyDeleted(object sender)
-    {
+    private void OnLobbyDeleted(object sender) =>
         //TODO: Only delete required lobby instead of rebuilding the entire channel list.
         BuildChannelList();
-    }
 
     public override void Dispose()
     {
@@ -65,12 +63,12 @@ public class DiscordChannelListControl : Control
 
     public void BuildChannelList()
     {
-        var channels = DiscordManager.Instance.GetLobbies();
+        IEnumerable<LobbyHandle> channels = DiscordManager.Instance.GetLobbies();
         
         _channelList.Clear();
         _currentChanIdList.Clear();
         
-        foreach (var channel in channels)
+        foreach (LobbyHandle channel in channels)
         {
             if(channel == null) continue;
             
@@ -80,12 +78,12 @@ public class DiscordChannelListControl : Control
             _channelList.Add(new DiscordChannelListItem(_discordGump, channel, Width - 20)); //-20 for scroll bar
         }
 
-        foreach (var chanId in DiscordManager.Instance.MessageHistory.Keys)
+        foreach (ulong chanId in DiscordManager.Instance.MessageHistory.Keys)
         {
             if(!_currentChanIdList.Add(chanId))
                 continue;
 
-            var channel = DiscordManager.Instance.GetChannel(chanId);
+            ChannelHandle channel = DiscordManager.Instance.GetChannel(chanId);
             
             if(channel != null)
                 _channelList.Add(new DiscordChannelListItem(_discordGump, channel, Width - 20)); //-20 for scroll bar
@@ -103,7 +101,7 @@ public class DiscordChannelListControl : Control
     
     public void UpdateSelectedChannel()
     {
-        foreach (var child in _channelList.Children)
+        foreach (Control child in _channelList.Children)
         {
             if (child is DiscordChannelListItem item)
                 item.SetSelected();

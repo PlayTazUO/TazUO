@@ -4,7 +4,6 @@ using System.Linq;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Utility.Logging;
 using LScript;
 using Microsoft.Xna.Framework;
 
@@ -41,7 +40,7 @@ internal static class Utility
         int groundRange = int.MaxValue, bool skipIgnoreCheck = false
     )
     {
-        List<Item> list = new List<Item>();
+        var list = new List<Item>();
 
         foreach (Item item in World.Items.Values)
         {
@@ -60,7 +59,7 @@ internal static class Utility
             if (hue != ushort.MaxValue && item.Hue != hue)
                 continue;
 
-                var root = World.Items.Get(item.BackpackOrRootContainer);
+            Item root = World.Items.Get(item.BackpackOrRootContainer);
 
             if (groundRange != int.MaxValue && ((item.Distance > groundRange && root == null) || (root != null && root.Distance > groundRange)))
                 continue;
@@ -210,10 +209,7 @@ internal static class Utility
         }
     }
 
-    public static Item FindNearestCorpsePython(int distance, API api)
-    {
-        return World.Items.Values.Where(c => c.IsCorpse && c.Distance <= distance && !api.OnIgnoreList(c)).OrderBy(c => c.Distance).FirstOrDefault();
-    }
+    public static Item FindNearestCorpsePython(int distance, API api) => World.Items.Values.Where(c => c.IsCorpse && c.Distance <= distance && !api.OnIgnoreList(c)).OrderBy(c => c.Distance).FirstOrDefault();
 
     public static uint FindNearestCheckPythonIgnore(ScanTypeObject scanType, API api)
     {

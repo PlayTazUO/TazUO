@@ -125,15 +125,9 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public void SetBackgroundHue(ushort hue)
-        {
-            Hue = hue;
-        }
+        public void SetBackgroundHue(ushort hue) => Hue = hue;
 
-        public void SetText(string text)
-        {
-            TextLabel.Text = text;
-        }
+        public void SetText(string text) => TextLabel.Text = text;
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {

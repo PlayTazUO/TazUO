@@ -49,7 +49,7 @@ namespace ClassicUO.Game.Scenes
                 int x = Camera.Bounds.X + (Camera.Bounds.Width >> 1) + ((ProfileManager.CurrentProfile.PlayerOffset.X - ProfileManager.CurrentProfile.PlayerOffset.Y) * 22);
                 int y = Camera.Bounds.Y + (Camera.Bounds.Height >> 1) + ((ProfileManager.CurrentProfile.PlayerOffset.X + ProfileManager.CurrentProfile.PlayerOffset.Y) * 22);
 
-                Direction direction = (Direction)
+                var direction = (Direction)
                     GameCursor.GetMouseDirection(x, y, Mouse.Position.X, Mouse.Position.Y, 1);
 
                 double mouseRange = MathHelper.Hypotenuse(
@@ -98,7 +98,7 @@ namespace ClassicUO.Game.Scenes
 
             if (gamePadState.IsConnected && gamePadState.ThumbSticks.Left != Vector2.Zero && _world.InGame)
             {
-                var dir = gamePadState.ThumbSticks.Left;
+                Vector2 dir = gamePadState.ThumbSticks.Left;
                 bool run = dir.X > 0.5 || dir.Y > 0.5 || dir.X < -0.5 || dir.Y < -0.5;
 
                 if (dir.X > THRESHOLD && dir.Y > THRESHOLD) // North
@@ -146,14 +146,11 @@ namespace ClassicUO.Game.Scenes
             return false;
         }
 
-        private bool CanDragSelectOnObject(GameObject obj)
-        {
-            return obj is null
+        private bool CanDragSelectOnObject(GameObject obj) => obj is null
                 || obj is Static
                 || obj is Land
                 || obj is Multi
                 || obj is Item tmpitem && tmpitem.IsLocked;
-        }
 
         private bool DragSelectModifierActive()
         {
@@ -284,7 +281,7 @@ namespace ClassicUO.Game.Scenes
                 p.X -= mobile.FrameInfo.X;
                 p.Y -= mobile.FrameInfo.Y;
 
-                Point size = new Point(p.X + mobile.FrameInfo.Width, p.Y + mobile.FrameInfo.Height);
+                var size = new Point(p.X + mobile.FrameInfo.Width, p.Y + mobile.FrameInfo.Height);
 
                 p = Camera.WorldToScreen(p);
                 _rectanglePlayer.X = p.X;
@@ -552,7 +549,7 @@ namespace ClassicUO.Game.Scenes
                     return true;
                 }
 
-                GameObject gobj = SelectedObject.Object as GameObject;
+                var gobj = SelectedObject.Object as GameObject;
 
                 if (gobj is Entity obj)
                 {
@@ -760,6 +757,11 @@ namespace ClassicUO.Game.Scenes
 
                             switch (obj)
                             {
+                                case Static stat:
+                                    _world.TargetManager.Reset();
+                                    MultiItemMoveGump.OnContainerTarget(_world, stat.X, stat.Y, stat.Z);
+                                    break;
+
                                 case Land land:
                                     _world.TargetManager.Reset();
                                     MultiItemMoveGump.OnContainerTarget(_world, land.X, land.Y, land.Z);
@@ -794,7 +796,7 @@ namespace ClassicUO.Game.Scenes
             }
             else
             {
-                GameObject obj = lastObj as GameObject;
+                var obj = lastObj as GameObject;
 
                 switch (obj)
                 {
@@ -1276,7 +1278,7 @@ namespace ClassicUO.Game.Scenes
 
                             if (ProfileManager.CurrentProfile.CustomBarsToggled)
                             {
-                                Rectangle rect = new Rectangle(
+                                var rect = new Rectangle(
                                     0,
                                     0,
                                     HealthBarGumpCustom.HPB_WIDTH,
@@ -1293,7 +1295,7 @@ namespace ClassicUO.Game.Scenes
                             }
                             else
                             {
-                                var bounds = Client.Game.UO.Gumps.GetGump(0x0804).UV;
+                                Rectangle bounds = Client.Game.UO.Gumps.GetGump(0x0804).UV;
 
                                 UIManager.Add(
                                     customgump = new HealthBarGump(_world, obj)
@@ -1322,7 +1324,7 @@ namespace ClassicUO.Game.Scenes
 
         internal override void OnKeyDown(SDL.SDL_KeyboardEvent e)
         {
-            SDL.SDL_Keycode key = (SDL.SDL_Keycode)e.key;
+            var key = (SDL.SDL_Keycode)e.key;
 
             if (key == SDL.SDL_Keycode.SDLK_TAB && e.repeat)
             {
@@ -1568,7 +1570,7 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
-            SDL.SDL_Keycode key = (SDL.SDL_Keycode)e.key;
+            var key = (SDL.SDL_Keycode)e.key;
 
             if (
                 !Keyboard.Ctrl &&
@@ -1733,11 +1735,8 @@ namespace ClassicUO.Game.Scenes
             }
         }
 
-        private bool CanExecuteMacro()
-        {
-            return UIManager.KeyboardFocusControl == UIManager.SystemChat.TextBoxControl
+        private bool CanExecuteMacro() => UIManager.KeyboardFocusControl == UIManager.SystemChat.TextBoxControl
                     && UIManager.SystemChat.Mode >= ChatMode.Default;
-        }
 
         private void ExecuteMacro(MacroObject macro)
         {

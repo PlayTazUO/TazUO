@@ -18,11 +18,11 @@ namespace ClassicUO.Game.UI
 {
     public class XmlGumpHandler
     {
-        public static string XmlGumpPath { get => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "XmlGumps"); }
+        public static string XmlGumpPath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "XmlGumps");
 
         public static XmlGump CreateGumpFromFile(World world, string filePath)
         {
-            XmlGump gump = new XmlGump(world);
+            var gump = new XmlGump(world);
             gump.CanCloseWithRightClick = true;
             gump.AcceptMouseInput = true;
             gump.CanMove = true;
@@ -31,7 +31,7 @@ namespace ClassicUO.Game.UI
             {
                 gump.FilePath = filePath;
 
-                XmlDocument xmlDoc = new XmlDocument();
+                var xmlDoc = new XmlDocument();
                 try
                 {
                     xmlDoc.LoadXml(File.ReadAllText(filePath));
@@ -92,7 +92,7 @@ namespace ClassicUO.Game.UI
 
         public static string[] GetAllXmlGumps()
         {
-            List<string> fileList = new List<string>();
+            var fileList = new List<string>();
 
             try
             {
@@ -183,7 +183,7 @@ namespace ClassicUO.Game.UI
 
         private static void HandleImageHPBar(World world, XmlGump gump, XmlNode node)
         {
-            XmlHealthBar hpBar = new XmlHealthBar(world, world.Player);
+            var hpBar = new XmlHealthBar(world, world.Player);
             ApplyBasicAttributes(hpBar, node);
             hpBar.SetImageType();
 
@@ -246,7 +246,7 @@ namespace ClassicUO.Game.UI
 
         private static void HandleColorHPBar(World world, XmlGump gump, XmlNode node)
         {
-            XmlHealthBar hpBar = new XmlHealthBar(world, world.Player);
+            var hpBar = new XmlHealthBar(world, world.Player);
             ApplyBasicAttributes(hpBar, node);
             hpBar.SetColoredType();
 
@@ -290,11 +290,11 @@ namespace ClassicUO.Game.UI
 
         private static void HandleMacroButtonGraphic(World world, XmlGump gump, XmlNode node)
         {
-            HitBox hb = new HitBox(0, 0, 0, 0, null, 0);
+            var hb = new HitBox(0, 0, 0, 0, null, 0);
             ApplyBasicAttributes(hb, node);
 
 
-            GumpPic bg = new GumpPic(0, 0, 0, 0);
+            var bg = new GumpPic(0, 0, 0, 0);
 
             hb.Add(bg);
 
@@ -341,7 +341,7 @@ namespace ClassicUO.Game.UI
                         }
                         break;
                     case "macro":
-                        var manager = world.Macros;
+                        MacroManager manager = world.Macros;
                         Macro m = manager.FindMacro(attr.Value);
                         if (m != null)
                         {
@@ -356,10 +356,10 @@ namespace ClassicUO.Game.UI
 
         private static void HandleMacroButton(World world, XmlGump gump, XmlNode node)
         {
-            HitBox hb = new HitBox(0, 0, 0, 0, null, 0);
+            var hb = new HitBox(0, 0, 0, 0, null, 0);
             ApplyBasicAttributes(hb, node);
 
-            AlphaBlendControl bg = new AlphaBlendControl() { Width = hb.Width, Height = hb.Height };
+            var bg = new AlphaBlendControl() { Width = hb.Width, Height = hb.Height };
             hb.Add(bg);
 
             ushort hue = 0;
@@ -428,7 +428,7 @@ namespace ClassicUO.Game.UI
 
         private static void HandleControl(World world, XmlGump gump, XmlNode node)
         {
-            XmlGump newControl = new XmlGump(world);
+            var newControl = new XmlGump(world);
             ApplyBasicAttributes(newControl, node);
 
             ProcessChildNodes(world, newControl, node);
@@ -748,10 +748,7 @@ namespace ClassicUO.Game.UI
             return c;
         }
 
-        public static float GetPercentage(double value, double max)
-        {
-            return (float)(value / max);
-        }
+        public static float GetPercentage(double value, double max) => (float)(value / max);
 
         public static string FormatText(World world, string text)
         {
@@ -841,7 +838,7 @@ namespace ClassicUO.Game.UI
 
             if (Time.Ticks >= nextUpdate)
             {
-                foreach (var t in TextBoxUpdates)
+                foreach (Tuple<TextBox, Tuple<string, int>> t in TextBoxUpdates)
                 {
                     if (t.Item1 != null && !t.Item1.IsDisposed)
                     {
@@ -860,7 +857,7 @@ namespace ClassicUO.Game.UI
                     }
                 }
 
-                foreach (var p in ProgressBarUpdates)
+                foreach (XmlProgressBarInfo p in ProgressBarUpdates)
                 {
                     if (p.Control != null && !p.Control.IsDisposed)
                     {
@@ -874,7 +871,7 @@ namespace ClassicUO.Game.UI
                     }
                 }
 
-                foreach (var p in VerticalProgressBarUpdates)
+                foreach (XmlProgressBarInfo p in VerticalProgressBarUpdates)
                 {
                     if (p.Control != null && !p.Control.IsDisposed)
                     {
@@ -943,7 +940,7 @@ namespace ClassicUO.Game.UI
 
                 if (!string.IsNullOrEmpty(FilePath) && File.Exists(FilePath))
                 {
-                    XmlDocument xmlDoc = new XmlDocument();
+                    var xmlDoc = new XmlDocument();
                     try
                     {
                         xmlDoc.LoadXml(File.ReadAllText(FilePath));

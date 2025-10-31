@@ -59,10 +59,10 @@ namespace ClassicUO.Game.UI.Controls
             if (Height <= 0 || !IsVisible)
                 return false;
 
-            var trackColor = TrackColor;
-            var upButtonColor = _btUpClicked ? ButtonPressedColor : ButtonColor;
-            var downButtonColor = _btDownClicked ? ButtonPressedColor : ButtonColor;
-            var thumbColor = _thumbPressed ? ThumbPressedColor :
+            Color trackColor = TrackColor;
+            Color upButtonColor = _btUpClicked ? ButtonPressedColor : ButtonColor;
+            Color downButtonColor = _btDownClicked ? ButtonPressedColor : ButtonColor;
+            Color thumbColor = _thumbPressed ? ThumbPressedColor :
                            (_thumbHovered ? ThumbHoverColor : ThumbColor);
 
             batcher.DrawRectangle(
@@ -111,19 +111,19 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawArrows(UltimaBatcher2D batcher, int x, int y)
         {
-            var arrowSize = 6;
-            var centerX = x + Width / 2;
+            int arrowSize = 6;
+            int centerX = x + Width / 2;
 
-            var upArrowY = y + _rectUpButton.Y + _rectUpButton.Height / 2;
+            int upArrowY = y + _rectUpButton.Y + _rectUpButton.Height / 2;
             DrawUpArrow(batcher, centerX, upArrowY, arrowSize);
 
-            var downArrowY = y + _rectDownButton.Y + _rectDownButton.Height / 2;
+            int downArrowY = y + _rectDownButton.Y + _rectDownButton.Height / 2;
             DrawDownArrow(batcher, centerX, downArrowY, arrowSize);
         }
 
         private void DrawUpArrow(UltimaBatcher2D batcher, int centerX, int centerY, int size)
         {
-            var halfSize = size / 2;
+            int halfSize = size / 2;
             for (int i = 0; i < halfSize; i++)
             {
                 batcher.DrawRectangle(
@@ -139,7 +139,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void DrawDownArrow(UltimaBatcher2D batcher, int centerX, int centerY, int size)
         {
-            var halfSize = size / 2;
+            int halfSize = size / 2;
             for (int i = 0; i < halfSize; i++)
             {
                 batcher.DrawRectangle(
@@ -153,10 +153,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override int GetScrollableArea()
-        {
-            return _trackRect.Height - _thumbRect.Height;
-        }
+        protected override int GetScrollableArea() => _trackRect.Height - _thumbRect.Height;
 
         protected override void CalculateByPosition(int x, int y)
         {
@@ -167,7 +164,7 @@ namespace ClassicUO.Game.UI.Controls
                 if (y < 0)
                     y = 0;
 
-                var scrollableArea = GetScrollableArea();
+                int scrollableArea = GetScrollableArea();
                 if (y > scrollableArea)
                     y = scrollableArea;
 
@@ -188,9 +185,9 @@ namespace ClassicUO.Game.UI.Controls
                 return;
             }
 
-            var totalRange = MaxValue - MinValue;
-            var visibleRatio = (float)Height / (Height + totalRange);
-            var thumbHeight = (int)(_trackRect.Height * visibleRatio);
+            int totalRange = MaxValue - MinValue;
+            float visibleRatio = (float)Height / (Height + totalRange);
+            int thumbHeight = (int)(_trackRect.Height * visibleRatio);
 
             if (thumbHeight < THUMB_MIN_SIZE)
                 thumbHeight = THUMB_MIN_SIZE;
@@ -198,8 +195,8 @@ namespace ClassicUO.Game.UI.Controls
             if (thumbHeight > _trackRect.Height)
                 thumbHeight = _trackRect.Height;
 
-            var scrollableArea = _trackRect.Height - thumbHeight;
-            var thumbY = _trackRect.Y + (scrollableArea * (Value - MinValue) / (MaxValue - MinValue));
+            int scrollableArea = _trackRect.Height - thumbHeight;
+            int thumbY = _trackRect.Y + (scrollableArea * (Value - MinValue) / (MaxValue - MinValue));
 
             _thumbRect = new Rectangle(1, (int)thumbY, Width - 2, thumbHeight);
         }
@@ -228,7 +225,7 @@ namespace ClassicUO.Game.UI.Controls
             }
             else if (_trackRect.Contains(x, y))
             {
-                var thumbCenter = _thumbRect.Y + (_thumbRect.Height / 2);
+                int thumbCenter = _thumbRect.Y + (_thumbRect.Height / 2);
                 if (y < thumbCenter)
                     Value -= ScrollStep;
                 else
@@ -242,9 +239,6 @@ namespace ClassicUO.Game.UI.Controls
             _thumbPressed = false;
         }
 
-        public override bool Contains(int x, int y)
-        {
-            return x >= 0 && x <= Width && y >= 0 && y <= Height;
-        }
+        public override bool Contains(int x, int y) => x >= 0 && x <= Width && y >= 0 && y <= Height;
     }
 }

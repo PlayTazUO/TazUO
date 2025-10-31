@@ -24,11 +24,11 @@ namespace ClassicUO.Renderer.Gumps
             if (idx >= _spriteInfos.Length)
                 return ref SpriteInfo.Empty;
 
-            ref var spriteInfo = ref _spriteInfos[idx];
+            ref SpriteInfo spriteInfo = ref _spriteInfos[idx];
 
             if (spriteInfo.Texture == null)
             {
-                var gumpInfo = PNGLoader.Instance.LoadGumpTexture(idx);
+                GumpInfo gumpInfo = PNGLoader.Instance.LoadGumpTexture(idx);
                 bool loadedFromPNG = gumpInfo.Pixels != null && !gumpInfo.Pixels.IsEmpty;
 
                 if (gumpInfo.Pixels.IsEmpty)

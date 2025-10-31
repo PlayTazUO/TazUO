@@ -145,9 +145,33 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// Called when the visual spell manager detects a spell being cast.
+        /// The event argument is the spell ID.
         /// </summary>
         public static event EventHandler<int> SpellCastBegin;
+        /// <summary>Invokes <see cref="SpellCastBegin"/>.</summary>
         public static void InvokeSpellCastBegin(int spell) => SpellCastBegin?.Invoke(null, spell);
+        /// <summary>
+        /// Called when the visual spell manager detects a spell done being cast.
+        /// The event argument is the spell ID.
+        /// </summary>
+        public static event EventHandler SpellCastEnd;
+        /// <summary>Invokes <see cref="SpellCastEnd"/>.</summary>
+        public static void InvokeSpellCastEnd() => SpellCastEnd?.Invoke(null, null);
+        /// <summary>
+        /// Called when the visual spell manager detects a spell recovery phase.
+        /// The event argument is the spell ID.
+        /// </summary>
+        public static event EventHandler<int> SpellRecoveryBegin;
+        /// <summary>Invokes <see cref="SpellRecoveryBegin"/>.</summary>
+        public static void InvokeSpellRecoveryBegin(int spell) => SpellRecoveryBegin?.Invoke(null, spell);
+        /// <summary>
+        /// Called when the visual spell manager detects a spell recovery phase end.
+        /// The event argument is the spell ID.
+        /// </summary>
+        public static event EventHandler SpellRecoveryEnd;
+        /// <summary>Invokes <see cref="SpellRecoveryEnd"/>.</summary>
+        public static void InvokeSpellRecoveryEnd() => SpellRecoveryEnd?.Invoke(null, null);
+
     }
 
     public class OPLEventArgs : EventArgs

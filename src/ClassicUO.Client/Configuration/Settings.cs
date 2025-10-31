@@ -119,8 +119,8 @@ namespace ClassicUO.Configuration
         public void Save()
         {
             // Make a copy of the settings object that we will use in the saving process
-            var json = JsonSerializer.Serialize(this, SettingsJsonContext.RealDefault.Settings);
-            var settingsToSave = JsonSerializer.Deserialize(json, SettingsJsonContext.RealDefault.Settings);
+            string json = JsonSerializer.Serialize(this, SettingsJsonContext.RealDefault.Settings);
+            Settings settingsToSave = JsonSerializer.Deserialize(json, SettingsJsonContext.RealDefault.Settings);
 
             // Make sure we don't save username and password if `saveaccount` flag is not set
             // NOTE: Even if we pass username and password via command-line arguments they won't be saved

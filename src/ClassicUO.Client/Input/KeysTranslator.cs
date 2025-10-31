@@ -266,7 +266,7 @@ namespace ClassicUO.Input
         {
             if (_keys.TryGetValue(key, out string value))
             {
-                StringBuilder sb = new StringBuilder();
+                var sb = new StringBuilder();
 
                 AddPrefix(sb, mod);
 
@@ -282,7 +282,7 @@ namespace ClassicUO.Input
                 else
                     sKey = $"{key}";
                 _keys.Add(key, sKey);
-                StringBuilder sb = new StringBuilder();
+                var sb = new StringBuilder();
                 AddPrefix(sb, mod);
                 sb.Append(sKey);
                 return sb.ToString();
@@ -291,7 +291,7 @@ namespace ClassicUO.Input
 
         public static string GetMouseButton(MouseButtonType button, SDL.SDL_Keymod mod)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             AddPrefix(sb, mod);
 
@@ -302,7 +302,7 @@ namespace ClassicUO.Input
 
         public static string GetMouseWheel(bool wheelUp, SDL.SDL_Keymod mod)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             AddPrefix(sb, mod);
 

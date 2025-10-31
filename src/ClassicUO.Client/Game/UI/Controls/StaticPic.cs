@@ -58,7 +58,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 graphic = value;
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(value);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(value);
 
                 if (artInfo.Texture == null)
                 {
@@ -81,7 +81,7 @@ namespace ClassicUO.Game.UI.Controls
                 hueVector = ShaderHueTranslator.GetHueVector(Hue, IsPartialHue, 1);
             }
 
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(Graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(Graphic);
 
             if (artInfo.Texture != null)
             {
@@ -96,9 +96,6 @@ namespace ClassicUO.Game.UI.Controls
             return base.Draw(batcher, x, y);
         }
 
-        public override bool Contains(int x, int y)
-        {
-            return Client.Game.UO.Arts.PixelCheck(Graphic, x - Offset.X, y - Offset.Y);
-        }
+        public override bool Contains(int x, int y) => Client.Game.UO.Arts.PixelCheck(Graphic, x - Offset.X, y - Offset.Y);
     }
 }

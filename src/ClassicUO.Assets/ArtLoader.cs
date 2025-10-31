@@ -67,7 +67,7 @@ namespace ClassicUO.Assets
 
             file.Seek(entry.Offset, SeekOrigin.Begin);
 
-            var data = new uint[width * height];
+            uint[] data = new uint[width * height];
 
             for (int i = 0; i < 22; ++i)
             {
@@ -110,14 +110,14 @@ namespace ClassicUO.Assets
 
             file.Seek(entry.Offset, SeekOrigin.Begin);
 
-            var flags = file.ReadUInt32();
+            uint flags = file.ReadUInt32();
             width = file.ReadInt16();
             height = file.ReadInt16();
 
-            var buf = new byte[entry.Length];
+            byte[] buf = new byte[entry.Length];
             file.Read(buf);
 
-            var data = new uint[width * height];
+            uint[] data = new uint[width * height];
 
             fixed (byte* startPtr = buf)
             {
@@ -125,7 +125,7 @@ namespace ClassicUO.Assets
                 byte* datastart = (byte*)startPtr + height * 2;
                 int x = 0;
                 int y = 0;
-                var ptr = (ushort*)(datastart + lineoffsets[0] * 2);
+                ushort* ptr = (ushort*)(datastart + lineoffsets[0] * 2);
 
                 while (y < height)
                 {
@@ -207,10 +207,10 @@ namespace ClassicUO.Assets
 
         public ArtInfo GetArt(uint idx)
         {
-            ref var entry = ref _file.GetValidRefEntry((int)idx);
-            var loadLand = idx < 0x4000;
-            var pixels = loadLand ?
-                LoadLand(_file, in entry, out var width, out var height)
+            ref UOFileIndex entry = ref _file.GetValidRefEntry((int)idx);
+            bool loadLand = idx < 0x4000;
+            uint[] pixels = loadLand ?
+                LoadLand(_file, in entry, out short width, out short height)
                 :
                 LoadArt(_file, in entry, out width, out height);
 

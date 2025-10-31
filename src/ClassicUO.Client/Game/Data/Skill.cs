@@ -45,23 +45,11 @@ namespace ClassicUO.Game.Data
 
         public int Index { get; }
 
-        public static void InvokeSkillValueChanged(int index)
-        {
-            SkillValueChangedEvent?.Invoke(null, new SkillChangeArgs(index));
-        }
-        public static void InvokeSkillBaseChanged(int index)
-        {
-            SkillBaseChangedEvent?.Invoke(null, new SkillChangeArgs(index));
-        }
-        public static void InvokeSkillCapChanged(int index)
-        {
-            SkillCapChangedEvent?.Invoke(null, new SkillChangeArgs(index));
-        }
+        public static void InvokeSkillValueChanged(int index) => SkillValueChangedEvent?.Invoke(null, new SkillChangeArgs(index));
+        public static void InvokeSkillBaseChanged(int index) => SkillBaseChangedEvent?.Invoke(null, new SkillChangeArgs(index));
+        public static void InvokeSkillCapChanged(int index) => SkillCapChangedEvent?.Invoke(null, new SkillChangeArgs(index));
 
-        public override string ToString()
-        {
-            return string.Format(ResGeneral.Name0Val1, Name, Value);
-        }
+        public override string ToString() => string.Format(ResGeneral.Name0Val1, Name, Value);
 
         public class SkillChangeArgs : EventArgs
         {

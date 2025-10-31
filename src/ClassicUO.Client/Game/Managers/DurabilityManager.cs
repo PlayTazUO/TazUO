@@ -63,22 +63,19 @@ namespace ClassicUO.Game.Managers
             EventSink.OPLOnReceive += OnOPLReceive;
         }
 
-        public bool TryGetDurability(uint serial, out DurabiltyProp durability)
-        {
-            return _itemLayerSlots.TryGetValue(serial, out durability);
-        }
+        public bool TryGetDurability(uint serial, out DurabiltyProp durability) => _itemLayerSlots.TryGetValue(serial, out durability);
 
         private void OnOPLReceive(object s, OPLEventArgs e)
         {
             if (!SerialHelper.IsItem(e.Serial))
                 return;
 
-            if (!World.Items.TryGetValue(e.Serial, out var item) || item.IsDestroyed)
+            if (!World.Items.TryGetValue(e.Serial, out GameObjects.Item item) || item.IsDestroyed)
                 return;
 
             if (item.Container == World.Player.Serial && _equipLayers.Contains(item.Layer))
             {
-                var durability = ParseDurability((int)item.Serial, e.Data);
+                DurabiltyProp durability = ParseDurability((int)item.Serial, e.Data);
 
                 if (durability.Serial != 0)
                     _itemLayerSlots[item.Serial] = durability;
@@ -108,10 +105,7 @@ namespace ClassicUO.Game.Managers
             return int.TryParse(parts[0].Trim(), out int min) && int.TryParse(parts[1].Trim(), out int max) ? new DurabiltyProp(serial, min, max) : new DurabiltyProp();
         }
 
-        public void Dispose()
-        {
-            EventSink.OPLOnReceive -= OnOPLReceive;
-        }
+        public void Dispose() => EventSink.OPLOnReceive -= OnOPLReceive;
     }
 
     public class DurabiltyProp

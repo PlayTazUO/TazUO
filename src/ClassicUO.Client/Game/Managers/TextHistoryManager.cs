@@ -56,7 +56,7 @@ public static class TextHistoryManager
     /// <returns>The best matching text or null if no matches</returns>
     public static string GetBestAutocompletion(string partialInput)
     {
-        var suggestions = GetAutocompleteSuggestions(partialInput);
+        List<string> suggestions = GetAutocompleteSuggestions(partialInput);
         return suggestions.FirstOrDefault();
     }
 
@@ -74,8 +74,5 @@ public static class TextHistoryManager
     /// <summary>
     /// Clears the history
     /// </summary>
-    public static void ClearHistory()
-    {
-        commandHistory.Clear();
-    }
+    public static void ClearHistory() => commandHistory.Clear();
 }

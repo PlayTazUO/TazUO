@@ -85,7 +85,7 @@ namespace ClassicUO.Game.Managers
                     layer = ProfileManager.CurrentProfile.ToolTipOverride_Layer[index];
                 else isNew = true;
 
-                ToolTipOverrideData data = new ToolTipOverrideData(index, searchText, formattedText, min1, max1, min2, max2, layer);
+                var data = new ToolTipOverrideData(index, searchText, formattedText, min1, max1, min2, max2, layer);
 
                 if (isNew)
                 {
@@ -132,7 +132,7 @@ namespace ClassicUO.Game.Managers
         {
             if (Index < 0) return;
 
-            var profile = ProfileManager.CurrentProfile;
+            Profile profile = ProfileManager.CurrentProfile;
 
             if (Index < profile.ToolTipOverride_SearchText.Count)
                 profile.ToolTipOverride_SearchText.RemoveAt(Index);
@@ -161,7 +161,7 @@ namespace ClassicUO.Game.Managers
             if (ProfileManager.CurrentProfile == null)
                 return null;
 
-            ToolTipOverrideData[] result = new ToolTipOverrideData[ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count];
+            var result = new ToolTipOverrideData[ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count];
 
             for (int i = 0; i < ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count; i++)
             {
@@ -186,7 +186,7 @@ namespace ClassicUO.Game.Managers
                 try
                 {
                     string result = JsonSerializer.Serialize(allData);
-                    var path = Path.Combine(p, "tooltip_overrides.json");
+                    string path = Path.Combine(p, "tooltip_overrides.json");
                     File.WriteAllText(path, result);
                     GameActions.Print(World.Instance, $"The override file has been saved to [{path}]");
                 }
@@ -198,34 +198,31 @@ namespace ClassicUO.Game.Managers
             }));
         }
 
-        public static void ImportOverrideSettings()
-        {
-            UIManager.Add(new FileSelector(World.Instance, FileSelectorType.File, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), ["*.json"], (p) =>
-            {
-                if (!File.Exists(p))
-                {
-                    GameActions.Print(World.Instance, "File doesn't exist!", 32);
-                    return;
-                }
+        public static void ImportOverrideSettings() => UIManager.Add(new FileSelector(World.Instance, FileSelectorType.File, Environment.GetFolderPath(Environment.SpecialFolder.Desktop), ["*.json"], (p) =>
+                                                                {
+                                                                    if (!File.Exists(p))
+                                                                    {
+                                                                        GameActions.Print(World.Instance, "File doesn't exist!", 32);
+                                                                        return;
+                                                                    }
 
-                try
-                {
-                    string result = File.ReadAllText(p);
+                                                                    try
+                                                                    {
+                                                                        string result = File.ReadAllText(p);
 
-                    ToolTipOverrideData[] imported = JsonSerializer.Deserialize<ToolTipOverrideData[]>(result);
+                                                                        ToolTipOverrideData[] imported = JsonSerializer.Deserialize<ToolTipOverrideData[]>(result);
 
-                    foreach (ToolTipOverrideData importedData in imported)
-                        new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer).Save();
+                                                                        foreach (ToolTipOverrideData importedData in imported)
+                                                                            new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer).Save();
 
-                    GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
-                }
-                catch (System.Exception e)
-                {
-                    Log.Error(e.ToString());
-                    GameActions.Print(World.Instance, "It looks like there was an error trying to import your override settings.", 32);
-                }
-            }));
-        }
+                                                                        GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
+                                                                    }
+                                                                    catch (System.Exception e)
+                                                                    {
+                                                                        Log.Error(e.ToString());
+                                                                        GameActions.Print(World.Instance, "It looks like there was an error trying to import your override settings.", 32);
+                                                                    }
+                                                                }));
 
         private static string DecodeUnicodeEscapes(string input)
         {
@@ -245,7 +242,7 @@ namespace ClassicUO.Game.Managers
         private static IEnumerable<ToolTipOverrideData> FilteredOverrides(
             ToolTipOverrideData[] all, byte itemLayer)
         {
-            foreach (var data in all)
+            foreach (ToolTipOverrideData data in all)
             {
                 if (data == null)
                     continue;
@@ -266,7 +263,7 @@ namespace ClassicUO.Game.Managers
             ToolTipOverrideData[] toolTipOverrides = GetAllToolTipOverrides();
 
             bool headerHandled = false;
-            foreach (var overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
+            foreach (ToolTipOverrideData overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
             {
                 if (MatchItemName(itemPropertiesData.Name, overrideData.SearchText))
                 {
@@ -288,9 +285,9 @@ namespace ClassicUO.Game.Managers
                 );
             }
 
-            var bestGridHighlightData = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
+            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
 
-            foreach (var property in itemPropertiesData.singlePropertyData)
+            foreach (ItemPropertiesData.SinglePropertyData property in itemPropertiesData.singlePropertyData)
             {
                 // Find if this property is highlighted
                 bool isHighlighted = bestGridHighlightData != null && bestGridHighlightData.DoesPropertyMatch(property);
@@ -299,7 +296,7 @@ namespace ClassicUO.Game.Managers
                 ToolTipOverrideData matchedOverride = null;
                 if (toolTipOverrides != null)
                 {
-                    foreach (var overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
+                    foreach (ToolTipOverrideData overrideData in FilteredOverrides(toolTipOverrides, itemPropertiesData.item?.ItemData.Layer ?? 0))
                     {
                         if (!MatchPropertyName(World.Instance, property.OriginalString, overrideData.SearchText))
                             continue;
@@ -383,7 +380,7 @@ namespace ClassicUO.Game.Managers
 
         public static string ProcessTooltipText(string text)
         {
-            ItemPropertiesData itemPropertiesData = new ItemPropertiesData(text);
+            var itemPropertiesData = new ItemPropertiesData(text);
             return BuildTooltip(itemPropertiesData);
         }
 

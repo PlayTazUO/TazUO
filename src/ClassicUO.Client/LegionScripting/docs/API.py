@@ -66,6 +66,7 @@ class Events:
         pass
 
 class PyBaseControl:
+    IsVisible: bool = None
 
     def Add(self, childControl: Any) -> None:
         """
@@ -150,6 +151,14 @@ class PyBaseControl:
     def CenterYInViewPort(self) -> None:
         """
          Centers a GUMP vertically in the viewport. Only works on Gump instances.
+         Used in python API
+        
+        """
+        pass
+
+    def Clear(self) -> None:
+        """
+         Clears all child controls from this control.
          Used in python API
         
         """
@@ -255,13 +264,13 @@ class PyEntity:
 
 class PyGameObject:
     Impassible: bool = None
+    X: int = None
+    Y: int = None
+    Z: int = None
     Graphic: int = None
     Hue: int = None
     Distance: int = None
     __class__: str = None
-    X: int = None
-    Y: int = None
-    Z: int = None
 
     def SetHue(self, hue: int) -> None:
         """
@@ -316,6 +325,9 @@ class PyLand:
     __class__: str = None
 
 class PyMobile:
+    X: int = None
+    Y: int = None
+    Z: int = None
     HitsDiff: int = None
     ManaDiff: int = None
     StamDiff: int = None
@@ -329,7 +341,9 @@ class PyMobile:
     Mana: int = None
     IsRenamable: bool = None
     IsHuman: bool = None
+    InWarMode: bool = None
     Backpack: PyItem = None
+    Mount: PyItem = None
     __class__: str = None
 
 class PyMulti:
@@ -386,6 +400,67 @@ class ModernNineSliceGump:
     def SetResizeCallback(self, callback: Any) -> None:
         pass
 
+class PyPlayer:
+    X: int = None
+    Y: int = None
+    Z: int = None
+    Strength: int = None
+    Dexterity: int = None
+    Intelligence: int = None
+    StrengthIncrease: int = None
+    DexterityIncrease: int = None
+    IntelligenceIncrease: int = None
+    StrLock = None
+    DexLock = None
+    IntLock = None
+    HitPointsIncrease: int = None
+    ManaIncrease: int = None
+    StaminaIncrease: int = None
+    HitPointsRegeneration: int = None
+    ManaRegeneration: int = None
+    StaminaRegeneration: int = None
+    PhysicalResistance: int = None
+    FireResistance: int = None
+    ColdResistance: int = None
+    PoisonResistance: int = None
+    EnergyResistance: int = None
+    MaxPhysicResistance: int = None
+    MaxFireResistance: int = None
+    MaxColdResistance: int = None
+    MaxPoisonResistance: int = None
+    MaxEnergyResistance: int = None
+    DamageMin: int = None
+    DamageMax: int = None
+    DamageIncrease: int = None
+    HitChanceIncrease: int = None
+    SwingSpeedIncrease: int = None
+    DefenseChanceIncrease: int = None
+    MaxDefenseChanceIncrease: int = None
+    ReflectPhysicalDamage: int = None
+    SpellDamageIncrease: int = None
+    FasterCasting: int = None
+    FasterCastRecovery: int = None
+    LowerManaCost: int = None
+    LowerReagentCost: int = None
+    IsCasting: bool = None
+    IsRecovering: bool = None
+    Luck: int = None
+    Gold: int = None
+    TithingPoints: int = None
+    Weight: int = None
+    WeightMax: int = None
+    StatsCap: int = None
+    Followers: int = None
+    FollowersMax: int = None
+    EnhancePotions: int = None
+    MaxHitPointsIncrease: int = None
+    MaxManaIncrease: int = None
+    MaxStaminaIncrease: int = None
+    IsHidden: bool = None
+    IsWalking: bool = None
+    InWarMode: bool = None
+    __class__: str = None
+
 class PyProfile:
     CharacterName: str = None
     ServerName: str = None
@@ -400,12 +475,13 @@ class PyStatic:
     IsImpassible: bool = None
     IsTree: bool = None
     IsVegetation: bool = None
+    IsCave: bool = None
     Name: str = None
     __class__: str = None
 
 JournalEntries = None
 Backpack: int = None
-Player = None
+Player: PyPlayer = None
 Bank: int = None
 Random = None
 LastTargetSerial: int = None
@@ -1524,6 +1600,29 @@ def CloseGump(ID: int = 1337) -> None:
      Example:
      ```py
      API.CloseGump()
+     ```
+    
+    """
+    pass
+
+def ConfigNextGump(serial: int | None = None, x: int | None = None, y: int | None = None, isVisible: bool | None = None, autoClose: bool | None = None, autoRespond: bool | None = None, autoRespondButton: int | None = None) -> None:
+    """
+     Configure how the next gump should be handled.
+     Example:
+     ```py
+     # Position gump at coordinates
+     API.ConfigNextGump(x=100, y=200)
+    
+     # Auto-close any gump
+     API.ConfigNextGump(autoClose=True)
+    
+     # Auto-respond to specific gump
+     API.ConfigNextGump(serial=0x12345678, autoRespond=True, autoRespondButton=1)
+    
+     # Clear configuration
+     API.ConfigNextGump()
+    
+     Note: This is only applied once. You cannot stack multiple configs. This is reset after successfully applied and only applies to server-sent gumps.
      ```
     
     """

@@ -69,12 +69,12 @@ namespace ClassicUO.Assets
             using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
             int bytesRead;
-            var totalRead = 0;
-            var buf = new byte[fileStream.Length];
+            int totalRead = 0;
+            byte[] buf = new byte[fileStream.Length];
             while ((bytesRead = fileStream.Read(buf, totalRead, Math.Min(4096, buf.Length - totalRead))) > 0)
                 totalRead += bytesRead;
 
-            var output = buf[3] == 0x8E /*|| FileManager.Version >= ClientVersion.CV_7010400*/ ? BwtDecompress.Decompress(buf) : buf;
+            byte[] output = buf[3] == 0x8E /*|| FileManager.Version >= ClientVersion.CV_7010400*/ ? BwtDecompress.Decompress(buf) : buf;
 
             var reader = new StackDataReader(output);
             reader.ReadInt32LE();
@@ -82,19 +82,16 @@ namespace ClassicUO.Assets
 
             while (reader.Remaining > 0)
             {
-                var number = reader.ReadInt32LE();
-                var flag = reader.ReadUInt8();
-                var length = reader.ReadInt16LE();
-                var text = string.Intern(reader.ReadUTF8(length));
+                int number = reader.ReadInt32LE();
+                byte flag = reader.ReadUInt8();
+                short length = reader.ReadInt16LE();
+                string text = string.Intern(reader.ReadUTF8(length));
 
                 _entries[number] = text;
             }
         }
 
-        public override void ClearResources()
-        {
-            _entries.Clear();
-        }
+        public override void ClearResources() => _entries.Clear();
 
         public string GetString(int number)
         {
@@ -146,7 +143,7 @@ namespace ClassicUO.Assets
                 arg = "";
             }
 
-            var roChars = arg.AsSpan();
+            ReadOnlySpan<char> roChars = arg.AsSpan();
 
 
             // get count of valid args
@@ -195,7 +192,7 @@ namespace ClassicUO.Assets
             locations[totalArgs - 1].Item1 = trueStart;
             locations[totalArgs - 1].Item2 = i;
 
-            ValueStringBuilder sb = new ValueStringBuilder(baseCliloc.AsSpan());
+            var sb = new ValueStringBuilder(baseCliloc.AsSpan());
             {
                 int index, pos = 0;
 
@@ -251,7 +248,7 @@ namespace ClassicUO.Assets
 
                     --index;
 
-                    var a = index < 0 || index >= totalArgs ? string.Empty.AsSpan() : arg.AsSpan().Slice(locations[index].Item1, locations[index].Item2 - locations[index].Item1);
+                    ReadOnlySpan<char> a = index < 0 || index >= totalArgs ? string.Empty.AsSpan() : arg.AsSpan().Slice(locations[index].Item1, locations[index].Item2 - locations[index].Item1);
 
                     if (a.Length > 1)
                     {
@@ -259,7 +256,7 @@ namespace ClassicUO.Assets
                         {
                             if (int.TryParse(a.Slice(1).ToString(), out int id1))
                             {
-                                var ss = GetString(id1);
+                                string ss = GetString(id1);
 
                                 if (string.IsNullOrEmpty(ss))
                                 {

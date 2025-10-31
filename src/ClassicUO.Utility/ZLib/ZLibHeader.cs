@@ -104,7 +104,7 @@ namespace ZLibNative
 
         public static ZLibHeader DecodeHeader(int pCMF, int pFlag)
         {
-            ZLibHeader result = new ZLibHeader();
+            var result = new ZLibHeader();
 
             //Ensure that parameters are bytes
             pCMF &= 0x0FF;

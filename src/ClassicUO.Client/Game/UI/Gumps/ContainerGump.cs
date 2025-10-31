@@ -54,7 +54,7 @@ namespace ClassicUO.Game.UI.Gumps
                 && ProfileManager.CurrentProfile != null
             )
             {
-                var gumps = Client.Game.UO.Gumps;
+                Renderer.Gumps.Gump gumps = Client.Game.UO.Gumps;
 
                 switch (ProfileManager.CurrentProfile.BackpackStyle)
                 {
@@ -262,7 +262,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            Entity it = SelectedObject.Object as Entity;
+            var it = SelectedObject.Object as Entity;
             uint serial = it != null ? it.Serial : 0;
             uint dropcontainer = LocalSerial;
 
@@ -385,7 +385,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         Rectangle containerBounds = World.ContainerManager.Get(gump.Graphic).Bounds;
 
-                        ref readonly var spriteInfo = ref (
+                        ref readonly SpriteInfo spriteInfo = ref (
                             (gump.IsChessboard || gump.IsBackgammonBoard)
                                 ? ref Client.Game.UO.Gumps.GetGump(
                                     (ushort)(
@@ -540,7 +540,7 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("graphic", Graphic.ToString());
             writer.WriteAttributeString("isminimized", IsMinimized.ToString());
 
-            var item = World.Items.Get(LocalSerial);
+            Item item = World.Items.Get(LocalSerial);
             if (item is not null)
             {
                 writer.WriteAttributeString("parent", item.Container.ToString());
@@ -557,10 +557,7 @@ namespace ClassicUO.Game.UI.Gumps
             Dispose();
         }
 
-        private float GetScale()
-        {
-            return (IsChessboard || IsBackgammonBoard) ? 1f : UIManager.ContainerScale;
-        }
+        private float GetScale() => (IsChessboard || IsBackgammonBoard) ? 1f : UIManager.ContainerScale;
 
         private void ItemsOnAdded()
         {
@@ -580,7 +577,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
-                Item item = (Item)i;
+                var item = (Item)i;
 
                 // NOTE: Switched from 'item.Layer' property which comes from server to 'ItemData.Layer' from tiledata.mul.
                 //       In the past I found some issues using the server property.
@@ -610,7 +607,7 @@ namespace ClassicUO.Game.UI.Gumps
                     continue;
                 }
 
-                ItemGump itemControl = new ItemGump(
+                var itemControl = new ItemGump(
                     this,
                     item.Serial,
                     (ushort)(
@@ -657,7 +654,7 @@ namespace ClassicUO.Game.UI.Gumps
             int boundWidth = dataBounds.Width;
             int boundHeight = dataBounds.Height + (IsChessboard ? 20 : 0);
 
-            ref readonly var spriteInfo = ref (
+            ref readonly SpriteInfo spriteInfo = ref (
                 (IsChessboard || IsBackgammonBoard)
                     ? ref Client.Game.UO.Gumps.GetGump(
                         (ushort)(
@@ -739,7 +736,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 for (LinkedObject i = item.Items; i != null; i = i.Next)
                 {
-                    Item child = (Item)i;
+                    var child = (Item)i;
 
                     if (child.Container == item)
                     {
@@ -768,7 +765,7 @@ namespace ClassicUO.Game.UI.Gumps
                 && ProfileManager.CurrentProfile.OverrideContainerLocationSetting >= 2
             )
             {
-                Point gumpCenter = new Point(X + (Width >> 1), Y + (Height >> 1));
+                var gumpCenter = new Point(X + (Width >> 1), Y + (Height >> 1));
                 ProfileManager.CurrentProfile.OverrideContainerLocationPosition = gumpCenter;
             }
 

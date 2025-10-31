@@ -37,7 +37,7 @@ namespace ClassicUO.Renderer.Arts
             if (idx >= _spriteInfos.Length)
                 return ref SpriteInfo.Empty;
 
-            ref var spriteInfo = ref _spriteInfos[idx];
+            ref SpriteInfo spriteInfo = ref _spriteInfos[idx];
 
             if (spriteInfo.Texture == null)
             {
@@ -79,7 +79,7 @@ namespace ClassicUO.Renderer.Arts
                         idx -= 0x4000;
                         _picker.Set(idx, artInfo.Width, artInfo.Height, artInfo.Pixels);
 
-                        var pos1 = 0;
+                        int pos1 = 0;
                         int minX = artInfo.Width,
                             minY = artInfo.Height,
                             maxX = 0,
@@ -116,7 +116,7 @@ namespace ClassicUO.Renderer.Arts
         {
             hotX = hotY = 0;
 
-            var artInfo = _artLoader.GetArt((uint)(index + 0x4000));
+            ArtInfo artInfo = _artLoader.GetArt((uint)(index + 0x4000));
 
             if (artInfo.Pixels.IsEmpty)
             {
@@ -125,7 +125,7 @@ namespace ClassicUO.Renderer.Arts
 
             fixed (uint* ptr = artInfo.Pixels)
             {
-                SDL.SDL_Surface* surface = (SDL.SDL_Surface*)SDL.SDL_CreateSurfaceFrom(artInfo.Width, artInfo.Height, SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888, (IntPtr)ptr, 4 * artInfo.Width);
+                var surface = (SDL.SDL_Surface*)SDL.SDL_CreateSurfaceFrom(artInfo.Width, artInfo.Height, SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888, (IntPtr)ptr, 4 * artInfo.Width);
                 // SDL2:
                 // SDL.SDL_Surface* surface = (SDL.SDL_Surface*)
                 //     SDL.SDL_CreateRGBSurfaceWithFormatFrom(

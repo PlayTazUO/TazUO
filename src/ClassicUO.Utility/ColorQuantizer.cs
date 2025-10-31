@@ -40,30 +40,15 @@ namespace ClassicUO.Utility
 
     static class ArgbHelper
     {
-        public static uint FromArgb(int alpha, int red, int green, int blue)
-        {
-            return ((uint)alpha << 24) | ((uint)red << 16) | ((uint)green << 8) | (uint)blue;
-        }
+        public static uint FromArgb(int alpha, int red, int green, int blue) => ((uint)alpha << 24) | ((uint)red << 16) | ((uint)green << 8) | (uint)blue;
 
-        public static int GetAlpha(uint color)
-        {
-            return (int)(color >> 24) & 0xFF;
-        }
+        public static int GetAlpha(uint color) => (int)(color >> 24) & 0xFF;
 
-        public static int GetRed(uint color)
-        {
-            return (int)(color >> 16) & 0xFF;
-        }
+        public static int GetRed(uint color) => (int)(color >> 16) & 0xFF;
 
-        public static int GetGreen(uint color)
-        {
-            return (int)(color >> 8) & 0xFF;
-        }
+        public static int GetGreen(uint color) => (int)(color >> 8) & 0xFF;
 
-        public static int GetBlue(uint color)
-        {
-            return (int)color & 0xFF;
-        }
+        public static int GetBlue(uint color) => (int)color & 0xFF;
 
         public static float GetHue(uint color)
         {
@@ -147,9 +132,9 @@ namespace ClassicUO.Utility
         /// </summary>
         private static double[] PrecalculateFactors()
         {
-            var result = new double[256];
+            double[] result = new double[256];
 
-            for (var value = 0; value < 256; value++) result[value] = value / 255.0;
+            for (int value = 0; value < 256; value++) result[value] = value / 255.0;
 
             return result;
         }
@@ -161,16 +146,16 @@ namespace ClassicUO.Utility
         /// <returns>The non-alpha blended color (RGB).</returns>
         internal static uint ConvertAlpha(uint color)
         {
-            var result = color;
+            uint result = color;
 
             if (ArgbHelper.GetAlpha(color) < 255)
             {
                 // performs a alpha blending (second color is BackgroundColor, by default a Control color)
-                var colorFactor = _Factors[ArgbHelper.GetAlpha(color)];
-                var backgroundFactor = _Factors[255 - ArgbHelper.GetAlpha(color)];
-                var red = (int)(ArgbHelper.GetRed(color) * colorFactor + ArgbHelper.GetRed(_BackgroundColor) * backgroundFactor);
-                var green = (int)(ArgbHelper.GetGreen(color) * colorFactor + ArgbHelper.GetGreen(_BackgroundColor) * backgroundFactor);
-                var blue = (int)(ArgbHelper.GetBlue(color) * colorFactor + ArgbHelper.GetBlue(_BackgroundColor) * backgroundFactor);
+                double colorFactor = _Factors[ArgbHelper.GetAlpha(color)];
+                double backgroundFactor = _Factors[255 - ArgbHelper.GetAlpha(color)];
+                int red = (int)(ArgbHelper.GetRed(color) * colorFactor + ArgbHelper.GetRed(_BackgroundColor) * backgroundFactor);
+                int green = (int)(ArgbHelper.GetGreen(color) * colorFactor + ArgbHelper.GetGreen(_BackgroundColor) * backgroundFactor);
+                int blue = (int)(ArgbHelper.GetBlue(color) * colorFactor + ArgbHelper.GetBlue(_BackgroundColor) * backgroundFactor);
                 result = ArgbHelper.FromArgb(255, red, green, blue);
             }
 
@@ -186,29 +171,29 @@ namespace ClassicUO.Utility
         internal static int GetNearestColor(uint color, IList<uint> palette)
         {
             // initializes the best difference, set it for worst possible, it can only get better
-            var bestIndex = 0;
-            var leastDifference = int.MaxValue;
+            int bestIndex = 0;
+            int leastDifference = int.MaxValue;
 
             // goes thru all the colors in the palette, looking for the best match
-            for (var index = 0; index < palette.Count; index++)
+            for (int index = 0; index < palette.Count; index++)
             {
-                var targetColor = palette[index];
+                uint targetColor = palette[index];
 
                 // calculates a difference for all the color components
-                var deltaA = ArgbHelper.GetAlpha(color) - ArgbHelper.GetAlpha(targetColor);
-                var deltaR = ArgbHelper.GetRed(color) - ArgbHelper.GetRed(targetColor);
-                var deltaG = ArgbHelper.GetGreen(color) - ArgbHelper.GetGreen(targetColor);
-                var deltaB = ArgbHelper.GetBlue(color) - ArgbHelper.GetBlue(targetColor);
+                int deltaA = ArgbHelper.GetAlpha(color) - ArgbHelper.GetAlpha(targetColor);
+                int deltaR = ArgbHelper.GetRed(color) - ArgbHelper.GetRed(targetColor);
+                int deltaG = ArgbHelper.GetGreen(color) - ArgbHelper.GetGreen(targetColor);
+                int deltaB = ArgbHelper.GetBlue(color) - ArgbHelper.GetBlue(targetColor);
 
                 // calculates a power of two
-                var factorA = deltaA * deltaA;
-                var factorR = deltaR * deltaR;
-                var factorG = deltaG * deltaG;
-                var factorB = deltaB * deltaB;
+                int factorA = deltaA * deltaA;
+                int factorR = deltaR * deltaR;
+                int factorG = deltaG * deltaG;
+                int factorB = deltaB * deltaB;
 
                 // calculates the Euclidean distance, a square-root is not need
                 // as we're only comparing distance, not measuring it
-                var difference = factorA + factorR + factorG + factorB;
+                int difference = factorA + factorR + factorG + factorB;
 
                 // if a difference is zero, we're good because it won't get better
                 if (difference == 0)
@@ -293,10 +278,7 @@ namespace ClassicUO.Utility
         /// <summary>
         ///     Increases the count of pixels of this color.
         /// </summary>
-        public void IncreaseCount()
-        {
-            Count++;
-        }
+        public void IncreaseCount() => Count++;
     }
 
     public class OctreeQuantizer : IColorQuantizer
@@ -313,7 +295,7 @@ namespace ClassicUO.Utility
             _levels = new List<OctreeNode>[7];
 
             // creates the octree level lists
-            for (var level = 0; level < 7; level++) _levels[level] = new List<OctreeNode>();
+            for (int level = 0; level < 7; level++) _levels[level] = new List<OctreeNode>();
 
             // creates a root node
             _root = new OctreeNode(0, this);
@@ -325,10 +307,7 @@ namespace ClassicUO.Utility
         ///     Gets the leaf nodes only (recursively).
         /// </summary>
         /// <value>All the tree leaves.</value>
-        internal IEnumerable<OctreeNode> Leaves
-        {
-            get { return _root.ActiveNodes.Where(node => node.IsLeaf); }
-        }
+        internal IEnumerable<OctreeNode> Leaves => _root.ActiveNodes.Where(node => node.IsLeaf);
 
         #endregion | Calculated properties |
 
@@ -339,10 +318,7 @@ namespace ClassicUO.Utility
         /// </summary>
         /// <param name="level">The depth level.</param>
         /// <param name="octreeNode">The octree node to be added.</param>
-        internal void AddLevelNode(int level, OctreeNode octreeNode)
-        {
-            _levels[level].Add(octreeNode);
-        }
+        internal void AddLevelNode(int level, OctreeNode octreeNode) => _levels[level].Add(octreeNode);
 
         #endregion | Methods |
 
@@ -366,11 +342,11 @@ namespace ClassicUO.Utility
         public List<uint> GetPalette(int colorCount)
         {
             var result = new List<uint>();
-            var leafCount = Leaves.Count();
-            var paletteIndex = 0;
+            int leafCount = Leaves.Count();
+            int paletteIndex = 0;
 
             // goes thru all the levels starting at the deepest, and goes upto a root level
-            for (var level = 6; level >= 0; level--)
+            for (int level = 6; level >= 0; level--)
             {
                 // if level contains any node
                 if (_levels[level].Count > 0)
@@ -379,7 +355,7 @@ namespace ClassicUO.Utility
                     IEnumerable<OctreeNode> sortedNodeList = _levels[level].OrderBy(node => node.ActiveNodesPixelCount);
 
                     // removes the nodes unless the count of the leaves is lower or equal than our requested color count
-                    foreach (var node in sortedNodeList)
+                    foreach (OctreeNode node in sortedNodeList)
                     {
                         // removes a node
                         leafCount -= node.RemoveLeaves();
@@ -397,7 +373,7 @@ namespace ClassicUO.Utility
             }
 
             // goes through all the leaves that are left in the tree (there should now be less or equal than requested)
-            foreach (var node in Leaves)
+            foreach (OctreeNode node in Leaves)
             {
                 // adds then to a palette
                 result.Add(node.Color);
@@ -433,11 +409,9 @@ namespace ClassicUO.Utility
         ///     Gets the color count.
         /// </summary>
         /// <returns></returns>
-        public int GetColorCount()
-        {
+        public int GetColorCount() =>
             // calculates the number of leaves, by parsing the whole tree
-            return Leaves.Count();
-        }
+            Leaves.Count();
 
         /// <summary>
         ///     Clears this instance.
@@ -445,7 +419,7 @@ namespace ClassicUO.Utility
         public void Clear()
         {
             // clears all the node list levels
-            foreach (var level in _levels) level.Clear();
+            foreach (List<OctreeNode> level in _levels) level.Clear();
 
             // creates a new root node (thus throwing away the old tree)
             _root = new OctreeNode(0, this);
@@ -524,12 +498,12 @@ namespace ClassicUO.Utility
         {
             get
             {
-                var result = _pixelCount;
+                int result = _pixelCount;
 
                 // sums up all the pixel presence for all the active nodes
-                for (var index = 0; index < 8; index++)
+                for (int index = 0; index < 8; index++)
                 {
-                    var node = _nodes[index];
+                    OctreeNode node = _nodes[index];
 
                     if (node != null) result += node._pixelCount;
                 }
@@ -549,9 +523,9 @@ namespace ClassicUO.Utility
                 var result = new List<OctreeNode>();
 
                 // adds all the active sub-nodes to a list
-                for (var index = 0; index < 8; index++)
+                for (int index = 0; index < 8; index++)
                 {
-                    var node = _nodes[index];
+                    OctreeNode node = _nodes[index];
 
                     if (node != null)
                     {
@@ -589,7 +563,7 @@ namespace ClassicUO.Utility
             else if (level < 8) // otherwise goes one level deeper
             {
                 // calculates an index for the next sub-branch
-                var index = GetColorIndexAtLevel(color, level);
+                int index = GetColorIndexAtLevel(color, level);
 
                 // if that branch doesn't exist, grows it
                 if (_nodes[index] == null) _nodes[index] = new OctreeNode(level, parent);
@@ -614,7 +588,7 @@ namespace ClassicUO.Utility
                 result = _paletteIndex;
             else // otherwise continue in to the lower depths
             {
-                var index = GetColorIndexAtLevel(color, level);
+                int index = GetColorIndexAtLevel(color, level);
                 result = _nodes[index].GetPaletteIndex(color, level + 1);
             }
 
@@ -627,12 +601,12 @@ namespace ClassicUO.Utility
         /// <returns></returns>
         public int RemoveLeaves()
         {
-            var result = 0;
+            int result = 0;
 
             // scans thru all the active nodes
-            for (var index = 0; index < 8; index++)
+            for (int index = 0; index < 8; index++)
             {
-                var node = _nodes[index];
+                OctreeNode node = _nodes[index];
 
                 if (node != null)
                 {
@@ -666,19 +640,13 @@ namespace ClassicUO.Utility
         /// <param name="color">The color for which the index will be calculated.</param>
         /// <param name="level">The bit index to be used for index calculation.</param>
         /// <returns>The color index at a certain depth level.</returns>
-        private static int GetColorIndexAtLevel(uint color, int level)
-        {
-            return ((ArgbHelper.GetRed(color) & _Mask[level]) == _Mask[level] ? 4 : 0) | ((ArgbHelper.GetGreen(color) & _Mask[level]) == _Mask[level] ? 2 : 0) | ((ArgbHelper.GetBlue(color) & _Mask[level]) == _Mask[level] ? 1 : 0);
-        }
+        private static int GetColorIndexAtLevel(uint color, int level) => ((ArgbHelper.GetRed(color) & _Mask[level]) == _Mask[level] ? 4 : 0) | ((ArgbHelper.GetGreen(color) & _Mask[level]) == _Mask[level] ? 2 : 0) | ((ArgbHelper.GetBlue(color) & _Mask[level]) == _Mask[level] ? 1 : 0);
 
         /// <summary>
         ///     Sets a palette index to this node.
         /// </summary>
         /// <param name="index">The palette index.</param>
-        internal void SetPaletteIndex(int index)
-        {
-            _paletteIndex = index;
-        }
+        internal void SetPaletteIndex(int index) => _paletteIndex = index;
 
         #endregion | Helper methods |
     }

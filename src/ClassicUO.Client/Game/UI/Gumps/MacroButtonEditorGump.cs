@@ -151,7 +151,7 @@ namespace ClassicUO.Game.UI.Gumps
             area.CanMove = true;
 
 
-            Checkbox _hideLabelCheckbox = new Checkbox
+            var _hideLabelCheckbox = new Checkbox
             (
                 0x00D2,
                 0x00D3,
@@ -173,7 +173,7 @@ namespace ClassicUO.Game.UI.Gumps
             area.Add(_hideLabelCheckbox);
 
 
-            Label _ScaleLbl = new Label
+            var _ScaleLbl = new Label
             (
                     "Scale",
                     true,
@@ -188,7 +188,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
             area.Add(_ScaleLbl);
 
-            HSliderBar _scale = new HSliderBar
+            var _scale = new HSliderBar
             (
                 _ScaleLbl.X + _ScaleLbl.Width + 15,
                 _ScaleLbl.Y + 2,
@@ -217,7 +217,7 @@ namespace ClassicUO.Game.UI.Gumps
             area.Add(_scale);
 
 
-            ModernColorPicker.HueDisplay _hueDisplay = new ModernColorPicker.HueDisplay(World, _macro.Hue, null, true)
+            var _hueDisplay = new ModernColorPicker.HueDisplay(World, _macro.Hue, null, true)
             {
                 X = 10,
                 Y = _scale.Y + _scale.Height + 15
@@ -259,7 +259,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = _ColorLabel.Y
             });
 
-            StbTextBox _searchBox = new StbTextBox(0xFF, -1, 65, true, FontStyle.None, 0x0481)
+            var _searchBox = new StbTextBox(0xFF, -1, 65, true, FontStyle.None, 0x0481)
             {
                 X = _scale.X,
                 Y = _ColorLabel.Y,
@@ -271,7 +271,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             _searchBox.TextChanged += (sender, e) => {
-                if (ushort.TryParse(_searchBox.Text, out var id)){
+                if (ushort.TryParse(_searchBox.Text, out ushort id)){
                     OnGraphicChange(id);
                     return;
                 }
@@ -313,7 +313,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 case 1:
                     World.Macros.Save();
-                    var existing = UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == _macro);
+                    MacroButtonGump existing = UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == _macro);
                     if (existing != null)
                     {
                         existing.TheMacro = _macro;

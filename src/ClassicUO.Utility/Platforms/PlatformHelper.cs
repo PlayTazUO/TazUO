@@ -37,7 +37,7 @@ namespace ClassicUO.Utility.Platforms
                 if (IsWindows)
                 {
                     // Use shell execute - secure and prevents command injection
-                    ProcessStartInfo psi = new ProcessStartInfo
+                    var psi = new ProcessStartInfo
                     {
                         FileName = url,
                         UseShellExecute = true

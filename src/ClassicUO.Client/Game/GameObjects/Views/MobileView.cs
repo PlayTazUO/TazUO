@@ -34,8 +34,8 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            var profile = _profile;
-            var auraManager = World.AuraManager;
+            Profile profile = _profile;
+            Managers.AuraManager auraManager = World.AuraManager;
             int clientViewRange = World.ClientViewRange;
 
             bool charSitting = false;
@@ -131,7 +131,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (!isPlayer)
             {
-                var targetManager = World.TargetManager;
+                Managers.TargetManager targetManager = World.TargetManager;
                 if ((targetManager.IsTargeting && isSelected) || (Serial == targetManager.LastAttack && !profile.DisableGrayEnemies))
                     overridenHue = Notoriety.GetHue(NotorietyFlag);
                 else if (inParty && profile.OverridePartyAndGuildHue)
@@ -169,7 +169,7 @@ namespace ClassicUO.Game.GameObjects
                     && mountGraphic < Client.Game.UO.Animations.MaxAnimationCount
                 )
                 {
-                    if (Mounts.TryGet(mount.Graphic, out var mountInfo))
+                    if (Mounts.TryGet(mount.Graphic, out MountInfo mountInfo))
                     {
                         mountOffsetY = mountInfo.OffsetY;
                     }
@@ -409,7 +409,7 @@ namespace ClassicUO.Game.GameObjects
                             Profiler.EnterContext("EQUIP_DRAW");
 
                             Profiler.EnterContext("GROUPFORANIM");
-                            var group = isGargoyle /*&& item.ItemData.IsWeapon*/
+                            byte group = isGargoyle /*&& item.ItemData.IsWeapon*/
                                         && seatData.Graphic == 0
                                 ? GetGroupForAnimation(this, graphic, true)
                                 : animGroup;
@@ -471,7 +471,7 @@ namespace ClassicUO.Game.GameObjects
         {
             if (item.ItemData.AnimID != 0)
             {
-                var graphic = item.ItemData.AnimID;
+                ushort graphic = item.ItemData.AnimID;
 
                 if (isGargoyle)
                 {
@@ -589,7 +589,7 @@ namespace ClassicUO.Game.GameObjects
         {
             spriteInfo = default;
 
-            var frames = Client.Game.UO.Animations.GetAnimationFrames(
+            Span<SpriteInfo> frames = Client.Game.UO.Animations.GetAnimationFrames(
                 graphic,
                 animGroup,
                 direction,
@@ -648,11 +648,11 @@ namespace ClassicUO.Game.GameObjects
             }
 
             Profiler.EnterContext("Get Anim Frames");
-            var frames = Client.Game.UO.Animations.GetAnimationFrames(
+            Span<SpriteInfo> frames = Client.Game.UO.Animations.GetAnimationFrames(
                 id,
                 animGroup,
                 dir,
-                out var hueFromFile,
+                out ushort hueFromFile,
                 out _,
                 isEquip,
                 false
@@ -678,7 +678,7 @@ namespace ClassicUO.Game.GameObjects
                 frameIndex = 0;
             }
 
-            ref var spriteInfo = ref frames[frameIndex % frames.Length];
+            ref SpriteInfo spriteInfo = ref frames[frameIndex % frames.Length];
 
             if (spriteInfo.Texture == null)
             {
@@ -747,7 +747,7 @@ namespace ClassicUO.Game.GameObjects
 
                 if (spriteInfo.Texture != null)
                 {
-                    Vector2 pos = new Vector2(x, y);
+                    var pos = new Vector2(x, y);
                     Rectangle rect = spriteInfo.UV;
 
                     if (charIsSitting)
@@ -840,7 +840,7 @@ namespace ClassicUO.Game.GameObjects
             ref SpriteInfo spriteInfo
         )
         {
-            Vector3 mod = new Vector3();
+            var mod = new Vector3();
 
             const float UPPER_BODY_RATIO = 0.35f;
             const float MID_BODY_RATIO = 0.60f;
@@ -968,7 +968,7 @@ namespace ClassicUO.Game.GameObjects
                 Client.Game.UO.Version >= ClientVersion.CV_7000
                 && (Graphic == 666 || Graphic == 667 || Graphic == 0x02B7 || Graphic == 0x02B6);
 
-            var animations = Client.Game.UO.Animations;
+            Renderer.Animations.Animations animations = Client.Game.UO.Animations;
 
             ProcessSteps(out byte dir);
             byte layerDir = dir;
@@ -990,11 +990,11 @@ namespace ClassicUO.Game.GameObjects
                 Item mount = Mount;
                 if (mount != null)
                 {
-                    var mountGraphic = mount.GetGraphicForAnimation();
+                    ushort mountGraphic = mount.GetGraphicForAnimation();
 
                     if (mountGraphic != 0xFFFF)
                     {
-                        var animGroupMount = GetGroupForAnimation(this, mountGraphic);
+                        byte animGroupMount = GetGroupForAnimation(this, mountGraphic);
 
                         if (
                             GetTexture(
@@ -1035,7 +1035,7 @@ namespace ClassicUO.Game.GameObjects
                                 return true;
                             }
 
-                            if (Mounts.TryGet(mount.Graphic, out var moutInfo))
+                            if (Mounts.TryGet(mount.Graphic, out MountInfo moutInfo))
                             {
                                 position.Y += moutInfo.OffsetY;
                             }

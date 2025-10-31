@@ -47,7 +47,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 _graphic = value;
 
-                ref readonly var spriteInfo = ref _is_gump
+                ref readonly SpriteInfo spriteInfo = ref _is_gump
                     ? ref Client.Game.UO.Gumps.GetGump(value)
                     : ref Client.Game.UO.Arts.GetArt(value);
 
@@ -124,13 +124,13 @@ namespace ClassicUO.Game.UI.Controls
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(hue, partialHue, 1);
 
-            ref readonly var spriteInfo = ref _is_gump
+            ref readonly SpriteInfo spriteInfo = ref _is_gump
                 ? ref Client.Game.UO.Gumps.GetGump(Graphic)
                 : ref Client.Game.UO.Arts.GetArt(Graphic);
 
             if (spriteInfo.Texture != null)
             {
-                Rectangle rect = new Rectangle(x, y, Width, Height);
+                var rect = new Rectangle(x, y, Width, Height);
 
                 batcher.Draw(spriteInfo.Texture, rect, spriteInfo.UV, hueVector);
 
@@ -156,7 +156,7 @@ namespace ClassicUO.Game.UI.Controls
 
         public override bool Contains(int x, int y)
         {
-            ref readonly var spriteInfo = ref _is_gump
+            ref readonly SpriteInfo spriteInfo = ref _is_gump
                 ? ref Client.Game.UO.Gumps.GetGump(Graphic)
                 : ref Client.Game.UO.Arts.GetArt(Graphic);
 
@@ -223,10 +223,7 @@ namespace ClassicUO.Game.UI.Controls
             base.OnMouseUp(x, y, button);
         }
 
-        protected override void OnMouseOver(int x, int y)
-        {
-            SelectedObject.Object = _gump.World.Get(LocalSerial);
-        }
+        protected override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump.World.Get(LocalSerial);
 
         private bool CanPickup()
         {
@@ -290,7 +287,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (CanPickUp)
             {
-                ref readonly var spriteInfo = ref _is_gump
+                ref readonly SpriteInfo spriteInfo = ref _is_gump
                     ? ref Client.Game.UO.Gumps.GetGump(Graphic)
                     : ref Client.Game.UO.Arts.GetArt(Graphic);
 
@@ -312,7 +309,7 @@ namespace ClassicUO.Game.UI.Controls
                     && ProfileManager.CurrentProfile.RelativeDragAndDropItems
                 )
                 {
-                    Point p = new Point(
+                    var p = new Point(
                         centerX - (Mouse.Position.X - ScreenCoordinateX),
                         centerY - (Mouse.Position.Y - ScreenCoordinateY)
                     );

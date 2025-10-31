@@ -314,14 +314,14 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 World.SkillsGroupManager.Groups.Sort((s1, s2) =>
                 {
-                    var m1 = Regex.Match(s1.Name, "^\\d+");
-                    var m2 = Regex.Match(s2.Name, "^\\d+");
+                    Match m1 = Regex.Match(s1.Name, "^\\d+");
+                    Match m2 = Regex.Match(s2.Name, "^\\d+");
                     if (!m1.Success || !m2.Success)
                     {
                         return s1.Name.CompareTo(s2.Name);
                     }
 
-                    if (!int.TryParse(m1.Value, out var v1) || !int.TryParse(m2.Value, out var v2))
+                    if (!int.TryParse(m1.Value, out int v1) || !int.TryParse(m2.Value, out int v2))
                     {
                         return s1.Name.CompareTo(s2.Name);
                     }
@@ -347,9 +347,9 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         g.IsMaximized = !g.IsMaximized;
                         var _a = (Area)sender;
-                        var newState = !(bool)_a.Tag;
+                        bool newState = !(bool)_a.Tag;
                         _a.Tag = newState;
-                        foreach (var entry in skillEntries)
+                        foreach (SkillListEntry entry in skillEntries)
                         {
                             entry.IsVisible = newState;
                         }
@@ -374,13 +374,13 @@ namespace ClassicUO.Game.UI.Gumps
                         skills.Reverse();
                     }
 
-                    var grpReal = skills.Sum(s => s.Base);
-                    var grpVal = skills.Sum(s => s.Value);
+                    float grpReal = skills.Sum(s => s.Base);
+                    float grpVal = skills.Sum(s => s.Value);
                     _totalReal += grpReal;
                     _totalValue += grpVal;
                     ;
 
-                    foreach (var s in skills)
+                    foreach (Skill s in skills)
                     {
                         skillEntries.Add(new SkillListEntry(World, this, s));
                     }
@@ -444,7 +444,7 @@ namespace ClassicUO.Game.UI.Gumps
                     a.Add(new Label(grpVal.ToString("F1"), true, 1153) { X = 255, Y = 3 });
 
                     _databox.Add(a);
-                    foreach (var entry in skillEntries)
+                    foreach (SkillListEntry entry in skillEntries)
                     {
                         entry.IsVisible = g.IsMaximized;
                         _skillListEntries.Add(entry);
@@ -454,7 +454,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                List<Skill> sortSkills = new List<Skill>(World.Player.Skills.OrderBy(x => pi.GetValue(x, null)));
+                var sortSkills = new List<Skill>(World.Player.Skills.OrderBy(x => pi.GetValue(x, null)));
                 if (_sortAsc)
                 {
                     sortSkills.Reverse();
@@ -465,7 +465,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _totalValue += skill.Value;
                     _skillListEntries.Add(new SkillListEntry(World, this, skill));
                 }
-                foreach (var entry in _skillListEntries)
+                foreach (SkillListEntry entry in _skillListEntries)
                 {
                     _databox.Add(entry);
                 }
@@ -502,10 +502,7 @@ namespace ClassicUO.Game.UI.Gumps
                 int.TryParse(xml.GetAttribute("lastbutton"), out last_button);
         }
 
-        private void ResizeDrag_MouseUp(object sender, Input.MouseEventArgs e)
-        {
-            Dragging = false;
-        }
+        private void ResizeDrag_MouseUp(object sender, Input.MouseEventArgs e) => Dragging = false;
 
         private void ResizeDrag_MouseDown(object sender, Input.MouseEventArgs e)
         {
@@ -566,10 +563,7 @@ namespace ClassicUO.Game.UI.Gumps
             return base.Draw(batcher, x, y);
         }
 
-        public void ForceUpdate()
-        {
-            _updateSkillsNeeded = true;
-        }
+        public void ForceUpdate() => _updateSkillsNeeded = true;
 
         private enum Buttons
         {
@@ -591,7 +585,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             _gump = gump;
             Height = 20;
-            Label skillName = new Label(skill.Name, true, 1153, font: 3) {AcceptMouseInput = skill.IsClickable, CanMove = true};
+            var skillName = new Label(skill.Name, true, 1153, font: 3) {AcceptMouseInput = skill.IsClickable, CanMove = true};
             if(skill.IsClickable)
             {
                 skillName.MouseDoubleClick += skillDoubleClick;
@@ -600,9 +594,9 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     GetSpellFloatingButton(_skill.Index)?.Dispose();
 
-                    ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x24B8);
+                    ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x24B8);
 
-                    SkillButtonGump skillButtonGump = new SkillButtonGump(
+                    var skillButtonGump = new SkillButtonGump(
                         world,
                         _skill,
                         Mouse.LClickPosition.X - (gumpInfo.UV.Width >> 1),
@@ -614,9 +608,9 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            Label skillValueBase = new Label(skill.Base.ToString(), true, 1153, font: 3);
-            Label skillValue = new Label(skill.Value.ToString(), true, 1153, font: 3);
-            Label skillCap = new Label(skill.Cap.ToString(), true, 1153, font: 3);
+            var skillValueBase = new Label(skill.Base.ToString(), true, 1153, font: 3);
+            var skillValue = new Label(skill.Value.ToString(), true, 1153, font: 3);
+            var skillCap = new Label(skill.Cap.ToString(), true, 1153, font: 3);
 
             _skill = skill;
             CanMove = true;
@@ -647,7 +641,7 @@ namespace ClassicUO.Game.UI.Gumps
             skillCap.X = 305;
             Add(skillCap);
 
-            GumpPic loc = new GumpPic(355, 4, (ushort)(skill.Lock == Lock.Up ? 0x983 : skill.Lock == Lock.Down ? 0x985 : 0x82C), 0);
+            var loc = new GumpPic(355, 4, (ushort)(skill.Lock == Lock.Up ? 0x983 : skill.Lock == Lock.Down ? 0x985 : 0x82C), 0);
 
             Add(loc);
 

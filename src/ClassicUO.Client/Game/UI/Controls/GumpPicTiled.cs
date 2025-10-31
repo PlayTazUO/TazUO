@@ -54,7 +54,7 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     _graphic = value;
 
-                    ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
+                    ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
 
                     if (gumpInfo.Texture == null)
                     {
@@ -91,7 +91,7 @@ namespace ClassicUO.Game.UI.Controls
                 hueVector = ShaderHueTranslator.GetHueVector(Hue, false, Alpha, true);
             }
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             if (gumpInfo.Texture != null)
             {
@@ -114,7 +114,7 @@ namespace ClassicUO.Game.UI.Controls
             x -= Offset.X;
             y -= Offset.Y;
 
-            ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
+            ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(Graphic);
 
             if (gumpInfo.Texture == null)
             {

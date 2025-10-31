@@ -218,11 +218,11 @@ namespace ClassicUO.Game.Data
             {
                 var tempList = new List<ushort>();
 
-                TextFileParser buffParser = new TextFileParser(File.ReadAllText(buff), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
+                var buffParser = new TextFileParser(File.ReadAllText(buff), new[] { ' ', '\t', ',' }, new[] { '#', ';' }, new[] { '"', '"' });
 
                 while (!buffParser.IsEOF())
                 {
-                    var buffToken = buffParser.ReadTokens();
+                    List<string> buffToken = buffParser.ReadTokens();
 
                     if (buffToken != null && buffToken.Count != 0)
                     {

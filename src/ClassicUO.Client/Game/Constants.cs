@@ -116,6 +116,7 @@ namespace ClassicUO.Game
         public static class SqlSettings
         {
             public const string MANAGED_ZLIB = "USE_MANAGED_ZLIB";
+            public const string IMGUI_ALPHA = "imgui_window_alpha";
         }
     }
 }

@@ -34,6 +34,7 @@ namespace ClassicUO.Game.Map
 
         public GameObject[,] Tiles { get; } = new GameObject[8, 8];
         public bool IsDestroyed;
+        public volatile bool IsLoading;
         public long LastAccessTime;
         public LinkedListNode<int> Node;
 
@@ -42,12 +43,13 @@ namespace ClassicUO.Game.Map
         public int Y;
 
 
-        public static Chunk Create(World world, int x, int y)
+        public static Chunk Create(World world, int x, int y, bool isAsync = false)
         {
             Chunk c = new Chunk(world); // _pool.GetOne();
             c.LastAccessTime = Time.Ticks + Constants.CLEAR_TEXTURES_DELAY;
             c.X = x;
             c.Y = y;
+            c.IsLoading = isAsync;
 
             return c;
         }
@@ -55,171 +57,179 @@ namespace ClassicUO.Game.Map
 
         public unsafe void Load(int index, bool updateWorldMap = false)
         {
+            IsLoading = true;
             IsDestroyed = false;
 
-            Map map = _world.Map;
-
-            ref var im = ref GetIndex(index);
-
-            if (!im.IsValid())
+            try
             {
-                return;
-            }
+                Map map = _world.Map;
 
-            im.MapFile.Seek((long)im.MapAddress, System.IO.SeekOrigin.Begin);
-            var block = im.MapFile.Read<MapBlock>();
+                ref IndexMap im = ref GetIndex(index);
 
-            var cells = block.Cells;
-            int bx = X << 3;
-            int by = Y << 3;
-
-            uint[] bufferBlock = new uint[64];
-            sbyte[] bufferBlockZ = new sbyte[64];
-            var huesLoader = Client.Game.UO.FileManager.Hues;
-
-            for (int y = 0; y < 8; ++y)
-            {
-                int pos = y << 3;
-                ushort tileY = (ushort)(by + y);
-
-                for (int x = 0; x < 8; ++x, ++pos)
+                if (!im.IsValid())
                 {
-                    ushort tileID = (ushort)(cells[pos].TileID & 0x3FFF);
-
-                    sbyte z = cells[pos].Z;
-
-                    Land land = Land.Create(_world, tileID);
-
-                    ushort tileX = (ushort)(bx + x);
-
-                    land.ApplyStretch(map, tileX, tileY, z);
-                    land.X = tileX;
-                    land.Y = tileY;
-                    land.Z = z;
-                    land.UpdateScreenPosition();
-
-                    if (TileMarkerManager.Instance.IsTileMarked(land.X, land.Y, map.Index, out var hue))
-                        land.Hue = hue;
-
-                    AddGameObject(land, x, y);
-
-                    if (updateWorldMap)
-                    {
-                        ushort color = (ushort)(0x8000 | huesLoader.GetRadarColorData(tileID & 0x3FFF));
-
-                        int blockIndex = y * 8 + x;
-                        bufferBlock[blockIndex] = HuesHelper.Color16To32(color) | 0xFF_00_00_00;
-                        bufferBlockZ[blockIndex] = z;
-                    }
-                }
-            }
-
-            //If Ultima Live is on, the statics of the first map block explored could be saved to StaticAdress 0, because the static file could be empty, so we can't check StaticAdress != 0
-            if (im.StaticAddress >= 0 && im.StaticCount > 0)
-            {
-                var staticsBlockBuffer = ArrayPool<StaticsBlock>.Shared.Rent((int)im.StaticCount);
-                var staticsSpan = staticsBlockBuffer.AsSpan(0, (int)im.StaticCount);
-                im.StaticFile.Seek((long)im.StaticAddress, System.IO.SeekOrigin.Begin);
-                im.StaticFile.Read(MemoryMarshal.AsBytes(staticsSpan));
-
-                foreach (ref var sb in staticsSpan)
-                {
-                    if (sb.Color != 0 && sb.Color != 0xFFFF)
-                    {
-                        int pos = (sb.Y << 3) + sb.X;
-
-                        if (pos >= 64)
-                        {
-                            continue;
-                        }
-
-                        Static staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
-                        staticObject.X = (ushort)(bx + sb.X);
-                        staticObject.Y = (ushort)(by + sb.Y);
-                        staticObject.Z = sb.Z;
-                        staticObject.UpdateScreenPosition();
-
-                        if (TileMarkerManager.Instance.IsTileMarked(staticObject.X, staticObject.Y, map.Index, out var hue))
-                            staticObject.Hue = hue;
-
-                        AddGameObject(staticObject, sb.X, sb.Y);
-
-                        if (updateWorldMap)
-                        {
-                            int blockIndex = (sb.Y << 3) + sb.X;
-                            if (GameObject.CanBeDrawn(_world, sb.Color) && sb.Z >= bufferBlockZ[blockIndex])
-                            {
-                                ushort color = (ushort)(0x8000 | (sb.Hue != 0 ? huesLoader.GetColor16(16384, sb.Hue) : huesLoader.GetRadarColorData(sb.Color + 0x4000)));
-
-                                bufferBlock[blockIndex] = HuesHelper.Color16To32(color) | 0xFF_00_00_00;
-                                bufferBlockZ[blockIndex] = sb.Z;
-                            }
-                        }
-                    }
+                    return;
                 }
 
-                ArrayPool<StaticsBlock>.Shared.Return(staticsBlockBuffer);
-            }
+                im.MapFile.Seek((long)im.MapAddress, System.IO.SeekOrigin.Begin);
+                MapBlock block = im.MapFile.Read<MapBlock>();
 
-            if (updateWorldMap)
-            {
-                const float MAG_0 = 80f / 100f;
-                const float MAG_1 = 100f / 80f;
+                MapCellsArray cells = block.Cells;
+                int bx = X << 3;
+                int by = Y << 3;
+
+                uint[] bufferBlock = new uint[64];
+                sbyte[] bufferBlockZ = new sbyte[64];
+                HuesLoader huesLoader = Client.Game.UO.FileManager.Hues;
 
                 for (int y = 0; y < 8; ++y)
                 {
-                    for (int x = 0; x < 8; ++x)
+                    int pos = y << 3;
+                    ushort tileY = (ushort)(by + y);
+
+                    for (int x = 0; x < 8; ++x, ++pos)
                     {
-                        int blockCurrent = y * 8 + x;
-                        int blockNext = (y + 1) * 8 + x;
+                        ushort tileID = (ushort)(cells[pos].TileID & 0x3FFF);
 
-                        //Reached last line, nothing to compare with
-                        if (y == 7)
+                        sbyte z = cells[pos].Z;
+
+                        Land land = Land.Create(_world, tileID);
+
+                        ushort tileX = (ushort)(bx + x);
+
+                        land.ApplyStretch(map, tileX, tileY, z);
+                        land.X = tileX;
+                        land.Y = tileY;
+                        land.Z = z;
+                        land.UpdateScreenPosition();
+
+                        if (TileMarkerManager.Instance.IsTileMarked(land.X, land.Y, map.Index, out ushort hue))
+                            land.Hue = hue;
+
+                        AddGameObject(land, x, y);
+
+                        if (updateWorldMap)
                         {
-                            break;
-                        }
+                            ushort color = (ushort)(0x8000 | huesLoader.GetRadarColorData(tileID & 0x3FFF));
 
-                        sbyte z0 = bufferBlockZ[++blockCurrent];
-                        sbyte z1 = bufferBlockZ[blockNext];
-
-                        if (z0 == z1)
-                        {
-                            continue;
-                        }
-
-                        ref uint cc = ref bufferBlock[blockCurrent];
-
-                        if (cc == 0)
-                        {
-                            continue;
-                        }
-
-                        byte r = (byte)(cc & 0xFF);
-                        byte g = (byte)((cc >> 8) & 0xFF);
-                        byte b = (byte)((cc >> 16) & 0xFF);
-                        byte a = (byte)((cc >> 24) & 0xFF);
-
-                        if (r != 0 || g != 0 || b != 0)
-                        {
-                            if (z0 < z1)
-                            {
-                                r = (byte)Math.Min(0xFF, r * MAG_0);
-                                g = (byte)Math.Min(0xFF, g * MAG_0);
-                                b = (byte)Math.Min(0xFF, b * MAG_0);
-                            }
-                            else
-                            {
-                                r = (byte)Math.Min(0xFF, r * MAG_1);
-                                g = (byte)Math.Min(0xFF, g * MAG_1);
-                                b = (byte)Math.Min(0xFF, b * MAG_1);
-                            }
-
-                            cc = (uint)(r | (g << 8) | (b << 16) | (a << 24));
+                            int blockIndex = y * 8 + x;
+                            bufferBlock[blockIndex] = HuesHelper.Color16To32(color) | 0xFF_00_00_00;
+                            bufferBlockZ[blockIndex] = z;
                         }
                     }
                 }
 
-                UIManager.GetGump<WorldMapGump>()?.UpdateWorldMapChunk(X, Y, bufferBlock);
+                //If Ultima Live is on, the statics of the first map block explored could be saved to StaticAdress 0, because the static file could be empty, so we can't check StaticAdress != 0
+                if (im.StaticAddress >= 0 && im.StaticCount > 0)
+                {
+                    StaticsBlock[] staticsBlockBuffer = ArrayPool<StaticsBlock>.Shared.Rent((int)im.StaticCount);
+                    Span<StaticsBlock> staticsSpan = staticsBlockBuffer.AsSpan(0, (int)im.StaticCount);
+                    im.StaticFile.Seek((long)im.StaticAddress, System.IO.SeekOrigin.Begin);
+                    im.StaticFile.Read(MemoryMarshal.AsBytes(staticsSpan));
+
+                    foreach (ref StaticsBlock sb in staticsSpan)
+                    {
+                        if (sb.Color != 0 && sb.Color != 0xFFFF)
+                        {
+                            int pos = (sb.Y << 3) + sb.X;
+
+                            if (pos >= 64)
+                            {
+                                continue;
+                            }
+
+                            Static staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
+                            staticObject.X = (ushort)(bx + sb.X);
+                            staticObject.Y = (ushort)(by + sb.Y);
+                            staticObject.Z = sb.Z;
+                            staticObject.UpdateScreenPosition();
+
+                            if (TileMarkerManager.Instance.IsTileMarked(staticObject.X, staticObject.Y, map.Index, out ushort hue))
+                                staticObject.Hue = hue;
+
+                            AddGameObject(staticObject, sb.X, sb.Y);
+
+                            if (updateWorldMap)
+                            {
+                                int blockIndex = (sb.Y << 3) + sb.X;
+                                if (GameObject.CanBeDrawn(_world, sb.Color) && sb.Z >= bufferBlockZ[blockIndex])
+                                {
+                                    ushort color = (ushort)(0x8000 | (sb.Hue != 0 ? huesLoader.GetColor16(16384, sb.Hue) : huesLoader.GetRadarColorData(sb.Color + 0x4000)));
+
+                                    bufferBlock[blockIndex] = HuesHelper.Color16To32(color) | 0xFF_00_00_00;
+                                    bufferBlockZ[blockIndex] = sb.Z;
+                                }
+                            }
+                        }
+                    }
+
+                    ArrayPool<StaticsBlock>.Shared.Return(staticsBlockBuffer);
+                }
+
+                if (updateWorldMap)
+                {
+                    const float MAG_0 = 80f / 100f;
+                    const float MAG_1 = 100f / 80f;
+
+                    for (int y = 0; y < 8; ++y)
+                    {
+                        for (int x = 0; x < 8; ++x)
+                        {
+                            int blockCurrent = y * 8 + x;
+                            int blockNext = (y + 1) * 8 + x;
+
+                            //Reached last line, nothing to compare with
+                            if (y == 7)
+                            {
+                                break;
+                            }
+
+                            sbyte z0 = bufferBlockZ[++blockCurrent];
+                            sbyte z1 = bufferBlockZ[blockNext];
+
+                            if (z0 == z1)
+                            {
+                                continue;
+                            }
+
+                            ref uint cc = ref bufferBlock[blockCurrent];
+
+                            if (cc == 0)
+                            {
+                                continue;
+                            }
+
+                            byte r = (byte)(cc & 0xFF);
+                            byte g = (byte)((cc >> 8) & 0xFF);
+                            byte b = (byte)((cc >> 16) & 0xFF);
+                            byte a = (byte)((cc >> 24) & 0xFF);
+
+                            if (r != 0 || g != 0 || b != 0)
+                            {
+                                if (z0 < z1)
+                                {
+                                    r = (byte)Math.Min(0xFF, r * MAG_0);
+                                    g = (byte)Math.Min(0xFF, g * MAG_0);
+                                    b = (byte)Math.Min(0xFF, b * MAG_0);
+                                }
+                                else
+                                {
+                                    r = (byte)Math.Min(0xFF, r * MAG_1);
+                                    g = (byte)Math.Min(0xFF, g * MAG_1);
+                                    b = (byte)Math.Min(0xFF, b * MAG_1);
+                                }
+
+                                cc = (uint)(r | (g << 8) | (b << 16) | (a << 24));
+                            }
+                        }
+                    }
+
+                    UIManager.GetGump<WorldMapGump>()?.UpdateWorldMapChunk(X, Y, bufferBlock);
+                }
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

@@ -37,54 +37,27 @@ namespace ClassicUO.Utility.Logging
         }
 
         [Conditional("DEBUG")]
-        public static void Debug(string text)
-        {
-            _logger?.Message(LogTypes.Debug, text);
-        }
+        public static void Debug(string text) => _logger?.Message(LogTypes.Debug, text);
 
-        public static void Info(string text)
-        {
-            _logger?.Message(LogTypes.Info, text);
-        }
+        public static void Info(string text) => _logger?.Message(LogTypes.Info, text);
 
-        public static void Trace(string text)
-        {
-            _logger?.Message(LogTypes.Trace, text);
-        }
+        public static void Trace(string text) => _logger?.Message(LogTypes.Trace, text);
 
-        public static void Warn(string text)
-        {
-            _logger?.Message(LogTypes.Warning, text);
-        }
+        [Conditional("DEBUG")]
+        public static void TraceDebug(string text) => _logger?.Message(LogTypes.Trace, text);
 
-        public static void Error(string text)
-        {
-            _logger?.Message(LogTypes.Error, text);
-        }
+        public static void Warn(string text) => _logger?.Message(LogTypes.Warning, text);
 
-        public static void Panic(string text)
-        {
-            _logger?.Message(LogTypes.Error, text);
-        }
+        public static void Error(string text) => _logger?.Message(LogTypes.Error, text);
 
-        public static void NewLine()
-        {
-            _logger?.NewLine();
-        }
+        public static void Panic(string text) => _logger?.Message(LogTypes.Error, text);
 
-        public static void Clear()
-        {
-            _logger?.Clear();
-        }
+        public static void NewLine() => _logger?.NewLine();
 
-        public static void PushIndent()
-        {
-            _logger?.PushIndent();
-        }
+        public static void Clear() => _logger?.Clear();
 
-        public static void PopIndent()
-        {
-            _logger?.PopIndent();
-        }
+        public static void PushIndent() => _logger?.PushIndent();
+
+        public static void PopIndent() => _logger?.PopIndent();
     }
 }

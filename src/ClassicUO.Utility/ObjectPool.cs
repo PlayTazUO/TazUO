@@ -20,10 +20,7 @@ public class ObjectPool<T> where T : class
             _pool.Push(_factory());
     }
 
-    public T Get()
-    {
-        return _pool.Count > 0 ? _pool.Pop() : _factory();
-    }
+    public T Get() => _pool.Count > 0 ? _pool.Pop() : _factory();
 
     public void Return(T obj)
     {
@@ -32,10 +29,7 @@ public class ObjectPool<T> where T : class
             _pool.Push(obj);
     }
 
-    public void Clear()
-    {
-        _pool.Clear();
-    }
+    public void Clear() => _pool.Clear();
 
     public int Count => _pool.Count;
 }

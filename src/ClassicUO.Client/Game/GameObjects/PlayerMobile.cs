@@ -10,13 +10,14 @@ using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
+using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.GameObjects
 {
     public class PlayerMobile : Mobile
     {
         private readonly Dictionary<BuffIconType, BuffIcon> _buffIcons = new Dictionary<BuffIconType, BuffIcon>();
-        
+
         public PlayerMobile(World world, uint serial) : base(world, serial)
         {
             Skills = new Skill[Client.Game.UO.FileManager.Skills.SkillsCount];
@@ -38,8 +39,11 @@ namespace ClassicUO.Game.GameObjects
                 }
             };
 
-            if(ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
-                UIManager.Add(new SpellVisualRangeManager.CastTimerProgressBar(world));
+            if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
+            {
+                UIManager.Add(new CastTimerProgressBar(world));
+                AttachCastingEventHandlers();
+            }
 
             IsPlayer = true;
         }
@@ -121,18 +125,77 @@ namespace ClassicUO.Game.GameObjects
         public uint TithingPoints;
         public ushort Weight;
         public ushort WeightMax;
+        /// <summary>
+        /// True while a spell is being cast.
+        /// </summary>
+        public bool IsCasting { get; private set; }
+        /// <summary>
+        /// True while a spell is in recovery phase.
+        /// </summary>
+        public bool IsRecovering { get; private set; }
 
-        public Item FindBandage()
+        public Item FindBandage(ushort graphic = 0x0E21)
         {
             Item backpack = Backpack;
             Item item = null;
 
             if (backpack != null)
             {
-                item = backpack.FindItem(0x0E21);
+                item = backpack.FindItem(graphic);
             }
 
+            if (item == null)
+                item = FindItemByLayer(Layer.Waist)?.FindItem(graphic);
+
             return item;
+        }
+
+        private void AttachCastingEventHandlers()
+        {
+            EventSink.SpellCastBegin += OnSpellCastBegin;
+            EventSink.SpellCastEnd += OnSpellCastEnd;
+            EventSink.SpellRecoveryBegin += OnSpellRecoveryBegin;
+            EventSink.SpellRecoveryEnd += OnSpellRecoveryEnd;
+        }
+
+        private void DetachCastingEventHandlers()
+        {
+            EventSink.SpellCastBegin -= OnSpellCastBegin;
+            EventSink.SpellCastEnd -= OnSpellCastEnd;
+            EventSink.SpellRecoveryBegin -= OnSpellRecoveryBegin;
+            EventSink.SpellRecoveryEnd -= OnSpellRecoveryEnd;
+        }
+
+        private void OnSpellCastBegin(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsCasting = true;
+            }
+        }
+
+        private void OnSpellCastEnd(object s, object o)
+        {
+            if (World?.Player == this)
+            {
+                IsCasting = false;
+            }
+        }
+
+        private void OnSpellRecoveryBegin(object sender, int spellID)
+        {
+            if (World?.Player == this)
+            {
+                IsRecovering = true;
+            }
+        }
+
+        private void OnSpellRecoveryEnd(object sender, object o)
+        {
+            if (World?.Player == this)
+            {
+                IsRecovering = false;
+            }
         }
 
         public Item FindItemByGraphic(ushort graphic)
@@ -167,7 +230,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 for (LinkedObject i = container.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
                     if (item.Graphic == graphic)
                     {
@@ -197,7 +260,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 for (LinkedObject i = container.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
 
                     if (cliloc == World.OPL.GetNameCliloc(item.Serial))
@@ -251,10 +314,7 @@ namespace ClassicUO.Game.GameObjects
             EventSink.InvokeOnBuffAdded(null, new BuffEventArgs(_buffIcons[type]));
         }
 
-        public bool IsBuffIconExists(BuffIconType graphic)
-        {
-            return _buffIcons.ContainsKey(graphic);
-        }
+        public bool IsBuffIconExists(BuffIconType graphic) => _buffIcons.ContainsKey(graphic);
 
         public void RemoveBuff(BuffIconType graphic)
         {
@@ -275,7 +335,7 @@ namespace ClassicUO.Game.GameObjects
         public void UpdateAbilities()
         {
             AbilityData.DefaultItemAbilities.Set(Abilities);
-            
+
             if ((FindItemByLayer(Layer.OneHanded) ?? FindItemByLayer(Layer.TwoHanded)) is { OriginalGraphic: > 0 } weapon)
             {
                 ushort animId = weapon.ItemData.AnimID;
@@ -290,7 +350,7 @@ namespace ClassicUO.Game.GameObjects
                     animGraphic = (ushort)(weapon.OriginalGraphic + 1);
                 }
 
-                if (AbilityData.GraphicToAbilitiesMap.TryGetValue(weapon.OriginalGraphic, out var abilities) || AbilityData.GraphicToAbilitiesMap.TryGetValue(animGraphic, out abilities))
+                if (AbilityData.GraphicToAbilitiesMap.TryGetValue(weapon.OriginalGraphic, out ItemAbilities abilities) || AbilityData.GraphicToAbilitiesMap.TryGetValue(animGraphic, out abilities))
                 {
                     abilities.Set(Abilities);
                 }
@@ -326,22 +386,44 @@ namespace ClassicUO.Game.GameObjects
 
         public void TryOpenCorpses()
         {
-            if (ProfileManager.CurrentProfile.AutoOpenCorpses)
+            // Early return if both auto-open settings are disabled
+            if (!ProfileManager.CurrentProfile.AutoOpenCorpses && !ProfileManager.CurrentProfile.AutoOpenOwnCorpse)
             {
-                if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 1 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && World.TargetManager.IsTargeting)
-                {
-                    return;
-                }
+                return;
+            }
 
-                if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 2 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && IsHidden)
-                {
-                    return;
-                }
+            // Use the optimized corpse collection instead of iterating all items
+            Item[] corpses = World.GetCorpseSnapshot();
 
-                foreach (Item item in World.Items.Values)
+            foreach (Item item in corpses)
+            {
+                if (!item.IsDestroyed && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
                 {
-                    if (!item.IsDestroyed && item.IsCorpse && item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange && !AutoOpenedCorpses.Contains(item.Serial))
+                    // Check if this is the player's own corpse
+                    bool isOwnCorpse = !string.IsNullOrEmpty(item.Name) &&
+                                       !string.IsNullOrEmpty(Name) &&
+                                       item.Name.Equals($"the remains of {Name}", System.StringComparison.OrdinalIgnoreCase);
+
+                    // Open if it's own corpse and AutoOpenOwnCorpse is enabled, or if AutoOpenCorpses is enabled
+                    bool shouldOpen = (isOwnCorpse && ProfileManager.CurrentProfile.AutoOpenOwnCorpse) ||
+                                      ProfileManager.CurrentProfile.AutoOpenCorpses;
+
+                    if (shouldOpen)
                     {
+                        // Check targeting and hidden restrictions only for auto open corpses (not own corpse)
+                        if (!isOwnCorpse || !ProfileManager.CurrentProfile.AutoOpenOwnCorpse)
+                        {
+                            if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 1 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && World.TargetManager.IsTargeting)
+                            {
+                                continue;
+                            }
+
+                            if ((ProfileManager.CurrentProfile.CorpseOpenOptions == 2 || ProfileManager.CurrentProfile.CorpseOpenOptions == 3) && IsHidden)
+                            {
+                                continue;
+                            }
+                        }
+
                         AutoOpenedCorpses.Add(item.Serial);
                         GameActions.DoubleClickQueued(item.Serial);
                     }
@@ -377,6 +459,7 @@ namespace ClassicUO.Game.GameObjects
             }
 
             DeathScreenTimer = 0;
+            DetachCastingEventHandlers();
 
             Log.Warn("PlayerMobile disposed!");
             base.Destroy();
@@ -390,11 +473,11 @@ namespace ClassicUO.Game.GameObjects
             {
                 if (!bank.IsEmpty)
                 {
-                    Item first = (Item)bank.Items;
+                    var first = (Item)bank.Items;
 
                     while (first != null)
                     {
-                        Item next = (Item)first.Next;
+                        var next = (Item)first.Next;
 
                         World.RemoveItem(first, true);
 
@@ -563,7 +646,7 @@ namespace ClassicUO.Game.GameObjects
         //}
         // #############################################
 
-         public bool Walk(Direction direction, bool run)
+        public bool Walk(Direction direction, bool run)
         {
             if (!ProfileManager.CurrentProfile.AutoAvoidObstacules || Pathfinder.AutoWalking)
             {
@@ -695,7 +778,7 @@ namespace ClassicUO.Game.GameObjects
                 }
 
 
-                var item = Walker.StepsCount;
+                int item = Walker.StepsCount;
 
                 ref StepInfo step = ref Walker.StepInfos[item];
                 step.Sequence = Walker.WalkSequence;
@@ -748,16 +831,10 @@ namespace ClassicUO.Game.GameObjects
 
         }
 
-        bool IsCardinalDirection(Direction direction)
-        {
-            return direction == Direction.North || direction == Direction.South ||
+        bool IsCardinalDirection(Direction direction) => direction == Direction.North || direction == Direction.South ||
                    direction == Direction.East || direction == Direction.West;
-        }
 
-        bool IsObstacle(Direction direction, int x, int y, sbyte z)
-        {
-            return !Pathfinder.CanWalk(ref direction, ref x, ref y, ref z);
-        }
+        bool IsObstacle(Direction direction, int x, int y, sbyte z) => !Pathfinder.CanWalk(ref direction, ref x, ref y, ref z);
 
         Direction TryToAvoid(Direction direction, int x, int y, sbyte z)
         {
@@ -803,7 +880,7 @@ namespace ClassicUO.Game.GameObjects
                 x = walkStep.X;
                 y = walkStep.Y;
                 z = walkStep.Z;
-                oldDirection = (Direction) walkStep.Direction;
+                oldDirection = (Direction)walkStep.Direction;
             }
 
             sbyte oldZ = z;
@@ -832,7 +909,7 @@ namespace ClassicUO.Game.GameObjects
                     y = newY;
                     z = newZ;
 
-                    walkTime = (ushort) MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
+                    walkTime = (ushort)MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
                 }
             }
             else
@@ -856,7 +933,7 @@ namespace ClassicUO.Game.GameObjects
                     y = newY;
                     z = newZ;
 
-                    walkTime = (ushort) MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
+                    walkTime = (ushort)MovementSpeed.TimeToCompleteMovement(run, IsMounted || SpeedMode == CharacterSpeedType.FastUnmount || SpeedMode == CharacterSpeedType.FastUnmountAndCantRun || IsFlying);
                 }
 
                 direction = newDir;
@@ -878,13 +955,13 @@ namespace ClassicUO.Game.GameObjects
             step.Sequence = Walker.WalkSequence;
             step.Accepted = false;
             step.Running = run;
-            step.OldDirection = (byte) (oldDirection & Direction.Mask);
-            step.Direction = (byte) direction;
+            step.OldDirection = (byte)(oldDirection & Direction.Mask);
+            step.Direction = (byte)direction;
             step.Timer = Time.Ticks;
-            step.X = (ushort) x;
-            step.Y = (ushort) y;
+            step.X = (ushort)x;
+            step.Y = (ushort)y;
             step.Z = z;
-            step.NoRotation = step.OldDirection == (byte) direction && oldZ - z >= 11;
+            step.NoRotation = step.OldDirection == (byte)direction && oldZ - z >= 11;
 
             Walker.StepsCount++;
 
@@ -895,7 +972,7 @@ namespace ClassicUO.Game.GameObjects
                     X = x,
                     Y = y,
                     Z = z,
-                    Direction = (byte) direction,
+                    Direction = (byte)direction,
                     Run = run
                 }
             );

@@ -193,8 +193,8 @@ namespace ClassicUO.Game.GameObjects
             ushort graphic = GetGraphicForAnimation();
 
             Client.Game.UO.Animations.ConvertBodyIfNeeded(ref graphic, isCorpse: IsCorpse);
-            var animGroup = Client.Game.UO.Animations.GetAnimType(graphic);
-            var animFlags = Client.Game.UO.Animations.GetAnimFlags(graphic);
+            AnimationGroupsType animGroup = Client.Game.UO.Animations.GetAnimType(graphic);
+            AnimationFlags animFlags = Client.Game.UO.Animations.GetAnimFlags(graphic);
             byte group = Client.Game.UO.FileManager.Animations.GetDeathAction(
                 graphic,
                 animFlags,
@@ -305,11 +305,11 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            var frames = Client.Game.UO.Animations.GetAnimationFrames(
+            Span<SpriteInfo> frames = Client.Game.UO.Animations.GetAnimationFrames(
                 graphic,
                 animGroup,
                 dir,
-                out var newHue,
+                out ushort newHue,
                 out _,
                 isEquip: layer != Layer.Invalid,
                 isCorpse: layer == Layer.Invalid
@@ -334,7 +334,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (animIndex < frames.Length)
             {
-                ref var spriteInfo = ref frames[animIndex];
+                ref SpriteInfo spriteInfo = ref frames[animIndex];
 
                 if (spriteInfo.Texture == null)
                 {
@@ -405,7 +405,7 @@ namespace ClassicUO.Game.GameObjects
                     hueVec = ShaderHueTranslator.GetHueVector(color, ispartialhue, alpha);
                 }
 
-                Vector2 pos = new Vector2(posX, posY);
+                var pos = new Vector2(posX, posY);
                 Rectangle rect = spriteInfo.UV;
 
                 int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y);
@@ -485,7 +485,7 @@ namespace ClassicUO.Game.GameObjects
 
                 if (Client.Game.UO.Arts.GetArt(graphic).Texture != null)
                 {
-                    ref var index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + 0x4000);
+                    ref UOFileIndex index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + 0x4000);
 
                     Point position = RealScreenPosition;
                     position.X += (int)Offset.X;
@@ -530,7 +530,7 @@ namespace ClassicUO.Game.GameObjects
                     return true;
                 }
 
-                var animations = Client.Game.UO.Animations;
+                Renderer.Animations.Animations animations = Client.Game.UO.Animations;
 
                 Point position = RealScreenPosition;
                 position.X += 22;
@@ -593,20 +593,20 @@ namespace ClassicUO.Game.GameObjects
                     }
 
                     animations.ConvertBodyIfNeeded(ref graphic, isCorpse: IsCorpse);
-                    var animGroup = animations.GetAnimType(graphic);
-                    var animFlags = animations.GetAnimFlags(graphic);
+                    AnimationGroupsType animGroup = animations.GetAnimType(graphic);
+                    AnimationFlags animFlags = animations.GetAnimFlags(graphic);
                     byte group = Client.Game.UO.FileManager.Animations.GetDeathAction(
                         graphic,
                         animFlags,
                         animGroup,
                         UsedLayer
                     );
-                    var frames = animations.GetAnimationFrames(
+                    Span<SpriteInfo> frames = animations.GetAnimationFrames(
                         graphic,
                         group,
                         direction,
                         out _,
-                        out var isUOP,
+                        out bool isUOP,
                         false,
                         IsCorpse
                     );
@@ -627,7 +627,7 @@ namespace ClassicUO.Game.GameObjects
                         animIndex = (byte)(animIndex % frames.Length);
                     }
 
-                    ref var spriteInfo = ref frames[animIndex];
+                    ref SpriteInfo spriteInfo = ref frames[animIndex];
 
                     if (spriteInfo.Texture != null)
                     {

@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             ushort.TryParse(newHueInput, out hue);
                         }
 
-                        var entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, "");
+                        AutoLootManager.AutoLootConfigEntry entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, "");
                         entry.RegexSearch = newRegexInput;
 
                         newGraphicInput = "";
@@ -240,7 +240,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 for (int i = lootEntries.Count - 1; i >= 0; i--)
                 {
-                    var entry = lootEntries[i];
+                    AutoLootManager.AutoLootConfigEntry entry = lootEntries[i];
                     ImGui.TableNextRow();
 
                     ImGui.TableNextColumn();
@@ -263,6 +263,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             entry.Graphic = newGraphic;
                         }
                     }
+                    SetTooltip("Set to -1 to match any graphic.");
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
@@ -283,6 +284,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                             entry.Hue = newHue;
                         }
                     }
+                    SetTooltip("Set to -1 to match any hue.");
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
@@ -375,7 +377,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (ImGui.BeginPopupModal("Import from Character"))
             {
-                var otherConfigs = AutoLootManager.Instance.GetOtherCharacterConfigs();
+                Dictionary<string, List<AutoLootManager.AutoLootConfigEntry>> otherConfigs = AutoLootManager.Instance.GetOtherCharacterConfigs();
 
                 if (otherConfigs.Count == 0)
                 {
@@ -390,10 +392,10 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.Text("Select a character to import autoloot configuration from:");
                     ImGui.Separator();
 
-                    foreach (var characterConfig in otherConfigs.OrderBy(c => c.Key))
+                    foreach (KeyValuePair<string, List<AutoLootManager.AutoLootConfigEntry>> characterConfig in otherConfigs.OrderBy(c => c.Key))
                     {
                         string characterName = characterConfig.Key;
-                        var configs = characterConfig.Value;
+                        List<AutoLootManager.AutoLootConfigEntry> configs = characterConfig.Value;
 
                         if (ImGui.Button($"{characterName} ({configs.Count} items)"))
                         {

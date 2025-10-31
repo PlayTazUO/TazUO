@@ -30,7 +30,7 @@ namespace ClassicUO.Game.UI.Controls
             Y = y;
             WantUpdateSize = false;
 
-            GumpPic background = new GumpPic(0, 0, 0x00D4, 0);
+            var background = new GumpPic(0, 0, 0x00D4, 0);
             Add(background);
 
             Width = background.Width;
@@ -72,7 +72,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
                 else
                 {
-                    ColorPickerGump pickerGump = new ColorPickerGump
+                    var pickerGump = new ColorPickerGump
                     (
                         _world,
                     0,

@@ -759,7 +759,7 @@ namespace ClassicUO.Game.Data
 
         public static List<int> GetSpellListByGroupName(string group)
         {
-            List<int> list = new List<int>();
+            var list = new List<int>();
 
             switch (group.ToLower())
             {
@@ -970,14 +970,8 @@ namespace ClassicUO.Game.Data
             }
         }
 
-        public static void SetSpell(int id, in SpellDefinition newspell)
-        {
-            _spellsDict[id] = newspell;
-        }
+        public static void SetSpell(int id, in SpellDefinition newspell) => _spellsDict[id] = newspell;
 
-        internal static void Clear()
-        {
-            _spellsDict.Clear();
-        }
+        internal static void Clear() => _spellsDict.Clear();
     }
 }

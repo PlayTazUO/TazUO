@@ -132,7 +132,7 @@ namespace ClassicUO.Renderer.Animations
                 frameIndex = (byte)animIndex;
             }
 
-            var frames = GetAnimationFrames(graphic, animGroup, dir, out _, out _, false);
+            Span<SpriteInfo> frames = GetAnimationFrames(graphic, animGroup, dir, out _, out _, false);
 
             if (!frames.IsEmpty && frames[frameIndex].Texture != null)
             {
@@ -172,14 +172,14 @@ namespace ClassicUO.Renderer.Animations
                 Array.Resize(ref _dataIndex, id + 1);
             }
 
-            ref var index = ref _dataIndex[id];
+            ref IndexAnimation index = ref _dataIndex[id];
 
             do
             {
                 if (index == null)
                 {
                     index = new IndexAnimation();
-                    var indices = _animationLoader.GetIndices
+                    ReadOnlySpan<AnimationsLoader.AnimationDirection> indices = _animationLoader.GetIndices
                     (
                         _animationLoader.FileManager.Version,
                         id,
@@ -213,7 +213,7 @@ namespace ClassicUO.Renderer.Animations
 
                                 for (int d = 0; d < AnimationsLoader.MAX_DIRECTIONS; d++)
                                 {
-                                    ref readonly var animIdx = ref indices[i * AnimationsLoader.MAX_DIRECTIONS + d];
+                                    ref readonly AnimationsLoader.AnimationDirection animIdx = ref indices[i * AnimationsLoader.MAX_DIRECTIONS + d];
                                     index.Groups[i].Direction[d].Address = animIdx.Position;
                                     index.Groups[i].Direction[d].Size = /*index.FileIndex > 0 ? Math.Max(1, animIdx.Size) :*/ animIdx.Size;
                                 }
@@ -224,7 +224,7 @@ namespace ClassicUO.Renderer.Animations
 
                 if (index.FileIndex == 0)
                 {
-                    var replaced = isCorpse ? _animationLoader.ReplaceCorpse(ref id, ref hue) : _animationLoader.ReplaceBody(ref id, ref hue);
+                    bool replaced = isCorpse ? _animationLoader.ReplaceCorpse(ref id, ref hue) : _animationLoader.ReplaceBody(ref id, ref hue);
                     if (replaced)
                     {
                         if (id >= _dataIndex.Length)
@@ -246,7 +246,7 @@ namespace ClassicUO.Renderer.Animations
             }
 
             // When we are searching for an equipment item we must ignore any other animation which is not equipment
-            var currentAnimType = GetAnimType(id);
+            AnimationGroupsType currentAnimType = GetAnimType(id);
             if (isEquip && currentAnimType != AnimationGroupsType.Equipment && currentAnimType != AnimationGroupsType.Human)
             {
                 return Span<SpriteInfo>.Empty;
@@ -271,7 +271,7 @@ namespace ClassicUO.Renderer.Animations
                 return Span<SpriteInfo>.Empty;
             }
 
-            ref var animDir = ref groupObj.Direction[dir];
+            ref AnimationDirection animDir = ref groupObj.Direction[dir];
 
             if (animDir.Address == uint.MaxValue)
             {
@@ -330,8 +330,8 @@ namespace ClassicUO.Renderer.Animations
 
                 for (int i = 0; i < frames.Length; i++)
                 {
-                    ref var frame = ref frames[i];
-                    ref var spriteInfo = ref animDir.SpriteInfos[frame.Num];
+                    ref AnimationsLoader.FrameInfo frame = ref frames[i];
+                    ref SpriteInfo spriteInfo = ref animDir.SpriteInfos[frame.Num];
 
                     if (frame.Width <= 0 || frame.Height <= 0)
                     {
@@ -361,25 +361,7 @@ namespace ClassicUO.Renderer.Animations
             return animDir.SpriteInfos.AsSpan(0, animDir.FrameCount);
         }
 
-        public void UpdateAnimationTable(BodyConvFlags flags)
-        {
-            _animationLoader.ProcessBodyConvDef(flags);
-            //if (flags != _lastFlags)
-            //{
-            //    if (_lastFlags != (BodyConvFlags)(-1))
-            //    {
-            //        /* This happens when you log out of an account then into another
-            //         * one with different expansions activated. Just reload the anim
-            //         * files from scratch. */
-            //        Array.Clear(_dataIndex, 0, _dataIndex.Length);
-            //        LoadInternal();
-            //    }
-
-            //    ProcessBodyConvDef(flags);
-            //}
-
-            //_lastFlags = flags;
-        }
+        public void UpdateAnimationTable(BodyConvFlags flags) => _animationLoader.ProcessBodyConvDef(flags);//if (flags != _lastFlags)//{//    if (_lastFlags != (BodyConvFlags)(-1))//    {//        /* This happens when you log out of an account then into another//         * one with different expansions activated. Just reload the anim//         * files from scratch. *///        Array.Clear(_dataIndex, 0, _dataIndex.Length);//        LoadInternal();//    }//    ProcessBodyConvDef(flags);//}//_lastFlags = flags;
 
         public void ConvertBodyIfNeeded(
             ref ushort graphic,
@@ -401,11 +383,11 @@ namespace ClassicUO.Renderer.Animations
         {
             if (graphic < _dataIndex.Length && group < AnimationsLoader.MAX_ACTIONS)
             {
-                var frames = GetAnimationFrames(
+                Span<SpriteInfo> frames = GetAnimationFrames(
                     graphic,
                     group,
                     0,
-                    out var _,
+                    out ushort _,
                     out _,
                     false,
                     isCorpse

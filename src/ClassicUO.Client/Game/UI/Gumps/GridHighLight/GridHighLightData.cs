@@ -2,13 +2,11 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.GameObjects;
-using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using ClassicUO.Network;
+using System.Text;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -18,6 +16,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private readonly GridHighlightSetupEntry _entry;
 
         private static readonly Queue<uint> _queue = new();
+        private static readonly HashSet<uint> _queuedItems = new();
         private static bool hasQueuedItems;
 
         private readonly Dictionary<string, string> _normalizeCache = new();
@@ -29,7 +28,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (allConfigs != null)
                     return allConfigs;
 
-                var setup = ProfileManager.CurrentProfile.GridHighlightSetup;
+                List<GridHighlightSetupEntry> setup = ProfileManager.CurrentProfile.GridHighlightSetup;
                 allConfigs = setup.Select(entry => new GridHighlightData(entry)).ToArray();
                 return allConfigs;
             }
@@ -123,7 +122,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public void Move(bool up)
         {
-            var list = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> list = ProfileManager.CurrentProfile.GridHighlightSetup;
             int index = list.IndexOf(_entry);
             if (index == -1) return; // Not found
 
@@ -135,10 +134,18 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             list.Insert(up ? index - 1 : index + 1, _entry);
         }
 
-
-        public static void ProcessItemOpl(uint value)
+        public static void ProcessItemOpl(World world, uint serial)
         {
-            _queue.Enqueue(value);
+            // Only queue items if the server supports tooltips
+            if (!world.ClientFeatures.TooltipsEnabled)
+                return;
+
+            // Check if already queued to avoid duplicates
+            if (!_queuedItems.Add(serial))
+                return;
+
+            // Enqueue for processing - validation happens in ProcessQueue
+            _queue.Enqueue(serial);
             hasQueuedItems = true;
         }
 
@@ -148,17 +155,45 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return;
 
             List<ItemPropertiesData> itemData = new(3);
+            List<uint> requeueItems = new();
 
             for (int i = 0; i < 3 && _queue.Count > 0; i++)
             {
                 uint ser = _queue.Dequeue();
-                if (World.Items.TryGetValue(ser, out var item))
-                    itemData.Add(new ItemPropertiesData(World, item));
+
+                // Check if item still exists
+                if (!World.Items.TryGetValue(ser, out Item item))
+                {
+                    // Item was removed, remove from hashset and skip
+                    _queuedItems.Remove(ser);
+                    continue;
+                }
+
+                // Check if item is still valid for highlighting
+                if (item.OnGround || item.IsMulti)
+                {
+                    // Item moved to ground or is multi, remove from hashset and skip
+                    _queuedItems.Remove(ser);
+                    continue;
+                }
+
+                // Check if OPL data exists
+                if (!World.OPL.TryGetNameAndData(ser, out _, out _))
+                {
+                    // OPL data not available yet, requeue for later processing
+                    requeueItems.Add(ser);
+                    continue;
+                }
+
+                // OPL data exists, remove from hashset and create ItemPropertiesData
+                _queuedItems.Remove(ser);
+                itemData.Add(new ItemPropertiesData(World, item));
             }
 
-            foreach (var data in itemData)
+            // Process items with OPL data
+            foreach (ItemPropertiesData data in itemData)
             {
-                var bestMatch = GetBestMatch(data);
+                GridHighlightData bestMatch = GetBestMatch(data);
                 if (bestMatch != null)
                 {
                     data.item.MatchesHighlightData = true;
@@ -167,21 +202,30 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                     if (bestMatch.LootOnMatch)
                     {
-                        var root = World.Items.Get(data.item.RootContainer);
+                        Item root = World.Items.Get(data.item.RootContainer);
                         if (root != null && root.IsCorpse)
                             AutoLootManager.Instance.LootItem(data.item);
                     }
                 }
             }
 
+            // Requeue items that don't have OPL data yet
+            foreach (uint ser in requeueItems)
+            {
+                _queue.Enqueue(ser);
+            }
+
             if (_queue.Count == 0)
+            {
                 hasQueuedItems = false;
+                _queuedItems.Clear(); // Clear hashset when queue is empty
+            }
         }
 
         public static GridHighlightData GetGridHighlightData(int index)
         {
-            var list = ProfileManager.CurrentProfile.GridHighlightSetup;
-            var data = index >= 0 && index < list.Count ? new GridHighlightData(list[index]) : null;
+            List<GridHighlightSetupEntry> list = ProfileManager.CurrentProfile.GridHighlightSetup;
+            GridHighlightData data = index >= 0 && index < list.Count ? new GridHighlightData(list[index]) : null;
 
             if (data == null)
             {
@@ -194,23 +238,34 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public static void RecheckMatchStatus()
         {
-            foreach (var kvp in World.Instance.Items)
+            AllConfigs = null; // Reset configs
+
+            World world = World.Instance;
+            if (world == null)
+                return;
+
+            // Then re-queue all valid items for OPL processing
+            foreach (KeyValuePair<uint, Item> kvp in world.Items)
             {
-                if (kvp.Value.OnGround || kvp.Value.IsMulti) continue;
-                ProcessItemOpl(kvp.Key);
+                Item item = kvp.Value;
+                if (item.OnGround || item.IsMulti)
+                    continue;
+
+                item.MatchesHighlightData = false;
+                item.HighlightName = null;
+                item.HighlightColor = Color.Transparent;
+
+                ProcessItemOpl(world, kvp.Key);
             }
         }
 
-        public bool IsMatch(ItemPropertiesData itemData)
-        {
-            return AcceptExtraProperties
+        public bool IsMatch(ItemPropertiesData itemData) => AcceptExtraProperties
                 ? IsMatchFromProperties(itemData)
                 : IsMatchFromItemPropertiesData(itemData);
-        }
 
         public bool DoesPropertyMatch(ItemPropertiesData.SinglePropertyData property)
         {
-            foreach (var rule in Properties)
+            foreach (GridHighlightProperty rule in Properties)
             {
                 string nProp = Normalize(property.Name);
                 string nRule = Normalize(rule.Name);
@@ -272,23 +327,22 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             int matchingPropertiesCount = 0;
 
-            foreach (var prop in Properties)
+            foreach (GridHighlightProperty prop in Properties)
             {
+                string normalizedPropName = Normalize(prop.Name);
                 bool matched = itemData.singlePropertyData.Any(p =>
-                    (Normalize(p.Name).IndexOf(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     Normalize(p.OriginalString).IndexOf(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase) >= 0) &&
+                    (Normalize(p.Name).IndexOf(normalizedPropName, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     Normalize(p.OriginalString).IndexOf(normalizedPropName, StringComparison.OrdinalIgnoreCase) >= 0) &&
                     (prop.MinValue == -1 || p.FirstValue >= prop.MinValue));
 
                 if (matched)
-                {
                     matchingPropertiesCount++;
-                }
 
                 if (!matched && !prop.IsOptional)
                     return false;
             }
 
-            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
             return isMatchingPropertyCount;
         }
 
@@ -300,7 +354,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (!MatchesSlot(itemData.item.ItemData.Layer))
                 return false;
 
-            var props = itemData.singlePropertyData;
+            List<ItemPropertiesData.SinglePropertyData> props = itemData.singlePropertyData;
 
             var itemProperties = props.Where(p =>
                 GridHighlightRules.Properties.Any(rule =>
@@ -323,7 +377,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return false;
             }
 
-            foreach (var pattern in ExcludeNegatives.Select(Normalize))
+            foreach (string pattern in ExcludeNegatives.Select(Normalize))
             {
                 if (itemProperties.Any(p => Normalize(p.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0) ||
                     itemNegatives.Any(p => Normalize(p.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0))
@@ -342,9 +396,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             int matchingPropertiesCount = 0;
 
-            foreach (var prop in Properties)
+            foreach (GridHighlightProperty prop in Properties)
             {
-                var match = itemProperties.FirstOrDefault(p =>
+                ItemPropertiesData.SinglePropertyData match = itemProperties.FirstOrDefault(p =>
                     Normalize(p.Name).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase));
 
                 if (match == null)
@@ -360,51 +414,65 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 matchingPropertiesCount++;
             }
 
-            var isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
             return isMatchingPropertyCount;
         }
 
         public static GridHighlightData GetBestMatch(ItemPropertiesData itemData)
         {
             GridHighlightData best = null;
-            int bestScore = -1;
-            bool bestHasExact = false;
+            double bestScore = -1;
 
-            foreach (var config in AllConfigs)
+            foreach (GridHighlightData config in AllConfigs)
             {
                 if (!config.IsMatch(itemData))
                     continue;
 
-                int score = 0;
-                bool hasExact = false;
+                double score = 0;
+                int totalRules = config.Properties.Count;
+                int matchedRules = 0;
 
-                foreach (var prop in itemData.singlePropertyData)
+                foreach (ItemPropertiesData.SinglePropertyData prop in itemData.singlePropertyData)
                 {
-                    foreach (var rule in config.Properties)
+                    foreach (GridHighlightProperty rule in config.Properties)
                     {
                         string nProp = config.Normalize(prop.Name);
                         string nRule = config.Normalize(rule.Name);
 
                         if (nProp.Equals(nRule, StringComparison.OrdinalIgnoreCase))
                         {
-                            score += 2; // exact name match = stronger
-                            hasExact = true;
+                            double delta = prop.FirstValue >= rule.MinValue + 5 ? 3.0 : 2.0;
+                            score += delta;
+                            matchedRules++;
                         }
                         else if (nProp.Contains(nRule, StringComparison.OrdinalIgnoreCase) ||
                                  config.Normalize(prop.OriginalString).Contains(nRule, StringComparison.OrdinalIgnoreCase))
                         {
-                            score += 1;
+                            score += 1.0;
+                            matchedRules++;
                         }
                     }
                 }
 
-                // tie-breaker: prefer exact name matches, then higher score
-                if (best == null || (hasExact && !bestHasExact) ||
-                    (hasExact == bestHasExact && score > bestScore))
+                if (totalRules > 0)
+                {
+                    score /= totalRules;
+                }
+
+                int requiredCount = config.Properties.Count(p => !p.IsOptional);
+                if (requiredCount > 0)
+                {
+                    double bonus = (double)matchedRules / requiredCount * 0.2;
+                    score += bonus;
+                }
+
+                double specificity = (1.0 - (config.Properties.Count(p => p.IsOptional) / (double)Math.Max(1, totalRules))) * 0.1;
+                score += specificity;
+
+                if (best == null || score > bestScore)
                 {
                     best = config;
                     bestScore = score;
-                    bestHasExact = hasExact;
                 }
             }
 
@@ -429,10 +497,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             input ??= string.Empty;
 
-            if (_normalizeCache.TryGetValue(input, out var cached))
+            if (_normalizeCache.TryGetValue(input, out string cached))
                 return cached;
 
-            var result = StripHtmlTags(input).Trim();
+            string result = StripHtmlTags(input);
             _normalizeCache[input] = result;
             return result;
         }
@@ -455,7 +523,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             if (string.IsNullOrEmpty(input)) return string.Empty;
 
-            var output = new char[input.Length];
+            char[] output = new char[input.Length];
             int outputIndex = 0;
             bool insideTag = false;
 
@@ -466,7 +534,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (!insideTag) output[outputIndex++] = c;
             }
 
-            return new string(output, 0, outputIndex);
+            return new string(output, 0, outputIndex).Trim().ToLowerInvariant().Normalize(NormalizationForm.FormKC);
         }
 
         private bool IsItemNameMatch(string itemName)

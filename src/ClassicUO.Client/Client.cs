@@ -52,7 +52,7 @@ namespace ClassicUO
             hueSamplers[0] = new Texture2D(game.GraphicsDevice, TEXTURE_WIDTH, TEXTURE_HEIGHT);
             hueSamplers[1] = new Texture2D(game.GraphicsDevice, LIGHTS_TEXTURE_WIDTH, LIGHTS_TEXTURE_HEIGHT);
 
-            var buffer = new uint[Math.Max(
+            uint[] buffer = new uint[Math.Max(
                 LIGHTS_TEXTURE_WIDTH * LIGHTS_TEXTURE_HEIGHT,
                 TEXTURE_WIDTH * TEXTURE_HEIGHT
             )];
@@ -240,9 +240,6 @@ namespace ClassicUO
             Log.Trace("Exiting game...");
         }
 
-        public static void ShowErrorMessage(string msg)
-        {
-            SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "ERROR", msg, IntPtr.Zero);
-        }
+        public static void ShowErrorMessage(string msg) => SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "ERROR", msg, IntPtr.Zero);
     }
 }

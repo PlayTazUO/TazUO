@@ -61,7 +61,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (!IsDestroyed)
             {
-                (var x, var y, var z) = GetSource();
+                (ushort x, ushort y, sbyte z) = GetSource();
 
                 if (Source != null)
                 {

@@ -460,10 +460,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             public List<ContextMenuItemEntry> GenSpellList()
             {
-                List<ContextMenuItemEntry> list = new List<ContextMenuItemEntry>();
+                var list = new List<ContextMenuItemEntry>();
 
-                ContextMenuItemEntry entry = new ContextMenuItemEntry("Magery");
-                foreach (var spell in SpellsMagery.GetAllSpells.Values)
+                var entry = new ContextMenuItemEntry("Magery");
+                foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -473,7 +473,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Necromancy");
-                foreach (var spell in SpellsNecromancy.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -483,7 +483,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Chivalry");
-                foreach (var spell in SpellsChivalry.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -493,7 +493,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Bushido");
-                foreach (var spell in SpellsBushido.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -503,7 +503,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Ninjitsu");
-                foreach (var spell in SpellsNinjitsu.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -513,7 +513,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Spellweaving");
-                foreach (var spell in SpellsSpellweaving.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -523,7 +523,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Mysticism");
-                foreach (var spell in SpellsMysticism.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -533,7 +533,7 @@ namespace ClassicUO.Game.UI.Gumps
 
 
                 entry = new ContextMenuItemEntry("Mastery");
-                foreach (var spell in SpellsMastery.GetAllSpells.Values)
+                foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
                         SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
@@ -619,7 +619,7 @@ namespace ClassicUO.Game.UI.Gumps
                         _amount = 0;
 
                         for (
-                            Item item = (Item)_gump.World.Player.Items;
+                            var item = (Item)_gump.World.Player.Items;
                             item != null;
                             item = (Item)item.Next
                         )
@@ -672,7 +672,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 for (LinkedObject i = parent.Items; i != null; i = i.Next)
                 {
-                    Item item = (Item)i;
+                    var item = (Item)i;
 
                     GetAmount(item, graphic, hue, ref amount);
 
@@ -775,16 +775,16 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (_graphic != 0)
                     {
-                        ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
+                        ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
                         if (_isGumpGraphic)
                             artInfo = ref Client.Game.UO.Gumps.GetGump(_graphic);
 
-                        var rect = _isGumpGraphic ? artInfo.UV : Client.Game.UO.Arts.GetRealArtBounds(_graphic);
+                        Rectangle rect = _isGumpGraphic ? artInfo.UV : Client.Game.UO.Arts.GetRealArtBounds(_graphic);
 
                         Vector3 hueVector = ShaderHueTranslator.GetHueVector(_hue, _partial, 1f, _isGumpGraphic);
 
-                        Point originalSize = new Point(Width, Height);
-                        Point point = new Point();
+                        var originalSize = new Point(Width, Height);
+                        var point = new Point();
 
                         if (rect.Width < Width)
                         {
@@ -827,15 +827,9 @@ namespace ClassicUO.Game.UI.Gumps
                     return base.Draw(batcher, x, y);
                 }
 
-                public void SetAmount(string amount)
-                {
-                    _label.Text = amount;
-                }
+                public void SetAmount(string amount) => _label.Text = amount;
 
-                public string GetText()
-                {
-                    return _label?.Text ?? "";
-                }
+                public string GetText() => _label?.Text ?? "";
             }
         }
     }

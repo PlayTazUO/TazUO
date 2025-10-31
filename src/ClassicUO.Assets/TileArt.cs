@@ -44,22 +44,22 @@ public sealed class TileArtLoader : UOFileLoader
         if (_file == null)
             return false;
 
-        ref var entry = ref _file.GetValidRefEntry((int)graphic);
+        ref UOFileIndex entry = ref _file.GetValidRefEntry((int)graphic);
         if (entry.Length == 0)
             return false;
 
-        var buf = ArrayPool<byte>.Shared.Rent(entry.Length);
-        var dbuf = ArrayPool<byte>.Shared.Rent(entry.DecompressedLength);
+        byte[] buf = ArrayPool<byte>.Shared.Rent(entry.Length);
+        byte[] dbuf = ArrayPool<byte>.Shared.Rent(entry.DecompressedLength);
 
         try
         {
-            var bufSpan = buf.AsSpan(0, entry.Length);
-            var dbufSpan = dbuf.AsSpan(0, entry.DecompressedLength);
+            Span<byte> bufSpan = buf.AsSpan(0, entry.Length);
+            Span<byte> dbufSpan = dbuf.AsSpan(0, entry.DecompressedLength);
 
             _file.Seek(entry.Offset, SeekOrigin.Begin);
             _file.Read(bufSpan);
 
-            var result = ZLib.Decompress(bufSpan, dbufSpan);
+            ZLib.ZLibError result = ZLib.Decompress(bufSpan, dbufSpan);
             if (result != ZLib.ZLibError.Ok)
             {
                 return false;
@@ -79,7 +79,7 @@ public sealed class TileArtLoader : UOFileLoader
 
     public override void Load()
     {
-        var path = FileManager.GetUOFilePath("tileart.uop");
+        string path = FileManager.GetUOFilePath("tileart.uop");
         if (!File.Exists(path))
             return;
 
@@ -156,35 +156,35 @@ public sealed class TileArtInfo
 {
     internal TileArtInfo(ref StackDataReader reader)
     {
-        var version = reader.ReadUInt16LE();
+        ushort version = reader.ReadUInt16LE();
         if (version != 4)
         {
             Log.Info($"tileart.uop v{version} is not supported.");
             return;
         }
 
-        var stringDictOffset = reader.ReadUInt32LE();
+        uint stringDictOffset = reader.ReadUInt32LE();
         TileId = version >= 4 ? reader.ReadUInt32LE() : reader.ReadUInt16LE();
-        var unkBool1 = reader.ReadBool();
-        var unkBool2 = reader.ReadBool();
-        var unkFloat1 = reader.ReadUInt32LE();
-        var unkFloat2 = reader.ReadUInt32LE();
-        var fixedZero = reader.ReadUInt32LE();
-        var oldId = reader.ReadUInt32LE();
-        var unkFloat3 = reader.ReadUInt32LE();
+        bool unkBool1 = reader.ReadBool();
+        bool unkBool2 = reader.ReadBool();
+        uint unkFloat1 = reader.ReadUInt32LE();
+        uint unkFloat2 = reader.ReadUInt32LE();
+        uint fixedZero = reader.ReadUInt32LE();
+        uint oldId = reader.ReadUInt32LE();
+        uint unkFloat3 = reader.ReadUInt32LE();
         BodyType = reader.ReadUInt32LE();
-        var unkByte = reader.ReadUInt8();
-        var unkDw1 = reader.ReadUInt32LE();
-        var unkDw2 = reader.ReadUInt32LE();
+        byte unkByte = reader.ReadUInt8();
+        uint unkDw1 = reader.ReadUInt32LE();
+        uint unkDw2 = reader.ReadUInt32LE();
         Lights[0] = reader.ReadUInt32LE();
         Lights[1] = reader.ReadUInt32LE();
-        var unkDw3 = reader.ReadUInt32LE();
+        uint unkDw3 = reader.ReadUInt32LE();
         Flags[0] = (TAEFlag)reader.ReadUInt64LE();
         Flags[1] = (TAEFlag)reader.ReadUInt64LE();
-        var facing = reader.ReadUInt32LE();
-        (var startX, var startY,
-        var endX, var endY,
-        var offX, var offY) = (
+        uint facing = reader.ReadUInt32LE();
+        (uint startX, uint startY,
+        uint endX, uint endY,
+        uint offX, uint offY) = (
             reader.ReadUInt32LE(),
             reader.ReadUInt32LE(),
             reader.ReadUInt32LE(),
@@ -192,9 +192,9 @@ public sealed class TileArtInfo
             reader.ReadUInt32LE(),
             reader.ReadUInt32LE()
         );
-        (var startX2, var startY2,
-        var endX2, var endY2,
-        var offX2, var offY2) = (
+        (uint startX2, uint startY2,
+        uint endX2, uint endY2,
+        uint offX2, uint offY2) = (
             reader.ReadUInt32LE(),
             reader.ReadUInt32LE(),
             reader.ReadUInt32LE(),
@@ -203,57 +203,57 @@ public sealed class TileArtInfo
             reader.ReadUInt32LE()
         );
 
-        var propCount = reader.ReadUInt8();
-        for (var j = 0; j < propCount; ++j)
+        byte propCount = reader.ReadUInt8();
+        for (int j = 0; j < propCount; ++j)
         {
             var propId = (TAEPropID)reader.ReadUInt8();
-            var propVal = reader.ReadUInt32LE();
+            uint propVal = reader.ReadUInt32LE();
 
             Props[0].Add((propId, propVal));
         }
 
-        var propCount2 = reader.ReadUInt8();
-        for (var j = 0; j < propCount2; ++j)
+        byte propCount2 = reader.ReadUInt8();
+        for (int j = 0; j < propCount2; ++j)
         {
             var propId = (TAEPropID)reader.ReadUInt8();
-            var propVal = reader.ReadUInt32LE();
+            uint propVal = reader.ReadUInt32LE();
 
             Props[1].Add((propId, propVal));
         }
 
-        var stackAliasCount = reader.ReadUInt32LE();
-        for (var j = 0; j < stackAliasCount; ++j)
+        uint stackAliasCount = reader.ReadUInt32LE();
+        for (int j = 0; j < stackAliasCount; ++j)
         {
-            var amount = reader.ReadUInt32LE();
-            var amountId = reader.ReadUInt32LE();
+            uint amount = reader.ReadUInt32LE();
+            uint amountId = reader.ReadUInt32LE();
 
             StackAliases.Add((amount, amountId));
         }
 
-        var appearanceCount = reader.ReadUInt32LE();
+        uint appearanceCount = reader.ReadUInt32LE();
 
-        for (var j = 0; j < appearanceCount; ++j)
+        for (int j = 0; j < appearanceCount; ++j)
         {
-            var subType = reader.ReadUInt8();
+            byte subType = reader.ReadUInt8();
             if (subType == 1)
             {
-                var unk1 = reader.ReadUInt8();
-                var unk2 = reader.ReadUInt32LE();
+                byte unk1 = reader.ReadUInt8();
+                uint unk2 = reader.ReadUInt32LE();
             }
             else
             {
-                var subCount = reader.ReadUInt32LE();
+                uint subCount = reader.ReadUInt32LE();
 
-                if (!Appearances.TryGetValue(subType, out var dict))
+                if (!Appearances.TryGetValue(subType, out Dictionary<uint, uint> dict))
                 {
                     dict = [];
                     Appearances.Add(subType, dict);
                 }
 
-                for (var k = 0; k < subCount; ++k)
+                for (int k = 0; k < subCount; ++k)
                 {
-                    var val = reader.ReadUInt32LE();
-                    var animId = reader.ReadUInt32LE();
+                    uint val = reader.ReadUInt32LE();
+                    uint animId = reader.ReadUInt32LE();
 
                     uint offset = val / 1000;
                     uint body = val % 1000;
@@ -266,20 +266,20 @@ public sealed class TileArtInfo
             }
         }
 
-        var hasSitting = reader.ReadBool();
+        bool hasSitting = reader.ReadBool();
         if (hasSitting)
         {
-            var unk1 = reader.ReadUInt32LE();
-            var unk2 = reader.ReadUInt32LE();
-            var unk3 = reader.ReadUInt32LE();
-            var unk4 = reader.ReadUInt32LE();
+            uint unk1 = reader.ReadUInt32LE();
+            uint unk2 = reader.ReadUInt32LE();
+            uint unk3 = reader.ReadUInt32LE();
+            uint unk4 = reader.ReadUInt32LE();
         }
 
-        var radColor = reader.ReadUInt32LE();
+        uint radColor = reader.ReadUInt32LE();
 
-        for (var i = 0; i < 4; ++i)
+        for (int i = 0; i < 4; ++i)
         {
-            var hasTexture = reader.ReadInt8();
+            sbyte hasTexture = reader.ReadInt8();
             if (hasTexture != 0)
             {
                 if (hasTexture != 1)
@@ -288,33 +288,33 @@ public sealed class TileArtInfo
                     break;
                 }
 
-                var unk1 = reader.ReadUInt8();
-                var typeStringOffset = reader.ReadUInt32LE();
-                var textureItemsCount = reader.ReadUInt8();
-                for (var j = 0; j < textureItemsCount; ++j)
+                byte unk1 = reader.ReadUInt8();
+                uint typeStringOffset = reader.ReadUInt32LE();
+                byte textureItemsCount = reader.ReadUInt8();
+                for (int j = 0; j < textureItemsCount; ++j)
                 {
-                    var nameStringOff = reader.ReadUInt32LE();
-                    var unk2 = reader.ReadUInt8();
-                    var unk3 = reader.ReadInt32LE();
-                    var unk4 = reader.ReadInt32LE();
-                    var unk5 = reader.ReadUInt32LE();
+                    uint nameStringOff = reader.ReadUInt32LE();
+                    byte unk2 = reader.ReadUInt8();
+                    int unk3 = reader.ReadInt32LE();
+                    int unk4 = reader.ReadInt32LE();
+                    uint unk5 = reader.ReadUInt32LE();
                 }
 
-                var unk6Count = reader.ReadUInt32LE();
-                for (var j = 0; j < unk6Count; ++j)
+                uint unk6Count = reader.ReadUInt32LE();
+                for (int j = 0; j < unk6Count; ++j)
                 {
-                    var unk9 = reader.ReadUInt32LE();
+                    uint unk9 = reader.ReadUInt32LE();
                 }
 
-                var unk10Count = reader.ReadUInt32LE();
-                for (var j = 0; j < unk6Count; ++j)
+                uint unk10Count = reader.ReadUInt32LE();
+                for (int j = 0; j < unk6Count; ++j)
                 {
-                    var unk11 = reader.ReadUInt32LE();
+                    uint unk11 = reader.ReadUInt32LE();
                 }
             }
         }
 
-        var unk12 = reader.ReadUInt8();
+        byte unk12 = reader.ReadUInt8();
     }
 
 
@@ -333,7 +333,7 @@ public sealed class TileArtInfo
 
         // get in account only type 0 for some unknown reason :D
         // added the Appearances.Count > 1 because seems like the conversion should happen only when there is more than 1 appearance (?)
-        return Appearances.Count > 1 && Appearances.TryGetValue(0, out var appearanceDict) &&
+        return Appearances.Count > 1 && Appearances.TryGetValue(0, out Dictionary<uint, uint> appearanceDict) &&
             appearanceDict.TryGetValue(mobGraphic, out appearanceId);
     }
 }

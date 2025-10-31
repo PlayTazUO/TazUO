@@ -700,15 +700,9 @@ namespace ClassicUO.Network.Encryption
                 (*C++) = (byte) (LL & 0xff);
             }
 
-            public static void L2N(ref uint LL, uint R, uint P, byte[] S)
-            {
-                LL = (uint) (LL ^ P ^ (((S[R >> 24] + S[0x0100 + ((R >> 16) & 0xff)]) ^ S[0x0200 + ((R >> 8) & 0xff)]) + S[0x0300 + (R & 0xff)]));
-            }
+            public static void L2N(ref uint LL, uint R, uint P, byte[] S) => LL = (uint)(LL ^ P ^ (((S[R >> 24] + S[0x0100 + ((R >> 16) & 0xff)]) ^ S[0x0200 + ((R >> 8) & 0xff)]) + S[0x0300 + (R & 0xff)]));
 
-            public static void Round(ref uint LL, uint R, uint[] S, uint P)
-            {
-                LL = LL ^ P ^ (((S[R >> 24] + S[0x0100 + ((R >> 16) & 0xff)]) ^ S[0x0200 + ((R >> 8) & 0xff)]) + S[0x0300 + (R & 0xff)]);
-            }
+            public static void Round(ref uint LL, uint R, uint[] S, uint P) => LL = LL ^ P ^ (((S[R >> 24] + S[0x0100 + ((R >> 16) & 0xff)]) ^ S[0x0200 + ((R >> 8) & 0xff)]) + S[0x0300 + (R & 0xff)]);
         }
     }
 }

@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.UI.Gumps.Login;
+using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using Constants = ClassicUO.Game.Constants;
 
@@ -88,11 +89,11 @@ sealed class PacketHandlers
 
     private int ParsePackets(World world, CircularBuffer stream, bool allowPlugins)
     {
-        var packetsCount = 0;
+        int packetsCount = 0;
 
         lock (stream)
         {
-            ref var packetBuffer = ref _readingBuffer;
+            ref byte[] packetBuffer = ref _readingBuffer;
 
             while (stream.Length > 0)
             {
@@ -100,7 +101,7 @@ sealed class PacketHandlers
                     !GetPacketInfo(
                         stream,
                         stream.Length,
-                        out var packetID,
+                        out byte packetID,
                         out int offset,
                         out int packetlength
                     )
@@ -157,7 +158,7 @@ sealed class PacketHandlers
         if (data.IsEmpty)
             return;
 
-        var bufferReader = _handlers[data[0]];
+        OnPacketBufferReader bufferReader = _handlers[data[0]];
 
         if (bufferReader != null)
         {
@@ -195,8 +196,8 @@ sealed class PacketHandlers
                 return false;
             }
 
-            var b0 = buffer[1];
-            var b1 = buffer[2];
+            byte b0 = buffer[1];
+            byte b1 = buffer[2];
 
             packetLen = (b0 << 8) | b1;
             packetOffset = 3;
@@ -377,35 +378,28 @@ sealed class PacketHandlers
         Handler._clilocRequests.Add(serial);
     }
 
-        private static void TargetCursor(World world, ref StackDataReader p)
+    private static void TargetCursor(World world, ref StackDataReader p)
+    {
+        var cursorTarget = (CursorTarget)p.ReadUInt8();
+        uint cursorId = p.ReadUInt32BE();
+        var targetType = (TargetType)p.ReadUInt8();
+
+        world.TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
+
+        if (world.Party.PartyHealTimer < Time.Ticks && world.Party.PartyHealTarget != 0)
         {
-            var cursorTarget = (CursorTarget)p.ReadUInt8();
-            var cursorId = p.ReadUInt32BE();
-            var targetType = (TargetType)p.ReadUInt8();
-
-            world.TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
-
-            if (world.Party.PartyHealTimer < Time.Ticks && world.Party.PartyHealTarget != 0)
-            {
-                world.TargetManager.Target(world.Party.PartyHealTarget);
-                world.Party.PartyHealTimer = 0;
-                world.Party.PartyHealTarget = 0;
-                TargetManager.NextAutoTarget.Clear(); // Clear any queued auto-target
-            }
-            else if (TargetManager.NextAutoTarget.IsSet)
-            {
-                // Check if this cursor matches what we expect
-                if (TargetManager.NextAutoTarget.ExpectedCursorTarget == cursorTarget &&
-                    TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
-                {
-                    // Auto-target the stored serial
-                    world.TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
-                }
-
-                // Always clear after any target cursor (no queuing)
-                TargetManager.NextAutoTarget.Clear();
-            }
+            world.TargetManager.Target(world.Party.PartyHealTarget);
+            world.Party.PartyHealTimer = 0;
+            world.Party.PartyHealTarget = 0;
         }
+        else if (TargetManager.NextAutoTarget.IsSet && TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
+        {
+            world.TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
+        }
+
+        // Always clear after any target cursor (no queuing)
+        TargetManager.NextAutoTarget.Clear();
+    }
 
     private static void SecureTrading(World world, ref StackDataReader p)
     {
@@ -544,7 +538,7 @@ sealed class PacketHandlers
 
         if (SerialHelper.IsMobile(serial))
         {
-            Mobile mobile = entity as Mobile;
+            var mobile = entity as Mobile;
 
             if (mobile == null)
             {
@@ -802,6 +796,8 @@ sealed class PacketHandlers
                         mobile.Flags &= ~Flags.Poisoned;
                     }
                 }
+
+                BandageManager.Instance.SetPoisoned(mobile.Serial, enabled);
             }
             else if (type == 2)
             {
@@ -1003,7 +999,7 @@ sealed class PacketHandlers
         uint serial = p.ReadUInt32BE();
         Entity entity = world.Get(serial);
         ushort graphic = p.ReadUInt16BE();
-        MessageType type = (MessageType)p.ReadUInt8();
+        var type = (MessageType)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
         ushort font = p.ReadUInt16BE();
         string name = p.ReadASCII(30);
@@ -1173,7 +1169,7 @@ sealed class PacketHandlers
         }
         else
         {
-            Item item = (Item)entity;
+            var item = (Item)entity;
 
             if (item.IsMulti)
             {
@@ -1217,11 +1213,11 @@ sealed class PacketHandlers
         ushort graphic = p.ReadUInt16BE();
         byte graphic_inc = p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
-        Flags flags = (Flags)p.ReadUInt8();
+        var flags = (Flags)p.ReadUInt8();
         ushort x = p.ReadUInt16BE();
         ushort y = p.ReadUInt16BE();
         ushort serverID = p.ReadUInt16BE();
-        Direction direction = (Direction)p.ReadUInt8();
+        var direction = (Direction)p.ReadUInt8();
         sbyte z = p.ReadInt8();
 
         UpdatePlayer(world, serial, graphic, graphic_inc, hue, flags, x, y, z, serverID, direction);
@@ -1237,7 +1233,7 @@ sealed class PacketHandlers
         byte seq = p.ReadUInt8();
         ushort x = p.ReadUInt16BE();
         ushort y = p.ReadUInt16BE();
-        Direction direction = (Direction)p.ReadUInt8();
+        var direction = (Direction)p.ReadUInt8();
         direction &= Direction.Up;
         sbyte z = p.ReadInt8();
 
@@ -1375,7 +1371,7 @@ sealed class PacketHandlers
 
             UIManager.GetGump<SpellbookGump>(serial)?.Dispose();
 
-            SpellbookGump spellbookGump = new SpellbookGump(world, spellBookItem);
+            var spellbookGump = new SpellbookGump(world, spellBookItem);
 
             if (!UIManager.GetGumpCachePosition(spellBookItem, out Point location))
             {
@@ -1430,11 +1426,11 @@ sealed class PacketHandlers
                         first = first.Next;
                     }
                 }
-                List<Item> buyList = new List<Item>();
+                var buyList = new List<Item>();
 
                 while (first != null)
                 {
-                    Item it = (Item)first;
+                    var it = (Item)first;
                     buyList.Add(it);
                     if (ProfileManager.CurrentProfile.UseModernShopGump)
                         modernShopGump.AddItem
@@ -1506,7 +1502,7 @@ sealed class PacketHandlers
                         && ProfileManager.CurrentProfile.UseLargeContainerGumps
                     )
                     {
-                        var gumps = Client.Game.UO.Gumps;
+                        Renderer.Gumps.Gump gumps = Client.Game.UO.Gumps;
 
                         switch (graphic)
                         {
@@ -1895,7 +1891,7 @@ sealed class PacketHandlers
 
         if (SerialHelper.IsMobile(serial))
         {
-            Mobile mobile = entity as Mobile;
+            var mobile = entity as Mobile;
 
             if (mobile == null)
             {
@@ -2131,7 +2127,7 @@ sealed class PacketHandlers
 
                 ushort realVal = p.ReadUInt16BE();
                 ushort baseVal = p.ReadUInt16BE();
-                Lock locked = (Lock)p.ReadUInt8();
+                var locked = (Lock)p.ReadUInt8();
                 ushort cap = 1000;
 
                 if (haveCap)
@@ -2475,7 +2471,7 @@ sealed class PacketHandlers
             return;
         }
 
-        WeatherType type = (WeatherType)p.ReadUInt8();
+        var type = (WeatherType)p.ReadUInt8();
 
         if (world.Weather.CurrentWeather != type)
         {
@@ -2585,7 +2581,7 @@ sealed class PacketHandlers
             return;
         }
 
-        GraphicEffectType type = (GraphicEffectType)p.ReadUInt8();
+        var type = (GraphicEffectType)p.ReadUInt8();
 
         if (type > GraphicEffectType.FixedFrom)
         {
@@ -2630,11 +2626,11 @@ sealed class PacketHandlers
 
             if (p[0] == 0xC7)
             {
-                var tileID = p.ReadUInt16BE();
-                var explodeEffect = p.ReadUInt16BE();
-                var explodeSound = p.ReadUInt16BE();
-                var serial = p.ReadUInt32BE();
-                var layer = p.ReadUInt8();
+                ushort tileID = p.ReadUInt16BE();
+                ushort explodeEffect = p.ReadUInt16BE();
+                ushort explodeSound = p.ReadUInt16BE();
+                uint serial = p.ReadUInt32BE();
+                byte layer = p.ReadUInt8();
                 p.Skip(2);
             }
         }
@@ -2660,10 +2656,7 @@ sealed class PacketHandlers
         );
     }
 
-    private static void ClientViewRange(World world, ref StackDataReader p)
-    {
-        world.ClientViewRange = p.ReadUInt8();
-    }
+    private static void ClientViewRange(World world, ref StackDataReader p) => world.ClientViewRange = p.ReadUInt8();
 
     private static void BulletinBoardData(World world, ref StackDataReader p)
     {
@@ -2763,7 +2756,7 @@ sealed class PacketHandlers
                         byte lines = p.ReadUInt8();
 
                         Span<char> span = stackalloc char[256];
-                        ValueStringBuilder sb = new ValueStringBuilder(span);
+                        var sb = new ValueStringBuilder(span);
 
                         for (int i = 0; i < lines; i++)
                         {
@@ -2815,10 +2808,7 @@ sealed class PacketHandlers
         world.Player.InWarMode = p.ReadBool();
     }
 
-    private static void Ping(World world, ref StackDataReader p)
-    {
-        AsyncNetClient.Socket.Statistics.PingReceived(p.ReadUInt8());
-    }
+    private static void Ping(World world, ref StackDataReader p) => AsyncNetClient.Socket.Statistics.PingReceived(p.ReadUInt8());
 
     private static void BuyList(World world, ref StackDataReader p)
     {
@@ -2900,7 +2890,7 @@ sealed class PacketHandlers
                     break;
                 }
 
-                Item it = (Item)first;
+                var it = (Item)first;
 
                 it.Price = p.ReadUInt32BE();
                 byte nameLen = p.ReadUInt8();
@@ -2958,10 +2948,10 @@ sealed class PacketHandlers
         ushort x = p.ReadUInt16BE();
         ushort y = p.ReadUInt16BE();
         sbyte z = p.ReadInt8();
-        Direction direction = (Direction)p.ReadUInt8();
+        var direction = (Direction)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
-        Flags flags = (Flags)p.ReadUInt8();
-        NotorietyFlag notoriety = (NotorietyFlag)p.ReadUInt8();
+        var flags = (Flags)p.ReadUInt8();
+        var notoriety = (NotorietyFlag)p.ReadUInt8();
 
         mobile.NotorietyFlag = notoriety;
 
@@ -2991,10 +2981,10 @@ sealed class PacketHandlers
         ushort x = p.ReadUInt16BE();
         ushort y = p.ReadUInt16BE();
         sbyte z = p.ReadInt8();
-        Direction direction = (Direction)p.ReadUInt8();
+        var direction = (Direction)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
-        Flags flags = (Flags)p.ReadUInt8();
-        NotorietyFlag notoriety = (NotorietyFlag)p.ReadUInt8();
+        var flags = (Flags)p.ReadUInt8();
+        var notoriety = (NotorietyFlag)p.ReadUInt8();
         bool oldDead = false;
         //bool alreadyExists =world.Get(serial) != null;
 
@@ -3025,7 +3015,7 @@ sealed class PacketHandlers
             while (o != null)
             {
                 LinkedObject next = o.Next;
-                Item it = (Item)o;
+                var it = (Item)o;
 
                 if (!it.Opened && it.Layer != Layer.Backpack)
                 {
@@ -3133,7 +3123,7 @@ sealed class PacketHandlers
 
         if (menuid != 0)
         {
-            MenuGump gump = new MenuGump(world, serial, id, name) { X = 100, Y = 100 };
+            var gump = new MenuGump(world, serial, id, name) { X = 100, Y = 100 };
 
             int posX = 0;
 
@@ -3143,7 +3133,7 @@ sealed class PacketHandlers
                 ushort hue = p.ReadUInt16BE();
                 name = p.ReadASCII(p.ReadUInt8());
 
-                ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
+                ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(graphic);
 
                 if (artInfo.UV.Width != 0 && artInfo.UV.Height != 0)
                 {
@@ -3168,7 +3158,7 @@ sealed class PacketHandlers
         }
         else
         {
-            GrayMenuGump gump = new GrayMenuGump(world, serial, id, name)
+            var gump = new GrayMenuGump(world, serial, id, name)
             {
                 X = (Client.Game.Window.ClientBounds.Width >> 1) - 200,
                 Y = (Client.Game.Window.ClientBounds.Height >> 1) - ((121 + count * 21) >> 1)
@@ -3302,7 +3292,7 @@ sealed class PacketHandlers
             return;
         }
 
-        Layer layer = (Layer)p.ReadUInt8();
+        var layer = (Layer)p.ReadUInt8();
 
         while (layer != Layer.Invalid && p.Position < p.Length)
         {
@@ -3333,7 +3323,7 @@ sealed class PacketHandlers
         ushort width = p.ReadUInt16BE();
         ushort height = p.ReadUInt16BE();
 
-        MapGump gump = new MapGump(world, serial, gumpid, width, height);
+        var gump = new MapGump(world, serial, gumpid, width, height);
         SpriteInfo multiMapInfo;
 
         if (p[0] == 0xF5 || Client.Game.UO.Version >= Utility.ClientVersion.CV_308Z)
@@ -3430,7 +3420,7 @@ sealed class PacketHandlers
         p.Skip(2);
         ushort graphic = p.ReadUInt16BE();
 
-        ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0906);
+        ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(0x0906);
 
         int x = (Client.Game.Window.ClientBounds.Width >> 1) - (gumpInfo.UV.Width >> 1);
         int y = (Client.Game.Window.ClientBounds.Height >> 1) - (gumpInfo.UV.Height >> 1);
@@ -3454,7 +3444,7 @@ sealed class PacketHandlers
             return;
         }
 
-        Direction direction = (Direction)p.ReadUInt8();
+        var direction = (Direction)p.ReadUInt8();
         world.Player.Walk(direction & Direction.Mask, (direction & Direction.Running) != 0);
     }
 
@@ -3651,7 +3641,7 @@ sealed class PacketHandlers
         // Check for bandage healing for all mobiles
         if (SerialHelper.IsMobile(entity.Serial) && oldHits != entity.Hits)
         {
-            Mobile mobile = entity as Mobile;
+            var mobile = entity as Mobile;
             if (mobile != null)
             {
                 BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, entity.Hits);
@@ -3766,7 +3756,7 @@ sealed class PacketHandlers
         ushort descLen = p.ReadUInt16BE();
         string desc = p.ReadASCII(descLen);
 
-        TextEntryDialogGump gump = new TextEntryDialogGump(
+        var gump = new TextEntryDialogGump(
             world,
             serial,
             143,
@@ -3817,7 +3807,7 @@ sealed class PacketHandlers
         uint serial = p.ReadUInt32BE();
         Entity entity = world.Get(serial);
         ushort graphic = p.ReadUInt16BE();
-        MessageType type = (MessageType)p.ReadUInt8();
+        var type = (MessageType)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
         ushort font = p.ReadUInt16BE();
         string lang = p.ReadASCII(4);
@@ -3951,7 +3941,7 @@ sealed class PacketHandlers
         {
             for (LinkedObject i = owner.Items; i != null; i = i.Next)
             {
-                Item it = (Item)i;
+                var it = (Item)i;
                 it.Container = serial;
             }
 
@@ -3964,11 +3954,11 @@ sealed class PacketHandlers
             world.CorpseManager.Add(corpseSerial, serial, owner.Direction, running != 0);
         }
 
-        var animations = Client.Game.UO.Animations;
-        var gfx = owner.Graphic;
+        Renderer.Animations.Animations animations = Client.Game.UO.Animations;
+        ushort gfx = owner.Graphic;
         animations.ConvertBodyIfNeeded(ref gfx);
-        var animGroup = animations.GetAnimType(gfx);
-        var animFlags = animations.GetAnimFlags(gfx);
+        AnimationGroupsType animGroup = animations.GetAnimType(gfx);
+        AnimationFlags animFlags = animations.GetAnimFlags(gfx);
         byte group = Client.Game.UO.FileManager.Animations.GetDeathAction(
             gfx,
             animFlags,
@@ -4333,10 +4323,7 @@ sealed class PacketHandlers
         world.ChangeSeason((Season)season, music);
     }
 
-    private static void ClientVersion(World world, ref StackDataReader p)
-    {
-        AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
-    }
+    private static void ClientVersion(World world, ref StackDataReader p) => AsyncNetClient.Socket.Send_ClientVersion(Settings.GlobalSettings.ClientVersion);
 
     private static void AssistVersion(World world, ref StackDataReader p)
     {
@@ -4473,7 +4460,7 @@ sealed class PacketHandlers
                 uint next = p.ReadUInt32BE();
 
                 Span<char> span = stackalloc char[256];
-                ValueStringBuilder strBuffer = new ValueStringBuilder(span);
+                var strBuffer = new ValueStringBuilder(span);
                 if (next == 0xFFFFFFFD)
                 {
                     crafterNameLen = p.ReadUInt16BE();
@@ -4756,7 +4743,7 @@ sealed class PacketHandlers
                         {
                             ushort cc = (ushort)(j * 32 + i + 1);
                             // FIXME: should i call Item.Create ?
-                            Item spellItem = Item.Create(world, cc); // new Item()
+                            var spellItem = Item.Create(world, cc); // new Item()
                             spellItem.Serial = cc;
                             spellItem.Graphic = 0x1F2E;
                             spellItem.Amount = cc;
@@ -4971,7 +4958,7 @@ sealed class PacketHandlers
         uint serial = p.ReadUInt32BE();
         Entity entity = world.Get(serial);
         ushort graphic = p.ReadUInt16BE();
-        MessageType type = (MessageType)p.ReadUInt8();
+        var type = (MessageType)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
         ushort font = p.ReadUInt16BE();
         uint cliloc = p.ReadUInt32BE();
@@ -5156,7 +5143,7 @@ sealed class PacketHandlers
             entity = world.Items.Get(serial);
         }
 
-        List<(int, string, int)> list = new List<(int, string, int)>();
+        var list = new List<(int, string, int)>();
         int totalLength = 0;
 
         while (p.Position < p.Length)
@@ -5204,7 +5191,7 @@ sealed class PacketHandlers
                         str = "<basefont color=#40a4fe>" + str + "</basefont>";
                     break;
                 case 1061170:
-                    if (int.TryParse(argument, out var strength) && world.Player.Strength < strength)
+                    if (int.TryParse(argument, out int strength) && world.Player.Strength < strength)
                         str = "<basefont color=#FF0000>" + str + "</basefont>";
                     break;
                 case 1062613:
@@ -5260,9 +5247,9 @@ sealed class PacketHandlers
         if (list.Count != 0)
         {
             Span<char> span = stackalloc char[totalLength];
-            ValueStringBuilder sb = new ValueStringBuilder(span);
+            var sb = new ValueStringBuilder(span);
 
-            foreach (var s in list)
+            foreach ((int, string, int) s in list)
             {
                 string str = s.Item2;
 
@@ -5329,7 +5316,7 @@ sealed class PacketHandlers
                             ? stackalloc byte[dlen]
                             : (buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(dlen));
 
-            var result = ZLib.Decompress(source.Slice(sourcePosition, clen), span.Slice(0, dlen));
+            ZLib.ZLibError result = ZLib.Decompress(source.Slice(sourcePosition, clen), span.Slice(0, dlen));
             var reader = new StackDataReader(span.Slice(0, dlen));
 
             ushort id = 0;
@@ -5715,7 +5702,7 @@ sealed class PacketHandlers
         const ushort BUFF_ICON_START_NEW = 0x466;
 
         uint serial = p.ReadUInt32BE();
-        BuffIconType ic = (BuffIconType)p.ReadUInt16BE();
+        var ic = (BuffIconType)p.ReadUInt16BE();
 
         ushort iconID =
             (ushort)ic >= BUFF_ICON_START_NEW
@@ -5749,8 +5736,8 @@ sealed class PacketHandlers
                     uint wtfCliloc = p.ReadUInt32BE();
 
                     ushort arg_length = p.ReadUInt16BE();
-                    var str = p.ReadUnicodeLE(2);
-                    var args = str + p.ReadUnicodeLE();
+                    string str = p.ReadUnicodeLE(2);
+                    string args = str + p.ReadUnicodeLE();
                     string title = Client.Game.UO.FileManager.Clilocs.Translate(
                         (int)titleCliloc,
                         args,
@@ -5845,7 +5832,7 @@ sealed class PacketHandlers
         ushort y = p.ReadUInt16BE();
         sbyte z = p.ReadInt8();
         byte map = p.ReadUInt8();
-        WaypointsType type = (WaypointsType)p.ReadUInt16BE();
+        var type = (WaypointsType)p.ReadUInt16BE();
         bool ignoreobject = p.ReadUInt16BE() != 0;
         uint cliloc = p.ReadUInt32BE();
         string name = p.ReadUnicodeLE();
@@ -5983,9 +5970,9 @@ sealed class PacketHandlers
         ushort x = p.ReadUInt16BE();
         ushort y = p.ReadUInt16BE();
         sbyte z = p.ReadInt8();
-        Direction dir = (Direction)p.ReadUInt8();
+        var dir = (Direction)p.ReadUInt8();
         ushort hue = p.ReadUInt16BE();
-        Flags flags = (Flags)p.ReadUInt8();
+        var flags = (Flags)p.ReadUInt8();
         ushort unk2 = p.ReadUInt16BE();
 
         if (serial != world.Player)
@@ -6214,12 +6201,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ServerListReceived(ref p);
-        }
+        LoginHandshake.Instance?.ServerListReceived(ref p);
     }
 
     private static void ReceiveServerRelay(World world, ref StackDataReader p)
@@ -6229,12 +6211,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleRelayServerPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleRelayServerPacket(ref p, Settings.GlobalSettings.IgnoreRelayIp);
     }
 
     private static void UpdateCharacterList(World world, ref StackDataReader p)
@@ -6244,12 +6221,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.UpdateCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.UpdateCharacterList(ref p);
     }
 
     private static void ReceiveCharacterList(World world, ref StackDataReader p)
@@ -6259,12 +6231,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.ReceiveCharacterList(ref p);
-        }
+        LoginHandshake.Instance?.ReceiveCharacterList(ref p);
     }
 
     private static void LoginDelay(World world, ref StackDataReader p)
@@ -6274,12 +6241,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleLoginDelayPacket(ref p);
-        }
+        LoginHandshake.Instance?.HandleLoginDelayPacket(ref p);
     }
 
     private static void ReceiveLoginRejection(World world, ref StackDataReader p)
@@ -6289,12 +6251,7 @@ sealed class PacketHandlers
             return;
         }
 
-        LoginScene scene = Client.Game.GetScene<LoginScene>();
-
-        if (scene != null)
-        {
-            scene.HandleErrorCode(ref p);
-        }
+        LoginHandshake.Instance?.HandleErrorCode(ref p);
     }
 
     private static void AddItemToContainer(
@@ -6366,6 +6323,9 @@ sealed class PacketHandlers
         }
 
         container.PushToBack(item);
+
+        // Queue item for grid highlighting
+        GridHighlightData.ProcessItemOpl(world, serial);
 
         if (SerialHelper.IsMobile(containerSerial))
         {
@@ -6611,6 +6571,10 @@ sealed class PacketHandlers
 
             // Update item database
             ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
+
+            // Queue item for grid highlighting
+            if(item.Container != 0xFFFF_FFFF)
+                GridHighlightData.ProcessItemOpl(world, serial);
         }
         else
         {
@@ -6794,7 +6758,7 @@ sealed class PacketHandlers
         while (first != null)
         {
             LinkedObject next = first.Next;
-            Item it = (Item)first;
+            var it = (Item)first;
 
             if (remove_unequipped && it.Layer != 0)
             {
@@ -6838,12 +6802,7 @@ sealed class PacketHandlers
             return null;
         }
 
-        Gump gump = UIManager.GetGumpServer(gumpID);
-        if (gump != null && gump.LocalSerial == sender)
-        {
-            gump.Dispose();
-            gump = null;
-        }
+        UIManager.GetGumpServer(gumpID)?.Dispose();
 
         bool mustBeAdded = true;
 
@@ -6857,21 +6816,18 @@ sealed class PacketHandlers
             UIManager.SavePosition(gumpID, new Point(x, y));
         }
 
-        if (gump == null)
+        var gump = new Gump(world, sender, gumpID)
         {
-            gump = new Gump(world, sender, gumpID)
-            {
-                X = x,
-                Y = y,
-                CanMove = true,
-                CanCloseWithRightClick = true,
-                CanCloseWithEsc = true,
-                InvalidateContents = false,
-                IsFromServer = true
-            };
-        }
+            X = x,
+            Y = y,
+            CanMove = true,
+            CanCloseWithRightClick = true,
+            CanCloseWithEsc = true,
+            InvalidateContents = false,
+            IsFromServer = true
+        };
 
-            gump.PacketGumpText = string.Join("\n", lines);
+        var gumpTextBuilder = new StringBuilder(string.Join("\n", lines));
 
         int group = 0;
         int page = 0;
@@ -6887,8 +6843,8 @@ sealed class PacketHandlers
                 continue;
             }
 
-                string entry = gparams[0];
-                gump.PacketGumpText += string.Join(" ", gparams) + "\n";
+            string entry = gparams[0];
+            gumpTextBuilder.Append(string.Join(" ", gparams)).Append('\n');
 
             if (string.Equals(entry, "button", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -6935,7 +6891,7 @@ sealed class PacketHandlers
             )
             {
                 GumpPic pic;
-                var isVirtue = gparams.Count >= 6
+                bool isVirtue = gparams.Count >= 6
                     && gparams[5].IndexOf(
                         "virtuegumpitem",
                         StringComparison.InvariantCultureIgnoreCase
@@ -7222,7 +7178,7 @@ sealed class PacketHandlers
                 )
             )
             {
-                StbTextBox textBox = new StbTextBox(gparams, lines);
+                var textBox = new StbTextBox(gparams, lines);
 
                 if (!textBoxFocused)
                 {
@@ -7411,6 +7367,8 @@ sealed class PacketHandlers
             }
         }
 
+        gump.PacketGumpText = gumpTextBuilder.ToString();
+
         if (mustBeAdded)
         {
             UIManager.Add(gump);
@@ -7464,7 +7422,7 @@ sealed class PacketHandlers
                         Vector3 location = ReverseLookup(xlong, ylat, xmins, ymins, xeast, ysouth);
                         GameActions.Print(world, $"If I am on the correct facet I think these coords should be somewhere near.. {location.X} and {location.Y}..");
 
-                        MenuButton menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = gump.Width - 46, Y = 6 };
+                        var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = gump.Width - 46, Y = 6 };
                         menu.MouseUp += (s, e) =>
                         {
                             menu.ContextMenu?.Show();
@@ -7514,6 +7472,8 @@ sealed class PacketHandlers
             gump.CenterXInViewPort();
             gump.CenterYInViewPort();
         }
+
+        NextGumpConfig.Apply(gump);
 
         return gump;
     }

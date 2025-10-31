@@ -31,11 +31,9 @@ namespace ClassicUO.Configuration
         {
             public static SnakeCaseNamingPolicy Instance { get; } = new SnakeCaseNamingPolicy();
 
-            public override string ConvertName(string name)
-            {
+            public override string ConvertName(string name) =>
                 // Conversion to other naming convention goes here. Like SnakeCase, KebabCase etc.
-                return string.Concat(name.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
-            }
+                string.Concat(name.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
         }
 
         private static Lazy<JsonSerializerOptions> _jsonOptions { get; } = new Lazy<JsonSerializerOptions>(() =>
@@ -145,6 +143,8 @@ namespace ClassicUO.Configuration
         public int BandageAgentHPPercentage { get; set; } = 80;
         public bool BandageAgentCheckInvul { get; set; } = true;
         public bool BandageAgentBandageFriends { get; set; } = false;
+        public bool BandageAgentUseDexFormula { get; set; } = false;
+        public bool BandageAgentDisableSelfHeal { get; set; } = false;
 
         public bool EnableDeathScreen { get; set; } = true;
         public bool EnableBlackWhiteEffect { get; set; } = true;
@@ -211,6 +211,7 @@ namespace ClassicUO.Configuration
         public int AutoOpenCorpseRange { get; set; } = 2;
         public int CorpseOpenOptions { get; set; } = 3;
         public bool SkipEmptyCorpse { get; set; }
+        public bool AutoOpenOwnCorpse { get; set; } = true;
         public bool DisableDefaultHotkeys { get; set; }
         public bool DisableArrowBtn { get; set; }
         public bool DisableTabBtn { get; set; }
@@ -656,7 +657,7 @@ namespace ClassicUO.Configuration
                 return;
 
             Log.Trace($"Saving path:\t\t{path}");
-            var filePath = Path.Combine(path, "profile.json");
+            string filePath = Path.Combine(path, "profile.json");
 
             // Create backup rotation before saving
             CreateBackupRotation(filePath);
@@ -672,19 +673,16 @@ namespace ClassicUO.Configuration
             lastSave = Time.Ticks;
         }
 
-        public void SaveAsFile(string path, string filename)
-        {
-            ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
-        }
+        public void SaveAsFile(string path, string filename) => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
 
         private void CreateBackupRotation(string filePath)
         {
             if (!File.Exists(filePath))
                 return;
 
-            var backup3 = filePath + ".bak3";
-            var backup2 = filePath + ".bak2";
-            var backup1 = filePath + ".bak1";
+            string backup3 = filePath + ".bak3";
+            string backup2 = filePath + ".bak2";
+            string backup1 = filePath + ".bak1";
 
             try
             {
@@ -715,16 +713,13 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public void SaveAs(string path, string filename = "default.json")
-        {
-            ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
-        }
+        public void SaveAs(string path, string filename = "default.json") => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
 
         private void SaveGumps(World world, string path)
         {
             string gumpsXmlPath = Path.Combine(path, "gumps.xml");
 
-            using (XmlTextWriter xml = new XmlTextWriter(gumpsXmlPath, Encoding.UTF8)
+            using (var xml = new XmlTextWriter(gumpsXmlPath, Encoding.UTF8)
             {
                 Formatting = Formatting.Indented,
                 IndentChar = '\t',
@@ -736,7 +731,7 @@ namespace ClassicUO.Configuration
 
                 UIManager.AnchorManager.Save(xml);
 
-                LinkedList<Gump> gumps = new LinkedList<Gump>();
+                var gumps = new LinkedList<Gump>();
 
                 foreach (Gump gump in UIManager.Gumps)
                 {
@@ -834,11 +829,11 @@ namespace ClassicUO.Configuration
             {
                 SaveItemsGump(parent, xml, list);
 
-                Item first = (Item)parent.Items;
+                var first = (Item)parent.Items;
 
                 while (first != null)
                 {
-                    Item next = (Item)first.Next;
+                    var next = (Item)first.Next;
 
                     SaveItemsGumpRecursive(first, xml, list);
 
@@ -876,7 +871,7 @@ namespace ClassicUO.Configuration
 
         public List<Gump> ReadGumps(World world, string path)
         {
-            List<Gump> gumps = new List<Gump>();
+            var gumps = new List<Gump>();
             List<(Gump gump, GumpType type, int x, int y, uint serial, uint parent, XmlElement xml)> nestedGumps = new();
 
             // load skillsgroup
@@ -887,7 +882,7 @@ namespace ClassicUO.Configuration
 
             if (File.Exists(gumpsXmlPath))
             {
-                XmlDocument doc = new XmlDocument();
+                var doc = new XmlDocument();
 
                 try
                 {
@@ -925,7 +920,7 @@ namespace ClassicUO.Configuration
                             int x = int.Parse(xml.GetAttribute(nameof(x)));
                             int y = int.Parse(xml.GetAttribute(nameof(y)));
                             uint serial = uint.Parse(xml.GetAttribute(nameof(serial)));
-                            uint? parent = uint.TryParse(xml.GetAttribute(nameof(parent)), out var result) ? result : null;
+                            uint? parent = uint.TryParse(xml.GetAttribute(nameof(parent)), out uint result) ? result : null;
 
                             if (uint.TryParse(xml.GetAttribute("serverSerial"), out uint serverSerial))
                             {
@@ -1092,7 +1087,7 @@ namespace ClassicUO.Configuration
                                     gump = new DurabilitysGump(world);
                                     break;
                                 case GumpType.ScriptManager:
-                                    gump = new LegionScripting.ScriptManagerGump();
+                                    // ScriptManagerGump removed - use ScriptManagerWindow instead
                                     break;
                             }
 
@@ -1133,9 +1128,9 @@ namespace ClassicUO.Configuration
                     while (nestedGumps.Count != 0)
                     {
                         int initialCount = nestedGumps.Count;
-                        foreach (var entry in nestedGumps.ToList())
+                        foreach ((Gump gump, GumpType type, int x, int y, uint serial, uint parent, XmlElement xml) entry in nestedGumps.ToList())
                         {
-                            var (gump, type, x, y, serial, parent, xml) = entry;
+                            (Gump gump, GumpType type, int x, int y, uint serial, uint parent, XmlElement xml) = entry;
                             bool parentIsInList = nestedGumps.Any(g => parent == g.serial);
                             if (parentIsInList)
                             {
@@ -1179,14 +1174,14 @@ namespace ClassicUO.Configuration
                         int matrix_width = int.Parse(group.GetAttribute("matrix_w"));
                         int matrix_height = int.Parse(group.GetAttribute("matrix_h"));
 
-                        AnchorManager.AnchorGroup ancoGroup = new AnchorManager.AnchorGroup();
+                        var ancoGroup = new AnchorManager.AnchorGroup();
                         ancoGroup.ResizeMatrix(matrix_width, matrix_height, 0, 0);
 
                         foreach (XmlElement xml in group.GetElementsByTagName("gump"))
                         {
                             try
                             {
-                                GumpType type = (GumpType)int.Parse(xml.GetAttribute("type"));
+                                var type = (GumpType)int.Parse(xml.GetAttribute("type"));
                                 int x = int.Parse(xml.GetAttribute("x"));
                                 int y = int.Parse(xml.GetAttribute("y"));
                                 uint serial = uint.Parse(xml.GetAttribute("serial"));

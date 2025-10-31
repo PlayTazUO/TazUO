@@ -53,8 +53,8 @@ namespace ClassicUO.LegionScripting
             Add(titleTextBox);
 
             // Scroll area
-            var scrollAreaY = titleTextBox.Y + titleTextBox.Height + 10;
-            var scrollAreaHeight = Height - scrollAreaY - BorderSize;
+            int scrollAreaY = titleTextBox.Y + titleTextBox.Height + 10;
+            int scrollAreaHeight = Height - scrollAreaY - BorderSize;
             scrollArea = new ModernScrollArea(BorderSize, scrollAreaY, Width - 2 * BorderSize, scrollAreaHeight);
             Add(scrollArea);
 
@@ -115,8 +115,8 @@ namespace ClassicUO.LegionScripting
             // Update scroll area
             if (scrollArea != null)
             {
-                var scrollAreaY = titleTextBox.Y + titleTextBox.Height + 10;
-                var scrollAreaHeight = Height - scrollAreaY - BorderSize;
+                int scrollAreaY = titleTextBox.Y + titleTextBox.Height + 10;
+                int scrollAreaHeight = Height - scrollAreaY - BorderSize;
 
                 scrollArea.Y = scrollAreaY;
                 scrollArea.Width = Width - 2 * BorderSize;
@@ -129,7 +129,7 @@ namespace ClassicUO.LegionScripting
                 container.Width = scrollArea.Width - 20;
 
                 // Update all entries width
-                foreach (var entry in container.Children.OfType<InfoEntry>())
+                foreach (InfoEntry entry in container.Children.OfType<InfoEntry>())
                 {
                     entry.UpdateWidth(container.Width - 10);
                 }
@@ -191,10 +191,7 @@ namespace ClassicUO.LegionScripting
                 }
             }
 
-            private static void SetClipboardText(string text)
-            {
-                SDL3.SDL.SDL_SetClipboardText(text);
-            }
+            private static void SetClipboardText(string text) => SDL3.SDL.SDL_SetClipboardText(text);
         }
     }
 }

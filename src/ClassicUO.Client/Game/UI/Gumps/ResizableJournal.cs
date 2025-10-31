@@ -147,10 +147,7 @@ namespace ClassicUO.Game.UI.Gumps
             EventSink.JournalEntryAdded += EventSink_EntryAdded; ;
         }
 
-        private void EventSink_EntryAdded(object sender, JournalEntry e)
-        {
-            AddJournalEntry(e);
-        }
+        private void EventSink_EntryAdded(object sender, JournalEntry e) => AddJournalEntry(e);
 
         public override GumpType GumpType => GumpType.Journal;
 
@@ -170,7 +167,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildTabs()
         {
-            foreach (var tab in _tab)
+            foreach (NiceButton tab in _tab)
             {
                 tab.Dispose();
             }
@@ -179,7 +176,7 @@ namespace ClassicUO.Game.UI.Gumps
             _tabName.Clear();
             _tabTypes.Clear();
 
-            foreach (var tab in ProfileManager.CurrentProfile.JournalTabs)
+            foreach (KeyValuePair<string, MessageType[]> tab in ProfileManager.CurrentProfile.JournalTabs)
             {
                 AddTab(tab.Key, tab.Value);
             }
@@ -339,7 +336,7 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("rh", Height.ToString());
 
             int c = 0;
-            foreach (var tab in _tab)
+            foreach (NiceButton tab in _tab)
             {
                 if (tab.IsSelected)
                 {
@@ -354,7 +351,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Restore(xml);
 
-            Point savedSize = new Microsoft.Xna.Framework.Point(Width, Height);
+            var savedSize = new Microsoft.Xna.Framework.Point(Width, Height);
 
             if (int.TryParse(xml.GetAttribute("rw"), out int width) && width > 0)
             {
@@ -599,8 +596,8 @@ namespace ClassicUO.Game.UI.Gumps
                 while (journalDatas.Count > (ProfileManager.CurrentProfile == null ? 200 : ProfileManager.CurrentProfile.MaxJournalEntries))
                     journalDatas.RemoveFromFront().Destroy();
 
-                TextBox timeS = TextBox.GetOne($"{time:t}", ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize - 2, 1150, TextBox.RTLOptions.Default());
-                TextBox je = TextBox.GetOne(text, ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize, hue,
+                var timeS = TextBox.GetOne($"{time:t}", ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize - 2, 1150, TextBox.RTLOptions.Default());
+                var je = TextBox.GetOne(text, ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize, hue,
                     new TextBox.RTLOptions() { Width = Width - (ProfileManager.CurrentProfile.HideJournalTimestamp ? 0 : timeS.Width) });
 
                 journalDatas.AddToBack(
@@ -794,7 +791,7 @@ namespace ClassicUO.Game.UI.Gumps
             private static MessageType[] RemoveType(MessageType[] array, MessageType removeMe)
             {
                 var modifiedList = new List<MessageType>();
-                foreach (var item in array)
+                foreach (MessageType item in array)
                 {
                     if (item != removeMe)
                     {

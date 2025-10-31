@@ -126,10 +126,10 @@ namespace ClassicUO.Game.UI.Controls
                 );
             }
 
-            var scrollAreaH = isFastAssign ? 80 : 280;
-            var scrollAreaW = 280;
+            int scrollAreaH = isFastAssign ? 80 : 280;
+            int scrollAreaW = 280;
 
-            ScrollArea area = new ScrollArea
+            var area = new ScrollArea
             (
                 10,
                 _hotkeyBox.Bounds.Bottom + 70,
@@ -158,7 +158,7 @@ namespace ClassicUO.Game.UI.Controls
 
         private void AddEmptyMacro()
         {
-            MacroObject ob = (MacroObject) Macro.Items;
+            var ob = (MacroObject) Macro.Items;
 
             if (ob.Code == MacroType.None)
             {
@@ -167,7 +167,7 @@ namespace ClassicUO.Game.UI.Controls
 
             while (ob.Next != null)
             {
-                MacroObject next = (MacroObject) ob.Next;
+                var next = (MacroObject) ob.Next;
 
                 if (next.Code == MacroType.None)
                 {
@@ -220,7 +220,7 @@ namespace ClassicUO.Game.UI.Controls
                 Macro.Items = Macro.Create(MacroType.None);
             }
 
-            MacroObject obj = (MacroObject)Macro.Items;
+            var obj = (MacroObject)Macro.Items;
             while (obj != null)
             {
                 _databox.Add(new MacroEntry(this, obj, _allHotkeysNames));
@@ -383,7 +383,7 @@ namespace ClassicUO.Game.UI.Controls
                 case (int)buttonsOption.CreateNewMacro:
                     UIManager.Gumps.OfType<MacroButtonGump>().FirstOrDefault(s => s.TheMacro == Macro)?.Dispose();
 
-                    MacroButtonGump macroButtonGump = new MacroButtonGump(_gump.World, Macro, Mouse.Position.X, Mouse.Position.Y);
+                    var macroButtonGump = new MacroButtonGump(_gump.World, Macro, Mouse.Position.X, Mouse.Position.Y);
                     UIManager.Add(macroButtonGump);
                     break;
                 case (int)buttonsOption.OpenMacroOptions:
@@ -404,8 +404,8 @@ namespace ClassicUO.Game.UI.Controls
 
             if (btnEditorGump == null)
             {
-                var posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
-                var posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
+                int posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
+                int posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
                 if (position.HasValue)
                 {
                     posX = (int)position.Value.X;
@@ -431,7 +431,7 @@ namespace ClassicUO.Game.UI.Controls
                 _items = items;
                 _obj = obj;
 
-                Combobox mainBox = new Combobox
+                var mainBox = new Combobox
                 (
                     0,
                     0,
@@ -490,7 +490,7 @@ namespace ClassicUO.Game.UI.Controls
                             names[i] = _allSubHotkeysNames[i + offset];
                         }
 
-                        Combobox sub = new Combobox
+                        var sub = new Combobox
                         (
                             20,
                             Height,
@@ -503,7 +503,7 @@ namespace ClassicUO.Game.UI.Controls
                         sub.OnOptionSelected += (senderr, ee) =>
                         {
                             Macro.GetBoundByCode(obj.Code, ref count, ref offset);
-                            MacroSubType subType = (MacroSubType) (offset + ee);
+                            var subType = (MacroSubType) (offset + ee);
                             obj.SubCode = subType;
                         };
 
@@ -516,7 +516,7 @@ namespace ClassicUO.Game.UI.Controls
 
                     case 2:
 
-                        ResizePic background = new ResizePic(0x0BB8)
+                        var background = new ResizePic(0x0BB8)
                         {
                             X = 16,
                             Y = Height,
@@ -526,7 +526,7 @@ namespace ClassicUO.Game.UI.Controls
 
                         Add(background);
 
-                        StbTextBox textbox = new StbTextBox
+                        var textbox = new StbTextBox
                         (
                             0xFF,
                             80,
@@ -580,8 +580,8 @@ namespace ClassicUO.Game.UI.Controls
             {
                 WantUpdateSize = true;
 
-                Combobox box = (Combobox) sender;
-                MacroObject currentMacroObj = (MacroObject) box.Tag;
+                var box = (Combobox) sender;
+                var currentMacroObj = (MacroObject) box.Tag;
 
                 if (e == 0)
                 {

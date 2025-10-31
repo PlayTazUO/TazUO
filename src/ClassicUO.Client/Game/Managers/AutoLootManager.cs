@@ -36,7 +36,7 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        public bool IsLoaded { get { return loaded; } }
+        public bool IsLoaded => loaded;
         public List<AutoLootConfigEntry> AutoLootList { get => autoLootItems; set => autoLootItems = value; }
         public bool IsLooting => lootItems.Count > 0;
 
@@ -50,7 +50,7 @@ namespace ClassicUO.Game.Managers
         private long nextClearRecents = Time.Ticks + 5000;
         private ProgressBarGump progressBarGump;
         private int currentLootTotalCount = 0;
-        private bool IsEnabled { get { return ProfileManager.CurrentProfile.EnableAutoLoot; } }
+        private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
 
         private World World;
 
@@ -65,7 +65,7 @@ namespace ClassicUO.Game.Managers
 
         public void LootItem(uint serial)
         {
-            var item = World.Items.Get(serial);
+            Item item = World.Items.Get(serial);
             if (item != null)
             {
                 LootItem(item, null);
@@ -107,7 +107,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var entry = IsOnLootList(i);
+            AutoLootConfigEntry entry = IsOnLootList(i);
             if (entry != null)
             {
                 LootItem(i, entry);
@@ -123,7 +123,7 @@ namespace ClassicUO.Game.Managers
         {
             if (!loaded) return null;
 
-            foreach (var entry in autoLootItems)
+            foreach (AutoLootConfigEntry entry in autoLootItems)
             {
                 if (entry.Match(i))
                 {
@@ -142,7 +142,7 @@ namespace ClassicUO.Game.Managers
         /// <returns></returns>
         public AutoLootConfigEntry AddAutoLootEntry(ushort graphic = 0, ushort hue = ushort.MaxValue, string name = "")
         {
-            AutoLootConfigEntry item = new AutoLootConfigEntry() { Graphic = graphic, Hue = hue, Name = name };
+            var item = new AutoLootConfigEntry() { Graphic = graphic, Hue = hue, Name = name };
 
             foreach (AutoLootConfigEntry entry in autoLootItems)
             {
@@ -205,7 +205,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var root = World.Items.Get(i.RootContainer);
+            Item root = World.Items.Get(i.RootContainer);
             if (root != null && root.IsCorpse)
             {
                 HandleCorpse(root);
@@ -273,7 +273,7 @@ namespace ClassicUO.Game.Managers
         private void OnOPLReceived(object sender, OPLEventArgs e)
         {
             if (!loaded || !IsEnabled) return;
-            var item = World.Items.Get(e.Serial);
+            Item item = World.Items.Get(e.Serial);
             if (item != null)
                 CheckCorpse(item);
         }
@@ -298,7 +298,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            var (item, entry) = lootItems.Dequeue();
+            (uint item, AutoLootConfigEntry entry) = lootItems.Dequeue();
             if (item != 0)
             {
                 if (lootItems.Count == 0) //Que emptied out
@@ -388,7 +388,7 @@ namespace ClassicUO.Game.Managers
 
             Task.Factory.StartNew(() =>
             {
-                var oldPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "AutoLoot.json");
+                string oldPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "AutoLoot.json");
                 if(File.Exists(oldPath))
                     File.Move(oldPath, savePath);
 
@@ -497,10 +497,10 @@ namespace ClassicUO.Game.Managers
             var newItems = new List<AutoLootConfigEntry>();
             int duplicateCount = 0;
 
-            foreach (var importedItem in entries)
+            foreach (AutoLootConfigEntry importedItem in entries)
             {
                 bool isDuplicate = false;
-                foreach (var existingItem in autoLootItems)
+                foreach (AutoLootConfigEntry existingItem in autoLootItems)
                 {
                     if (existingItem.Equals(importedItem))
                     {
@@ -564,9 +564,9 @@ namespace ClassicUO.Game.Managers
             }
 
             string currentCharacterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
-            var characterPaths = Exstentions.GetAllCharacterPaths(rootpath);
+            Dictionary<string, string> characterPaths = Exstentions.GetAllCharacterPaths(rootpath);
 
-            foreach (var kvp in characterPaths)
+            foreach (KeyValuePair<string, string> kvp in characterPaths)
             {
                 string characterName = kvp.Key;
                 string characterPath = kvp.Value;
@@ -574,7 +574,7 @@ namespace ClassicUO.Game.Managers
                 if (characterPath == ProfileManager.ProfilePath)
                     continue;
 
-                var configs = LoadOtherCharacterConfig(characterPath);
+                List<AutoLootConfigEntry> configs = LoadOtherCharacterConfig(characterPath);
                 if (configs.Count > 0)
                 {
                     otherConfigs[characterName] = configs;
@@ -635,10 +635,7 @@ namespace ClassicUO.Game.Managers
                 return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
             }
 
-            public bool Equals(AutoLootConfigEntry other)
-            {
-                return other.Graphic == Graphic && other.Hue == Hue && RegexSearch == other.RegexSearch;
-            }
+            public bool Equals(AutoLootConfigEntry other) => other.Graphic == Graphic && other.Hue == Hue && RegexSearch == other.RegexSearch;
         }
     }
 }

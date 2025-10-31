@@ -85,7 +85,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 GameScene scene = Client.Game.GetScene<GameScene>();
                 Span<char> span = stackalloc char[256];
-                ValueStringBuilder sb = new ValueStringBuilder(span);
+                var sb = new ValueStringBuilder(span);
 
                 if (IsMinimized && scene != null)
                 {
@@ -111,7 +111,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         double timeTotal = Profiler.TrackedTime;
                         
-                        foreach (var pd in Profiler.AllFrameData)
+                        foreach (Profiler.ProfileData pd in Profiler.AllFrameData)
                         {
                             sb.Append($"\n[{pd.Context[pd.Context.Length - 1]}] [Last: {pd.LastTime:0.0}ms] [Total %: {100d * (pd.TimeInContext / timeTotal):0.00}]");
                         }
@@ -119,8 +119,8 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
-                    var cameraZoomCount = (int)((scene.Camera.ZoomMax - scene.Camera.ZoomMin) / scene.Camera.ZoomStep);
-                    var cameraZoomIndex = cameraZoomCount - (int)((scene.Camera.ZoomMax - scene.Camera.Zoom) / scene.Camera.ZoomStep);
+                    int cameraZoomCount = (int)((scene.Camera.ZoomMax - scene.Camera.ZoomMin) / scene.Camera.ZoomStep);
+                    int cameraZoomIndex = cameraZoomCount - (int)((scene.Camera.ZoomMax - scene.Camera.Zoom) / scene.Camera.ZoomStep);
 
                     if (scene != null && cameraZoomIndex != 5)
                     {

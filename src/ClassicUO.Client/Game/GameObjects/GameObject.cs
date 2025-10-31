@@ -14,7 +14,10 @@ namespace ClassicUO.Game.GameObjects
 {
     public abstract class BaseGameObject : LinkedObject
     {
-        protected BaseGameObject(World world) => World = world;
+        protected BaseGameObject(World world)
+        {
+            World = world;
+        }
 
         public Point RealScreenPosition;
 
@@ -120,19 +123,13 @@ namespace ClassicUO.Game.GameObjects
 
             _averageOverTime.AddValue(Time.Ticks, damage);
         }
-        public double GetCurrentDPS()
-        {
-            return Math.Round(_averageOverTime.LastAveragePerSecond, 1);
-        }
+        public double GetCurrentDPS() => Math.Round(_averageOverTime.LastAveragePerSecond, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2 GetScreenPosition()
-        {
-            return new Vector2(
+        public Vector2 GetScreenPosition() => new Vector2(
                 RealScreenPosition.X + Offset.X,
                 RealScreenPosition.Y + (Offset.Y - Offset.Z)
             );
-        }
 
         public int DistanceFrom(Vector2 pos)
         {
@@ -141,15 +138,9 @@ namespace ClassicUO.Game.GameObjects
             return Math.Max(Math.Abs(X - (int)pos.X), Math.Abs(Y - (int)pos.Y));
         }
 
-        public void AddToTile()
-        {
-            AddToTile(X, Y);
-        }
+        public void AddToTile() => AddToTile(X, Y);
 
-        public void AddToTile(int x, int y)
-        {
-            AddToTile(World.Map?.GetChunk(x, y), x % 8, y % 8);
-        }
+        public void AddToTile(int x, int y) => AddToTile(World.Map?.GetChunk(x, y), x % 8, y % 8);
 
         public void AddToTile(Chunk chunk, int chunkX, int chunkY)
         {
@@ -204,9 +195,7 @@ namespace ClassicUO.Game.GameObjects
             AddToTile(x, y);
         }
 
-        public void AddMessage(MessageType type, string message, TextType text_type)
-        {
-            AddMessage(
+        public void AddMessage(MessageType type, string message, TextType text_type) => AddMessage(
                 type,
                 message,
                 ProfileManager.CurrentProfile.ChatFont,
@@ -214,7 +203,6 @@ namespace ClassicUO.Game.GameObjects
                 true,
                 text_type
             );
-        }
 
         public virtual void UpdateTextCoordsV()
         {
@@ -223,7 +211,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            TextObject last = (TextObject)TextContainer.Items;
+            var last = (TextObject)TextContainer.Items;
 
             while (last?.Next != null)
             {
@@ -239,7 +227,7 @@ namespace ClassicUO.Game.GameObjects
 
             Point p = RealScreenPosition;
 
-            var bounds = Client.Game.UO.Arts.GetRealArtBounds(Graphic);
+            Rectangle bounds = Client.Game.UO.Arts.GetRealArtBounds(Graphic);
 
             p.Y -= bounds.Height >> 1;
 
@@ -283,7 +271,7 @@ namespace ClassicUO.Game.GameObjects
             //int maxY = minY + ProfileManager.CurrentProfile.GameWindowSize.Y - 6;
 
             for (
-                TextObject item = (TextObject)TextContainer.Items;
+                var item = (TextObject)TextContainer.Items;
                 item != null;
                 item = (TextObject)item.Next
             )
@@ -424,7 +412,7 @@ namespace ClassicUO.Game.GameObjects
                 case 0x9E64:
                 case 0x9E65:
                 case 0x9E7D:
-                    ref var data = ref Client.Game.UO.FileManager.TileData.StaticData[g];
+                    ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[g];
 
                     return !data.IsBackground && !data.IsSurface;
             }
@@ -447,7 +435,7 @@ namespace ClassicUO.Game.GameObjects
 
                 if (g < Client.Game.UO.FileManager.TileData.StaticData.Length)
                 {
-                    ref var data = ref Client.Game.UO.FileManager.TileData.StaticData[g];
+                    ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[g];
 
                     // Hacky way to do not render "nodraw"
                     if (!string.IsNullOrEmpty(data.Name) && data.Name.StartsWith("nodraw", StringComparison.OrdinalIgnoreCase))

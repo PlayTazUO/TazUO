@@ -26,7 +26,7 @@ namespace ClassicUO.Game.UI.Controls
             ContainsByBounds = true;
             IsFromServer = true;
 
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
 
             if (artInfo.Texture == null)
             {
@@ -44,9 +44,9 @@ namespace ClassicUO.Game.UI.Controls
         {
             base.Draw(batcher, x, y);
 
-            var hueVector = ShaderHueTranslator.GetHueVector(_hue, _isPartial, 1f);
+            Vector3 hueVector = ShaderHueTranslator.GetHueVector(_hue, _isPartial, 1f);
 
-            ref readonly var artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
+            ref readonly SpriteInfo artInfo = ref Client.Game.UO.Arts.GetArt(_graphic);
 
             if (artInfo.Texture != null)
             {

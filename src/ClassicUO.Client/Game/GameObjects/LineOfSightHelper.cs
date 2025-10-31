@@ -21,7 +21,7 @@ namespace ClassicUO.Game.GameObjects
             if (observer.X == target.X && observer.Y == target.Y && observer.Z == target.Z)
                 return true;
 
-            var coords = CoordsToTarget(observer, target);
+            List<Point3D> coords = CoordsToTarget(observer, target);
 
             return CheckCoords(observer, target, coords);
         }
@@ -67,7 +67,7 @@ namespace ClassicUO.Game.GameObjects
             int observerEyeZ = observer.Z + MOBILE_EYE_HEIGHT;
             int targetEyeZ = target.Z + MOBILE_EYE_HEIGHT;
 
-            foreach (var coord in coords)
+            foreach (Point3D coord in coords)
             {
                 zlist.Add(coord.Z);
                 if (!CheckTile(coord.X, coord.Y, observerEyeZ, targetEyeZ))
@@ -84,10 +84,10 @@ namespace ClassicUO.Game.GameObjects
             int losMinZ = Math.Min(observerEyeZ, targetEyeZ);
             int losMaxZ = Math.Max(observerEyeZ, targetEyeZ);
 
-            var objects = Pathfinder.GetAllObjectsAt(x, y);
+            List<GameObject> objects = Pathfinder.GetAllObjectsAt(x, y);
             try
             {
-                foreach (var obj in objects)
+                foreach (GameObject obj in objects)
                 {
                     if (Pathfinder.ObjectBlocksLOS(obj, losMinZ, losMaxZ))
                         return false;

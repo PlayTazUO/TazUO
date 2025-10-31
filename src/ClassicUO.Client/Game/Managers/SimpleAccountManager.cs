@@ -9,13 +9,13 @@ namespace ClassicUO.Game.Managers
 
         public static string[] GetAccounts()
         {
-            List<string> accounts = new List<string>();
+            var accounts = new List<string>();
 
             if (Directory.Exists(accountPath))
             {
-                var dirs = Directory.GetDirectories(accountPath);
+                string[] dirs = Directory.GetDirectories(accountPath);
 
-                foreach (var dir in dirs)
+                foreach (string dir in dirs)
                 {
                     accounts.Add(Path.GetFileName(dir));
                 }

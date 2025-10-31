@@ -37,15 +37,9 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             SetStep(CharCreationStep.ChooseProfession);
         }
 
-        public void SetAttributes(bool force = false)
-        {
-            SetStep(_selectedProfession.DescriptionIndex >= 0 || force ? CharCreationStep.ChooseCity : CharCreationStep.ChooseTrade);
-        }
+        public void SetAttributes(bool force = false) => SetStep(_selectedProfession.DescriptionIndex >= 0 || force ? CharCreationStep.ChooseCity : CharCreationStep.ChooseTrade);
 
-        public void SetCity(int cityIndex)
-        {
-            _cityIndex = cityIndex;
-        }
+        public void SetCity(int cityIndex) => _cityIndex = cityIndex;
 
         public void SetProfession(ProfessionInfo info)
         {
@@ -70,7 +64,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                         skill.Lock = Lock.Locked;
                     }
 
-                    MessageBoxGump messageBox = new MessageBoxGump
+                    var messageBox = new MessageBoxGump
                     (
                         World,
                         400,
@@ -107,10 +101,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             SetStep(_selectedProfession.DescriptionIndex > 0 ? CharCreationStep.ChooseCity : CharCreationStep.ChooseTrade);
         }
 
-        public void CreateCharacter(byte profession)
-        {
-            _loginScene.CreateCharacter(_character, _cityIndex, profession);
-        }
+        public void CreateCharacter(byte profession) => _loginScene.CreateCharacter(_character, _cityIndex, profession);
 
         public void StepBack(int steps = 1)
         {

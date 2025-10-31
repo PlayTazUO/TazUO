@@ -116,15 +116,18 @@ namespace ClassicUO.Renderer
         }
 
 
-        public void SetBrightlight(float f)
-        {
-            _basicUOEffect.Brighlight.SetValue(f);
-        }
+        public void SetBrightlight(float f) => _basicUOEffect.Brighlight.SetValue(f);
 
         // For IFontStashRenderer
         public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, float rotation, Vector2 scale, float depth)
         {
-            Vector3 hueVector = new Vector3(0, ShaderHueTranslator.SHADER_TEXT_HUE, MathHelper.Clamp(color.A / 255f, 0f, 1f));
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
+            var hueVector = new Vector3(0, ShaderHueTranslator.SHADER_TEXT_HUE, MathHelper.Clamp(color.A / 255f, 0f, 1f));
 
             float sourceX, sourceY, sourceW, sourceH;
             if (sourceRectangle.HasValue)
@@ -148,10 +151,10 @@ namespace ClassicUO.Renderer
 
             EnsureSize();
 
-            ref var sprite = ref _vertexInfo[_numSprites];
+            ref PositionNormalTextureColor4 sprite = ref _vertexInfo[_numSprites];
 
-            var rotationSin = (float)Math.Sin(rotation);
-            var rotationCos = (float)Math.Cos(rotation);
+            float rotationSin = (float)Math.Sin(rotation);
+            float rotationCos = (float)Math.Cos(rotation);
 
             sprite.Position0.X = position.X;
             sprite.Position0.Y = position.Y;
@@ -190,9 +193,9 @@ namespace ClassicUO.Renderer
             sprite.Hue2 = hueVector;
             sprite.Hue3 = hueVector;
 
-            var r = color.R / 255.0f;
-            var g = color.G / 255.0f;
-            var b = color.B / 255.0f;
+            float r = color.R / 255.0f;
+            float g = color.G / 255.0f;
+            float b = color.B / 255.0f;
 
             sprite.Normal0.X = r;
             sprite.Normal0.Y = g;
@@ -227,6 +230,12 @@ namespace ClassicUO.Renderer
             EnsureSize();
 
             Texture2D textureValue = spriteFont.Texture;
+
+            // Skip if the font texture is null or disposed
+            if (textureValue == null || textureValue.IsDisposed)
+            {
+                return;
+            }
             List<Rectangle> glyphData = spriteFont.GlyphData;
             List<Rectangle> croppingData = spriteFont.CroppingData;
             List<Vector3> kerning = spriteFont.Kerning;
@@ -339,6 +348,12 @@ namespace ClassicUO.Renderer
             float depth
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             ref PositionNormalTextureColor4 vertex = ref _vertexInfo[_numSprites];
@@ -396,6 +411,12 @@ namespace ClassicUO.Renderer
 
         public void DrawShadow(Texture2D texture, Vector2 position, Rectangle sourceRect, bool flip, float depth)
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             float width = sourceRect.Width;
             float height = sourceRect.Height * 0.5f;
             float translatedY = position.Y + height - 10;
@@ -476,6 +497,12 @@ namespace ClassicUO.Renderer
             float depth
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             float h03 = sourceRect.Height * mod.X;
@@ -688,10 +715,16 @@ namespace ClassicUO.Renderer
             Vector3 hue
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             int h = destinationRectangle.Height;
 
             Rectangle rect = sourceRectangle;
-            Vector2 pos = new Vector2(destinationRectangle.X, destinationRectangle.Y);
+            var pos = new Vector2(destinationRectangle.X, destinationRectangle.Y);
 
             while (h > 0)
             {
@@ -732,7 +765,13 @@ namespace ClassicUO.Renderer
             float depth = 0f
         )
         {
-            Rectangle rect = new Rectangle(x, y, width, 1);
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return false;
+            }
+
+            var rect = new Rectangle(x, y, width, 1);
             Draw(texture, rect, null, hue, 0f, Vector2.Zero, SpriteEffects.None, depth);
 
             rect.X += width;
@@ -764,8 +803,14 @@ namespace ClassicUO.Renderer
             float stroke
         )
         {
-            var radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
-            Vector2.Distance(ref start, ref end, out var length);
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
+            float radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
+            Vector2.Distance(ref start, ref end, out float length);
 
             Draw
             (
@@ -789,10 +834,7 @@ namespace ClassicUO.Renderer
             Texture2D texture,
             Vector2 position,
             Vector3 color
-        )
-        {
-            AddSprite(texture, 0f, 0f, 1f, 1f, position.X, position.Y, texture.Width, texture.Height, color, 0f, 0f, 0f, 1f, 0f, 0);
-        }
+        ) => AddSprite(texture, 0f, 0f, 1f, 1f, position.X, position.Y, texture.Width, texture.Height, color, 0f, 0f, 0f, 1f, 0f, 0);
 
         public void Draw
         (
@@ -943,9 +985,7 @@ namespace ClassicUO.Renderer
             Texture2D texture,
             Rectangle destinationRectangle,
             Vector3 color
-        )
-        {
-            AddSprite(
+        ) => AddSprite(
                 texture,
                 0.0f,
                 0.0f,
@@ -963,7 +1003,6 @@ namespace ClassicUO.Renderer
                 0.0f,
                 0
             );
-        }
 
         public void Draw
         (
@@ -1085,6 +1124,12 @@ namespace ClassicUO.Renderer
             byte effects
         )
         {
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             EnsureSize();
 
             SetVertex
@@ -1103,15 +1148,9 @@ namespace ClassicUO.Renderer
         }
 
 
-        public void Begin()
-        {
-            Begin(null, Matrix.Identity);
-        }
+        public void Begin() => Begin(null, Matrix.Identity);
 
-        public void Begin(Effect effect)
-        {
-            Begin(effect, Matrix.Identity);
-        }
+        public void Begin(Effect effect) => Begin(effect, Matrix.Identity);
 
         public void Begin(Effect customEffect, Matrix transform_matrix)
         {
@@ -1320,13 +1359,21 @@ namespace ClassicUO.Renderer
                 if (tex != curTexture)
                 {
                     ++TextureSwitches;
-                    InternalDraw(curTexture, baseOff + offset, i - offset);
+                    // Only draw if we have a valid texture
+                    if (curTexture != null && !curTexture.IsDisposed)
+                    {
+                        InternalDraw(curTexture, baseOff + offset, i - offset);
+                    }
                     curTexture = tex;
                     offset = i;
                 }
             }
 
-            InternalDraw(curTexture, baseOff + offset, batchSize - offset);
+            // Only draw the final batch if we have a valid texture
+            if (curTexture != null && !curTexture.IsDisposed)
+            {
+                InternalDraw(curTexture, baseOff + offset, batchSize - offset);
+            }
 
             if (_numSprites > MAX_SPRITES)
             {
@@ -1341,6 +1388,11 @@ namespace ClassicUO.Renderer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalDraw(Texture texture, int baseSprite, int batchSize)
         {
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
             GraphicsDevice.Textures[0] = texture;
 
             if (_customEffect != null)

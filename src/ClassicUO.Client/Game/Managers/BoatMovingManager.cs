@@ -105,7 +105,7 @@ namespace ClassicUO.Game.Managers
 
             //Direction moveDir = DirectionHelper.CalculateDirection(currX, currY, x, y);
 
-            BoatStep step = new BoatStep();
+            var step = new BoatStep();
             step.Serial = serial;
             step.TimeDiff = _timePacket == 0 || empty ? GetVelocity(speed) : (int) (Time.Ticks - _timePacket);
 
@@ -134,11 +134,11 @@ namespace ClassicUO.Game.Managers
                     multiItem.Offset.Z = 0;
                 }
 
-                if (_items.TryGetValue(serial, out var list))
+                if (_items.TryGetValue(serial, out FastList<ItemInside> list))
                 {
                     for (int i = 0; i < list.Length; i++)
                     {
-                        ref var it = ref list.Buffer[i];
+                        ref ItemInside it = ref list.Buffer[i];
 
                         Entity ent = _world.Get(it.Serial);
 
@@ -159,20 +159,12 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void ClearEntities(uint serial)
-        {
-            _items.Remove(serial);
-
-            //if (_items.TryGetValue(serial, out var list))
-            //{
-            //    list.Clear();
-            //}
-        }
+        public void ClearEntities(uint serial) => _items.Remove(serial);//if (_items.TryGetValue(serial, out var list))//{//    list.Clear();//}
 
 
         public void PushItemToList(uint serial, uint objSerial, int x, int y, int z)
         {
-            if (!_items.TryGetValue(serial, out var list))
+            if (!_items.TryGetValue(serial, out FastList<ItemInside> list))
             {
                 list = new FastList<ItemInside>();
 
@@ -181,7 +173,7 @@ namespace ClassicUO.Game.Managers
 
             for (int i = 0; i < list.Length; i++)
             {
-                ref var item = ref list.Buffer[i];
+                ref ItemInside item = ref list.Buffer[i];
 
                 if (!SerialHelper.IsValid(item.Serial))
                 {
@@ -343,13 +335,13 @@ namespace ClassicUO.Game.Managers
             Direction direction
         )
         {
-            if (_items.TryGetValue(serial, out var list))
+            if (_items.TryGetValue(serial, out FastList<ItemInside> list))
             {
                 Item item = _world.Items.Get(serial);
 
                 for (int i = 0; i < list.Length; i++)
                 {
-                    ref var it = ref list.Buffer[i];
+                    ref ItemInside it = ref list.Buffer[i];
 
                     //if (!SerialHelper.IsValid(it.Serial))
                     //    break;

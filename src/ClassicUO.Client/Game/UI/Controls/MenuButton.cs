@@ -9,7 +9,7 @@ namespace ClassicUO.Game.UI.Controls
             Width = width;
             Height = 16;
             AcceptMouseInput = true;
-            Area _ = new Area(true, (int)hue) { Width = Width, Height = Height, AcceptMouseInput = false };
+            var _ = new Area(true, (int)hue) { Width = Width, Height = Height, AcceptMouseInput = false };
             _.Add(new AlphaBlendControl(0.25f) { Width = Width, Height = Height });
 
             if(linehue != UInt32.MaxValue)
@@ -23,9 +23,6 @@ namespace ClassicUO.Game.UI.Controls
             //_.SetTooltip(tooltip);
         }
 
-        public override bool Contains(int x, int y)
-        {
-            return true;
-        }
+        public override bool Contains(int x, int y) => true;
     }
 }

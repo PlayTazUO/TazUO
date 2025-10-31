@@ -45,7 +45,7 @@ namespace ClassicUO.Game.UI.Gumps
                 )
             );
 
-            Label text = new Label
+            var text = new Label
             (
                 ResGumps.ChooseName,
                 true,
@@ -62,7 +62,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             int BORDER_SIZE = 4;
 
-            BorderControl border = new BorderControl
+            var border = new BorderControl
             (
                 0,
                 text.Y + text.Height,

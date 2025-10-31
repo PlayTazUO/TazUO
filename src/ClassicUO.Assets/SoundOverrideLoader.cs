@@ -15,7 +15,7 @@ namespace ClassicUO.Assets
 
         private SoundOverrideLoader()
         {
-            var exePath = AppContext.BaseDirectory;
+            string exePath = AppContext.BaseDirectory;
 
             Task.Factory.StartNew(() =>
             {
@@ -25,7 +25,7 @@ namespace ClassicUO.Assets
 
                     for (int i = 0; i < files.Length; i++)
                     {
-                        var fname = Path.GetFileName(files[i]);
+                        string fname = Path.GetFileName(files[i]);
                         if (int.TryParse(fname.Substring(0, fname.Length - 4), out int fID))
                         {
                             soundCache.Add(fID, new Tuple<string, byte[]>(fname, File.ReadAllBytes(files[i])));

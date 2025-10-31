@@ -28,7 +28,7 @@ namespace ClassicUO.Assets
 
         public override unsafe void Load()
         {
-            var path = FileManager.GetUOFilePath("hues.mul");
+            string path = FileManager.GetUOFilePath("hues.mul");
 
             FileSystemHelper.EnsureFileExists(path);
 
@@ -136,22 +136,13 @@ namespace ClassicUO.Assets
 
         /* Look up the hue and return the color for the given index. Index must be between 0 and 31.
          * The returned color is a 32 bit color in R8G8B8A8 format. */
-        public uint GetHueColorRgba8888(ushort index, ushort hue)
-        {
-            return HuesHelper.Color16To32(GetHueColorRgba5551(index, hue));
-        }
+        public uint GetHueColorRgba8888(ushort index, ushort hue) => HuesHelper.Color16To32(GetHueColorRgba5551(index, hue));
 
         /* Apply the hue to the given gray color, returning a 16 bit color. */
-        public ushort ApplyHueRgba5551(ushort gray, ushort hue)
-        {
-            return GetHueColorRgba5551((ushort)((gray >> 10) & 0x1F), hue);
-        }
+        public ushort ApplyHueRgba5551(ushort gray, ushort hue) => GetHueColorRgba5551((ushort)((gray >> 10) & 0x1F), hue);
 
         /* Apply the hue to the given gray color, returning a 32 bit color. */
-        public uint ApplyHueRgba8888(ushort gray, ushort hue)
-        {
-            return HuesHelper.Color16To32(ApplyHueRgba5551(gray, hue));
-        }
+        public uint ApplyHueRgba8888(ushort gray, ushort hue) => HuesHelper.Color16To32(ApplyHueRgba5551(gray, hue));
 
         public ushort GetColor16(ushort c, ushort color)
         {
