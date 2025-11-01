@@ -233,6 +233,10 @@ description:  Represents a Python-accessible player character with full stat and
 
 **Type:** `bool`
 
+### `IsWalking`
+
+**Type:** `bool`
+
 ### `InWarMode`
 
 **Type:** `bool`

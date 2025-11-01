@@ -250,14 +250,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
-                    if (!entryGraphicInputs.ContainsKey(entry.UID))
+                    if (!entryGraphicInputs.ContainsKey(entry.Uid))
                     {
-                        entryGraphicInputs[entry.UID] = entry.Graphic.ToString();
+                        entryGraphicInputs[entry.Uid] = entry.Graphic.ToString();
                     }
-                    string graphicStr = entryGraphicInputs[entry.UID];
+                    string graphicStr = entryGraphicInputs[entry.Uid];
                     if (ImGui.InputText($"##Graphic{i}", ref graphicStr, 10))
                     {
-                        entryGraphicInputs[entry.UID] = graphicStr;
+                        entryGraphicInputs[entry.Uid] = graphicStr;
                         if (StringHelper.TryParseGraphic(graphicStr, out int newGraphic))
                         {
                             entry.Graphic = newGraphic;
@@ -267,14 +267,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
-                    if (!entryHueInputs.ContainsKey(entry.UID))
+                    if (!entryHueInputs.ContainsKey(entry.Uid))
                     {
-                        entryHueInputs[entry.UID] = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString();
+                        entryHueInputs[entry.Uid] = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString();
                     }
-                    string hueStr = entryHueInputs[entry.UID];
+                    string hueStr = entryHueInputs[entry.Uid];
                     if (ImGui.InputText($"##Hue{i}", ref hueStr, 10))
                     {
-                        entryHueInputs[entry.UID] = hueStr;
+                        entryHueInputs[entry.Uid] = hueStr;
                         if (hueStr == "-1")
                         {
                             entry.Hue = ushort.MaxValue;
@@ -288,11 +288,11 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
-                    if (!entryRegexInputs.ContainsKey(entry.UID))
+                    if (!entryRegexInputs.ContainsKey(entry.Uid))
                     {
-                        entryRegexInputs[entry.UID] = entry.RegexSearch ?? "";
+                        entryRegexInputs[entry.Uid] = entry.RegexSearch ?? "";
                     }
-                    string regexStr = entryRegexInputs[entry.UID];
+                    string regexStr = entryRegexInputs[entry.Uid];
 
 
                     if (ImGui.Button($"Edit##{i}"))
@@ -306,7 +306,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                         if (ImGui.InputTextMultiline($"##Regex{i}", ref regexStr, 500, new Vector2(300, 100)))
                         {
-                            entryRegexInputs[entry.UID] = regexStr;
+                            entryRegexInputs[entry.Uid] = regexStr;
                             entry.RegexSearch = regexStr;
                         }
 
@@ -318,15 +318,15 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     ImGui.TableNextColumn();
                     // Initialize input string if not exists
-                    if (!entryDestinationInputs.ContainsKey(entry.UID))
+                    if (!entryDestinationInputs.ContainsKey(entry.Uid))
                     {
-                        entryDestinationInputs[entry.UID] = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}";
+                        entryDestinationInputs[entry.Uid] = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}";
                     }
-                    string destStr = entryDestinationInputs[entry.UID];
+                    string destStr = entryDestinationInputs[entry.Uid];
                     ImGui.SetNextItemWidth(80);
                     if (ImGui.InputText($"##Dest{i}", ref destStr, 20))
                     {
-                        entryDestinationInputs[entry.UID] = destStr;
+                        entryDestinationInputs[entry.Uid] = destStr;
                         if (string.IsNullOrWhiteSpace(destStr))
                         {
                             entry.DestinationContainer = 0;
@@ -346,7 +346,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                                 if (SerialHelper.IsItem(targetedEntity))
                                 {
                                     entry.DestinationContainer = targetedEntity.Serial;
-                                    entryDestinationInputs[entry.UID] = $"0x{targetedEntity.Serial:X}";
+                                    entryDestinationInputs[entry.Uid] = $"0x{targetedEntity.Serial:X}";
                                 }
                             }
                         });
@@ -355,12 +355,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.TableNextColumn();
                     if (ImGui.Button($"Delete##Delete{i}"))
                     {
-                        AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.UID);
+                        AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.Uid);
                         // Clean up input dictionaries
-                        entryGraphicInputs.Remove(entry.UID);
-                        entryHueInputs.Remove(entry.UID);
-                        entryRegexInputs.Remove(entry.UID);
-                        entryDestinationInputs.Remove(entry.UID);
+                        entryGraphicInputs.Remove(entry.Uid);
+                        entryHueInputs.Remove(entry.Uid);
+                        entryRegexInputs.Remove(entry.Uid);
+                        entryDestinationInputs.Remove(entry.Uid);
                         lootEntries = AutoLootManager.Instance.AutoLootList;
                     }
                 }

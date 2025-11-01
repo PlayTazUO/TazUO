@@ -178,7 +178,15 @@ namespace ClassicUO.Game.Scenes
                     if (CanAutologin && Servers != null && Servers.Length != 0)
                     {
                         int index = GetServerIndexFromSettings();
-                        SelectServer((byte)Servers[index].Index);
+                        // Loop through servers to find the one with matching Index property
+                        for (int i = 0; i < Servers.Length; i++)
+                        {
+                            if (Servers[i].Index == index)
+                            {
+                                SelectServer((byte)index);
+                                break;
+                            }
+                        }
                     }
                     break;
                 case LoginSteps.LoginInToServer:
@@ -362,7 +370,7 @@ namespace ClassicUO.Game.Scenes
                 index = Settings.GlobalSettings.LastServerNum;
             }
 
-            if (Servers == null || index < 0 || index >= Servers.Length)
+            if (Servers == null || index < 0 || index > Servers.Length)
             {
                 index = 0;
             }
@@ -372,15 +380,25 @@ namespace ClassicUO.Game.Scenes
 
         public void SelectServer(byte index)
         {
-            if (Servers == null || index < 0 || index >= Servers.Length)
+            if (Servers == null || Servers.Length == 0)
                 return;
 
-            if (Servers is { Length: > 0 })
+            // Loop through servers to find the one with matching Index property
+            string serverName = "";
+            for (int i = 0; i < Servers.Length; i++)
             {
-                _world.ServerName = Servers[index].Name;
+                if (Servers[i].Index == index)
+                {
+                    serverName = Servers[i].Name;
+                    break;
+                }
             }
 
-            LoginHandshake.Instance.SelectServer(index, _world.ServerName);
+            if (!string.IsNullOrEmpty(serverName))
+            {
+                _world.ServerName = serverName;
+                LoginHandshake.Instance.SelectServer(index, serverName);
+            }
         }
 
         public void SelectCharacter(uint index)

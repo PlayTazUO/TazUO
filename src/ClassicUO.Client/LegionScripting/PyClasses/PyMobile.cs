@@ -28,6 +28,12 @@ public class PyMobile : PyEntity
     public bool IsRenamable => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRenamable ?? false);
     public bool IsHuman => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHuman ?? false);
 
+    public virtual bool InWarMode
+    {
+        get => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.InWarMode ?? false);
+        set { } // Dispose of value - only overrides can set
+    }
+
     /// <summary>
     /// Get the mobile's Backpack item
     /// </summary>

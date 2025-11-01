@@ -13,6 +13,7 @@ using ClassicUO.Utility;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
@@ -132,21 +133,18 @@ namespace ClassicUO.Game.Managers
     {
         public uint TargetSerial { get; set; }
         public TargetType ExpectedTargetType { get; set; }
-        public CursorTarget ExpectedCursorTarget { get; set; }
         public bool IsSet => TargetSerial != 0;
 
-        public void Set(uint serial, TargetType targetType, CursorTarget cursorTarget)
+        public void Set(uint serial, TargetType targetType)
         {
             TargetSerial = serial;
             ExpectedTargetType = targetType;
-            ExpectedCursorTarget = cursorTarget;
         }
 
         public void Clear()
         {
             TargetSerial = 0;
             ExpectedTargetType = TargetType.Cancel;
-            ExpectedCursorTarget = CursorTarget.Invalid;
         }
     }
 
@@ -247,7 +245,6 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
-            NextAutoTarget.Clear();
 
             bool lastTargetting = IsTargeting;
             IsTargeting = cursorType < TargetType.Cancel;
@@ -270,7 +267,7 @@ namespace ClassicUO.Game.Managers
             _targetCursorId = cursorID;
         }
 
-        public static void SetAutoTarget(uint serial, TargetType targetType, CursorTarget cursorTarget) => NextAutoTarget.Set(serial, targetType, cursorTarget);
+        public static void SetAutoTarget(uint serial, TargetType targetType) => NextAutoTarget.Set(serial, targetType);
 
         public void CancelTarget()
         {
@@ -334,8 +331,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordTarget(serial);
+            LegionScripting.ScriptRecorder.Instance.RecordTarget(serial);
 
             Entity entity = _world.InGame ? _world.Get(serial) : null;
 
@@ -575,8 +574,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             // Record action for script recording
-            ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordTargetLocation(x, y, z, graphic);
+            LegionScripting.ScriptRecorder.Instance.RecordTargetLocation(x, y, z, graphic);
 
             switch (TargetingState)
             {
@@ -637,6 +638,8 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            NextAutoTarget.Clear();
+
             _lastDataBuffer[0] = 0x6C;
             _lastDataBuffer[1] = (byte)TargetingState;
             _lastDataBuffer[2] = (byte)(_targetCursorId >> 24);
@@ -656,6 +659,8 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
+
+            NextAutoTarget.Clear();
 
             _lastDataBuffer[0] = 0x6C;
 

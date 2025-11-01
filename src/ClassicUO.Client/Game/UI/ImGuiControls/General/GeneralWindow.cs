@@ -11,6 +11,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private int _objectMoveDelay;
         private bool _highlightObjects;
         private bool _showNames;
+        private bool _autoOpenOwnCorpse;
         private ushort _turnDelay;
         private float _imguiWindowAlpha, _lastImguiWindowAlpha;
         private GeneralWindow() : base("General Tab")
@@ -19,6 +20,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             _objectMoveDelay = _profile.MoveMultiObjectDelay;
             _highlightObjects = _profile.HighlightGameObjects;
             _showNames = _profile.NameOverheadToggled;
+            _autoOpenOwnCorpse = _profile.AutoOpenOwnCorpse;
             _turnDelay = _profile.TurnDelay;
             _imguiWindowAlpha = _lastImguiWindowAlpha = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_ALPHA, 1.0f);
         }
@@ -112,6 +114,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _profile.NameOverheadToggled = _showNames;
             }
             ImGuiComponents.Tooltip("Toggle the display of names above characters and NPCs in the game world.");
+
+            if (ImGui.Checkbox("Auto open own corpse", ref _autoOpenOwnCorpse))
+            {
+                _profile.AutoOpenOwnCorpse = _autoOpenOwnCorpse;
+            }
+            ImGuiComponents.Tooltip("Automatically open your own corpse when you die, even if auto open corpses is disabled.");
 
             ImGui.EndGroup();
 

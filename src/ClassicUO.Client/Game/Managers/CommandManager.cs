@@ -280,6 +280,20 @@ namespace ClassicUO.Game.Managers
             Register("organize", (s) => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizer", (s) => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizerlist", (s) => OrganizerAgent.Instance?.ListOrganizers());
+            Register("reply", (s) =>
+            {
+                if (DiscordManager.Instance.LastPrivateMessage == null)
+                {
+                    GameActions.Print("No message to reply to.", 32);
+                    return;
+                }
+
+                string msg = "";
+                for (int i = 1; i < s.Length; i++)
+                    msg += s[i] + " ";
+
+                DiscordManager.Instance.SendDm(DiscordManager.Instance.LastPrivateMessage.ChannelId(), msg);
+            });
         }
 
 

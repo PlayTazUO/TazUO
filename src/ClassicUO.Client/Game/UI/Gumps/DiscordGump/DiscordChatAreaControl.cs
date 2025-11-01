@@ -106,7 +106,7 @@ public class DiscordChatAreaControl : Control
         }
 
         if (isDM)
-            DiscordManager.Instance.SendDM(_selectedChannel, txt);
+            DiscordManager.Instance.SendDm(_selectedChannel, txt);
         else
             DiscordManager.Instance.SendChannelMsg(_selectedChannel, txt);
     }

@@ -378,35 +378,28 @@ sealed class PacketHandlers
         Handler._clilocRequests.Add(serial);
     }
 
-        private static void TargetCursor(World world, ref StackDataReader p)
-        {
-            var cursorTarget = (CursorTarget)p.ReadUInt8();
+    private static void TargetCursor(World world, ref StackDataReader p)
+    {
+        var cursorTarget = (CursorTarget)p.ReadUInt8();
         uint cursorId = p.ReadUInt32BE();
-            var targetType = (TargetType)p.ReadUInt8();
+        var targetType = (TargetType)p.ReadUInt8();
 
-            world.TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
+        world.TargetManager.SetTargeting(cursorTarget, cursorId, targetType);
 
-            if (world.Party.PartyHealTimer < Time.Ticks && world.Party.PartyHealTarget != 0)
-            {
-                world.TargetManager.Target(world.Party.PartyHealTarget);
-                world.Party.PartyHealTimer = 0;
-                world.Party.PartyHealTarget = 0;
-                TargetManager.NextAutoTarget.Clear(); // Clear any queued auto-target
-            }
-            else if (TargetManager.NextAutoTarget.IsSet)
-            {
-                // Check if this cursor matches what we expect
-                if (TargetManager.NextAutoTarget.ExpectedCursorTarget == cursorTarget &&
-                    TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
-                {
-                    // Auto-target the stored serial
-                    world.TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
-                }
-
-                // Always clear after any target cursor (no queuing)
-                TargetManager.NextAutoTarget.Clear();
-            }
+        if (world.Party.PartyHealTimer < Time.Ticks && world.Party.PartyHealTarget != 0)
+        {
+            world.TargetManager.Target(world.Party.PartyHealTarget);
+            world.Party.PartyHealTimer = 0;
+            world.Party.PartyHealTarget = 0;
         }
+        else if (TargetManager.NextAutoTarget.IsSet && TargetManager.NextAutoTarget.ExpectedTargetType == targetType)
+        {
+            world.TargetManager.Target(TargetManager.NextAutoTarget.TargetSerial);
+        }
+
+        // Always clear after any target cursor (no queuing)
+        TargetManager.NextAutoTarget.Clear();
+    }
 
     private static void SecureTrading(World world, ref StackDataReader p)
     {

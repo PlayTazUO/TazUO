@@ -156,6 +156,14 @@ class PyBaseControl:
         """
         pass
 
+    def Clear(self) -> None:
+        """
+         Clears all child controls from this control.
+         Used in python API
+        
+        """
+        pass
+
     def Dispose(self) -> None:
         """
          Close/Destroy the control
@@ -333,7 +341,9 @@ class PyMobile:
     Mana: int = None
     IsRenamable: bool = None
     IsHuman: bool = None
+    InWarMode: bool = None
     Backpack: PyItem = None
+    Mount: PyItem = None
     __class__: str = None
 
 class PyMulti:
@@ -447,6 +457,7 @@ class PyPlayer:
     MaxManaIncrease: int = None
     MaxStaminaIncrease: int = None
     IsHidden: bool = None
+    IsWalking: bool = None
     InWarMode: bool = None
     __class__: str = None
 

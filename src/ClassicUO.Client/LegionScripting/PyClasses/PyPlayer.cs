@@ -91,7 +91,7 @@ public class PyPlayer : PyMobile
     public bool IsHidden =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsHidden ?? false);
     public bool IsWalking =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsWalking ?? false);
 
-    public bool InWarMode
+    public override bool InWarMode
     {
         get => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.InWarMode ?? false);
         set => MainThreadQueue.InvokeOnMainThread(() =>

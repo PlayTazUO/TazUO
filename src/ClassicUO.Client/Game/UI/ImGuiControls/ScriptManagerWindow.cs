@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.ImGuiControls.Legion;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility.Logging;
@@ -794,6 +795,9 @@ while True:
             ImGui.Text(script.FileName);
             ImGui.SeparatorText("Options:");
 
+            if(ImGui.MenuItem("Edit Constants"))
+                ImGuiManager.AddWindow(new ScriptConstantsEditorWindow(script));
+
             if (ImGui.MenuItem("Rename"))
             {
                 // Start renaming the script
@@ -1266,11 +1270,13 @@ while True:
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    Process.Start("xdg-open", filePath);
+                    ProcessStartInfo p = new() { FileName = "xdg-open", ArgumentList = { filePath }};
+                    Process.Start(p);
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    Process.Start("open", filePath);
+                    ProcessStartInfo p = new() { FileName = "open", ArgumentList = { filePath }};
+                    Process.Start(p);
                 }
             }
             catch (Exception ex)

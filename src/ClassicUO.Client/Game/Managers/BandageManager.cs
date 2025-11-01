@@ -244,7 +244,7 @@ namespace ClassicUO.Game.Managers
             else
             {
                 // Set up auto-target before double-clicking
-                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial, CursorTarget.Object);
+                TargetManager.SetAutoTarget(mobile.Serial, TargetType.Beneficial);
 
                 GameActions.DoubleClick(World.Instance, bandage.Serial);
             }

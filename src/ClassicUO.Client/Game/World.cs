@@ -115,6 +115,10 @@ namespace ClassicUO.Game
 
         public Dictionary<uint, Mobile> Mobiles { get; } = new Dictionary<uint, Mobile>();
 
+        // Separate collection for corpses to optimize iteration in TryOpenCorpses
+        private readonly HashSet<Item> _corpses = new HashSet<Item>();
+        private readonly object _corpsesLock = new object();
+
         public Map.Map Map
         {
             get;
@@ -212,6 +216,48 @@ namespace ClassicUO.Game
         public ClientFeatures ClientFeatures { get; } = new ClientFeatures();
 
         public string ServerName { get; set; } = "_";
+
+        /// <summary>
+        /// Adds a corpse to the corpse collection for faster iteration.
+        /// Thread-safe.
+        /// </summary>
+        public void AddCorpse(Item item)
+        {
+            if (item != null && !item.IsDestroyed)
+            {
+                lock (_corpsesLock)
+                {
+                    _corpses.Add(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes a corpse from the corpse collection.
+        /// Thread-safe.
+        /// </summary>
+        public void RemoveCorpse(Item item)
+        {
+            if (item != null)
+            {
+                lock (_corpsesLock)
+                {
+                    _corpses.Remove(item);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a snapshot of corpses for iteration.
+        /// Thread-safe.
+        /// </summary>
+        public Item[] GetCorpseSnapshot()
+        {
+            lock (_corpsesLock)
+            {
+                return _corpses.ToArray();
+            }
+        }
 
         public void CreatePlayer(uint serial)
         {
@@ -857,6 +903,10 @@ namespace ClassicUO.Game
             LastObject = 0;
             Items.Clear();
             Mobiles.Clear();
+            lock (_corpsesLock)
+            {
+                _corpses.Clear();
+            }
             Player?.Destroy();
             Player = null;
             Map?.Destroy();

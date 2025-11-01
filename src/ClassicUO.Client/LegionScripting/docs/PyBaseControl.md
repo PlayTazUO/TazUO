@@ -171,6 +171,16 @@ description: PyBaseControl class documentation
 
 ---
 
+### Clear
+
+ Clears all child controls from this control.
+ Used in python API
+
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### Dispose
 
  Close/Destroy the control

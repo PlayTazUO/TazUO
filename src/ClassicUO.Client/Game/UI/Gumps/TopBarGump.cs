@@ -168,7 +168,6 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             }, 1);
             lscript.MouseUp += (s, e) => {
-                UIManager.Add(new LegionScripting.ScriptManagerGump());
                 ScriptManagerWindow.Show();
             };
             startX += largeWidth + 1;

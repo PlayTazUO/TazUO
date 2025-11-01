@@ -664,7 +664,7 @@ namespace ClassicUO.Game.UI.Controls
                 return null;
             }
 
-            foreach (Control c in Children)
+            foreach (Control c in Children.ToArray())
             {
                 Control a = c.GetFirstControlAcceptKeyboardInput();
 
