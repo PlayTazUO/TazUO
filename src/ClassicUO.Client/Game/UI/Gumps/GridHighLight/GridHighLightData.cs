@@ -395,26 +395,23 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
 
             int matchingPropertiesCount = 0;
+            int propertiesCount = 0;
 
             foreach (GridHighlightProperty prop in Properties)
             {
+                propertiesCount++;
                 ItemPropertiesData.SinglePropertyData match = itemProperties.FirstOrDefault(p =>
                     Normalize(p.Name).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase));
 
-                if (match == null)
-                {
-                    if (!prop.IsOptional)
-                        return false;
-                }
-                else if (prop.MinValue != -1 && match.FirstValue < prop.MinValue)
-                {
+                if ((match == null && !prop.IsOptional) || prop.MinValue != -1 && match.FirstValue < prop.MinValue && !prop.IsOptional)
                     return false;
-                }
+                if ((match == null && prop.IsOptional) || (prop.MinValue != -1 && match.FirstValue < prop.MinValue && prop.IsOptional))
+                    continue;
 
                 matchingPropertiesCount++;
             }
 
-            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
+            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount, propertiesCount);
             return isMatchingPropertyCount;
         }
 
@@ -479,13 +476,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return best;
         }
 
-        private bool IsMatchingPropertyCount(int matchingPropertiesCount)
+        private bool IsMatchingPropertyCount(int matchingPropertiesCount, int propertiesCount = 0)
         {
-            if (MinimumProperty > 0 && matchingPropertiesCount < MinimumProperty)
+            int count = propertiesCount > 0 ? (propertiesCount - matchingPropertiesCount) : matchingPropertiesCount;
+
+            if (MinimumProperty > 0 && count < MinimumProperty)
             {
                 return false;
             }
-            if (MaximumProperty > 0 && matchingPropertiesCount > MaximumProperty)
+            if (MaximumProperty > 0 && count > MaximumProperty)
             {
                 return false;
             }
