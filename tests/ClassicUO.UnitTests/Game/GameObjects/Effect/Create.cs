@@ -14,11 +14,12 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Effect
         [InlineData((int)ClassicUO.Game.Data.GraphicEffectType.Lightning, typeof(ClassicUO.Game.GameObjects.LightningEffect))]
         public void Create_Returns_Effect_Instance(int graphicEffectType, Type type)
         {
+            Client.UnitTestingActive = true;
             var world = new World();
             var em = new ClassicUO.Game.Managers.EffectManager(world);
 
             em.CreateEffect((ClassicUO.Game.Data.GraphicEffectType) graphicEffectType, 0, 0, 1, 0,0, 0 , 0,0 ,0,0 ,0, 0, false, false, false, ClassicUO.Game.Data.GraphicEffectBlendMode.Normal);
-            
+
             Assert.IsType(type, em.Items);
 
             em.Clear();

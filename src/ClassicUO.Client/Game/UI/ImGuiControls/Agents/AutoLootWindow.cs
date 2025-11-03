@@ -302,7 +302,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                     if (ImGui.BeginPopup($"RegexEditor##{i}"))
                     {
-                        ImGui.TextColored(ImGuiTheme.Colors.Primary, "Regex Editor:");
+                        ImGui.TextColored(ImGuiTheme.Current.Primary, "Regex Editor:");
 
                         if (ImGui.InputTextMultiline($"##Regex{i}", ref regexStr, 500, new Vector2(300, 100)))
                         {

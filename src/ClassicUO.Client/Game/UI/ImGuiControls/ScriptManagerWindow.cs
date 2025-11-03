@@ -154,9 +154,9 @@ while True:
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 4));
             ImGui.PushStyleVar(ImGuiStyleVar.PopupRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.PopupBorderSize, 1.0f);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ImGuiTheme.Colors.Primary * 0.8f);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, ImGuiTheme.Colors.Primary);
-            ImGui.PushStyleColor(ImGuiCol.Header, ImGuiTheme.Colors.Primary);
+            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ImGuiTheme.Current.Primary * 0.8f);
+            ImGui.PushStyleColor(ImGuiCol.HeaderActive, ImGuiTheme.Current.Primary);
+            ImGui.PushStyleColor(ImGuiCol.Header, ImGuiTheme.Current.Primary);
 
             // Load scripts if needed
             if (_pendingReload)
@@ -345,7 +345,7 @@ while True:
                 ImDrawListPtr drawList = ImGui.GetWindowDrawList();
                 Vector2 itemMin = ImGui.GetItemRectMin();
                 Vector2 itemMax = ImGui.GetItemRectMax();
-                uint highlightColor = ImGui.ColorConvertFloat4ToU32(ImGuiTheme.Colors.Primary * 0.5f); // Semi-transparent primary color
+                uint highlightColor = ImGui.ColorConvertFloat4ToU32(ImGuiTheme.Current.Primary * 0.5f); // Semi-transparent primary color
                 drawList.AddRectFilled(itemMin, itemMax, highlightColor);
 
                 unsafe
@@ -441,7 +441,7 @@ while True:
             string buttonText = isPlaying ? "Stop" : "Play";
             Vector4 buttonColor = isPlaying
                 ? new Vector4(0.2f, 0.6f, 0.2f, 1.0f) // Green for play
-                : ImGuiTheme.Colors.Primary;
+                : ImGuiTheme.Current.Primary;
 
 
             ImGui.PushStyleColor(ImGuiCol.Button, buttonColor);
@@ -812,7 +812,7 @@ while True:
 
             if (ImGui.MenuItem("Edit"))
             {
-                UIManager.Add(new ScriptEditor(World.Instance, script));
+                ImGuiManager.AddWindow(new ScriptEditorWindow(script));
                 _showContextMenu = false;
             }
 

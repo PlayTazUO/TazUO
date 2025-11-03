@@ -9,6 +9,8 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Mobile
         [Fact]
         public void GetSecureTradeBox_Returns_Null_Without_Items()
         {
+            Client.UnitTestingActive = true;
+
             var world = new World();
             var sut = new ClassicUO.Game.GameObjects.Mobile(world);
 
@@ -20,6 +22,8 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Mobile
         [Fact]
         public void GetSecureTradeBox_Returns_Null_With_Irrelevant_Items()
         {
+            Client.UnitTestingActive = true;
+
             var world = new World();
 
             var irrelevantItem1 = new Item(world);
@@ -38,6 +42,8 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Mobile
         [Fact]
         public void GetSecureTradeBox_Returns_Only_Relevant_Item()
         {
+            Client.UnitTestingActive = true;
+
             var world = new World();
 
             var irrelevantItem1 = new Item(world);

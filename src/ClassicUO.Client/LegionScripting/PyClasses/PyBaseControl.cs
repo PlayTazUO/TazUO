@@ -9,6 +9,23 @@ public class PyBaseControl(Control control)
 {
     internal Control Control => control;
 
+    /// <summary>
+    /// Weather this control/gump can be moved by dragging this control
+    /// </summary>
+    public bool CanMove
+    {
+        get
+        {
+            return VerifyIntegrity() && control.CanMove;
+        }
+        set
+        {
+            if (!VerifyIntegrity()) return;
+
+            control.CanMove = value;
+        }
+    }
+
     public bool IsVisible
     {
         get

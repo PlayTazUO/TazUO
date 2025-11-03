@@ -24,7 +24,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.ASCII.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadASCII(str.Length);
 
@@ -46,7 +46,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.ASCII.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadASCII();
 
@@ -67,7 +67,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.Unicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUnicodeLE(str.Length);
 
@@ -89,7 +89,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.Unicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUnicodeLE();
 
@@ -110,7 +110,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.BigEndianUnicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUnicodeBE(str.Length);
 
@@ -132,7 +132,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.BigEndianUnicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUnicodeBE();
 
@@ -154,7 +154,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUTF8(str.Length);
 
@@ -176,7 +176,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUTF8();
 
@@ -197,7 +197,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUTF8(str.Length, true);
 
@@ -219,7 +219,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUTF8(true);
 
@@ -237,7 +237,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.ASCII.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadASCII();
             Assert.Equal(remains, reader.Remaining);
@@ -256,7 +256,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.ASCII.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadASCII(str.Length);
             Assert.Equal(reader.Remaining, remains);
@@ -275,7 +275,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.BigEndianUnicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUnicodeBE();
             Assert.Equal(remains, reader.Remaining);
@@ -294,7 +294,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.BigEndianUnicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUnicodeBE(str.Length);
             Assert.Equal(reader.Remaining, remains);
@@ -313,7 +313,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.Unicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUnicodeLE();
             Assert.Equal(remains, reader.Remaining);
@@ -332,7 +332,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.Unicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUnicodeLE(str.Length);
             Assert.Equal(reader.Remaining, remains);
@@ -351,7 +351,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUTF8();
             Assert.Equal(remains, reader.Remaining);
@@ -370,7 +370,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUTF8(str.Length);
             Assert.Equal(reader.Remaining, remains);
@@ -389,7 +389,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUTF8(true);
             Assert.Equal(remains, reader.Remaining);
@@ -408,7 +408,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             reader.ReadUTF8(str.Length, true);
             Assert.Equal(reader.Remaining, remains);
@@ -427,7 +427,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.ASCII.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadASCII(length);
 
@@ -442,7 +442,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.BigEndianUnicode.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUnicodeBE(length);
 
@@ -456,7 +456,7 @@ namespace ClassicUO.UnitTests.IO
         {
             Span<byte> data = Encoding.UTF8.GetBytes(str);
 
-            StackDataReader reader = new StackDataReader(data);
+            var reader = new StackDataReader(data);
 
             string s = reader.ReadUTF8(length);
 

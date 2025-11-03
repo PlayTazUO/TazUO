@@ -11,7 +11,7 @@ namespace ClassicUO.UnitTests.Utility.StringHelper
             const string UNCAPITALIZED_WORDS = "hello fans of ultima online";
             const string EXPECTED_RESULT = "Hello Fans Of Ultima Online";
 
-            var result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(UNCAPITALIZED_WORDS);
+            string result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(UNCAPITALIZED_WORDS);
 
             result
                 .Should()
@@ -24,7 +24,7 @@ namespace ClassicUO.UnitTests.Utility.StringHelper
             const string UNCAPITALIZED_WORDS = "h";
             const string EXPECTED_RESULT = "H";
 
-            var result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(UNCAPITALIZED_WORDS);
+            string result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(UNCAPITALIZED_WORDS);
 
             result
                 .Should()
@@ -36,7 +36,7 @@ namespace ClassicUO.UnitTests.Utility.StringHelper
         [InlineData(null)]
         public void CapitalizeAllWords_No_Input_Should_Return_EmptyString(string input)
         {
-            var result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(input);
+            string result = ClassicUO.Utility.StringHelper.CapitalizeAllWords(input);
 
             result
                 .Should()

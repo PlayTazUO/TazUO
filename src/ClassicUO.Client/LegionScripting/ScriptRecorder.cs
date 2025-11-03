@@ -306,8 +306,6 @@ namespace ClassicUO.LegionScripting
             script.AppendLine("# Created: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             script.AppendLine();
             script.AppendLine("import API");
-            if(includePauses)
-                script.AppendLine("import time");
             script.AppendLine();
 
             bool firstAction = true;
@@ -317,7 +315,7 @@ namespace ClassicUO.LegionScripting
                 if (includePauses && !firstAction && action.DelayFromPrevious > 100) // Only add delays > 100ms
                 {
                     double delaySeconds = action.DelayFromPrevious / 1000.0;
-                    script.AppendLine($"time.sleep({delaySeconds:F2})");
+                    script.AppendLine($"API.Pause({delaySeconds:F2})");
                 }
                 firstAction = false;
 
@@ -474,7 +472,7 @@ namespace ClassicUO.LegionScripting
                     case "waitforgump":
                         if (action.Parameters.TryGetValue("id", out object gumpid))
                         {
-                            script.AppendLine($"while not API.HasGump(\"{gumpid}\")");
+                            script.AppendLine($"while not API.HasGump(\"{gumpid}\"):");
                             script.AppendLine($"    API.Pause(0.1)");
                         }
                         break;

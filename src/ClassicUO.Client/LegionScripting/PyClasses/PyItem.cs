@@ -14,6 +14,29 @@ public class PyItem : PyEntity
     public bool IsCorpse;
     public bool Opened => GetItem()?.Opened ?? false;
     public uint Container => GetItem()?.Container ?? 0;
+    public uint RootContainer => GetItem()?.RootContainer ?? 0;
+
+    public PyEntity RootEntity => MainThreadQueue.InvokeOnMainThread<PyEntity>(() =>
+    {
+        if (item == null)
+        {
+            item = GetItemUnsafe();
+            if (item == null) return null;
+        }
+
+        if (SerialHelper.IsMobile(item.RootContainer))
+        {
+            Client.Game.UO.World.Mobiles.TryGetValue(item.RootContainer, out Mobile m);
+
+            return m != null ? new PyMobile(m) : null;
+        }
+        else
+        {
+            Client.Game.UO.World.Items.TryGetValue(item.RootContainer, out Item i);
+
+            return i != null ? new PyItem(i) : null;
+        }
+    });
 
     /// <summary>
     /// If this item matches a grid highlight rule, this is the rule name it matched against
@@ -45,13 +68,14 @@ public class PyItem : PyEntity
     public override string __class__ => "PyItem";
 
     protected Item item;
+    protected Item GetItemUnsafe() => Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
     protected Item GetItem()
     {
         if (item != null && item.Serial == Serial) return item;
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
-            return item = Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
+            return item = GetItemUnsafe();
         });
     }
 }

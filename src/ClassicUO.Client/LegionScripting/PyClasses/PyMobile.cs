@@ -27,6 +27,7 @@ public class PyMobile : PyEntity
     public int Mana => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Mana ?? 0);
     public bool IsRenamable => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRenamable ?? false);
     public bool IsHuman => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHuman ?? false);
+    public bool IsYellowHits => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsYellowHits ?? false);
 
     public virtual bool InWarMode
     {

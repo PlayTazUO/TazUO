@@ -14,7 +14,7 @@ namespace ClassicUO.UnitTests.IO
         [Fact]
         public void Write_BigEndian_String_No_Fixed_Size()
         {
-            StackDataWriter writer = new StackDataWriter(32);
+            var writer = new StackDataWriter(32);
 
             string str = new string('a', 128);
 
@@ -39,7 +39,7 @@ namespace ClassicUO.UnitTests.IO
         [Fact]
         public void Write_BigEndian_String_Greater_Fixed_Size_Than_RealString()
         {
-            StackDataWriter writer = new StackDataWriter(32);
+            var writer = new StackDataWriter(32);
 
             string str = "aaaa";
             int size = 256;
@@ -64,7 +64,7 @@ namespace ClassicUO.UnitTests.IO
         [Fact]
         public void Write_BigEndian_String_Less_Fixed_Size_Than_RealString()
         {
-            StackDataWriter writer = new StackDataWriter(32);
+            var writer = new StackDataWriter(32);
 
             string str = new string('a', 255);
             int size = 239;
@@ -91,7 +91,7 @@ namespace ClassicUO.UnitTests.IO
         [InlineData("ÀÁÂÃÄÅ", new byte[] { 0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0x00 })]
         public void Write_CP1252String(string a, byte[] b)
         {
-            StackDataWriter writer = new StackDataWriter();
+            var writer = new StackDataWriter();
 
             writer.WriteASCII(a);
 

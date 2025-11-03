@@ -12,6 +12,8 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.ImGuiControls;
 using ImGuiNET;
 using System.Numerics;
+using ClassicUO.Game.UI;
+using ClassicUO.Game.UI.ImGuiControls.Legion;
 
 namespace ClassicUO.LegionScripting
 {
@@ -316,7 +318,7 @@ namespace ClassicUO.LegionScripting
 
                                                                                           // Create ScriptFile object pointing to the saved file
                                                                                           var f = new ScriptFile(World.Instance, LegionScripting.ScriptPath, finalFileName);
-                                                                                          UIManager.Add(new ScriptEditor(World.Instance, f));
+                                                                                          ImGuiManager.AddWindow(new ScriptEditorWindow(f));
 
                                                                                           GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
 

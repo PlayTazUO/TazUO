@@ -528,17 +528,23 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        private void CleanUpDisposedChildren()
+        internal void CleanUpDisposedChildren()
         {
+            bool childRemoved = false;
             for (int i = Children.Count - 1; i >= 0; i--)
-            {
-                // Check bounds in case the list was modified during iteration
-                if (i < Children.Count && Children[i]?.IsDisposed == true)
+                if (i < Children.Count)
                 {
-                    Children.RemoveAt(i);
-                    OnChildRemoved();
+                    Control c = Children[i];
+
+                    if(c?.IsDisposed == true)
+                    {
+                        Children.Remove(c);
+                        childRemoved = true;
+                    }
                 }
-            }
+
+            if(childRemoved)
+                OnChildRemoved();
         }
 
         private void DrawDebug(UltimaBatcher2D batcher, int x, int y)

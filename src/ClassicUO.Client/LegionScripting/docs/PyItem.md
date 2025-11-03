@@ -21,6 +21,14 @@ description:  Represents a Python-accessible item in the game world.   Inherits 
 
 **Type:** `uint`
 
+### `RootContainer`
+
+**Type:** `uint`
+
+### `RootEntity`
+
+**Type:** `PyEntity`
+
 ### `__class__`
 
 **Type:** `string`

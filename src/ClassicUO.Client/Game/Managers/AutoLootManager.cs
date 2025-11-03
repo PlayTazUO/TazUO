@@ -95,6 +95,12 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            if (i.ShouldAutoLoot)
+            {
+                LootItem(i, null);
+                return;
+            }
+
             AutoLootConfigEntry entry = IsOnLootList(i);
             if (entry != null) LootItem(i, entry);
         }

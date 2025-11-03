@@ -18,7 +18,7 @@ namespace ClassicUO.UnitTests.Utility.FileSystemHelper
         [Fact]
         public void EnsureFileExists_ValidPath_Should_Not_ThrowException()
         {
-            var validFileName = Path.GetTempFileName();
+            string validFileName = Path.GetTempFileName();
 
             Action act = () => ClassicUO.Utility.FileSystemHelper.EnsureFileExists(validFileName);
 

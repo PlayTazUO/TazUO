@@ -33,6 +33,8 @@ namespace ClassicUO.Game.Managers
 
         private readonly string _saveFileName = "dress_configs.json";
 
+        private Layer[] _forbiddenLayers = [Layer.Backpack, Layer.Beard, Layer.Hair, Layer.Invalid, Layer.ShopBuy, Layer.ShopBuyRestock, Layer.ShopSell, Layer.Bank];
+
         private DressAgentManager() { }
 
         public void Load()
@@ -44,28 +46,21 @@ namespace ClassicUO.Game.Managers
             string characterName = ProfileManager.CurrentProfile?.CharacterName ?? "";
 
             if (File.Exists(savePath))
-            {
                 try
                 {
                     string json = File.ReadAllText(savePath);
                     CurrentPlayerConfigs = JsonSerializer.Deserialize(json, DressAgentJsonContext.Default.ListDressConfig) ?? new List<DressConfig>();
 
                     // Ensure all configs have the correct character name
-                    foreach (DressConfig config in CurrentPlayerConfigs)
-                    {
-                        config.CharacterName = characterName;
-                    }
+                    foreach (DressConfig config in CurrentPlayerConfigs) config.CharacterName = characterName;
                 }
                 catch (Exception ex)
                 {
                     Utility.Logging.Log.Error($"Error loading dress configs: {ex.Message}");
                     CurrentPlayerConfigs = new List<DressConfig>();
                 }
-            }
             else
-            {
                 CurrentPlayerConfigs = new List<DressConfig>();
-            }
 
             LoadOtherCharacterConfigs();
 
@@ -80,13 +75,9 @@ namespace ClassicUO.Game.Managers
 
             string rootpath;
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.ProfilesPath))
-            {
                 rootpath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles");
-            }
             else
-            {
                 rootpath = Settings.GlobalSettings.ProfilesPath;
-            }
 
             if (!Directory.Exists(rootpath))
                 return;
@@ -114,7 +105,6 @@ namespace ClassicUO.Game.Managers
 
                             string configFilePath = Path.Combine(characterPath, _saveFileName);
                             if (File.Exists(configFilePath))
-                            {
                                 try
                                 {
                                     string json = File.ReadAllText(configFilePath);
@@ -130,7 +120,6 @@ namespace ClassicUO.Game.Managers
                                 {
                                     Utility.Logging.Log.Error($"Error loading dress configs for {characterName}: {ex.Message}");
                                 }
-                            }
                         }
                     }
                 }
@@ -203,10 +192,7 @@ namespace ClassicUO.Game.Managers
 
         public void DeleteConfig(DressConfig config)
         {
-            if (CurrentPlayerConfigs.Remove(config))
-            {
-                Save();
-            }
+            if (CurrentPlayerConfigs.Remove(config)) Save();
         }
 
         public void AddItemToConfig(DressConfig config, uint serial, string name)
@@ -257,10 +243,7 @@ namespace ClassicUO.Game.Managers
                     continue;
 
                 Item item = World.Instance.Player.FindItemByLayer(layer);
-                if (item != null)
-                {
-                    AddItemToConfig(config, item.Serial, item.Name);
-                }
+                if (item != null) AddItemToConfig(config, item.Serial, item.Name);
             }
         }
 
@@ -281,6 +264,9 @@ namespace ClassicUO.Game.Managers
 
         private void Dress(DressConfig config)
         {
+            if (World.Instance == null || World.Instance.Player == null)
+                return;
+                
             if (config.UseKREquipPacket)
             {
 
@@ -291,19 +277,14 @@ namespace ClassicUO.Game.Managers
                 {
                     // Check if the item is already equipped on the player
                     Item item = World.Instance.Items.Get(dressItem.Serial);
-                    if (item != null && item.Container == World.Instance.Player?.Serial)
-                    {
-                        continue;
-                    }
+                    if (item != null && item.Container == World.Instance.Player?.Serial || _forbiddenLayers.Contains(item.Layer)) continue;
 
                     itemsToEquip.Add(dressItem.Serial);
                 }
 
                 if (itemsToEquip.Count > 0)
-                {
                     // Send KR equip packet for all items at once
                     AsyncNetClient.Socket.Send_EquipMacroKR(itemsToEquip.ToArray().AsSpan());
-                }
             }
             else
             {
@@ -312,6 +293,8 @@ namespace ClassicUO.Game.Managers
                 var layersToUnequip = new List<byte>();
                 foreach (DressItem dressItem in config.Items)
                 {
+                    if(_forbiddenLayers.Contains((Layer)dressItem.Layer)) continue;
+
                     if (!layersToUnequip.Contains(dressItem.Layer))
                     {
                         if (dressItem.Layer == (byte)Layer.TwoHanded && !layersToUnequip.Contains((byte)Layer.OneHanded))
@@ -330,10 +313,7 @@ namespace ClassicUO.Game.Managers
                 {
                     // Check if the item is already equipped on the player
                     Item item = World.Instance.Items.Get(dressItem.Serial);
-                    if (item != null && item.Container == World.Instance.Player?.Serial)
-                    {
-                        continue;
-                    }
+                    if (item != null && item.Container == World.Instance.Player?.Serial) continue;
 
                     MoveItemQueue.Instance.EnqueueEquipSingle(dressItem.Serial, (Layer)dressItem.Layer);
                 }
@@ -350,22 +330,19 @@ namespace ClassicUO.Game.Managers
                 // Collect layers that are currently equipped with config items
                 foreach (DressItem dressItem in config.Items)
                 {
+                    if(_forbiddenLayers.Contains((Layer)dressItem.Layer)) continue;
+
                     Item item = World.Instance.Items.Get(dressItem.Serial);
                     if (item != null && item.Container == World.Instance.Player?.Serial)
                     {
                         var layer = (Layer)dressItem.Layer;
-                        if (!layersToUnequip.Contains(layer))
-                        {
-                            layersToUnequip.Add(layer);
-                        }
+                        if (!layersToUnequip.Contains(layer)) layersToUnequip.Add(layer);
                     }
                 }
 
                 if (layersToUnequip.Count > 0)
-                {
                     // Send KR unequip packet for all layers at once
                     AsyncNetClient.Socket.Send_UnequipMacroKR(layersToUnequip.ToArray().AsSpan());
-                }
             }
             else
             {
@@ -375,11 +352,10 @@ namespace ClassicUO.Game.Managers
                 // Collect items that are currently equipped
                 foreach (DressItem dressItem in config.Items)
                 {
+                    if(_forbiddenLayers.Contains((Layer)dressItem.Layer)) continue;
+
                     Item item = World.Instance.Items.Get(dressItem.Serial);
-                    if (item != null && item.Container == World.Instance.Player?.Serial)
-                    {
-                        itemsToUnequip.Add(dressItem.Serial);
-                    }
+                    if (item != null && item.Container == World.Instance.Player?.Serial) itemsToUnequip.Add(dressItem.Serial);
                 }
 
                 foreach (uint serial in itemsToUnequip)
@@ -393,6 +369,8 @@ namespace ClassicUO.Game.Managers
 
             foreach (byte layer in layers)
             {
+                if(_forbiddenLayers.Contains((Layer)layer)) continue;
+
                 Item currentlyEquipped = World.Instance.Player?.FindItemByLayer((Layer)layer);
                 if (currentlyEquipped != null && !config.Contains(currentlyEquipped.Serial))
                     MoveItemQueue.Instance.Enqueue(currentlyEquipped, undressBag);
@@ -408,6 +386,27 @@ namespace ClassicUO.Game.Managers
                 uint undressBag = GetUndressBag(config);
                 MoveItemQueue.Instance.Enqueue(item, undressBag);
             }
+        }
+
+        public void UndressAll(bool kr)
+        {
+            uint undressBag = World.Instance.Player.Backpack;
+            List<Layer> toUnequip = new();
+
+            foreach (byte layer in Enum.GetValues<Layer>())
+            {
+                if(_forbiddenLayers.Contains((Layer)layer)) continue;
+
+                Item currentlyEquipped = World.Instance.Player?.FindItemByLayer((Layer)layer);
+                if (currentlyEquipped == null) continue;
+
+                if(!kr)
+                    MoveItemQueue.Instance.Enqueue(currentlyEquipped, undressBag);
+                else
+                    toUnequip.Add((Layer)layer);
+            }
+
+            if (kr) AsyncNetClient.Socket.Send_UnequipMacroKR(toUnequip.ToArray().AsSpan());
         }
 
         public void CreateDressMacro(string configName)

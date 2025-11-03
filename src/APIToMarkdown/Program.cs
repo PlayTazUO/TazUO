@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 public static class GenDoc
 {
     private static bool isMainAPI = false;
+
     public static Dictionary<string, Tuple<StringBuilder, StringBuilder>> GenerateMarkdown(string filePath)
     {
         Dictionary<string, Tuple<StringBuilder, StringBuilder>> classesDict = new();
@@ -85,6 +86,7 @@ public static class GenDoc
             {
                 sb.AppendLine($"description: {classDeclaration.Identifier.Text} class documentation");
             }
+
             sb.AppendLine("---");
             sb.AppendLine();
         }
@@ -143,6 +145,7 @@ public static class GenDoc
         {
             sb.AppendLine("*No properties found.*");
         }
+
         sb.AppendLine();
     }
 
@@ -193,6 +196,7 @@ public static class GenDoc
         {
             sb.AppendLine("*No fields found.*");
         }
+
         sb.AppendLine();
     }
 
@@ -237,8 +241,10 @@ public static class GenDoc
                         if (byte.TryParse(member.EqualsValue?.Value.ToString(), out last))
                             value = last;
                     }
+
                     python.AppendLine($"{pySpace}    {member.Identifier.Text} = {value}");
                 }
+
                 sb.AppendLine();
             }
         }
@@ -246,6 +252,7 @@ public static class GenDoc
         {
             sb.AppendLine("*No enums found.*");
         }
+
         python.AppendLine();
         sb.AppendLine();
     }
@@ -284,11 +291,11 @@ public static class GenDoc
                 string pySpace = isMainAPI ? string.Empty : "    ";
                 string pyReturn = MapCSharpTypeToPython(method.ReturnType.ToString());
 
-                if (pyReturn == classDeclaration.Identifier.Text)
+                if (pyReturn != "None")
                     pyReturn = $"\"{pyReturn}\"";
 
                 python.AppendLine($"{pySpace}def {method.Identifier.Text}({GetPythonParameters(method.ParameterList.Parameters, !isMainAPI)})"
-                 + $" -> {pyReturn}:");
+                                  + $" -> {pyReturn}:");
                 if (!string.IsNullOrWhiteSpace(methodSummary))
                 {
                     // Indent and escape triple quotes in summary if present
@@ -298,6 +305,7 @@ public static class GenDoc
                     python.AppendLine(indentedDoc);
                     python.AppendLine($"{pySpace}    \"\"\"");
                 }
+
                 python.AppendLine($"{pySpace}    pass");
                 python.AppendLine();
             }
@@ -331,11 +339,11 @@ public static class GenDoc
                 // 3. Split by space, remove empty results, join with single space
                 //string cleanedText = string.Join(" ", rawText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
                 string cleanedDocumentation = Regex.Replace(
-                        rawText,
-                        @"^\s*(///.*)$",  // The pattern to find
-                        "$1",             // The replacement string (content of group 1)
-                        RegexOptions.Multiline // Treat ^ and $ as start/end of LINE
-                    );
+                    rawText,
+                    @"^\s*(///.*)$", // The pattern to find
+                    "$1", // The replacement string (content of group 1)
+                    RegexOptions.Multiline // Treat ^ and $ as start/end of LINE
+                );
 
                 return cleanedDocumentation.Replace("///", "");
             }
@@ -354,6 +362,7 @@ public static class GenDoc
         {
             sb.AppendLine("**Return Type:** `void` *(Does not return anything)*");
         }
+
         sb.AppendLine();
     }
 
@@ -389,13 +398,13 @@ public static class GenDoc
                 .OfType<XmlElementSyntax>()
                 .FirstOrDefault(e => e.StartTag.Name.LocalName.Text == "param" &&
                                      e.StartTag.Attributes.OfType<XmlNameAttributeSyntax>()
-                                     .Any(a => a.Identifier.Identifier.Text == paramName));
+                                         .Any(a => a.Identifier.Identifier.Text == paramName));
 
             if (paramElement != null)
             {
                 string r = string.Join(" ", paramElement.Content.Select(c => c.ToString().Trim()));
                 r = r.Replace("///", "").Trim()
-                  .Replace("\n", "  \n");
+                    .Replace("\n", "  \n");
                 return r;
             }
         }
@@ -426,17 +435,21 @@ public static class GenDoc
 
         var sb = new StringBuilder();
 
-        if(inClass)
+        if (inClass)
             sb.Append("self, ");
 
         foreach (ParameterSyntax param in parameters)
         {
             string pythonType = MapCSharpTypeToPython(param.Type!.ToString());
 
+            if (pythonType != "None")
+                    pythonType = $"\"{pythonType}\"";
+
             string defaultValue = param.Default != null ? $" = {MapDefaultToPython(param.Default.ToString())}" : string.Empty;
 
             sb.Append($"{param.Identifier.Text}: {pythonType}{defaultValue}, ");
         }
+
         sb.Remove(sb.Length - 2, 2);
 
         return sb.ToString();
@@ -483,14 +496,7 @@ public static class GenDoc
 
         // 2. Handle common generic collection types (List<T>, IEnumerable<T>, etc.)
         // This uses basic string parsing; more robust parsing might be needed for complex cases.
-        string[] collectionPrefixes = {
-            "List<", "IList<", "IEnumerable<", "ICollection<", "Collection<",
-            "System.Collections.Generic.List<",
-            "System.Collections.Generic.IList<",
-            "System.Collections.Generic.IEnumerable<",
-            "System.Collections.Generic.ICollection<",
-            "System.Collections.ObjectModel.Collection<"
-        };
+        string[] collectionPrefixes = { "List<", "IList<", "IEnumerable<", "ICollection<", "Collection<", "System.Collections.Generic.List<", "System.Collections.Generic.IList<", "System.Collections.Generic.IEnumerable<", "System.Collections.Generic.ICollection<", "System.Collections.ObjectModel.Collection<" };
 
         // Check if the type starts with one of the prefixes and ends with ">"
         string? matchedPrefix = collectionPrefixes.FirstOrDefault(prefix => csharpType.StartsWith(prefix));
@@ -498,7 +504,7 @@ public static class GenDoc
         {
             // Extract the element type T from Collection<T>
             int openBracketIndex = matchedPrefix.Length - 1; // Index of '<'
-            int closeBracketIndex = csharpType.Length - 1;   // Index of '>'
+            int closeBracketIndex = csharpType.Length - 1; // Index of '>'
 
             if (closeBracketIndex > openBracketIndex)
             {
@@ -531,6 +537,7 @@ public static class GenDoc
                     underlyingType = "object"; // Fallback
                 }
             }
+
             string pythonUnderlyingType = MapCSharpTypeToPython(underlyingType);
             // Use Python 3.10+ Union syntax: T | None
             return $"{pythonUnderlyingType} | None";
@@ -580,6 +587,20 @@ public static class GenDoc
             "PyScrollArea" => "PyScrollArea",
             "PythonList" => "List",
             "PyPlayer" => "PyPlayer",
+            "PyGumps" => "PyGumps",
+            "PyLabel" => "PyLabel",
+            "PyRadioButton" => "PyRadioButton",
+            "PyNiceButton" => "PyNiceButton",
+            "PyButton" => "PyButton",
+            "PyResizableStaticPic" => "PyResizableStaticPic",
+            "PyAlphaBlendControl" => "PyAlphaBlendControl",
+            "PyTTFTextInputField" => "PyTTFTextInputField",
+            "PyTextBox" => "PyTextBox",
+            "PySimpleProgressBar" => "PySimpleProgressBar",
+            "PyGumpPic" => "PyGumpPic",
+            "PyNineSliceGump" => "PyNineSliceGump",
+            "PyCheckbox" => "PyCheckbox",
+            "PyEvents" => "PyEvents",
 
             // Fallback for unknown types
             _ => noMatch

@@ -204,7 +204,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     {
                         Item root = World.Items.Get(data.item.RootContainer);
                         if (root != null && root.IsCorpse)
+                        {
                             AutoLootManager.Instance.LootItem(data.item);
+                            data.item.ShouldAutoLoot = true;
+                        }
                     }
                 }
             }
@@ -254,6 +257,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 item.MatchesHighlightData = false;
                 item.HighlightName = null;
                 item.HighlightColor = Color.Transparent;
+                item.ShouldAutoLoot = false;
 
                 ProcessItemOpl(world, kvp.Key);
             }

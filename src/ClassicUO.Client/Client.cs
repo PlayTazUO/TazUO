@@ -201,7 +201,7 @@ namespace ClassicUO
     {
         public static GameController Game { get; private set; }
         public static SQLSettingsManager Settings { get; private set; }
-
+        public static bool UnitTestingActive;
 
         public static void Run(IPluginHost pluginHost)
         {

@@ -53,10 +53,13 @@ namespace ClassicUO.Game.GameObjects
 
             Duration = duration > 0 ? Time.Ticks + duration : -1;
 
-            ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
-            IsPartialHue =  data.IsPartialHue;
-            IsTranslucent =  data.IsTranslucent;
-            IsLight =   data.IsLight;
+            if(!Client.UnitTestingActive)
+            {
+                ref StaticTiles data = ref Client.Game.UO.FileManager.TileData.StaticData[Graphic];
+                IsPartialHue = data.IsPartialHue;
+                IsTranslucent = data.IsTranslucent;
+                IsLight = data.IsLight;
+            }
         }
 
         public bool IsMoving => Target != null || TargetX != 0 && TargetY != 0;

@@ -242,16 +242,11 @@ namespace ClassicUO.Network
 
         public int GetServerIndexByName(string name)
         {
-            if (!string.IsNullOrWhiteSpace(name) && Servers != null)
-            {
-                for (int i = 0; i < Servers.Length; i++)
-                {
-                    if (Servers[i].Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return i;
-                    }
-                }
-            }
+            if (string.IsNullOrWhiteSpace(name) || Servers == null) return -1;
+
+            for (int i = 0; i < Servers.Length; i++)
+                if (Servers[i].Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                    return i;
 
             return -1;
         }

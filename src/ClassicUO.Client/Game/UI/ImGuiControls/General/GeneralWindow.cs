@@ -14,6 +14,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private bool _autoOpenOwnCorpse;
         private ushort _turnDelay;
         private float _imguiWindowAlpha, _lastImguiWindowAlpha;
+        private int _currentThemeIndex;
+        private string[] _themeNames;
         private GeneralWindow() : base("General Tab")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -23,6 +25,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
             _autoOpenOwnCorpse = _profile.AutoOpenOwnCorpse;
             _turnDelay = _profile.TurnDelay;
             _imguiWindowAlpha = _lastImguiWindowAlpha = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_ALPHA, 1.0f);
+
+            // Initialize theme selector
+            _themeNames = ImGuiTheme.GetThemes();
+            string currentTheme = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_THEME, "Default");
+            _currentThemeIndex = Array.IndexOf(_themeNames, currentTheme);
+            if (_currentThemeIndex < 0) _currentThemeIndex = 0;
         }
 
         public override void DrawContent()
@@ -89,7 +97,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // Group: Visual Config
             ImGui.BeginGroup();
             ImGui.AlignTextToFramePadding();
-            ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Visual Config");
+            ImGui.TextColored(ImGuiTheme.Current.BaseContent, "Visual Config");
 
             ImGui.SetNextItemWidth(125);
             if (ImGui.SliderFloat("Assistant Alpha", ref _imguiWindowAlpha, 0.2f, 1.0f, "%.2f"))
@@ -103,6 +111,18 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 }
             }
             ImGuiComponents.Tooltip("Adjust the background transparency of all ImGui windows.");
+
+            ImGui.SetNextItemWidth(125);
+            if (ImGui.Combo("Theme", ref _currentThemeIndex, _themeNames, _themeNames.Length))
+            {
+                string selectedTheme = _themeNames[_currentThemeIndex];
+                if (ImGuiTheme.SetTheme(selectedTheme))
+                {
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.IMGUI_THEME, selectedTheme);
+                    ImGuiManager.UpdateTheme(_imguiWindowAlpha);
+                }
+            }
+            ImGuiComponents.Tooltip("Select the color theme for ImGui windows.");
 
             if (ImGui.Checkbox("Highlight game objects", ref _highlightObjects))
             {
@@ -128,7 +148,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // Group: Delay Config
             ImGui.BeginGroup();
             ImGui.AlignTextToFramePadding();
-            ImGui.TextColored(ImGuiTheme.Colors.BaseContent, "Delay Config");
+            ImGui.TextColored(ImGuiTheme.Current.BaseContent, "Delay Config");
 
             int tempTurnDelay = _turnDelay;
 
@@ -170,11 +190,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text("FPS: " + CUOEnviroment.CurrentRefreshRate);
             ImGui.Spacing();
             ImGui.Text(_lastObjectString);
-            if(ImGui.IsItemClicked())
-            {
-                SDL3.SDL.SDL_SetClipboardText($"0x{_lastObject:X8}");
-                GameActions.Print("Copied last object to clipboard.", 62);
-            }
+            ClipboardOnClick(_lastObjectString);
             ImGui.Spacing();
             ImGui.Text(_version);
         }

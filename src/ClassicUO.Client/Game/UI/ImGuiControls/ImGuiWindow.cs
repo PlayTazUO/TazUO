@@ -100,6 +100,15 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.SetTooltip(tooltip);
         }
 
+        protected void ClipboardOnClick(string value)
+        {
+            if(ImGui.IsItemClicked())
+            {
+                SDL3.SDL.SDL_SetClipboardText(value);
+                GameActions.Print($"Copied [{value}] to clipboard.", 62);
+            }
+        }
+
         private Dictionary<ushort, ArtPointerStruct> _texturePointerCache = new();
 
         protected bool DrawArt(ushort graphic, Vector2 size, bool useSmallerIfGfxSmaller = true)

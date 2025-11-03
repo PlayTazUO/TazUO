@@ -4,6 +4,13 @@ description: PyBaseControl class documentation
 ---
 
 ## Properties
+### `CanMove`
+
+**Type:** `bool`
+
+ Weather this control/gump can be moved by dragging this control
+
+
 ### `IsVisible`
 
 **Type:** `bool`

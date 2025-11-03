@@ -23,6 +23,7 @@ using System.Net.Sockets;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
+using ImGuiNET;
 
 namespace ClassicUO.Game.Scenes
 {
@@ -1469,40 +1470,44 @@ namespace ClassicUO.Game.Scenes
 
         public void DrawSelection(UltimaBatcher2D batcher)
         {
-            if (_isSelectionActive)
+            if (!_isSelectionActive) return;
+
+            if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse)
             {
-                var selectionHue = new Vector3();
-                selectionHue.Z = 0.7f;
-
-                int minX = Math.Min(_selectionStart.X, Mouse.Position.X);
-                int maxX = Math.Max(_selectionStart.X, Mouse.Position.X);
-                int minY = Math.Min(_selectionStart.Y, Mouse.Position.Y);
-                int maxY = Math.Max(_selectionStart.Y, Mouse.Position.Y);
-
-                var selectionRect = new Rectangle(
-                    minX - Camera.Bounds.X,
-                    minY - Camera.Bounds.Y,
-                    maxX - minX,
-                    maxY - minY
-                );
-
-                batcher.Draw(
-                    SolidColorTextureCache.GetTexture(Color.Black),
-                    selectionRect,
-                    selectionHue
-                );
-
-                selectionHue.Z = 0.3f;
-
-                batcher.DrawRectangle(
-                    SolidColorTextureCache.GetTexture(Color.DeepSkyBlue),
-                    selectionRect.X,
-                    selectionRect.Y,
-                    selectionRect.Width,
-                    selectionRect.Height,
-                    selectionHue
-                );
+                _isSelectionActive = false;
+                return;
             }
+
+            var selectionHue = new Vector3 { Z = 0.7f };
+
+            int minX = Math.Min(_selectionStart.X, Mouse.Position.X);
+            int maxX = Math.Max(_selectionStart.X, Mouse.Position.X);
+            int minY = Math.Min(_selectionStart.Y, Mouse.Position.Y);
+            int maxY = Math.Max(_selectionStart.Y, Mouse.Position.Y);
+
+            var selectionRect = new Rectangle(
+                minX - Camera.Bounds.X,
+                minY - Camera.Bounds.Y,
+                maxX - minX,
+                maxY - minY
+            );
+
+            batcher.Draw(
+                SolidColorTextureCache.GetTexture(Color.Black),
+                selectionRect,
+                selectionHue
+            );
+
+            selectionHue.Z = 0.3f;
+
+            batcher.DrawRectangle(
+                SolidColorTextureCache.GetTexture(Color.DeepSkyBlue),
+                selectionRect.X,
+                selectionRect.Y,
+                selectionRect.Width,
+                selectionRect.Height,
+                selectionHue
+            );
         }
 
         private void EnsureRenderTargets(GraphicsDevice gd)

@@ -10,11 +10,9 @@ namespace ClassicUO.UnitTests.Game.SerialHelper
         [InlineData("1")]
         [InlineData("0x1F")]
         [InlineData("-23")]
-        public void Parse_Should_Return_Legal_Number(string input)
-        {
+        public void Parse_Should_Return_Legal_Number(string input) =>
             ClassicUO.Game.SerialHelper.Parse(input)
                 .Should().BePositive();
-        }
 
         [Theory]
         [InlineData("0XF")]

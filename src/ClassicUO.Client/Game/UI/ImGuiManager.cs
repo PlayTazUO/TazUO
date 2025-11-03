@@ -97,6 +97,10 @@ namespace ClassicUO.Game.UI
             style.ItemSpacing = new System.Numerics.Vector2(8, 6);
             style.TabBorderSize = 1.0f;
 
+            // Load saved theme
+            string savedTheme = Client.Settings?.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_THEME, "Default") ?? "Default";
+            ImGuiTheme.SetTheme(savedTheme);
+
             float alpha = Client.Settings?.Get(SettingsScope.Global, "imgui_window_alpha", 1.0f) ?? 1.0f;
             ApplyThemeColors(alpha);
         }
@@ -107,77 +111,77 @@ namespace ClassicUO.Game.UI
             RangeAccessor<System.Numerics.Vector4> colors = ImGui.GetStyle().Colors;
 
             // Primary background - apply alpha
-            System.Numerics.Vector4 windowBg = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 windowBg = ImGuiTheme.Current.Base100;
             windowBg.W = alpha;
             colors[(int)ImGuiCol.WindowBg] = windowBg;
 
-            colors[(int)ImGuiCol.MenuBarBg] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.MenuBarBg] = ImGuiTheme.Current.Primary;
 
-            System.Numerics.Vector4 popupBg = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 popupBg = ImGuiTheme.Current.Base100;
             popupBg.W = alpha;
             colors[(int)ImGuiCol.PopupBg] = popupBg;
 
             // Headers - apply alpha to backgrounds
-            System.Numerics.Vector4 header = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 header = ImGuiTheme.Current.Base100;
             header.W = alpha;
             colors[(int)ImGuiCol.Header] = header;
 
-            System.Numerics.Vector4 headerHovered = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 headerHovered = ImGuiTheme.Current.Base100;
             headerHovered.W = alpha;
             colors[(int)ImGuiCol.HeaderHovered] = headerHovered;
 
-            colors[(int)ImGuiCol.HeaderActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.HeaderActive] = ImGuiTheme.Current.Primary;
 
             // Buttons
-            colors[(int)ImGuiCol.Button] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.ButtonHovered] = ImGuiTheme.Colors.Base200;
-            colors[(int)ImGuiCol.ButtonActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.Button] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.ButtonHovered] = ImGuiTheme.Current.Base200;
+            colors[(int)ImGuiCol.ButtonActive] = ImGuiTheme.Current.Primary;
 
             // Frame BG
-            colors[(int)ImGuiCol.FrameBg] = ImGuiTheme.Colors.Base200;
-            colors[(int)ImGuiCol.FrameBgHovered] = ImGuiTheme.Colors.Base300;
-            colors[(int)ImGuiCol.FrameBgActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.FrameBg] = ImGuiTheme.Current.Base200;
+            colors[(int)ImGuiCol.FrameBgHovered] = ImGuiTheme.Current.Base300;
+            colors[(int)ImGuiCol.FrameBgActive] = ImGuiTheme.Current.Primary;
 
             // Tabs - apply alpha to backgrounds
-            System.Numerics.Vector4 tab = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 tab = ImGuiTheme.Current.Base100;
             tab.W = alpha;
             colors[(int)ImGuiCol.Tab] = tab;
 
-            colors[(int)ImGuiCol.TabHovered] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.TabSelected] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.TabHovered] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.TabSelected] = ImGuiTheme.Current.Primary;
 
             // Title - apply alpha to backgrounds
-            System.Numerics.Vector4 titleBg = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 titleBg = ImGuiTheme.Current.Base100;
             titleBg.W = alpha;
             colors[(int)ImGuiCol.TitleBg] = titleBg;
 
-            colors[(int)ImGuiCol.TitleBgActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.TitleBgActive] = ImGuiTheme.Current.Primary;
 
-            System.Numerics.Vector4 titleBgCollapsed = ImGuiTheme.Colors.Base100;
+            System.Numerics.Vector4 titleBgCollapsed = ImGuiTheme.Current.Base100;
             titleBgCollapsed.W = alpha;
             colors[(int)ImGuiCol.TitleBgCollapsed] = titleBgCollapsed;
 
             // Borders
-            colors[(int)ImGuiCol.Border] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.BorderShadow] = ImGuiTheme.Colors.BorderShadow;
+            colors[(int)ImGuiCol.Border] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.BorderShadow] = ImGuiTheme.Current.BorderShadow;
 
             // Text
-            colors[(int)ImGuiCol.Text] = ImGuiTheme.Colors.BaseContent;
-            colors[(int)ImGuiCol.TextDisabled] = ImGuiTheme.Colors.Base300;
+            colors[(int)ImGuiCol.Text] = ImGuiTheme.Current.BaseContent;
+            colors[(int)ImGuiCol.TextDisabled] = ImGuiTheme.Current.Base300;
 
             // Highlights
-            colors[(int)ImGuiCol.CheckMark] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.SliderGrab] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.SliderGrabActive] = ImGuiTheme.Colors.Base100;
-            colors[(int)ImGuiCol.ResizeGrip] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.ResizeGripHovered] = ImGuiTheme.Colors.Primary;
-            colors[(int)ImGuiCol.ResizeGripActive] = ImGuiTheme.Colors.Primary;
+            colors[(int)ImGuiCol.CheckMark] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.SliderGrab] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.SliderGrabActive] = ImGuiTheme.Current.Base100;
+            colors[(int)ImGuiCol.ResizeGrip] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.ResizeGripHovered] = ImGuiTheme.Current.Primary;
+            colors[(int)ImGuiCol.ResizeGripActive] = ImGuiTheme.Current.Primary;
 
             // Scrollbar
-            colors[(int)ImGuiCol.ScrollbarBg] = ImGuiTheme.Colors.ScrollbarBg;
-            colors[(int)ImGuiCol.ScrollbarGrab] = ImGuiTheme.Colors.ScrollbarGrab;
-            colors[(int)ImGuiCol.ScrollbarGrabHovered] = ImGuiTheme.Colors.ScrollbarGrabHovered;
-            colors[(int)ImGuiCol.ScrollbarGrabActive] = ImGuiTheme.Colors.ScrollbarGrabActive;
+            colors[(int)ImGuiCol.ScrollbarBg] = ImGuiTheme.Current.ScrollbarBg;
+            colors[(int)ImGuiCol.ScrollbarGrab] = ImGuiTheme.Current.ScrollbarGrab;
+            colors[(int)ImGuiCol.ScrollbarGrabHovered] = ImGuiTheme.Current.ScrollbarGrabHovered;
+            colors[(int)ImGuiCol.ScrollbarGrabActive] = ImGuiTheme.Current.ScrollbarGrabActive;
         }
 
         public static void Initialize(Microsoft.Xna.Framework.Game game)

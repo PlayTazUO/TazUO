@@ -8,6 +8,7 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Effect
         [Fact]
         public void Create_EffectManager_Add_Single_Effect_Then_Clear_Contents()
         {
+            Client.UnitTestingActive = true;
             var world = new World();
             var em = new ClassicUO.Game.Managers.EffectManager(world);
 
@@ -26,6 +27,7 @@ namespace ClassicUO.UnitTests.Game.GameObjects.Effect
         [Fact]
         public void Create_EffectManager_Add_Multiple_Effects_Then_Clear_Contents()
         {
+            Client.UnitTestingActive = true;
             var world = new World();
             var em = new ClassicUO.Game.Managers.EffectManager(world);
 

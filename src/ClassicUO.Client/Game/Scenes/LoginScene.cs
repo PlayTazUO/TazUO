@@ -370,7 +370,7 @@ namespace ClassicUO.Game.Scenes
                 index = Settings.GlobalSettings.LastServerNum;
             }
 
-            if (Servers == null || index < 0 || index > Servers.Length)
+            if (Servers == null || index < 0 || index >= Servers.Length)
             {
                 index = 0;
             }
