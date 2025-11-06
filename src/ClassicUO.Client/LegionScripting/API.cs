@@ -401,7 +401,7 @@ namespace ClassicUO.LegionScripting
             while (gumps.TryTake(out Gump g))
             {
                 if (g is { IsDisposed: false })
-                    MainThreadQueue.EnqueueAction(() => g?.Dispose());
+                    MainThreadQueue.EnqueueAction(() => DisposeGump(g));
 
                 c++;
 
@@ -2277,10 +2277,26 @@ namespace ClassicUO.LegionScripting
                 if (World.Player == null || ID == 0) //0 Prevents weird behaviour closing system chat gump
                     return;
 
-                uint gump = ID != uint.MaxValue ? ID : World.Player.LastGumpID;
-                UIManager.GetGumpServer(gump)?.Dispose();
+                uint gumpId = ID != uint.MaxValue ? ID : World.Player.LastGumpID;
+                Gump gump = UIManager.GetGumpServer(gumpId);
+                DisposeGump(gump);
             }
         );
+
+        private void DisposeGump(Gump gump)
+        {
+            if (gump == null)
+            {
+                return;
+            }
+
+            if (gump.CanCloseWithRightClick)
+            {
+                gump.InvokeMouseCloseGumpWithRClick();
+                return;
+            }
+            gump.Dispose();
+        }
 
         /// <summary>
         /// Configure how the next gump should be handled.
