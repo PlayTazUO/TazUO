@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -59,7 +60,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.SetHighlightColor(value);
         }
 
-        public List<GridHighlightProperty> Properties => _entry.Properties;
+        public List<GridHighlightProperty> Properties
+        {
+            get => _entry.Properties;
+            set
+            {
+                _entry.Properties = value;
+                InvalidateCache();
+            }
+        }
 
         public bool AcceptExtraProperties
         {
@@ -79,10 +88,26 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => _entry.MaximumProperty = value;
         }
 
+        public int MinimumMatchingProperty
+        {
+            get => _entry.MinimumMatchingProperty;
+            set => _entry.MinimumMatchingProperty = value;
+        }
+
+        public int MaximumMatchingProperty
+        {
+            get => _entry.MaximumMatchingProperty;
+            set => _entry.MaximumMatchingProperty = value;
+        }
+
         public List<string> ExcludeNegatives
         {
             get => _entry.ExcludeNegatives;
-            set => _entry.ExcludeNegatives = value;
+            set
+            {
+                _entry.ExcludeNegatives = value;
+                InvalidateCache();
+            }
         }
 
         public bool Overweight
@@ -94,7 +119,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public List<string> RequiredRarities
         {
             get => _entry.RequiredRarities;
-            set => _entry.RequiredRarities = value;
+            set
+            {
+                _entry.RequiredRarities = value;
+                InvalidateCache();
+            }
         }
 
         public GridHighlightSlot EquipmentSlots
@@ -108,6 +137,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             get => _entry.LootOnMatch;
             set => _entry.LootOnMatch = value;
         }
+
+        private List<string> _cachedNormalizedRulesExcludeNegatives;
+        private HashSet<string> _cachedNormalizedRulesRequiredRarities;
+        private HashSet<string> _cachedNormalizedAllRarities;
+        private HashSet<string> _cachedNormalizedAllProperties;
+        private HashSet<string> _cachedNormalizedAllNegatives;
+        private Dictionary<string, (int MinValue, bool IsOptional)> _cachedNormalizedRulesProperties;
+        private bool _cacheValid = false;
 
         private GridHighlightData(GridHighlightSetupEntry entry)
         {
@@ -291,132 +328,228 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return false;
         }
 
+        private void InvalidateCache() => _cacheValid = false;
+
+        private void EnsureCache()
+        {
+            if (_cacheValid) return;
+
+            // All
+            _cachedNormalizedAllRarities = new HashSet<string>(
+                GridHighlightRules.RarityProperties.Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+            _cachedNormalizedAllProperties = new HashSet<string>(
+                GridHighlightRules.Properties.Concat(GridHighlightRules.SlayerProperties).Concat(GridHighlightRules.SuperSlayerProperties).Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+            _cachedNormalizedAllNegatives = new HashSet<string>(
+                GridHighlightRules.NegativeProperties.Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+
+            // Rules
+            _cachedNormalizedRulesExcludeNegatives = ExcludeNegatives.Select(Normalize).ToList() ?? new List<string>();
+            _cachedNormalizedRulesRequiredRarities = new HashSet<string>(
+                RequiredRarities.Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+            _cachedNormalizedRulesProperties = Properties
+                .GroupBy(p => Normalize(p.Name)) // dedupe if config had repeats
+                .ToDictionary(g => g.Key,
+                              g =>
+                              {
+                                  // if duplicates exist, keep the strictest (highest MinValue) and required if any non-optional
+                                  int minValue = g.Max(x => x.MinValue);
+                                  bool isOptional = g.All(x => x.IsOptional); // any required makes it required
+                                  return (minValue, isOptional);
+                              },
+                              StringComparer.OrdinalIgnoreCase) ?? new();
+
+            _cacheValid = true;
+        }
+
         private bool IsMatchFromProperties(ItemPropertiesData itemData)
         {
-            if (!IsItemNameMatch(itemData.item.Name))
+            EnsureCache();
+
+            if (!IsItemNameMatch(itemData.item.Name) || !MatchesSlot(itemData.item.ItemData.Layer))
                 return false;
 
-            if (!MatchesSlot(itemData.item.ItemData.Layer))
-                return false;
+            // Rules
+            Dictionary<string, (int MinValue, bool IsOptional)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
+            List<string> normalizedRulesExcludeNegatives = _cachedNormalizedRulesExcludeNegatives;
+            HashSet<string> normalizedRulesRequiredRarities = _cachedNormalizedRulesRequiredRarities;
 
-            if (Overweight && itemData.singlePropertyData.Any(prop =>
-                    Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
+            // All
+            HashSet<string> normalizedAllRarities = _cachedNormalizedAllRarities;
+            HashSet<string> normalizedAllProperties = _cachedNormalizedAllProperties;
+
+
+            // --- Preprocess item data once (normalize both Name and OriginalString)
+            var normalizedItemProperties = itemData.singlePropertyData
+                .GroupBy(p => Normalize(p.Name))
+                .ToDictionary(
+                    g => g.Key,
+                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue))
+                );
+
+            // --- Combined overweight, exclusion, and rarity scan
+            bool hasRequiredRarity = normalizedRulesRequiredRarities.Count == 0;
+            foreach (KeyValuePair<string, (string Original, double Value)> normalizedItemProperty in normalizedItemProperties)
             {
-                return false;
+                string propertyName = normalizedItemProperty.Key;
+                string original = normalizedItemProperty.Value.Original;
+
+                // overweight
+                if (Overweight && original.Contains("weight: 50 stones"))
+                    return false;
+
+                // exclusion check (hash-based lookup)
+                if (normalizedRulesExcludeNegatives.Any(pattern => propertyName.Contains(pattern) || original.Contains(pattern)))
+                    return false;
+
+                // rarity check
+                if (!hasRequiredRarity && normalizedAllRarities.Contains(propertyName) && normalizedRulesRequiredRarities.Contains(propertyName))
+                    hasRequiredRarity = true;
             }
 
-            foreach (string pattern in ExcludeNegatives.Select(Normalize))
+            if (!hasRequiredRarity)
+                return false;
+
+            // --- Property matching
+            var matchedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var matchedRequiredProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> normalizedRulesProperty in normalizedRulesProperties)
             {
-                if (itemData.singlePropertyData.Any(prop =>
-                        Normalize(prop.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        Normalize(prop.OriginalString).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0))
+                string normalizedPropertyName = normalizedRulesProperty.Key;
+                int propertyMinValue = normalizedRulesProperty.Value.MinValue;
+                bool isPropertyOptional = normalizedRulesProperty.Value.IsOptional;
+
+                if (!normalizedItemProperties.TryGetValue(normalizedPropertyName, out (string Original, double Value) normalizedItemProperty))
+                    continue;
+
+                if (propertyMinValue == -1 || normalizedItemProperty.Value >= propertyMinValue)
                 {
-                    return false;
+                    matchedProperties.Add(normalizedPropertyName);
+                    if (!isPropertyOptional)
+                        matchedRequiredProperties.Add(normalizedPropertyName);
                 }
             }
 
-            if (RequiredRarities.Count > 0)
-            {
-                bool hasRequired = itemData.singlePropertyData.Any(prop =>
-                {
-                    return GridHighlightRules.RarityProperties.Any(rule =>
-                        Normalize(rule).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase)) &&
-                    RequiredRarities.Any(r =>
-                        Normalize(r).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase));
-                });
+            // --- Validate required properties
+            if (normalizedRulesProperties.Any(p => !p.Value.IsOptional && !matchedRequiredProperties.Contains(p.Key)))
+                return false;
 
-                if (!hasRequired)
-                    return false;
-            }
+            // --- Included property count
+            var includedProps = new HashSet<string>(normalizedItemProperties.Keys.Intersect(normalizedAllProperties), StringComparer.OrdinalIgnoreCase);
 
-            int matchingPropertiesCount = 0;
+            int matchingCount = matchedProperties.Count;
+            int includedCount = includedProps.Count;
 
-            foreach (GridHighlightProperty prop in Properties)
-            {
-                string normalizedPropName = Normalize(prop.Name);
-                bool matched = itemData.singlePropertyData.Any(p =>
-                    (Normalize(p.Name).IndexOf(normalizedPropName, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                     Normalize(p.OriginalString).IndexOf(normalizedPropName, StringComparison.OrdinalIgnoreCase) >= 0) &&
-                    (prop.MinValue == -1 || p.FirstValue >= prop.MinValue));
+            if (!IsMatchingCount(matchingCount, MinimumMatchingProperty, MaximumMatchingProperty))
+                return false;
 
-                if (matched)
-                    matchingPropertiesCount++;
+            if (!IsMatchingCount(includedCount, MinimumProperty, MaximumProperty))
+                return false;
 
-                if (!matched && !prop.IsOptional)
-                    return false;
-            }
-
-            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount);
-            return isMatchingPropertyCount;
+            return true;
         }
 
         private bool IsMatchFromItemPropertiesData(ItemPropertiesData itemData)
         {
+            EnsureCache();
+
             if (!IsItemNameMatch(itemData.item.Name))
                 return false;
 
             if (!MatchesSlot(itemData.item.ItemData.Layer))
                 return false;
 
-            List<ItemPropertiesData.SinglePropertyData> props = itemData.singlePropertyData;
+            var normalizedItemLines = itemData.singlePropertyData
+                .GroupBy(p => Normalize(p.Name))
+                .ToDictionary(
+                    g => g.Key,
+                    g => (Original: Normalize(g.First().OriginalString), Value: g.Max(x => x.FirstValue))
+                );
 
-            var itemProperties = props.Where(p =>
-                GridHighlightRules.Properties.Any(rule =>
-                    Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
+            // Rules
+            Dictionary<string, (int MinValue, bool IsOptional)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
+            List<string> normalizedRulesExcludeNegatives = _cachedNormalizedRulesExcludeNegatives;
+            HashSet<string> normalizedRulesRequiredRarities = _cachedNormalizedRulesRequiredRarities;
 
-            var itemNegatives = props.Where(p =>
-                GridHighlightRules.NegativeProperties.Any(rule =>
-                    Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
+            // All
+            HashSet<string> normalizedAllRarities = _cachedNormalizedAllRarities;
+            HashSet<string> normalizedAllProperties = _cachedNormalizedAllProperties;
 
-            var itemRarities = props.Where(p =>
-                GridHighlightRules.RarityProperties.Any(rule =>
-                    Normalize(rule).Equals(Normalize(p.Name), StringComparison.OrdinalIgnoreCase))).ToList();
+
+            var itemNegatives = normalizedItemLines.Where(p =>
+                normalizedRulesExcludeNegatives.Any(rule =>
+                    rule.Equals(p.Key, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            var itemRarities = normalizedItemLines.Where(p =>
+                normalizedRulesRequiredRarities.Any(rule =>
+                    rule.Equals(p.Key, StringComparison.OrdinalIgnoreCase))).ToList();
+
+            var itemProperties = normalizedItemLines.Where(p =>
+                 normalizedAllProperties.Any(rule =>
+                     rule.Equals(p.Key, StringComparison.OrdinalIgnoreCase))).ToList();
 
             if (!itemProperties.Any() && !itemNegatives.Any() && !itemRarities.Any())
                 return false;
 
-            if (Overweight && props.Any(prop =>
-                    Normalize(prop.OriginalString).IndexOf("Weight: 50 Stones", StringComparison.OrdinalIgnoreCase) >= 0))
+            if (Overweight && normalizedItemLines.Any(prop =>
+                    prop.Value.Original.IndexOf("weight: 50 stones", StringComparison.OrdinalIgnoreCase) >= 0))
             {
                 return false;
             }
 
-            foreach (string pattern in ExcludeNegatives.Select(Normalize))
+            foreach (string normalizedRulesExcludeNegative in normalizedRulesExcludeNegatives)
             {
-                if (itemProperties.Any(p => Normalize(p.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    itemNegatives.Any(p => Normalize(p.Name).IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0))
+                if (itemProperties.Any(p => p.Key.IndexOf(normalizedRulesExcludeNegative, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                    itemNegatives.Any(p => p.Key.IndexOf(normalizedRulesExcludeNegative, StringComparison.OrdinalIgnoreCase) >= 0))
                     return false;
             }
 
-            if (RequiredRarities.Count > 0)
+            if (normalizedRulesRequiredRarities.Count > 0)
             {
                 bool hasRequired = itemRarities.Any(r =>
-                    RequiredRarities.Any(req =>
-                        Normalize(r.Name).Equals(Normalize(req), StringComparison.OrdinalIgnoreCase)));
+                    normalizedRulesRequiredRarities.Any(req =>
+                        r.Key.Equals(req, StringComparison.OrdinalIgnoreCase)));
 
                 if (!hasRequired)
                     return false;
             }
 
             int matchingPropertiesCount = 0;
-            int propertiesCount = 0;
 
-            foreach (GridHighlightProperty prop in Properties)
+            var filteredItemLines = normalizedItemLines
+                .Where(p => normalizedAllProperties.Contains(p.Key))
+                .ToList();
+
+            foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
             {
-                propertiesCount++;
-                ItemPropertiesData.SinglePropertyData match = itemProperties.FirstOrDefault(p =>
-                    Normalize(p.Name).Equals(Normalize(prop.Name), StringComparison.OrdinalIgnoreCase));
+                double itemValue = filteredItemLine.Value.Value;
 
-                if ((match == null && !prop.IsOptional) || prop.MinValue != -1 && match.FirstValue < prop.MinValue && !prop.IsOptional)
+                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
+                {
+                    Log.Debug($"normalizedItemProperty: {filteredItemLine.Key}");
                     return false;
-                if ((match == null && prop.IsOptional) || (prop.MinValue != -1 && match.FirstValue < prop.MinValue && prop.IsOptional))
+                }
+
+                int minValue = rule.MinValue;
+                bool isOptional = rule.IsOptional;
+
+                if (minValue != -1 && itemValue < minValue)
+                {
+                    if (!isOptional)
+                        return false;
                     continue;
+                }
 
                 matchingPropertiesCount++;
             }
 
-            bool isMatchingPropertyCount = IsMatchingPropertyCount(matchingPropertiesCount, propertiesCount);
-            return isMatchingPropertyCount;
+            if (!IsMatchingCount(matchingPropertiesCount, MinimumMatchingProperty, MaximumMatchingProperty))
+                return false;
+
+            if (!IsMatchingCount(filteredItemLines.Count, MinimumProperty, MaximumProperty))
+                return false;
+
+            return true;
         }
 
         public static GridHighlightData GetBestMatch(ItemPropertiesData itemData)
@@ -480,15 +613,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return best;
         }
 
-        private bool IsMatchingPropertyCount(int matchingPropertiesCount, int propertiesCount = 0)
+        private bool IsMatchingCount(int count, int minPropertyCount, int maxPropertyCount)
         {
-            int count = propertiesCount > 0 ? (propertiesCount - matchingPropertiesCount) : matchingPropertiesCount;
-
-            if (MinimumProperty > 0 && count < MinimumProperty)
+            if (minPropertyCount > 0 && count < minPropertyCount)
             {
                 return false;
             }
-            if (MaximumProperty > 0 && count > MaximumProperty)
+            if (maxPropertyCount > 0 && count > maxPropertyCount)
             {
                 return false;
             }
