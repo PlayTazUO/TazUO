@@ -536,10 +536,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 double minValue = filteredNotOptionalRule.Value.MinValue;
 
                 KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredNotOptionalRule.Key);
-                if (string.IsNullOrEmpty(filteredItemLine.Key))
-                    return false;
-
-                if (minValue != -1 && filteredItemLine.Value.Value < minValue)
+                if (string.IsNullOrEmpty(filteredItemLine.Key) || (minValue != -1 && filteredItemLine.Value.Value < minValue))
                     return false;
 
                 matchingPropertiesCount++;
@@ -549,10 +546,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredOptionalRule in filteredOptionalRules)
             {
                 double minValue = filteredOptionalRule.Value.MinValue;
-                bool isOptional = filteredOptionalRule.Value.IsOptional;
 
                 KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredOptionalRule.Key);
-                if (string.IsNullOrEmpty(filteredItemLine.Key) || minValue != -1 && filteredItemLine.Value.Value < minValue)
+                if (string.IsNullOrEmpty(filteredItemLine.Key) || (minValue != -1 && filteredItemLine.Value.Value < minValue))
                     continue;
 
                 matchingPropertiesCount++;
