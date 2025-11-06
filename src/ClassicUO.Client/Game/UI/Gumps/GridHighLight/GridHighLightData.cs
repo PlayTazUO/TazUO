@@ -328,7 +328,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return false;
         }
 
-        private void InvalidateCache() => _cacheValid = false;
+        public void InvalidateCache() => _cacheValid = false;
 
         private void EnsureCache()
         {
@@ -434,16 +434,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             if (normalizedRulesProperties.Any(p => !p.Value.IsOptional && !matchedRequiredProperties.Contains(p.Key)))
                 return false;
 
+
+            if (!IsMatchingCount(matchedProperties.Count, MinimumMatchingProperty, MaximumMatchingProperty))
+                return false;
+
             // --- Included property count
             var includedProps = new HashSet<string>(normalizedItemProperties.Keys.Intersect(normalizedAllProperties), StringComparer.OrdinalIgnoreCase);
 
-            int matchingCount = matchedProperties.Count;
-            int includedCount = includedProps.Count;
-
-            if (!IsMatchingCount(matchingCount, MinimumMatchingProperty, MaximumMatchingProperty))
-                return false;
-
-            if (!IsMatchingCount(includedCount, MinimumProperty, MaximumProperty))
+            if (!IsMatchingCount(includedProps.Count, MinimumProperty, MaximumProperty))
                 return false;
 
             return true;
@@ -526,13 +524,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
                 {
-                    Log.Debug($"normalizedItemProperty: {filteredItemLine.Key}");
                     return false;
                 }
 
                 int minValue = rule.MinValue;
                 bool isOptional = rule.IsOptional;
-
                 if (minValue != -1 && itemValue < minValue)
                 {
                     if (!isOptional)

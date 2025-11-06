@@ -185,6 +185,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false });
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }
@@ -268,6 +269,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.ExcludeNegatives.Add("");
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }
@@ -295,6 +297,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.RequiredRarities.Add("");
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }
