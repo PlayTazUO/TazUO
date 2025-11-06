@@ -982,8 +982,8 @@ namespace ClassicUO.Game
             if (playerDistance > 10)
             {
                 // Use long distance pathfinder
-                LongDistancePathfinder.WalkLongDistance(x, y);
-                return true;
+                if (LongDistancePathfinder.WalkLongDistance(x, y))
+                    return true;
             }
 
             CleanupPathfinding();
