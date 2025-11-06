@@ -31,4 +31,15 @@ description: PyTextBox class documentation
 *No enums found.*
 
 ## Methods
-*No methods found.*
+### SetText
+`(text)`
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | ❌ No |  |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+

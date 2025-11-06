@@ -38,7 +38,7 @@ namespace ClassicUO.Utility
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int PercetangeOf(int current, int max)
+        public static int PercentageOf(int current, int max)
         {
             if (current <= 0 || max <= 0)
             {
@@ -49,7 +49,7 @@ namespace ClassicUO.Utility
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int PercetangeOf(int max, int current, int maxValue)
+        public static int PercentageOf(int max, int current, int maxValue)
         {
             if (max > 0)
             {

@@ -1298,6 +1298,11 @@ namespace ClassicUO.Configuration
                     w2.Load(xml);
                     ImGuiManager.AddWindow(w2);
                     break;
+                case "ClassicUO.Game.UI.ImGuiControls.RunningScriptsWindow":
+                    SingletonImGuiWindow<RunningScriptsWindow> w3 = RunningScriptsWindow.GetInstance();
+                    w3.Load(xml);
+                    ImGuiManager.AddWindow(w3);
+                    break;
             }
         }
     }

@@ -41,6 +41,17 @@ public class PyBaseControl(Control control)
     }
 
     /// <summary>
+    /// Check if this control has been disposed(delete/removed/etc)
+    /// </summary>
+    public bool IsDisposed
+    {
+        get
+        {
+            return VerifyIntegrity() && control.IsDisposed;
+        }
+    }
+
+    /// <summary>
     /// Adds a child control to this control. Works with gumps too (gump.Add(control)).
     /// Used in python API
     /// </summary>
@@ -182,6 +193,30 @@ public class PyBaseControl(Control control)
     {
         if (VerifyIntegrity() && control is Gump g)
             MainThreadQueue.EnqueueAction(() => g.CenterYInViewPort());
+    }
+
+    /// <summary>
+    /// Returns the control's Alpha value.
+    /// Used in python API
+    /// </summary>
+    /// <returns>The Alpha value of the control</returns>
+    public float GetAlpha()
+    {
+        if (!VerifyIntegrity())
+            return 0;
+
+        return MainThreadQueue.InvokeOnMainThread(() => control.Alpha);
+    }
+
+    /// <summary>
+    /// Sets the control's Alpha value.
+    /// Used in python API
+    /// </summary>
+    /// <param name="alpha">The new Alpha value</param>
+    public void SetAlpha(float alpha)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(() => control.Alpha = alpha);
     }
 
     /// <summary>

@@ -101,7 +101,22 @@ public static class GenDoc
 
         if (!isMainAPI)
         {
-            python.AppendLine($"class {classDeclaration.Identifier.Text}:");
+            string baseClasses = string.Empty;
+            if (classDeclaration.BaseList != null && classDeclaration.BaseList.Types.Count > 0)
+            {
+                // Extract base class names and map them to Python types
+                var bases = classDeclaration.BaseList.Types
+                    .Select(t => MapCSharpTypeToPython(t.Type.ToString(), t.Type.ToString()))
+                    .Where(b => !string.IsNullOrEmpty(b))
+                    .ToList();
+
+                if (bases.Any())
+                    baseClasses = $"({string.Join(", ", bases)})";
+
+            }
+
+            python.AppendLine($"class {classDeclaration.Identifier.Text}{baseClasses}:");
+            python.AppendLine("   \"\"");
         }
     }
 

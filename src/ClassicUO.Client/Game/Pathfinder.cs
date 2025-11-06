@@ -668,13 +668,14 @@ namespace ClassicUO.Game
             }
         }
 
-        public bool CanWalk(ref Direction direction, ref int x, ref int y, ref sbyte z)
+        public bool CanWalk(ref Direction direction, ref int x, ref int y, ref sbyte z, bool dontChangeXY = false)
         {
             int newX = x;
             int newY = y;
             sbyte newZ = z;
             byte newDirection = (byte)direction;
-            GetNewXY((byte)direction, ref newX, ref newY);
+            if(!dontChangeXY) // if we dont want to change the xy, we can just use the current xy and direction
+                GetNewXY((byte)direction, ref newX, ref newY);
             bool passed = CalculateNewZ(newX, newY, ref newZ, (byte)direction);
 
             if ((sbyte)direction % 2 != 0)
@@ -976,6 +977,14 @@ namespace ClassicUO.Game
             }
 
             EventSink.InvokeOnPathFinding(null, new Vector4(x, y, z, distance));
+
+            int playerDistance = Math.Max(Math.Abs(x - _world.Player.X), Math.Abs(y - _world.Player.Y));
+            if (playerDistance > 10)
+            {
+                // Use long distance pathfinder
+                if (LongDistancePathfinder.WalkLongDistance(x, y))
+                    return true;
+            }
 
             CleanupPathfinding();
             _pointIndex = 0;

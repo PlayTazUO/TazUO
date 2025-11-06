@@ -84,4 +84,11 @@ public class PyTextBox(TextBox textBox) : PyBaseControl(textBox)
             MainThreadQueue.InvokeOnMainThread(() => textBox.MultiLine = value);
         }
     }
+
+    public void SetText(string text)
+    {
+        if (!VerifyIntegrity()) return;
+
+        MainThreadQueue.InvokeOnMainThread(() => textBox.SetText(text));
+    }
 }

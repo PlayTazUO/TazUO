@@ -15,6 +15,13 @@ description: PyBaseControl class documentation
 
 **Type:** `bool`
 
+### `IsDisposed`
+
+**Type:** `bool`
+
+ Check if this control has been disposed(delete/removed/etc)
+
+
 
 *No fields found.*
 
@@ -173,6 +180,32 @@ description: PyBaseControl class documentation
  Centers a GUMP vertically in the viewport. Only works on Gump instances.
  Used in python API
 
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### GetAlpha
+
+ Returns the control's Alpha value.
+ Used in python API
+
+
+**Return Type:** `float`
+
+---
+
+### SetAlpha
+`(alpha)`
+ Sets the control's Alpha value.
+ Used in python API
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `alpha` | `float` | ❌ No | The new Alpha value |
 
 **Return Type:** `void` *(Does not return anything)*
 

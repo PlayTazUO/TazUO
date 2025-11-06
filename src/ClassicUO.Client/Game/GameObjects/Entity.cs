@@ -154,7 +154,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (HitsMax > 0)
             {
-                int perc = MathHelper.PercetangeOf(Hits, HitsMax);
+                int perc = MathHelper.PercentageOf(Hits, HitsMax);
                 perc = perc > 100 ? 100 : perc < 0 ? 0 : perc;
 
                 UpdateHits((byte)perc);

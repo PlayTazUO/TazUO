@@ -1,11 +1,13 @@
 class Buff:
+   ""
     Graphic: int = None
     Text: str = None
     Timer: int = None
     Type = None
     Title: str = None
 
-class PyAlphaBlendControl:
+class PyAlphaBlendControl(PyBaseControl):
+   ""
     Hue: int = None
     Alpha: float = None
     BaseColorR: int = None
@@ -21,8 +23,10 @@ class PyAlphaBlendControl:
         pass
 
 class PyBaseControl:
+   ""
     CanMove: bool = None
     IsVisible: bool = None
+    IsDisposed: bool = None
 
     def Add(self, childControl: "Any") -> None:
         """
@@ -112,6 +116,22 @@ class PyBaseControl:
         """
         pass
 
+    def GetAlpha(self) -> "float":
+        """
+         Returns the control's Alpha value.
+         Used in python API
+        
+        """
+        pass
+
+    def SetAlpha(self, alpha: "float") -> None:
+        """
+         Sets the control's Alpha value.
+         Used in python API
+        
+        """
+        pass
+
     def Clear(self) -> None:
         """
          Clears all child controls from this control.
@@ -127,7 +147,8 @@ class PyBaseControl:
         """
         pass
 
-class PyBaseGump:
+class PyBaseGump(PyBaseControl, IPyGump):
+   ""
     IsDisposed: bool = None
     PacketGumpText: str = None
     CanCloseWithRightClick: bool = None
@@ -160,7 +181,8 @@ class PyBaseGump:
         """
         pass
 
-class PyButton:
+class PyButton(PyBaseControl):
+   ""
     ButtonID: int = None
     IsClicked: bool = None
     ButtonAction: int = None
@@ -175,7 +197,8 @@ class PyButton:
     def HasBeenClicked(self) -> "bool":
         pass
 
-class PyCheckbox:
+class PyCheckbox(PyBaseControl):
+   ""
     IsChecked: bool = None
     Text: str = None
 
@@ -203,7 +226,8 @@ class PyCheckbox:
         """
         pass
 
-class PyControlDropDown:
+class PyControlDropDown(PyBaseControl):
+   ""
 
     def GetSelectedIndex(self) -> "int":
         """
@@ -212,7 +236,8 @@ class PyControlDropDown:
         """
         pass
 
-class PyEntity:
+class PyEntity(PyGameObject):
+   ""
     Name: str = None
     __class__: str = None
     Serial: int = None
@@ -234,6 +259,7 @@ class PyEntity:
         pass
 
 class PyEvents:
+   ""
 
     def OnPlayerHitsChanged(self, callback: "Any") -> None:
         """
@@ -294,6 +320,7 @@ class PyEvents:
         pass
 
 class PyGameObject:
+   ""
     Impassible: bool = None
     X: int = None
     Y: int = None
@@ -334,13 +361,15 @@ class PyGameObject:
         """
         pass
 
-class PyGumpPic:
+class PyGumpPic(PyBaseControl):
+   ""
     Graphic: int = None
     Hue: int = None
     IsPartialHue: bool = None
     ContainsByBounds: bool = None
 
 class PyGumps:
+   ""
 
     def CreateGump(self, acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "PyBaseGump":
         """
@@ -637,7 +666,8 @@ class PyGumps:
         """
         pass
 
-class PyItem:
+class PyItem(PyEntity):
+   ""
     Amount: int = None
     Opened: bool = None
     Container: int = None
@@ -645,10 +675,19 @@ class PyItem:
     RootEntity = None
     __class__: str = None
     IsCorpse: bool = None
+    IsContainer: bool = None
     MatchingHighlightName: str = None
     MatchesHighlight: bool = None
 
+    def GetContainerGump(self) -> "PyBaseControl":
+        """
+         If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
+        
+        """
+        pass
+
 class PyJournalEntry:
+   ""
     Hue: int = None
     Name: str = None
     Text: str = None
@@ -657,14 +696,17 @@ class PyJournalEntry:
     MessageType = None
     Disposed: bool = None
 
-class PyLabel:
+class PyLabel(PyBaseControl):
+   ""
     Text: str = None
     Hue: int = None
 
-class PyLand:
+class PyLand(PyGameObject):
+   ""
     __class__: str = None
 
-class PyMobile:
+class PyMobile(PyEntity):
+   ""
     X: int = None
     Y: int = None
     Z: int = None
@@ -687,10 +729,12 @@ class PyMobile:
     Mount: PyItem = None
     __class__: str = None
 
-class PyMulti:
+class PyMulti(PyGameObject):
+   ""
     __class__: str = None
 
-class PyNiceButton:
+class PyNiceButton(PyBaseControl):
+   ""
     ButtonParameter: int = None
     IsSelectable: bool = None
     IsSelected: bool = None
@@ -720,7 +764,8 @@ class PyNiceButton:
         """
         pass
 
-class PyNineSliceGump:
+class PyNineSliceGump(PyBaseControl, IPyGump):
+   ""
     NineSliceGump = None
     Gump: PyBaseGump = None
 
@@ -766,12 +811,14 @@ class PyNineSliceGump:
         """
         pass
 
-class ModernNineSliceGump:
+class ModernNineSliceGump(NineSliceGump):
+   ""
 
     def SetResizeCallback(self, callback: "Any") -> None:
         pass
 
-class PyPlayer:
+class PyPlayer(PyMobile):
+   ""
     X: int = None
     Y: int = None
     Z: int = None
@@ -833,6 +880,7 @@ class PyPlayer:
     __class__: str = None
 
 class PyProfile:
+   ""
     CharacterName: str = None
     ServerName: str = None
     LootBagSerial: int = None
@@ -840,7 +888,8 @@ class PyProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
-class PyRadioButton:
+class PyRadioButton(PyCheckbox):
+   ""
     GroupIndex: int = None
 
     def GetGroupIndex(self) -> "int":
@@ -861,14 +910,17 @@ class PyRadioButton:
         """
         pass
 
-class PyResizableStaticPic:
+class PyResizableStaticPic(PyBaseControl):
+   ""
     Hue: int = None
     Graphic: int = None
     DrawBorder: bool = None
 
-class PyScrollArea:
+class PyScrollArea(PyBaseControl):
+   ""
 
-class PySimpleProgressBar:
+class PySimpleProgressBar(PyBaseControl):
+   ""
 
     def SetProgress(self, value: "float", max: "float") -> None:
         """
@@ -877,7 +929,8 @@ class PySimpleProgressBar:
         """
         pass
 
-class PyStatic:
+class PyStatic(PyGameObject):
+   ""
     IsImpassible: bool = None
     IsTree: bool = None
     IsVegetation: bool = None
@@ -885,14 +938,19 @@ class PyStatic:
     Name: str = None
     __class__: str = None
 
-class PyTextBox:
+class PyTextBox(PyBaseControl):
+   ""
     Text: str = None
     Hue: int = None
     Font: str = None
     FontSize: float = None
     MultiLine: bool = None
 
-class PyTTFTextInputField:
+    def SetText(self, text: "str") -> None:
+        pass
+
+class PyTTFTextInputField(PyBaseControl):
+   ""
     Text: str = None
     CaretIndex: int = None
     NumbersOnly: bool = None
@@ -920,7 +978,6 @@ LastTargetSerial: int = None
 LastTargetPos = None
 LastTargetGraphic: int = None
 Found: int = None
-PyProfile: PyProfile = None
 Profile: PyProfile = None
 Events: PyEvents = None
 Gumps: PyGumps = None

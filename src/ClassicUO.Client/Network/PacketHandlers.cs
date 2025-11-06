@@ -4870,26 +4870,26 @@ sealed class PacketHandlers
                 ushort spell = p.ReadUInt16BE();
                 bool active = p.ReadBool();
 
-                foreach (Gump g in UIManager.Gumps)
+                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    if (!g.IsDisposed && g.IsVisible)
-                    {
-                        if (g is UseSpellButtonGump spellButton && spellButton.SpellID == spell)
-                        {
-                            if (active)
-                            {
-                                spellButton.Hue = 38;
-                                world.ActiveSpellIcons.Add(spell);
-                            }
-                            else
-                            {
-                                spellButton.Hue = 0;
-                                world.ActiveSpellIcons.Remove(spell);
-                            }
+                    Control c = last.Value;
 
-                            break;
-                        }
+                    if (c.IsDisposed || !c.IsVisible) continue;
+
+                    if (c is not UseSpellButtonGump spellButton || spellButton.SpellID != spell) continue;
+
+                    if (active)
+                    {
+                        spellButton.Hue = 38;
+                        world.ActiveSpellIcons.Add(spell);
                     }
+                    else
+                    {
+                        spellButton.Hue = 0;
+                        world.ActiveSpellIcons.Remove(spell);
+                    }
+
+                    break;
                 }
 
                 break;
@@ -6798,9 +6798,7 @@ sealed class PacketHandlers
         int cmdlen = cmdlist.Count;
 
         if (cmdlen <= 0)
-        {
             return null;
-        }
 
         UIManager.GetGumpServer(gumpID)?.Dispose();
 
@@ -6812,9 +6810,7 @@ sealed class PacketHandlers
             y = pos.Y;
         }
         else
-        {
             UIManager.SavePosition(gumpID, new Point(x, y));
-        }
 
         var gump = new Gump(world, sender, gumpID)
         {

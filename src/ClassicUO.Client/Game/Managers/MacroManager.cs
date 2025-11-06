@@ -1123,7 +1123,7 @@ namespace ClassicUO.Game.Managers
                     Item m = _world.Player.FindItemByLayer(Layer.Mount);
                     if (m != null)
                     {
-                        GameActions.DoubleClickQueued(_world.Player);
+                        GameActions.DoubleClickQueued(_world.Player, true);
                         ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordDismount();
                     }
                     break;
