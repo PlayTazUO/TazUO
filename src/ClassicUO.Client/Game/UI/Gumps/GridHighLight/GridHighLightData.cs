@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ClassicUO.Utility.Logging;
+using SQLitePCL;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -328,7 +328,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             return false;
         }
 
-        public void InvalidateCache() => _cacheValid = false;
+        public void InvalidateCache()
+        {
+            _cacheValid = false;
+            RecheckMatchStatus();
+        }
 
         private void EnsureCache()
         {
@@ -518,26 +522,48 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 .Where(p => normalizedAllProperties.Contains(p.Key))
                 .ToList();
 
-            foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
+            var filteredNotOptionalRules = normalizedRulesProperties
+                .Where(p => !p.Value.IsOptional)
+                .ToList();
+
+            var filteredOptionalRules = normalizedRulesProperties
+                .Where(p => p.Value.IsOptional)
+                .ToList();
+
+            // Checking if all the required properties are present
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredNotOptionalRule in filteredNotOptionalRules)
             {
-                double itemValue = filteredItemLine.Value.Value;
+                double minValue = filteredNotOptionalRule.Value.MinValue;
 
-                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
-                {
+                KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredNotOptionalRule.Key);
+                if (string.IsNullOrEmpty(filteredItemLine.Key))
                     return false;
-                }
 
-                int minValue = rule.MinValue;
-                bool isOptional = rule.IsOptional;
-                if (minValue != -1 && itemValue < minValue)
-                {
-                    if (!isOptional)
-                        return false;
-                    continue;
-                }
+                if (minValue != -1 && filteredItemLine.Value.Value < minValue)
+                    return false;
 
                 matchingPropertiesCount++;
             }
+            
+            // Adding optional matching rules
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredOptionalRule in filteredOptionalRules)
+            {
+                double minValue = filteredOptionalRule.Value.MinValue;
+                bool isOptional = filteredOptionalRule.Value.IsOptional;
+
+                KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredOptionalRule.Key);
+                if (string.IsNullOrEmpty(filteredItemLine.Key) || minValue != -1 && filteredItemLine.Value.Value < minValue)
+                    continue;
+
+                matchingPropertiesCount++;
+            }
+
+            // Checking if all the itemLines is in a rule (No extra properties allowed)
+            foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
+            {
+                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
+                    return false;
+            }    
 
             if (!IsMatchingCount(matchingPropertiesCount, MinimumMatchingProperty, MaximumMatchingProperty))
                 return false;
