@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using SQLitePCL;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -530,6 +529,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 .Where(p => p.Value.IsOptional)
                 .ToList();
 
+            // Checking if all the itemLines is in a rule (No extra properties allowed)
+            foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
+            {
+                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
+                    return false;
+            } 
+
             // Checking if all the required properties are present
             foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredNotOptionalRule in filteredNotOptionalRules)
             {
@@ -552,14 +558,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     continue;
 
                 matchingPropertiesCount++;
-            }
-
-            // Checking if all the itemLines is in a rule (No extra properties allowed)
-            foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
-            {
-                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
-                    return false;
-            }    
+            }   
 
             if (!IsMatchingCount(matchingPropertiesCount, MinimumMatchingProperty, MaximumMatchingProperty))
                 return false;
