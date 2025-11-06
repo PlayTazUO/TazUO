@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -55,9 +56,13 @@ namespace ClassicUO.Game
         public bool BlockMoving { get; set; }
 
         private World _world;
+
+        public bool UseLongDistancePathfinding;
+
         public Pathfinder(World world)
         {
             _world = world;
+            Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, false, (b) => UseLongDistancePathfinding = b);
         }
 
         public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
@@ -457,17 +462,13 @@ namespace ClassicUO.Game
             else
             {
                 if (_world.Player.IsGargoyle && _world.Player.IsFlying)
-                {
                     stepState = (int)PATH_STEP_STATE.PSS_FLYING;
-                }
                 else
                 {
                     Item mount = _world.Player.FindItemByLayer(Layer.Mount);
 
                     if (mount != null && mount.Graphic == 0x3EB3) // sea horse
-                    {
                         stepState = (int)PATH_STEP_STATE.PSS_ON_SEA_HORSE;
-                    }
                 }
             }
 
@@ -485,10 +486,7 @@ namespace ClassicUO.Game
                 stepState
             );
 
-            foreach (PathObject o in _reusableList)
-            {
-                o.Return();
-            }
+            foreach (PathObject o in _reusableList) o.Return();
             _reusableList.Clear();
 
             if (_world.CustomHouseManager != null)
@@ -508,17 +506,16 @@ namespace ClassicUO.Game
 
             _reusableList.Sort();
 
-            _reusableList.Add
-            (
-                PathObject.Get
-                (
-                    (uint)PATH_OBJECT_FLAGS.POF_IMPASSABLE_OR_SURFACE,
-                    128,
-                    128,
-                    128,
-                    null
-                )
+            var pathObj = PathObject.Get(
+                (uint)PATH_OBJECT_FLAGS.POF_IMPASSABLE_OR_SURFACE,
+                128,
+                128,
+                128,
+                null
             );
+
+            if(pathObj != null)
+                _reusableList.Add(pathObj);
 
             int resultZ = -128;
 
@@ -837,6 +834,8 @@ namespace ClassicUO.Game
             while (!_openSet.IsEmpty())
             {
                 PathNode node = _openSet.Dequeue();
+                if (node == null) continue;
+
                 (int X, int Y, int Z) key = (node.X, node.Y, node.Z);
 
                 if (_closedSet.ContainsKey(key))
@@ -978,14 +977,6 @@ namespace ClassicUO.Game
 
             EventSink.InvokeOnPathFinding(null, new Vector4(x, y, z, distance));
 
-            int playerDistance = Math.Max(Math.Abs(x - _world.Player.X), Math.Abs(y - _world.Player.Y));
-            if (playerDistance > 10)
-            {
-                // Use long distance pathfinder
-                if (LongDistancePathfinder.WalkLongDistance(x, y))
-                    return true;
-            }
-
             CleanupPathfinding();
             _pointIndex = 0;
             _goalNode = null;
@@ -1008,7 +999,13 @@ namespace ClassicUO.Game
                 AutoWalking = false;
             }
 
-            return _path.Count != 0;
+            bool status = _path.Count != 0;
+
+            if(UseLongDistancePathfinding && !status)
+                if (LongDistancePathfinder.WalkLongDistance(x, y))
+                    return true;
+
+            return status;
         }
 
         public void ProcessAutoWalk()

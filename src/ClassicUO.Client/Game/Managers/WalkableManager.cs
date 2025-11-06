@@ -24,7 +24,7 @@ namespace ClassicUO.Game.Managers
         private volatile bool _isGenerating = false;
         private readonly object _generationLock = new object();
         private int _chunksPerCycle = 1; // Start with 1 for performance measurement
-        private const int TARGET_GENERATION_TIME_MS = 2;
+        public int TARGET_GENERATION_TIME_MS = 2;
         private const int MIN_CHUNKS_PER_CYCLE = 1;
         private const int MAX_CHUNKS_PER_CYCLE = 500;
         private readonly List<double> _recentGenerationTimes = new();
@@ -54,6 +54,8 @@ namespace ClassicUO.Game.Managers
         {
             CreateCacheDirectory();
             LoadAllMapData();
+
+            Client.Settings?.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.LONG_DISTANCE_PATHING_SPEED, 2, (s) => TARGET_GENERATION_TIME_MS = s);
         }
 
         public bool IsWalkable(int x, int y)
