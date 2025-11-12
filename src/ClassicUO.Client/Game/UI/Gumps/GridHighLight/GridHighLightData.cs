@@ -142,7 +142,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private HashSet<string> _cachedNormalizedAllRarities;
         private HashSet<string> _cachedNormalizedAllProperties;
         private HashSet<string> _cachedNormalizedAllNegatives;
-        private Dictionary<string, (int MinValue, bool IsOptional)> _cachedNormalizedRulesProperties;
+        private Dictionary<string, HashSet<string>> _cachedNormalizedAllGroups;
+        private HashSet<string> _cachedNormalizedAllGroupProperties;
+        private Dictionary<string, (int MinValue, bool IsOptional, bool IsGroup)> _cachedNormalizedRulesProperties;
         private static readonly List<ItemPropertiesData> _reusableItemData = new(3);
         private static readonly List<uint> _reusableRequeueItems = new();
         private bool _cacheValid = false;
@@ -345,6 +347,36 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             RecheckMatchStatus();
         }
 
+        // Returns the sum of all member properties present on the item.
+        // hadMember is true if at least one member property was found (useful when MinValue == -1 meaning "exists").
+        private double ComputeGroupSum(ItemPropertiesData itemData, in HashSet<string> ruleProps, out bool hadMember)
+        {
+            double sum = 0;
+            bool any = false;
+
+            foreach (ItemPropertiesData.SinglePropertyData p in itemData.singlePropertyData)
+            {
+                string n = Normalize(p.Name);
+                string o = Normalize(p.OriginalString);
+
+                for (int i = 0; i < ruleProps.Count; i++)
+                {
+                    string m = Normalize(ruleProps.ElementAt(i));
+
+                    if (n.IndexOf(m, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        o.IndexOf(m, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        sum += p.FirstValue;
+                        any = true;
+                        break;
+                    }
+                }
+            }
+
+            hadMember = any;
+            return sum;
+        }
+
         private void EnsureCache()
         {
             if (_cacheValid) return;
@@ -353,9 +385,16 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             _cachedNormalizedAllRarities = new HashSet<string>(
                 GridHighlightRules.RarityProperties.Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
             _cachedNormalizedAllProperties = new HashSet<string>(
-                GridHighlightRules.Properties.Concat(GridHighlightRules.SlayerProperties).Concat(GridHighlightRules.SuperSlayerProperties).Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+                GridHighlightRules.Properties.Concat(GridHighlightRules.SlayerProperties).Concat(GridHighlightRules.SuperSlayerProperties).Concat(GridHighlightRules.GroupedProperties.Keys).Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
             _cachedNormalizedAllNegatives = new HashSet<string>(
                 GridHighlightRules.NegativeProperties.Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
+            _cachedNormalizedAllGroups = new Dictionary<string, HashSet<string>>(
+                GridHighlightRules.GroupedProperties.ToDictionary(
+                    kvp => Normalize(kvp.Key),
+                    kvp => new HashSet<string>(kvp.Value.Select(Normalize), StringComparer.OrdinalIgnoreCase)),
+                StringComparer.OrdinalIgnoreCase) ?? new();
+            _cachedNormalizedAllGroupProperties = new HashSet<string>(
+                GridHighlightRules.GroupedProperties.SelectMany(g => g.Value).Select(Normalize), StringComparer.OrdinalIgnoreCase) ?? new();
 
             // Rules
             _cachedNormalizedRulesExcludeNegatives = ExcludeNegatives.Select(Normalize).ToList() ?? new List<string>();
@@ -369,7 +408,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                                   // if duplicates exist, keep the strictest (highest MinValue) and required if any non-optional
                                   int minValue = g.Max(x => x.MinValue);
                                   bool isOptional = g.All(x => x.IsOptional); // any required makes it required
-                                  return (minValue, isOptional);
+                                  bool isGroup = GridHighlightRules.GroupedProperties.Select(k => Normalize(k.Key)).Contains(Normalize(g.First().Name));
+                                  return (minValue, isOptional, isGroup);
                               },
                               StringComparer.OrdinalIgnoreCase) ?? new();
 
@@ -384,7 +424,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return false;
 
             // Rules
-            Dictionary<string, (int MinValue, bool IsOptional)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
+            Dictionary<string, (int MinValue, bool IsOptional, bool IsGroup)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
             List<string> normalizedRulesExcludeNegatives = _cachedNormalizedRulesExcludeNegatives;
             HashSet<string> normalizedRulesRequiredRarities = _cachedNormalizedRulesRequiredRarities;
 
@@ -428,11 +468,33 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             var matchedProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var matchedRequiredProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> normalizedRulesProperty in normalizedRulesProperties)
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional, bool IsGroup)> normalizedRulesProperty in normalizedRulesProperties)
             {
                 string normalizedPropertyName = normalizedRulesProperty.Key;
                 int propertyMinValue = normalizedRulesProperty.Value.MinValue;
                 bool isPropertyOptional = normalizedRulesProperty.Value.IsOptional;
+                bool isPropertyGroup = normalizedRulesProperty.Value.IsGroup;
+
+                if (isPropertyGroup)
+                {
+                    if (!_cachedNormalizedAllGroups.TryGetValue(normalizedPropertyName, out HashSet<string> groupProperties))
+                        continue;
+
+                    bool groupMatched = false;
+                    double groupSum = 0;
+
+                    groupSum = groupProperties.Intersect(normalizedItemProperties.Keys)
+                        .Select(ikey => normalizedItemProperties[ikey])
+                        .Sum(p => p.Value);
+                    groupMatched = groupSum >= propertyMinValue;
+                    if (groupMatched)
+                    {
+                        matchedProperties.Add(normalizedPropertyName);
+                        if (!isPropertyOptional)
+                            matchedRequiredProperties.Add(normalizedPropertyName);
+                        continue;
+                    }
+                }
 
                 if (!normalizedItemProperties.TryGetValue(normalizedPropertyName, out (string Original, double Value) normalizedItemProperty))
                     continue;
@@ -480,7 +542,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 );
 
             // Rules
-            Dictionary<string, (int MinValue, bool IsOptional)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
+            Dictionary<string, (int MinValue, bool IsOptional, bool IsGroup)> normalizedRulesProperties = _cachedNormalizedRulesProperties;
             List<string> normalizedRulesExcludeNegatives = _cachedNormalizedRulesExcludeNegatives;
             HashSet<string> normalizedRulesRequiredRarities = _cachedNormalizedRulesRequiredRarities;
 
@@ -541,17 +603,48 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 .Where(p => p.Value.IsOptional)
                 .ToList();
 
+            var filteredGroupRules = normalizedRulesProperties
+                .Where(p => _cachedNormalizedAllGroups.ContainsKey(p.Key))
+                .ToList();
+
+            var filteredGroupProperties = filteredGroupRules
+                .SelectMany(g => _cachedNormalizedAllGroups[g.Key])
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
             // Checking if all the itemLines is in a rule (No extra properties allowed)
             foreach (KeyValuePair<string, (string Original, double Value)> filteredItemLine in filteredItemLines)
             {
-                if (!normalizedRulesProperties.TryGetValue(filteredItemLine.Key, out (int MinValue, bool IsOptional) rule))
+
+                if (!filteredGroupProperties.Contains(filteredItemLine.Key)
+                    && !normalizedRulesProperties.Where(r => !r.Value.IsGroup)
+                       .Select(p => p.Key).Contains(filteredItemLine.Key))
                     return false;
-            } 
+            }
 
             // Checking if all the required properties are present
-            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredNotOptionalRule in filteredNotOptionalRules)
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional, bool IsGroup)> filteredNotOptionalRule in filteredNotOptionalRules)
             {
                 double minValue = filteredNotOptionalRule.Value.MinValue;
+                bool isPropertyGroup = filteredNotOptionalRule.Value.IsGroup;
+
+                if (isPropertyGroup)
+                {
+                    if (!_cachedNormalizedAllGroups.TryGetValue(filteredNotOptionalRule.Key, out HashSet<string> groupProperties))
+                        continue;
+
+                    bool groupMatched = false;
+                    double groupSum = 0;
+
+                    groupSum = groupProperties.Intersect(normalizedItemLines.Keys)
+                        .Select(ikey => normalizedItemLines[ikey])
+                        .Sum(p => p.Value);
+                    groupMatched = groupSum >= minValue;
+                    if (groupMatched)
+                    {
+                        matchingPropertiesCount++;
+                        continue;
+                    }
+                }
 
                 KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredNotOptionalRule.Key);
                 if (string.IsNullOrEmpty(filteredItemLine.Key) || (minValue != -1 && filteredItemLine.Value.Value < minValue))
@@ -561,9 +654,30 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }
             
             // Adding optional matching rules
-            foreach (KeyValuePair<string, (int MinValue, bool IsOptional)> filteredOptionalRule in filteredOptionalRules)
+            foreach (KeyValuePair<string, (int MinValue, bool IsOptional, bool IsGroup)> filteredOptionalRule in filteredOptionalRules)
             {
                 double minValue = filteredOptionalRule.Value.MinValue;
+
+                bool isPropertyGroup = filteredOptionalRule.Value.IsGroup;
+
+                if (isPropertyGroup)
+                {
+                    if (!_cachedNormalizedAllGroups.TryGetValue(filteredOptionalRule.Key, out HashSet<string> groupProperties))
+                        continue;
+
+                    bool groupMatched = false;
+                    double groupSum = 0;
+
+                    groupSum = groupProperties.Intersect(normalizedItemLines.Keys)
+                        .Select(ikey => normalizedItemLines[ikey])
+                        .Sum(p => p.Value);
+                    groupMatched = groupSum >= minValue;
+                    if (groupMatched)
+                    {
+                        matchingPropertiesCount++;
+                        continue;
+                    }
+                }
 
                 KeyValuePair<string, (string Original, double Value)> filteredItemLine = filteredItemLines.FirstOrDefault(x => x.Key == filteredOptionalRule.Key);
                 if (string.IsNullOrEmpty(filteredItemLine.Key) || (minValue != -1 && filteredItemLine.Value.Value < minValue))

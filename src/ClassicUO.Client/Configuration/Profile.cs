@@ -439,6 +439,7 @@ namespace ClassicUO.Configuration
         public List<string> ConfigurableSuperSlayers { get; set; } = new();
         public List<string> ConfigurableSlayers { get; set; } = new();
         public List<string> ConfigurableRarities { get; set; } = new();
+        public Dictionary<string, List<string>> ConfigurableGroupedProperties { get; set; } = new();
 
         #endregion
 
