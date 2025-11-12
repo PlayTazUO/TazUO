@@ -5,6 +5,7 @@ using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using ClassicUO.Game.Data;
+using System.Linq;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -174,7 +175,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             for (int i = 0; i < data.Properties.Count; i++)
             {
-                AddProperty(data.Properties, i, pos.Y, [GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties]);
+                AddProperty(data.Properties, i, pos.Y, [GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties, GridHighlightRules.GroupedProperties.Keys.ToHashSet()]);
                 pos.Y += 25;
             }
 
@@ -184,7 +185,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             {
                 if (e.Button == Input.MouseButtonType.Left)
                 {
-                    data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false });
+                    data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false});
                     data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches

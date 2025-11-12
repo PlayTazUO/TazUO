@@ -1,8 +1,10 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System.IO;
+using System.Linq;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
+using IronPython.Compiler.Ast;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Configuration
@@ -44,12 +46,23 @@ namespace ClassicUO.Configuration
             CurrentProfile.Username = username;
             CurrentProfile.ServerName = servername;
             CurrentProfile.CharacterName = charactername;
+            bool shouldResave = false;
 
             if (CurrentProfile.GridHighlightSetup.Count == 0)
             {
                 GridHighLightProfile.MigrateGridHighlightToSetup(CurrentProfile);
-                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
+                shouldResave = true;
+               
             }
+            if (CurrentProfile.ConfigurableGroupedProperties.Count == 0)
+            {
+                CurrentProfile.ConfigurableGroupedProperties = GridHighlightRules.GroupedProperties.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.ToList());
+                shouldResave = true;
+            }
+            if(shouldResave)
+                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
 
             ValidateFields(CurrentProfile);
 

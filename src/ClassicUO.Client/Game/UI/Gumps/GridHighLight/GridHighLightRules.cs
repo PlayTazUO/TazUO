@@ -8,6 +8,8 @@ using System.Text.Json;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
+    
+
     public static class GridHighlightRules
     {
         private const string CONFIG_FILE_NAME = "GridHighlightSettings.json";
@@ -39,7 +41,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 Negatives = ProfileManager.CurrentProfile.ConfigurableNegatives?.ToList(),
                 SuperSlayers = ProfileManager.CurrentProfile.ConfigurableSuperSlayers?.ToList(),
                 Slayers = ProfileManager.CurrentProfile.ConfigurableSlayers?.ToList(),
-                Rarities = ProfileManager.CurrentProfile.ConfigurableRarities?.ToList()
+                Rarities = ProfileManager.CurrentProfile.ConfigurableRarities?.ToList(),
+                GroupedProperties = ProfileManager.CurrentProfile.ConfigurableGroupedProperties?.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.ToList())
             };
 
             string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
@@ -74,6 +79,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     ProfileManager.CurrentProfile.ConfigurableSuperSlayers = DefaultSuperSlayer.ToList();
                     ProfileManager.CurrentProfile.ConfigurableSlayers = DefaultSlayer.ToList();
                     ProfileManager.CurrentProfile.ConfigurableRarities = DefaultRarity.ToList();
+                    ProfileManager.CurrentProfile.ConfigurableGroupedProperties = DefaultGroupedProperties.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.ToList());
                     SaveGridHighlightConfiguration();
                 }
 
@@ -93,6 +101,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     ProfileManager.CurrentProfile.ConfigurableSuperSlayers = config.SuperSlayers ?? new List<string>();
                     ProfileManager.CurrentProfile.ConfigurableSlayers = config.Slayers ?? new List<string>();
                     ProfileManager.CurrentProfile.ConfigurableRarities = config.Rarities ?? new List<string>();
+                    ProfileManager.CurrentProfile.ConfigurableGroupedProperties = config.GroupedProperties?.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value.ToList()) ?? new Dictionary<string, List<string>>();
                 }
             }
             catch (Exception ex)
@@ -109,6 +120,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             public List<string> SuperSlayers { get; set; }
             public List<string> Slayers { get; set; }
             public List<string> Rarities { get; set; }
+            public Dictionary<string, List<string>> GroupedProperties { get; set; }
         }
 
         public static HashSet<string> Properties =>
@@ -247,6 +259,35 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 "Major Artifact",
                 "Legendary Artifact"
             };
+
+        public static Dictionary<string, HashSet<string>> GroupedProperties => DefaultGroupedProperties;
+        //GetConfigurableOrDefault(() => ProfileManager.CurrentProfile?.ConfigurableGroupedProperties, DefaultGroupedProperties);
+        private static readonly Dictionary<string, HashSet<string>> DefaultGroupedProperties = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Total Resists"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Physical Resist",
+                "Fire Resist",
+                "Cold Resist",
+                "Poison Resist",
+                "Energy Resist"
+            },
+            ["Total Mana"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Intelligence Bonus",
+                "Mana Increase"
+            },
+            ["Total Hits"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Strength Bonus",
+                "Hit Point Increase"
+            },
+            ["Total Stamina"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "Dexterity Bonus",
+                "Stamina Increase"
+            }
+        };
 
         public static string[] FlattenAndDistinctParameters(params HashSet<string>[] propertySets) => propertySets
                 .SelectMany(set => set)
