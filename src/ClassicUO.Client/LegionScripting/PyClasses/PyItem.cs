@@ -102,4 +102,34 @@ public class PyItem : PyEntity
             return item = GetItemUnsafe();
         });
     }
+
+    /// <summary>
+    /// Gets the item name and properties (tooltip text).
+    /// This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+    /// </summary>
+    /// <param name="wait">True or false to wait for name and props</param>
+    /// <param name="timeout">Timeout in seconds</param>
+    /// <returns>Item name and properties, or empty string if we don't have them.</returns>
+    public string NameAndProps(bool wait = false, int timeout = 10)
+    {
+        if (wait)
+        {
+            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
+
+            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
+        return MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            {
+                return n + "\n" + d;
+            }
+
+            return string.Empty;
+        });
+    }
 }
