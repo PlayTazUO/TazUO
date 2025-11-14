@@ -8,12 +8,12 @@ public static class DelegateManager
 
     public static T GetOrAdd<T>(string key, Func<T> creator) where T : Delegate
     {
-        if (_delegates.TryGetValue(key, out var existing))
+        if (_delegates.TryGetValue(key, out Delegate? existing))
         {
             return (T)existing;
         }
 
-        var newDelegate = creator();
+        T newDelegate = creator();
         _delegates[key] = newDelegate;
         return newDelegate;
     }

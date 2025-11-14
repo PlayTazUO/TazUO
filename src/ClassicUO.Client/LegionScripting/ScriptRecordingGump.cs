@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
-using ClassicUO.Utility;
-using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting
 {

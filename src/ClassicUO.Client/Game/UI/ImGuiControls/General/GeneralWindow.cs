@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using ImGuiNET;
 using ClassicUO.Configuration;
+using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Managers;
 using ClassicUO.Network;
 
 namespace ClassicUO.Game.UI.ImGuiControls
@@ -9,13 +12,15 @@ namespace ClassicUO.Game.UI.ImGuiControls
     {
         private readonly Profile _profile = ProfileManager.CurrentProfile;
         private int _objectMoveDelay;
-        private bool _highlightObjects;
+        private bool _highlightObjects, _petScaling;
         private bool _showNames;
         private bool _autoOpenOwnCorpse;
+        private bool _useLongDistancePathing;
         private ushort _turnDelay;
         private float _imguiWindowAlpha, _lastImguiWindowAlpha;
         private int _currentThemeIndex;
         private string[] _themeNames;
+        private int _pathfindingGenerationTimeMs;
         private GeneralWindow() : base("General Tab")
         {
             WindowFlags = ImGuiWindowFlags.AlwaysAutoResize;
@@ -25,6 +30,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
             _autoOpenOwnCorpse = _profile.AutoOpenOwnCorpse;
             _turnDelay = _profile.TurnDelay;
             _imguiWindowAlpha = _lastImguiWindowAlpha = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_ALPHA, 1.0f);
+            _useLongDistancePathing = World.Instance?.Player?.Pathfinder.UseLongDistancePathfinding ?? false;
+            _pathfindingGenerationTimeMs = Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.LONG_DISTANCE_PATHING_SPEED, 2);
+            _petScaling = _profile.EnablePetScaling;
 
             // Initialize theme selector
             _themeNames = ImGuiTheme.GetThemes();
@@ -87,6 +95,12 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.EndTabItem();
                 }
 
+                if (ImGui.BeginTabItem("Pathfinding"))
+                {
+                    DrawPathfindingTab();
+                    ImGui.EndTabItem();
+                }
+
                 ImGui.EndTabBar();
             }
         }
@@ -137,6 +151,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
             ImGuiComponents.Tooltip("Adjust the background transparency of all ImGui windows.");
 
+            if(ImGui.Button("Open Theme Editor"))
+                ImGuiThemeEditorWindow.Show();
+
             if (ImGui.Checkbox("Highlight game objects", ref _highlightObjects))
             {
                 _profile.HighlightGameObjects = _highlightObjects;
@@ -153,6 +170,18 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 _profile.AutoOpenOwnCorpse = _autoOpenOwnCorpse;
             }
             ImGuiComponents.Tooltip("Automatically open your own corpse when you die, even if auto open corpses is disabled.");
+
+            if (ImGui.Checkbox("Enable pet scaling", ref _petScaling))
+            {
+                _profile.EnablePetScaling = _petScaling;
+
+                Dictionary<uint, Mobile>.ValueCollection mobs = World.Instance.Mobiles.Values;
+                foreach (Mobile mob in mobs)
+                {
+                    if (mob != null && mob.IsRenamable)
+                        mob.Scale = _petScaling ? 0.6f : 1f;
+                }
+            }
 
             ImGui.EndGroup();
 
@@ -184,6 +213,39 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.EndGroup();
         }
 
+        private void DrawPathfindingTab()
+        {
+            ImGui.BeginGroup();
+
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.Checkbox("Long-Distance Pathfinding", ref _useLongDistancePathing))
+            {
+                World.Instance.Player.Pathfinder.UseLongDistancePathfinding = _useLongDistancePathing;
+                Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING,  _useLongDistancePathing);
+            }
+            ImGuiComponents.Tooltip("This is currently in beta.");
+
+
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.SliderInt("Pathfinding Gen Time", ref _pathfindingGenerationTimeMs, 1, 50, "%d ms"))
+            {
+                _pathfindingGenerationTimeMs = Math.Clamp(_pathfindingGenerationTimeMs, 1, 50);
+                Client.Settings?.SetAsync(SettingsScope.Global, Constants.SqlSettings.LONG_DISTANCE_PATHING_SPEED,  _pathfindingGenerationTimeMs);
+                if (Managers.WalkableManager.Instance != null) Managers.WalkableManager.Instance.TARGET_GENERATION_TIME_MS = _pathfindingGenerationTimeMs;
+            }
+            ImGuiComponents.Tooltip("Target time in milliseconds for pathfinding cache generation per cycle. Higher values generate cache faster but may cause performance issues.");
+
+            ImGui.SetNextItemWidth(150);
+            if (ImGui.Button("Reset current map cache"))
+            {
+                WalkableManager.Instance?.StartFreshGeneration(World.Instance.MapIndex);
+            }
+            ImGuiComponents.Tooltip("This will start regeneration of the current map cache.");
+
+
+            ImGui.EndGroup();
+        }
+
         private readonly string _version = "TazUO Version: " + CUOEnviroment.Version; //Pre-cache to prevent reading var and string concatenation every frame
         private uint _lastObject = 0;
         private string _lastObjectString = "Last Object: 0x00000000";
@@ -203,11 +265,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text("FPS: " + CUOEnviroment.CurrentRefreshRate);
             ImGui.Spacing();
             ImGui.Text(_lastObjectString);
-            if(ImGui.IsItemClicked())
-            {
-                SDL3.SDL.SDL_SetClipboardText($"0x{_lastObject:X8}");
-                GameActions.Print("Copied last object to clipboard.", 62);
-            }
+            ClipboardOnClick(_lastObjectString);
             ImGui.Spacing();
             ImGui.Text(_version);
         }

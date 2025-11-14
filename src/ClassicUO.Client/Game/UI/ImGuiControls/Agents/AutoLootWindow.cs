@@ -191,7 +191,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 if (ImGui.Button("Add##AddEntry"))
                 {
-                    if (StringHelper.TryParseGraphic(newGraphicInput, out int graphic))
+                    if (StringHelper.TryParseInt(newGraphicInput, out int graphic))
                     {
                         ushort hue = ushort.MaxValue;
                         if (!string.IsNullOrEmpty(newHueInput) && newHueInput != "-1")
@@ -258,7 +258,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     if (ImGui.InputText($"##Graphic{i}", ref graphicStr, 10))
                     {
                         entryGraphicInputs[entry.Uid] = graphicStr;
-                        if (StringHelper.TryParseGraphic(graphicStr, out int newGraphic))
+                        if (StringHelper.TryParseInt(graphicStr, out int newGraphic))
                         {
                             entry.Graphic = newGraphic;
                         }

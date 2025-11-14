@@ -2,12 +2,12 @@ using Microsoft.Scripting.Hosting;
 
 namespace ClassicUO.LegionScripting.PyClasses;
 
-public partial class Events
+public partial class PyEvents
 {
     private readonly ScriptEngine _engine;
     private readonly API _api;
 
-    internal Events(ScriptEngine engine, API api)
+    internal PyEvents(ScriptEngine engine, API api)
     {
         _engine = engine;
         _api = api;

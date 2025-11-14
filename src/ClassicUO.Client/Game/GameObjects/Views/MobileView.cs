@@ -694,14 +694,14 @@ namespace ClassicUO.Game.GameObjects
                 // Position calculations only when texture exists
                 if (mirror)
                 {
-                    x -= spriteInfo.UV.Width - spriteInfo.Center.X;
+                    x -= (int)((spriteInfo.UV.Width - spriteInfo.Center.X) * owner.Scale);
                 }
                 else
                 {
-                    x -= spriteInfo.Center.X;
+                    x -= (int)(spriteInfo.Center.X * owner.Scale);
                 }
 
-                y -= spriteInfo.UV.Height + spriteInfo.Center.Y;
+                y -= (int)((spriteInfo.UV.Height + spriteInfo.Center.Y) * owner.Scale);
             }
 
             if (hasShadow)
@@ -785,24 +785,24 @@ namespace ClassicUO.Game.GameObjects
                                 hueVec,
                                 0f,
                                 Vector2.Zero,
-                                1f,
+                                owner.Scale,
                                 mirror ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
                                 depth + 1f + (i * tiles)
                             );
 
-                            pos.Y += rect.Height;
+                            pos.Y += rect.Height * owner.Scale;
                             rect.Y += rect.Height;
                             rect.Height = remains;
                             remains -= rect.Height;
                         }
                     }
 
-                    int xx = -spriteInfo.Center.X;
-                    int yy = -(spriteInfo.UV.Height + spriteInfo.Center.Y + 3);
+                    int xx = (int)(-spriteInfo.Center.X * owner.Scale);
+                    int yy = (int)(-(spriteInfo.UV.Height + spriteInfo.Center.Y + 3) * owner.Scale);
 
                     if (mirror)
                     {
-                        xx = -(spriteInfo.UV.Width - spriteInfo.Center.X);
+                        xx = (int)(-(spriteInfo.UV.Width - spriteInfo.Center.X) * owner.Scale);
                     }
 
                     if (xx < owner.FrameInfo.X)
@@ -815,14 +815,14 @@ namespace ClassicUO.Game.GameObjects
                         owner.FrameInfo.Y = yy;
                     }
 
-                    if (owner.FrameInfo.Width < xx + spriteInfo.UV.Width)
+                    if (owner.FrameInfo.Width < xx + (int)(spriteInfo.UV.Width * owner.Scale))
                     {
-                        owner.FrameInfo.Width = xx + spriteInfo.UV.Width;
+                        owner.FrameInfo.Width = xx + (int)(spriteInfo.UV.Width * owner.Scale);
                     }
 
-                    if (owner.FrameInfo.Height < yy + spriteInfo.UV.Height)
+                    if (owner.FrameInfo.Height < yy + (int)(spriteInfo.UV.Height * owner.Scale))
                     {
-                        owner.FrameInfo.Height = yy + spriteInfo.UV.Height;
+                        owner.FrameInfo.Height = yy + (int)(spriteInfo.UV.Height * owner.Scale);
                     }
                 }
 
@@ -1009,12 +1009,12 @@ namespace ClassicUO.Game.GameObjects
                         {
                             int x =
                                 position.X
-                                - (
+                                - (int)((
                                     isFlipped
                                         ? spriteInfo.UV.Width - spriteInfo.Center.X
                                         : spriteInfo.Center.X
-                                );
-                            int y = position.Y - (spriteInfo.UV.Height + spriteInfo.Center.Y);
+                                ) * Scale);
+                            int y = position.Y - (int)((spriteInfo.UV.Height + spriteInfo.Center.Y) * Scale);
 
                             if (
                                 animations.PixelCheck(
@@ -1023,12 +1023,12 @@ namespace ClassicUO.Game.GameObjects
                                     dir,
                                     isUop,
                                     animIndex,
-                                    isFlipped
+                                    (int)((isFlipped
                                         ? x
-                                            + spriteInfo.UV.Width
+                                            + spriteInfo.UV.Width * Scale
                                             - SelectedObject.TranslatedMousePositionByViewport.X
-                                        : SelectedObject.TranslatedMousePositionByViewport.X - x,
-                                    SelectedObject.TranslatedMousePositionByViewport.Y - y
+                                        : SelectedObject.TranslatedMousePositionByViewport.X - x) / Scale),
+                                    (int)((SelectedObject.TranslatedMousePositionByViewport.Y - y) / Scale)
                                 )
                             )
                             {
@@ -1048,8 +1048,8 @@ namespace ClassicUO.Game.GameObjects
             {
                 int x =
                     position.X
-                    - (isFlipped ? spriteInfo.UV.Width - spriteInfo.Center.X : spriteInfo.Center.X);
-                int y = position.Y - (spriteInfo.UV.Height + spriteInfo.Center.Y);
+                    - (int)((isFlipped ? spriteInfo.UV.Width - spriteInfo.Center.X : spriteInfo.Center.X) * Scale);
+                int y = position.Y - (int)((spriteInfo.UV.Height + spriteInfo.Center.Y) * Scale);
 
                 if (
                     animations.PixelCheck(
@@ -1058,12 +1058,12 @@ namespace ClassicUO.Game.GameObjects
                         dir,
                         isUop,
                         animIndex,
-                        isFlipped
+                        (int)((isFlipped
                             ? x
-                                + spriteInfo.UV.Width
+                                + spriteInfo.UV.Width * Scale
                                 - SelectedObject.TranslatedMousePositionByViewport.X
-                            : SelectedObject.TranslatedMousePositionByViewport.X - x,
-                        SelectedObject.TranslatedMousePositionByViewport.Y - y
+                            : SelectedObject.TranslatedMousePositionByViewport.X - x) / Scale),
+                        (int)((SelectedObject.TranslatedMousePositionByViewport.Y - y) / Scale)
                     )
                 )
                 {
@@ -1107,12 +1107,12 @@ namespace ClassicUO.Game.GameObjects
                         {
                             int x =
                                 position.X
-                                - (
+                                - (int)((
                                     isFlipped
                                         ? spriteInfo.UV.Width - spriteInfo.Center.X
                                         : spriteInfo.Center.X
-                                );
-                            int y = position.Y - (spriteInfo.UV.Height + spriteInfo.Center.Y);
+                                ) * Scale);
+                            int y = position.Y - (int)((spriteInfo.UV.Height + spriteInfo.Center.Y) * Scale);
 
                             if (
                                 animations.PixelCheck(
@@ -1121,12 +1121,12 @@ namespace ClassicUO.Game.GameObjects
                                     dir,
                                     isUop,
                                     animIndex,
-                                    isFlipped
+                                    (int)((isFlipped
                                         ? x
-                                            + spriteInfo.UV.Width
+                                            + spriteInfo.UV.Width * Scale
                                             - SelectedObject.TranslatedMousePositionByViewport.X
-                                        : SelectedObject.TranslatedMousePositionByViewport.X - x,
-                                    SelectedObject.TranslatedMousePositionByViewport.Y - y
+                                        : SelectedObject.TranslatedMousePositionByViewport.X - x) / Scale),
+                                    (int)((SelectedObject.TranslatedMousePositionByViewport.Y - y) / Scale)
                                 )
                             )
                             {

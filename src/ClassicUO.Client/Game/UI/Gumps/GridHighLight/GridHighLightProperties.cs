@@ -71,6 +71,40 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             mainScrollArea.Add(pos.PositionRightOf(new Label("Auto loot on match", true, 0xffff), lootOnMatchCheckbox));
 
+            InputField minMatchingInput;
+            mainScrollArea.Add(pos.Position(minMatchingInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
+            minMatchingInput.SetText(data.MinimumMatchingProperty.ToString());
+            minMatchingInput.TextChanged += (s, e) =>
+            {
+                if (int.TryParse(minMatchingInput.Text, out int val))
+                {
+                    data.MinimumMatchingProperty = val;
+                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
+                }
+                else
+                {
+                    minMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                }
+            };
+            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min. matching count", true, 0xffff), minMatchingInput));
+
+            InputField maxMatchingInput;
+            mainScrollArea.Add(pos.PositionRightOf(maxMatchingInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20), temp, 20));
+            maxMatchingInput.SetText(data.MaximumMatchingProperty.ToString());
+            maxMatchingInput.TextChanged += (s, e) =>
+            {
+                if (int.TryParse(maxMatchingInput.Text, out int val))
+                {
+                    data.MaximumMatchingProperty = val;
+                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
+                }
+                else
+                {
+                    maxMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
+                }
+            };
+            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. matching count", true, 0xffff), maxMatchingInput));
+
             InputField minPropertiesInput;
             mainScrollArea.Add(pos.Position(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
             minPropertiesInput.SetText(data.MinimumProperty.ToString());
@@ -103,7 +137,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     maxPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
                 }
             };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. property count", true, 0xffff), maxPropertiesInput));;
+            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. property count", true, 0xffff), maxPropertiesInput));
 
             #region Name
 
@@ -151,6 +185,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false });
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }
@@ -234,6 +269,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.ExcludeNegatives.Add("");
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }
@@ -261,6 +297,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (e.Button == Input.MouseButtonType.Left)
                 {
                     data.RequiredRarities.Add("");
+                    data.InvalidateCache();
                     Build();
                     GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
                 }

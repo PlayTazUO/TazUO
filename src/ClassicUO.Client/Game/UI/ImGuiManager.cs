@@ -21,6 +21,7 @@ namespace ClassicUO.Game.UI
 
         public static bool IsInitialized => _isInitialized;
         public static ImGuiRenderer Renderer => _imGuiRenderer;
+        public static float Alpha = 1f;
         public static ImGuiWindow[] Windows
         {
             get
@@ -67,6 +68,7 @@ namespace ClassicUO.Game.UI
         }
 
         public static void UpdateTheme(float alpha) => ApplyThemeColors(alpha);
+        public static void UpdateTheme() => ApplyThemeColors(Alpha);
 
         private static void SetTazUOTheme()
         {
@@ -101,8 +103,8 @@ namespace ClassicUO.Game.UI
             string savedTheme = Client.Settings?.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_THEME, "Default") ?? "Default";
             ImGuiTheme.SetTheme(savedTheme);
 
-            float alpha = Client.Settings?.Get(SettingsScope.Global, "imgui_window_alpha", 1.0f) ?? 1.0f;
-            ApplyThemeColors(alpha);
+            Alpha = Client.Settings?.Get(SettingsScope.Global, "imgui_window_alpha", 1.0f) ?? 1.0f;
+            ApplyThemeColors(Alpha);
         }
 
         private static void ApplyThemeColors(float alpha)

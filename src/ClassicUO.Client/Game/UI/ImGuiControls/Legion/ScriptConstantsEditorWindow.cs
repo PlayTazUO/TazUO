@@ -24,6 +24,13 @@ public class ScriptConstantsEditorWindow : ImGuiWindow
         ParseConstants();
     }
 
+    public new void Draw()
+    {
+        // Set minimum window size
+        ImGui.SetNextWindowSizeConstraints(new Vector2(300, 200), new Vector2(float.MaxValue, float.MaxValue));
+        base.Draw();
+    }
+
     private void ParseConstants()
     {
         _constants.Clear();
@@ -149,19 +156,33 @@ public class ScriptConstantsEditorWindow : ImGuiWindow
 
                 // Value column
                 ImGui.TableSetColumnIndex(1);
-                ImGui.SetNextItemWidth(-1);
 
-                string editValue = constant.EditValue;
-                if (ImGui.InputText("##value", ref editValue, 1024))
+                // Check if this is a boolean value
+                if (IsBooleanValue(constant.EditValue))
                 {
-                    constant.EditValue = editValue;
-                    CheckForChanges();
+                    DrawBooleanEditor(constant);
                 }
-
-                // Show tooltip with original value if changed
-                if (ImGui.IsItemHovered() && constant.OriginalValue != constant.EditValue)
+                // Check if this is an array value
+                else if (TryParseArray(constant.EditValue, out List<string> arrayElements))
                 {
-                    ImGui.SetTooltip($"Original: {constant.OriginalValue}");
+                    DrawArrayEditor(constant, arrayElements);
+                }
+                else
+                {
+                    // Regular single value input
+                    ImGui.SetNextItemWidth(-1);
+                    string editValue = constant.EditValue;
+                    if (ImGui.InputText("##value", ref editValue, 1024))
+                    {
+                        constant.EditValue = editValue;
+                        CheckForChanges();
+                    }
+
+                    // Show tooltip with original value if changed
+                    if (ImGui.IsItemHovered() && constant.OriginalValue != constant.EditValue)
+                    {
+                        ImGui.SetTooltip($"Original: {constant.OriginalValue}");
+                    }
                 }
 
                 // Line number column
@@ -176,6 +197,136 @@ public class ScriptConstantsEditorWindow : ImGuiWindow
     }
 
     private void CheckForChanges() => _hasUnsavedChanges = _constants.Values.Any(c => c.OriginalValue != c.EditValue);
+
+    private bool IsBooleanValue(string value)
+    {
+        string trimmed = value.Trim();
+        return trimmed.Equals("True", StringComparison.OrdinalIgnoreCase) ||
+               trimmed.Equals("False", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void DrawBooleanEditor(ConstantEntry constant)
+    {
+        ImGui.SetNextItemWidth(-1);
+
+        bool currentValue = constant.EditValue.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+        int selectedIndex = currentValue ? 0 : 1;
+
+        string[] items = { "True", "False" };
+        if (ImGui.Combo("##bool", ref selectedIndex, items, items.Length))
+        {
+            constant.EditValue = items[selectedIndex];
+            CheckForChanges();
+        }
+
+        // Show tooltip with original value if changed
+        if (ImGui.IsItemHovered() && constant.OriginalValue != constant.EditValue)
+        {
+            ImGui.SetTooltip($"Original: {constant.OriginalValue}");
+        }
+    }
+
+    private bool TryParseArray(string value, out List<string> elements)
+    {
+        elements = null;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        string trimmed = value.Trim();
+        if (!trimmed.StartsWith("[") || !trimmed.EndsWith("]"))
+            return false;
+
+        // Remove brackets and split by comma
+        string inner = trimmed.Substring(1, trimmed.Length - 2);
+        elements = inner.Split(',')
+            .Select(s => s.Trim())
+            .ToList();
+
+        return elements.Count > 0;
+    }
+
+    private void DrawArrayEditor(ConstantEntry constant, List<string> arrayElements)
+    {
+        // Show button to open array editor
+        ImGui.SetNextItemWidth(-60);
+        ImGui.InputText("##value_readonly", ref constant.EditValue, 1024, ImGuiInputTextFlags.ReadOnly);
+
+        if (ImGui.IsItemHovered() && constant.OriginalValue != constant.EditValue)
+        {
+            ImGui.SetTooltip($"Original: {constant.OriginalValue}");
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Edit##array"))
+        {
+            constant.EditingArray = true;
+        }
+
+        // Draw array editor child window if active
+        if (constant.EditingArray)
+        {
+            ImGui.SetNextWindowSize(new Vector2(300, 400), ImGuiCond.FirstUseEver);
+            if (ImGui.Begin($"Array Editor: {constant.Name}###{constant.Name}_array", ref constant.EditingArray))
+            {
+                bool changed = false;
+
+                ImGui.Text($"Editing: {constant.Name}");
+                ImGui.Separator();
+
+                // List of array elements
+                if (ImGui.BeginChild("ArrayElements", new Vector2(0, -30), ImGuiChildFlags.Borders))
+                {
+                    for (int i = 0; i < arrayElements.Count; i++)
+                    {
+                        ImGui.PushID(i);
+
+                        ImGui.Text($"[{i}]");
+                        ImGui.SameLine();
+                        ImGui.SetNextItemWidth(-40);
+
+                        string element = arrayElements[i];
+                        if (ImGui.InputText("##element", ref element, 256))
+                        {
+                            arrayElements[i] = element;
+                            changed = true;
+                        }
+
+                        ImGui.SameLine();
+                        if (ImGui.SmallButton("X"))
+                        {
+                            arrayElements.RemoveAt(i);
+                            changed = true;
+                            ImGui.PopID();
+                            break;
+                        }
+                        if (ImGui.IsItemHovered())
+                            ImGui.SetTooltip("Remove this element");
+
+                        ImGui.PopID();
+                    }
+
+                    ImGui.EndChild();
+                }
+
+                // Add button at the bottom
+                ImGui.Separator();
+                if (ImGui.Button("Add Element", new Vector2(-1, 0)))
+                {
+                    arrayElements.Add("0");
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    // Reconstruct array string
+                    constant.EditValue = "[" + string.Join(", ", arrayElements) + "]";
+                    CheckForChanges();
+                }
+            }
+            ImGui.End();
+        }
+    }
 
     private void RefreshConstants()
     {
@@ -243,8 +394,9 @@ public class ScriptConstantsEditorWindow : ImGuiWindow
     {
         public string Name { get; set; }
         public string OriginalValue { get; set; }
-        public string EditValue { get; set; }
+        public string EditValue;
         public int LineNumber { get; set; }
         public string FullLine { get; set; }
+        public bool EditingArray;
     }
 }

@@ -21,6 +21,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public bool Overweight { get; set; } = true;
         public int MinimumProperty { get; set; } = 0;
         public int MaximumProperty { get; set; } = 0;
+        public int MinimumMatchingProperty { get; set; } = 0;
+        public int MaximumMatchingProperty { get; set; } = 0;
         public List<string> ExcludeNegatives { get; set; } = new();
         public List<string> RequiredRarities { get; set; } = new();
         public GridHighlightSlot GridHighlightSlot { get; set; } = new();

@@ -6,7 +6,6 @@ using System.Threading;
 using ClassicUO.Game;
 using ClassicUO.Utility.Logging;
 using IronPython.Hosting;
-using LScript;
 using Microsoft.Scripting.Hosting;
 
 namespace ClassicUO.LegionScripting;
@@ -18,25 +17,14 @@ public class ScriptFile
     public string FullPath;
     public string Group = string.Empty;
     public string SubGroup = string.Empty;
-    public Script GetScript;
     public string[] FileContents;
     public string FileContentsJoined;
-    public ScriptType ScriptType = ScriptType.LegionScript;
     public Thread PythonThread;
     public ScriptEngine PythonEngine;
     public ScriptScope PythonScope;
     public API ScopedApi;
 
-    public bool IsPlaying
-    {
-        get
-        {
-            if (ScriptType == ScriptType.LegionScript && GetScript != null)
-                return GetScript.IsPlaying;
-
-            return PythonThread != null;
-        }
-    }
+    public bool IsPlaying => PythonThread != null;
 
     private World World;
 
@@ -47,7 +35,7 @@ public class ScriptFile
 
         string cleanPath = path.Replace(System.IO.Path.DirectorySeparatorChar, '/');
         string cleanBasePath = LegionScripting.ScriptPath.Replace(System.IO.Path.DirectorySeparatorChar, '/');
-        cleanPath = cleanPath.Substring(cleanPath.IndexOf(cleanBasePath) + cleanBasePath.Length);
+        cleanPath = cleanPath.Substring(cleanPath.IndexOf(cleanBasePath, StringComparison.Ordinal) + cleanBasePath.Length);
 
         if (cleanPath.Length > 0)
         {
@@ -61,12 +49,6 @@ public class ScriptFile
         FileName = fileName;
         FullPath = System.IO.Path.Combine(Path, FileName);
         FileContents = ReadFromFile();
-
-        if (FileName.EndsWith(".py"))
-            ScriptType = ScriptType.Python;
-
-        if (ScriptType == ScriptType.LegionScript)
-            GenerateScript();
     }
 
     public void OverrideFileContents(string contents)
@@ -92,34 +74,16 @@ public class ScriptFile
         {
             string[] c = File.ReadAllLines(FullPath, Encoding.UTF8);
             FileContentsJoined = string.Join("\n", c);
-            if (ScriptType == ScriptType.Python)
-            {
-                string pattern = @"^\s*(?:from\s+[\w.]+\s+import\s+API|import\s+API)\s*$";
-                FileContentsJoined = System.Text.RegularExpressions.Regex.Replace(FileContentsJoined, pattern, string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
-            }
+
+            string pattern = @"^\s*(?:from\s+[\w.]+\s+import\s+API|import\s+API)\s*$";
+            FileContentsJoined = System.Text.RegularExpressions.Regex.Replace(FileContentsJoined, pattern, string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
             return c;
         }
         catch (Exception e)
         {
             Log.Error($"Error reading script file: {e}");
-            return new string[0];
-        }
-    }
-
-    public void GenerateScript()
-    {
-        LegionScripting.StopScript(this);
-
-        try
-        {
-            if (GetScript == null)
-                GetScript = new Script(Lexer.Lex(FullPath), World);
-            else
-                GetScript.UpdateScript(Lexer.Lex(FullPath));
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.ToString());
+            return [];
         }
     }
 

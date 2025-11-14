@@ -248,25 +248,33 @@ namespace ClassicUO.Game.Managers
             {
                 MakeDefault();
 
-                using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read))
-                using (var writer = new StreamWriter(stream))
+                try
                 {
-                    writer.WriteLine("# FORMAT");
-                    writer.WriteLine(
-                        "# GRAPHIC OPEN_SOUND_ID CLOSE_SOUND_ID LEFT TOP RIGHT BOTTOM ICONIZED_GRAPHIC [0 if not exists] MINIMIZER_AREA_X [0 if not exists] MINIMIZER_AREA_Y [0 if not exists]"
-                    );
-                    writer.WriteLine(
-                        "# LEFT = X,  TOP = Y,  RIGHT = X + WIDTH,  BOTTOM = Y + HEIGHT"
-                    );
-                    writer.WriteLine();
-                    writer.WriteLine();
-
-                    foreach (KeyValuePair<ushort, ContainerData> e in _data)
+                    using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+                    using (var writer = new StreamWriter(stream))
                     {
+                        writer.WriteLine("# FORMAT");
                         writer.WriteLine(
-                            $"{e.Value.Graphic} {e.Value.OpenSound} {e.Value.ClosedSound} {e.Value.Bounds.X} {e.Value.Bounds.Y} {e.Value.Bounds.Width} {e.Value.Bounds.Height} {e.Value.IconizedGraphic} {e.Value.MinimizerArea.X} {e.Value.MinimizerArea.Y}"
+                            "# GRAPHIC OPEN_SOUND_ID CLOSE_SOUND_ID LEFT TOP RIGHT BOTTOM ICONIZED_GRAPHIC [0 if not exists] MINIMIZER_AREA_X [0 if not exists] MINIMIZER_AREA_Y [0 if not exists]"
                         );
+                        writer.WriteLine(
+                            "# LEFT = X,  TOP = Y,  RIGHT = X + WIDTH,  BOTTOM = Y + HEIGHT"
+                        );
+                        writer.WriteLine();
+                        writer.WriteLine();
+
+                        foreach (KeyValuePair<ushort, ContainerData> e in _data)
+                        {
+                            writer.WriteLine(
+                                $"{e.Value.Graphic} {e.Value.OpenSound} {e.Value.ClosedSound} {e.Value.Bounds.X} {e.Value.Bounds.Y} {e.Value.Bounds.Width} {e.Value.Bounds.Height} {e.Value.IconizedGraphic} {e.Value.MinimizerArea.X} {e.Value.MinimizerArea.Y}"
+                            );
+                        }
                     }
+                }
+                catch (IOException ex)
+                {
+                    // If file creation fails (e.g., another process is writing), we still have the defaults in memory
+                    Log.Warn($"Unable to write containers.txt, using defaults: {ex.Message}");
                 }
 
                 // Data is already in _data from MakeDefault(), no need to read file
@@ -276,75 +284,78 @@ namespace ClassicUO.Game.Managers
             // File exists and no force rebuild, read from file
             _data.Clear();
 
-            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            string c;
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = new StreamReader(stream))
             {
-                var containersParser = new TextFileParser(
-                    reader.ReadToEnd(),
-                    new[] { ' ', '\t', ',' },
-                    new[] { '#', ';' },
-                    new[] { '"', '"' }
-                );
+                c = reader.ReadToEnd();
+            }
 
-                int line = 0;
+            var containersParser = new TextFileParser(
+                c,
+                new[] { ' ', '\t', ',' },
+                new[] { '#', ';' },
+                new[] { '"', '"' }
+            );
 
-                while (!containersParser.IsEOF())
+            int line = 0;
+
+            while (!containersParser.IsEOF())
+            {
+                List<string> ss = containersParser.ReadTokens();
+
+                if (ss != null && ss.Count != 0)
                 {
-                    List<string> ss = containersParser.ReadTokens();
-
-                    if (ss != null && ss.Count != 0)
+                    if (
+                        ss.Count >= 7
+                        && ushort.TryParse(ss[0], out ushort graphic)
+                        && ushort.TryParse(ss[1], out ushort openSoundId)
+                        && ushort.TryParse(ss[2], out ushort closeSoundId)
+                        && int.TryParse(ss[3], out int x)
+                        && int.TryParse(ss[4], out int y)
+                        && int.TryParse(ss[5], out int w)
+                        && int.TryParse(ss[6], out int h)
+                    )
                     {
-                        if (
-                            ss.Count >= 7
-                            && ushort.TryParse(ss[0], out ushort graphic)
-                            && ushort.TryParse(ss[1], out ushort openSoundId)
-                            && ushort.TryParse(ss[2], out ushort closeSoundId)
-                            && int.TryParse(ss[3], out int x)
-                            && int.TryParse(ss[4], out int y)
-                            && int.TryParse(ss[5], out int w)
-                            && int.TryParse(ss[6], out int h)
-                        )
+                        ushort iconizedGraphic = 0;
+                        int minimizerX = 0;
+                        int minimizerY = 0;
+
+                        if (ss.Count >= 8)
                         {
-                            ushort iconizedGraphic = 0;
-                            int minimizerX = 0;
-                            int minimizerY = 0;
-
-                            if (ss.Count >= 8)
-                            {
-                                ushort.TryParse(ss[7], out iconizedGraphic);
-                            }
-
-                            if (ss.Count >= 9)
-                            {
-                                int.TryParse(ss[8], out minimizerX);
-                            }
-
-                            if (ss.Count >= 10)
-                            {
-                                int.TryParse(ss[9], out minimizerY);
-                            }
-
-                            _data[graphic] = new ContainerData(
-                                graphic,
-                                openSoundId,
-                                closeSoundId,
-                                x,
-                                y,
-                                w,
-                                h,
-                                iconizedGraphic,
-                                minimizerX,
-                                minimizerY
-                            );
+                            ushort.TryParse(ss[7], out iconizedGraphic);
                         }
-                        else
+
+                        if (ss.Count >= 9)
                         {
-                            Log.Warn($"Error parsing container data at line {line}: {string.Join(" ", ss)}");
+                            int.TryParse(ss[8], out minimizerX);
                         }
+
+                        if (ss.Count >= 10)
+                        {
+                            int.TryParse(ss[9], out minimizerY);
+                        }
+
+                        _data[graphic] = new ContainerData(
+                            graphic,
+                            openSoundId,
+                            closeSoundId,
+                            x,
+                            y,
+                            w,
+                            h,
+                            iconizedGraphic,
+                            minimizerX,
+                            minimizerY
+                        );
                     }
-
-                    line++;
+                    else
+                    {
+                        Log.Warn($"Error parsing container data at line {line}: {string.Join(" ", ss)}");
+                    }
                 }
+
+                line++;
             }
         }
 

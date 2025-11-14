@@ -146,6 +146,9 @@ namespace ClassicUO.Game.Managers
                 {
                     if (!buyConfigEntry.IsMatch(item.Graphic, item.Hue)) continue;
 
+                    // Skip if item price exceeds configured max price
+                    if (buyConfigEntry.MaxPrice > 0 && item.Price > buyConfigEntry.MaxPrice) continue;
+
                     if (current_count >= maxToBuy) continue;
 
                     if (limit_unique_items && unique_items >= max_unique_items) break;
@@ -298,6 +301,7 @@ namespace ClassicUO.Game.Managers
         public ushort Hue { get; set; } = ushort.MaxValue;
         public ushort MaxAmount { get; set; } = ushort.MaxValue;
         public ushort RestockUpTo { get; set; } = 0;
+        public uint MaxPrice { get; set; } = 0;
         public bool Enabled { get; set; } = true;
 
         public bool IsMatch(ushort graphic, ushort hue) => graphic == Graphic && (hue == Hue || Hue == ushort.MaxValue);

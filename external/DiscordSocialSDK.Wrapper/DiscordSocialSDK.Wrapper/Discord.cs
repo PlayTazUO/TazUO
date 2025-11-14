@@ -420,10 +420,7 @@ namespace Discord.Sdk
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void __FreeString(NativeMethods.Discord_String* str)
-        {
-            Marshal.FreeCoTaskMem((IntPtr)str->ptr);
-        }
+        public unsafe static void __FreeString(NativeMethods.Discord_String* str) => Marshal.FreeCoTaskMem((IntPtr)str->ptr);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static bool __InitStringLocal(byte* buf, int* bufUsed, int bufCapacity, NativeMethods.Discord_String* str, string value)

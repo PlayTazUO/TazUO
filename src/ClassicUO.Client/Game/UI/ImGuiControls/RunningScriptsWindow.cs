@@ -39,7 +39,6 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     if (ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
-                        ImGui.Text($"Type: {script.ScriptType}");
                         ImGui.Text($"Path: {script.FullPath ?? "N/A"}");
                         ImGui.EndTooltip();
                     }

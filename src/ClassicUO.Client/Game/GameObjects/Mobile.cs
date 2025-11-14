@@ -204,6 +204,7 @@ namespace ClassicUO.Game.GameObjects
         public ushort ManaMax;
         public int StepSoundOffset;
         public string Title = string.Empty;
+        public float Scale = 1f; //Functional, but not ready for deployment yet
 
         public static Mobile Create(World world, uint serial)
         {

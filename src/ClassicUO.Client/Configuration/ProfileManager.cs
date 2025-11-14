@@ -53,6 +53,8 @@ namespace ClassicUO.Configuration
 
             ValidateFields(CurrentProfile);
 
+            CurrentProfile.AfterLoad();
+
             Client.Game?.SetVSync(CurrentProfile.EnableVSync);
         }
 

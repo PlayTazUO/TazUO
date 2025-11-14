@@ -42,6 +42,13 @@ description:  Represents a Python-accessible item in the game world.   Inherits 
 
 **Type:** `bool`
 
+### `IsContainer`
+
+**Type:** `bool`
+
+ Check if this item is a container(Bag, chest, etc)
+
+
 ### `MatchingHighlightName`
 
 **Type:** `string`
@@ -61,3 +68,12 @@ description:  Represents a Python-accessible item in the game world.   Inherits 
 *No enums found.*
 
 ## Methods
+### GetContainerGump
+
+ If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
+
+
+**Return Type:** `PyBaseControl`
+
+---
+

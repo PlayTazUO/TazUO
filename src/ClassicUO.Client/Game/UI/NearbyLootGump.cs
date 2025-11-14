@@ -225,6 +225,7 @@ namespace ClassicUO.Game.UI
                         continue;
 
                     itemList.Add(item);
+                    GridHighlightData.ProcessItemOpl(world, item);
                 }
 
             }

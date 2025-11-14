@@ -394,7 +394,7 @@ namespace ClassicUO.Game
                                 mob.Serial,
                                 mob.X,
                                 mob.Y,
-                                MathHelper.PercetangeOf(mob.Hits, mob.HitsMax),
+                                MathHelper.PercentageOf(mob.Hits, mob.HitsMax),
                                 MapIndex,
                                 true,
                                 mob.Name
@@ -407,7 +407,7 @@ namespace ClassicUO.Game
                                 mob.Serial,
                                 mob.X,
                                 mob.Y,
-                                MathHelper.PercetangeOf(mob.Hits, mob.HitsMax),
+                                MathHelper.PercentageOf(mob.Hits, mob.HitsMax),
                                 MapIndex,
                                 false,
                                 mob.Name

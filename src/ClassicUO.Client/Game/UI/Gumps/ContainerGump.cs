@@ -13,6 +13,7 @@ using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using ClassicUO.Game.UI.Gumps.GridHighLight;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -606,6 +607,8 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     continue;
                 }
+
+                GridHighlightData.ProcessItemOpl(World, item);
 
                 var itemControl = new ItemGump(
                     this,

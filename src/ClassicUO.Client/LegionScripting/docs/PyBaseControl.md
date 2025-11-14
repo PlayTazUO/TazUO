@@ -4,9 +4,23 @@ description: PyBaseControl class documentation
 ---
 
 ## Properties
+### `CanMove`
+
+**Type:** `bool`
+
+ Weather this control/gump can be moved by dragging this control
+
+
 ### `IsVisible`
 
 **Type:** `bool`
+
+### `IsDisposed`
+
+**Type:** `bool`
+
+ Check if this control has been disposed(delete/removed/etc)
+
 
 
 *No fields found.*
@@ -63,7 +77,7 @@ description: PyBaseControl class documentation
 | --- | --- | --- | --- |
 | `x` | `int` | ❌ No | The new X coordinate |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -79,7 +93,7 @@ description: PyBaseControl class documentation
 | --- | --- | --- | --- |
 | `y` | `int` | ❌ No | The new Y coordinate |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -96,7 +110,19 @@ description: PyBaseControl class documentation
 | `x` | `int` | ❌ No | The new X coordinate |
 | `y` | `int` | ❌ No | The new Y coordinate |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
+
+---
+
+### GetWidth
+
+**Return Type:** `int`
+
+---
+
+### GetHeight
+
+**Return Type:** `int`
 
 ---
 
@@ -112,7 +138,7 @@ description: PyBaseControl class documentation
 | --- | --- | --- | --- |
 | `width` | `int` | ❌ No | The new width in pixels |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -128,7 +154,7 @@ description: PyBaseControl class documentation
 | --- | --- | --- | --- |
 | `height` | `int` | ❌ No | The new height in pixels |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -147,7 +173,7 @@ description: PyBaseControl class documentation
 | `width` | `int` | ❌ No | The new width in pixels |
 | `height` | `int` | ❌ No | The new height in pixels |
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -157,7 +183,7 @@ description: PyBaseControl class documentation
  Used in python API
 
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -167,7 +193,33 @@ description: PyBaseControl class documentation
  Used in python API
 
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
+
+---
+
+### GetAlpha
+
+ Returns the control's Alpha value.
+ Used in python API
+
+
+**Return Type:** `float`
+
+---
+
+### SetAlpha
+`(alpha)`
+ Sets the control's Alpha value.
+ Used in python API
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `alpha` | `float` | ❌ No | The new Alpha value |
+
+**Return Type:** `PyBaseControl`
 
 ---
 
@@ -177,7 +229,7 @@ description: PyBaseControl class documentation
  Used in python API
 
 
-**Return Type:** `void` *(Does not return anything)*
+**Return Type:** `PyBaseControl`
 
 ---
 

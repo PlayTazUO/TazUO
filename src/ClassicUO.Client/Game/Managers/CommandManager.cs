@@ -33,7 +33,7 @@ namespace ClassicUO.Game.Managers
 
             Register("updateapi", (s) =>
             {
-                LegionScripting.LegionScripting.DownloadAPIPy();
+                LegionScripting.LegionScripting.DownloadApiPy();
             });
 
             Register

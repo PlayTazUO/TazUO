@@ -1123,7 +1123,7 @@ namespace ClassicUO.Game.Managers
                     Item m = _world.Player.FindItemByLayer(Layer.Mount);
                     if (m != null)
                     {
-                        GameActions.DoubleClickQueued(_world.Player);
+                        GameActions.DoubleClickQueued(_world.Player, true);
                         ClassicUO.LegionScripting.ScriptRecorder.Instance.RecordDismount();
                     }
                     break;
@@ -2088,6 +2088,39 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.UseType:
+                    var useTypeString = (MacroObjectString)macro;
+                    string typePattern = useTypeString.Text;
+
+                    if (!string.IsNullOrEmpty(typePattern))
+                    {
+                        // Parse pattern: format is "graphic hue" or just "graphic"
+                        // Example: "0x0F0E 0" for graphic 0x0F0E with hue 0
+                        // Example: "0x0F0E" for graphic 0x0F0E with any hue
+                        string[] parts = typePattern.Split(' ');
+                        ushort graphic = 0;
+                        ushort? hue = null;
+
+                        int parsed = 0;
+
+                        if (parts.Length >= 1)
+                            if (!StringHelper.TryParseInt(parts[0], out parsed))
+                                break; // Invalid graphic, exit
+
+                        graphic = (ushort)parsed;
+
+                        if (parts.Length == 2)
+                            // Hue is optional
+                            if (StringHelper.TryParseInt(parts[1], out int h))
+                                hue = (ushort)h;
+
+                        Item foundItem = _world.Player.FindItemByGraphicAndHue(graphic, hue);
+
+                        if (foundItem != null) GameActions.DoubleClick(_world, foundItem);
+                    }
+
+                    break;
+
                 case MacroType.CloseAllHealthBars:
 
                     //Includes HealthBarGump/HealthBarGumpCustom
@@ -2539,6 +2572,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.UseCounterBar:
                 case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
+                case MacroType.UseType:
                     obj = new MacroObjectString(code, MacroSubType.MSC_NONE);
 
                     break;
@@ -2719,6 +2753,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.UseCounterBar:
                 case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
+                case MacroType.UseType:
                     SubMenuType = 2;
 
                     break;
@@ -2854,6 +2889,7 @@ namespace ClassicUO.Game.Managers
         ToggleMount,
         ClearHands,
         EquipHands,
+        UseType,
     }
 
     public enum MacroSubType

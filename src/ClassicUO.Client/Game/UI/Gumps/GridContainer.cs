@@ -1593,7 +1593,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // Second pass: Fill remaining empty slots with items that don't have saved positions
                 // This includes new items or items being auto-sorted
                 foreach (Item i in filteredItems)
-                {
+                {                    
                     foreach (KeyValuePair<int, GridItem> slot in gridSlots)
                     {
                         // Skip slots that already have items
@@ -1756,6 +1756,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (item.IsDestroyed)
                         continue;
+
+                    GridHighlightData.ProcessItemOpl(world, item);
 
                     world.OPL.Contains(item); //Request tooltip data
 

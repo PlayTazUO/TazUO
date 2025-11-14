@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using ClassicUO.Utility.Logging;
+using Lock = System.Threading.Lock;
 
 namespace ClassicUO.Game.Managers
 {
@@ -25,6 +26,7 @@ namespace ClassicUO.Game.Managers
         private long _nextBandageTime = 0;
         private readonly LinkedList<uint> _pendingHeals = new();
         private readonly HashSet<uint> _enqueuedInGlobalQueue = new();
+        private readonly Lock _queueLock = new();
         private Timer _retryTimer;
         private const int RETRY_INTERVAL_MS = 100;
 
@@ -35,11 +37,11 @@ namespace ClassicUO.Game.Managers
         private ushort BandageGraphic => ProfileManager.CurrentProfile?.BandageAgentGraphic ?? 0x0E21;
         private bool UseNewBandagePacket => ProfileManager.CurrentProfile?.BandageAgentUseNewPacket ?? true;
         private int HpPercentageThreshold => ProfileManager.CurrentProfile?.BandageAgentHPPercentage ?? 80;
-        public bool UseOnPoisoned => ProfileManager.CurrentProfile?.BandageAgentCheckPoisoned ?? false;
-        public bool CheckHidden => ProfileManager.CurrentProfile?.BandageAgentCheckHidden ?? false;
-        public bool CheckInvul => ProfileManager.CurrentProfile?.BandageAgentCheckInvul ?? false;
-        public bool HasBandagingBuff { get; set; } = false;
-        public bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
+        private bool UseOnPoisoned => ProfileManager.CurrentProfile?.BandageAgentCheckPoisoned ?? false;
+        private bool CheckHidden => ProfileManager.CurrentProfile?.BandageAgentCheckHidden ?? false;
+        private bool CheckInvul => ProfileManager.CurrentProfile?.BandageAgentCheckInvul ?? false;
+        private bool HasBandagingBuff { get; set; } = false;
+        private bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
         private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
 
         private BandageManager()
@@ -54,18 +56,12 @@ namespace ClassicUO.Game.Managers
 
             Mobile mobile = World.Instance?.Mobiles?.Get(serial);
 
-            if (ShouldAttemptHeal(mobile))
-            {
-                AttemptHealMobile(mobile);
-            }
+            if (ShouldAttemptHeal(mobile)) AttemptHealMobile(mobile);
         }
 
         private void OnBuffAdded(object sender, BuffEventArgs e)
         {
-            if (e.Buff.Type == BuffIconType.Healing)
-            {
-                HasBandagingBuff = true;
-            }
+            if (e.Buff.Type == BuffIconType.Healing) HasBandagingBuff = true;
         }
 
         private void OnBuffRemoved(object sender, BuffEventArgs e)
@@ -87,10 +83,7 @@ namespace ClassicUO.Game.Managers
                 return;
 
             // Check if we should heal this mobile
-            if (ShouldAttemptHeal(mobile))
-            {
-                AttemptHealMobile(mobile);
-            }
+            if (ShouldAttemptHeal(mobile)) AttemptHealMobile(mobile);
         }
 
         /// <summary>
@@ -100,25 +93,29 @@ namespace ClassicUO.Game.Managers
         {
             if (!IsEnabled) return;
 
-            if(!_pendingHeals.Contains(mobileSerial))
-            {
-                if (mobileSerial == World.Instance.Player)
-                    _pendingHeals.AddFirst(mobileSerial);
-                else
-                    _pendingHeals.AddLast(mobileSerial);
-            }
+            lock (_queueLock)
+                if(!_pendingHeals.Contains(mobileSerial))
+                {
+                    if (mobileSerial == World.Instance.Player)
+                        _pendingHeals.AddFirst(mobileSerial);
+                    else
+                        _pendingHeals.AddLast(mobileSerial);
+                }
 
             VerifyTimer();
         }
 
         private void VerifyTimer()
         {
-            if (!IsEnabled || _pendingHeals.Count == 0)
+            lock (_queueLock)
             {
-                DestroyTimer();
-                return;
+                if (!IsEnabled || _pendingHeals.Count == 0)
+                {
+                    DestroyTimer();
+                    return;
+                }
+                _retryTimer ??= new Timer(ProcessRetryQueue, null, RETRY_INTERVAL_MS, RETRY_INTERVAL_MS);
             }
-            _retryTimer ??= new Timer(ProcessRetryQueue, null, RETRY_INTERVAL_MS, RETRY_INTERVAL_MS);
         }
 
         private void DestroyTimer()
@@ -132,22 +129,20 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ProcessRetryQueue(object state)
         {
-            if (_pendingHeals.Count == 0) return;
+            uint serial;
 
-            if (_pendingHeals.First == null)
+            // Safely get and remove the first item from the queue
+            lock (_queueLock)
             {
+                if (_pendingHeals.Count == 0) return;
+
+                serial = _pendingHeals.First.Value;
                 _pendingHeals.RemoveFirst();
-                ProcessRetryQueue(state);
-                return;
             }
 
-            uint serial = _pendingHeals.First.Value;
-            _pendingHeals.RemoveFirst();
+            // Process outside the lock to avoid holding it during game logic
             Mobile mobile = World.Instance?.Mobiles?.Get(serial);
-            if (ShouldAttemptHeal(mobile))
-            {
-                AttemptHealMobile(mobile);
-            }
+            if (ShouldAttemptHeal(mobile)) AttemptHealMobile(mobile);
 
             VerifyTimer();
         }
@@ -214,16 +209,16 @@ namespace ClassicUO.Game.Managers
             }
 
             // Only enqueue if not already in the global priority queue
-            if (_enqueuedInGlobalQueue.Add(mobile.Serial))
-            {
-                GlobalPriorityQueue.Instance.Enqueue(() => ExecuteHealMobile(mobile));
-            }
+            bool shouldEnqueue;
+            lock (_queueLock) shouldEnqueue = _enqueuedInGlobalQueue.Add(mobile.Serial);
+
+            if (shouldEnqueue) GlobalPriorityQueue.Instance.Enqueue(() => ExecuteHealMobile(mobile));
         }
 
         private void ExecuteHealMobile(Mobile mobile)
         {
             // Remove from tracking set now that we're executing
-            _enqueuedInGlobalQueue.Remove(mobile.Serial);
+            lock (_queueLock) _enqueuedInGlobalQueue.Remove(mobile.Serial);
 
             if (World.Instance == null || World.Instance.Player == null || mobile == null)
                 return;
@@ -237,10 +232,8 @@ namespace ClassicUO.Game.Managers
             }
 
             if (UseNewBandagePacket)
-            {
                 // Use the same pattern as BandageSelf but target the mobile
                 AsyncNetClient.Socket.Send_TargetSelectedObject(bandage.Serial, mobile.Serial);
-            }
             else
             {
                 // Set up auto-target before double-clicking
@@ -287,8 +280,11 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private void ClearAllPendingHeals()
         {
-            _pendingHeals.Clear();
-            _enqueuedInGlobalQueue.Clear();
+            lock (_queueLock)
+            {
+                _pendingHeals.Clear();
+                _enqueuedInGlobalQueue.Clear();
+            }
             DestroyTimer();
         }
 

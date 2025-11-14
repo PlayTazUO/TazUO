@@ -46,6 +46,9 @@ namespace ClassicUO.Game.Scenes
                     _world.Player.Pathfinder.StopAutoWalk();
                 }
 
+                if (LongDistancePathfinder.IsPathfinding())
+                    LongDistancePathfinder.StopPathfinding();
+
                 int x = Camera.Bounds.X + (Camera.Bounds.Width >> 1) + ((ProfileManager.CurrentProfile.PlayerOffset.X - ProfileManager.CurrentProfile.PlayerOffset.Y) * 22);
                 int y = Camera.Bounds.Y + (Camera.Bounds.Height >> 1) + ((ProfileManager.CurrentProfile.PlayerOffset.X + ProfileManager.CurrentProfile.PlayerOffset.Y) * 22);
 
@@ -1349,6 +1352,8 @@ namespace ClassicUO.Game.Scenes
                     {
                         _world.Player.Pathfinder.StopAutoWalk();
                     }
+                    if (LongDistancePathfinder.IsPathfinding())
+                        LongDistancePathfinder.StopPathfinding();
 
                     break;
 

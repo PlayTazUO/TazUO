@@ -88,8 +88,7 @@ namespace ClassicUO.Game.GameObjects
         {
             get => graphic; set
             {
-                if (originalGraphic == 0)
-                    originalGraphic = value;
+                originalGraphic = value;
                 GraphicsReplacement.Replace(originalGraphic, ref value, ref hue);
                 Hue = hue; //Workaround for making sure hues are replaced as-well
                 graphic = value;

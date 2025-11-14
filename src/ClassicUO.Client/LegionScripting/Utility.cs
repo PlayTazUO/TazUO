@@ -4,7 +4,6 @@ using System.Linq;
 using ClassicUO.Game;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
-using LScript;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.LegionScripting;
@@ -25,7 +24,7 @@ internal static class Utility
     }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="gfx">Graphic to match</param>
     /// <param name="parentContainer">Matches *only* the parent container, not root **Don't use different continer params together**</param>
@@ -37,7 +36,7 @@ internal static class Utility
     public static List<Item> FindItems
     (
         uint gfx = uint.MaxValue, uint parentContainer = uint.MaxValue, uint rootContainer = uint.MaxValue, uint parOrRootContainer = uint.MaxValue, ushort hue = ushort.MaxValue,
-        int groundRange = int.MaxValue, bool skipIgnoreCheck = false
+        int groundRange = int.MaxValue
     )
     {
         var list = new List<Item>();
@@ -50,11 +49,11 @@ internal static class Utility
             if (parentContainer != uint.MaxValue && item.Container != parentContainer)
                 continue;
 
-                if (rootContainer != uint.MaxValue && item.BackpackOrRootContainer != rootContainer)
-                    continue;
+            if (rootContainer != uint.MaxValue && item.BackpackOrRootContainer != rootContainer)
+                continue;
 
-                if (parOrRootContainer != uint.MaxValue && (item.Container != parOrRootContainer && item.BackpackOrRootContainer != parOrRootContainer))
-                    continue;
+            if (parOrRootContainer != uint.MaxValue && (item.Container != parOrRootContainer && item.BackpackOrRootContainer != parOrRootContainer))
+                continue;
 
             if (hue != ushort.MaxValue && item.Hue != hue)
                 continue;
@@ -62,9 +61,6 @@ internal static class Utility
             Item root = World.Items.Get(item.BackpackOrRootContainer);
 
             if (groundRange != int.MaxValue && ((item.Distance > groundRange && root == null) || (root != null && root.Distance > groundRange)))
-                continue;
-
-            if (!skipIgnoreCheck && Interpreter.InIgnoreList(item))
                 continue;
 
             list.Add(item);
@@ -217,13 +213,9 @@ internal static class Utility
         uint serial = 0;
 
         if (scanType == ScanTypeObject.Objects)
-        {
             foreach (Item item in World.Items.Values)
             {
-                if (item.IsMulti || item.IsDestroyed || !item.OnGround || api.OnIgnoreList(item))
-                {
-                    continue;
-                }
+                if (item.IsMulti || item.IsDestroyed || !item.OnGround || api.OnIgnoreList(item)) continue;
 
                 if (item.Distance < distance)
                 {
@@ -231,44 +223,27 @@ internal static class Utility
                     serial = item.Serial;
                 }
             }
-        }
         else
-        {
             foreach (Mobile mobile in World.Mobiles.Values)
             {
-                if (mobile.IsDestroyed || mobile == World.Player || api.OnIgnoreList(mobile))
-                {
-                    continue;
-                }
+                if (mobile.IsDestroyed || mobile == World.Player || api.OnIgnoreList(mobile)) continue;
 
                 switch (scanType)
                 {
                     case ScanTypeObject.Party:
-                        if (!World.Party.Contains(mobile))
-                        {
-                            continue;
-                        }
+                        if (!World.Party.Contains(mobile)) continue;
 
                         break;
 
                     case ScanTypeObject.Followers:
-                        if (!(mobile.IsRenamable && mobile.NotorietyFlag != NotorietyFlag.Enemy))
-                        {
-                            continue;
-                        }
+                        if (!(mobile.IsRenamable && mobile.NotorietyFlag != NotorietyFlag.Enemy)) continue;
 
                         break;
 
                     case ScanTypeObject.Hostile:
-                        if (mobile.NotorietyFlag == NotorietyFlag.Ally || mobile.NotorietyFlag == NotorietyFlag.Innocent || mobile.NotorietyFlag == NotorietyFlag.Invulnerable)
-                        {
-                            continue;
-                        }
+                        if (mobile.NotorietyFlag == NotorietyFlag.Ally || mobile.NotorietyFlag == NotorietyFlag.Innocent || mobile.NotorietyFlag == NotorietyFlag.Invulnerable) continue;
 
                         break;
-
-                    case ScanTypeObject.Objects:
-                        /* This was handled separately above */ continue;
                 }
 
                 if (mobile.Distance < distance)
@@ -277,7 +252,6 @@ internal static class Utility
                     serial = mobile.Serial;
                 }
             }
-        }
 
         return serial;
     }

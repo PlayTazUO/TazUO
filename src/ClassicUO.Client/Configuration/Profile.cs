@@ -650,7 +650,20 @@ namespace ClassicUO.Configuration
         public bool DisableDismountInWarMode { get; set; }
         public bool EnableASyncMapLoading { get; set; }
 
+        [JsonIgnore]
+        public bool EnablePetScaling
+        {
+            get => field;
+            set {
+                field = value;
+                Client.Settings.SetAsync(SettingsScope.Char, Constants.SqlSettings.SCALE_PETS_ENABLED, value);
+            }
+        }
+
         private long lastSave;
+
+        internal void AfterLoad() => Client.Settings.GetAsyncOnMainThread(SettingsScope.Char, Constants.SqlSettings.SCALE_PETS_ENABLED, false, (b) => { EnablePetScaling = b; });
+
         internal void Save(World world, string path, bool saveGumps = true)
         {
             if (Time.Ticks - lastSave < 10) //Don't save if saved in the last 10 ms, prevent duplcate saving when exiting game with options menu open
@@ -1297,6 +1310,11 @@ namespace ClassicUO.Configuration
                     SingletonImGuiWindow<AssistantWindow> w2 = AssistantWindow.GetInstance();
                     w2.Load(xml);
                     ImGuiManager.AddWindow(w2);
+                    break;
+                case "ClassicUO.Game.UI.ImGuiControls.RunningScriptsWindow":
+                    SingletonImGuiWindow<RunningScriptsWindow> w3 = RunningScriptsWindow.GetInstance();
+                    w3.Load(xml);
+                    ImGuiManager.AddWindow(w3);
                     break;
             }
         }

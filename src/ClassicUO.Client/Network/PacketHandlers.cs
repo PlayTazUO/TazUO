@@ -727,16 +727,12 @@ sealed class PacketHandlers
                 }
             }
 
-            if (mobile == world.Player)
-            {
-                TitleBarStatsManager.UpdateTitleBar();
-            }
+            if (mobile == world.Player) TitleBarStatsManager.UpdateTitleBar();
 
             // Check for bandage healing
-            if (oldHits != mobile.Hits)
-            {
-                BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
-            }
+            if (oldHits != mobile.Hits) BandageManager.Instance.OnMobileHpChanged(mobile, oldHits, mobile.Hits);
+
+            if (mobile.IsRenamable && ProfileManager.CurrentProfile.EnablePetScaling) mobile.Scale = 0.6f;//Customizable later
         }
     }
 
@@ -4870,26 +4866,26 @@ sealed class PacketHandlers
                 ushort spell = p.ReadUInt16BE();
                 bool active = p.ReadBool();
 
-                foreach (Gump g in UIManager.Gumps)
+                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    if (!g.IsDisposed && g.IsVisible)
-                    {
-                        if (g is UseSpellButtonGump spellButton && spellButton.SpellID == spell)
-                        {
-                            if (active)
-                            {
-                                spellButton.Hue = 38;
-                                world.ActiveSpellIcons.Add(spell);
-                            }
-                            else
-                            {
-                                spellButton.Hue = 0;
-                                world.ActiveSpellIcons.Remove(spell);
-                            }
+                    Control c = last.Value;
 
-                            break;
-                        }
+                    if (c.IsDisposed || !c.IsVisible) continue;
+
+                    if (c is not UseSpellButtonGump spellButton || spellButton.SpellID != spell) continue;
+
+                    if (active)
+                    {
+                        spellButton.Hue = 38;
+                        world.ActiveSpellIcons.Add(spell);
                     }
+                    else
+                    {
+                        spellButton.Hue = 0;
+                        world.ActiveSpellIcons.Remove(spell);
+                    }
+
+                    break;
                 }
 
                 break;
@@ -4903,6 +4899,8 @@ sealed class PacketHandlers
                 {
                     val = 0;
                 }
+
+                if (world.Player == null || !Enum.IsDefined(typeof(CharacterSpeedType), val)) break;
 
                 world.Player.SpeedMode = (CharacterSpeedType)val;
 
@@ -6324,9 +6322,6 @@ sealed class PacketHandlers
 
         container.PushToBack(item);
 
-        // Queue item for grid highlighting
-        GridHighlightData.ProcessItemOpl(world, serial);
-
         if (SerialHelper.IsMobile(containerSerial))
         {
             Mobile m = world.Mobiles.Get(containerSerial);
@@ -6571,10 +6566,6 @@ sealed class PacketHandlers
 
             // Update item database
             ItemDatabaseManager.Instance.AddOrUpdateItem(item, world);
-
-            // Queue item for grid highlighting
-            if(item.Container != 0xFFFF_FFFF)
-                GridHighlightData.ProcessItemOpl(world, serial);
         }
         else
         {
@@ -6798,9 +6789,7 @@ sealed class PacketHandlers
         int cmdlen = cmdlist.Count;
 
         if (cmdlen <= 0)
-        {
             return null;
-        }
 
         UIManager.GetGumpServer(gumpID)?.Dispose();
 
@@ -6812,9 +6801,7 @@ sealed class PacketHandlers
             y = pos.Y;
         }
         else
-        {
             UIManager.SavePosition(gumpID, new Point(x, y));
-        }
 
         var gump = new Gump(world, sender, gumpID)
         {

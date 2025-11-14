@@ -1,4 +1,3 @@
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 
 namespace ClassicUO.LegionScripting;

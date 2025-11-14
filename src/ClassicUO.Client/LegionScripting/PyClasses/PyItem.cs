@@ -1,6 +1,7 @@
 using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Gumps;
 
 namespace ClassicUO.LegionScripting.PyClasses;
 
@@ -15,6 +16,11 @@ public class PyItem : PyEntity
     public bool Opened => GetItem()?.Opened ?? false;
     public uint Container => GetItem()?.Container ?? 0;
     public uint RootContainer => GetItem()?.RootContainer ?? 0;
+
+    /// <summary>
+    /// Check if this item is a container(Bag, chest, etc)
+    /// </summary>
+    public bool IsContainer;
 
     public PyEntity RootEntity => MainThreadQueue.InvokeOnMainThread<PyEntity>(() =>
     {
@@ -49,6 +55,23 @@ public class PyItem : PyEntity
     public bool MatchesHighlight;
 
     /// <summary>
+    /// If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
+    /// </summary>
+    /// <returns></returns>
+    public PyBaseControl GetContainerGump()
+    {
+        Item item = GetItem();
+        if (item == null) return null;
+
+        Gump result = MainThreadQueue.InvokeOnMainThread(() => UIManager.GetGump(item.Serial));
+
+        if (result is GridContainer || result is ContainerGump)
+            return new PyBaseControl(result);
+
+        return null;
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="PyItem"/> class from an <see cref="Item"/>.
     /// </summary>
     /// <param name="item">The item to wrap.</param>
@@ -59,6 +82,7 @@ public class PyItem : PyEntity
         IsCorpse =  item.IsCorpse;
         MatchingHighlightName = item.HighlightName;
         MatchesHighlight = item.MatchesHighlightData;
+        IsContainer = item.ItemData.IsContainer;
     }
 
     /// <summary>
@@ -76,6 +100,36 @@ public class PyItem : PyEntity
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
             return item = GetItemUnsafe();
+        });
+    }
+
+    /// <summary>
+    /// Gets the item name and properties (tooltip text).
+    /// This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+    /// </summary>
+    /// <param name="wait">True or false to wait for name and props</param>
+    /// <param name="timeout">Timeout in seconds</param>
+    /// <returns>Item name and properties, or empty string if we don't have them.</returns>
+    public string NameAndProps(bool wait = false, int timeout = 10)
+    {
+        if (wait)
+        {
+            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
+
+            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
+        return MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            {
+                return n + "\n" + d;
+            }
+
+            return string.Empty;
         });
     }
 }

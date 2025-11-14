@@ -222,6 +222,18 @@ namespace ClassicUO.Game.GameObjects
             return null;
         }
 
+        public Item FindItemByGraphicAndHue(ushort graphic, ushort? hue)
+        {
+            Item backpack = Backpack;
+
+            if (backpack != null)
+            {
+                return FindItemByGraphicAndHueInContainerRecursive(backpack, graphic, hue);
+            }
+
+            return null;
+        }
+
         private Item FindItemInContainerRecursive(Item container, ushort graphic)
         {
             Item found = null;
@@ -273,6 +285,39 @@ namespace ClassicUO.Game.GameObjects
                         found = FindItemByClilocInContainerRecursive(item, cliloc);
 
                         if (found != null && cliloc == World.OPL.GetNameCliloc(found.Serial))
+                        {
+                            return found;
+                        }
+                    }
+                }
+            }
+
+            return found;
+        }
+
+        private Item FindItemByGraphicAndHueInContainerRecursive(Item container, ushort graphic, ushort? hue)
+        {
+            Item found = null;
+
+            if (container != null)
+            {
+                for (LinkedObject i = container.Items; i != null; i = i.Next)
+                {
+                    var item = (Item)i;
+
+                    bool graphicMatches = item.Graphic == graphic;
+                    bool hueMatches = !hue.HasValue || item.Hue == hue.Value;
+
+                    if (graphicMatches && hueMatches)
+                    {
+                        return item;
+                    }
+
+                    if (!item.IsEmpty)
+                    {
+                        found = FindItemByGraphicAndHueInContainerRecursive(item, graphic, hue);
+
+                        if (found != null)
                         {
                             return found;
                         }
@@ -648,7 +693,7 @@ namespace ClassicUO.Game.GameObjects
 
         public bool Walk(Direction direction, bool run)
         {
-            if (!ProfileManager.CurrentProfile.AutoAvoidObstacules || Pathfinder.AutoWalking)
+            if (!ProfileManager.CurrentProfile.AutoAvoidObstacules || Pathfinder.AutoWalking || !WalkableManager.Instance.IsMapGenerationComplete(World.Instance?.MapIndex ?? 0))
             {
                 return WalkNotAvoid(direction, run);
             }

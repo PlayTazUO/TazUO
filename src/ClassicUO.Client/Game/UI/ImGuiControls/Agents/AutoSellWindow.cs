@@ -147,7 +147,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 if (ImGui.Button("Add##AddEntry"))
                 {
-                    if (StringHelper.TryParseGraphic(_newGraphicInput, out int graphic))
+                    if (StringHelper.TryParseInt(_newGraphicInput, out int graphic))
                     {
                         BuySellItemConfig newConfig = BuySellAgent.Instance.NewSellConfig();
                         newConfig.Graphic = (ushort)graphic;
@@ -231,7 +231,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         if (ImGui.InputText($"##Graphic{i}", ref graphicStr, 10))
                         {
                             _entryGraphicInputs[entry] = graphicStr;
-                            if (StringHelper.TryParseGraphic(graphicStr, out int newGraphic))
+                            if (StringHelper.TryParseInt(graphicStr, out int newGraphic))
                             {
                                 entry.Graphic = (ushort)newGraphic;
                             }

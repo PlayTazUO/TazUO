@@ -715,7 +715,7 @@ namespace ClassicUO.Game.UI.Gumps
                     y = (int)(
                         m.RealScreenPosition.Y
                         + (m.Offset.Y - m.Offset.Z)
-                        - (height + centerY + 15)
+                        - (height + centerY + 15) * m.Scale
                         + (
                             m.IsGargoyle && m.IsFlying
                                 ? -22

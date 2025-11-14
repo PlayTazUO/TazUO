@@ -1,1 +1,0 @@
-# Docs moved to [docs/](docs/API.md)

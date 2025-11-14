@@ -1,8 +1,75 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace ClassicUO.Game.UI
 {
+    /// <summary>
+    /// JSON converter for System.Numerics.Vector4
+    /// </summary>
+    public class Vector4JsonConverter : JsonConverter<Vector4>
+    {
+        public override Vector4 Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                throw new JsonException("Expected StartObject token");
+            }
+
+            float x = 0, y = 0, z = 0, w = 0;
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonTokenType.EndObject)
+                {
+                    return new Vector4(x, y, z, w);
+                }
+
+                if (reader.TokenType == JsonTokenType.PropertyName)
+                {
+                    string propertyName = reader.GetString();
+                    reader.Read();
+
+                    switch (propertyName)
+                    {
+                        case "X":
+                            x = reader.GetSingle();
+                            break;
+                        case "Y":
+                            y = reader.GetSingle();
+                            break;
+                        case "Z":
+                            z = reader.GetSingle();
+                            break;
+                        case "W":
+                            w = reader.GetSingle();
+                            break;
+                    }
+                }
+            }
+
+            throw new JsonException("Unexpected end of JSON");
+        }
+
+        public override void Write(Utf8JsonWriter writer, Vector4 value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber("X", value.X);
+            writer.WriteNumber("Y", value.Y);
+            writer.WriteNumber("Z", value.Z);
+            writer.WriteNumber("W", value.W);
+            writer.WriteEndObject();
+        }
+    }
+
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSerializable(typeof(ImGuiTheme.ThemeColors))]
+    internal partial class ThemeColorsJsonContext : JsonSerializerContext
+    {
+    }
+
     /// <summary>
     /// A collection of color definitions for a consistent ImGui theme.
     /// </summary>
@@ -17,7 +84,46 @@ namespace ClassicUO.Game.UI
             // Register default themes
             RegisterTheme("Default", CreateDefaultTheme());
             RegisterTheme("Light", CreateLightTheme());
+            LoadCustomThemeFromSettings();
             SetTheme("Default");
+        }
+
+        /// <summary>
+        /// Load the Custom theme from settings, or create a default one
+        /// </summary>
+        public static void LoadCustomThemeFromSettings()
+        {
+            string customThemeJson = Client.Settings?.Get(SettingsScope.Global, Constants.SqlSettings.IMGUI_CUSTOM_THEME_JSON, string.Empty);
+
+            if (!string.IsNullOrEmpty(customThemeJson))
+            {
+                try
+                {
+                    var customColors = new ThemeColors(customThemeJson);
+                    RegisterTheme("Custom", new ImGuiTheme { Colors = customColors });
+                    return;
+                }
+                catch
+                {
+                    // If loading fails, fall through to create default Custom theme
+                }
+            }
+
+            // Register default Custom theme (clone of Default)
+            RegisterTheme("Custom", CreateDefaultTheme());
+        }
+
+        /// <summary>
+        /// Save the Custom theme to settings
+        /// </summary>
+        public static void SaveCustomThemeToSettings()
+        {
+            ImGuiTheme customTheme = GetTheme("Custom");
+            if (customTheme != null)
+            {
+                string json = customTheme.Colors.ToJson();
+                _ = Client.Settings?.SetAsync(SettingsScope.Global, Constants.SqlSettings.IMGUI_CUSTOM_THEME_JSON, json);
+            }
         }
 
         public ImGuiTheme()
@@ -33,7 +139,11 @@ namespace ClassicUO.Game.UI
         /// <summary>
         /// The currently active theme's colors
         /// </summary>
-        public static ThemeColors Current => _currentTheme.Colors;
+        public static ThemeColors Current
+        {
+            get => _currentTheme.Colors;
+            set => _currentTheme.Colors = value;
+        }
 
         /// <summary>
         /// The name of the currently active theme
@@ -167,40 +277,122 @@ namespace ClassicUO.Game.UI
         public class ThemeColors
         {
             // Bases
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Base100 { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Base200 { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Base300 { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 BaseContent { get; set; }
 
             // Principal Palette
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Primary { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 PrimaryContent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Secondary { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 SecondaryContent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Accent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 AccentContent { get; set; }
 
             // Neutral
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Neutral { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 NeutralContent { get; set; }
 
             // Info - States
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Info { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 InfoContent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Success { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 SuccessContent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Warning { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 WarningContent { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Error { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 ErrorContent { get; set; }
 
             // Extras for UI commons
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 Border { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 BorderShadow { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 ScrollbarBg { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 ScrollbarGrab { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 ScrollbarGrabHovered { get; set; }
+            [JsonConverter(typeof(Vector4JsonConverter))]
             public Vector4 ScrollbarGrabActive { get; set; }
+
+            /// <summary>
+            /// Create a ThemeColors instance from a JSON string
+            /// </summary>
+            public ThemeColors(string json)
+            {
+                try
+                {
+                    ThemeColors loaded = JsonSerializer.Deserialize(json, ThemeColorsJsonContext.Default.ThemeColors);
+                    if (loaded != null)
+                    {
+                        Base100 = loaded.Base100;
+                        Base200 = loaded.Base200;
+                        Base300 = loaded.Base300;
+                        BaseContent = loaded.BaseContent;
+                        Primary = loaded.Primary;
+                        PrimaryContent = loaded.PrimaryContent;
+                        Secondary = loaded.Secondary;
+                        SecondaryContent = loaded.SecondaryContent;
+                        Accent = loaded.Accent;
+                        AccentContent = loaded.AccentContent;
+                        Neutral = loaded.Neutral;
+                        NeutralContent = loaded.NeutralContent;
+                        Info = loaded.Info;
+                        InfoContent = loaded.InfoContent;
+                        Success = loaded.Success;
+                        SuccessContent = loaded.SuccessContent;
+                        Warning = loaded.Warning;
+                        WarningContent = loaded.WarningContent;
+                        Error = loaded.Error;
+                        ErrorContent = loaded.ErrorContent;
+                        Border = loaded.Border;
+                        BorderShadow = loaded.BorderShadow;
+                        ScrollbarBg = loaded.ScrollbarBg;
+                        ScrollbarGrab = loaded.ScrollbarGrab;
+                        ScrollbarGrabHovered = loaded.ScrollbarGrabHovered;
+                        ScrollbarGrabActive = loaded.ScrollbarGrabActive;
+                    }
+                }
+                catch
+                {
+                    // If deserialization fails, use default values
+                }
+            }
+
+            /// <summary>
+            /// Default constructor
+            /// </summary>
+            public ThemeColors()
+            {
+            }
+
+            /// <summary>
+            /// Export this theme to a JSON string
+            /// </summary>
+            public string ToJson() => JsonSerializer.Serialize(this, ThemeColorsJsonContext.Default.ThemeColors);
         }
 
         public static class Dimensions

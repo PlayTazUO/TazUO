@@ -380,19 +380,15 @@ namespace ClassicUO.Utility
         /// <param name="text">The input string to parse</param>
         /// <param name="graphic">The parsed graphic ID</param>
         /// <returns>True if parsing succeeded, false otherwise</returns>
-        public static bool TryParseGraphic(string text, out int graphic)
+        public static bool TryParseInt(string text, out int graphic)
         {
             graphic = 0;
             if (string.IsNullOrEmpty(text)) return false;
 
             if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-            {
                 return int.TryParse(text.Substring(2), NumberStyles.AllowHexSpecifier, null, out graphic);
-            }
-            else
-            {
-                return int.TryParse(text, out graphic);
-            }
+
+            return int.TryParse(text, out graphic);
         }
     }
 }

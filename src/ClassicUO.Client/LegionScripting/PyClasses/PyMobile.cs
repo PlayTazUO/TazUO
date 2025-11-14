@@ -1,4 +1,3 @@
-using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 
@@ -27,6 +26,7 @@ public class PyMobile : PyEntity
     public int Mana => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Mana ?? 0);
     public bool IsRenamable => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRenamable ?? false);
     public bool IsHuman => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHuman ?? false);
+    public bool IsYellowHits => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsYellowHits ?? false);
 
     public virtual bool InWarMode
     {
@@ -86,5 +86,35 @@ public class PyMobile : PyEntity
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Gets the mobile name and properties (tooltip text).
+    /// This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+    /// </summary>
+    /// <param name="wait">True or false to wait for name and props</param>
+    /// <param name="timeout">Timeout in seconds</param>
+    /// <returns>Mobile name and properties, or empty string if we don't have them.</returns>
+    public string NameAndProps(bool wait = false, int timeout = 10)
+    {
+        if (wait)
+        {
+            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
+
+            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
+        return MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            {
+                return n + "\n" + d;
+            }
+
+            return string.Empty;
+        });
     }
 }

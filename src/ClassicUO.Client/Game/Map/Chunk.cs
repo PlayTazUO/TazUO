@@ -45,7 +45,7 @@ namespace ClassicUO.Game.Map
 
         public static Chunk Create(World world, int x, int y, bool isAsync = false)
         {
-            Chunk c = new Chunk(world); // _pool.GetOne();
+            var c = new Chunk(world); // _pool.GetOne();
             c.LastAccessTime = Time.Ticks + Constants.CLEAR_TEXTURES_DELAY;
             c.X = x;
             c.Y = y;
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.Map
 
                         sbyte z = cells[pos].Z;
 
-                        Land land = Land.Create(_world, tileID);
+                        var land = Land.Create(_world, tileID);
 
                         ushort tileX = (ushort)(bx + x);
 
@@ -138,7 +138,7 @@ namespace ClassicUO.Game.Map
                                 continue;
                             }
 
-                            Static staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
+                            var staticObject = Static.Create(_world, sb.Color, sb.Hue, pos);
                             staticObject.X = (ushort)(bx + sb.X);
                             staticObject.Y = (ushort)(by + sb.Y);
                             staticObject.Z = sb.Z;

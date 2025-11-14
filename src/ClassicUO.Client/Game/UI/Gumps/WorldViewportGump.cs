@@ -100,7 +100,7 @@ namespace ClassicUO.Game.UI.Gumps
                 UIManager.Add(new VersionHistory(world));
                 ProfileManager.CurrentProfile.LastVersionHistoryShown = CUOEnviroment.Version.ToString();
 
-                LegionScripting.LegionScripting.DownloadAPIPy();
+                LegionScripting.LegionScripting.DownloadApiPy();
             }
 
             if (Settings.GlobalSettings.FPS < GameController.SupportedRefreshRate)

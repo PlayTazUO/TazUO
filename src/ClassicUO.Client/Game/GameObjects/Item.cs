@@ -86,6 +86,8 @@ namespace ClassicUO.Game.GameObjects
         public bool MatchesHighlightData;
         public Color HighlightColor = Color.White;
         public string HighlightName = string.Empty;
+        public bool ShouldAutoLoot;
+        public bool HighlightChecked;
         public ushort DisplayedGraphic
         {
             get

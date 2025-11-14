@@ -84,8 +84,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Spacing();
                 if (ImGui.Button("Add##AddEntry"))
                 {
-                    if (StringHelper.TryParseGraphic(newOriginalGraphicInput, out int originalGraphic) &&
-                        StringHelper.TryParseGraphic(newReplacementGraphicInput, out int replacementGraphic))
+                    if (StringHelper.TryParseInt(newOriginalGraphicInput, out int originalGraphic) &&
+                        StringHelper.TryParseInt(newReplacementGraphicInput, out int replacementGraphic))
                     {
                         ushort newHue = ushort.MaxValue;
                         if (!string.IsNullOrEmpty(newHueInput) && newHueInput != "-1")
@@ -155,7 +155,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         if (ImGui.InputText($"##Original{i}", ref originalStr, 10))
                         {
                             entryOriginalInputs[filter.OriginalGraphic] = originalStr;
-                            if (StringHelper.TryParseGraphic(originalStr, out int newOriginal))
+                            if (StringHelper.TryParseInt(originalStr, out int newOriginal))
                             {
                                 filter.OriginalGraphic = (ushort)newOriginal;
                                 GraphicsReplacement.ResetLists();
@@ -172,7 +172,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
                         if (ImGui.InputText($"##Replacement{i}", ref replacementStr, 10))
                         {
                             entryReplacementInputs[filter.OriginalGraphic] = replacementStr;
-                            if (StringHelper.TryParseGraphic(replacementStr, out int newReplacement))
+                            if (StringHelper.TryParseInt(replacementStr, out int newReplacement))
                             {
                                 filter.ReplacementGraphic = (ushort)newReplacement;
                             }

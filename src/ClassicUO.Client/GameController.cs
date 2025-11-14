@@ -425,10 +425,6 @@ namespace ClassicUO
             UIManager.Update();
             Profiler.ExitContext("UI Update");
 
-            Profiler.EnterContext("LScript");
-            LegionScripting.LegionScripting.OnUpdate();
-            Profiler.ExitContext("LScript");
-
             Profiler.EnterContext("MTQ");
             MainThreadQueue.ProcessQueue();
             Profiler.ExitContext("MTQ");

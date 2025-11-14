@@ -11,6 +11,7 @@ using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.UI.Gumps.GridHighLight;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -221,6 +222,8 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         continue;
                     }
+
+                    GridHighlightData.ProcessItemOpl(World, it);
 
                     var gridItem = new GridLootItem(this, it, GRID_ITEM_SIZE);
 
