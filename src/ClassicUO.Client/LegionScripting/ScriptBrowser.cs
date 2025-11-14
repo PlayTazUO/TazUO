@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using ClassicUO.Game;
 using ClassicUO.Game.UI.ImGuiControls;
@@ -16,6 +17,13 @@ using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.ImGuiControls.Legion;
 
 namespace ClassicUO.LegionScripting;
+
+[JsonSerializable(typeof(List<ScriptBrowser.GhFileObject>))]
+[JsonSerializable(typeof(ScriptBrowser.GhFileObject))]
+[JsonSerializable(typeof(ScriptBrowser.Links))]
+public partial class ScriptBrowserJsonContext : JsonSerializerContext
+{
+}
 
 public class ScriptBrowser : SingletonImGuiWindow<ScriptBrowser>
 {
@@ -350,22 +358,46 @@ public class ScriptBrowser : SingletonImGuiWindow<ScriptBrowser>
 
     public class GhFileObject
     {
+        [JsonPropertyName("name")]
         public string Name { get; set; }
+
+        [JsonPropertyName("path")]
         public string Path { get; set; }
+
+        [JsonPropertyName("sha")]
         public string Sha { get; set; }
+
+        [JsonPropertyName("size")]
         public int Size { get; set; }
+
+        [JsonPropertyName("url")]
         public string Url { get; set; }
+
+        [JsonPropertyName("html_url")]
         public string HtmlUrl { get; set; }
+
+        [JsonPropertyName("git_url")]
         public string GitUrl { get; set; }
+
+        [JsonPropertyName("download_url")]
         public string DownloadUrl { get; set; }
+
+        [JsonPropertyName("type")]
         public string Type { get; set; }
+
+        [JsonPropertyName("_links")]
         public Links Links { get; set; }
     }
 
     public class Links
     {
+        [JsonPropertyName("self")]
         public string Self { get; set; }
+
+        [JsonPropertyName("git")]
         public string Git { get; set; }
+
+        [JsonPropertyName("html")]
         public string Html { get; set; }
     }
 }
@@ -471,7 +503,7 @@ internal class GitHubContentCache : IDisposable
                 return new List<ScriptBrowser.GhFileObject>();
             }
 
-            List<ScriptBrowser.GhFileObject> files = JsonSerializer.Deserialize<List<ScriptBrowser.GhFileObject>>(response);
+            List<ScriptBrowser.GhFileObject> files = JsonSerializer.Deserialize(response, ScriptBrowserJsonContext.Default.ListGhFileObject);
             return files ?? new List<ScriptBrowser.GhFileObject>();
         }
         catch (WebException webEx)
