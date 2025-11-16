@@ -1,44 +1,55 @@
 @echo off
-chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo    清理并编译 OpenUO
+echo    Build and Run OpenUO
 echo ========================================
 echo.
 
-echo [0/3] 检查并关闭运行中的游戏...
+echo [1/3] Checking for running game...
 tasklist /FI "IMAGENAME eq OpenUO.exe" 2>NUL | find /I /N "OpenUO.exe">NUL
 if "%ERRORLEVEL%"=="0" (
-    echo 发现运行中的 OpenUO.exe，正在关闭...
+    echo Found running OpenUO.exe, closing...
     taskkill /F /IM OpenUO.exe >NUL 2>&1
     timeout /t 2 /nobreak >NUL
-    echo 已关闭游戏进程
+    echo Game process closed
 ) else (
-    echo 没有运行中的游戏进程
+    echo No running game process
 )
 
 echo.
-echo [1/2] 快速增量编译...
+echo [2/3] Building...
 dotnet build --configuration Debug --no-restore --verbosity minimal
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ========================================
-    echo    ✓ 编译成功！
+    echo    Build Success!
     echo ========================================
     echo.
-    echo [2/2] 启动游戏...
+    echo [3/3] Starting game...
     echo.
     
     cd bin\Debug\net9.0\win-x64
-    start OpenUO.exe
+
+    if exist "Data\Profiles\" (
+        rmdir /s /q "Data\Profiles\"
+        echo Deleted Profiles directory
+    )
     
-    echo 游戏已启动！
+    if exist "OpenUO.exe" (
+        start "" "OpenUO.exe"
+        echo Game started!
+    ) else (
+        echo [ERROR] OpenUO.exe not found
+        pause
+        exit /b 1
+    )
+    
     echo.
 ) else (
     echo.
-    echo [错误] 编译失败！
+    echo [ERROR] Build failed!
     echo.
     pause
     exit /b 1
