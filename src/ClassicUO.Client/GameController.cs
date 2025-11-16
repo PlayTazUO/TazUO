@@ -427,16 +427,6 @@ namespace ClassicUO
 
         public void SetWindowSize(int width, int height)
         {
-            //width = (int) ((double) width * Client.Game.GraphicManager.PreferredBackBufferWidth / Client.Game.Window.ClientBounds.Width);
-            //height = (int) ((double) height * Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height);
-
-            /*if (CUOEnviroment.IsHighDPI)
-            {
-                width *= 2;
-                height *= 2;
-            }
-            */
-
             GraphicManager.PreferredBackBufferWidth = width;
             GraphicManager.PreferredBackBufferHeight = height;
             GraphicManager.ApplyChanges();

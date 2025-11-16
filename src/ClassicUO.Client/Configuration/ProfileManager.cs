@@ -99,7 +99,7 @@ namespace ClassicUO.Configuration
         public static void UnLoadProfile() => CurrentProfile = null;
 
         /// <summary>
-        /// 根据DPI自动应用全局缩放
+        /// 根据launcher_scale_factor或DPI自动应用全局缩放
         /// 只在用户未手动配置时自动设置
         /// </summary>
         private static void ApplyAutoDPIScaling(Profile profile)
@@ -107,18 +107,33 @@ namespace ClassicUO.Configuration
             if (profile == null)
                 return;
 
-            float dpiScale = CUOEnviroment.DPIScaleFactor;
+            // 优先使用launcher_scale_factor（首次运行时）
+            // 这主要是为了解决Windows高DPI下UI过小的问题
+            // macOS不需要，因为SDL已经自动处理了HiDPI
+            bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+            
+            if (CUOEnviroment.UseLauncherScaleForProfile && 
+                Settings.GlobalSettings?.LauncherScaleFactor > 1.01f &&
+                !isMacOS)
+            {
+                // 检查是否是默认值（用户未手动调整过）
+                if (profile.GlobalScale == 1.5f || profile.GlobalScale == 1.0f || !profile.GlobalScaling)
+                {
+                    profile.GlobalScaling = true;
+                    profile.GlobalScale = Settings.GlobalSettings.LauncherScaleFactor;
+                    Utility.Logging.Log.Trace($"Applied launcher_scale_factor to GlobalScale: {profile.GlobalScale:F2}x (Windows high-DPI fix)");
+                    return;
+                }
+            }
 
-            // 如果DPI缩放大于1.0，且用户还没有启用GlobalScaling，则自动启用
+            // 备用方案：使用DPI缩放
+            float dpiScale = CUOEnviroment.DPIScaleFactor;
             if (dpiScale > 1.0f && !profile.GlobalScaling)
             {
-                // 检查是否是首次加载（GlobalScale仍为默认值1.5）
-                // 如果用户已经手动调整过，我们不覆盖
                 if (profile.GlobalScale == 1.5f || profile.GlobalScale == 1.0f)
                 {
                     profile.GlobalScaling = true;
                     profile.GlobalScale = dpiScale;
-                    
                     Utility.Logging.Log.Trace($"Auto-enabled global scaling: {dpiScale:F2}x for high-DPI display");
                 }
             }

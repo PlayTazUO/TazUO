@@ -102,18 +102,6 @@ namespace ClassicUO
 
             ReadSettingsFromArgs(args);
 
-            if (CUOEnviroment.IsHighDPI)
-            {
-                Environment.SetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI", "1");
-            }
-
-            // NOTE: this is a workaroud to fix d3d11 on windows 11 + scale windows
-            Environment.SetEnvironmentVariable("FNA3D_D3D11_FORCE_BITBLT", "1");
-            Environment.SetEnvironmentVariable("FNA3D_BACKBUFFER_SCALE_NEAREST", "1");
-            Environment.SetEnvironmentVariable("FNA3D_OPENGL_FORCE_COMPATIBILITY_PROFILE", "1");
-            Environment.SetEnvironmentVariable(SDL.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-            Environment.SetEnvironmentVariable("PATH", Environment.GetEnvironmentVariable("PATH") + ";" + Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Plugins"));
-
             string globalSettingsPath = Settings.GetSettingsFilepath();
 
             if (!Directory.Exists(Path.GetDirectoryName(globalSettingsPath)) || !File.Exists(globalSettingsPath))
@@ -135,6 +123,10 @@ namespace ClassicUO
                 Settings.GlobalSettings = new Settings();
                 Settings.GlobalSettings.Save();
             }
+
+            // 判断是否首次运行，并处理launcher_scale_factor
+            // 这必须在设置环境变量之前调用，因为它会设置CUOEnviroment.IsHighDPI
+            ApplyLauncherScaleSettings();
 
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.Language))
             {
@@ -545,6 +537,39 @@ namespace ClassicUO
                         catch { }
                     }
                 }
+        }
+
+        private static void ApplyLauncherScaleSettings()
+        {
+            if (Settings.GlobalSettings == null)
+            {
+                return;
+            }
+
+            // 判断是否首次运行（没有保存过窗口信息）
+            bool isFirstRun = !Settings.GlobalSettings.WindowSize.HasValue && !Settings.GlobalSettings.WindowPosition.HasValue;
+            bool hasLauncherScale = Settings.GlobalSettings.LauncherScaleFactor > 1.01f;
+            bool isMacOS = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+
+            if (isFirstRun && hasLauncherScale)
+            {
+                // 首次运行且有launcher_scale_factor：设置标志，稍后应用到Profile（仅Windows）
+                CUOEnviroment.UseLauncherScaleForProfile = true;
+            }
+            else
+            {
+                CUOEnviroment.UseLauncherScaleForProfile = false;
+            }
+
+            // macOS HiDPI支持：
+            // 启用FNA_GRAPHICS_ENABLE_HIGHDPI会导致"Scissor rect and viewport appear not to overlap"错误
+            // 这是因为FNA创建了2倍分辨率的BackBuffer，但UI坐标系统还是按逻辑分辨率计算
+            // 暂时禁用，等待更好的解决方案
+            // if (isMacOS && hasLauncherScale)
+            // {
+            //     CUOEnviroment.IsHighDPI = true;
+            //     Log.Trace($"macOS HiDPI: launcher_scale_factor={Settings.GlobalSettings.LauncherScaleFactor:F2}, enabling FNA HiDPI support");
+            // }
         }
 
         private static string GetPlatformFolder()

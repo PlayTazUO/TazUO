@@ -16,6 +16,7 @@ namespace ClassicUO
         public static string[] Plugins;
         public static bool Debug;
         public static bool IsHighDPI;
+        public static bool UseLauncherScaleForProfile;
         public static uint CurrentRefreshRate;
         public static bool SkipLoginScreen;
         public static bool NoServerPing;
