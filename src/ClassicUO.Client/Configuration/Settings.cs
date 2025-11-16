@@ -58,6 +58,11 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(NullablePoint2Converter))][JsonPropertyName("window_position")] public Point? WindowPosition { get; set; }
         [JsonConverter(typeof(NullablePoint2Converter))][JsonPropertyName("window_size")] public Point? WindowSize { get; set; }
 
+        [JsonPropertyName("launcher_screen_width")] public int LauncherScreenWidth { get; set; }
+        [JsonPropertyName("launcher_screen_height")] public int LauncherScreenHeight { get; set; }
+        [JsonPropertyName("launcher_scale_factor"), JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)] public float LauncherScaleFactor { get; set; }
+        [JsonPropertyName("launcher_is_hidpi")] public bool LauncherIsHighDpi { get; set; }
+
         [JsonPropertyName("is_win_maximized")] public bool IsWindowMaximized { get; set; } = false;
 
         [JsonPropertyName("saveaccount")] public bool SaveAccount { get; set; } = true;
