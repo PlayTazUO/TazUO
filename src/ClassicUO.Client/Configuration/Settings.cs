@@ -90,7 +90,7 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("encryption")] public byte Encryption { get; set; }
 
-        [JsonPropertyName("plugins")] public string[] Plugins { get; set; } = { @"./Assistant/Razor.dll" };
+        [JsonPropertyName("plugins")] public string[] Plugins { get; set; } = { };
 
         public bool EnhancedPacketsEnabled = PacketsEnabled();
 
