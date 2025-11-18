@@ -19,6 +19,8 @@ This is the most important feature of this fork:
 
 Whether you're using 2K, 4K monitors, or MacBook Retina screens, you'll get the best visual experience.
 
+<img width="2032" height="1103" alt="image" src="https://github.com/user-attachments/assets/d41f5c30-45d2-4134-8666-e937b664ae99" />
+
 ---
 
 ## 🎯 Major Improvements
@@ -28,15 +30,23 @@ Whether you're using 2K, 4K monitors, or MacBook Retina screens, you'll get the 
 - Optimized Chinese font rendering
 - User experience tailored for Chinese users
 
+<img width="904" height="704" alt="image" src="https://github.com/user-attachments/assets/88e38878-40b6-42d6-866f-3eeba65be961" />
+
 ### 📝 Enhanced Script Recording
 - Improved script recording functionality
 - More stable recording performance
 - Optimized script playback mechanism
+- Fixed issues with recording certain skills like tracking
+
+<img width="610" height="434" alt="image" src="https://github.com/user-attachments/assets/73f9235b-1a92-4b6d-ab29-fde690de1817" />
+
 
 ### 🔄 Loop Control UI
 - New graphical settings interface for Loop functionality
 - Intuitive loop parameter configuration
 - Convenient script loop management
+
+<img width="611" height="444" alt="image" src="https://github.com/user-attachments/assets/3b886f65-c599-4b19-a34a-9f4790b41276" />
 
 ---
 
