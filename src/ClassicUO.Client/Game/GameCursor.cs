@@ -96,7 +96,7 @@ namespace ClassicUO.Game
             _aura = new Aura(30);
 
             // 根据DPI缩放因子来放大光标
-            float cursorScale = Math.Max(1.0f, CUOEnviroment.DPIScaleFactor);
+            float cursorScale = CUOEnviroment.IsHighDPI ? 1.0f : Math.Max(1.0f, CUOEnviroment.DPIScaleFactor);
 
             for (int i = 0; i < 3; i++)
             {

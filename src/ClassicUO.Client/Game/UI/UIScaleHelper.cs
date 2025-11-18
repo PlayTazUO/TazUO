@@ -11,6 +11,12 @@ namespace ClassicUO.Game.UI
     {
         private static float ResolveScale()
         {
+            if (CUOEnviroment.IsHighDPI)
+            {
+                // HiDPI：UI 按 DPI 放大以匹配放大的 BackBuffer
+                return CUOEnviroment.DPIScaleFactor <= 0f ? 1f : CUOEnviroment.DPIScaleFactor;
+            }
+
             Profile profile = ProfileManager.CurrentProfile;
 
             if (profile?.GlobalScaling == true && profile.GlobalScale > 0f)
@@ -67,7 +73,18 @@ namespace ClassicUO.Game.UI
             );
         }
 
-        public static Rectangle GetLogicalWindowBounds() => ConvertToLogical(Client.Game.Window.ClientBounds);
+        public static Rectangle GetLogicalWindowBounds()
+        {
+            // macOS HiDPI：返回窗口的逻辑边界，不应用 UI 缩放
+            // 因为 UI 坐标系统使用的是未缩放的逻辑坐标，缩放只在绘制时通过 Matrix.CreateScale 应用
+            if (CUOEnviroment.IsHighDPI)
+            {
+                return Client.Game.Window.ClientBounds;
+            }
+            
+            // Windows/Linux：如果有 Profile 的全局缩放，需要转换
+            return ConvertToLogical(Client.Game.Window.ClientBounds);
+        }
 
         public static int ConvertToPhysical(int value)
         {

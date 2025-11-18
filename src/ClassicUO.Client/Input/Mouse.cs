@@ -2,8 +2,10 @@
 
 using ClassicUO.Game;
 using ClassicUO.Game.UI;
+using ClassicUO.Game.Managers;
 using Microsoft.Xna.Framework;
 using SDL3;
+using System;
 
 namespace ClassicUO.Input
 {
@@ -139,9 +141,8 @@ namespace ClassicUO.Input
                 }
             }
 
-            // Scale the mouse coordinates for the faux-backbuffer
+            // Scale the mouse coordinates for the faux-backbuffer，保持与渲染一致（含 HiDPI）
             Position.X = (int)((double)Position.X * Client.Game.GraphicManager.PreferredBackBufferWidth / Client.Game.Window.ClientBounds.Width);
-
             Position.Y = (int)((double)Position.Y * Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height);
 
             Position = UIScaleHelper.ConvertToLogical(Position);

@@ -561,15 +561,13 @@ namespace ClassicUO
                 CUOEnviroment.UseLauncherScaleForProfile = false;
             }
 
-            // macOS HiDPI支持：
-            // 启用FNA_GRAPHICS_ENABLE_HIGHDPI会导致"Scissor rect and viewport appear not to overlap"错误
-            // 这是因为FNA创建了2倍分辨率的BackBuffer，但UI坐标系统还是按逻辑分辨率计算
-            // 暂时禁用，等待更好的解决方案
-            // if (isMacOS && hasLauncherScale)
-            // {
-            //     CUOEnviroment.IsHighDPI = true;
-            //     Log.Trace($"macOS HiDPI: launcher_scale_factor={Settings.GlobalSettings.LauncherScaleFactor:F2}, enabling FNA HiDPI support");
-            // }
+            // macOS HiDPI 支持：如果 launcher_scale_factor>1，则启用 FNA 的 HiDPI backbuffer
+            if (isMacOS && hasLauncherScale)
+            {
+                Environment.SetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI", "1");
+                CUOEnviroment.IsHighDPI = true;
+                Log.Trace($"macOS HiDPI: launcher_scale_factor={Settings.GlobalSettings.LauncherScaleFactor:F2}, enabling FNA HiDPI support");
+            }
         }
 
         private static string GetPlatformFolder()

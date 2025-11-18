@@ -43,6 +43,8 @@ namespace ClassicUO
         private uint _totalFrames;
         private UltimaBatcher2D _uoSpriteBatch;
         private bool _suppressedDraw;
+        private Point? _pendingViewportSize;
+        private bool _pendingViewportFull;
         private Texture2D _background;
         private bool _pluginsInitialized;
         private Rectangle bufferRect = Rectangle.Empty;
@@ -108,10 +110,14 @@ namespace ClassicUO
                 return;
             }
 
-            // 检测DPI并设置全局UI缩放因子
+            // 检测DPI，用于判断是否处于 HiDPI 环境（不用于全局缩放）
             float dpiScale = GetDisplayDpiScale(displayId);
-            CUOEnviroment.DPIScaleFactor = dpiScale;
-            Log.Trace($"Display: {displayBounds.w}x{displayBounds.h}, DPI Scale: {dpiScale:F2}");
+            if (CUOEnviroment.IsHighDPI && Settings.GlobalSettings?.LauncherScaleFactor > 1.0f)
+            {
+                dpiScale = MathF.Max(dpiScale, Settings.GlobalSettings.LauncherScaleFactor);
+            }
+            CUOEnviroment.DPIScaleFactor = dpiScale <= 0 ? 1f : dpiScale;
+            Log.Trace($"Display: {displayBounds.w}x{displayBounds.h}, DPI Scale: {CUOEnviroment.DPIScaleFactor:F2}");
             
             // 如果用户已保存窗体大小，优先使用
             if (Settings.GlobalSettings.WindowSize.HasValue)
@@ -123,15 +129,11 @@ namespace ClassicUO
                 return;
             }
 
-            // 计算合适的窗体大小（占屏幕50-60%）
-            var (windowWidth, windowHeight) = CalculateOptimalWindowSize(displayBounds.w, displayBounds.h);
-
-            GraphicManager.PreferredBackBufferWidth = windowWidth;
-            GraphicManager.PreferredBackBufferHeight = windowHeight;
-            Settings.GlobalSettings.WindowSize = new Point(windowWidth, windowHeight);
-            Settings.GlobalSettings.IsWindowMaximized = false;
-
-            Log.Trace($"Auto window size: {windowWidth}x{windowHeight}");
+            // 未保存窗口尺寸：使用默认尺寸，不自动最大化
+            // 默认使用 1024x768 的合理尺寸
+            GraphicManager.PreferredBackBufferWidth = 1024;
+            GraphicManager.PreferredBackBufferHeight = 768;
+            Log.Trace("No saved window size; using default 1024x768.");
         }
 
         /// <summary>
@@ -330,14 +332,8 @@ namespace ClassicUO
                 Math.Max(0, Window.ClientBounds.Y - top)
             );
 
-            // 保存窗体大小（如果不是最大化状态）
-            if (!IsWindowMaximized())
-            {
-                Settings.GlobalSettings.WindowSize = new Point(
-                    Window.ClientBounds.Width,
-                    Window.ClientBounds.Height
-                );
-            }
+            // 注意：不在这里保存窗口大小，因为此时可能已经切换到 LoginScene
+            // 窗口大小应该在 GameScene.Unload 中保存，那时窗口还是游戏大小
 
             Audio?.StopMusic();
             Settings.GlobalSettings.Save();
@@ -425,13 +421,18 @@ namespace ClassicUO
 
         private void SetWindowPosition(int x, int y) => SDL_SetWindowPosition(Window.Handle, x, y);
 
-        public void SetWindowSize(int width, int height)
-        {
-            GraphicManager.PreferredBackBufferWidth = width;
-            GraphicManager.PreferredBackBufferHeight = height;
-            GraphicManager.ApplyChanges();
-            bufferRect = new Rectangle(0, 0, width, height);
-        }
+    public void SetWindowSize(int width, int height)
+    {
+        SDL_SetWindowSize(Window.Handle, width, height);
+        SDL_SetWindowMinimumSize(Window.Handle, width, height);
+
+        // 在 HiDPI 下让 BackBuffer 按 DPI 放大，窗口仍用逻辑尺寸
+        float scale = CUOEnviroment.IsHighDPI ? MathF.Max(1f, CUOEnviroment.DPIScaleFactor) : 1f;
+        GraphicManager.PreferredBackBufferWidth = (int)MathF.Round(width * scale);
+        GraphicManager.PreferredBackBufferHeight = (int)MathF.Round(height * scale);
+        GraphicManager.ApplyChanges();
+        bufferRect = new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight);
+    }
 
         public void SetWindowBorderless(bool borderless)
         {
@@ -487,10 +488,15 @@ namespace ClassicUO
         {
             SDL_MaximizeWindow(Window.Handle);
 
-            GraphicManager.PreferredBackBufferWidth = Client.Game.Window.ClientBounds.Width;
-            GraphicManager.PreferredBackBufferHeight = Client.Game.Window.ClientBounds.Height;
+            int width = Client.Game.Window.ClientBounds.Width;
+            int height = Client.Game.Window.ClientBounds.Height;
+            
+            // 在 HiDPI 下，BackBuffer 需要按 DPI 缩放
+            float scale = CUOEnviroment.IsHighDPI ? MathF.Max(1f, CUOEnviroment.DPIScaleFactor) : 1f;
+            GraphicManager.PreferredBackBufferWidth = (int)MathF.Round(width * scale);
+            GraphicManager.PreferredBackBufferHeight = (int)MathF.Round(height * scale);
             GraphicManager.ApplyChanges();
-            bufferRect = new Rectangle(0, 0, Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height);
+            bufferRect = new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight);
         }
 
         public bool IsWindowMaximized()
@@ -531,6 +537,27 @@ namespace ClassicUO
             Profiler.EnterContext("Packets");
             ProcessNetworkPackets();
             Profiler.ExitContext("Packets");
+
+            // 统一处理窗口大小变更对视口的影响（避免拖拽时多次重算）
+            if (_pendingViewportSize.HasValue && ProfileManager.CurrentProfile != null)
+            {
+                WorldViewportGump viewport = UIManager.GetGump<WorldViewportGump>();
+                if (viewport != null)
+                {
+                    if (_pendingViewportFull)
+                    {
+                        ProfileManager.CurrentProfile.GameWindowFullSize = true;
+                        viewport.ResizeGameWindow(_pendingViewportSize.Value);
+                        viewport.SetGameWindowPosition(Point.Zero);
+                    }
+                    else if (ProfileManager.CurrentProfile.GameWindowFullSize)
+                    {
+                        viewport.ResizeGameWindow(_pendingViewportSize.Value);
+                    }
+                }
+                _pendingViewportSize = null;
+                _pendingViewportFull = false;
+            }
 
             if(_pluginsInitialized)
                 Plugin.Tick();
@@ -655,23 +682,18 @@ namespace ClassicUO
         {
             int width = Window.ClientBounds.Width;
             int height = Window.ClientBounds.Height;
+            bool isMaximized = IsWindowMaximized();
 
-            if (!IsWindowMaximized())
+            if (!isMaximized && ProfileManager.CurrentProfile != null)
             {
-                if (ProfileManager.CurrentProfile != null)
-                    ProfileManager.CurrentProfile.WindowClientBounds = new Point(width, height);
+                ProfileManager.CurrentProfile.WindowClientBounds = new Point(width, height);
             }
 
             SetWindowSize(width, height);
 
-            WorldViewportGump viewport = UIManager.GetGump<WorldViewportGump>();
-
-            if (viewport != null && ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.GameWindowFullSize)
-            {
-                viewport.ResizeGameWindow(new Point(width, height));
-                viewport.X = -5;
-                viewport.Y = -5;
-            }
+            // 延迟应用到游戏视口，避免拖拽过程频繁重算
+            _pendingViewportSize = new Point(width, height);
+            _pendingViewportFull = ProfileManager.CurrentProfile?.GameWindowFullSize == true;
         }
 
         private bool HandleSdlEvent(IntPtr userdata, SDL_Event* sdlEvent)

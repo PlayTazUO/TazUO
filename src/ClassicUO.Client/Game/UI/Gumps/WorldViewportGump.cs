@@ -146,14 +146,17 @@ namespace ClassicUO.Game.UI.Gumps
                         h = 480;
                     }
 
-                    if (w > Client.Game.Window.ClientBounds.Width - BORDER_WIDTH)
+                    // 使用逻辑窗口边界，确保在 HiDPI 模式下坐标正确
+                    Rectangle windowBounds = UIScaleHelper.GetLogicalWindowBounds();
+                    
+                    if (w > windowBounds.Width - BORDER_WIDTH)
                     {
-                        w = Client.Game.Window.ClientBounds.Width - BORDER_WIDTH;
+                        w = windowBounds.Width - BORDER_WIDTH;
                     }
 
-                    if (h > Client.Game.Window.ClientBounds.Height - BORDER_WIDTH)
+                    if (h > windowBounds.Height - BORDER_WIDTH)
                     {
-                        h = Client.Game.Window.ClientBounds.Height - BORDER_WIDTH;
+                        h = windowBounds.Height - BORDER_WIDTH;
                     }
 
                     _lastSize.X = w;
@@ -180,10 +183,13 @@ namespace ClassicUO.Game.UI.Gumps
             base.OnDragEnd(x, y);
 
             Point position = Location;
+            
+            // 使用逻辑窗口边界，确保在 HiDPI 模式下坐标正确
+            Rectangle windowBounds = UIScaleHelper.GetLogicalWindowBounds();
 
-            if (position.X + Width - BORDER_WIDTH > Client.Game.Window.ClientBounds.Width)
+            if (position.X + Width - BORDER_WIDTH > windowBounds.Width)
             {
-                position.X = Client.Game.Window.ClientBounds.Width - (Width - BORDER_WIDTH);
+                position.X = windowBounds.Width - (Width - BORDER_WIDTH);
             }
 
             if (position.X < -BORDER_WIDTH)
@@ -191,9 +197,9 @@ namespace ClassicUO.Game.UI.Gumps
                 position.X = -BORDER_WIDTH;
             }
 
-            if (position.Y + Height - BORDER_WIDTH > Client.Game.Window.ClientBounds.Height)
+            if (position.Y + Height - BORDER_WIDTH > windowBounds.Height)
             {
-                position.Y = Client.Game.Window.ClientBounds.Height - (Height - BORDER_WIDTH);
+                position.Y = windowBounds.Height - (Height - BORDER_WIDTH);
             }
 
             if (position.Y < -BORDER_WIDTH)
@@ -270,8 +276,10 @@ namespace ClassicUO.Game.UI.Gumps
                 || _scene.Camera.Bounds.Height != _lastSize.Y
             )
             {
-                _scene.Camera.Bounds.Width = _lastSize.X;
-                _scene.Camera.Bounds.Height = _lastSize.Y;
+                int targetW = _lastSize.X;
+                int targetH = _lastSize.Y;
+                _scene.Camera.Bounds.Width = targetW;
+                _scene.Camera.Bounds.Height = targetH;
                 Width = _scene.Camera.Bounds.Width + BORDER_WIDTH * 2;
                 Height = _scene.Camera.Bounds.Height + BORDER_WIDTH * 2;
 

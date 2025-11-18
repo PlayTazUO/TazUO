@@ -143,10 +143,14 @@ namespace ClassicUO.Game.Scenes
                 Client.Game.RestoreWindow();
             }
 
-            // 登录界面逻辑尺寸保持 640x480，物理尺寸遵循当前缩放
+            // 登录界面逻辑尺寸保持 640x480。
+            // HiDPI 情况下 FNA 会自动将 BackBuffer 放大，我们保持逻辑尺寸不再手动乘 DPI，避免双重缩放。
             var logicalSize = new Microsoft.Xna.Framework.Point(640, 480);
-            var physicalSize = UIScaleHelper.ConvertToPhysical(logicalSize);
-            Client.Game.SetWindowSize(physicalSize.X, physicalSize.Y);
+            // 登录窗口：保持 640x480 逻辑尺寸，窗口大小使用逻辑值；BackBuffer 在 SetWindowSize 内会按 DPI 放大
+            Microsoft.Xna.Framework.Point targetSize = CUOEnviroment.IsHighDPI
+                ? logicalSize
+                : UIScaleHelper.ConvertToPhysical(logicalSize);
+            Client.Game.SetWindowSize(targetSize.X, targetSize.Y);
         }
 
 

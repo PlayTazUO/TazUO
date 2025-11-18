@@ -96,8 +96,10 @@ namespace ClassicUO.Game.Scenes
             Camera.Zoom = ProfileManager.CurrentProfile.DefaultScale;
             Camera.Bounds.X = Math.Max(0, ProfileManager.CurrentProfile.GameWindowPosition.X);
             Camera.Bounds.Y = Math.Max(0, ProfileManager.CurrentProfile.GameWindowPosition.Y);
-            Camera.Bounds.Width = Math.Max(640, ProfileManager.CurrentProfile.GameWindowSize.X);
-            Camera.Bounds.Height = Math.Max(480, ProfileManager.CurrentProfile.GameWindowSize.Y);
+            int camW = Math.Max(640, ProfileManager.CurrentProfile.GameWindowSize.X);
+            int camH = Math.Max(480, ProfileManager.CurrentProfile.GameWindowSize.Y);
+            Camera.Bounds.Width = camW;
+            Camera.Bounds.Height = camH;
 
             Client.Game.Window.AllowUserResizing = true;
 
@@ -105,19 +107,36 @@ namespace ClassicUO.Game.Scenes
             {
                 Client.Game.SetWindowBorderless(true);
             }
-            else if (Settings.GlobalSettings.IsWindowMaximized)
+            else
             {
-                Client.Game.MaximizeWindow();
+                // 检查是否应该最大化窗口
+                if (Settings.GlobalSettings.IsWindowMaximized)
+                {
+                    Client.Game.MaximizeWindow();
+                }
+                else if (Settings.GlobalSettings.WindowSize.HasValue)
+                {
+                    int w = Math.Max(640, Settings.GlobalSettings.WindowSize.Value.X);
+                    int h = Math.Max(480, Settings.GlobalSettings.WindowSize.Value.Y);
+                    Client.Game.SetWindowSize(w, h);
+                }
+                else
+                {
+                    // 默认窗口尺寸
+                    Client.Game.SetWindowSize(1024, 768);
+                }
             }
-            else if (Settings.GlobalSettings.WindowSize.HasValue)
+
+            // 高 DPI 下，如果窗口逻辑尺寸被平台缩成一半，强制恢复到 800x600 逻辑大小
+            if (CUOEnviroment.IsHighDPI)
             {
-                int w = Settings.GlobalSettings.WindowSize.Value.X;
-                int h = Settings.GlobalSettings.WindowSize.Value.Y;
+                int logicalW = Client.Game.Window.ClientBounds.Width;
+                int logicalH = Client.Game.Window.ClientBounds.Height;
 
-                w = Math.Max(640, w);
-                h = Math.Max(480, h);
-
-                Client.Game.SetWindowSize(w, h);
+                if (logicalW < 800 || logicalH < 600)
+                {
+                    Client.Game.SetWindowSize(800, 600);
+                }
             }
 
             SetPostProcessingSettings();
@@ -201,8 +220,8 @@ namespace ClassicUO.Game.Scenes
             _world.CommandManager.Initialize();
             ItemDatabaseManager.Instance.Initialize();
 
-            // 自动根据DPI设置UI缩放，实现统一的缩放管理
-            if (CUOEnviroment.DPIScaleFactor > 1.0f && !ProfileManager.CurrentProfile.GlobalScaling)
+            // 自动根据DPI设置UI缩放，实现统一的缩放管理（macOS HiDPI 不开启全局缩放）
+            if (!CUOEnviroment.IsHighDPI && CUOEnviroment.DPIScaleFactor > 1.0f && !ProfileManager.CurrentProfile.GlobalScaling)
             {
                 ProfileManager.CurrentProfile.GlobalScaling = true;
                 ProfileManager.CurrentProfile.GlobalScale = CUOEnviroment.DPIScaleFactor;
@@ -474,12 +493,15 @@ namespace ClassicUO.Game.Scenes
             GlobalPriorityQueue.Instance.Clear();
             EventSink.MessageReceived -= ChatOnMessageReceived;
 
+            // 保存窗口最大化状态
+            Settings.GlobalSettings.IsWindowMaximized = Client.Game.IsWindowMaximized();
+            
+            // 总是保存窗口大小（即使是最大化状态）
             Settings.GlobalSettings.WindowSize = new Point(
                 Client.Game.Window.ClientBounds.Width,
                 Client.Game.Window.ClientBounds.Height
             );
-
-            Settings.GlobalSettings.IsWindowMaximized = Client.Game.IsWindowMaximized();
+            
             Client.Game.SetWindowBorderless(false);
 
             base.Unload();

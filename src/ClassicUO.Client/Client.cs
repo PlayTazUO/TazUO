@@ -215,8 +215,9 @@ namespace ClassicUO
 
             using (Game = new GameController(pluginHost))
             {
-                // https://github.com/FNA-XNA/FNA/wiki/7:-FNA-Environment-Variables#fna_graphics_enable_highdpi
-                CUOEnviroment.IsHighDPI = Environment.GetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI") == "1";
+                // 仅 macOS 才启用 FNA HiDPI，避免破坏 Windows/Linux 的缩放逻辑
+                bool isMac = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+                CUOEnviroment.IsHighDPI = isMac && Environment.GetEnvironmentVariable("FNA_GRAPHICS_ENABLE_HIGHDPI") == "1";
 
                 if (CUOEnviroment.IsHighDPI)
                 {

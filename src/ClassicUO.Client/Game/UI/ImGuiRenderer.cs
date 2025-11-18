@@ -73,10 +73,23 @@ namespace ClassicUO.Game.UI
         {
             Rectangle bounds = Client.Game.Window.ClientBounds;
             
-            // 考虑 DPI 缩放因子，将物理像素转换为逻辑像素
+            // macOS HiDPI：ClientBounds 已经是逻辑像素，直接使用
+            // Windows/Linux：可能需要根据 DPI 调整
             float scaleFactor = CUOEnviroment.DPIScaleFactor;
-            float logicalWidth = bounds.Width / scaleFactor;
-            float logicalHeight = bounds.Height / scaleFactor;
+            float logicalWidth, logicalHeight;
+            
+            if (CUOEnviroment.IsHighDPI)
+            {
+                // macOS HiDPI：直接使用 ClientBounds 作为 DisplaySize
+                logicalWidth = bounds.Width;
+                logicalHeight = bounds.Height;
+            }
+            else
+            {
+                // Windows/Linux：除以 DPI 缩放因子
+                logicalWidth = bounds.Width / scaleFactor;
+                logicalHeight = bounds.Height / scaleFactor;
+            }
             
             _displaySize = new(logicalWidth < 1 ? 1 : logicalWidth, logicalHeight < 1 ? 1 : logicalHeight);
 
@@ -221,7 +234,8 @@ namespace ClassicUO.Game.UI
             MouseState mouse = Mouse.GetState();
             KeyboardState keyboard = Keyboard.GetState();
             
-            // 将物理鼠标坐标转换为逻辑坐标
+            // 转换鼠标坐标
+            // Mouse.GetState() 在所有平台都返回物理像素坐标，需要转换为逻辑坐标
             float scaleFactor = CUOEnviroment.DPIScaleFactor;
             float logicalMouseX = mouse.X / scaleFactor;
             float logicalMouseY = mouse.Y / scaleFactor;

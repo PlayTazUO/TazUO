@@ -9,6 +9,7 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -431,9 +432,11 @@ namespace ClassicUO.Game.Managers
 
             float scale = UIScaleHelper.GetCurrentScale();
 
-            if (scale != 1f)
+            float batchScale = scale;
+
+            if (batchScale != 1f)
             {
-                batcher.Begin(null, Matrix.CreateScale(scale));
+                batcher.Begin(null, Matrix.CreateScale(batchScale));
             }
             else
             {
