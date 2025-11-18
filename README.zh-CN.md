@@ -19,6 +19,8 @@
 
 无论你使用 2K、4K 显示器，还是 MacBook 的 Retina 屏幕，都能获得最佳的视觉体验。
 
+<img width="2032" height="1103" alt="image" src="https://github.com/user-attachments/assets/d41f5c30-45d2-4134-8666-e937b664ae99" />
+
 ---
 
 ## 🎯 主要改进
@@ -28,15 +30,24 @@
 - 优化中文字体显示效果
 - 提供更符合中文用户习惯的交互体验
 
+<img width="904" height="704" alt="image" src="https://github.com/user-attachments/assets/88e38878-40b6-42d6-866f-3eeba65be961" />
+
 ### 📝 脚本录制增强
 - 改进的脚本录制功能
 - 更稳定的录制性能
 - 优化的脚本回放机制
+- 修复追踪技能等一些不能录制的问题
+
+<img width="610" height="434" alt="image" src="https://github.com/user-attachments/assets/73f9235b-1a92-4b6d-ab29-fde690de1817" />
+
 
 ### 🔄 循环控制 UI
 - 新增循环（Loop）功能的图形化设置界面
 - 直观的循环参数配置
 - 便捷的脚本循环管理
+
+<img width="611" height="444" alt="image" src="https://github.com/user-attachments/assets/3b886f65-c599-4b19-a34a-9f4790b41276" />
+
 
 ---
 
