@@ -40,7 +40,7 @@ jobs:
             rid: linux-x64
           - os: macos-latest
             rid: osx-arm64
-          - os: macos-13
+          - os: macos-15-intel
             rid: osx-x64
     outputs:
       rid: ${{ matrix.rid }}
