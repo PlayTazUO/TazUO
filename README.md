@@ -1,49 +1,156 @@
-<p align="center"><a href="https://discord.gg/QvqzkB95G4"><img src="https://discord.com/api/guilds/1344851225538986064/widget.png?style=banner3" alt="Discord Banner 3"/></a></p>
+# ClassicUO Fork - HiDPI Optimized Edition
 
-***
+<p align="center">
+  <strong>ClassicUO client optimized for high-resolution displays</strong>
+</p>
 
+**[中文文档](README.zh-CN.md)** | English
 
-| Channel | Status                                                                                                                                                                     |
-| --- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Release | [![Release](https://github.com/PlayTazUO/TazUO/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/PlayTazUO/TazUO/actions/workflows/build-test.yml) |
-| Dev | [![Dev](https://github.com/PlayTazUO/TazUO/actions/workflows/build-test.yml/badge.svg?branch=dev)](https://github.com/PlayTazUO/TazUO/actions/workflows/build-test.yml)        |
+---
 
+## ✨ Key Features
 
-# What is TazUO?
-**TazUO** was originally a fork from ClassicUO with the mindset of adding features requested by users to improve QOL. **TazUO** has since moved away from ClassicUO, we will keep an eye on ClassicUO updates and incorporate changes or fixes as they have a wider user base that provides bug reports, but **TazUO** will no longer be merging all changes from ClassicUO.
+### 🖥️ Perfect High-Resolution Display Support
+This is the most important feature of this fork:
 
-# Play now
-The easiest way to play with TazUO is via our [launcher](https://github.com/PlayTazUO/TUO-Launcher/releases/latest)!
+- **Windows High DPI Scaling** - Perfect support for high-resolution scaling on Windows, say goodbye to blurry interfaces
+- **macOS HiDPI Native Support** - Crystal clear and sharp game graphics on macOS Retina displays
+- **Silky Smooth Visual Experience** - Sharp text and graphics edges, just like native Retina applications
 
-# TazUO features
-Check out our [wiki](../../wiki) for details on all the changes TazUO has made for players!  
+Whether you're using 2K, 4K monitors, or MacBook Retina screens, you'll get the best visual experience.
 
-***Most*** features can be disabled if you don't want to use said feature.  
+---
 
-- [Launcher](../../wiki/TazUO.Updater-Launcher) - Managing profiles for multiple accounts/servers
-- [Grid containers](../../wiki/TazUO.Grid-Containers) - Easily find and move items with our fully customizable grid containers
-- [Custom build-in scripting](../../wiki/TazUO.Legion-Scripting) - Build in powerful scripting languages. **Python** and Legion Script.
-- **Assistant features built-in** - Like Auto buy, sell, auto loot and more.
-- [Journal](../../wiki/TazUO.Journal) - Vastly improved journal for readability and organization
-- [Alternative paperdoll](../../wiki/TazUO.Alternate-Paperdoll) - A new flavor of your paperdoll
-- [Improved buff bar](../../wiki/TazUO.Buff-Bars)
-- [Client commands](../../wiki/TazUO.Commands) - Several commands have been added for various features
-- [Controller support](../../wiki/TazUO.Controller-Support) - That's right, play with your controller!
-- [Cooldown bars](../../wiki/TazUO.Cooldown-bars) - Customizable cooldown bars
-- [Grid Highlighting](../../wiki/TazUO.Grid-highlighting-based-on-item-properties) - Grid highlighting of items that have specific properties, easier looting!
-- [Tooltip overrides](../../wiki/TazUO.Tooltip-Override) - Customize and override any text in tooltips!
-- [Custom fonts](../../wiki/TazUO.TTF-Fonts) - BYOF, Bring your own fonts for better readability.
+## 🎯 Major Improvements
 
-There are ***many*** more features to check out in our [wiki](../../wiki) or in game, this list is just a sample!
+### 🌏 Complete Chinese Localization
+- Deep localization of interface and features
+- Optimized Chinese font rendering
+- User experience tailored for Chinese users
 
+### 📝 Enhanced Script Recording
+- Improved script recording functionality
+- More stable recording performance
+- Optimized script playback mechanism
 
-# Screenshots
-![Cooldown](https://user-images.githubusercontent.com/3859393/227056224-ef1c6958-fff5-4698-a21a-c63c5814877c.gif)  
-![SlottedInv](https://user-images.githubusercontent.com/3859393/226514464-32919a68-ebad-4ec0-8bcf-8614a5055f7d.gif)  
-![Grid Previe](https://user-images.githubusercontent.com/3859393/222873187-c88ad321-8b19-4cfd-9617-7e23b2443b6a.gif)  
-![image](https://user-images.githubusercontent.com/3859393/222975241-319e5fa6-2c1e-441d-97e6-b04a5e1f6f3b.png)  
-![Journal](https://user-images.githubusercontent.com/3859393/222942915-e31d26aa-e9a7-41df-9c99-570bcc00d1fb.gif)  
-![image](https://user-images.githubusercontent.com/3859393/225168130-5ce83950-853d-43ce-9583-65ec4b0ae9d6.png)  
-![image](https://user-images.githubusercontent.com/3859393/225307385-c8e8014f-9b84-4fe4-a2cd-f33fbeee9563.png)  
-![image](https://user-images.githubusercontent.com/3859393/226114408-28c6556d-6ba8-43c7-bf1a-079342aaeacd.png)  
-![image](https://user-images.githubusercontent.com/3859393/226114417-e68b1653-f719-49b3-b799-0beb07e0a211.png)  
+### 🔄 Loop Control UI
+- New graphical settings interface for Loop functionality
+- Intuitive loop parameter configuration
+- Convenient script loop management
+
+---
+
+## 🚀 Quick Start
+
+### Recommended: Use with Launcher
+
+For the smoothest experience, use with [Another OpenUO Launcher](https://github.com/openuo-online/Another-OpenUO-Launcher):
+
+- Automatic client version management
+- Convenient multi-account configuration
+- One-click game launch
+- Smoother user experience
+
+### Manual Installation
+
+1. Go to [Releases](../../releases/latest) page to download the latest version
+2. Extract to any directory
+3. Run the client and enjoy the high-definition gaming experience
+
+### System Requirements
+
+- **Windows**: Windows 10/11 (High DPI scaling recommended)
+- **macOS**: macOS 10.15 or higher (Perfect Retina display support)
+- **.NET**: .NET 8.0 or higher
+
+---
+
+## 📖 Features
+
+### High DPI Settings Recommendations
+
+**Windows Users:**
+- Set any scaling ratio in system settings (125%, 150%, 200%, etc.)
+- Client automatically adapts to keep interface sharp and clear
+- No additional configuration needed, works out of the box
+
+**macOS Users:**
+- Automatically enables HiDPI rendering on Retina displays
+- Text and graphics rendered at 2x or higher resolution
+- Native application-level display quality
+
+### Script Features
+
+- Record game operations as scripts
+- Set loop count or infinite loop
+- Easily manage script parameters through UI
+
+---
+
+## 🔧 Build Instructions
+
+### Prerequisites
+- .NET 8.0 SDK
+- Git
+
+### Build Steps
+
+**Windows:**
+```bash
+git clone --recursive https://github.com/[your-repo]/ClassicUO.git
+cd ClassicUO
+build.bat
+```
+
+**macOS/Linux:**
+```bash
+git clone --recursive https://github.com/[your-repo]/ClassicUO.git
+cd ClassicUO
+chmod +x build.sh
+./build.sh
+```
+
+---
+
+## 📸 Screenshots
+
+_High-resolution display comparison screenshots coming soon_
+
+---
+
+## 🤝 Contributing
+
+Issues and Pull Requests are welcome!
+
+If you encounter any problems or have feature suggestions, please feel free to provide feedback on the Issues page.
+
+---
+
+## 📄 License
+
+This project is modified based on ClassicUO and follows the original project's open source license.
+
+See [LICENSE.md](LICENSE.md) for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- Thanks to the [ClassicUO](https://github.com/ClassicUO/ClassicUO) original project team
+- Thanks to [TazUO](https://github.com/PlayTazUO/TazUO) for feature enhancements and improvements
+- Thanks to all contributors and users for their support
+
+---
+
+## 📮 Contact
+
+For questions or suggestions, feel free to contact us through:
+
+- Submit an [Issue](../../issues)
+- Start a [Discussion](../../discussions)
+
+---
+
+<p align="center">
+  <strong>Enjoy a high-definition, smooth UO gaming experience!</strong>
+</p>
