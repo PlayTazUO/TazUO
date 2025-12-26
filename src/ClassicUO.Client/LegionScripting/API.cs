@@ -633,6 +633,24 @@ namespace ClassicUO.LegionScripting
                 return true;
             }
         );
+        
+        /// <summary>
+        /// Close the current (last opened) gump created by the server.
+        /// Returns true if a server gump was found and closed.
+        /// </summary>
+        public bool CloseLastServerGump() => MainThreadQueue.InvokeOnMainThread<bool>
+        (() =>
+            {
+                var gump = UIManager.Gumps
+                    .LastOrDefault(g => g is not null && !g.IsDisposed && g.IsVisible && g.IsFromServer);
+
+                if (gump is null)
+                    return false;
+
+                DisposeGump(gump);
+                return true;
+            }
+        );
 
         /// <summary>
         /// Attempt to equip an item. Layer is automatically detected.
