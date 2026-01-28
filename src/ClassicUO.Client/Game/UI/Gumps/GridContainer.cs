@@ -2054,11 +2054,16 @@ namespace ClassicUO.Game.UI.Gumps
 
             private static string GetItemName(Item item)
             {
-                if (World.Instance != null && World.Instance.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
-                {
-                    return !string.IsNullOrEmpty(name) ? name : item.ItemData.Name;
-                }
-                return !string.IsNullOrEmpty(item.Name) ? item.Name : item.ItemData.Name;
+                if (World.Instance?.OPL?.TryGetNameAndData(item.Serial, out string name, out string data) != true)
+                    return !string.IsNullOrEmpty(item.Name) ? item.Name : item.ItemData.Name;
+
+                if (string.IsNullOrEmpty(name))
+                    return item.ItemData.Name;
+
+                string itemAmountStr = item.Amount.ToString();
+                return name.StartsWith(itemAmountStr)
+                    ? name[itemAmountStr.Length..]
+                    : name;
             }
 
             private void SetupGridItemControls()
