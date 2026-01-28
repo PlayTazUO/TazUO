@@ -2057,12 +2057,13 @@ namespace ClassicUO.Game.UI.Gumps
                 if (World.Instance?.OPL?.TryGetNameAndData(item.Serial, out string name, out string data) != true)
                     return !string.IsNullOrEmpty(item.Name) ? item.Name : item.ItemData.Name;
 
+                // OPL has a cached name for the item
                 if (string.IsNullOrEmpty(name))
                     return item.ItemData.Name;
 
                 string itemAmountStr = item.Amount.ToString();
                 return name.StartsWith(itemAmountStr)
-                    ? name[itemAmountStr.Length..]
+                    ? name[(itemAmountStr.Length + 1)..] // The +1 is for the whitespace between the Amount and Name
                     : name;
             }
 
