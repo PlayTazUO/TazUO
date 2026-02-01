@@ -228,7 +228,7 @@ namespace ClassicUO.Game.Managers
 
             if (MouseOverControl != null)
             {
-                if (_mouseDownControls[index] != null && MouseOverControl == _mouseDownControls[index] || Client.Game.UO.GameCursor.ItemHold.Enabled)
+                if (_mouseDownControls[index] != null && MouseOverControl.LocalSerial == _mouseDownControls[index]?.LocalSerial || Client.Game.UO.GameCursor.ItemHold.Enabled)
                 {
                     MouseOverControl.InvokeMouseUp(Mouse.Position, button);
                 }

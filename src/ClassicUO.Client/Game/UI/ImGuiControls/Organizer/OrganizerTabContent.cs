@@ -15,6 +15,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
         private string _addItemGraphicInput = "";
         private string _addItemHueInput = "";
         private bool _showAddItemManual = false;
+        private ulong? _playerBackpackSerial = null;
 
         public OrganizerTabContent()
         {
@@ -27,6 +28,9 @@ namespace ClassicUO.Game.UI.ImGuiControls
                 ImGui.Text("Organizer Agent not loaded");
                 return;
             }
+            
+            if (_playerBackpackSerial is null)
+                _playerBackpackSerial = Client.Game.UO?.World?.Player?.Backpack?.Serial;
 
             // Main layout: left panel for organizer list, right panel for details
             if (ImGui.BeginTable("OrganizerTable", 2, ImGuiTableFlags.Resizable))
@@ -218,13 +222,14 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             // Display current containers
-            if (_selectedConfig.SourceContSerial != 0)
+            if (_selectedConfig.SourceContSerial != 0 && _selectedConfig.SourceContSerial != _playerBackpackSerial)
             {
                 ImGui.Text($"Source: ({_selectedConfig.SourceContSerial:X})");
             }
             else
             {
-                ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f), "Source: Your backpack");
+                var msg = _playerBackpackSerial is null ? "Source: Your backpack" : $"Source: Your backpack ({_playerBackpackSerial:X8})";
+                ImGui.TextColored(new System.Numerics.Vector4(0.0f, 1.0f, 0.0f, 1.0f), msg);
             }
 
             ImGui.SameLine();
