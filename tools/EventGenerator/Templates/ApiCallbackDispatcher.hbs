@@ -1,0 +1,80 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using ClassicUO.LegionScripting;
+
+#pragma warning disable CS0169 // Field is never used
+
+{{#each Classes}}
+
+namespace {{{Namespace}}}
+{
+    public class {{{Name}}} : IDisposable
+    {
+        private readonly Dictionary<string, HashSet<object>> _callbacks = new();
+        private readonly Dictionary<Delegate, object[]> _registeredCallbacks = new();
+        private bool _disposed;
+
+        private LegionAPI _api;
+    
+    {{#each Events}}
+        private EventHandler<{{{EventArgsType}}}> _on{{TrimOnPrefix Name}}Handler;
+    {{/each}}
+    
+        public {{{Name}}}(LegionAPI api)
+        {
+            ArgumentNullException.ThrowIfNull(api);
+            _api = api;
+        }
+    
+    {{#each Events}}
+        public void On{{TrimOnPrefix Name}}(object callback)
+        {
+            if (_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+            {
+                if (!callbacks.Add(callback))
+                    return;
+            }
+            else
+                _callbacks.Add("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", [callback]);
+        
+            {{{../GeneratedFromClassName}}}.{{{Name}}} += Dispatch{{TrimOnPrefix Name}}Callbacks;
+        }
+
+        public void UnregisterOn{{TrimOnPrefix Name}}(object callback)
+        {
+            if (!_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+                return;
+
+            if (callbacks.Remove(callback) && callbacks.Count <= 0)
+                {{{../GeneratedFromClassName}}}.{{{Name}}} -= Dispatch{{TrimOnPrefix Name}}Callbacks;
+        }
+
+        private void Dispatch{{TrimOnPrefix Name}}Callbacks(object sender, {{EventArgsType}} e)
+        {
+            if (!_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+                return;
+
+            if (callbacks.Count <= 0)
+                return;
+        
+            _api?.ScheduleCallbacks(callbacks.ToArray(), e);
+        }
+
+    {{/each}}
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+    
+    {{#each Events}}
+            {{{../GeneratedFromClassName}}}.{{{Name}}} -= Dispatch{{TrimOnPrefix Name}}Callbacks;
+    {{/each}}
+        
+            _disposed = true;
+        }
+    }
+}
+{{/each}}
+#pragma warning restore CS0169 // Field is never used

@@ -105,6 +105,7 @@ namespace ClassicUO.Game
         public const uint RECHECK_HITS_STATUS = 20000;
 
         public const ushort HUE_ERROR = 32;
+        public const ushort HUE_WARN = 53;
         public const ushort HUE_SUCCESS = 62;
 
         public static class SqlSettings

@@ -12,6 +12,12 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Forces generated sources (incl. source generators) to be written to disk -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <OutputPath>$(ProjectDir)..\..\bin\Release\</OutputPath>
     <PublishDir>$(ProjectDir)..\..\bin\dist\</PublishDir>
@@ -97,6 +103,7 @@
     <PackageReference Include="IronPython" Version="3.4.2" />
     <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -127,6 +134,28 @@
      $(RuntimeIdentifier.StartsWith('linux')) )
   ">true</_IsLinux>
   </PropertyGroup>
+
+  <Target Name="IncludeGeneratedFiles" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <None Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/ApiClasses/*.cs" />
+    <DocSourceFiles Include="LegionScripting\LegionAPI.cs" />
+    <DocSourceFiles Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Create a string of quoted paths -->
+    <DocFileArgs>@(DocSourceFiles->'"%(FullPath)"', ' ')</DocFileArgs>
+  </PropertyGroup>
+
+  <Target Name="GenerateDocs" AfterTargets="Build">
+    <Message Text="Running: dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj $(DocFileArgs)" />
+    <Exec Command='dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj "$(ProjectDir)/LegionScripting/docs" $(DocFileArgs)' />
+  </Target>
 
   <Target Name="CreateVersionFile" AfterTargets="Build">
     <WriteLinesToFile File="$(TargetDir)v.txt" Lines="$(AssemblyVersion)" Overwrite="true" />

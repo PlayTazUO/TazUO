@@ -205,7 +205,7 @@ public class ScriptBrowser : SingletonImGuiWindow<ScriptBrowser>
         }
 
         // Draw script files
-        var scriptFiles = node.Contents.Where(f => f.Type == "file" && (f.Name.EndsWith(".py"))).OrderBy(f => f.Name).ToList();
+        var scriptFiles = node.Contents.Where(f => f.Type == "file" && (f.Name.EndsWith(".py") || f.Name.EndsWith(".cs"))).OrderBy(f => f.Name).ToList();
         foreach (GhFileObject file in scriptFiles)
         {
             ImGui.PushID(file.Path);

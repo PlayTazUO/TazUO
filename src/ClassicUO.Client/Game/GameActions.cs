@@ -712,6 +712,7 @@ internal static class GameActions
         }
     }
 
+    internal static void PrintWarn(string message) => Print(World.Instance, message, Constants.HUE_WARN, MessageType.Regular, 3, true);
 
     internal static void Print(string message, ushort hue = 946, MessageType type = MessageType.Regular, byte font = 3, bool unicode = true) => Print(World.Instance, message, hue, type, font, unicode);
 

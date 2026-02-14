@@ -17,6 +17,8 @@ namespace ClassicUO.Configuration
         public MapLanguage MapLanguage { get; set; } = new MapLanguage();
         public TopBarGumpLanguage TopBarGump { get; set; } = new TopBarGumpLanguage();
 
+        public ScriptingLanguage Scripting { get; set; } = new();
+
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
         public string TazUOWiki { get; set; } = "TazUO Wiki";
@@ -625,6 +627,12 @@ namespace ClassicUO.Configuration
             public string HiddenLayersEnabled { get; set; } = "Enable visible layer system";
             #endregion
         }
+    }
+
+    public class ScriptingLanguage
+    {
+        public string OpenLocation { get; set; } = "Open Location";
+        public string OpenLocationFailed { get; set; } = "Failed to open location '{0}'";
     }
 
     public class ErrorsLanguage

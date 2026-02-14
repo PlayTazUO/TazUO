@@ -10,7 +10,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
 {
     public class PersistentVarsWindow : SingletonImGuiWindow<PersistentVarsWindow>
     {
-        private API.PersistentVar _selectedScope = API.PersistentVar.Char;
+        private LegionAPI.PersistentVar _selectedScope = LegionAPI.PersistentVar.Char;
         private string _filterText = "";
         private string _newKey = "";
         private string _newValue = "";
@@ -53,20 +53,20 @@ namespace ClassicUO.Game.UI.ImGuiControls
             ImGui.Text("Scope:");
             ImGui.SameLine();
 
-            if (ImGui.RadioButton("Character", _selectedScope == API.PersistentVar.Char))
-                _selectedScope = API.PersistentVar.Char;
+            if (ImGui.RadioButton("Character", _selectedScope == LegionAPI.PersistentVar.Char))
+                _selectedScope = LegionAPI.PersistentVar.Char;
             ImGui.SameLine();
 
-            if (ImGui.RadioButton("Account", _selectedScope == API.PersistentVar.Account))
-                _selectedScope = API.PersistentVar.Account;
+            if (ImGui.RadioButton("Account", _selectedScope == LegionAPI.PersistentVar.Account))
+                _selectedScope = LegionAPI.PersistentVar.Account;
             ImGui.SameLine();
 
-            if (ImGui.RadioButton("Server", _selectedScope == API.PersistentVar.Server))
-                _selectedScope = API.PersistentVar.Server;
+            if (ImGui.RadioButton("Server", _selectedScope == LegionAPI.PersistentVar.Server))
+                _selectedScope = LegionAPI.PersistentVar.Server;
             ImGui.SameLine();
 
-            if (ImGui.RadioButton("Global", _selectedScope == API.PersistentVar.Global))
-                _selectedScope = API.PersistentVar.Global;
+            if (ImGui.RadioButton("Global", _selectedScope == LegionAPI.PersistentVar.Global))
+                _selectedScope = LegionAPI.PersistentVar.Global;
 
             // Show current scope info
             ImGui.SameLine();
@@ -275,13 +275,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
         {
             switch (_selectedScope)
             {
-                case API.PersistentVar.Char:
+                case LegionAPI.PersistentVar.Char:
                     return $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.CharacterName}";
-                case API.PersistentVar.Account:
+                case LegionAPI.PersistentVar.Account:
                     return $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.Username}";
-                case API.PersistentVar.Server:
+                case LegionAPI.PersistentVar.Server:
                     return ProfileManager.CurrentProfile.ServerName;
-                case API.PersistentVar.Global:
+                case LegionAPI.PersistentVar.Global:
                     return "All servers and characters";
                 default:
                     return "";

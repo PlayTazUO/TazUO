@@ -1,0 +1,23 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using ClassicUO.LegionScripting;
+
+#pragma warning disable CS0169 // Field is never used
+
+namespace ClassicUO.LegionScripting;
+
+{{#each Classes}}
+
+public abstract class {{Name}}Declaration
+{
+{{#each Events}}
+    {{{Docs}}}
+    public abstract void {{{Name}}}(object callback);
+
+    {{/each}}
+}
+
+{{/each}}
+
+#pragma warning restore CS0169 // Field is never used

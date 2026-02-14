@@ -20,7 +20,7 @@ public static class GenDoc
         foreach (ClassDeclarationSyntax classDeclaration in classes)
         {
             string className = classDeclaration.Identifier.Text;
-            isMainAPI = className == "API";
+            isMainAPI = className == "LegionAPI";
             classesDict.TryAdd(className, new Tuple<StringBuilder, StringBuilder>(new StringBuilder(), new StringBuilder()));
             StringBuilder sb = classesDict[className].Item1;
             StringBuilder python = classesDict[className].Item2;
