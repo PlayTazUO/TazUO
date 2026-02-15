@@ -138,7 +138,11 @@ internal class ModernNineSliceGump : NineSliceGump
         if (callback == null)
         {
             // No callback registered, stop the debounce timer, if it's running'
-            _debounceTimer?.Stop();
+            if (_debounceTimer == null)
+                return;
+
+            _debounceTimer.Stop();
+            _debounceTimer.Elapsed -= DispatchResizeEvent;
             _debounceTimer = null;
             return;
         }
