@@ -87,16 +87,10 @@ namespace ClassicUO.LegionScripting
                 if (_scheduledCallbacks.Count <= Config.MaxCallbackCount)
                     return;
 
-                GameActions.Print(
-                    World,
-                    $"Scripting Warning: Too many callbacks registered! Dropping the {Config.MaxCallbackCount - _scheduledCallbacks.Count} oldest callbacks",
-                    Constants.HUE_WARN
-                );
-
+                // Calling GameActions.Print results in a stack overflow due to the recursive
+                // nature of message processing.
                 while (_scheduledCallbacks.Count > Config.MaxCallbackCount)
-                {
                     _scheduledCallbacks.Dequeue(); //Limit callback counts
-                }
             }
         }
 

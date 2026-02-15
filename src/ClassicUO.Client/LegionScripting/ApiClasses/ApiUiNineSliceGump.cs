@@ -1,4 +1,4 @@
-using System;
+using System.Timers;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
@@ -118,8 +118,13 @@ public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
 /// </summary>
 internal class ModernNineSliceGump : NineSliceGump
 {
+    private const int DEBOUNCE_MS = 75;
+
     private readonly LegionAPI _api;
     private object _resizeCallback;
+    private Timer _debounceTimer;
+
+    private volatile bool _onResizeDispatchRequested;
 
     public ModernNineSliceGump(LegionAPI api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight)
         : base(Game.World.Instance, x, y, width, height, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, resizable, minWidth, minHeight)
@@ -127,27 +132,57 @@ internal class ModernNineSliceGump : NineSliceGump
         _api = api;
     }
 
-    public void SetResizeCallback(object callback) => _resizeCallback = callback;
+    public void SetResizeCallback(object callback)
+    {
+        _resizeCallback = callback;
+        if (callback == null)
+        {
+            // No callback registered, stop the debounce timer, if it's running'
+            _debounceTimer?.Stop();
+            _debounceTimer = null;
+            return;
+        }
+
+        // A callback was registered, start the debounce timer
+        _debounceTimer = new Timer { AutoReset = true, Interval = DEBOUNCE_MS };
+        _debounceTimer.Elapsed += DispatchResizeEvent;
+        _debounceTimer.Start();
+    }
+
+    public override void Dispose()
+    {
+        if (_debounceTimer != null)
+        {
+            _debounceTimer.Elapsed -= DispatchResizeEvent;
+            _debounceTimer?.Stop();
+            _debounceTimer = null;
+        }
+
+        base.Dispose();
+    }
 
     protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
     {
         base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
 
         if (_resizeCallback != null)
-        {
-            _api.ScheduleCallback
-            (() =>
-                {
-                    try
-                    {
-                        _api.CallbackChannel.Invoke(_resizeCallback);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Script callback error: {ex}");
-                    }
-                }
-            );
-        }
+            _onResizeDispatchRequested = true;
+    }
+
+    private void DispatchResizeEvent(object sender, ElapsedEventArgs e)
+    {
+        // This is not a synchronized construct - this event CAN dispatch more often than
+        // the debounce timer interval.
+        //
+        // Since we're only talking debounce and not idempotency and such, this is fine.
+        // Saves on synchronization complexity and overhead.
+        if (!_onResizeDispatchRequested)
+            return;
+
+        _onResizeDispatchRequested = false;
+
+        // A bit of defensiveness to prevent null callbacks via dispose or script-based update
+        if (_resizeCallback != null)
+            _api.ScheduleCallback(_resizeCallback);
     }
 }

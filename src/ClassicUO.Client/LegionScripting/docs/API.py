@@ -969,6 +969,9 @@ class ModernNineSliceGump(NineSliceGump):
     def SetResizeCallback(self, callback: "Any") -> None:
         pass
 
+    def Dispose(self) -> None:
+        pass
+
 class ApiUiRadioButton(ApiUiCheckbox):
     ""
     GroupIndex: int = None

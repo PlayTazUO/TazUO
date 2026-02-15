@@ -822,7 +822,7 @@ public class ScriptManagerWindow : SingletonImGuiWindow<ScriptManagerWindow>
             if (!FileSystemHelper.OpenLocation(script.FullPath))
             {
                 Log.Warn($"Failed to open location for script '{script.FullPath}'");
-                GameActions.PrintWarn(string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
+                GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
             }
 
             _showContextMenu = false;

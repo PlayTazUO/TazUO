@@ -27,3 +27,9 @@ description:  Internal class that extends NineSliceGump to provide callback supp
 
 ---
 
+### Dispose
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
