@@ -924,7 +924,9 @@ namespace ClassicUO.Game.Managers
 
             _wasCtrlHeldLastFrame = ctrlCurrentlyHeld;
 
-            if (Client.Game.Scene is not LoginScene)
+            // WorldViewportGump is drawn without UIScale (Pass 1 with Identity matrix),
+            // so its coordinates are in screen-space — don't convert its drag delta.
+            if (Client.Game.Scene is not LoginScene && DraggingControl is not WorldViewportGump)
                 delta = ScreenToUIDelta(delta);
 
             DraggingControl.X += delta.X;

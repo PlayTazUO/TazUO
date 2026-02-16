@@ -142,25 +142,33 @@ namespace ClassicUO.Game.UI.Gumps
         public void CenterXInScreen()
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            X = (windowBounds.Width - Width) / 2;
+            float inv = 1f / Client.Game.UIScale;
+            X = ((int)(windowBounds.Width * inv) - Width) / 2;
         }
 
         public void CenterYInScreen()
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            Y = (windowBounds.Height - Height) / 2;
+            float inv = 1f / Client.Game.UIScale;
+            Y = ((int)(windowBounds.Height * inv) - Height) / 2;
         }
 
         public void CenterXInViewPort()
         {
             Camera camera = Client.Game.Scene.Camera;
-            X = camera.Bounds.X + ((camera.Bounds.Width - Width) / 2);
+            float inv = 1f / Client.Game.UIScale;
+            int bx = (int)(camera.Bounds.X * inv);
+            int bw = (int)(camera.Bounds.Width * inv);
+            X = bx + ((bw - Width) / 2);
         }
 
         public void CenterYInViewPort()
         {
             Camera camera = Client.Game.Scene.Camera;
-            Y = camera.Bounds.Y + ((camera.Bounds.Height - Height) / 2);
+            float inv = 1f / Client.Game.UIScale;
+            int by = (int)(camera.Bounds.Y * inv);
+            int bh = (int)(camera.Bounds.Height * inv);
+            Y = by + ((bh - Height) / 2);
         }
 
         public Gump CenterInViewPort()
@@ -173,12 +181,15 @@ namespace ClassicUO.Game.UI.Gumps
         public void SetInScreen()
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
+            float inv = 1f / Client.Game.UIScale;
+            int maxW = (int)(windowBounds.Width * inv);
+            int maxH = (int)(windowBounds.Height * inv);
 
             int halfWidth = Width / 2;
             int halfHeight = Height / 2;
 
-            int newX = (int)MathHelper.Clamp(X, -halfWidth, windowBounds.Width - halfWidth);
-            int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowBounds.Height - halfHeight);
+            int newX = (int)MathHelper.Clamp(X, -halfWidth, maxW - halfWidth);
+            int newY = (int)MathHelper.Clamp(Y, -halfHeight, maxH - halfHeight);
 
             X = newX;
             Y = newY;
