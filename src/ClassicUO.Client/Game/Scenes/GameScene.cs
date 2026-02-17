@@ -863,9 +863,12 @@ namespace ClassicUO.Game.Scenes
 
                     if (widthMatch && heightMatch)
                     {
-                        // Resize succeeded
+                        // Resize succeeded — sync PreferredBackBuffer with actual size.
+                        // On macOS, programmatic resizes don't fire SDL_EVENT_WINDOW_RESIZED
+                        // so WindowOnClientSizeChanged never runs to sync these values.
                         _waitingForWindowResize = false;
                         _expectedWindowSize = null;
+                        Client.Game.SetWindowSize(actualWidth, actualHeight, true);
                     }
                     else if (Time.Ticks - _windowResizeStartTime > WINDOW_RESIZE_TIMEOUT_MS)
                     {
@@ -884,8 +887,11 @@ namespace ClassicUO.Game.Scenes
                     // We're waiting for maximize operation to complete
                     if (Client.Game.IsWindowMaximized())
                     {
-                        // Maximize succeeded
+                        // Maximize succeeded — sync PreferredBackBuffer with actual size.
                         _waitingForWindowResize = false;
+                        int mw = Client.Game.Window.ClientBounds.Width;
+                        int mh = Client.Game.Window.ClientBounds.Height;
+                        Client.Game.SetWindowSize(mw, mh, true);
                     }
                     else if (Time.Ticks - _windowResizeStartTime > WINDOW_RESIZE_TIMEOUT_MS)
                     {
