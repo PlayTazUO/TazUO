@@ -804,6 +804,12 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
             }
 
+            // Convert from screen-space to UI-space so the gump aligns with the
+            // game world when drawn with the UIScale matrix in Pass 2.
+            float uiInv = 1f / Client.Game.UIScale;
+            x = (int)(x * uiInv);
+            y = (int)(y * uiInv);
+
             Point adjustedPos = AdjustPositionToAvoidOverlap(x, y);
             x = adjustedPos.X;
             y = adjustedPos.Y;

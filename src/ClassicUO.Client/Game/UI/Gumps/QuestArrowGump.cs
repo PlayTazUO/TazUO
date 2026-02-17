@@ -164,6 +164,11 @@ namespace ClassicUO.Game.UI.Gumps
                 y = camera.Bounds.Bottom - _arrow.Height;
             }
 
+            // Convert from screen-space to UI-space for Pass 2 rendering.
+            float uiInv = 1f / Client.Game.UIScale;
+            x = (int)(x * uiInv);
+            y = (int)(y * uiInv);
+
             X = x;
             Y = y;
 

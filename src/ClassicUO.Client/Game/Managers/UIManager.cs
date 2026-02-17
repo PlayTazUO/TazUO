@@ -700,7 +700,7 @@ namespace ClassicUO.Game.Managers
             //}
         }
 
-        private static Control GetMouseOverControl(Point position)
+        private static Control GetMouseOverControl(Point uiPosition)
         {
             if (_isDraggingControl)
             {
@@ -720,7 +720,12 @@ namespace ClassicUO.Game.Managers
                     continue;
                 }
 
-                c.HitTest(position, ref control);
+                // WorldViewportGump is drawn without UIScale (Pass 1 with Identity matrix),
+                // so its bounds are in screen-space — hit-test with screen-space coordinates.
+                if (c is WorldViewportGump)
+                    c.HitTest(Mouse.Position, ref control);
+                else
+                    c.HitTest(uiPosition, ref control);
 
                 if (control != null)
                 {
