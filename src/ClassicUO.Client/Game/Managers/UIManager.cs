@@ -483,6 +483,20 @@ namespace ClassicUO.Game.Managers
         {
             SortControlsByInfo();
 
+            // When UIScale == 1.0, uiTransform is Identity — no need to split into
+            // two passes, which would force an extra GPU flush for no benefit.
+            if (uiTransform == Matrix.Identity)
+            {
+                batcher.Begin(null, Matrix.Identity);
+                for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+                {
+                    Gump g = last.Value;
+                    g.Draw(batcher, g.X, g.Y);
+                }
+                batcher.End();
+                return;
+            }
+
             // Pass 1: Draw the game viewport unscaled so system chat stays on-screen
             batcher.Begin(null, Matrix.Identity);
             for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
