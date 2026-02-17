@@ -457,13 +457,13 @@ namespace ClassicUO.LegionScripting
             {
                 ShowCSharpCompilationError(script, e);
             }
-            catch (AggregateException ae) when (ae.InnerException is OperationCanceledException)
+            catch (AggregateException ae) when (ae.InnerException is OperationCanceledException or ThreadInterruptedException or ThreadAbortException)
             {
-                // Script was cancelled via stop button
+                // Script was canceled via the stop button
             }
             catch (OperationCanceledException)
             {
-                // Script was cancelled
+                // Script was canceled
             }
             catch (ThreadInterruptedException) { }
             catch (ThreadAbortException) { }
@@ -570,30 +570,31 @@ namespace ClassicUO.LegionScripting
 
             foreach (Diagnostic diagnostic in e.Diagnostics)
             {
-                if (diagnostic.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
-                {
-                    FileLinePositionSpan lineSpan = diagnostic.Location.GetLineSpan();
-                    int lineNumber = lineSpan.StartLinePosition.Line + 1;
+                if (diagnostic.Severity != DiagnosticSeverity.Error)
+                    continue;
 
-                    string lineContent = "";
-                    if (TryReadFileLines(script.FullPath, out string[] fileLines))
-                        lineContent = GetContents(fileLines, lineNumber);
+                FileLinePositionSpan lineSpan = diagnostic.Location.GetLineSpan();
+                // Since we're injecting code into the script, we need to account for the actual user code's start line
+                int lineNumber = lineSpan.StartLinePosition.Line - script.UserCodeStartLine;
 
-                    errorLocations.Add(new ScriptErrorLocation(
-                        script.FileName,
-                        script.FullPath,
-                        lineNumber,
-                        lineContent
-                    ));
+                string lineContent = "";
+                if (TryReadFileLines(script.FullPath, out string[] fileLines))
+                    lineContent = GetContents(fileLines, lineNumber);
 
-                    Log.Warn($"{script.FileName}({lineNumber}): {diagnostic.GetMessage()}");
-                }
+                errorLocations.Add(new ScriptErrorLocation(
+                    script.FileName,
+                    script.FullPath,
+                    lineNumber,
+                    lineContent
+                ));
+
+                Log.Warn($"{script.FileName}({lineNumber}): {diagnostic.GetMessage()}");
             }
 
             if (errorLocations.Count > 0)
             {
                 string errorMsg = string.Join("\n", e.Diagnostics
-                    .Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error)
+                    .Where(d => d.Severity == DiagnosticSeverity.Error)
                     .Select(d => d.GetMessage()));
 
                 ImGuiManager.AddWindow(new ScriptErrorWindow(
@@ -612,15 +613,15 @@ namespace ClassicUO.LegionScripting
 
             // Unwrap AggregateException if present
             Exception actualException = e;
-            if (e is AggregateException ae && ae.InnerException != null)
+            if (e is AggregateException { InnerException: not null } ae)
                 actualException = ae.InnerException;
 
             Log.Warn($"C# Script Error: {actualException}");
 
             var errorLocations = new List<ScriptErrorLocation>();
-            var stackTrace = new System.Diagnostics.StackTrace(actualException, true);
+            var stackTrace = new StackTrace(actualException, true);
 
-            foreach (StackFrame frame in stackTrace.GetFrames() ?? Array.Empty<System.Diagnostics.StackFrame>())
+            foreach (StackFrame frame in stackTrace.GetFrames())
             {
                 string fileName = frame.GetFileName();
                 if (string.IsNullOrEmpty(fileName))
@@ -630,7 +631,8 @@ namespace ClassicUO.LegionScripting
                 if (!fileName.Equals(script.FullPath, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                int lineNumber = frame.GetFileLineNumber();
+                // We have to account for the hidden injected code here, in terms of the actual line numbers
+                int lineNumber = frame.GetFileLineNumber() - script.UserCodeStartLine + 2;
                 if (lineNumber <= 0)
                     continue;
 
@@ -639,7 +641,7 @@ namespace ClassicUO.LegionScripting
                     lineContent = GetContents(fileLines, lineNumber);
 
                 errorLocations.Add(new ScriptErrorLocation(
-                    System.IO.Path.GetFileName(fileName),
+                    Path.GetFileName(fileName),
                     fileName,
                     lineNumber,
                     lineContent

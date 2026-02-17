@@ -29,6 +29,7 @@ public partial class ScriptFile : IDisposable
     public LegionAPI ScopedApi;
     public ScriptType Type;
     public Script<object> CSharpCompiledScript;
+    public int UserCodeStartLine { get; private set; }
 
     public bool IsPlaying => ScriptThread != null;
 
@@ -176,25 +177,31 @@ public partial class ScriptFile : IDisposable
         return (usings.ToArray(), code.Trim());
     }
 
-    private static string GenerateUserCodeWrapper(string userCode)
+    private static (string code, int userCodeStartLine1Based) GenerateUserCodeWrapper(string userCode)
     {
         var (usingDirectives, userCodeWithoutUsings) = ExciseUsingDirectives(userCode);
 
         string proxyClassName = $"LegionAPIProxy{Guid.NewGuid().ToString().Replace("-", "")}";
-        return $$"""
-                 global using static {{proxyClassName}};
+        string proxyCode = $$"""
+                             global using static {{proxyClassName}};
 
-                 {{string.Join('\n', usingDirectives)}}
+                             {{string.Join('\n', usingDirectives)}}
 
-                 public static class {{proxyClassName}}
-                 {
-                     public static LegionAPI API { get; set; }
-                 }
+                             public static class {{proxyClassName}}
+                             {
+                                 public static LegionAPI API { get; set; }
+                             }
 
-                 {{proxyClassName}}.API = GlobalApiInstance;
+                             {{proxyClassName}}.API = GlobalApiInstance;
 
-                 {{userCodeWithoutUsings}}
-                 """;
+                             """;
+        int proxyCodeLineCount = proxyCode.Split(["\n", "\r", "\r\n"], StringSplitOptions.None).Length;
+
+        // The user code starts after the proxy code MINUS the number of using directives (as they were originally provided by the user)
+        int userCodeStartLine1Based = proxyCodeLineCount - usingDirectives.Length;
+        string finalCode = proxyCode + userCodeWithoutUsings;
+
+        return (finalCode, userCodeStartLine1Based);
     }
 
 
@@ -220,11 +227,15 @@ public partial class ScriptFile : IDisposable
                 "System.Threading.Tasks",
                 "ClassicUO.LegionScripting",
                 "ClassicUO.LegionScripting.ApiClasses"
-            );
+            )
+            .WithEmitDebugInformation(true)
+            .WithFileEncoding(Encoding.UTF8)
+            .WithFilePath(FullPath);
 
         // Compile the script
-        string code = GenerateUserCodeWrapper(FileContentsJoined);
+        (string code, int userCodeStartLine) = GenerateUserCodeWrapper(FileContentsJoined);
         CSharpCompiledScript = CSharpScript.Create<object>(code, options, typeof(ScriptGlobals));
+        UserCodeStartLine = userCodeStartLine;
 
         // Pre-compile to catch compilation errors early
         CSharpCompiledScript.Compile();
