@@ -44,6 +44,7 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
         internal readonly HashSet<uint> _nearbyGroundItems = new();
+        private uint[] _nearbyItemsSnapshot = Array.Empty<uint>();
         private readonly Dictionary<uint, long> _lootCooldowns = new();
         private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), int> _lootItems = new ();
         internal volatile List<AutoLootConfigEntry> _mergedEntries = new ();
@@ -425,11 +426,14 @@ namespace ClassicUO.Game.Managers
 
                 // Snapshot to avoid collection-modified-during-enumeration if CheckAndLoot
                 // triggers events that call OnItemCreatedOrUpdated (which modifies _nearbyGroundItems).
-                uint[] snapshot = new uint[_nearbyGroundItems.Count];
-                _nearbyGroundItems.CopyTo(snapshot);
+                int count = _nearbyGroundItems.Count;
+                if (_nearbyItemsSnapshot.Length < count)
+                    _nearbyItemsSnapshot = new uint[count];
+                _nearbyGroundItems.CopyTo(_nearbyItemsSnapshot);
 
-                foreach (uint serial in snapshot)
+                for (int idx = 0; idx < count; idx++)
                 {
+                    uint serial = _nearbyItemsSnapshot[idx];
                     Item item = _world.Items.Get(serial);
 
                     if (item == null || !item.OnGround || item.IsLocked || item.IsCorpse)
