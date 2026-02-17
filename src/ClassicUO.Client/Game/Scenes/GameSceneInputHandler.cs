@@ -969,12 +969,13 @@ namespace ClassicUO.Game.Scenes
 
         private bool OnRightMouseDown()
         {
-            if (
-                UIManager.PopupMenu != null
-                && !UIManager.PopupMenu.Bounds.Contains(Mouse.Position.X, Mouse.Position.Y)
-            )
+            if (UIManager.PopupMenu != null)
             {
-                UIManager.ShowGamePopup(null);
+                Point uiMouse = UIManager.ScreenToUI(Mouse.Position);
+                if (!UIManager.PopupMenu.Bounds.Contains(uiMouse.X, uiMouse.Y))
+                {
+                    UIManager.ShowGamePopup(null);
+                }
             }
 
             if (!UIManager.IsMouseOverWorld)
@@ -991,12 +992,13 @@ namespace ClassicUO.Game.Scenes
 
         private bool OnRightMouseUp()
         {
-            if (
-                UIManager.PopupMenu != null
-                && !UIManager.PopupMenu.Bounds.Contains(Mouse.Position.X, Mouse.Position.Y)
-            )
+            if (UIManager.PopupMenu != null)
             {
-                UIManager.ShowGamePopup(null);
+                Point uiMouse = UIManager.ScreenToUI(Mouse.Position);
+                if (!UIManager.PopupMenu.Bounds.Contains(uiMouse.X, uiMouse.Y))
+                {
+                    UIManager.ShowGamePopup(null);
+                }
             }
 
             _rightMousePressed = false;

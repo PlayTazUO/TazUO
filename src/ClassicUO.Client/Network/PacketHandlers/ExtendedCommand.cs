@@ -218,13 +218,24 @@ internal static class ExtendedCommand
                 var popupPos = UIManager.ScreenToUI(new Microsoft.Xna.Framework.Point(
                     world.DelayedObjectClickManager.LastMouseX,
                     world.DelayedObjectClickManager.LastMouseY));
-                UIManager.ShowGamePopup(
-                    new PopupMenuGump(world, PopupMenuData.Parse(ref p))
-                    {
-                        X = popupPos.X,
-                        Y = popupPos.Y
-                    }
-                );
+                var popupGump = new PopupMenuGump(world, PopupMenuData.Parse(ref p))
+                {
+                    X = popupPos.X,
+                    Y = popupPos.Y
+                };
+
+                // Clamp to UI-space bounds so the popup stays on-screen at UIScale > 1.
+                int maxW = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.UIScale);
+                int maxH = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.UIScale);
+
+                if (popupGump.X + popupGump.Width > maxW)
+                    popupGump.X = maxW - popupGump.Width;
+                if (popupGump.Y + popupGump.Height > maxH)
+                    popupGump.Y = maxH - popupGump.Height;
+                if (popupGump.Y < 0)
+                    popupGump.Y = 0;
+
+                UIManager.ShowGamePopup(popupGump);
 
                 break;
 
