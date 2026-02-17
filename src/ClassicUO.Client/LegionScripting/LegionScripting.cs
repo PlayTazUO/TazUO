@@ -229,7 +229,7 @@ namespace ClassicUO.LegionScripting
                 if (fname == "API.py" || fname.StartsWith("_"))
                     continue;
 
-                if (file.EndsWith(".lscript") || file.EndsWith(".py") || file.EndsWith(".cs"))
+                if (file.EndsWith(".py") || file.EndsWith(".cs"))
                 {
                     if (loadedScripts.Contains(file))
                         continue;
@@ -397,20 +397,20 @@ namespace ClassicUO.LegionScripting
             if (RunningScripts.Contains(script)) //Already playing
                 return;
 
-            if (script.PythonThread == null || !script.PythonThread.IsAlive)
+            if (script.ScriptThread == null || !script.ScriptThread.IsAlive)
             {
                 script.ReadFromFile();
 
                 // Route to correct executor based on script type
                 if (script.Type == ScriptFile.ScriptType.CSharp)
-                    script.PythonThread = new Thread(() => ExecuteCSharpScript(script));
+                    script.ScriptThread = new Thread(() => ExecuteCSharpScript(script));
                 else
-                    script.PythonThread = new Thread(() => ExecutePythonScript(script));
+                    script.ScriptThread = new Thread(() => ExecutePythonScript(script));
 
-                if(!PyThreads.TryAdd(script.PythonThread.ManagedThreadId, script))
-                    PyThreads[script.PythonThread.ManagedThreadId] = script;
+                if(!PyThreads.TryAdd(script.ScriptThread.ManagedThreadId, script))
+                    PyThreads[script.ScriptThread.ManagedThreadId] = script;
 
-                script.PythonThread.Start();
+                script.ScriptThread.Start();
             }
 
             RunningScripts.Add(script);
@@ -446,11 +446,11 @@ namespace ClassicUO.LegionScripting
 
                 // Execute with cancellation support
                 Task<ScriptState<object>> task = script.CSharpCompiledScript.RunAsync(
-                    new object(),
-                    cancellationToken: script.ScopedApi.CancellationToken.Token
+                    new ScriptGlobals { GlobalApiInstance = script.ScopedApi },
+                    script.ScopedApi.CancellationToken.Token
                 );
 
-                // Block thread until script completes or is cancelled
+                // Block thread until the script completes or is canceled
                 task.Wait(script.ScopedApi.CancellationToken.Token);
             }
             catch (CompilationErrorException e)
@@ -664,7 +664,7 @@ namespace ClassicUO.LegionScripting
 
             RunningScripts.Remove(script);
 
-            if (script.PythonThread is { IsAlive: true })
+            if (script.ScriptThread is { IsAlive: true })
             {
                 if (script.ScopedApi != null)
                 {
@@ -675,12 +675,12 @@ namespace ClassicUO.LegionScripting
                 if (script.PythonEngine != null)
                     script.PythonEngine.Runtime.Shutdown();
 
-                script.PythonThread.Interrupt();
+                script.ScriptThread.Interrupt();
             }
             else
             {
-                if (script.PythonThread != null)
-                    PyThreads.Remove(script.PythonThread.ManagedThreadId);
+                if (script.ScriptThread != null)
+                    PyThreads.Remove(script.ScriptThread.ManagedThreadId);
 
                 // Route to correct cleanup based on script type
                 if (script.Type == ScriptFile.ScriptType.CSharp)
@@ -688,7 +688,7 @@ namespace ClassicUO.LegionScripting
                 else
                     script.PythonScriptStopped();
 
-                script.PythonThread = null;
+                script.ScriptThread = null;
             }
         }
 

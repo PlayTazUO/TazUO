@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using ClassicUO.Game;
 using ClassicUO.Utility.Logging;
@@ -13,7 +14,7 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace ClassicUO.LegionScripting;
 
-public class ScriptFile : IDisposable
+public partial class ScriptFile : IDisposable
 {
     public string Path;
     public string FileName;
@@ -22,14 +23,14 @@ public class ScriptFile : IDisposable
     public string SubGroup = string.Empty;
     public string[] FileContents;
     public string FileContentsJoined;
-    public Thread PythonThread;
+    public Thread ScriptThread;
     public ScriptEngine PythonEngine;
     public ScriptScope PythonScope;
     public LegionAPI ScopedApi;
     public ScriptType Type;
     public Script<object> CSharpCompiledScript;
 
-    public bool IsPlaying => PythonThread != null;
+    public bool IsPlaying => ScriptThread != null;
 
     public enum ScriptType
     {
@@ -151,6 +152,52 @@ public class ScriptFile : IDisposable
             PythonEngine = null;
     }
 
+    private static (string[], string) ExciseUsingDirectives(string code)
+    {
+        Regex usingDirectiveRx = MatchUsingDirectives();
+        MatchCollection matches = usingDirectiveRx.Matches(code);
+
+        if (matches.Count == 0)
+            return ([], code);
+
+        var usings = new List<string>();
+
+        // Process matches in reverse order to keep indices valid
+        for (int i = matches.Count - 1; i >= 0; i--)
+        {
+            Match match = matches[i];
+            usings.Add(match.Value);
+            code = code.Remove(match.Index, match.Length);
+        }
+
+        // Reverse the list since we collected in reverse order
+        usings.Reverse();
+
+        return (usings.ToArray(), code.Trim());
+    }
+
+    private static string GenerateUserCodeWrapper(string userCode)
+    {
+        var (usingDirectives, userCodeWithoutUsings) = ExciseUsingDirectives(userCode);
+
+        string proxyClassName = $"LegionAPIProxy{Guid.NewGuid().ToString().Replace("-", "")}";
+        return $$"""
+                 global using static {{proxyClassName}};
+
+                 {{string.Join('\n', usingDirectives)}}
+
+                 public static class {{proxyClassName}}
+                 {
+                     public static LegionAPI API { get; set; }
+                 }
+
+                 {{proxyClassName}}.API = GlobalApiInstance;
+
+                 {{userCodeWithoutUsings}}
+                 """;
+    }
+
+
     public void SetupCSharpScript()
     {
         // Reuse cached compilation if available
@@ -175,12 +222,9 @@ public class ScriptFile : IDisposable
                 "ClassicUO.LegionScripting.ApiClasses"
             );
 
-        // Roslyn limits script globals to the bottom frame which is means the API has to be force-fed down the class/script hierarchy.
-        // To work around that, we can inject an ugly 'using' that effectively does the same work by exposing the LegionAPI instance via a static class/field
-        string code = string.Concat($"using static ClassicUO.LegionScripting.{nameof(CsLegionApiHost)};\n", FileContentsJoined);
-
         // Compile the script
-        CSharpCompiledScript = CSharpScript.Create<object>(code, options, typeof(object));
+        string code = GenerateUserCodeWrapper(FileContentsJoined);
+        CSharpCompiledScript = CSharpScript.Create<object>(code, options, typeof(ScriptGlobals));
 
         // Pre-compile to catch compilation errors early
         CSharpCompiledScript.Compile();
@@ -190,7 +234,6 @@ public class ScriptFile : IDisposable
     {
         var api = new LegionAPI(new CSharpCallbackChannel(), this);
         ScopedApi = api;
-        CsLegionApiHost.Current.Value = api;
     }
 
     public void CSharpScriptStopped()
@@ -217,4 +260,7 @@ public class ScriptFile : IDisposable
         GC.SuppressFinalize(this);
         _disposed = true;
     }
+
+    [GeneratedRegex(@"^using\s+\w[\w\d]*(?:\.\w[\w\d]*)*;$", RegexOptions.Multiline | RegexOptions.Compiled)]
+    private static partial Regex MatchUsingDirectives();
 }
