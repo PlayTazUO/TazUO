@@ -10,8 +10,8 @@ DOCS_OUTPUT="$CLIENT_DIR/LegionScripting/docs"
 SOURCE_FILES=()
 while IFS= read -r -d '' f; do
     SOURCE_FILES+=("$f")
-done < <(find "$CLIENT_DIR/LegionScripting/PyClasses" -name "*.cs" -print0)
-SOURCE_FILES+=("$CLIENT_DIR/LegionScripting/API.cs")
+done < <(find "$CLIENT_DIR/LegionScripting/ApiClasses" -name "*.cs" -print0)
+SOURCE_FILES+=("$CLIENT_DIR/LegionScripting/LegionAPI.cs")
 
 if [ ${#SOURCE_FILES[@]} -eq 0 ]; then
     echo "Error: No source files found for doc generation."

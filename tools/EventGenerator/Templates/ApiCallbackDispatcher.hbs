@@ -36,9 +36,10 @@ namespace {{{Namespace}}}
                     return;
             }
             else
-                _callbacks.Add("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", [callback]);
-        
-            {{{../GeneratedFromClassName}}}.{{{Name}}} += Dispatch{{TrimOnPrefix Name}}Callbacks;
+            {
+                _callbacks.Add("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", [callback]);        
+                {{{../GeneratedFromClassName}}}.{{{Name}}} += Dispatch{{TrimOnPrefix Name}}Callbacks;
+            }
         }
 
         public void UnregisterOn{{TrimOnPrefix Name}}(object callback)
