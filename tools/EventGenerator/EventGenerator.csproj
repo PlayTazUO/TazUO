@@ -28,7 +28,7 @@
     <!-- net10.0 config - allows resting the generator and such but doesn't work for actual build -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
         <Reference Include="xunit.core">
-            <HintPath>..\..\..\..\..\..\home\v\.nuget\packages\xunit.extensibility.core\2.9.0\lib\netstandard1.1\xunit.core.dll</HintPath>
+            <HintPath>$(NuGetPackageRoot)xunit.extensibility.core\2.9.0\lib\netstandard1.1\xunit.core.dll</HintPath>
         </Reference>
 
         <PackageReference Include="Microsoft.CodeAnalysis" Version="5.0.0"/>

@@ -50,7 +50,7 @@ class ApiGameObject:
         """
         pass
 
-    def HasLineOfSightFrom(self, observer: "Any" = None) -> "bool":
+    def HasLineOfSightFrom(self, observer: "ApiGameObject" = None) -> "bool":
         """
          Determines if there is line of sight from the specified observer to this object.
          If no observer is specified, it defaults to the player.
@@ -80,21 +80,21 @@ class ApiItem(ApiEntity):
     Opened: bool = None
     Container: int = None
     RootContainer: int = None
-    RootEntity = None
+    RootEntity: ApiEntity = None
     __class__: str = None
     IsCorpse: bool = None
     IsContainer: bool = None
     MatchingHighlightName: str = None
     MatchesHighlight: bool = None
 
-    def GetItemData(self) -> "Any":
+    def GetItemData(self) -> "ApiItemData":
         """
          Get the items ItemData
         
         """
         pass
 
-    def GetContainerGump(self) -> "Any":
+    def GetContainerGump(self) -> "ApiUiBaseControl":
         """
          If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
         
@@ -184,8 +184,8 @@ class ApiMobile(ApiEntity):
     IsRunning: bool = None
     Notoriety: Notoriety = None
     InWarMode: bool = None
-    Backpack = None
-    Mount = None
+    Backpack: ApiItem = None
+    Mount: ApiItem = None
     __class__: str = None
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
@@ -330,7 +330,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetX(self, x: "int") -> "Any":
+    def SetX(self, x: "int") -> "ApiUiBaseControl":
         """
          Sets the control's X position.
          Used in python API
@@ -338,7 +338,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetY(self, y: "int") -> "Any":
+    def SetY(self, y: "int") -> "ApiUiBaseControl":
         """
          Sets the control's Y position.
          Used in python API
@@ -346,7 +346,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetPos(self, x: "int", y: "int") -> "Any":
+    def SetPos(self, x: "int", y: "int") -> "ApiUiBaseControl":
         """
          Sets the control's X and Y positions.
          Used in python API
@@ -360,7 +360,7 @@ class ApiUiBaseControl:
     def GetHeight(self) -> "int":
         pass
 
-    def SetWidth(self, width: "int") -> "Any":
+    def SetWidth(self, width: "int") -> "ApiUiBaseControl":
         """
          Sets the control's width.
          Used in python API
@@ -368,7 +368,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetHeight(self, height: "int") -> "Any":
+    def SetHeight(self, height: "int") -> "ApiUiBaseControl":
         """
          Sets the control's height.
          Used in python API
@@ -376,7 +376,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetRect(self, x: "int", y: "int", width: "int", height: "int") -> "Any":
+    def SetRect(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiBaseControl":
         """
          Sets the control's position and size in one operation.
          Used in python API
@@ -384,7 +384,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def CenterXInViewPort(self) -> "Any":
+    def CenterXInViewPort(self) -> "ApiUiBaseControl":
         """
          Centers a GUMP horizontally in the viewport. Only works on Gump instances.
          Used in python API
@@ -392,7 +392,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def CenterYInViewPort(self) -> "Any":
+    def CenterYInViewPort(self) -> "ApiUiBaseControl":
         """
          Centers a GUMP vertically in the viewport. Only works on Gump instances.
          Used in python API
@@ -408,7 +408,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetAlpha(self, alpha: "float") -> "Any":
+    def SetAlpha(self, alpha: "float") -> "ApiUiBaseControl":
         """
          Sets the control's Alpha value.
          Used in python API
@@ -416,7 +416,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def Clear(self) -> "Any":
+    def Clear(self) -> "ApiUiBaseControl":
         """
          Clears all child controls from this control.
          Used in python API
@@ -437,7 +437,7 @@ class ApiUiBaseGump(ApiUiBaseControl, IApiGump):
     PacketGumpText: str = None
     CanCloseWithRightClick: bool = None
     LayerOrder = None
-    Gump: PyBaseGump = None
+    Gump: ApiUiBaseGump = None
 
     def SetInScreen(self) -> None:
         """
@@ -521,7 +521,7 @@ class ApiUiControlDropDown(ApiUiBaseControl):
         """
         pass
 
-    def OnDropDownOptionSelected(self, onSelectionChanged: "Any") -> "Any":
+    def OnDropDownOptionSelected(self, onSelectionChanged: "Any") -> "ApiUiControlDropDown":
         """
          Add an onSelectionChanged callback to this dropdown control.
          The callback function will receive the selected index as a parameter.
@@ -543,7 +543,7 @@ class ApiUiControlDropDown(ApiUiBaseControl):
 class ApiUiGump:
     ""
 
-    def CreateGump(self, acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "Any":
+    def CreateGump(self, acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "ApiUiBaseGump":
         """
          Get a blank gump.
          Example:
@@ -557,7 +557,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateModernGump(self, x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "Any":
+    def CreateModernGump(self, x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "ApiUiNineSliceGump":
         """
          Creates a modern nine-slice gump using ModernUIConstants for consistent styling.
          The gump uses the standard modern UI panel texture and border size internally.
@@ -579,7 +579,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpCheckbox(self, text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "Any":
+    def CreateGumpCheckbox(self, text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "ApiUiCheckbox":
         """
          Create a checkbox for gumps.
           Example:
@@ -596,7 +596,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpLabel(self, text: "str", hue: "int" = 996) -> "Any":
+    def CreateGumpLabel(self, text: "str", hue: "int" = 996) -> "ApiUiLabel":
         """
          Create a label for a gump.
          Example:
@@ -610,7 +610,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpColorBox(self, opacity: "float" = 0.7, color: "str" = "#000000") -> "Any":
+    def CreateGumpColorBox(self, opacity: "float" = 0.7, color: "str" = "#000000") -> "ApiUiAlphaBlendControl":
         """
          Get a transparent color box for gumps.
          Example:
@@ -627,7 +627,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpItemPic(self, graphic: "int", width: "int", height: "int") -> "Any":
+    def CreateGumpItemPic(self, graphic: "int", width: "int", height: "int") -> "ApiUiResizableStaticPic":
         """
          Create a picture of an item.
          Example:
@@ -641,7 +641,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpButton(self, text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "Any":
+    def CreateGumpButton(self, text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "ApiUiButton":
         """
          Create a button for gumps.
          Example:
@@ -661,7 +661,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateSimpleButton(self, text: "str", width: "int", height: "int") -> "Any":
+    def CreateSimpleButton(self, text: "str", width: "int", height: "int") -> "ApiUiNiceButton":
         """
          Create a simple button, does not use graphics.
          Example:
@@ -676,7 +676,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpRadioButton(self, text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "Any":
+    def CreateGumpRadioButton(self, text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "ApiUiRadioButton":
         """
          Create a radio button for gumps, use group numbers to only allow one item to be checked at a time.
          Example:
@@ -692,7 +692,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "Any":
+    def CreateGumpTextBox(self, text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
         """
          Create a text area control.
          Example:
@@ -722,7 +722,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "Any":
+    def CreateGumpTTFLabel(self, text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
         """
          Create a TTF label with advanced options.
          Example:
@@ -740,7 +740,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpSimpleProgressBar(self, width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "Any":
+    def CreateGumpSimpleProgressBar(self, width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "ApiUiSimpleProgressBar":
         """
          Create a progress bar. Can be updated as needed with `bar.SetProgress(current, max)`.
          Example:
@@ -767,7 +767,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpScrollArea(self, x: "int", y: "int", width: "int", height: "int") -> "Any":
+    def CreateGumpScrollArea(self, x: "int", y: "int", width: "int", height: "int") -> "ApiUiScrollArea":
         """
          Create a scrolling area, add and position controls to it directly.
          Example:
@@ -784,7 +784,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateGumpPic(self, graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "Any":
+    def CreateGumpPic(self, graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "ApiUiGumpPic":
         """
          Create a gump pic(Use this for gump art, not item art)
          Example:
@@ -806,7 +806,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateDropDown(self, width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "Any":
+    def CreateDropDown(self, width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "ApiUiControlDropDown":
         """
          Creates a dropdown control (combobox) with the specified width and items.
         
@@ -829,7 +829,7 @@ class ApiUiGump:
         """
         pass
 
-    def AddControlOnDisposed(self, control: "Any", onDispose: "Any") -> "Any":
+    def AddControlOnDisposed(self, control: "ApiUiBaseControl", onDispose: "Any") -> "ApiUiBaseControl":
         """
          Add onDispose(Closed) callback to a control.
          Example:
@@ -919,7 +919,7 @@ class ApiUiNiceButton(ApiUiBaseControl):
 class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
     ""
     NineSliceGump = None
-    Gump: PyBaseGump = None
+    Gump: ApiUiBaseGump = None
 
     def GetHue(self) -> "int":
         """
@@ -1066,14 +1066,14 @@ class Buff:
     Type = None
     Title: str = None
 
-Events = None
+Events: EventSinkApiDeclaration = None
 Config = None
 JournalEntries = None
 SoundEntries = None
 ScriptName: str = None
 ScriptPath: str = None
 Backpack: int = None
-Player = None
+Player: ApiPlayer = None
 Bank: int = None
 Random = None
 LastTargetSerial: int = None
@@ -1081,8 +1081,8 @@ LastTargetPos = None
 LastTargetGraphic: int = None
 Found: int = None
 InstanceId: int = None
-Profile = None
-Gumps = None
+Profile: ApiUserProfile = None
+Gumps: ApiUiGump = None
 StopRequested: bool = None
 CancellationToken = None
 
@@ -1237,7 +1237,7 @@ def BandageSelf() -> "bool":
     """
     pass
 
-def ClearLeftHand() -> "Any":
+def ClearLeftHand() -> "ApiItem":
     """
      If you have an item in your left hand, move it to your backpack
      Sets API.Found to the item's serial.
@@ -1251,7 +1251,7 @@ def ClearLeftHand() -> "Any":
     """
     pass
 
-def ClearRightHand() -> "Any":
+def ClearRightHand() -> "ApiItem":
     """
      If you have an item in your right hand, move it to your backpack
      Sets API.Found to the item's serial.
@@ -1321,7 +1321,7 @@ def MenuResponseCurrent(index: "int", itemGraphic: "int" = 0, itemHue: "int" = 0
     """
     pass
 
-def MenuItemsCurrent() -> "list[Any]":
+def MenuItemsCurrent() -> "list[ApiUiMenuItem]":
     """
      Retrieve the current open menu's (uses the latest MenuGump) menu item descriptions.
      Useful when menu IDs change every time (e.g., Tracking skill).
@@ -1679,7 +1679,7 @@ def PromptResponse(message: "str") -> None:
     """
     pass
 
-def FindItem(serial: "int") -> "Any":
+def FindItem(serial: "int") -> "ApiItem":
     """
      Try to get an item by its serial.
      Sets API.Found to the serial of the item found.
@@ -1695,7 +1695,7 @@ def FindItem(serial: "int") -> "Any":
     """
     pass
 
-def FindType(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "Any":
+def FindType(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "ApiItem":
     """
      Attempt to find an item by type(graphic).
      Sets API.Found to the serial of the item found.
@@ -1710,7 +1710,7 @@ def FindType(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: 
     """
     pass
 
-def FindTypeAll(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "list[Any]":
+def FindTypeAll(graphic: "int", container: "int" = 1337, range: "int" = 1337, hue: "int" = 1337, minamount: "int" = 0) -> "list[ApiItem]":
     """
      Return a list of items matching the parameters set.
      Example:
@@ -1723,7 +1723,7 @@ def FindTypeAll(graphic: "int", container: "int" = 1337, range: "int" = 1337, hu
     """
     pass
 
-def FindLayer(layer: "str", serial: "int" = 1337) -> "Any":
+def FindLayer(layer: "str", serial: "int" = 1337) -> "ApiItem":
     """
      Attempt to find an item on a layer.
      Sets API.Found to the serial of the item found.
@@ -1737,7 +1737,7 @@ def FindLayer(layer: "str", serial: "int" = 1337) -> "Any":
     """
     pass
 
-def GetItemsOnGround(distance: "int" = int.MaxValue, graphic: "int" = 1337) -> "list[Any]":
+def GetItemsOnGround(distance: "int" = int.MaxValue, graphic: "int" = 1337) -> "list[ApiItem]":
     """
      Get all items on the ground within specified range.
      Example:
@@ -1750,7 +1750,7 @@ def GetItemsOnGround(distance: "int" = int.MaxValue, graphic: "int" = 1337) -> "
     """
     pass
 
-def ItemsInContainer(container: "int", recursive: "bool" = False) -> "list[Any]":
+def ItemsInContainer(container: "int", recursive: "bool" = False) -> "list[ApiItem]":
     """
      Get all items in a container.
      Example:
@@ -1887,7 +1887,7 @@ def CancelPathfinding() -> None:
     """
     pass
 
-def GetPath(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1) -> "list[Any]":
+def GetPath(x: "int", y: "int", z: "int" = 1337, distance: "int" = 1) -> "list[ApiPoint3D]":
     """
      Attempt to build a path to a location.  This will fail with large distances.
      Example:
@@ -2049,7 +2049,7 @@ def RequestTarget(timeout: "float" = 5) -> "int":
     """
     pass
 
-def RequestAnyTarget(timeout: "float" = 5) -> "Any":
+def RequestAnyTarget(timeout: "float" = 5) -> "ApiGameObject":
     """
      Prompts the player to target any object in the game world, including an <c>Item</c> , <c>Mobile</c> , <c>Land</c> tile, <c>Static</c> , or <c>Multi</c> .
      Waits for the player to select a target within a given timeout period.
@@ -2316,7 +2316,7 @@ def GetGumpContents(ID: "int" = 1337) -> "str":
     """
     pass
 
-def GetGump(ID: "int" = 1337) -> "PyBaseGump":
+def GetGump(ID: "int" = 1337) -> "ApiUiBaseGump":
     """
      Get a gump by ID.
      Example:
@@ -2330,7 +2330,7 @@ def GetGump(ID: "int" = 1337) -> "PyBaseGump":
     """
     pass
 
-def GetAllGumps() -> "list[PyBaseGump]":
+def GetAllGumps() -> "list[ApiUiBaseGump]":
     """
          Gets all currently open server-side gumps.
     
@@ -2444,7 +2444,7 @@ def ClearSoundLog() -> None:
     """
     pass
 
-def CheckSoundLog(idx: "int") -> "Any":
+def CheckSoundLog(idx: "int") -> "ApiSoundEntry":
     """
      Check if the sound log contains a given sound and retrieves it.
      Example:
@@ -2456,7 +2456,7 @@ def CheckSoundLog(idx: "int") -> "Any":
     """
     pass
 
-def GetSoundLog(seconds: "float") -> "list[Any]":
+def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
     """
      Get all the sound logs of the last X seconds.
      Example:
@@ -2483,7 +2483,7 @@ def InJournalAny(msgs: "list[str]", clearMatches: "bool" = False) -> "bool":
     """
     pass
 
-def GetJournalEntries(seconds: "float", matchingText: "str" = "") -> "list[Any]":
+def GetJournalEntries(seconds: "float", matchingText: "str" = "") -> "list[ApiJournalEntry]":
     """
      Get all the journal entires in the last X seconds.
      matchingText supports regex with $ prepended.
@@ -2567,7 +2567,7 @@ def Virtue(virtue: "str") -> None:
     """
     pass
 
-def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "Any":
+def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "ApiEntity":
     """
      Find the nearest item/mobile based on scan type.
      Sets API.Found to the serial of the item/mobile.
@@ -2583,7 +2583,7 @@ def NearestEntity(scanType: "ScanType", maxDistance: "int" = 10) -> "Any":
     """
     pass
 
-def NearestMobile(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "Any":
+def NearestMobile(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "ApiMobile":
     """
      Get the nearest mobile by Notoriety.
      Sets API.Found to the serial of the mobile.
@@ -2599,7 +2599,7 @@ def NearestMobile(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "Any
     """
     pass
 
-def NearestCorpse(distance: "int" = 3) -> "Any":
+def NearestCorpse(distance: "int" = 3) -> "ApiItem":
     """
      Get the nearest corpse within a distance.
      Sets API.Found to the serial of the corpse.
@@ -2614,7 +2614,7 @@ def NearestCorpse(distance: "int" = 3) -> "Any":
     """
     pass
 
-def NearestMobiles(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "list[Any]":
+def NearestMobiles(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "list[ApiMobile]":
     """
      Get all mobiles matching Notoriety and distance.
      Example:
@@ -2629,7 +2629,7 @@ def NearestMobiles(notoriety: "list[Notoriety]", maxDistance: "int" = 10) -> "li
     """
     pass
 
-def FindMobile(serial: "int") -> "Any":
+def FindMobile(serial: "int") -> "ApiMobile":
     """
      Get a mobile from its serial.
      Sets API.Found to the serial of the mobile.
@@ -2644,7 +2644,7 @@ def FindMobile(serial: "int") -> "Any":
     """
     pass
 
-def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None) -> "list[Any]":
+def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, notoriety: "list[Notoriety]" = None) -> "list[ApiMobile]":
     """
      Return a list of all mobiles the client is aware of, optionally filtered by graphic, distance, and/or notoriety.
      Example:
@@ -2662,7 +2662,7 @@ def GetAllMobiles(graphic: "int | None" = None, distance: "int | None" = None, n
     """
     pass
 
-def GetTile(x: "int", y: "int") -> "Any":
+def GetTile(x: "int", y: "int") -> "ApiGameObject":
     """
      Get the tile at a location.
      Example:
@@ -2675,7 +2675,7 @@ def GetTile(x: "int", y: "int") -> "Any":
     """
     pass
 
-def GetStaticsAt(x: "int", y: "int") -> "list[Any]":
+def GetStaticsAt(x: "int", y: "int") -> "list[ApiStatic]":
     """
      Gets all static objects at a specific position (x, y coordinates).
      This includes trees, vegetation, buildings, and other non-movable scenery.
@@ -2689,7 +2689,7 @@ def GetStaticsAt(x: "int", y: "int") -> "list[Any]":
     """
     pass
 
-def GetStaticsInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[Any]":
+def GetStaticsInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiStatic]":
     """
      Gets all static objects within a rectangular area defined by coordinates.
      This includes trees, vegetation, buildings, and other non-movable scenery.
@@ -2705,7 +2705,7 @@ def GetStaticsInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[Any]":
     """
     pass
 
-def GetMultisAt(x: "int", y: "int") -> "list[Any]":
+def GetMultisAt(x: "int", y: "int") -> "list[ApiMulti]":
     """
      Gets all multi objects at a specific position (x, y coordinates).
      This includes server-side house data.
@@ -2719,7 +2719,7 @@ def GetMultisAt(x: "int", y: "int") -> "list[Any]":
     """
     pass
 
-def GetMultisInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[Any]":
+def GetMultisInArea(x1: "int", y1: "int", x2: "int", y2: "int") -> "list[ApiMulti]":
     """
      Gets all multi objects within a rectangular area defined by coordinates.
      This includes server-side house data.
@@ -2793,7 +2793,7 @@ def GetPartyMemberSerials() -> "list[int]":
     """
     pass
 
-def CreateGump(acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "Any":
+def CreateGump(acceptMouseInput: "bool" = True, canMove: "bool" = True, keepOpen: "bool" = False) -> "ApiUiBaseGump":
     """
      Use API.Gumps.CreateGump instead
     
@@ -2807,98 +2807,98 @@ def AddGump(g: "Any") -> None:
     """
     pass
 
-def CreateGumpCheckbox(text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "Any":
+def CreateGumpCheckbox(text: "str" = "", hue: "int" = 0, isChecked: "bool" = False) -> "ApiUiCheckbox":
     """
      Use API.Gumps.CreateGumpCheckbox instead.
     
     """
     pass
 
-def CreateGumpLabel(text: "str", hue: "int" = 996) -> "Any":
+def CreateGumpLabel(text: "str", hue: "int" = 996) -> "ApiUiLabel":
     """
      Use API.Gumps.CreateGumpLabel instead.
     
     """
     pass
 
-def CreateGumpColorBox(opacity: "float" = 0.7, color: "str" = "#000000") -> "Any":
+def CreateGumpColorBox(opacity: "float" = 0.7, color: "str" = "#000000") -> "ApiUiAlphaBlendControl":
     """
      Use API.Gumps.CreateGumpColorBox instead.
     
     """
     pass
 
-def CreateGumpItemPic(graphic: "int", width: "int", height: "int") -> "Any":
+def CreateGumpItemPic(graphic: "int", width: "int", height: "int") -> "ApiUiResizableStaticPic":
     """
      Use API.Gumps.CreateGumpItemPic instead.
     
     """
     pass
 
-def CreateGumpButton(text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "Any":
+def CreateGumpButton(text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "ApiUiButton":
     """
      Use API.Gumps.CreateGumpButton instead.
     
     """
     pass
 
-def CreateSimpleButton(text: "str", width: "int", height: "int") -> "Any":
+def CreateSimpleButton(text: "str", width: "int", height: "int") -> "ApiUiNiceButton":
     """
      Use API.Gumps.CreateSimpleButton instead.
     
     """
     pass
 
-def CreateGumpRadioButton(text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "Any":
+def CreateGumpRadioButton(text: "str" = "", group: "int" = 0, inactive: "int" = 0x00D0, active: "int" = 0x00D1, hue: "int" = 0xFFFF, isChecked: "bool" = False) -> "ApiUiRadioButton":
     """
      Use API.Gumps.CreateGumpRadioButton instead.
     
     """
     pass
 
-def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "Any":
+def CreateGumpTextBox(text: "str" = "", width: "int" = 200, height: "int" = 30, multiline: "bool" = False) -> "ApiUiTtfTextInputField":
     """
      Use API.Gumps.CreateGumpTextBox instead.
     
     """
     pass
 
-def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "Any":
+def CreateGumpTTFLabel(text: "str", size: "float", color: "str" = "#FFFFFF", font: "str" = TrueTypeLoader.EMBEDDED_FONT, aligned: "str" = "let", maxWidth: "int" = 0, applyStroke: "bool" = False) -> "ApiUiTextBox":
     """
      Use API.Gumps.CreateGumpTTFLabel instead.
     
     """
     pass
 
-def CreateGumpSimpleProgressBar(width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "Any":
+def CreateGumpSimpleProgressBar(width: "int", height: "int", backgroundColor: "str" = "#616161", foregroundColor: "str" = "#212121", value: "int" = 100, max: "int" = 100) -> "ApiUiSimpleProgressBar":
     """
      Use API.Gumps.CreateGumpSimpleProgressBar instead.
     
     """
     pass
 
-def CreateGumpScrollArea(x: "int", y: "int", width: "int", height: "int") -> "Any":
+def CreateGumpScrollArea(x: "int", y: "int", width: "int", height: "int") -> "ApiUiScrollArea":
     """
      Use API.Gumps.CreateGumpScrollArea instead.
     
     """
     pass
 
-def CreateGumpPic(graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "Any":
+def CreateGumpPic(graphic: "int", x: "int" = 0, y: "int" = 0, hue: "int" = 0) -> "ApiUiGumpPic":
     """
      Use API.Gumps.CreateGumpPic instead.
     
     """
     pass
 
-def CreateDropDown(width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "Any":
+def CreateDropDown(width: "int", items: "list[str]", selectedIndex: "int" = 0) -> "ApiUiControlDropDown":
     """
      Use API.Gumps.CreateDropDown instead.
     
     """
     pass
 
-def CreateModernGump(x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "Any":
+def CreateModernGump(x: "int", y: "int", width: "int", height: "int", resizable: "bool" = True, minWidth: "int" = 50, minHeight: "int" = 50, onResized: "Any" = None) -> "ApiUiNineSliceGump":
     """
      Use API.Gumps.CreateModernGump instead.
     
@@ -2912,7 +2912,7 @@ def AddControlOnClick(control: "Any", onClick: "Any", leftOnly: "bool" = True) -
     """
     pass
 
-def AddControlOnDisposed(control: "Any", onDispose: "Any") -> "Any":
+def AddControlOnDisposed(control: "ApiUiBaseControl", onDispose: "Any") -> "ApiUiBaseControl":
     """
      Use API.Gumps.AddControlOnDisposed instead.
     
@@ -3031,7 +3031,7 @@ def IsGlobalCooldownActive() -> "bool":
     """
     pass
 
-def SavePersistentVar(name: "str", value: "str", scope: "Any") -> None:
+def SavePersistentVar(name: "str", value: "str", scope: "PersistentVar") -> None:
     """
      Save a variable that persists between sessions and scripts.
      Example:
@@ -3042,7 +3042,7 @@ def SavePersistentVar(name: "str", value: "str", scope: "Any") -> None:
     """
     pass
 
-def RemovePersistentVar(name: "str", scope: "Any") -> None:
+def RemovePersistentVar(name: "str", scope: "PersistentVar") -> None:
     """
      Delete/remove a persistent variable.
      Example:
@@ -3053,7 +3053,7 @@ def RemovePersistentVar(name: "str", scope: "Any") -> None:
     """
     pass
 
-def GetPersistentVar(name: "str", defaultValue: "str", scope: "Any") -> "str":
+def GetPersistentVar(name: "str", defaultValue: "str", scope: "PersistentVar") -> "str":
     """
      Get a persistent variable.
      Example:

@@ -600,7 +600,7 @@ public static class GenDoc
             "ApiUiBaseControl" => "ApiUiBaseControl",
             "ApiUiBaseGump" => "ApiUiBaseGump",
             "ApiUiScrollArea" => "ApiUiScrollArea",
-            "IList" or "List" => "List",
+            "IList" or "List" => "list",
             "ApiPlayer" => "ApiPlayer",
             "ApiUiGump" => "ApiUiGump",
             "ApiUiLabel" => "ApiUiLabel",
@@ -615,7 +615,16 @@ public static class GenDoc
             "ApiUiGumpPic" => "ApiUiGumpPic",
             "ApiUiNineSliceGump" => "ApiUiNineSliceGump",
             "ApiUiCheckbox" => "ApiUiCheckbox",
-            "ApiEvents" => "ApiEvents",
+            "EventSinkApi" => "EventSinkApiDeclaration",
+            "ApiPoint3D" => "ApiPoint3D",
+            "ApiSoundEntry" => "ApiSoundEntry",
+            "ApiJournalEntry" => "ApiJournalEntry",
+            "ApiEntity" => "ApiEntity",
+            "ApiStatic" => "ApiStatic",
+            "ApiItemData" => "ApiItemData",
+            "ApiUiMenuItem" => "ApiUiMenuItem",
+            "ApiMulti" => "ApiMulti",
+            "PersistentVar" => "PersistentVar",
 
             // Fallback for unknown types
             _ => noMatch
