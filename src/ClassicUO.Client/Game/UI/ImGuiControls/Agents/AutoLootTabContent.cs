@@ -559,6 +559,16 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     ImGui.EndDragDropTarget();
                 }
 
+                // Right-click context menu for profile
+                if (ImGui.BeginPopupContextItem($"ProfileContext##{i}"))
+                {
+                    if (ImGui.MenuItem("Send to Organizer"))
+                    {
+                        SendProfileToOrganizer(profile);
+                    }
+                    ImGui.EndPopup();
+                }
+
                 // Visual feedback: draw a colored line at the drop target
                 if (dropTargetIndex == i)
                 {
@@ -695,6 +705,33 @@ namespace ClassicUO.Game.UI.ImGuiControls
             entryHueInputs.Clear();
             entryRegexInputs.Clear();
             entryDestinationInputs.Clear();
+        }
+
+        private static void SendProfileToOrganizer(AutoLootManager.AutoLootProfile profile)
+        {
+            if (profile == null || profile.Entries.Count == 0)
+            {
+                GameActions.Print("Profile has no entries to send.", Constants.HUE_ERROR);
+                return;
+            }
+
+            OrganizerConfig config = OrganizerAgent.Instance.NewOrganizerConfig();
+            config.Name = $"From: {profile.Name}";
+            config.DestContSerial = profile.DestinationContainer;
+
+            foreach (AutoLootManager.AutoLootConfigEntry entry in profile.Entries)
+            {
+                // Skip wildcard entries (graphic -1) — organizer requires exact graphics
+                if (entry.Graphic < 0) continue;
+
+                OrganizerItemConfig itemConfig = config.NewItemConfig();
+                itemConfig.Graphic = (ushort)entry.Graphic;
+                itemConfig.Hue = entry.Hue;
+                itemConfig.DestContSerial = entry.DestinationContainer;
+            }
+
+            OrganizerAgent.Instance.Save();
+            GameActions.Print($"Created organizer '{config.Name}' with {config.ItemConfigs.Count} items from loot profile.", Constants.HUE_SUCCESS);
         }
 
         private void DrawEntryTable()

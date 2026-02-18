@@ -202,18 +202,20 @@ namespace ClassicUO.Game.UI.ImGuiControls
             }
 
             ImGui.SameLine();
-            if (ImGui.Button("Set Destination Container"))
+            if (ImGui.Button("Set Destination"))
             {
-                GameActions.Print("Select [DESTINATION] Container", 82);
+                GameActions.Print("Select [DESTINATION] Container or Pack Animal", 82);
                 World.Instance.TargetManager.SetTargeting((destination) =>
                 {
-                    if (destination == null || !(destination is Entity destEntity) || !SerialHelper.IsItem(destEntity))
+                    if (destination == null || !(destination is Entity destEntity) ||
+                        (!SerialHelper.IsItem(destEntity) && !SerialHelper.IsMobile(destEntity)))
                     {
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print("Select a container or pack animal!");
                         return;
                     }
                     _selectedConfig.DestContSerial = destEntity.Serial;
-                    GameActions.Print($"Destination container set to 0x{destEntity.Serial:X4} ({destEntity.Name})", Constants.HUE_SUCCESS);
+                    string label = SerialHelper.IsMobile(destEntity) ? "Pack animal" : "Container";
+                    GameActions.Print($"Destination set to {label}: 0x{destEntity.Serial:X4} ({destEntity.Name})", Constants.HUE_SUCCESS);
                 });
             }
 
@@ -231,7 +233,8 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
             if (_selectedConfig.DestContSerial != 0)
             {
-                ImGui.Text($"Destination: (0x{_selectedConfig.DestContSerial:X4})");
+                string destLabel = GetDestinationLabel(_selectedConfig.DestContSerial);
+                ImGui.Text($"Destination: {destLabel}");
             }
             else
             {
@@ -331,13 +334,13 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     string hueText = itemConfig.Hue == ushort.MaxValue ? "ANY" : itemConfig.Hue.ToString();
                     if (ImGui.InputText($"##Hue{i}", ref hueText, 5))
                     {
-                        if (ushort.TryParse(hueText, System.Globalization.NumberStyles.HexNumber, null, out ushort hue))
-                            itemConfig.Hue = hue == 0xFFFF ? ushort.MaxValue : hue;
-                        else if (hueText == "ANY")
+                        if (hueText == "ANY" || hueText == "-1")
                             itemConfig.Hue = ushort.MaxValue;
+                        else if (ushort.TryParse(hueText, System.Globalization.NumberStyles.HexNumber, null, out ushort hue))
+                            itemConfig.Hue = hue == 0xFFFF ? ushort.MaxValue : hue;
                     }
 
-                    SetTooltip("Set to ANY to match any hue.");
+                    SetTooltip("Set to ANY or -1 to match any hue.");
 
                     ImGui.TableSetColumnIndex(2);
                     int amount = itemConfig.Amount;
@@ -355,48 +358,41 @@ namespace ClassicUO.Game.UI.ImGuiControls
                     // Per-item destination
                     if (itemConfig.DestContSerial != 0)
                     {
-                        ImGui.Text($"{itemConfig.DestContSerial:X}");
+                        string destLabel = GetDestinationLabel(itemConfig.DestContSerial);
+                        ImGui.Text(destLabel);
                         if (ImGui.IsItemHovered())
-                        {
                             ImGui.SetTooltip("Per-item destination");
-                        }
                         ImGui.SameLine();
                         if (ImGui.SmallButton($"X##ClearDest{i}"))
-                        {
                             itemConfig.DestContSerial = 0;
-                        }
                         if (ImGui.IsItemHovered())
-                        {
                             ImGui.SetTooltip("Clear and use config destination");
-                        }
                     }
                     else
                     {
                         ImGui.TextColored(new Vector4(0.5f, 0.5f, 0.5f, 1.0f), "Config");
                         if (ImGui.IsItemHovered())
-                        {
                             ImGui.SetTooltip("Using configuration's destination");
-                        }
                         ImGui.SameLine();
                         if (ImGui.SmallButton($"Set##SetDest{i}"))
                         {
                             OrganizerItemConfig currentItemConfig = itemConfig;
-                            GameActions.Print("Select [DESTINATION] Container for this item", 82);
+                            GameActions.Print("Select [DESTINATION] Container or Pack Animal", 82);
                             World.Instance.TargetManager.SetTargeting((destination) =>
                             {
-                                if (destination == null || !(destination is Entity destEntity) || !SerialHelper.IsItem(destEntity))
+                                if (destination == null || !(destination is Entity destEntity) ||
+                                    (!SerialHelper.IsItem(destEntity) && !SerialHelper.IsMobile(destEntity)))
                                 {
-                                    GameActions.Print("Only items can be selected!");
+                                    GameActions.Print("Select a container or pack animal!");
                                     return;
                                 }
                                 currentItemConfig.DestContSerial = destEntity.Serial;
-                                GameActions.Print($"Per-item destination set to {destEntity.Serial:X}", Constants.HUE_SUCCESS);
+                                string label = SerialHelper.IsMobile(destEntity) ? "Pack animal" : "Container";
+                                GameActions.Print($"Per-item destination set to {label}: {destEntity.Serial:X}", Constants.HUE_SUCCESS);
                             });
                         }
                         if (ImGui.IsItemHovered())
-                        {
-                            ImGui.SetTooltip("Set per-item destination");
-                        }
+                            ImGui.SetTooltip("Set per-item destination (container or pack animal)");
                     }
 
                     ImGui.TableSetColumnIndex(4);
@@ -421,6 +417,21 @@ namespace ClassicUO.Game.UI.ImGuiControls
 
                 ImGui.EndTable();
             }
+        }
+
+        private static string GetDestinationLabel(uint serial)
+        {
+            if (serial == 0) return "Not set";
+
+            Mobile mob = World.Instance?.Mobiles.Get(serial);
+            if (mob != null)
+                return $"{mob.Name ?? "Pack Animal"} (0x{serial:X4})";
+
+            Item item = World.Instance?.Items.Get(serial);
+            if (item != null)
+                return $"{item.Name ?? "Container"} (0x{serial:X4})";
+
+            return $"(0x{serial:X4})";
         }
     }
 }

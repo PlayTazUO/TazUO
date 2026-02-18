@@ -139,6 +139,36 @@ namespace ClassicUO.Game.Managers
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
         }
+        /// <summary>
+        /// Resolves a destination serial to an Item container.
+        /// Supports both item containers and pack animals (mobile → backpack).
+        /// The out parameter dropSerial is the serial to use in MoveRequest (the mobile
+        /// serial for pack animals, so the server routes to its backpack).
+        /// </summary>
+        private static Item ResolveDestination(uint serial, out uint dropSerial)
+        {
+            dropSerial = serial;
+
+            // Try as item first
+            Item item = World.Instance.Items.Get(serial);
+            if (item != null) return item;
+
+            // Try as mobile (pack animal) — get its backpack for item counting
+            Mobile mob = World.Instance.Mobiles.Get(serial);
+            if (mob != null)
+            {
+                Item pack = mob.Backpack;
+                if (pack != null)
+                {
+                    // Use the mobile serial for the drop packet so the server routes it
+                    dropSerial = mob.Serial;
+                    return pack;
+                }
+            }
+
+            return null;
+        }
+
         public void ListOrganizers()
         {
             if (OrganizerConfigs.Count == 0)
@@ -181,17 +211,25 @@ namespace ClassicUO.Game.Managers
                     continue;
                 }
 
-                Item destCont = config.DestContSerial != 0
-                    ? World.Instance.Items.Get(config.DestContSerial)
-                    : backpack;
-
-                if (destCont == null)
+                Item destCont;
+                uint destDropSerial;
+                if (config.DestContSerial != 0)
                 {
-                    GameActions.Print($"Cannot find destination container for organizer '{config.Name}'. Using backpack as default.");
+                    destCont = ResolveDestination(config.DestContSerial, out destDropSerial);
+                    if (destCont == null)
+                    {
+                        GameActions.Print($"Cannot find destination for organizer '{config.Name}'. Using backpack as default.");
+                        destCont = backpack;
+                        destDropSerial = backpack.Serial;
+                    }
+                }
+                else
+                {
                     destCont = backpack;
+                    destDropSerial = backpack.Serial;
                 }
 
-                totalOrganized += OrganizeItems(sourceCont, destCont, config);
+                totalOrganized += OrganizeItems(sourceCont, destCont, destDropSerial, config);
             }
 
             if (totalOrganized == 0)
@@ -224,7 +262,7 @@ namespace ClassicUO.Game.Managers
             RunSingleOrganizer(config);
         }
 
-        private int OrganizeItems(Item sourceCont, Item destCont, OrganizerConfig config)
+        private int OrganizeItems(Item sourceCont, Item destCont, uint destDropSerial, OrganizerConfig config)
         {
             Item backpack = World.Instance.Player?.Backpack;
 
@@ -241,7 +279,7 @@ namespace ClassicUO.Game.Managers
                     if (itemConfig.Enabled && itemConfig.IsMatch(item.Graphic, item.Hue))
                     {
                         // Determine the destination for this item
-                        uint itemDestSerial = itemConfig.DestContSerial != 0 ? itemConfig.DestContSerial : destCont.Serial;
+                        uint itemDestSerial = itemConfig.DestContSerial != 0 ? itemConfig.DestContSerial : destDropSerial;
 
                         if (!itemsToMoveByDestination.ContainsKey(itemDestSerial))
                             itemsToMoveByDestination[itemDestSerial] = new List<(Item, ushort, OrganizerItemConfig)>();
@@ -260,11 +298,13 @@ namespace ClassicUO.Game.Managers
                 uint destinationSerial = kvp.Key;
                 List<(Item Item, ushort Amount, OrganizerItemConfig Config)> itemsForThisDest = kvp.Value;
 
-                Item thisDestCont = World.Instance.Items.Get(destinationSerial);
+                // Resolve the destination — supports both containers and pack animals
+                Item thisDestCont = ResolveDestination(destinationSerial, out uint thisDropSerial);
                 if (thisDestCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container {destinationSerial:X}. Using backpack as default.");
+                    GameActions.Print($"Cannot find destination {destinationSerial:X}. Using backpack as default.");
                     thisDestCont = backpack;
+                    thisDropSerial = backpack?.Serial ?? 0;
                     if (thisDestCont == null) continue;
                 }
 
@@ -279,7 +319,7 @@ namespace ClassicUO.Game.Managers
                         if (!item.ItemData.IsStackable) continue; // non-stackable items can't be organized in the same container
 
                         ushort amountToMove = itemConfig.Amount > 0 ? itemConfig.Amount : ushort.MaxValue;
-                        ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDestCont.Serial, amountToMove).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                        ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDropSerial, amountToMove).ToObjectActionQueueItem(), ActionPriority.MoveItem);
                         totalItemsMoved++;
                     }
                 }
@@ -302,7 +342,7 @@ namespace ClassicUO.Game.Managers
                         if (itemConfig.Amount == 0)
                         {
                             // Move all items of this type
-                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDestCont.Serial, ushort.MaxValue).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDropSerial, ushort.MaxValue).ToObjectActionQueueItem(), ActionPriority.MoveItem);
                             totalItemsMoved++;
                         }
                         else
@@ -313,7 +353,7 @@ namespace ClassicUO.Game.Managers
                             if (toMove > 0)
                             {
                                 ushort actualAmount = (ushort)Math.Min(toMove, item.Amount);
-                                ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDestCont.Serial, actualAmount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                                ObjectActionQueue.Instance.Enqueue(new MoveRequest(item.Serial, thisDropSerial, actualAmount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
                                 // Update the count to avoid over-moving if multiple stacks exist in source
                                 destItemCounts[(item.Graphic, item.Hue)] = existingCount + actualAmount;
                                 totalItemsMoved++;
@@ -358,18 +398,25 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Item destCont = dest != 0 ? World.Instance.Items.Get(dest) :
-                config.DestContSerial != 0
-                    ? World.Instance.Items.Get(config.DestContSerial)
-                    : backpack;
-
-            if (destCont == null)
+            uint destSerial = dest != 0 ? dest : config.DestContSerial;
+            Item destCont;
+            uint destDropSerial;
+            if (destSerial != 0)
             {
-                GameActions.Print(World.Instance, $"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})", Constants.HUE_ERROR);
-                return;
+                destCont = ResolveDestination(destSerial, out destDropSerial);
+                if (destCont == null)
+                {
+                    GameActions.Print(World.Instance, $"Cannot find destination for organizer '{config.Name}' (Serial: {config.DestContSerial:X})", Constants.HUE_ERROR);
+                    return;
+                }
+            }
+            else
+            {
+                destCont = backpack;
+                destDropSerial = backpack.Serial;
             }
 
-            int organized = OrganizeItems(sourceCont, destCont, config);
+            int organized = OrganizeItems(sourceCont, destCont, destDropSerial, config);
             if (organized == 0)
             {
                 GameActions.Print(World.Instance, $"No items were organized by '{config.Name}'.", Constants.HUE_ERROR);
