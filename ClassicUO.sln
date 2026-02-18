@@ -77,6 +77,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassicUO.CUOAPI", "src\Cla
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventGenerator", "tools\EventGenerator\EventGenerator.csproj", "{7890E00E-353C-445F-B1C7-002D51B84034}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Myra.FNA.Core", "external\Myra\src\Myra\Myra.FNA.Core.csproj", "{9E704005-8873-482C-BC0C-48CCDA3AD014}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -191,6 +193,14 @@ Global
 		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|x64.ActiveCfg = Release|Any CPU
 		{7890E00E-353C-445F-B1C7-002D51B84034}.Release|x64.Build.0 = Release|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Debug|x64.Build.0 = Debug|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Release|x64.ActiveCfg = Release|Any CPU
+		{9E704005-8873-482C-BC0C-48CCDA3AD014}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -211,6 +221,7 @@ Global
 		{5ACA68DA-A282-434D-919F-B243A801D4C3} = {FA5D7AB8-3570-4E55-95B0-35BA6842FEE3}
 		{E0E5D8FF-A30F-4698-9106-83B6103D292C} = {8EAF9583-DC5B-46DC-A01E-47B00A1C862E}
 		{F1234567-890A-BCDE-F123-456789ABCDEF} = {8EAF9583-DC5B-46DC-A01E-47B00A1C862E}
+		{9E704005-8873-482C-BC0C-48CCDA3AD014} = {FA5D7AB8-3570-4E55-95B0-35BA6842FEE3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0A99E91A-ADAB-45C3-8170-2656140F6EFA}

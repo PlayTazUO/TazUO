@@ -10,6 +10,7 @@
     <PackageProjectUrl>https://github.com/PlayTazUO/TazUO</PackageProjectUrl>
     <PublishAot>false</PublishAot>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -43,7 +44,7 @@
     <ProjectReference Include="..\ClassicUO.CUOAPI\ClassicUO.CUOAPI.csproj" />
     <ProjectReference Include="..\..\tools\EventGenerator\EventGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Async.IRC\Async.IRC.csproj" />
-
+    <ProjectReference Include="..\..\external\Myra\src\Myra\Myra.FNA.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

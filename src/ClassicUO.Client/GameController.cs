@@ -28,6 +28,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using ClassicUO.Network.PacketHandlers;
 using ImGuiNET;
+using Myra;
 using SDL3;
 using static SDL3.SDL;
 using Keyboard = ClassicUO.Input.Keyboard;
@@ -163,6 +164,8 @@ namespace ClassicUO
         protected override void LoadContent()
         {
             base.LoadContent();
+
+            MyraEnvironment.Game = this;
 
             Fonts.Initialize(GraphicsDevice);
             SolidColorTextureCache.Initialize(GraphicsDevice);
