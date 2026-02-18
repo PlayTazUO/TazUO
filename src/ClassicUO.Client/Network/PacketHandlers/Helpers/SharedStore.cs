@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Game;
 
 namespace ClassicUO.Network.PacketHandlers.Helpers;
@@ -7,24 +6,22 @@ namespace ClassicUO.Network.PacketHandlers.Helpers;
 internal static class SharedStore
 {
     private static readonly List<uint> _cliLocRequests = [];
+    private static readonly HashSet<uint> _cliLocRequestsDedup = [];
     private static readonly List<uint> _customHouseRequests = [];
+    private static readonly HashSet<uint> _customHouseRequestsDedup = [];
 
     public static uint RequestedGridLoot { get; set; }
 
     public static void AddMegaCliLocRequest(uint serial)
     {
-        if (_cliLocRequests.Any(s => s == serial))
-            return;
-
-        _cliLocRequests.Add(serial);
+        if (_cliLocRequestsDedup.Add(serial))
+            _cliLocRequests.Add(serial);
     }
 
     public static void AddCustomHouseRequest(uint serial)
     {
-        if (_customHouseRequests.Any(s => s == serial))
-            return;
-
-        _customHouseRequests.Add(serial);
+        if (_customHouseRequestsDedup.Add(serial))
+            _customHouseRequests.Add(serial);
     }
 
     public static void SendMegaCliLocRequests(World world)
@@ -33,8 +30,12 @@ internal static class SharedStore
         {
             if (Client.Game.UO.Version >= Utility.ClientVersion.CV_5090)
             {
-                if (_cliLocRequests.Count != 0)
-                    AsyncNetClient.Socket.Send_MegaClilocRequest(_cliLocRequests);
+                AsyncNetClient.Socket.Send_MegaClilocRequest(_cliLocRequests);
+
+                // Rebuild dedup from what remains so those serials can be re-requested later
+                _cliLocRequestsDedup.Clear();
+                foreach (uint s in _cliLocRequests)
+                    _cliLocRequestsDedup.Add(s);
             }
             else
             {
@@ -42,6 +43,7 @@ internal static class SharedStore
                     AsyncNetClient.Socket.Send_MegaClilocRequest_Old(serial);
 
                 _cliLocRequests.Clear();
+                _cliLocRequestsDedup.Clear();
             }
         }
 
@@ -51,6 +53,7 @@ internal static class SharedStore
                 AsyncNetClient.Socket.Send_CustomHouseDataRequest(_customHouseRequests[i]);
 
             _customHouseRequests.Clear();
+            _customHouseRequestsDedup.Clear();
         }
     }
 }

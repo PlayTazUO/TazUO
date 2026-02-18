@@ -46,7 +46,7 @@ namespace ClassicUO.Game.Managers
         internal readonly HashSet<uint> _nearbyGroundItems = new();
         private uint[] _nearbyItemsSnapshot = Array.Empty<uint>();
         private readonly Dictionary<uint, long> _lootCooldowns = new();
-        private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), int> _lootItems = new ();
+        private readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), int> _lootItems = new ();
         internal volatile List<AutoLootConfigEntry> _mergedEntries = new ();
         private volatile int _activeProfileCount = 0;
         internal Dictionary<int, List<AutoLootConfigEntry>> _graphicIndex = new();
@@ -137,6 +137,7 @@ namespace ClassicUO.Game.Managers
             if (!item.OnGround) pri -= 100;
             _lootItems.Enqueue((item.Serial, entry), pri);
             _currentLootTotalCount++;
+            _nextClearRecents = Time.Ticks + 5000;
         }
 
         public void ForceLootContainer(uint serial)
@@ -403,6 +404,10 @@ namespace ClassicUO.Game.Managers
             EventSink.OnPositionChanged -= OnPositionChanged;
             _nearbyGroundItems.Clear();
             _lootCooldowns.Clear();
+            _lootItems.Clear();
+            _quickContainsLookup.Clear();
+            _recentlyLooted.Clear();
+            _currentLootTotalCount = 0;
             ClearMatchCache();
             SaveAll();
             SaveExclusions();
