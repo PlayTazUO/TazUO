@@ -1380,33 +1380,41 @@ namespace ClassicUO.Assets
 
             // TODO: check if UOFileIndex works
             file.Seek(index.Position, SeekOrigin.Begin);
-            byte[] buf = new byte[index.Size];
-            file.Read(buf);
+            byte[] buf = ArrayPool<byte>.Shared.Rent((int)index.Size);
 
-            var reader = new StackDataReader(buf);
-            ReadOnlySpan<ushort> palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
-            reader.Skip(512);
-
-            long dataStart = reader.Position;
-            uint frameCount = reader.ReadUInt32LE();
-            var frameOffset = new ReadOnlySpan<uint>((uint*)reader.PositionAddress, (int)frameCount);
-
-            if (_frames == null || frameCount > _frames.Length)
+            try
             {
-                _frames = new FrameInfo[frameCount];
+                file.Read(buf);
+
+                var reader = new StackDataReader(buf);
+                ReadOnlySpan<ushort> palette = MemoryMarshal.Cast<byte, ushort>(reader.Buffer.Slice(reader.Position, 512));
+                reader.Skip(512);
+
+                long dataStart = reader.Position;
+                uint frameCount = reader.ReadUInt32LE();
+                var frameOffset = new ReadOnlySpan<uint>((uint*)reader.PositionAddress, (int)frameCount);
+
+                if (_frames == null || frameCount > _frames.Length)
+                {
+                    _frames = new FrameInfo[frameCount];
+                }
+
+                Span<FrameInfo> frames = _frames.AsSpan(0, (int)frameCount);
+
+                for (int i = 0; i < frameCount; i++)
+                {
+                    reader.Seek(dataStart + frameOffset[i]);
+
+                    frames[i].Num = i;
+                    ReadSpriteData(ref reader, palette, ref frames[i], false);
+                }
+
+                return frames;
             }
-
-            Span<FrameInfo> frames = _frames.AsSpan(0, (int)frameCount);
-
-            for (int i = 0; i < frameCount; i++)
+            finally
             {
-                reader.Seek(dataStart + frameOffset[i]);
-
-                frames[i].Num = i;
-                ReadSpriteData(ref reader, palette, ref frames[i], false);
+                ArrayPool<byte>.Shared.Return(buf);
             }
-
-            return frames;
         }
 
         private void ReadSpriteData(

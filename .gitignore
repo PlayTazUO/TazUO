@@ -267,3 +267,14 @@ __pycache__/
 external/FNA
 external/MP3Sharp
 .claude/settings.local.json
+
+# Auto Claude data directory
+.auto-claude/
+
+# Auto Claude generated files
+.auto-claude-security.json
+.auto-claude-status
+.claude_settings.json
+.worktrees/
+.security-key
+logs/security/
