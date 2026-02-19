@@ -757,11 +757,11 @@ class ApiUiGump:
          max = 100
         
          while True:
-           pb.SetProgress(cur, max)
-           if cur >= max:
-           break
-           cur += 1
-           API.Pause(0.5)
+             pb.SetProgress(cur, max)
+             if cur >= max:
+                 break
+             cur += 1
+             API.Pause(0.5)
          ```
         
         """
@@ -1067,7 +1067,7 @@ class Buff:
     Title: str = None
 
 Events: EventSinkApiDeclaration = None
-Config = None
+Config: LegionApiConfig = None
 JournalEntries = None
 SoundEntries = None
 ScriptName: str = None
@@ -3125,7 +3125,7 @@ class EventSinkApiDeclaration:
 
     def OnDisconnected(self, callback: "Any") -> None:
         """
-             Invoked when the player is connected to a server
+             Invoked when the player is disconnected from the server
         
         """
         pass

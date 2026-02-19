@@ -28,6 +28,9 @@ namespace {{{Namespace}}}
     {{#each Events}}
         public void On{{TrimOnPrefix Name}}(object callback)
         {
+            if (_disposed)
+                return;
+
             _callbackRwLock.EnterWriteLock();
             try
             {
@@ -47,6 +50,9 @@ namespace {{{Namespace}}}
 
         public void UnregisterOn{{TrimOnPrefix Name}}(object callback)
         {
+            if (_disposed)
+                return;
+
             _callbackRwLock.EnterUpgradeableReadLock();
             try
             {
@@ -75,6 +81,9 @@ namespace {{{Namespace}}}
 
         private void Dispatch{{TrimOnPrefix Name}}Callbacks(object sender, {{{EventArgsType}}} e)
         {
+            if (_disposed)
+                return;
+
             object[] callbacksArray;
             _callbackRwLock.EnterReadLock();
             try

@@ -625,6 +625,7 @@ public static class GenDoc
             "ApiUiMenuItem" => "ApiUiMenuItem",
             "ApiMulti" => "ApiMulti",
             "PersistentVar" => "PersistentVar",
+            "LegionApiConfig" => "LegionApiConfig",
 
             // Fallback for unknown types
             _ => noMatch

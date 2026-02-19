@@ -86,7 +86,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnDisconnected
 `(callback)`
-     Invoked when the player is connected to a server
+     Invoked when the player is disconnected from the server
 
 
 **Parameters:**

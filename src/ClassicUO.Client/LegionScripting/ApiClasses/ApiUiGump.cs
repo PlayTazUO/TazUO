@@ -343,11 +343,11 @@ public class ApiUiGump(LegionAPI api)
     /// max = 100
     ///
     /// while True:
-    ///   pb.SetProgress(cur, max)
-    ///   if cur >= max:
-    ///   break
-    ///   cur += 1
-    ///   API.Pause(0.5)
+    ///     pb.SetProgress(cur, max)
+    ///     if cur >= max:
+    ///         break
+    ///     cur += 1
+    ///     API.Pause(0.5)
     /// ```
     /// </summary>
     /// <param name="width">The width of the bar</param>

@@ -55,7 +55,7 @@ public class EventSink
     internal static void InvokeOnConnected(object sender) => OnConnected?.Invoke(sender, EventArgs.Empty);
 
     /// <summary>
-    ///     Invoked when the player is connected to a server
+    ///     Invoked when the player is disconnected from the server
     /// </summary>
     [ApiEvent]
     internal static event EventHandler<EventArgs> OnDisconnected;
