@@ -2182,7 +2182,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### GetAllGumps
 
-     Gets all currently open server-side gumps.
+ Gets all currently open server-side gumps.
 
 
 **Return Type:** `IList<Gump>`

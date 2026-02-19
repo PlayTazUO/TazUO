@@ -15,7 +15,7 @@ namespace {{{Namespace}}}
         private readonly ReaderWriterLockSlim _callbackRwLock = new();
         private readonly Lock _disposalLock = new();
         private readonly Dictionary<string, HashSet<object>> _callbacks = new();
-        private bool _disposed;
+        private volatile bool _disposed;
 
         private readonly LegionAPI _api;
     

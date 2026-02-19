@@ -2685,7 +2685,7 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
-        ///     Gets all currently open server-side gumps.
+        /// Gets all currently open server-side gumps.
         /// </summary>
         /// <returns>A list containing all open server gumps, or null if none are open</returns>
         public IList<Gump> GetAllGumps() =>

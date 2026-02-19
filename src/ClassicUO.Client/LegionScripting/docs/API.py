@@ -795,7 +795,7 @@ class ApiUiGump:
         """
         pass
 
-    def CreateTiledGumpPic(self, graphic: "int", width: "int", height: "int", hue: "int" = 0) -> "Any":
+    def CreateTiledGumpPic(self, graphic: "int", width: "int", height: "int", hue: "int" = 0) -> "ApiUiTiledGumpPic":
         """
          Create a gump pic that tiles(repeats) (Use this for gump art, not item art)
          Example:
@@ -2332,7 +2332,7 @@ def GetGump(ID: "int" = 1337) -> "ApiUiBaseGump":
 
 def GetAllGumps() -> "list[ApiUiBaseGump]":
     """
-         Gets all currently open server-side gumps.
+     Gets all currently open server-side gumps.
     
     """
     pass

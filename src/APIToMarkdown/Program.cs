@@ -626,6 +626,7 @@ public static class GenDoc
             "ApiMulti" => "ApiMulti",
             "PersistentVar" => "PersistentVar",
             "LegionApiConfig" => "LegionApiConfig",
+            "ApiUiTiledGumpPic" => "ApiUiTiledGumpPic",
 
             // Fallback for unknown types
             _ => noMatch
