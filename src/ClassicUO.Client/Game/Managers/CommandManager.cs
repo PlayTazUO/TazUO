@@ -12,6 +12,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI;
+using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.ImGuiControls;
 using ClassicUO.LegionScripting;
 
@@ -288,6 +289,10 @@ namespace ClassicUO.Game.Managers
             Register("test", (s) =>
             {
                 ImGuiManager.AddWindow(new TestWindow());
+
+                var g = new Gump(_world, 0, 0);
+                g.Add(new MyraControl());
+                UIManager.Add(g);
             });
 
 #endif
