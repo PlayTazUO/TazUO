@@ -967,9 +967,19 @@ class ModernNineSliceGump(NineSliceGump):
     ""
 
     def SetResizeCallback(self, callback: "Any") -> None:
+        """
+         Registers a callback to be called when the gump is resized.
+         <remarks>
+         Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
+         </remarks>
+        """
         pass
 
     def Dispose(self) -> None:
+        """
+         Disposes the gump and releases its internal resources
+        
+        """
         pass
 
 class ApiUiRadioButton(ApiUiCheckbox):
@@ -3094,150 +3104,172 @@ class EventSinkApiDeclaration:
 
     def OnItemCreated(self, callback: "Any") -> None:
         """
-             Invoked when an item is added to the client, sender is the Item
+         Invoked when an item is added to the client. The event's 'sender' is the Item
         
         """
         pass
 
     def PyOnItemCreated(self, callback: "Any") -> None:
+        """
+         Invoked when an item is added to the client.
+         The event's 'sender' is the Item, the event's argument is the item's serial
+        
+        """
         pass
 
     def OnItemUpdated(self, callback: "Any") -> None:
         """
-             Invoked when an item is already in the client but has been updated, sender is the Item
+         Invoked when an item is already in the client but has been updated. The event's 'sender' is the Item
         
         """
         pass
 
     def OnCorpseCreated(self, callback: "Any") -> None:
         """
-             Invoked when a corpse is added to the client, sender is the corpse Item
+         Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
         
         """
         pass
 
     def OnConnected(self, callback: "Any") -> None:
         """
-             Invoked when the player is connected to a server
+         Invoked when the player is connected to a server
         
         """
         pass
 
     def OnDisconnected(self, callback: "Any") -> None:
         """
-             Invoked when the player is disconnected from the server
+         Invoked when the player is disconnected from the server
         
         """
         pass
 
     def MessageReceived(self, callback: "Any") -> None:
         """
-             Invoked when any message is received from the server after client processing
+         Invoked when any message is received from the server after client processing
         
         """
         pass
 
     def RawMessageReceived(self, callback: "Any") -> None:
         """
-             Invoked when any message is received from the server *before* client processing
+         Invoked when any message is received from the server *before* client processing
         
         """
         pass
 
     def ClilocMessageReceived(self, callback: "Any") -> None:
         """
-             Not currently used. May be removed later or put into use, not sure right now
+          Not currently used. May be removed later or put into use, not sure right now
         
         """
         pass
 
     def JournalEntryAdded(self, callback: "Any") -> None:
         """
-             Invoked anytime a message is added to the journal
+          Invoked when a message is added to the journal
         
         """
         pass
 
     def SoundPlayed(self, callback: "Any") -> None:
         """
-         Invoked anytime a sound is played
+         Invoked when the server requests that a sound be played
         
         """
         pass
 
     def OPLOnReceive(self, callback: "Any") -> None:
         """
-             Invoked anytime we receive object property list data (Tooltip text for items)
+         Invoked when an object's property list data (Tooltip text for items) is received
         
         """
         pass
 
     def OnBuffAdded(self, callback: "Any") -> None:
         """
-             Invoked when a buff is "added" to a player
+         Invoked when a buff is "added" to a player
         
         """
         pass
 
     def PyOnBuffAdded(self, callback: "Any") -> None:
+        """
+         Invoked when a buff is "added" to a player
+        
+        """
         pass
 
     def OnBuffRemoved(self, callback: "Any") -> None:
         """
-             Invoked when a buff is "removed" to a player (Called before removal)
+         Invoked when a buff is "removed" to a player (Called before removal)
         
         """
         pass
 
     def PyOnBuffRemoved(self, callback: "Any") -> None:
+        """
+         Invoked when a buff is "removed" to a player (Called before removal)
+        
+        """
         pass
 
     def OnPositionChanged(self, callback: "Any") -> None:
         """
-             Invoked when the players position is changed
+         Invoked when the player's position is changed
         
         """
         pass
 
     def OnEntityDamage(self, callback: "Any") -> None:
         """
-             Invoked when any entity in game receives damage, not necessarily the player.
+         Invoked when any entity in the game receives damage, not necessarily the player.
         
         """
         pass
 
     def OnOpenContainer(self, callback: "Any") -> None:
         """
-             Invoked when a container is opened. Sender is the Item, serial is the item serial.
+         Invoked when a container is opened.
+         The event's 'sender' is the Item, the event's argument is the item's serial
         
         """
         pass
 
     def OnPlayerDeath(self, callback: "Any") -> None:
         """
-             Invoked when the player receives a death packet from the server
+         Invoked when the player receives a death packet from the server
         
         """
         pass
 
     def OnPathFinding(self, callback: "Any") -> None:
         """
-             Invoked when the player or server tells the client to path find
-             Vector is X, Y, Z and Distance
+          Invoked when the player or server tells the client to path find
+          Vector is X, Y, Z, and Distance
         
         """
         pass
 
     def OnSetWeather(self, callback: "Any") -> None:
         """
-             Invoked when the server asks the client to generate some weather
+         Invoked when the server asks the client to generate some weather
         
         """
         pass
 
     def OnPlayerHitsChanged(self, callback: "Any") -> None:
         """
-             Invoked when the players hits changed.
+         Invoked after the player's hit points have changed.
+        
+        """
+        pass
+
+    def ApiMobileCreated(self, callback: "Any") -> None:
+        """
+         Invoked when a mobile is created.
+         The event's sender is null and the argument is an ApiMobile.
         
         """
         pass

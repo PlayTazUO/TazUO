@@ -132,6 +132,13 @@ internal class ModernNineSliceGump : NineSliceGump
         _api = api;
     }
 
+    /// <summary>
+    /// Registers a callback to be called when the gump is resized.
+    /// <remarks>
+    /// Note that only one callback may be registered at a time. Subsequent calls will replace the previous callback.
+    /// </remarks>
+    /// </summary>
+    /// <param name="callback"></param>
     public void SetResizeCallback(object callback)
     {
         _resizeCallback = callback;
@@ -153,6 +160,9 @@ internal class ModernNineSliceGump : NineSliceGump
         _debounceTimer.Start();
     }
 
+    /// <summary>
+    /// Disposes the gump and releases its internal resources
+    /// </summary>
     public override void Dispose()
     {
         if (_debounceTimer != null)
@@ -165,6 +175,13 @@ internal class ModernNineSliceGump : NineSliceGump
         base.Dispose();
     }
 
+    /// <summary>
+    /// An handler for resize events
+    /// </summary>
+    /// <param name="oldWidth">The gump's old width</param>
+    /// <param name="oldHeight">The gump's old height</param>
+    /// <param name="newWidth">The gump's new width</param>
+    /// <param name="newHeight">The gump's new height</param>
     protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
     {
         base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
@@ -173,6 +190,11 @@ internal class ModernNineSliceGump : NineSliceGump
             _onResizeDispatchRequested = true;
     }
 
+    /// <summary>
+    /// Dispatches the resize event to the registered callback
+    /// </summary>
+    /// <param name="sender">The sender to dispatch the event with</param>
+    /// <param name="e">The event's arguments</param>
     private void DispatchResizeEvent(object sender, ElapsedEventArgs e)
     {
         // This is not a synchronized construct - this event CAN dispatch more often than

@@ -14,7 +14,7 @@ description: EventSinkApiDeclaration class documentation
 ## Methods
 ### OnItemCreated
 `(callback)`
-     Invoked when an item is added to the client, sender is the Item
+ Invoked when an item is added to the client. The event's 'sender' is the Item
 
 
 **Parameters:**
@@ -29,6 +29,10 @@ description: EventSinkApiDeclaration class documentation
 
 ### PyOnItemCreated
 `(callback)`
+ Invoked when an item is added to the client.
+ The event's 'sender' is the Item, the event's argument is the item's serial
+
+
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -41,7 +45,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnItemUpdated
 `(callback)`
-     Invoked when an item is already in the client but has been updated, sender is the Item
+ Invoked when an item is already in the client but has been updated. The event's 'sender' is the Item
 
 
 **Parameters:**
@@ -56,7 +60,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnCorpseCreated
 `(callback)`
-     Invoked when a corpse is added to the client, sender is the corpse Item
+ Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
 
 
 **Parameters:**
@@ -71,7 +75,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnConnected
 `(callback)`
-     Invoked when the player is connected to a server
+ Invoked when the player is connected to a server
 
 
 **Parameters:**
@@ -86,7 +90,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnDisconnected
 `(callback)`
-     Invoked when the player is disconnected from the server
+ Invoked when the player is disconnected from the server
 
 
 **Parameters:**
@@ -101,7 +105,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### MessageReceived
 `(callback)`
-     Invoked when any message is received from the server after client processing
+ Invoked when any message is received from the server after client processing
 
 
 **Parameters:**
@@ -116,7 +120,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### RawMessageReceived
 `(callback)`
-     Invoked when any message is received from the server *before* client processing
+ Invoked when any message is received from the server *before* client processing
 
 
 **Parameters:**
@@ -131,7 +135,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### ClilocMessageReceived
 `(callback)`
-     Not currently used. May be removed later or put into use, not sure right now
+  Not currently used. May be removed later or put into use, not sure right now
 
 
 **Parameters:**
@@ -146,7 +150,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### JournalEntryAdded
 `(callback)`
-     Invoked anytime a message is added to the journal
+  Invoked when a message is added to the journal
 
 
 **Parameters:**
@@ -161,7 +165,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### SoundPlayed
 `(callback)`
- Invoked anytime a sound is played
+ Invoked when the server requests that a sound be played
 
 
 **Parameters:**
@@ -176,7 +180,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OPLOnReceive
 `(callback)`
-     Invoked anytime we receive object property list data (Tooltip text for items)
+ Invoked when an object's property list data (Tooltip text for items) is received
 
 
 **Parameters:**
@@ -191,7 +195,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnBuffAdded
 `(callback)`
-     Invoked when a buff is "added" to a player
+ Invoked when a buff is "added" to a player
 
 
 **Parameters:**
@@ -206,6 +210,9 @@ description: EventSinkApiDeclaration class documentation
 
 ### PyOnBuffAdded
 `(callback)`
+ Invoked when a buff is "added" to a player
+
+
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -218,7 +225,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnBuffRemoved
 `(callback)`
-     Invoked when a buff is "removed" to a player (Called before removal)
+ Invoked when a buff is "removed" to a player (Called before removal)
 
 
 **Parameters:**
@@ -233,6 +240,9 @@ description: EventSinkApiDeclaration class documentation
 
 ### PyOnBuffRemoved
 `(callback)`
+ Invoked when a buff is "removed" to a player (Called before removal)
+
+
 **Parameters:**
 
 | Name | Type | Optional | Description |
@@ -245,7 +255,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnPositionChanged
 `(callback)`
-     Invoked when the players position is changed
+ Invoked when the player's position is changed
 
 
 **Parameters:**
@@ -260,7 +270,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnEntityDamage
 `(callback)`
-     Invoked when any entity in game receives damage, not necessarily the player.
+ Invoked when any entity in the game receives damage, not necessarily the player.
 
 
 **Parameters:**
@@ -275,7 +285,8 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnOpenContainer
 `(callback)`
-     Invoked when a container is opened. Sender is the Item, serial is the item serial.
+ Invoked when a container is opened.
+ The event's 'sender' is the Item, the event's argument is the item's serial
 
 
 **Parameters:**
@@ -290,7 +301,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnPlayerDeath
 `(callback)`
-     Invoked when the player receives a death packet from the server
+ Invoked when the player receives a death packet from the server
 
 
 **Parameters:**
@@ -305,8 +316,8 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnPathFinding
 `(callback)`
-     Invoked when the player or server tells the client to path find
-     Vector is X, Y, Z and Distance
+  Invoked when the player or server tells the client to path find
+  Vector is X, Y, Z, and Distance
 
 
 **Parameters:**
@@ -321,7 +332,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnSetWeather
 `(callback)`
-     Invoked when the server asks the client to generate some weather
+ Invoked when the server asks the client to generate some weather
 
 
 **Parameters:**
@@ -336,7 +347,23 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnPlayerHitsChanged
 `(callback)`
-     Invoked when the players hits changed.
+ Invoked after the player's hit points have changed.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `callback` | `object` | ❌ No |  |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### ApiMobileCreated
+`(callback)`
+ Invoked when a mobile is created.
+ The event's sender is null and the argument is an ApiMobile.
 
 
 **Parameters:**
