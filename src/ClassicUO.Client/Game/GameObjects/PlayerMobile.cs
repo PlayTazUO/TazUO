@@ -12,6 +12,7 @@ using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers.SpellVisualRange;
+using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.GameObjects
 {
@@ -482,7 +483,7 @@ namespace ClassicUO.Game.GameObjects
                 if (UIManager.Gumps.Count > i)
                     continue;
 
-                Gump gump = UIManager.Gumps.ElementAt(i);
+                IGui gump = UIManager.Gumps.ElementAt(i);
                 //}
                 //foreach (Gump gump in UIManager.Gumps)
                 //{

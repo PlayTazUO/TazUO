@@ -18,7 +18,7 @@ namespace ClassicUO.Game.Managers
 {
     internal static class UIManager
     {
-        private static readonly Dictionary<Type, List<Gump>> _gumpTypeList = new();
+        private static readonly Dictionary<Type, List<IGui>> _gumpTypeList = new();
         private static readonly ConcurrentDictionary<uint, Point> _gumpPositionCache = new();
         private static readonly IGui[] _mouseDownControls = new IGui[0xFF];
 
@@ -336,7 +336,7 @@ namespace ClassicUO.Game.Managers
             //     }
             // }
 
-            if (!_gumpTypeList.TryGetValue(typeof(T), out List<Gump> list))
+            if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
                 return null;
 
             list.RemoveAll(i => i.IsDisposed);
@@ -346,7 +346,7 @@ namespace ClassicUO.Game.Managers
             if(!serial.HasValue)
                 return list[0] as T;
 
-            foreach(Gump gump in list)
+            foreach(IGui gump in list)
                 if (gump.LocalSerial == serial.Value)
                     return gump as T;
 
@@ -477,7 +477,7 @@ namespace ClassicUO.Game.Managers
             batcher.End();
         }
 
-        public static void Add(Gump gump, bool front = true)
+        public static void Add(IGui gump, bool front = true)
         {
             if (!gump.IsDisposed)
             {
@@ -510,7 +510,7 @@ namespace ClassicUO.Game.Managers
         /// Register gump to it's correct list(s) via Type
         /// </summary>
         /// <param name="item"></param>
-        private static void RegisterGump(Gump item)
+        private static void RegisterGump(IGui item)
         {
             Type t = item.GetType();
 
@@ -518,9 +518,9 @@ namespace ClassicUO.Game.Managers
             {
                 if (t == typeof(Control)) break; //break early at control ( XX <- Gump <- Control -< Object )
 
-                if (!_gumpTypeList.TryGetValue(t, out List<Gump> list))
+                if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
                 {
-                    list = new List<Gump>();
+                    list = new List<IGui>();
                     _gumpTypeList[t] = list;
                 }
                 list.Add(item);
@@ -533,7 +533,7 @@ namespace ClassicUO.Game.Managers
         /// Remove a gump from it's correct Type list(s)
         /// </summary>
         /// <param name="item"></param>
-        private static void UnregisterGump(Gump item)
+        private static void UnregisterGump(IGui item)
         {
             Type t = item.GetType();
 
@@ -541,7 +541,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (t == typeof(Control)) break;
 
-                if (_gumpTypeList.TryGetValue(t, out List<Gump> list))
+                if (_gumpTypeList.TryGetValue(t, out List<IGui> list))
                     list.Remove(item);
 
                 t = t.BaseType;
@@ -553,19 +553,19 @@ namespace ClassicUO.Game.Managers
         /// Disposed instances are pruned automatically before this iteration.
         /// </summary>
         /// <returns>True if any instances existed</returns>
-        public static bool ForEach<T>(Action<T> action, uint? serial = null) where T : Gump
+        public static bool ForEach<T>(Action<T> action, uint? serial = null) where T : IGui
         {
-            Gump[] snapshot;
+            IGui[] snapshot;
             int count;
 
-            if (!_gumpTypeList.TryGetValue(typeof(T), out List<Gump> list))
+            if (!_gumpTypeList.TryGetValue(typeof(T), out List<IGui> list))
                 return false;
 
             list.RemoveAll(i => i.IsDisposed);
             count = list.Count;
             if (count == 0) return false;
 
-            snapshot = ArrayPool<Gump>.Shared.Rent(count);
+            snapshot = ArrayPool<IGui>.Shared.Rent(count);
             list.CopyTo(snapshot, 0);
 
             int c = 0;
@@ -584,7 +584,7 @@ namespace ClassicUO.Game.Managers
             finally
             {
                 Array.Clear(snapshot, 0, count);
-                ArrayPool<Gump>.Shared.Return(snapshot);
+                ArrayPool<IGui>.Shared.Return(snapshot);
             }
 
             return c != 0;
@@ -744,7 +744,7 @@ namespace ClassicUO.Game.Managers
             {
                 for (LinkedListNode<IGui> el = Gumps.First; el != null; el = el.Next)
                 {
-                    Gump c = el.Value;
+                    IGui c = el.Value;
 
                     if (c.LayerOrder == UILayer.Default)
                     {

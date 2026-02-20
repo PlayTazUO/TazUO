@@ -45,7 +45,9 @@ public interface IGui
     bool IsModal { get; }
     float Alpha { get; set;  }
     bool WantUpdateSize { get; set; }
-
+    UILayer LayerOrder { get; set; }
+    bool IsFromServer { get; set; }
+    Point Location { get; set; }
     void Update();
     void PreDraw();
     bool Draw(UltimaBatcher2D batcher, int x, int y);

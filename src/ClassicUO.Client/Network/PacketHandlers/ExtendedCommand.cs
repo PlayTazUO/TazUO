@@ -5,6 +5,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
@@ -47,11 +48,11 @@ internal static class ExtendedCommand
                 uint ser = p.ReadUInt32BE();
                 int button = (int)p.ReadUInt32BE();
 
-                LinkedListNode<Gump> first = UIManager.Gumps.First;
+                LinkedListNode<IGui> first = UIManager.Gumps.First;
 
                 while (first != null)
                 {
-                    LinkedListNode<Gump> nextGump = first.Next;
+                    LinkedListNode<IGui> nextGump = first.Next;
 
                     if (first.Value.ServerSerial == ser && first.Value.IsFromServer)
                     {
@@ -509,9 +510,9 @@ internal static class ExtendedCommand
                 ushort spell = p.ReadUInt16BE();
                 bool active = p.ReadBool();
 
-                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
+                for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    Control c = last.Value;
+                    IGui c = last.Value;
 
                     if (c.IsDisposed || !c.IsVisible) continue;
 

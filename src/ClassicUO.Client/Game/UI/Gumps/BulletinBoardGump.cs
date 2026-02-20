@@ -92,7 +92,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
-            for (LinkedListNode<Gump> g = UIManager.Gumps.Last; g != null; g = g.Previous)
+            for (LinkedListNode<IGui> g = UIManager.Gumps.Last; g != null; g = g.Previous)
             {
                 if (g.Value is BulletinBoardItem)
                 {
@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void RemoveBulletinObject(uint serial)
         {
-            foreach (Control child in _databox.Children)
+            foreach (IGui child in _databox.Children)
             {
                 if (child.LocalSerial == serial)
                 {
@@ -121,7 +121,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void AddBulletinObject(uint serial, string msg)
         {
-            foreach (Control c in _databox.Children)
+            foreach (IGui c in _databox.Children)
             {
                 if (c.LocalSerial == serial)
                 {

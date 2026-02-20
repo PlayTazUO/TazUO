@@ -525,7 +525,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             var result = new List<NameOverheadGump>();
 
-            for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
+            for (LinkedListNode<IGui> node = UIManager.Gumps.First; node != null; node = node.Next)
             {
                 if (node.Value is NameOverheadGump nameGump &&
                     !nameGump.IsDisposed &&

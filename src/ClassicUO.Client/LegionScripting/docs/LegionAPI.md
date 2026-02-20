@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `2/19/26`.*
+*This was generated on `2/20/26`.*
 
 ## Properties
 ### `Events`
@@ -2181,7 +2181,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  Gets all currently open server-side gumps.
 
 
-**Return Type:** `IList<Gump>`
+**Return Type:** `IList<IGui>`
 
 ---
 

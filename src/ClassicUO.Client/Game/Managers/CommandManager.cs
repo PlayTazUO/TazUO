@@ -290,9 +290,7 @@ namespace ClassicUO.Game.Managers
             {
                 //ImGuiManager.AddWindow(new TestWindow());
 
-                var g = new Gump(_world, 0, 0);
-                g.Add(new UI.MyraWindows.TestWindow());
-                UIManager.Add(g);
+                UIManager.Add(new UI.MyraWindows.TestWindow());
             });
 
 #endif

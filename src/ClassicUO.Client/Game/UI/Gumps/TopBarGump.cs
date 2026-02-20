@@ -252,13 +252,13 @@ namespace ClassicUO.Game.UI.Gumps
             submenu.Add(new ContextMenuItemEntry("Healthbar Collector", () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
             submenu.Add(new ContextMenuItemEntry("Retrieve gumps", () =>
             {
-                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
+                for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    Gump c = last.Value;
+                    IGui c = last.Value;
 
-                    if (!c.IsDisposed)
+                    if (!c.IsDisposed && c is Gump g)
                     {
-                        c.SetInScreen();
+                        g.SetInScreen();
                     }
                 }
             }));

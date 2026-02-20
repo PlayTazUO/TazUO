@@ -4,7 +4,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 using SDL3;
 
@@ -36,7 +35,7 @@ public class MyraControl : IGui
     public bool AcceptMouseInput { get; set; }
     public bool HandlesKeyboardFocus { get; set; }
     public bool IsFocused { get; set; }
-    public bool IsDisposed { get; private set; }
+    public bool IsDisposed { get; private set; } = false;
     public bool IsVisible { get; set; } = true;
     public bool IsEnabled { get; set; } = true;
     public IGui RootParent { get; } = null;
@@ -72,6 +71,9 @@ public class MyraControl : IGui
     public bool IsModal { get; } = false;
     public float Alpha { get; set; }
     public bool WantUpdateSize { get; set; }
+    public UILayer LayerOrder { get; set; } = UILayer.Default;
+    public bool IsFromServer { get; set; }
+    public Point Location { get; set; } = Point.Zero;
 
     public virtual void Update() { }
 

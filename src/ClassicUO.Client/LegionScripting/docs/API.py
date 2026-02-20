@@ -2339,7 +2339,7 @@ def GetGump(ID: "int" = 1337) -> "ApiUiBaseGump":
     """
     pass
 
-def GetAllGumps() -> "list[ApiUiBaseGump]":
+def GetAllGumps() -> "list[Any]":
     """
      Gets all currently open server-side gumps.
     

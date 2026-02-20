@@ -967,8 +967,10 @@ namespace ClassicUO.Configuration
 
                 var gumps = new LinkedList<Gump>();
 
-                foreach (Gump gump in UIManager.Gumps)
+                foreach (IGui igui in UIManager.Gumps)
                 {
+                    if (igui is not Gump gump) continue;//Skip myra for now
+
                     if (!gump.IsDisposed && gump.CanBeSaved && !(gump is AnchorableGump anchored && UIManager.AnchorManager[anchored] != null))
                     {
                         gumps.AddLast(gump);
