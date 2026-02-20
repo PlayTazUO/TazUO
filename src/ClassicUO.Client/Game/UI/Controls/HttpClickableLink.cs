@@ -26,7 +26,7 @@ namespace ClassicUO.Game.UI.Controls
             ForceSizeUpdate();
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if(button == MouseButtonType.Left)
@@ -36,7 +36,7 @@ namespace ClassicUO.Game.UI.Controls
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-        {           
+        {
             if (MouseIsOver)
             {
                 batcher.Draw

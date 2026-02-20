@@ -344,7 +344,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
 
             public override bool Contains(int x, int y)
             {
-                Control c = null;
+                IGui c = null;
                 _label.HitTest(x, y, ref c);
 
                 if (c != null)

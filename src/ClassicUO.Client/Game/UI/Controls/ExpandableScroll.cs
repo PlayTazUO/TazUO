@@ -157,7 +157,7 @@ namespace ClassicUO.Game.UI.Controls
             x += ScreenCoordinateX;
             y += ScreenCoordinateY;
 
-            Control c = null;
+            IGui c = null;
 
             _gumpTop.HitTest(x, y, ref c);
 

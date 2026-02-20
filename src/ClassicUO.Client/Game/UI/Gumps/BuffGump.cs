@@ -128,7 +128,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             for (int i = 0, offset = 0; i < _box.Children.Count; i++, offset += 31)
             {
-                Control e = _box.Children[i];
+                IGui e = _box.Children[i];
 
                 switch (_direction)
                 {

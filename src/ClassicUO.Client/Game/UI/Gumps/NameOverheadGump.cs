@@ -190,7 +190,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
         }
 
-        protected override void CloseWithRightClick()
+        public override void CloseWithRightClick()
         {
             Entity entity = World.Get(LocalSerial);
 
@@ -272,7 +272,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -301,7 +301,7 @@ namespace ClassicUO.Game.UI.Gumps
             return false;
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -312,7 +312,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.OnMouseDown(x, y, button);
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -454,7 +454,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.OnMouseUp(x, y, button);
         }
 
-        protected override void OnMouseOver(int x, int y)
+        public override void OnMouseOver(int x, int y)
         {
             if (_leftMouseIsDown)
             {

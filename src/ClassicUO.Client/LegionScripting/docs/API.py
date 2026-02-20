@@ -1090,7 +1090,6 @@ LastTargetSerial: int = None
 LastTargetPos = None
 LastTargetGraphic: int = None
 Found: int = None
-InstanceId: int = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
 StopRequested: bool = None

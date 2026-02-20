@@ -483,7 +483,7 @@ public class WorldMapGump : ResizableGump
         parent.Add(zoneOptions);
     }
 
-    protected override void CloseWithRightClick()
+    public override void CloseWithRightClick()
     {
         if (!Keyboard.Ctrl)
         {
@@ -3207,7 +3207,7 @@ public class WorldMapGump : ResizableGump
 
     #region I/O
 
-    protected override void OnMouseUp(int x, int y, MouseButtonType button)
+    public override void OnMouseUp(int x, int y, MouseButtonType button)
     {
         bool allowTarget = _allowPositionalTarget && World.TargetManager.IsTargeting && World.TargetManager.TargetingState == CursorTarget.Position;
         if (allowTarget && button == MouseButtonType.Left)
@@ -3250,7 +3250,7 @@ public class WorldMapGump : ResizableGump
         base.OnMouseUp(x, y, button);
     }
 
-    protected override void OnMouseDown(int x, int y, MouseButtonType button)
+    public override void OnMouseDown(int x, int y, MouseButtonType button)
     {
         if (!Client.Game.UO.GameCursor.ItemHold.Enabled)
         {
@@ -3297,7 +3297,7 @@ public class WorldMapGump : ResizableGump
         base.OnMouseDown(x, y, button);
     }
 
-    protected override void OnMouseOver(int x, int y)
+    public override void OnMouseOver(int x, int y)
     {
         _lastMousePosition = new Point(x, y);
 
@@ -3361,7 +3361,7 @@ public class WorldMapGump : ResizableGump
         }
     }
 
-    protected override void OnMouseWheel(MouseEventType delta)
+    public override void OnMouseWheel(MouseEventType delta)
     {
         if (delta == MouseEventType.WheelScrollUp)
         {
@@ -3386,7 +3386,7 @@ public class WorldMapGump : ResizableGump
         base.OnMouseWheel(delta);
     }
 
-    protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+    public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
     {
         if (button != MouseButtonType.Left || _isScrolling || Keyboard.Alt)
         {

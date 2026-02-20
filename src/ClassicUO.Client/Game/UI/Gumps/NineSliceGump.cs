@@ -152,7 +152,7 @@ public class NineSliceGump : Gump
         _hoveredCorner = GetCornerAtPosition(x, y);
     }
 
-    protected override void OnMouseOver(int x, int y)
+    public override void OnMouseOver(int x, int y)
     {
         base.OnMouseOver(x, y);
         if (!_resizable) return;
@@ -166,7 +166,7 @@ public class NineSliceGump : Gump
         base.OnMouseExit(x, y);
     }
 
-    protected override void OnMouseDown(int x, int y, MouseButtonType button)
+    public override void OnMouseDown(int x, int y, MouseButtonType button)
     {
         base.OnMouseDown(x, y, button);
 
@@ -183,7 +183,7 @@ public class NineSliceGump : Gump
         }
     }
 
-    protected override void OnMouseUp(int x, int y, MouseButtonType button)
+    public override void OnMouseUp(int x, int y, MouseButtonType button)
     {
         base.OnMouseUp(x, y, button);
 

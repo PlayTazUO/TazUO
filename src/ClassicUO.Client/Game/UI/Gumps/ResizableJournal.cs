@@ -345,7 +345,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildBorder();
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             base.OnMouseWheel(delta);
             if (_scrollBarBase != null)

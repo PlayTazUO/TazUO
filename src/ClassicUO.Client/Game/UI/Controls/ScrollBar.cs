@@ -186,7 +186,7 @@ namespace ClassicUO.Game.UI.Controls
                 - gumpInfoSlider.UV.Height;
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             base.OnMouseDown(x, y, button);
 

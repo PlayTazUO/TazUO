@@ -122,7 +122,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+        public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
             if (IsActive)
             {
@@ -161,7 +161,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Middle || button == MouseButtonType.XButton1 || button == MouseButtonType.XButton2)
             {
@@ -200,7 +200,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 

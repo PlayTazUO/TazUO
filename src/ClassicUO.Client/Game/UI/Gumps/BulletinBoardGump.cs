@@ -535,14 +535,14 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {
                 return false;
             }
 
-            Control root = RootParent;
+            IGui root = RootParent;
 
             if (root != null)
             {

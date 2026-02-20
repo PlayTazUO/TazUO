@@ -217,13 +217,13 @@ namespace ClassicUO.Game.UI.Controls
             return false;
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             SelectedObject.Object = _gump.World.Get(LocalSerial);
             base.OnMouseUp(x, y, button);
         }
 
-        protected override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump.World.Get(LocalSerial);
+        public override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump.World.Get(LocalSerial);
 
         private bool CanPickup()
         {
@@ -252,7 +252,7 @@ namespace ClassicUO.Game.UI.Controls
             return false;
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left || _gump.World.TargetManager.IsTargeting)
             {

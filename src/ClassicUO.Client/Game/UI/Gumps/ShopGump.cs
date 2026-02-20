@@ -764,7 +764,7 @@ namespace ClassicUO.Game.UI.Gumps
                 WantUpdateSize = false;
             }
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button) => true;
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button) => true;
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {

@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.Controls
 
         protected virtual void OnCheckedChanged() => ValueChanged.Raise(this);
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left && MouseIsOver)
             {

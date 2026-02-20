@@ -46,14 +46,14 @@ public class NineSliceButton : NineSliceControl
         Hue = _oldHue;
     }
 
-    protected override void OnMouseDown(int x, int y, MouseButtonType button)
+    public override void OnMouseDown(int x, int y, MouseButtonType button)
     {
         base.OnMouseDown(x, y, button);
         Texture = _textureDown;
         BorderSize = _borderSizeDown;
     }
 
-    protected override void OnMouseUp(int x, int y, MouseButtonType button)
+    public override void OnMouseUp(int x, int y, MouseButtonType button)
     {
         base.OnMouseUp(x, y, button);
         Texture = _textureUp;

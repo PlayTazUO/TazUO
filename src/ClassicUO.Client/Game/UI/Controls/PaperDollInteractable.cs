@@ -528,7 +528,7 @@ namespace ClassicUO.Game.UI.Controls
 
             public bool CanLift { get; set; }
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
                 {
@@ -544,7 +544,7 @@ namespace ClassicUO.Game.UI.Controls
                 return true;
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 SelectedObject.Object = _gump?.World?.Get(LocalSerial);
                 base.OnMouseUp(x, y, button);
@@ -584,7 +584,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            protected override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump?.World?.Get(LocalSerial);
+            public override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump?.World?.Get(LocalSerial);
         }
     }
 }

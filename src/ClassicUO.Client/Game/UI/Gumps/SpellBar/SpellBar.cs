@@ -50,7 +50,7 @@ public class SpellBar : Gump
 
     public override GumpType GumpType { get; } = GumpType.SpellBar;
 
-    protected override void OnMouseWheel(MouseEventType delta)
+    public override void OnMouseWheel(MouseEventType delta)
     {
         base.OnMouseWheel(delta);
 
@@ -192,7 +192,7 @@ public class SpellBar : Gump
             }));
     }
 
-    protected override void OnMouseUp(int x, int y, MouseButtonType button)
+    public override void OnMouseUp(int x, int y, MouseButtonType button)
     {
         base.OnMouseUp(x, y, button);
 
@@ -336,7 +336,7 @@ public class SpellBar : Gump
             if (spell != null && spell != SpellDefinition.EmptySpell) GameActions.CastSpell(spell.ID);
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if (button == MouseButtonType.Right)

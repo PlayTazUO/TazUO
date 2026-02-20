@@ -501,7 +501,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if (button == MouseButtonType.Left && World.InGame)
@@ -806,7 +806,7 @@ namespace ClassicUO.Game.UI.Gumps
                 WantUpdateSize = false;
             }
 
-            public override Control ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false)
+            public override IGui ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false)
             {
                 forcedScale = scale;
                 bg?.ApplyScale(scale, scalePosition, scaleSize, force);

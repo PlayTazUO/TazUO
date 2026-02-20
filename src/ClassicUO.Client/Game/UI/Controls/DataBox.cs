@@ -36,7 +36,7 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 0; i < Children.Count; ++i)
             {
-                Control c = Children[i];
+                IGui c = Children[i];
 
                 if (!c.IsVisible || c.IsDisposed)
                     continue;
@@ -65,7 +65,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             for (int i = 0, height = 0; i < Children.Count; ++i)
             {
-                Control c = Children[i];
+                IGui c = Children[i];
 
                 if (c.IsVisible && !c.IsDisposed)
                 {
@@ -85,11 +85,11 @@ namespace ClassicUO.Game.UI.Controls
                 return true;
             }
 
-            Control t = null;
+            IGui t = null;
             x += ScreenCoordinateX;
             y += ScreenCoordinateY;
 
-            foreach (Control child in Children)
+            foreach (IGui child in Children)
             {
                 child.HitTest(x, y, ref t);
 

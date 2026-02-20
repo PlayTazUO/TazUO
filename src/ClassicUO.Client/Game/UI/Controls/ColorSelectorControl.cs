@@ -306,7 +306,7 @@ namespace ClassicUO.Game.UI.Controls
         }
 
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -337,7 +337,7 @@ namespace ClassicUO.Game.UI.Controls
             base.OnMouseDown(x, y, button);
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -350,7 +350,7 @@ namespace ClassicUO.Game.UI.Controls
             base.OnMouseUp(x, y, button);
         }
 
-        protected override void OnMouseOver(int x, int y)
+        public override void OnMouseOver(int x, int y)
         {
             if (_isDraggingRed)
             {

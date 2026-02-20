@@ -177,7 +177,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (CanCloseWithRightClick) return; //This is set to true in Python API, we can ignore server-side stuff
 

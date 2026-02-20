@@ -1528,7 +1528,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// <param name="x"></param>
             /// <param name="y"></param>
             /// <param name="button"></param>
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left && ShowEdit)
                 {

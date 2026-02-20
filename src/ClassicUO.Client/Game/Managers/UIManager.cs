@@ -12,6 +12,7 @@ using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.Managers
 {
@@ -19,13 +20,13 @@ namespace ClassicUO.Game.Managers
     {
         private static readonly Dictionary<Type, List<Gump>> _gumpTypeList = new();
         private static readonly ConcurrentDictionary<uint, Point> _gumpPositionCache = new();
-        private static readonly Control[] _mouseDownControls = new Control[0xFF];
+        private static readonly IGui[] _mouseDownControls = new IGui[0xFF];
 
 
         //private static readonly Dictionary<uint, TargetLineGump> _targetLineGumps = new Dictionary<uint, TargetLineGump>();
         private static Point _dragOrigin;
         private static bool _isDraggingControl;
-        private static Control _keyboardFocusControl, _lastFocus;
+        private static IGui _keyboardFocusControl, _lastFocus;
         private static bool _needSort;
 
         // Ctrl-modified drag state for axis-locking and speed reduction
@@ -57,7 +58,7 @@ namespace ClassicUO.Game.Managers
 
         public static LinkedList<Gump> Gumps { get; } = new();
 
-        public static Control MouseOverControl { get; private set; }
+        public static IGui MouseOverControl { get; private set; }
 
         public static bool IsModalOpen { get; private set; }
 
@@ -85,7 +86,7 @@ namespace ClassicUO.Game.Managers
 
         public static PopupMenuGump PopupMenu { get; private set; }
 
-        public static Control KeyboardFocusControl
+        public static IGui KeyboardFocusControl
         {
             get => _keyboardFocusControl;
             set
@@ -247,7 +248,7 @@ namespace ClassicUO.Game.Managers
 
             if (button == MouseButtonType.Right)
             {
-                Control mouseDownControl = _mouseDownControls[index];
+                IGui mouseDownControl = _mouseDownControls[index];
                 // only attempt to close the gump if the mouse is still on the gump when right click mouse up occurs
                 if (mouseDownControl != null && MouseOverControl == mouseDownControl)
                 {
@@ -286,7 +287,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public static Control LastControlMouseDown(MouseButtonType button) => _mouseDownControls[(int)button];
+        public static IGui LastControlMouseDown(MouseButtonType button) => _mouseDownControls[(int)button];
 
         public static void SavePosition(uint serverSerial, Point point) => _gumpPositionCache[serverSerial] = point;
 
@@ -627,7 +628,7 @@ namespace ClassicUO.Game.Managers
 
         private static void HandleMouseInput()
         {
-            Control gump = GetMouseOverControl(Mouse.Position);
+            IGui gump = GetMouseOverControl(Mouse.Position);
 
             if (MouseOverControl != null && gump != MouseOverControl)
             {
@@ -671,20 +672,20 @@ namespace ClassicUO.Game.Managers
             //}
         }
 
-        private static Control GetMouseOverControl(Point position)
+        private static IGui GetMouseOverControl(Point position)
         {
             if (_isDraggingControl)
             {
                 return DraggingControl;
             }
 
-            Control control = null;
+            IGui control = null;
 
             IsModalOpen = IsModalControlOpen();
 
             for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
             {
-                Control c = first.Value;
+                IGui c = first.Value;
 
                 if (IsModalOpen && !c.IsModal || !c.IsVisible || !c.IsEnabled)
                 {
@@ -702,7 +703,7 @@ namespace ClassicUO.Game.Managers
             return null;
         }
 
-        public static void MakeTopMostGump(Control control)
+        public static void MakeTopMostGump(IGui control)
         {
             var gump = control as Gump;
             if (gump == null && control?.RootParent is Gump)
@@ -710,32 +711,31 @@ namespace ClassicUO.Game.Managers
                 gump = control.RootParent as Gump;
             }
 
-            if (gump != null)
+            if (gump == null) return;
+
+            for (LinkedListNode<Gump> start = Gumps.First; start != null; start = start.Next)
             {
-                for (LinkedListNode<Gump> start = Gumps.First; start != null; start = start.Next)
+                if (start.Value == gump)
                 {
-                    if (start.Value == gump)
+                    if (gump.LayerOrder == UILayer.Under)
                     {
-                        if (gump.LayerOrder == UILayer.Under)
-                        {
-                            if (start != Gumps.Last)
-                            {
-                                Gumps.Remove(gump);
-                                Gumps.AddBefore(Gumps.Last, start);
-                            }
-                        }
-                        else
+                        if (start != Gumps.Last)
                         {
                             Gumps.Remove(gump);
-                            Gumps.AddFirst(start);
+                            Gumps.AddBefore(Gumps.Last, start);
                         }
-
-                        break;
                     }
-                }
+                    else
+                    {
+                        Gumps.Remove(gump);
+                        Gumps.AddFirst(start);
+                    }
 
-                _needSort = Gumps.Count > 1;
+                    break;
+                }
             }
+
+            _needSort = Gumps.Count > 1;
         }
 
         private static void SortControlsByInfo()
@@ -782,27 +782,28 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public static void AttemptDragControl(Control control, bool attemptAlwaysSuccessful = false)
+        public static void AttemptDragControl(IGui control, bool attemptAlwaysSuccessful = false)
         {
             if ((_isDraggingControl && !attemptAlwaysSuccessful) || Client.Game.UO.GameCursor.ItemHold.Enabled && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
             {
                 return;
             }
 
-            Control dragTarget = control;
+            if (control is not Control dragTarget) return;
+
 
             if (!dragTarget.CanMove)
             {
                 return;
             }
 
-            while (dragTarget.Parent != null)
+            while (dragTarget?.Parent != null)
             {
-                dragTarget = dragTarget.Parent;
+                dragTarget = dragTarget.Parent as Control;
             }
 
 
-            if (dragTarget.CanMove)
+            if (dragTarget?.CanMove == true)
             {
                 Point delta = Mouse.LDragOffset;
 

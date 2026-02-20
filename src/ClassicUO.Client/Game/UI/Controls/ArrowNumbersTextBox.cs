@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.Controls
             ValidateValue(i);
         }
 
-        internal override void OnFocusLost()
+        public override void OnFocusLost()
         {
             if (IsDisposed)
             {

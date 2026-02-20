@@ -113,10 +113,6 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 
 
-### `InstanceId`
-
-**Type:** `int`
-
 ### `Profile`
 
 **Type:** `ApiUserProfile`

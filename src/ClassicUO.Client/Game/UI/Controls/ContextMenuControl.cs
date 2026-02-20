@@ -301,7 +301,7 @@ namespace ClassicUO.Game.UI.Controls
                     }
                     else
                     {
-                        Control p = UIManager.MouseOverControl?.Parent;
+                        IGui p = UIManager.MouseOverControl?.Parent;
 
                         while (p != null)
                         {
@@ -318,7 +318,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left)
                 {

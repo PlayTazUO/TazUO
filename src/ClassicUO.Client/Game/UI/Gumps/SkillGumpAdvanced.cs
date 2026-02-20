@@ -679,7 +679,7 @@ namespace ClassicUO.Game.UI.Gumps
                 base.OnDragEnd(x, y);
         }
 
-        protected override void OnMouseOver(int x, int y)
+        public override void OnMouseOver(int x, int y)
         {
             base.OnMouseOver(x, y);
 

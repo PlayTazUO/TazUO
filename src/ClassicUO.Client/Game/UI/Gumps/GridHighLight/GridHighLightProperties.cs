@@ -37,7 +37,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             Clear();
             Positioner pos = new();
-            Control temp;
+            IGui temp;
 
             // Scroll area
             Add(mainScrollArea = new ScrollArea(BorderSize, BorderSize, Width - (BorderSize * 2), Height - (BorderSize * 2), true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });

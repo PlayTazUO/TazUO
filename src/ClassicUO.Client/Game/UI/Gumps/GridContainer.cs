@@ -434,7 +434,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e.Button == MouseButtonType.Left)
                 {
                     // Only toggle if clicking on empty space (not on grid items)
-                    Control clickedControl = UIManager.MouseOverControl;
+                    IGui clickedControl = UIManager.MouseOverControl;
                     if (clickedControl == _scrollArea)
                     {
                         OnMinimizeToggleDoubleClick(sender, e);
@@ -1261,7 +1261,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// </summary>
             public static void StaticGridContainerSettingUpdated() => _borderHueVec = ShaderHueTranslator.GetHueVector(ProfileManager.CurrentProfile.GridBorderHue, false, (float)ProfileManager.CurrentProfile.GridBorderAlpha / 100);
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType e)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType e)
             {
                 base.OnMouseDoubleClick(x, y, e);
 
@@ -1311,7 +1311,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType e)
+            public override void OnMouseUp(int x, int y, MouseButtonType e)
             {
                 base.OnMouseUp(x, y, e);
 
@@ -2170,7 +2170,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     for (int i = 1; i < Children.Count; i++)
                     {
-                        Control child = Children[i];
+                        IGui child = Children[i];
 
                         if (!child.IsVisible)
                         {
@@ -2188,7 +2188,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             }
 
-            protected override void OnMouseWheel(MouseEventType delta)
+            public override void OnMouseWheel(MouseEventType delta)
             {
                 switch (delta)
                 {
@@ -2221,7 +2221,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 for (int i = 1; i < Children.Count; i++)
                 {
-                    Control c = Children[i];
+                    IGui c = Children[i];
 
                     if (c.IsVisible && !c.IsDisposed)
                     {

@@ -54,7 +54,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.OnMove(x, y);
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             UIManager.AnchorManager[this]?.MakeTopMost();
 
@@ -64,7 +64,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.OnMouseDown(x, y, button);
         }
 
-        protected override void OnMouseOver(int x, int y)
+        public override void OnMouseOver(int x, int y)
         {
             if (!IsDisposed && UIManager.IsDragging && UIManager.DraggingControl == this && AnchorType != ANCHOR_TYPE.DISABLED)
             {
@@ -98,7 +98,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left && ShowLock)
             {
@@ -200,7 +200,7 @@ namespace ClassicUO.Game.UI.Gumps
             return true;
         }
 
-        protected override void CloseWithRightClick()
+        public override void CloseWithRightClick()
         {
             if (
                 UIManager.AnchorManager[this] == null

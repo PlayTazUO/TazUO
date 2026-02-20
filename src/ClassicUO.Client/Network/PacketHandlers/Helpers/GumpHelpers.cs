@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.LegionScripting;
@@ -475,7 +476,7 @@ internal static class GumpHelpers
                 else
                     text = Client.Game.UO.FileManager.Clilocs.GetString(int.Parse(gparams[1]));
 
-                Control last =
+                IGui last =
                     gump.Children.Count != 0 ? gump.Children[gump.Children.Count - 1] : null;
 
                 if (last != null)
@@ -676,7 +677,7 @@ internal static class GumpHelpers
         int y2 = y + height;
         for (int i = 0; i < gump.Children.Count; i++)
         {
-            Control child = gump.Children[i];
+            IGui child = gump.Children[i];
             bool canDraw = child.Page == 0 || current_page == child.Page;
 
             bool overlap =

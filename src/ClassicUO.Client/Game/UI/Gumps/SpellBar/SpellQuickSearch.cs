@@ -87,7 +87,7 @@ public class SpellQuickSearch : NineSliceGump
 
         public override bool AcceptMouseInput { get; set; } = true;
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
 

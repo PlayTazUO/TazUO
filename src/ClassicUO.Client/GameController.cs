@@ -784,7 +784,7 @@ namespace ClassicUO
                             }
                             else if (UIManager.MouseOverControl != null && UIManager.MouseOverControl.IsVisible)
                             {
-                                Control c = UIManager.MouseOverControl.RootParent;
+                                IGui c = UIManager.MouseOverControl.RootParent;
                                 if (c != null)
                                 {
                                     ClipboardScreenshot(c.Bounds, GraphicsDevice);

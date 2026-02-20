@@ -43,7 +43,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public float AlphaOffset = 0;
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             base.OnMouseWheel(delta);
 
@@ -119,7 +119,7 @@ namespace ClassicUO.Game.UI.Gumps
             base.Dispose();
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if (CanBeLocked && ((Keyboard.Ctrl && Keyboard.Alt) || Controller.Button_LeftTrigger) && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
@@ -292,7 +292,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void CloseWithRightClick()
+        public override void CloseWithRightClick()
         {
             if (!CanCloseWithRightClick)
             {

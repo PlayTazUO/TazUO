@@ -8,7 +8,7 @@ using ClassicUO.Utility;
 namespace ClassicUO.Game.UI.Gumps
 {
     public class PopupMenuGump : Gump
-    {   
+    {
         public static uint CloseNext = uint.MaxValue;
 
         private ushort _selectedItem;
@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.Gumps
         public PopupMenuGump(World world, PopupMenuData data) : base(world, 0, 0)
         {
             if (CloseNext != uint.MaxValue && data.Serial == CloseNext)
-            {                
+            {
                 Dispose();
                 CloseNext = uint.MaxValue;
                 return;
@@ -121,7 +121,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
