@@ -12,6 +12,7 @@ public class TestWindow : MyraControl
     private Myra.Graphics2D.UI.Label infoLabel = new();
     public TestWindow() : base("Test Window")
     {
+        MyraStyle.SetDefault();//Remove later, this is to set style for testing
         _rootWindow.Left = 300;
         _rootWindow.Top = 300;
 
@@ -20,12 +21,12 @@ public class TestWindow : MyraControl
             RowSpacing = 8,
             ColumnSpacing = 8
         };
+        grid.ApplyWidgetStyle(MyraStyle.StandardStyle);
 
         grid.ColumnsProportions.Add(new Proportion(ProportionType.Pixels, 150));
         grid.ColumnsProportions.Add(new Proportion(ProportionType.Auto));
         grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
         grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
-        grid.Background = new SolidBrush(new Color(0, 0, 0, 0.75f));
 
         var helloWorld = new Myra.Graphics2D.UI.Label
         {
@@ -90,11 +91,12 @@ public class TestWindow : MyraControl
 
         if(Time.Ticks > nextUpdate)
         {
-            nextUpdate = Time.Ticks + 250;
+            nextUpdate = Time.Ticks + 500;
             infoLabel.Text = $"{Bounds.Width}x{Bounds.Height}, {Bounds.Left},{Bounds.Top}\n" +
                              $"Mouse over: {UIManager.MouseOverControl}\n" +
                              $"Last click:{UIManager.LastControlMouseDown(MouseButtonType.Left)}\n" +
                              $"Top most: {UIManager.TopMostControl}";
+            MyraStyle.SetDefault();
         }
     }
 }

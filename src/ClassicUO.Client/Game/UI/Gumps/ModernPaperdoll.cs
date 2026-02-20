@@ -249,13 +249,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public static void UpdateAllOptions()
-        {
-            foreach (ModernPaperdoll p in UIManager.Gumps.OfType<ModernPaperdoll>())
-            {
-                p.UpdateOptions();
-            }
-        }
+        public static void UpdateAllOptions() => UIManager.ForEach<ModernPaperdoll>(p => p.UpdateOptions());
 
         protected override void OnMove(int x, int y)
         {

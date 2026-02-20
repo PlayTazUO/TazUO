@@ -44,7 +44,7 @@ public static class HideHudManager
             }
         }
 
-        foreach (Gump gump in UIManager.Gumps)
+        foreach (IGui gump in UIManager.Gumps)
         {
             if (gump == null)
                 continue;

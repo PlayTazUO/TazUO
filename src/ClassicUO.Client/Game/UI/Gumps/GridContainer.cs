@@ -1020,11 +1020,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildBorder();
         }
 
-        public static void UpdateAllGridContainers()
-        {
-            foreach (GridContainer _ in UIManager.Gumps.OfType<GridContainer>())
-                _.OptionsUpdated();
-        }
+        public static void UpdateAllGridContainers() => UIManager.ForEach<GridContainer>(c => c.OptionsUpdated());
 
         public void HandleObjectMessage(Entity parent, string text, ushort hue)
         {

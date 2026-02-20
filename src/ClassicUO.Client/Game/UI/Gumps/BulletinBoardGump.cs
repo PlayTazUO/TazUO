@@ -92,13 +92,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
-            for (LinkedListNode<IGui> g = UIManager.Gumps.Last; g != null; g = g.Previous)
-            {
-                if (g.Value is BulletinBoardItem)
-                {
-                    g.Value.Dispose();
-                }
-            }
+            UIManager.ForEach<BulletinBoardGump>(g => g.Dispose()); //Not 100% certain closing all bulletin board gumps is intentional..
 
             base.Dispose();
         }
