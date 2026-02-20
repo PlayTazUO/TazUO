@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -33,6 +32,7 @@ using SDL3;
 using static SDL3.SDL;
 using Keyboard = ClassicUO.Input.Keyboard;
 using Mouse = ClassicUO.Input.Mouse;
+using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO
 {
@@ -166,6 +166,8 @@ namespace ClassicUO
             base.LoadContent();
 
             MyraEnvironment.Game = this;
+            MyraEnvironment.SetMouseCursorFromWidget = false;
+            MyraStyle.SetDefault();
 
             Fonts.Initialize(GraphicsDevice);
             SolidColorTextureCache.Initialize(GraphicsDevice);
