@@ -33,8 +33,6 @@ namespace ClassicUO.LegionScripting
     {
         #region Members
 
-        public readonly int InstanceId = new Random().Next(100000);
-
         internal readonly ConcurrentBag<Gump> _gumps = [];
         private readonly Queue<Action> _scheduledCallbacks = new();
         private static readonly ConcurrentDictionary<string, object> _sharedVars = new();
