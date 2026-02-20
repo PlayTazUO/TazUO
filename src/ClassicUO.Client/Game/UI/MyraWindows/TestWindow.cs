@@ -1,4 +1,6 @@
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.Brushes;
@@ -8,6 +10,7 @@ namespace ClassicUO.Game.UI.MyraWindows;
 
 public class TestWindow : MyraControl
 {
+    private Myra.Graphics2D.UI.Label infoLabel = new();
     public TestWindow() : base("Test Window")
     {
         _rootWindow.Left = 300;
@@ -19,7 +22,7 @@ public class TestWindow : MyraControl
             ColumnSpacing = 8
         };
 
-        grid.ColumnsProportions.Add(new Proportion(ProportionType.Auto));
+        grid.ColumnsProportions.Add(new Proportion(ProportionType.Pixels, 150));
         grid.ColumnsProportions.Add(new Proportion(ProportionType.Auto));
         grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
         grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
@@ -72,8 +75,27 @@ public class TestWindow : MyraControl
         Grid.SetColumn(spinButton, 1);
         Grid.SetRow(spinButton, 1);
 
-        grid.Width = 300;
-        grid.Height = 100;
-        _rootWindow.Content = grid;
+        grid.Width = 550;
+        grid.Height = 200;
+
+        grid.Widgets.Add(infoLabel);
+        Grid.SetRow(infoLabel, 2);
+
+        SetRootContent(grid);
+    }
+
+    private uint nextUpdate = 0;
+    public override void PreDraw()
+    {
+        base.PreDraw();
+
+        if(Time.Ticks > nextUpdate)
+        {
+            nextUpdate = Time.Ticks + 250;
+            infoLabel.Text = $"{Bounds.Width}x{Bounds.Height}, {Bounds.Left},{Bounds.Top}\n" +
+                             $"Mouse over: {UIManager.MouseOverControl}\n" +
+                             $"Last click:{UIManager.LastControlMouseDown(MouseButtonType.Left)}\n" +
+                             $"Top most: {UIManager.TopMostControl}";
+        }
     }
 }

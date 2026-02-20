@@ -48,6 +48,9 @@ public interface IGui
     UILayer LayerOrder { get; set; }
     bool IsFromServer { get; set; }
     Point Location { get; set; }
+    bool HasKeyboardFocus { get; }
+    bool ModalClickOutsideAreaClosesThisControl { get; }
+
     void Update();
     void PreDraw();
     bool Draw(UltimaBatcher2D batcher, int x, int y);
@@ -55,7 +58,6 @@ public interface IGui
     void OnFocusEnter();
     void OnFocusLost();
     void SetKeyboardFocus();
-
     void InvokeKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod);
     void InvokeKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod);
     void InvokeTextInput(string c);

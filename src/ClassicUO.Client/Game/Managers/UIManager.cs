@@ -59,6 +59,7 @@ namespace ClassicUO.Game.Managers
         public static LinkedList<IGui> Gumps { get; } = new();
 
         public static IGui MouseOverControl { get; private set; }
+        public static IGui TopMostControl { get; set; }
 
         public static bool IsModalOpen { get; private set; }
 
@@ -204,7 +205,7 @@ namespace ClassicUO.Game.Managers
             }
             else
             {
-                foreach (Gump s in Gumps)
+                foreach (IGui s in Gumps)
                 {
                     if (s.IsModal && s.ModalClickOutsideAreaClosesThisControl)
                     {
@@ -703,12 +704,11 @@ namespace ClassicUO.Game.Managers
             return null;
         }
 
-        public static void MakeTopMostGump(IGui control)
+        public static void MakeTopMostGump(IGui gump)
         {
-            var gump = control as Gump;
-            if (gump == null && control?.RootParent is Gump)
+            if (gump != null && gump?.RootParent != null)
             {
-                gump = control.RootParent as Gump;
+                gump = gump.RootParent;
             }
 
             if (gump == null) return;
@@ -734,6 +734,8 @@ namespace ClassicUO.Game.Managers
                     break;
                 }
             }
+
+            TopMostControl = gump;
 
             _needSort = Gumps.Count > 1;
         }

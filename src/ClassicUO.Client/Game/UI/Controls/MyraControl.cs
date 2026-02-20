@@ -4,11 +4,16 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
+using Myra.Events;
 using Myra.Graphics2D.UI;
 using SDL3;
 
 namespace ClassicUO.Game.UI.Controls;
 
+/// <summary>
+/// While we inherit many interface methods from Gump controls, many of them do not apply to Myra controls.
+/// It's a long process to be able to support two different types of windows/gumps in the same UIManager
+/// </summary>
 public class MyraControl : IGui
 {
     protected Desktop _desktop = new();
@@ -27,12 +32,53 @@ public class MyraControl : IGui
     public MyraControl(string title)
     {
         _rootWindow = new Window { Title = title };
-        _rootWindow.Closed += (s, a) => Dispose();
+        _rootWindow.Closed += OnRootWindowOnClosed;
         _desktop.Root = _rootWindow;
+
+        _desktop.WidgetGotKeyboardFocus += DesktopOnWidgetGotKeyboardFocus;
+        _rootWindow.TouchDown += DesktopOnTouchDown;
+        _rootWindow.TouchUp += DesktopOnTouchUp;
+        _rootWindow.LocationChanged += DesktopWindowOnLocationChanged;
+        _rootWindow.SizeChanged += RootWindowOnSizeChanged;
     }
 
-    public bool AcceptKeyboardInput { get; set; }
-    public bool AcceptMouseInput { get; set; }
+    private void OnRootWindowOnClosed(object s, EventArgs a)
+    {
+        if (IsDisposed) return;
+
+        _disposeRequested = true;
+    }
+
+    private void RootWindowOnSizeChanged(object sender, EventArgs e)
+    {
+        _rootWindow.UpdateArrange();
+        Point mSize = _rootWindow.Measure(new Point(2000, 2000));
+
+        Bounds.Width = mSize.X;
+        Bounds.Height = mSize.Y;
+        Bounds.X = _rootWindow.Left;
+        Bounds.Y = _rootWindow.Top;
+    }
+
+    private void DesktopWindowOnLocationChanged(object sender, EventArgs e)
+    {
+        Bounds.X = _rootWindow.Left;
+        Bounds.Y = _rootWindow.Top;
+    }
+
+    private void DesktopOnTouchUp(object sender, EventArgs e) => OnMouseUp(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
+
+    private void DesktopOnTouchDown(object sender, EventArgs e)
+    {
+        if (Bounds.Contains(Mouse.Position))
+            BringOnTop();
+        OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
+    }
+
+    private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e) => SetKeyboardFocus();
+
+    public bool AcceptKeyboardInput { get; set; } = true;
+    public bool AcceptMouseInput { get; set; } = true;
     public bool HandlesKeyboardFocus { get; set; }
     public bool IsFocused { get; set; }
     public bool IsDisposed { get; private set; } = false;
@@ -74,30 +120,70 @@ public class MyraControl : IGui
     public UILayer LayerOrder { get; set; } = UILayer.Default;
     public bool IsFromServer { get; set; }
     public Point Location { get; set; } = Point.Zero;
+    public bool HasKeyboardFocus => UIManager.KeyboardFocusControl == this;
+    public bool ModalClickOutsideAreaClosesThisControl { get; } = true;
 
-    public virtual void Update() { }
+    private bool _disposeRequested = false;
+
+    protected void SetRootContent(Widget widget)
+    {
+        _rootWindow.Content = widget;
+        RootWindowOnSizeChanged(null, null);
+    }
+
+    public virtual void Update()
+    {
+        if (IsDisposed) return;
+
+        if(_disposeRequested) Dispose();
+    }
 
     public virtual void PreDraw() { }
 
     public virtual bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
-        if (_desktop == null || _desktop.Root == null || !IsVisible) return false;
+        if (IsDisposed || !IsVisible || _desktop == null || _desktop.Root == null) return false;
 
+        batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
         _desktop.Render();
         return true;
     }
 
     public void Dispose()
     {
-        _desktop?.Widgets.Clear();
+        if(IsDisposed) return;
+
+        _disposeRequested = false;
         IsDisposed = true;
+
+        if (_desktop is null) return;
+
+        _desktop.WidgetGotKeyboardFocus -= DesktopOnWidgetGotKeyboardFocus;
+
+        if(_rootWindow is not null)
+        {
+            _rootWindow.Closed -= OnRootWindowOnClosed;
+            _rootWindow.TouchDown -= DesktopOnTouchDown;
+            _rootWindow.TouchUp -= DesktopOnTouchUp;
+            _rootWindow.LocationChanged -= DesktopWindowOnLocationChanged;
+            _rootWindow.SizeChanged -= RootWindowOnSizeChanged;
+        }
+
+        _desktop.Widgets.Clear();
+        _desktop.Dispose();
     }
 
     public void OnFocusEnter() { }
 
     public void OnFocusLost() { }
 
-    public void SetKeyboardFocus() { }
+    public void SetKeyboardFocus()
+    {
+        if (AcceptKeyboardInput && !HasKeyboardFocus)
+        {
+            UIManager.KeyboardFocusControl = this;
+        }
+    }
 
     public void InvokeKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
 
@@ -129,9 +215,19 @@ public class MyraControl : IGui
 
     public void InvokeDragEnd(Point position) { }
 
-    public void HitTest(Point position, ref IGui res) { }
+    public void HitTest(Point position, ref IGui res)
+    {
+        if (!IsVisible || !IsEnabled || IsDisposed) return;
 
-    public void HitTest(int x, int y, ref IGui res) { }
+        if (Bounds.Contains(position.X, position.Y))
+            if (AcceptMouseInput)
+            {
+                res = this;
+                OnHitTestSuccess(position.X, position.Y, ref res);
+            }
+    }
+
+    public void HitTest(int x, int y, ref IGui res) => HitTest(new Point(x, y), ref res);
 
     public void OnHitTestSuccess(int x, int y, ref IGui res) { }
 

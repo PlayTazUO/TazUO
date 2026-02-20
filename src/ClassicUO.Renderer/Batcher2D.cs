@@ -1309,6 +1309,16 @@ namespace ClassicUO.Renderer
             _customEffect = null;
         }
 
+        /// <summary>
+        /// Flushes pending draw calls to the GPU without ending the batch.
+        /// Use this before rendering with an external pipeline (e.g. Myra) so that
+        /// previously queued sprites are committed before the external render runs.
+        /// </summary>
+        public void FlushBatch()
+        {
+            Flush();
+        }
+
         private void SetVertex
         (
             ref PositionNormalTextureColor4 sprite,
