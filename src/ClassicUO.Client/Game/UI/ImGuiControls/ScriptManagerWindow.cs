@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.ImGuiControls.Legion;
@@ -815,6 +814,17 @@ public class ScriptManagerWindow : SingletonImGuiWindow<ScriptManagerWindow>
         if (ImGui.MenuItem("Edit Externally"))
         {
             FileSystemHelper.OpenFileWithDefaultApp(script.FullPath);
+            _showContextMenu = false;
+        }
+
+        if (ImGui.MenuItem(Language.Instance.Scripting.OpenLocation))
+        {
+            if (!FileSystemHelper.OpenLocation(script.FullPath))
+            {
+                Log.Warn($"Failed to open location for script '{script.FullPath}'");
+                GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
+            }
+
             _showContextMenu = false;
         }
 

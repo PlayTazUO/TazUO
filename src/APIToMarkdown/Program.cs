@@ -20,7 +20,7 @@ public static class GenDoc
         foreach (ClassDeclarationSyntax classDeclaration in classes)
         {
             string className = classDeclaration.Identifier.Text;
-            isMainAPI = className == "API";
+            isMainAPI = className == "LegionAPI";
             classesDict.TryAdd(className, new Tuple<StringBuilder, StringBuilder>(new StringBuilder(), new StringBuilder()));
             StringBuilder sb = classesDict[className].Item1;
             StringBuilder python = classesDict[className].Item2;
@@ -584,38 +584,49 @@ public static class GenDoc
             "DateTime" or "System.DateTime" => "datetime", // Requires 'import datetime'
             "Guid" or "System.Guid" => "str", // Often represented as string or UUID
 
-            "Gump" => "PyBaseGump", // Custom types
-            "Control" or "ScrollArea" or "SimpleProgressBar" or "TextBox" or "TTFTextInputField" or "GumpPic" => "PyBaseControl",
-            "RadioButton" or "NiceButton" or "Button" or "ResizableStaticPic" or "AlphaBlendControl" or "Label" => "PyBaseControl",
-            "Checkbox" => "PyCheckbox",
-            "Item" or "PyItem" => "PyItem",
-            "Mobile" or "PyMobile" => "PyMobile",
+            "Gump" => "ApiUiBaseGump", // Custom types
+            "Control" or "ScrollArea" or "SimpleProgressBar" or "TextBox" or "TTFTextInputField" or "GumpPic" => "ApiUiBaseControl",
+            "RadioButton" or "NiceButton" or "Button" or "ResizableStaticPic" or "AlphaBlendControl" or "Label" => "ApiUiBaseControl",
+            "Checkbox" => "ApiUiCheckbox",
+            "Item" or "ApiItem" => "ApiItem",
+            "Mobile" or "ApiMobile" => "ApiMobile",
             "Skill" => "Skill",
             "Buff" => "Buff",
             "ScanType" => "ScanType",
             "Notoriety" => "Notoriety",
-            "GameObject" or "PyGameObject" => "PyGameObject",
-            "PyProfile" => "PyProfile",
-            "PyControlDropDown" => "PyControlDropDown",
-            "PyBaseControl" => "PyBaseControl",
-            "PyBaseGump" => "PyBaseGump",
-            "PyScrollArea" => "PyScrollArea",
-            "PythonList" => "List",
-            "PyPlayer" => "PyPlayer",
-            "PyGumps" => "PyGumps",
-            "PyLabel" => "PyLabel",
-            "PyRadioButton" => "PyRadioButton",
-            "PyNiceButton" => "PyNiceButton",
-            "PyButton" => "PyButton",
-            "PyResizableStaticPic" => "PyResizableStaticPic",
-            "PyAlphaBlendControl" => "PyAlphaBlendControl",
-            "PyTTFTextInputField" => "PyTTFTextInputField",
-            "PyTextBox" => "PyTextBox",
-            "PySimpleProgressBar" => "PySimpleProgressBar",
-            "PyGumpPic" => "PyGumpPic",
-            "PyNineSliceGump" => "PyNineSliceGump",
-            "PyCheckbox" => "PyCheckbox",
-            "PyEvents" => "PyEvents",
+            "GameObject" or "ApiGameObject" => "ApiGameObject",
+            "ApiUserProfile" => "ApiUserProfile",
+            "ApiUiControlDropDown" => "ApiUiControlDropDown",
+            "ApiUiBaseControl" => "ApiUiBaseControl",
+            "ApiUiBaseGump" => "ApiUiBaseGump",
+            "ApiUiScrollArea" => "ApiUiScrollArea",
+            "IList" or "List" => "list",
+            "ApiPlayer" => "ApiPlayer",
+            "ApiUiGump" => "ApiUiGump",
+            "ApiUiLabel" => "ApiUiLabel",
+            "ApiUiRadioButton" => "ApiUiRadioButton",
+            "ApiUiNiceButton" => "ApiUiNiceButton",
+            "ApiUiButton" => "ApiUiButton",
+            "ApiUiResizableStaticPic" => "ApiUiResizableStaticPic",
+            "ApiUiAlphaBlendControl" => "ApiUiAlphaBlendControl",
+            "ApiUiTtfTextInputField" => "ApiUiTtfTextInputField",
+            "ApiUiTextBox" => "ApiUiTextBox",
+            "ApiUiSimpleProgressBar" => "ApiUiSimpleProgressBar",
+            "ApiUiGumpPic" => "ApiUiGumpPic",
+            "ApiUiNineSliceGump" => "ApiUiNineSliceGump",
+            "ApiUiCheckbox" => "ApiUiCheckbox",
+            "EventSinkApi" => "EventSinkApiDeclaration",
+            "ApiPoint3D" => "ApiPoint3D",
+            "ApiSoundEntry" => "ApiSoundEntry",
+            "ApiJournalEntry" => "ApiJournalEntry",
+            "ApiEntity" => "ApiEntity",
+            "ApiStatic" => "ApiStatic",
+            "ApiItemData" => "ApiItemData",
+            "ApiUiMenuItem" => "ApiUiMenuItem",
+            "ApiMulti" => "ApiMulti",
+            "PersistentVar" => "PersistentVar",
+            "LegionApiConfig" => "LegionApiConfig",
+            "ApiUiTiledGumpPic" => "ApiUiTiledGumpPic",
 
             // Fallback for unknown types
             _ => noMatch
@@ -636,9 +647,11 @@ class Program
         if (File.Exists(pyFilePath))
             File.Delete(pyFilePath);
 
-        foreach (string? filePath in args.Skip(1))
+        var files = args.Skip(1).ToList();
+
+        foreach (string? filePath in files)
         {
-            //Console.WriteLine("Processing file: " + filePath);
+            Console.WriteLine("Processing file: " + filePath);
 
             if (string.IsNullOrEmpty(filePath))
                 continue;

@@ -1,0 +1,133 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Collections.Generic;
+using ClassicUO.LegionScripting;
+
+#pragma warning disable CS0169 // Field is never used
+
+{{#each Classes}}
+
+namespace {{{Namespace}}}
+{
+    public class {{{Name}}} : IDisposable
+    {
+        private readonly ReaderWriterLockSlim _callbackRwLock = new();
+        private readonly Lock _disposalLock = new();
+        private readonly Dictionary<string, HashSet<object>> _callbacks = new();
+        private volatile bool _disposed;
+
+        private readonly LegionAPI _api;
+    
+        public {{{Name}}}(LegionAPI api)
+        {
+            ArgumentNullException.ThrowIfNull(api);
+            _api = api;
+        }
+    
+    {{#each Events}}
+        public void On{{TrimOnPrefix Name}}(object callback)
+        {
+            if (_disposed)
+                return;
+
+            _callbackRwLock.EnterWriteLock();
+            try
+            {
+                if (_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+                    callbacks.Add(callback);
+                else
+                {
+                    _callbacks.Add("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", [callback]);        
+                    {{{../GeneratedFromClassName}}}.{{{Name}}} += Dispatch{{TrimOnPrefix Name}}Callbacks;
+                }
+            }
+            finally
+            {
+                _callbackRwLock.ExitWriteLock();
+            }
+        }
+
+        public void UnregisterOn{{TrimOnPrefix Name}}(object callback)
+        {
+            if (_disposed)
+                return;
+
+            _callbackRwLock.EnterUpgradeableReadLock();
+            try
+            {
+                if (!_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+                    return;
+
+                _callbackRwLock.EnterWriteLock();
+                try
+                {
+                    if (callbacks.Remove(callback) && callbacks.Count <= 0)
+                    {
+                        _callbacks.Remove("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}");
+                        {{{../GeneratedFromClassName}}}.{{{Name}}} -= Dispatch{{TrimOnPrefix Name}}Callbacks;
+                    }
+                }
+                finally
+                {
+                    _callbackRwLock.ExitWriteLock();
+                }
+            }
+            finally
+            {
+                _callbackRwLock.ExitUpgradeableReadLock();
+            }
+        }
+
+        private void Dispatch{{TrimOnPrefix Name}}Callbacks(object sender, {{{EventArgsType}}} e)
+        {
+            if (_disposed)
+                return;
+
+            object[] callbacksArray;
+            _callbackRwLock.EnterReadLock();
+            try
+            {
+                if (!_callbacks.TryGetValue("{{{../Namespace}}}.{{{../Name}}}.{{{Name}}}", out HashSet<object> callbacks))
+                    return;
+
+                callbacksArray = callbacks.ToArray();
+            }
+            finally
+            {
+                _callbackRwLock.ExitReadLock();
+            }
+
+            if (callbacksArray.Length <= 0)
+                return;
+
+            _api?.ScheduleCallbacks(callbacksArray, e);
+        }
+
+    {{/each}}
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        public void Dispose(bool disposing)
+        {
+            lock(_disposalLock)
+            {
+                if (_disposed || !disposing)
+                    return;
+    
+            {{#each Events}}
+                {{{../GeneratedFromClassName}}}.{{{Name}}} -= Dispatch{{TrimOnPrefix Name}}Callbacks;
+            {{/each}}
+
+                _callbackRwLock.Dispose();
+                _disposed = true;
+                GC.SuppressFinalize(this);
+            }
+        }
+    }
+}
+{{/each}}
+#pragma warning restore CS0169 // Field is never used

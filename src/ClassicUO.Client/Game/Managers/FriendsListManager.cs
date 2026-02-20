@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
-using IronPython.Runtime;
 
 namespace ClassicUO.Game.Managers
 {
@@ -170,17 +170,12 @@ namespace ClassicUO.Game.Managers
             return _friends.Find(f => string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        public PythonList GetAllFriends()
+        public IList<uint> GetAllFriends()
         {
             if (!_loaded)
                 Load();
 
-            PythonList friendList = new();
-
-            foreach (FriendEntry friend in _friends)
-                friendList.Add(friend.Serial);
-
-            return friendList;
+            return new List<uint>(_friends.Select(friend => friend.Serial));
         }
     }
 

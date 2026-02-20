@@ -712,6 +712,12 @@ internal static class GameActions
         }
     }
 
+    /// <summary>
+    /// Prints a warning message to the client/user, bypassing normal event chain processing
+    /// </summary>
+    /// <param name="world">The 'world' instance to use</param>
+    /// <param name="message">The message to display</param>
+    internal static void PrintUserWarn(World world, string message) => Print(world, message, Constants.HUE_WARN);
 
     internal static void Print(string message, ushort hue = 946, MessageType type = MessageType.Regular, byte font = 3, bool unicode = true) => Print(World.Instance, message, hue, type, font, unicode);
 
@@ -746,7 +752,7 @@ internal static class GameActions
         );
     }
 
-    internal static void Print
+    private static void Print
     (
         World world,
         Entity entity,
