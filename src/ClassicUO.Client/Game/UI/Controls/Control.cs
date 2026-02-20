@@ -22,10 +22,9 @@ namespace ClassicUO.Game.UI.Controls
     private bool _acceptKeyboardInput;
     private Rectangle _bounds;
     private Point _offset;
-    private IGui _parent;
     private float alpha = 1.0f;
 
-    protected Control(Control parent = null)
+    protected Control(IGui parent = null)
     {
         Parent = parent;
         Children = new();
@@ -143,20 +142,20 @@ namespace ClassicUO.Game.UI.Controls
 
     public IGui Parent
     {
-        get => _parent;
+        get;
         set
         {
             if (value == null)
             {
-                _parent?.Children.Remove(this);
+                field?.Children.Remove(this);
             }
             else
             {
-                _parent?.Children.Remove(this);
+                field?.Children.Remove(this);
                 value.Children.Add(this);
             }
 
-            _parent = value;
+            field = value;
         }
     }
 
@@ -204,7 +203,7 @@ namespace ClassicUO.Game.UI.Controls
                 return false;
             }
 
-            foreach (Control c in Children)
+            foreach (IGui c in Children)
             {
                 if (c.HandlesKeyboardFocus)
                 {
@@ -240,91 +239,6 @@ namespace ClassicUO.Game.UI.Controls
 
     public bool AllowedToDraw { get; set; }
 
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="w"></param>
-    /// <param name="h"></param>
-    public Control SetRect(int x, int y, int w, int h)
-    {
-        X = x;
-        Y = y;
-        SetWidth(w);
-        SetHeight(h);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <param name="width"></param>
-    public Control SetWidth(int width)
-    {
-        Width = width < 0 ? 0 : width;
-        return this;
-    }
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <param name="height"></param>
-    public Control SetHeight(int height)
-    {
-        Height = height < 0 ? 0 : height;
-
-        return this;
-    }
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <param name="x"></param>
-    public Control SetX(int x)
-    {
-        X = x;
-
-        return this;
-    }
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <param name="y"></param>
-    public Control SetY(int y)
-    {
-        Y = y;
-
-        return this;
-    }
-
-    /// <summary>
-    /// Use int python API
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    public Control SetPos(int x, int y)
-    {
-        X = x;
-        Y = y;
-
-        return this;
-    }
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <returns>int</returns>
-    public int GetX() => X;
-
-    /// <summary>
-    /// Used in python API
-    /// </summary>
-    /// <returns>int</returns>
-    public int GetY() => Y;
-
     public void UpdateOffset(int x, int y)
     {
         if (_offset.X != x || _offset.Y != y)
@@ -332,7 +246,7 @@ namespace ClassicUO.Game.UI.Controls
             _offset.X = x;
             _offset.Y = y;
 
-            foreach (Control c in Children)
+            foreach (IGui c in Children)
             {
                 c.UpdateOffset(x, y);
             }
@@ -454,7 +368,7 @@ namespace ClassicUO.Game.UI.Controls
     /// </summary>
     /// <param name="scale"></param>
     /// <returns>This control</returns>
-    public virtual Control ScaleWidthAndHeight(double scale)
+    public virtual IGui ScaleWidthAndHeight(double scale)
     {
         if (scale != 1f)
         {
@@ -470,7 +384,7 @@ namespace ClassicUO.Game.UI.Controls
     /// </summary>
     /// <param name="scale"></param>
     /// <returns>This control</returns>
-    public virtual Control ScaleXAndY(double scale)
+    public virtual IGui ScaleXAndY(double scale)
     {
         if (scale != 1f)
         {
@@ -486,7 +400,7 @@ namespace ClassicUO.Game.UI.Controls
     /// </summary>
     /// <param name="scale"></param>
     /// <returns>This control</returns>
-    public virtual Control SetInternalScale(double scale)
+    public virtual IGui SetInternalScale(double scale)
     {
         InternalScale = scale;
         return this;
@@ -520,20 +434,6 @@ namespace ClassicUO.Game.UI.Controls
         SetInternalScale(scale);
 
         return this;
-    }
-
-    /// <summary>
-    /// Apply scale to all children recursively
-    /// </summary>
-    /// <param name="scale">The scale factor to apply</param>
-    /// <param name="scalePosition">Whether to scale X/Y position (default: true)</param>
-    /// <param name="scaleSize">Whether to scale Width/Height (default: true)</param>
-    protected void ScaleChildren(double scale, bool scalePosition = true, bool scaleSize = true)
-    {
-        foreach (Control child in Children)
-        {
-            child.ApplyScale(scale, scalePosition, scaleSize);
-        }
     }
 
     public void ForceSizeUpdate(bool onlyIfLarger = true)
@@ -707,7 +607,7 @@ namespace ClassicUO.Game.UI.Controls
     /// <param name="newValue"></param>
     public virtual void AlphaChanged(float oldValue, float newValue) { }
 
-    public Control GetFirstControlAcceptKeyboardInput()
+    public IGui GetFirstControlAcceptKeyboardInput()
     {
         if (_acceptKeyboardInput)
         {
@@ -719,9 +619,9 @@ namespace ClassicUO.Game.UI.Controls
             return null;
         }
 
-        foreach (Control c in Children.ToArray())
+        foreach (IGui c in Children.ToArray())
         {
-            Control a = c.GetFirstControlAcceptKeyboardInput();
+            IGui a = c.GetFirstControlAcceptKeyboardInput();
 
             if (a != null)
             {
@@ -741,13 +641,13 @@ namespace ClassicUO.Game.UI.Controls
         return c;
     }
 
-    public void Insert(int index, Control c, int page = 0)
+    public void Insert(int index, IGui c, int page = 0)
     {
         c.Page = 0;
 
-        c._parent?.Children.Remove(c);
+        c.Parent?.Children.Remove(c);
 
-        c._parent = this;
+        c.Parent = this;
 
         Children.Insert(index, c);
 
@@ -774,9 +674,9 @@ namespace ClassicUO.Game.UI.Controls
         }
     }
 
-    public T[] GetControls<T>() where T : Control => Children.OfType<T>().Where(s => !s.IsDisposed).ToArray();
+    public T[] GetControls<T>() where T : IGui => Children.OfType<T>().Where(s => !s.IsDisposed).ToArray();
 
-    public IEnumerable<T> FindControls<T>() where T : Control => Children.OfType<T>().Where(s => !s.IsDisposed);
+    public IEnumerable<T> FindControls<T>() where T : IGui => Children.OfType<T>().Where(s => !s.IsDisposed);
 
 
     public void InvokeMouseDown(Point position, MouseButtonType button)
@@ -1009,7 +909,7 @@ namespace ClassicUO.Game.UI.Controls
         }
     }
 
-    public void KeyboardTabToNextFocus(Control c)
+    public void KeyboardTabToNextFocus(IGui c)
     {
         int startIndex = Children.IndexOf(c);
 

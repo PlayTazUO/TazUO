@@ -251,13 +251,13 @@ namespace ClassicUO.Game.Managers
 
             Register("setinscreen", (s) =>
             {
-                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
+                for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    Gump c = last.Value;
+                    IGui c = last.Value;
 
-                    if (!c.IsDisposed)
+                    if (!c.IsDisposed && c is Gump g)
                     {
-                        c.SetInScreen();
+                        g.SetInScreen();
                     }
                 }
             });
@@ -288,10 +288,10 @@ namespace ClassicUO.Game.Managers
 
             Register("test", (s) =>
             {
-                ImGuiManager.AddWindow(new TestWindow());
+                //ImGuiManager.AddWindow(new TestWindow());
 
                 var g = new Gump(_world, 0, 0);
-                g.Add(new MyraControl());
+                g.Add(new UI.MyraWindows.TestWindow());
                 UIManager.Add(g);
             });
 

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -11,6 +12,7 @@ public interface IGui
 {
     bool AcceptKeyboardInput { get; set; }
     bool AcceptMouseInput { get; set; }
+    bool HandlesKeyboardFocus { get; set; }
     bool IsFocused { get; set; }
     bool IsDisposed { get; }
     bool IsVisible { get; set; }
@@ -20,6 +22,7 @@ public interface IGui
     ref Rectangle Bounds { get; }
     object Tooltip { get; }
     bool HasTooltip { get; }
+    bool CanMove { get; set; }
     /// <summary>
     /// Is this control something the user can edit like an input field? (Affects mouse cursor graphic)
     /// </summary>
@@ -28,6 +31,8 @@ public interface IGui
     uint LocalSerial { get; set; }
     ref int X { get; }
     ref int Y { get; }
+    int ScreenCoordinateX { get; }
+    int ScreenCoordinateY { get; }
     ref int Height { get; }
     ref int Width { get; }
     int ParentX { get; }
@@ -79,8 +84,8 @@ public interface IGui
     void ChangePage(int pageIndex);
     void CloseWithRightClick();
     bool Contains(int x, int y);
-    IEnumerable<T> FindControls<T>() where T : Control;
-    void KeyboardTabToNextFocus(Control c);
+    IEnumerable<T> FindControls<T>() where T : IGui;
+    void KeyboardTabToNextFocus(IGui c);
     void UpdateOffset(int x, int y);
     T Add<T>(T c, int page = 0) where T : IGui;
     void Remove(IGui c);
@@ -90,4 +95,8 @@ public interface IGui
     void OnPageChanged();
     void ForceSizeUpdate(bool onlyIfLarger = true);
     IGui ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false);
+    IGui SetInternalScale(double scale);
+    IGui GetFirstControlAcceptKeyboardInput();
+    void Insert(int index, IGui c, int page = 0);
+    void BringOnTop();
 }

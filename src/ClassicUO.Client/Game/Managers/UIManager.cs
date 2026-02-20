@@ -56,7 +56,7 @@ namespace ClassicUO.Game.Managers
 
         public static AnchorManager AnchorManager { get; } = new();
 
-        public static LinkedList<Gump> Gumps { get; } = new();
+        public static LinkedList<IGui> Gumps { get; } = new();
 
         public static IGui MouseOverControl { get; private set; }
 
@@ -146,7 +146,7 @@ namespace ClassicUO.Game.Managers
 
         public static bool IsModalControlOpen()
         {
-            for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+            for (LinkedListNode<IGui> last = Gumps.Last; last != null; last = last.Previous)
             {
                 if (last.Value.IsModal)
                 {
@@ -309,11 +309,11 @@ namespace ClassicUO.Game.Managers
             Add(ContextMenu);
         }
 
-        public static T GetGump<T>(uint? serial = null) where T : Control
+        public static T GetGump<T>(uint? serial = null) where T : Gump
         {
             // if (serial.HasValue)
             // {
-            //     for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+            //     for (LinkedListNode<IGui> last = Gumps.Last; last != null; last = last.Previous)
             //     {
             //         Control c = last.Value;
             //
@@ -325,7 +325,7 @@ namespace ClassicUO.Game.Managers
             // }
             // else
             // {
-            //     for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
+            //     for (LinkedListNode<IGui> first = Gumps.First; first != null; first = first.Next)
             //     {
             //         Control c = first.Value;
             //
@@ -355,13 +355,13 @@ namespace ClassicUO.Game.Managers
 
         public static Gump GetGump(uint serial)
         {
-            for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+            for (LinkedListNode<IGui> last = Gumps.Last; last != null; last = last.Previous)
             {
-                Control c = last.Value;
+                IGui c = last.Value;
 
-                if (!c.IsDisposed && c.LocalSerial == serial)
+                if (!c.IsDisposed && c.LocalSerial == serial && c is Gump gump)
                 {
-                    return c as Gump;
+                    return gump;
                 }
             }
 
@@ -370,13 +370,13 @@ namespace ClassicUO.Game.Managers
 
         public static Gump GetGumpServer(uint serial)
         {
-            for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+            for (LinkedListNode<IGui> last = Gumps.Last; last != null; last = last.Previous)
             {
-                Gump c = last.Value;
+                IGui c = last.Value;
 
-                if (!c.IsDisposed && c.ServerSerial == serial)
+                if (!c.IsDisposed && c.ServerSerial == serial && c is Gump g)
                 {
-                    return c;
+                    return g;
                 }
             }
 
@@ -385,7 +385,7 @@ namespace ClassicUO.Game.Managers
 
         public static TradingGump GetTradingGump(uint serial)
         {
-            for (LinkedListNode<Gump> g = Gumps.Last; g != null; g = g.Previous)
+            for (LinkedListNode<IGui> g = Gumps.Last; g != null; g = g.Previous)
             {
                 if (g.Value != null && !g.Value.IsDisposed && g.Value is TradingGump trading && (trading.ID1 == serial || trading.ID2 == serial || trading.LocalSerial == serial))
                 {
@@ -400,13 +400,13 @@ namespace ClassicUO.Game.Managers
         {
             SortControlsByInfo();
 
-            LinkedListNode<Gump> first = Gumps.First;
+            LinkedListNode<IGui> first = Gumps.First;
 
             while (first != null)
             {
-                LinkedListNode<Gump> next = first.Next;
+                LinkedListNode<IGui> next = first.Next;
 
-                Gump g = first.Value;
+                IGui g = first.Value;
                 if (updateTimerEnabled)
                 {
                     updateTimer.Restart();
@@ -443,13 +443,13 @@ namespace ClassicUO.Game.Managers
         {
             SortControlsByInfo();
 
-            LinkedListNode<Gump> first = Gumps.First;
+            LinkedListNode<IGui> first = Gumps.First;
 
             while (first != null)
             {
-                LinkedListNode<Gump> next = first.Next;
+                LinkedListNode<IGui> next = first.Next;
 
-                Gump g = first.Value;
+                IGui g = first.Value;
 
                 g.PreDraw();
 
@@ -468,9 +468,9 @@ namespace ClassicUO.Game.Managers
             SortControlsByInfo();
             batcher.Begin();
 
-            for (LinkedListNode<Gump> last = Gumps.Last; last != null; last = last.Previous)
+            for (LinkedListNode<IGui> last = Gumps.Last; last != null; last = last.Previous)
             {
-                Gump g = last.Value;
+                IGui g = last.Value;
                 g.Draw(batcher, g.X, g.Y);
             }
 
@@ -498,7 +498,7 @@ namespace ClassicUO.Game.Managers
 
         public static void Clear()
         {
-            foreach (Gump s in Gumps)
+            foreach (IGui s in Gumps)
             {
                 s.Dispose();
             }
@@ -606,9 +606,9 @@ namespace ClassicUO.Game.Managers
                 }
                 else
                 {
-                    for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
+                    for (LinkedListNode<IGui> first = Gumps.First; first != null; first = first.Next)
                     {
-                        Control c = first.Value;
+                        IGui c = first.Value;
 
                         if (!c.IsDisposed && c.IsVisible && c.IsEnabled)
                         {
@@ -683,7 +683,7 @@ namespace ClassicUO.Game.Managers
 
             IsModalOpen = IsModalControlOpen();
 
-            for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
+            for (LinkedListNode<IGui> first = Gumps.First; first != null; first = first.Next)
             {
                 IGui c = first.Value;
 
@@ -713,7 +713,7 @@ namespace ClassicUO.Game.Managers
 
             if (gump == null) return;
 
-            for (LinkedListNode<Gump> start = Gumps.First; start != null; start = start.Next)
+            for (LinkedListNode<IGui> start = Gumps.First; start != null; start = start.Next)
             {
                 if (start.Value == gump)
                 {
@@ -742,7 +742,7 @@ namespace ClassicUO.Game.Managers
         {
             if (_needSort)
             {
-                for (LinkedListNode<Gump> el = Gumps.First; el != null; el = el.Next)
+                for (LinkedListNode<IGui> el = Gumps.First; el != null; el = el.Next)
                 {
                     Gump c = el.Value;
 
@@ -753,7 +753,7 @@ namespace ClassicUO.Game.Managers
 
                     if (c.LayerOrder == UILayer.Under)
                     {
-                        for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
+                        for (LinkedListNode<IGui> first = Gumps.First; first != null; first = first.Next)
                         {
                             if (first.Value == c)
                             {
@@ -767,7 +767,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else if (c.LayerOrder == UILayer.Over)
                     {
-                        for (LinkedListNode<Gump> first = Gumps.First; first != null; first = first.Next)
+                        for (LinkedListNode<IGui> first = Gumps.First; first != null; first = first.Next)
                         {
                             if (first.Value == c)
                             {
