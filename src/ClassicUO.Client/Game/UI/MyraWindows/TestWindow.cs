@@ -1,5 +1,6 @@
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Input;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.Brushes;
@@ -16,12 +17,11 @@ public class TestWindow : MyraControl
         _rootWindow.Left = 300;
         _rootWindow.Top = 300;
 
-        var grid = new Grid
+        var grid = new MyraGrid
         {
             RowSpacing = 8,
             ColumnSpacing = 8
         };
-        grid.ApplyWidgetStyle(MyraStyle.StandardStyle);
 
         grid.ColumnsProportions.Add(new Proportion(ProportionType.Pixels, 150));
         grid.ColumnsProportions.Add(new Proportion(ProportionType.Auto));
@@ -33,6 +33,7 @@ public class TestWindow : MyraControl
             Id = "label",
             Text = "Hello, World!"
         };
+        
         grid.Widgets.Add(helloWorld);
 
 // ComboBox

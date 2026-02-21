@@ -82,12 +82,12 @@ namespace ClassicUO.Assets
 
         private void LoadEmbeddedFonts()
         {
-            var settings = new FontSystemSettings
-            {
-                FontResolutionFactor = 2,
-                KernelWidth = 2,
-                KernelHeight = 2
-            };
+            var settings = new FontSystemSettings();
+            // {
+            //     FontResolutionFactor = 2,
+            //     KernelWidth = 2,
+            //     KernelHeight = 2
+            // };
 
             System.Reflection.Assembly assembly = this.GetType().Assembly;
             string fontAssetFolder = assembly.GetName().Name + ".fonts";

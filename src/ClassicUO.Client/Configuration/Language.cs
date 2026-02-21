@@ -12,12 +12,12 @@ namespace ClassicUO.Configuration
 
     public class Language
     {
-        public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new ModernOptionsGumpLanguage();
-        public ErrorsLanguage ErrorsLanguage { get; set; } = new ErrorsLanguage();
-        public MapLanguage MapLanguage { get; set; } = new MapLanguage();
-        public TopBarGumpLanguage TopBarGump { get; set; } = new TopBarGumpLanguage();
-
+        public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
+        public ErrorsLanguage ErrorsLanguage { get; set; } = new();
+        public MapLanguage MapLanguage { get; set; } = new();
+        public TopBarGumpLanguage TopBarGump { get; set; } = new();
         public ScriptingLanguage Scripting { get; set; } = new();
+        public AssistantLanguage Assistant { get; set; } = new();
 
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
@@ -26,7 +26,7 @@ namespace ClassicUO.Configuration
         public string CommandGump { get; set; } = "Available Client Commands";
 
         [JsonIgnore]
-        public static Language Instance { get; private set; } = new Language();
+        public static Language Instance { get; private set; } = new();
 
         public static void Load()
         {
@@ -88,20 +88,20 @@ namespace ClassicUO.Configuration
         public string ButtonLighting { get; set; } = "Lighting";
         public string ButtonShadows { get; set; } = "Shadows";
 
-        public General GetGeneral { get; set; } = new General();
-        public Video GetVideo { get; set; } = new Video();
-        public Sound GetSound { get; set; } = new Sound();
-        public Macros GetMacros { get; set; } = new Macros();
-        public ToolTips GetToolTips { get; set; } = new ToolTips();
-        public Speech GetSpeech { get; set; } = new Speech();
-        public CombatSpells GetCombatSpells { get; set; } = new CombatSpells();
-        public Counters GetCounters { get; set; } = new Counters();
-        public InfoBars GetInfoBars { get; set; } = new InfoBars();
-        public Containers GetContainers { get; set; } = new Containers();
-        public Experimental GetExperimental { get; set; } = new Experimental();
-        public NamePlates GetNamePlates { get; set; } = new NamePlates();
-        public Cooldowns GetCooldowns { get; set; } = new Cooldowns();
-        public TazUO GetTazUO { get; set; } = new TazUO();
+        public General GetGeneral { get; set; } = new();
+        public Video GetVideo { get; set; } = new();
+        public Sound GetSound { get; set; } = new();
+        public Macros GetMacros { get; set; } = new();
+        public ToolTips GetToolTips { get; set; } = new();
+        public Speech GetSpeech { get; set; } = new();
+        public CombatSpells GetCombatSpells { get; set; } = new();
+        public Counters GetCounters { get; set; } = new();
+        public InfoBars GetInfoBars { get; set; } = new();
+        public Containers GetContainers { get; set; } = new();
+        public Experimental GetExperimental { get; set; } = new();
+        public NamePlates GetNamePlates { get; set; } = new();
+        public Cooldowns GetCooldowns { get; set; } = new();
+        public TazUO GetTazUO { get; set; } = new();
 
         public class General
         {
@@ -649,5 +649,18 @@ namespace ClassicUO.Configuration
     public class TopBarGumpLanguage
     {
         public string CommandsEntry { get; set; } = "Client Commands";
+    }
+
+    public class AssistantLanguage
+    {
+        public string VisualConfig { get; set; } = "Visual Config";
+        public string DelayConfig { get; set; } = "Delay Config";
+        public string CameraSmoothing { get; set; } = "Camera smoothing";
+        public string CameraSmoothingTooltip { get; set; } = "Smooth camera following when moving. 0 = instant (classic), 1 = very smooth/floaty.";
+        public string HighlightGameObjects { get; set; } = "Highlight game objects";
+        public string ShowNameplates { get; set; } = "Show nameplates";
+        public string PetScaling { get; set; } = "Pet scaling";
+        public string PetScalingTooltip { get; set; } = "Toggle the display of names above characters and NPCs in the game world.";
+        public string OutlineMobiles { get; set; } = "Outline mobiles";
     }
 }

@@ -249,5 +249,7 @@ namespace ClassicUO.Utility
             /// </summary>
             public int NotZero => value == 0 ? 1 : value;
         }
+
+        public static int ToInt<T>(this T enumValue) where T : struct, Enum => Unsafe.As<T, int>(ref enumValue);
     }
 }

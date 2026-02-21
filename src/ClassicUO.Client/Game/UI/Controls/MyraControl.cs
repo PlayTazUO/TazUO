@@ -42,7 +42,12 @@ public class MyraControl : IGui
         _disposeRequested = true;
     }
 
-    private void RootWindowOnSizeChanged(object sender, EventArgs e)
+    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents();
+
+    /// <summary>
+    /// Update this <see cref="Bounds"/> to fit to the content of the window.
+    /// </summary>
+    private void UpdateBoundsToContents()
     {
         _rootWindow.UpdateArrange();
         Point mSize = _rootWindow.Measure(new Point(2000, 2000));
@@ -100,8 +105,10 @@ public class MyraControl : IGui
     public bool IsEditable { get; set; }
     public uint ServerSerial { get; set; }
     public uint LocalSerial { get; set; }
-    public ref int X => ref Bounds.Y;
-    public ref int Y => ref Bounds.X;
+    /// <summary> Setting this does not affect position of this window, use SetPosition() instead </summary>
+    public ref int X => ref Bounds.X;
+    /// <summary> Setting this does not affect position of this window, use SetPosition() instead </summary>
+    public ref int Y => ref Bounds.Y;
     public int ScreenCoordinateX => X;
     public int ScreenCoordinateY => Y;
     public ref int Height => ref Bounds.Height;
@@ -126,7 +133,7 @@ public class MyraControl : IGui
     protected void SetRootContent(Widget widget)
     {
         _rootWindow.Content = widget;
-        RootWindowOnSizeChanged(null, null);
+        UpdateBoundsToContents();
     }
 
     public void SetKeyboardFocus()
@@ -135,6 +142,24 @@ public class MyraControl : IGui
         {
             UIManager.KeyboardFocusControl = this;
         }
+    }
+
+    public MyraControl CenterInViewPort()
+    {
+        Camera camera = Client.Game.Scene.Camera;
+        X = camera.Bounds.X + (camera.Bounds.Width - Width) / 2;
+        Y = camera.Bounds.Y + (camera.Bounds.Height - Height) / 2;
+
+        SetPosition(X, Y);
+
+        return this;
+    }
+
+    public void SetPosition(int x, int y)
+    {
+        _rootWindow.Left = x;
+        _rootWindow.Top = y;
+        UpdateBoundsToContents();
     }
 
     public virtual void Update()
@@ -333,7 +358,7 @@ public class MyraControl : IGui
     {
         if (_desktop == null) return;
 
-        RootWindowOnSizeChanged(null, null);
+        UpdateBoundsToContents();
     }
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>

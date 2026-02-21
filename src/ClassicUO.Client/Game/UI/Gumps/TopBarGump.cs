@@ -147,7 +147,13 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 1,
                 FontCenter = true
             }, 1);
-            assistant.MouseUp += (s, e) => { AssistantWindow.Show(); };
+            assistant.MouseUp += (s, e) =>
+            {
+                AssistantWindow.Show();
+                #if DEBUG
+                UIManager.Add(new MyraWindows.AssistantWindow());
+                #endif
+            };
             startX += largeWidth + 1;
 
             RighClickableButton lscript;

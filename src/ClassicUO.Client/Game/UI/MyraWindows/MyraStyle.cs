@@ -1,3 +1,4 @@
+using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -15,10 +16,19 @@ public static class MyraStyle
         style.Border = new SolidBrush(new Color(0.667f, 0.412f, 0.051f, 1f));
         style.Padding = new Thickness(0);
         style.BorderThickness = new Thickness(4);
+
+        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
     }
 
-    public static WidgetStyle StandardStyle = new WidgetStyle()
+    public static WidgetStyle GridStyle = new()
     {
-        Background = Stylesheet.Current.WindowStyle.Background,
+        Background = Stylesheet.Current.WindowStyle.Background
+    };
+
+    public static SliderStyle HorizontalSlider = new()
+    {
+        Background = new SolidBrush(new Color(50, 49, 56, 200)),
+        Width = 75,
+        Height = 20,
     };
 }
