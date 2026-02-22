@@ -210,8 +210,8 @@ namespace ClassicUO.Game.Managers
         {
             Load();
             EventSink.OPLOnReceive += OnOPLReceived;
-            EventSink.OnItemCreated += OnItemCreatedOrUpdated;
-            EventSink.OnItemUpdated += OnItemCreatedOrUpdated;
+            EventSink.OnItemCreatedInternal += OnItemCreatedOrUpdated;
+            EventSink.OnItemUpdatedInternal += OnItemCreatedOrUpdated;
             EventSink.OnOpenContainer += OnOpenContainer;
             EventSink.OnPositionChanged += OnPositionChanged;
         }
@@ -219,8 +219,8 @@ namespace ClassicUO.Game.Managers
         public void OnSceneUnload()
         {
             EventSink.OPLOnReceive -= OnOPLReceived;
-            EventSink.OnItemCreated -= OnItemCreatedOrUpdated;
-            EventSink.OnItemUpdated -= OnItemCreatedOrUpdated;
+            EventSink.OnItemCreatedInternal -= OnItemCreatedOrUpdated;
+            EventSink.OnItemUpdatedInternal -= OnItemCreatedOrUpdated;
             EventSink.OnOpenContainer -= OnOpenContainer;
             EventSink.OnPositionChanged -= OnPositionChanged;
             Save();

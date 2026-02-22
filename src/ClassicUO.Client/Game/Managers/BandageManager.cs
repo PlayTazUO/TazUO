@@ -49,8 +49,8 @@ namespace ClassicUO.Game.Managers
 
         private BandageManager()
         {
-            EventSink.OnBuffAdded += OnBuffAdded;
-            EventSink.OnBuffRemoved += OnBuffRemoved;
+            EventSink.OnBuffAddedInternal += OnBuffAdded;
+            EventSink.OnBuffRemovedInternal += OnBuffRemoved;
         }
 
         public void SetPoisoned(uint serial, bool status)
@@ -343,8 +343,8 @@ namespace ClassicUO.Game.Managers
         {
             DestroyTimer();
             ClearAllPendingHeals();
-            EventSink.OnBuffAdded -= OnBuffAdded;
-            EventSink.OnBuffRemoved -= OnBuffRemoved;
+            EventSink.OnBuffAddedInternal -= OnBuffAdded;
+            EventSink.OnBuffRemovedInternal -= OnBuffRemoved;
             Instance = null;
         }
     }

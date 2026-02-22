@@ -14,23 +14,8 @@ description: EventSinkApiDeclaration class documentation
 ## Methods
 ### OnItemCreated
 `(callback)`
- Invoked when an item is added to the client. The event's 'sender' is the Item
-
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `callback` | `object` | ❌ No |  |
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### PyOnItemCreated
-`(callback)`
  Invoked when an item is added to the client.
- The event's 'sender' is the Item, the event's argument is the item's serial
+ The event's argument is the ApiItem.
 
 
 **Parameters:**
@@ -45,7 +30,8 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnItemUpdated
 `(callback)`
- Invoked when an item is already in the client but has been updated. The event's 'sender' is the Item
+ Invoked when an item is already in the client but has been updated.
+ The event's argument is the ApiItem.
 
 
 **Parameters:**
@@ -195,22 +181,8 @@ description: EventSinkApiDeclaration class documentation
 
 ### OnBuffAdded
 `(callback)`
- Invoked when a buff is "added" to a player
-
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `callback` | `object` | ❌ No |  |
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### PyOnBuffAdded
-`(callback)`
- Invoked when a buff is "added" to a player
+ Invoked when a buff is "added" to a player.
+ The event's argument is the ApiBuff.
 
 
 **Parameters:**
@@ -226,21 +198,7 @@ description: EventSinkApiDeclaration class documentation
 ### OnBuffRemoved
 `(callback)`
  Invoked when a buff is "removed" to a player (Called before removal)
-
-
-**Parameters:**
-
-| Name | Type | Optional | Description |
-| --- | --- | --- | --- |
-| `callback` | `object` | ❌ No |  |
-
-**Return Type:** `void` *(Does not return anything)*
-
----
-
-### PyOnBuffRemoved
-`(callback)`
- Invoked when a buff is "removed" to a player (Called before removal)
+ The event's argument is the ApiBuff.
 
 
 **Parameters:**

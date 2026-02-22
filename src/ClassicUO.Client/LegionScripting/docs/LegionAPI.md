@@ -903,7 +903,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  ```
 
 
-**Return Type:** `Buff[]`
+**Return Type:** `ApiBuff[]`
 
 ---
 

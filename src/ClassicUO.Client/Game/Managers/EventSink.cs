@@ -10,7 +10,7 @@ namespace ClassicUO.Game.Managers;
 public class EventSink
 {
     /// <summary>
-    ///     Invoked when the player is created
+    /// Invoked when the player is created
     /// </summary>
     public static event EventHandler<EventArgs> OnPlayerCreated;
 
@@ -19,31 +19,39 @@ public class EventSink
     /// <summary>
     /// Invoked when an item is added to the client. The event's 'sender' is the Item
     /// </summary>
-    [ApiEvent]
-    internal static event EventHandler<EventArgs> OnItemCreated;
+    internal static event EventHandler<EventArgs> OnItemCreatedInternal;
 
     /// <summary>
     /// Invoked when an item is added to the client.
-    /// The event's 'sender' is the Item, the event's argument is the item's serial
+    /// The event's argument is the ApiItem.
     /// </summary>
-    /// <remarks>Mostly synonymous with <see cref="OnItemCreated"/></remarks>
-    [Obsolete("Please use OnItemCreated instead. This event may be removed in future versions")]
     [ApiEvent]
-    internal static event EventHandler<uint> PyOnItemCreated;
+    internal static event EventHandler<ApiItem> OnItemCreated;
 
     internal static void InvokeOnItemCreated(Item sender)
     {
-        OnItemCreated?.Invoke(sender, EventArgs.Empty);
-        PyOnItemCreated?.Invoke(sender, sender.Serial);
+        OnItemCreatedInternal?.Invoke(sender, EventArgs.Empty);
+        OnItemCreated?.Invoke(sender, new ApiItem(sender));
     }
 
     /// <summary>
-    /// Invoked when an item is already in the client but has been updated. The event's 'sender' is the Item
+    /// Invoked when an item is already in the client but has been updated.
+    /// The event's 'sender' is the Item and event arguments are empty
+    /// </summary>
+    internal static event EventHandler<EventArgs> OnItemUpdatedInternal;
+
+    /// <summary>
+    /// Invoked when an item is already in the client but has been updated.
+    /// The event's argument is the ApiItem.
     /// </summary>
     [ApiEvent]
-    internal static event EventHandler<EventArgs> OnItemUpdated;
+    internal static event EventHandler<ApiItem> OnItemUpdated;
 
-    internal static void InvokeOnItemUpdated(Item sender) => OnItemUpdated?.Invoke(sender, EventArgs.Empty);
+    internal static void InvokeOnItemUpdated(Item sender)
+    {
+        OnItemUpdatedInternal?.Invoke(sender, EventArgs.Empty);
+        OnItemUpdated?.Invoke(sender, new ApiItem(sender));
+    }
 
     /// <summary>
     /// Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
@@ -119,39 +127,37 @@ public class EventSink
     /// <summary>
     /// Invoked when a buff is "added" to a player
     /// </summary>
-    [ApiEvent]
-    internal static event EventHandler<BuffEventArgs> OnBuffAdded;
+    internal static event EventHandler<BuffEventArgs> OnBuffAddedInternal;
 
     /// <summary>
-    /// Invoked when a buff is "added" to a player
+    /// Invoked when a buff is "added" to a player.
+    /// The event's argument is the ApiBuff.
     /// </summary>
-    /// <remarks>Mostly synonymous with <see cref="OnBuffAdded"/></remarks>
     [ApiEvent]
-    internal static event EventHandler<Buff> PyOnBuffAdded;
+    internal static event EventHandler<ApiBuff> OnBuffAdded;
 
     internal static void InvokeOnBuffAdded(object sender, BuffEventArgs e)
     {
-        OnBuffAdded?.Invoke(sender, e);
-        PyOnBuffAdded?.Invoke(sender, new Buff(e.Buff));
+        OnBuffAddedInternal?.Invoke(sender, e);
+        OnBuffAdded?.Invoke(sender, new ApiBuff(e.Buff));
     }
 
     /// <summary>
     /// Invoked when a buff is "removed" to a player (Called before removal)
     /// </summary>
-    [ApiEvent]
-    internal static event EventHandler<BuffEventArgs> OnBuffRemoved;
+    internal static event EventHandler<BuffEventArgs> OnBuffRemovedInternal;
 
     /// <summary>
     /// Invoked when a buff is "removed" to a player (Called before removal)
+    /// The event's argument is the ApiBuff.
     /// </summary>
-    /// <remarks>Mostly synonymous with <see cref="OnBuffRemoved"/></remarks>
     [ApiEvent]
-    internal static event EventHandler<Buff> PyOnBuffRemoved;
+    internal static event EventHandler<ApiBuff> OnBuffRemoved;
 
     internal static void InvokeOnBuffRemoved(object sender, BuffEventArgs e)
     {
-        OnBuffRemoved?.Invoke(sender, e);
-        PyOnBuffRemoved?.Invoke(sender, new Buff(e.Buff));
+        OnBuffRemovedInternal?.Invoke(sender, e);
+        OnBuffRemoved?.Invoke(sender, new ApiBuff(e.Buff));
     }
 
     /// <summary>

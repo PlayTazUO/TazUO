@@ -1,3 +1,11 @@
+class ApiBuff:
+    ""
+    Graphic: int = None
+    Text: str = None
+    Timer: int = None
+    Type = None
+    Title: str = None
+
 class ApiEntity(ApiGameObject):
     ""
     Name: str = None
@@ -1068,14 +1076,6 @@ class ApiUserProfile:
     MoveItemDelay: int = None
     AutoLootEnabled: bool = None
 
-class Buff:
-    ""
-    Graphic: int = None
-    Text: str = None
-    Timer: int = None
-    Type = None
-    Title: str = None
-
 Events: EventSinkApiDeclaration = None
 Config: LegionApiConfig = None
 JournalEntries = None
@@ -1560,7 +1560,7 @@ def BuffExists(buffName: "str") -> "bool":
     """
     pass
 
-def ActiveBuffs() -> "list[Buff]":
+def ActiveBuffs() -> "list[ApiBuff]":
     """
      Get a list of all buffs that are active.
      See [Buff](Buff.md) to see what attributes are available.
@@ -3103,22 +3103,16 @@ class EventSinkApiDeclaration:
 
     def OnItemCreated(self, callback: "Any") -> None:
         """
-         Invoked when an item is added to the client. The event's 'sender' is the Item
-        
-        """
-        pass
-
-    def PyOnItemCreated(self, callback: "Any") -> None:
-        """
          Invoked when an item is added to the client.
-         The event's 'sender' is the Item, the event's argument is the item's serial
+         The event's argument is the ApiItem.
         
         """
         pass
 
     def OnItemUpdated(self, callback: "Any") -> None:
         """
-         Invoked when an item is already in the client but has been updated. The event's 'sender' is the Item
+         Invoked when an item is already in the client but has been updated.
+         The event's argument is the ApiItem.
         
         """
         pass
@@ -3188,14 +3182,8 @@ class EventSinkApiDeclaration:
 
     def OnBuffAdded(self, callback: "Any") -> None:
         """
-         Invoked when a buff is "added" to a player
-        
-        """
-        pass
-
-    def PyOnBuffAdded(self, callback: "Any") -> None:
-        """
-         Invoked when a buff is "added" to a player
+         Invoked when a buff is "added" to a player.
+         The event's argument is the ApiBuff.
         
         """
         pass
@@ -3203,13 +3191,7 @@ class EventSinkApiDeclaration:
     def OnBuffRemoved(self, callback: "Any") -> None:
         """
          Invoked when a buff is "removed" to a player (Called before removal)
-        
-        """
-        pass
-
-    def PyOnBuffRemoved(self, callback: "Any") -> None:
-        """
-         Invoked when a buff is "removed" to a player (Called before removal)
+         The event's argument is the ApiBuff.
         
         """
         pass

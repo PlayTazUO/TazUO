@@ -1115,15 +1115,15 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <returns></returns>
-        public Buff[] ActiveBuffs() => MainThreadQueue.InvokeOnMainThread(() =>
+        public ApiBuff[] ActiveBuffs() => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if (World == null || World.Player == null) return new Buff[]{};
+            if (World == null || World.Player == null) return new ApiBuff[]{};
 
-            List<Buff> buffs = new();
+            List<ApiBuff> buffs = new();
 
             foreach (BuffIcon buff in World.Player.BuffIcons.Values)
             {
-                buffs.Add(new Buff(buff));
+                buffs.Add(new ApiBuff(buff));
             }
 
             return buffs.ToArray();

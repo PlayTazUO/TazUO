@@ -583,7 +583,23 @@ internal static class GameActions
         Socket.Send_AttackRequest(serial);
     }
 
-    internal static void QueueOpenCorpse(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.OpenCorpse);
+    internal static void QueueOpenCorpse(uint serial) =>
+        ObjectActionQueue.Instance.Enqueue(
+            new ObjectActionQueueItem(() =>
+            {
+                if (serial == 0)
+                    return;
+
+                Item item = World.Instance?.Items?.Get(serial);
+                if (item != null &&
+                    !item.IsDestroyed &&
+                    item.IsCorpse &&
+                    item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange
+                   )
+                    ObjectActionQueueItem.DoubleClick(serial).Action(); // Using the 'Action' here to remain DRY.
+            }),
+            ActionPriority.OpenCorpse
+        );
 
     internal static void DoubleClickQueued(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.UseItem);
 

@@ -1,6 +1,6 @@
 ---
-title: Buff
-description: Buff class documentation
+title: ApiBuff
+description: ApiBuff class documentation
 ---
 
 ## Properties

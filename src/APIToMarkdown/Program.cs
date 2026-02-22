@@ -591,7 +591,10 @@ public static class GenDoc
             "Item" or "ApiItem" => "ApiItem",
             "Mobile" or "ApiMobile" => "ApiMobile",
             "Skill" => "Skill",
-            "Buff" => "Buff",
+            "ApiBuff" => "ApiBuff",
+            // This type sits outside the ApiClasses namespace - we either have to duplicate it
+            // or update the type resolution logic.
+            // "BuffIconType" => "BuffIconType",
             "ScanType" => "ScanType",
             "Notoriety" => "Notoriety",
             "GameObject" or "ApiGameObject" => "ApiGameObject",
