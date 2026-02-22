@@ -31,4 +31,14 @@ public static class MyraStyle
         Width = 75,
         Height = 20,
     };
+
+    public static ButtonStyle ButtonStyle = GetButonStyle();
+    private static ButtonStyle GetButonStyle()
+    {
+        var s = Stylesheet.Current.ButtonStyle.Clone() as ButtonStyle;
+        s?.MinWidth = 1;
+        s?.MinHeight = 1;
+        s?.Padding = new Thickness(5);
+        return s;
+    }
 }

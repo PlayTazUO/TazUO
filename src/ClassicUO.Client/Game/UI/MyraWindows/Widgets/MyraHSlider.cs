@@ -7,7 +7,5 @@ public class MyraHSlider : HorizontalSlider
     public MyraHSlider()
     {
         ApplySliderStyle(MyraStyle.HorizontalSlider);
-
-
     }
 }

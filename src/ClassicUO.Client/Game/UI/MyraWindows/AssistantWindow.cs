@@ -6,6 +6,8 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
+using Button = Myra.Graphics2D.UI.Button;
+using Label = Myra.Graphics2D.UI.Label;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -13,6 +15,8 @@ public class AssistantWindow : MyraControl
 {
     public const int WIDTH = 550;
     private TabItem _selectedTab;
+    private float _gameScale = Client.Game.RenderScale;
+
 
     public AssistantWindow() : base("Legion Assistant")
     {
@@ -67,9 +71,7 @@ public class AssistantWindow : MyraControl
         row++;
 
         grid.AddWidget(new MyraLabel(lang.CameraSmoothing, MyraLabel.Style.P) { Tooltip = lang.CameraSmoothingTooltip }, row, Col.LeftLabel.ToInt());
-        var cameraSmoothing = new MyraHSlider { Minimum = 0, Maximum = 1, Value = profile.CameraSmoothingFactor };
-        cameraSmoothing.ValueChangedByUser += (_, _) => profile.CameraSmoothingFactor = Math.Clamp(cameraSmoothing.Value, 0f, 1f);
-        grid.AddWidget(cameraSmoothing, row, Col.LeftContent.ToInt());
+        grid.AddWidget(CreateSlider(0, 1, profile.CameraSmoothingFactor, v => profile.CameraSmoothingFactor = v), row, Col.LeftContent.ToInt());
 
         row++;
 
@@ -99,7 +101,43 @@ public class AssistantWindow : MyraControl
         grid.AddWidget(new MyraLabel(lang.OutlineMobiles, MyraLabel.Style.P), row, Col.LeftLabel.ToInt());
         grid.AddWidget(CreateCheckBox(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b), row, Col.LeftContent.ToInt());
 
+        row++;
+
+        grid.AddWidget(new MyraLabel(lang.MinGumpDragDist, MyraLabel.Style.P) { Tooltip = lang.MinGumpDragDistTooltip }, row, Col.LeftLabel.ToInt());
+        grid.AddWidget(CreateSlider(0, 20, profile.MinGumpMoveDistance, v => profile.MinGumpMoveDistance = (int)v), row, Col.LeftContent.ToInt());
+
+        row++;
+
+        grid.AddWidget(new MyraLabel(lang.GameScale, MyraLabel.Style.P) { Tooltip = lang.GameScaleTooltip }, row, Col.LeftLabel.ToInt());
+        grid.AddWidget(CreateSlider(Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE, Client.Game.RenderScale, v =>
+        {
+            _gameScale = Math.Clamp(v, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
+        }), row, Col.LeftContent.ToInt());
+
+        row++;
+        grid.AddWidget(new MyraButton("Apply scale", () =>
+        {
+            Client.Game.SetScale(_gameScale);
+            _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, _gameScale);
+        }) , row, Col.LeftContent.ToInt());
+
+        row++;
+        grid.AddWidget(new Myra.Graphics2D.UI.Button
+        {
+            Content = new Label
+            {
+                Text = "Show"
+            }
+        }, row, Col.LeftContent.ToInt());
+
         return grid;
+    }
+
+    private MyraHSlider CreateSlider(float min, float max, float value, Action<float> onChanged)
+    {
+        var slider = new MyraHSlider { Minimum = min, Maximum = max, Value = value };
+        slider.ValueChangedByUser += (_, _) => onChanged(Math.Clamp(slider.Value, min, max));
+        return slider;
     }
 
     private CheckButton CreateCheckBox(bool isChecked, Action<bool> onClick)

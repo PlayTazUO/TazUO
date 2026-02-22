@@ -662,5 +662,9 @@ namespace ClassicUO.Configuration
         public string PetScaling { get; set; } = "Pet scaling";
         public string PetScalingTooltip { get; set; } = "Toggle the display of names above characters and NPCs in the game world.";
         public string OutlineMobiles { get; set; } = "Outline mobiles";
+        public string MinGumpDragDist { get; set; } = "Min gump drag distance";
+        public string MinGumpDragDistTooltip { get; set; } = "How far you need to drag before a gump will move, this helps prevent accidentally dragging instead of clicking.";
+        public string GameScale { get; set; } = "Game scale";
+        public string GameScaleTooltip { get; set; } = "Adjust the scale of the entire game.";
     }
 }
