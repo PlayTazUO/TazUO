@@ -276,6 +276,9 @@ class ApiPoint3D:
     Y: int = None
     Z: int = None
 
+    def ToString(self) -> "str":
+        pass
+
 class ApiSoundEntry:
     ""
     ID: int = None
@@ -1087,7 +1090,7 @@ Player: ApiPlayer = None
 Bank: int = None
 Random = None
 LastTargetSerial: int = None
-LastTargetPos = None
+LastTargetPos: ApiPoint3D = None
 LastTargetGraphic: int = None
 Found: int = None
 Profile: ApiUserProfile = None

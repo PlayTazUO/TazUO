@@ -325,4 +325,41 @@ namespace ClassicUO.Game.Data
             { 0x4071, new (0x4071, Ability.ArmorIgnore, Ability.ParalyzingBlow) },
         };
     }
+
+    /// <summary>
+    /// Extension methods for <see cref="Ability"/> values.
+    /// </summary>
+    public static class AbilityExtensions
+    {
+        /// <summary>
+        ///     A bit flag that marks an ability as active
+        /// </summary>
+        public const byte ABILITY_ACTIVE_FLAG = 0x80;
+
+        /// <summary>
+        ///     A bit mask that negates the ability activation flag
+        /// </summary>
+        public const byte ABILITY_DEACTIVATE_MASK = 0x7F;
+
+        extension(Ability ability)
+        {
+            /// <summary>
+            ///     Checks whether the ability is active
+            /// </summary>
+            /// <returns>True if the ability is active, false otherwise</returns>
+            public bool IsActive() => ability != Ability.None && ((int)ability & ABILITY_ACTIVE_FLAG) != 0;
+
+            /// <summary>
+            ///     Gets the ability's 'clean' value, that is, without the activation flag
+            /// </summary>
+            /// <returns>The ability without the activation flags</returns>
+            public Ability CleanValue() => (Ability)((int)ability & ABILITY_DEACTIVATE_MASK);
+
+            /// <summary>
+            ///     Gets the ability's display name
+            /// </summary>
+            /// <returns>The ability's display name</returns>
+            public string GetName() => Enum.GetName(ability.CleanValue());
+        }
+    }
 }
