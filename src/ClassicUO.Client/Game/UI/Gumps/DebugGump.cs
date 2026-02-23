@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Diagnostics;
 using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
@@ -22,6 +23,8 @@ namespace ClassicUO.Game.UI.Gumps
         private const string DEBUG_STRING_4 = "\n- MoveGap: last {0}ms max {1}ms  Δ({2},{3},{4})";
         private const string DEBUG_STRING_5 = "\n- Walker: steps {0} unacked {1} failed {2} lastReq {3}ms";
         private const string DEBUG_STRING_6 = "\n- CamOff: {0:0.0},{1:0.0}  Δ {2:0.0}";
+        private const string DEBUG_STRING_7 = "\n- Frame: last {0}ms max {1}ms  Update {2}ms  Draw {3}ms";
+        private const string DEBUG_STRING_8 = "\n- GC: gen0 {0} gen1 {1} gen2 {2}  mem {3:0.0}MB";
 
         private const string DEBUG_STRING_SMALL = "FPS: {0}\nZoom: {1:0.00}";
         private const string DEBUG_STRING_SMALL_NO_ZOOM = "FPS: {0}";
@@ -38,6 +41,12 @@ namespace ClassicUO.Game.UI.Gumps
         private int _lastMoveGapMs;
         private int _maxMoveGapMs;
         private Vector2 _lastCameraOffset;
+        private long _lastFrameTick;
+        private int _lastFrameMs;
+        private int _maxFrameMs;
+        private long _frameWindowStart;
+        private int _lastUpdateMs;
+        private int _lastDrawMs;
 
         public DebugGump(World world, int x, int y) : base(world, 0, 0)
         {
@@ -92,7 +101,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Time.Ticks > _timeToUpdate)
             {
+                long updateStart = Stopwatch.GetTimestamp();
                 _timeToUpdate = Time.Ticks + 100;
+                UpdateFrameTiming();
 
                 GameScene scene = Client.Game.GetScene<GameScene>();
                 Span<char> span = stackalloc char[256];
@@ -142,6 +153,20 @@ namespace ClassicUO.Game.UI.Gumps
                         scene.Camera.Offset.Y,
                         Vector2.Distance(scene.Camera.Offset, _lastCameraOffset)
                     ));
+                    sb.Append(string.Format(
+                        DEBUG_STRING_7,
+                        _lastFrameMs,
+                        _maxFrameMs,
+                        _lastUpdateMs,
+                        _lastDrawMs
+                    ));
+                    sb.Append(string.Format(
+                        DEBUG_STRING_8,
+                        GC.CollectionCount(0),
+                        GC.CollectionCount(1),
+                        GC.CollectionCount(2),
+                        GC.GetTotalMemory(false) / 1024f / 1024f
+                    ));
 
                     sb.Append(string.Format(DEBUG_STRING_3, ReadObject(SelectedObject.Object)));
 
@@ -180,6 +205,14 @@ namespace ClassicUO.Game.UI.Gumps
                         long lastReqDelta = World.Player.Walker.LastStepRequestTime > 0 ? (Time.Ticks - World.Player.Walker.LastStepRequestTime) : 0;
                         sb.Append(string.Format(DEBUG_STRING_5, World.Player.Walker.StepsCount, World.Player.Walker.UnacceptedPacketsCount, World.Player.Walker.WalkingFailed, lastReqDelta));
                         sb.Append(string.Format(DEBUG_STRING_6, scene.Camera.Offset.X, scene.Camera.Offset.Y, Vector2.Distance(scene.Camera.Offset, _lastCameraOffset)));
+                        sb.Append(string.Format(DEBUG_STRING_7, _lastFrameMs, _maxFrameMs, _lastUpdateMs, _lastDrawMs));
+                        sb.Append(string.Format(
+                            DEBUG_STRING_8,
+                            GC.CollectionCount(0),
+                            GC.CollectionCount(1),
+                            GC.CollectionCount(2),
+                            GC.GetTotalMemory(false) / 1024f / 1024f
+                        ));
                     }
                 }
 
@@ -194,11 +227,13 @@ namespace ClassicUO.Game.UI.Gumps
                 _alphaBlendControl.Height = Height = (int) (size.Y + 20);
 
                 WantUpdateSize = true;
+                _lastUpdateMs = ElapsedMs(updateStart);
             }
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
+            long drawStart = Stopwatch.GetTimestamp();
             if (!base.Draw(batcher, x, y))
             {
                 return false;
@@ -215,6 +250,7 @@ namespace ClassicUO.Game.UI.Gumps
                 hueVector
             );
 
+            _lastDrawMs = ElapsedMs(drawStart);
             return true;
         }
 
@@ -283,6 +319,38 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             _lastCameraOffset = scene.Camera.Offset;
+        }
+
+        private void UpdateFrameTiming()
+        {
+            long now = Time.Ticks;
+            if (_lastFrameTick == 0)
+            {
+                _lastFrameTick = now;
+                _frameWindowStart = now;
+                _lastFrameMs = 0;
+                _maxFrameMs = 0;
+                return;
+            }
+
+            _lastFrameMs = (int)Math.Max(0, now - _lastFrameTick);
+            _lastFrameTick = now;
+
+            if (now - _frameWindowStart > 1000)
+            {
+                _frameWindowStart = now;
+                _maxFrameMs = _lastFrameMs;
+            }
+            else if (_lastFrameMs > _maxFrameMs)
+            {
+                _maxFrameMs = _lastFrameMs;
+            }
+        }
+
+        private static int ElapsedMs(long startTimestamp)
+        {
+            long ticks = Stopwatch.GetTimestamp() - startTimestamp;
+            return (int)((ticks * 1000) / Stopwatch.Frequency);
         }
 
 
