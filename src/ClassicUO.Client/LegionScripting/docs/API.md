@@ -429,6 +429,27 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### UseObjectOnTarget
+`(itemSerial, targetSerial)`
+ Use an item on a target without opening a target cursor.
+ This uses the same packet as the Bandage Agent. Some servers/items may not support it.
+ Example:
+ ```py
+ API.UseObjectOnTarget(bandage.Serial, API.Player.Serial)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `itemSerial` | `uint` | ❌ No | The item to use |
+| `targetSerial` | `uint` | ❌ No | The target to use the item on |
+
+**Return Type:** `bool`
+
+---
+
 ### Contents
 `(serial)`
  Get an item count for the contents of a container
@@ -3445,4 +3466,3 @@ You can now type `-updateapi` in game to download the latest API.py file.
 **Return Type:** `void` *(Does not return anything)*
 
 ---
-

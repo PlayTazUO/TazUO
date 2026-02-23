@@ -547,6 +547,26 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Use an item on a target without opening a target cursor.
+        /// This uses the same packet as the Bandage Agent. Some servers/items may not support it.
+        /// Example:
+        /// ```py
+        /// API.UseObjectOnTarget(bandage.Serial, API.Player.Serial)
+        /// ```
+        /// </summary>
+        /// <param name="itemSerial">The item to use</param>
+        /// <param name="targetSerial">The target to use the item on</param>
+        /// <returns>True if the request was sent, false if input was invalid</returns>
+        public bool UseObjectOnTarget(uint itemSerial, uint targetSerial) => MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            if (itemSerial == 0 || targetSerial == 0)
+                return false;
+
+            AsyncNetClient.Socket.Send_TargetSelectedObject(itemSerial, targetSerial);
+            return true;
+        });
+
+        /// <summary>
         /// Get an item count for the contents of a container
         /// Example:
         /// ```py

@@ -1332,6 +1332,18 @@ def UseObject(serial: "int", skipQueue: "bool" = True) -> None:
     """
     pass
 
+def UseObjectOnTarget(itemSerial: "int", targetSerial: "int") -> "bool":
+    """
+     Use an item on a target without opening a target cursor.
+     This uses the same packet as the Bandage Agent. Some servers/items may not support it.
+     Example:
+     ```py
+     API.UseObjectOnTarget(bandage.Serial, API.Player.Serial)
+     ```
+    
+    """
+    pass
+
 def Contents(serial: "int") -> "int":
     """
      Get an item count for the contents of a container
@@ -3112,4 +3124,3 @@ def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
     
     """
     pass
-
