@@ -278,7 +278,8 @@ public class PyGumps(API api)
     /// <param name="multiline"></param>
     /// <returns></returns>
     public PyTTFTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false) =>
-        new PyTTFTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true });
+        MainThreadQueue.InvokeOnMainThread(() =>
+            new PyTTFTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true }));
 
     /// <summary>
     /// Create a TTF label with advanced options.
@@ -323,7 +324,8 @@ public class PyGumps(API api)
         if (maxWidth > 0)
             opts.Width = maxWidth;
 
-        return new PyTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts));
+        return MainThreadQueue.InvokeOnMainThread(() =>
+            new PyTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts)));
     }
 
     /// <summary>
