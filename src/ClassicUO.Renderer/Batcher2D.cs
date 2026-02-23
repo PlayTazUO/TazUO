@@ -1314,10 +1314,7 @@ namespace ClassicUO.Renderer
         /// Use this before rendering with an external pipeline (e.g. Myra) so that
         /// previously queued sprites are committed before the external render runs.
         /// </summary>
-        public void FlushBatch()
-        {
-            Flush();
-        }
+        public void FlushBatch() => Flush();
 
         private void SetVertex
         (
