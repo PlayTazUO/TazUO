@@ -8,6 +8,7 @@ public static class GeneralTab
     {
         var tabs = new MyraTabControl();
         tabs.AddTab("Options", GeneralTabContent.Build);
+        tabs.AddTab("HUD", HudTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

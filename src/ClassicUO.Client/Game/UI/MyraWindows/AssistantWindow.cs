@@ -6,7 +6,7 @@ namespace ClassicUO.Game.UI.MyraWindows;
 
 public class AssistantWindow : MyraControl
 {
-    public const int WIDTH = 550;
+    public const int WIDTH = 450;
 
     public AssistantWindow() : base("Legion Assistant")
     {
@@ -16,7 +16,7 @@ public class AssistantWindow : MyraControl
 
     private void Build()
     {
-        var tabs = new MyraTabControl { Width = WIDTH };
+        var tabs = new MyraTabControl { MinWidth = WIDTH };
         tabs.AddTab("General", GeneralTab.Build);
         tabs.SelectFirst();
         SetRootContent(tabs);
