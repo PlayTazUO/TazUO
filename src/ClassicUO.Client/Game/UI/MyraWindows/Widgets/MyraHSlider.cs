@@ -43,7 +43,7 @@ public class MyraHSlider : Grid
         ColumnsProportions.Add(new Proportion(ProportionType.Auto));
         RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-        _slider = new HorizontalSlider() { };
+        _slider = new();
         _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
 
         _valueLabel = new OverlayLabel

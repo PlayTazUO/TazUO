@@ -32,6 +32,8 @@ public class MyraControl : IGui
         _rootWindow.TouchUp += DesktopOnTouchUp;
         _rootWindow.LocationChanged += DesktopWindowOnLocationChanged;
         _rootWindow.SizeChanged += RootWindowOnSizeChanged;
+
+        _rootWindow.CloseKey = null;
     }
 
 #region Event Handlers
