@@ -17,8 +17,6 @@ public class MyraButton : Button
         Text = text;
 
         Build();
-
-        ApplyButtonStyle(MyraStyle.ButtonStyle);
     }
 
     public override void OnTouchDown()

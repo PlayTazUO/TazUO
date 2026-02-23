@@ -8,7 +8,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 public class MyraHSlider : Grid
 {
     private readonly OverlayLabel _valueLabel;
-    private readonly InternalSlider _slider;
+    private readonly HorizontalSlider _slider;
 
     public float Minimum
     {
@@ -43,7 +43,7 @@ public class MyraHSlider : Grid
         ColumnsProportions.Add(new Proportion(ProportionType.Auto));
         RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-        _slider = new InternalSlider();
+        _slider = new HorizontalSlider() { };
         _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
 
         _valueLabel = new OverlayLabel
@@ -72,14 +72,6 @@ public class MyraHSlider : Grid
 
     private static string FormatValue(float v) =>
         v == (int)v ? ((int)v).ToString() : v.ToString("F1");
-
-    private sealed class InternalSlider : HorizontalSlider
-    {
-        public InternalSlider()
-        {
-            ApplySliderStyle(MyraStyle.HorizontalSlider);
-        }
-    }
 
     private sealed class OverlayLabel : Label
     {

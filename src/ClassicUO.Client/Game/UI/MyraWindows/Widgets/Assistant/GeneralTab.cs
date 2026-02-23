@@ -9,6 +9,8 @@ public static class GeneralTab
         var tabs = new MyraTabControl();
         tabs.AddTab("Options", GeneralTabContent.Build);
         tabs.AddTab("HUD", HudTabContent.Build);
+        tabs.AddTab("Spell Bar", SpellBarTabContent.Build);
+        tabs.AddTab("Title Bar", TitleBarTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

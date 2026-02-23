@@ -66,12 +66,7 @@ public class MyraControl : IGui
 
     private void DesktopOnTouchUp(object sender, EventArgs e) => OnMouseUp(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
 
-    private void DesktopOnTouchDown(object sender, EventArgs e)
-    {
-        // if (Bounds.Contains(Mouse.Position))
-        //     BringOnTop();
-        OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
-    }
+    private void DesktopOnTouchDown(object sender, EventArgs e) => OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e) => SetKeyboardFocus();
 #endregion
 

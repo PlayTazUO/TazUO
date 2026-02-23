@@ -10,7 +10,6 @@ public class MyraGrid : Grid
     /// </summary>
     public MyraGrid()
     {
-        ApplyWidgetStyle(MyraStyle.GridStyle);
         RowSpacing = 2;
         ColumnSpacing = 2;
     }
