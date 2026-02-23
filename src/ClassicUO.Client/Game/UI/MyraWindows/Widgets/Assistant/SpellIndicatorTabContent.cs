@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -133,37 +134,37 @@ public static class SpellIndicatorTabContent
 
             grid.AddWidget(new MyraLabel("Cursor Size:", MyraLabel.Style.P), row, 0);
             var cursorSizeSpinner = new SpinButton { Integer = true, Value = spell.CursorSize, MinWidth = 100, Tooltip = "Area to show around the cursor, for area spells that affect the area near the target." };
-            cursorSizeSpinner.ValueChangedByUser += (_, _) => { spell.CursorSize = (int)(cursorSizeSpinner.Value ?? 0); Save(); };
+            cursorSizeSpinner.ValueChangedByUser += (_, _) => { spell.CursorSize = (int)Math.Clamp(cursorSizeSpinner.Value ?? 0f, 0f, int.MaxValue); Save(); };
             grid.AddWidget(cursorSizeSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cast Range:", MyraLabel.Style.P), row, 0);
             var castRangeSpinner = new SpinButton { Integer = true, Value = spell.CastRange, MinWidth = 100 };
-            castRangeSpinner.ValueChangedByUser += (_, _) => { spell.CastRange = (int)(castRangeSpinner.Value ?? 1); Save(); };
+            castRangeSpinner.ValueChangedByUser += (_, _) => { spell.CastRange = (int)Math.Clamp(castRangeSpinner.Value ?? 1f, 1f, int.MaxValue); Save(); };
             grid.AddWidget(castRangeSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cast Time:", MyraLabel.Style.P), row, 0);
             var castTimeBox = new TextBox { Text = spell.CastTime.ToString(), MinWidth = 100 };
-            castTimeBox.TextChangedByUser += (_, _) => { if (double.TryParse(castTimeBox.Text, out double v)) { spell.CastTime = v; Save(); } };
+            castTimeBox.TextChangedByUser += (_, _) => { if (double.TryParse(castTimeBox.Text, out double v)) { spell.CastTime = Math.Max(0.0, v); Save(); } };
             grid.AddWidget(castTimeBox, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Max Duration:", MyraLabel.Style.P), row, 0);
             var maxDurSpinner = new SpinButton { Integer = true, Value = spell.MaxDuration, MinWidth = 100, Tooltip = "Fallback in case spell detection fails." };
-            maxDurSpinner.ValueChangedByUser += (_, _) => { spell.MaxDuration = (int)(maxDurSpinner.Value ?? 10); Save(); };
+            maxDurSpinner.ValueChangedByUser += (_, _) => { spell.MaxDuration = (int)Math.Clamp(maxDurSpinner.Value ?? 0f, 0f, int.MaxValue); Save(); };
             grid.AddWidget(maxDurSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cursor Hue:", MyraLabel.Style.P), row, 0);
             var cursorHueSpinner = new SpinButton { Integer = true, Value = spell.CursorHue, MinWidth = 100 };
-            cursorHueSpinner.ValueChangedByUser += (_, _) => { spell.CursorHue = (ushort)(cursorHueSpinner.Value ?? 0); Save(); };
+            cursorHueSpinner.ValueChangedByUser += (_, _) => { spell.CursorHue = (ushort)Math.Clamp(cursorHueSpinner.Value ?? 0f, 0f, ushort.MaxValue); Save(); };
             grid.AddWidget(cursorHueSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Range Hue:", MyraLabel.Style.P), row, 0);
             var rangeHueSpinner = new SpinButton { Integer = true, Value = spell.Hue, MinWidth = 100 };
-            rangeHueSpinner.ValueChangedByUser += (_, _) => { spell.Hue = (ushort)(rangeHueSpinner.Value ?? 0); Save(); };
+            rangeHueSpinner.ValueChangedByUser += (_, _) => { spell.Hue = (ushort)Math.Clamp(rangeHueSpinner.Value ?? 0f, 0f, ushort.MaxValue); Save(); };
             grid.AddWidget(rangeHueSpinner, row, 2);
             row++;
 
@@ -236,6 +237,12 @@ public static class SpellIndicatorTabContent
             if (!int.TryParse(idText, out int spellId))
             {
                 addErrorLabel.Text = "Spell ID must be a valid number.";
+                addErrorLabel.Visible = true;
+                return;
+            }
+            if (spellId <= 0)
+            {
+                addErrorLabel.Text = "Spell ID must be a positive number.";
                 addErrorLabel.Visible = true;
                 return;
             }
