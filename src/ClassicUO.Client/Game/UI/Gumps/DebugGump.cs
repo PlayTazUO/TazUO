@@ -19,6 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
         private const string DEBUG_STRING_1 = "- Mobiles: {0}   Items: {1}   Statics: {2}   Multi: {3}   Lands: {4}   Effects: {5}\n";
         private const string DEBUG_STRING_2 = "- CharPos: {0}\n- Mouse: {1}\n- InGamePos: {2}\n";
         private const string DEBUG_STRING_3 = "- Selected: {0}";
+        private const string DEBUG_STRING_4 = "\n- MoveGap: last {0}ms max {1}ms  Δ({2},{3},{4})";
+        private const string DEBUG_STRING_5 = "\n- Walker: steps {0} unacked {1} failed {2} lastReq {3}ms";
+        private const string DEBUG_STRING_6 = "\n- CamOff: {0:0.0},{1:0.0}  Δ {2:0.0}";
 
         private const string DEBUG_STRING_SMALL = "FPS: {0}\nZoom: {1:0.00}";
         private const string DEBUG_STRING_SMALL_NO_ZOOM = "FPS: {0}";
@@ -27,6 +30,14 @@ namespace ClassicUO.Game.UI.Gumps
         private uint _timeToUpdate;
         private readonly AlphaBlendControl _alphaBlendControl;
         private string _cacheText = string.Empty;
+        private bool _hasLastPlayerPos;
+        private int _lastPlayerX;
+        private int _lastPlayerY;
+        private int _lastPlayerZ;
+        private long _lastPlayerMoveTick;
+        private int _lastMoveGapMs;
+        private int _maxMoveGapMs;
+        private Vector2 _lastCameraOffset;
 
         public DebugGump(World world, int x, int y) : base(world, 0, 0)
         {
@@ -89,6 +100,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (IsMinimized && scene != null)
                 {
+                    UpdateMovementDiagnostics(scene);
+
                     sb.Append
                     (string.Format(
                          DEBUG_STRING_0,
@@ -104,6 +117,31 @@ namespace ClassicUO.Game.UI.Gumps
 
                     //_sb.AppendFormat(DEBUG_STRING_1, Engine.DebugInfo.MobilesRendered, Engine.DebugInfo.ItemsRendered, Engine.DebugInfo.StaticsRendered, Engine.DebugInfo.MultiRendered, Engine.DebugInfo.LandsRendered, Engine.DebugInfo.EffectsRendered);
                     sb.Append(string.Format(DEBUG_STRING_2, World.InGame ? $"{World.Player.X}, {World.Player.Y}, {World.Player.Z}" : "0xFFFF, 0xFFFF, 0", Mouse.Position, SelectedObject.Object is GameObject gobj ? $"{gobj.X}, {gobj.Y}, {gobj.Z}" : "0xFFFF, 0xFFFF, 0"));
+                    sb.Append(string.Format(
+                        DEBUG_STRING_4,
+                        _lastMoveGapMs,
+                        _maxMoveGapMs,
+                        World.InGame ? World.Player.X - _lastPlayerX : 0,
+                        World.InGame ? World.Player.Y - _lastPlayerY : 0,
+                        World.InGame ? World.Player.Z - _lastPlayerZ : 0
+                    ));
+                    if (World.InGame)
+                    {
+                        long lastReqDelta = World.Player.Walker.LastStepRequestTime > 0 ? (Time.Ticks - World.Player.Walker.LastStepRequestTime) : 0;
+                        sb.Append(string.Format(
+                            DEBUG_STRING_5,
+                            World.Player.Walker.StepsCount,
+                            World.Player.Walker.UnacceptedPacketsCount,
+                            World.Player.Walker.WalkingFailed,
+                            lastReqDelta
+                        ));
+                    }
+                    sb.Append(string.Format(
+                        DEBUG_STRING_6,
+                        scene.Camera.Offset.X,
+                        scene.Camera.Offset.Y,
+                        Vector2.Distance(scene.Camera.Offset, _lastCameraOffset)
+                    ));
 
                     sb.Append(string.Format(DEBUG_STRING_3, ReadObject(SelectedObject.Object)));
 
@@ -119,6 +157,11 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
+                    if (scene != null)
+                    {
+                        UpdateMovementDiagnostics(scene);
+                    }
+
                     int cameraZoomCount = (int)((scene.Camera.ZoomMax - scene.Camera.ZoomMin) / scene.Camera.ZoomStep);
                     int cameraZoomIndex = cameraZoomCount - (int)((scene.Camera.ZoomMax - scene.Camera.Zoom) / scene.Camera.ZoomStep);
 
@@ -129,6 +172,14 @@ namespace ClassicUO.Game.UI.Gumps
                     else
                     {
                         sb.Append(string.Format(DEBUG_STRING_SMALL_NO_ZOOM, CUOEnviroment.CurrentRefreshRate));
+                    }
+
+                    if (scene != null && World.InGame)
+                    {
+                        sb.Append(string.Format(DEBUG_STRING_4, _lastMoveGapMs, _maxMoveGapMs, World.Player.X - _lastPlayerX, World.Player.Y - _lastPlayerY, World.Player.Z - _lastPlayerZ));
+                        long lastReqDelta = World.Player.Walker.LastStepRequestTime > 0 ? (Time.Ticks - World.Player.Walker.LastStepRequestTime) : 0;
+                        sb.Append(string.Format(DEBUG_STRING_5, World.Player.Walker.StepsCount, World.Player.Walker.UnacceptedPacketsCount, World.Player.Walker.WalkingFailed, lastReqDelta));
+                        sb.Append(string.Format(DEBUG_STRING_6, scene.Camera.Offset.X, scene.Camera.Offset.Y, Vector2.Distance(scene.Camera.Offset, _lastCameraOffset)));
                     }
                 }
 
@@ -190,6 +241,48 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             return string.Empty;
+        }
+
+        private void UpdateMovementDiagnostics(GameScene scene)
+        {
+            if (!World.InGame || World.Player == null)
+            {
+                _hasLastPlayerPos = false;
+                _lastMoveGapMs = 0;
+                _maxMoveGapMs = 0;
+                _lastCameraOffset = scene.Camera.Offset;
+                return;
+            }
+
+            if (!_hasLastPlayerPos)
+            {
+                _hasLastPlayerPos = true;
+                _lastPlayerX = World.Player.X;
+                _lastPlayerY = World.Player.Y;
+                _lastPlayerZ = World.Player.Z;
+                _lastPlayerMoveTick = Time.Ticks;
+                _lastMoveGapMs = 0;
+                _maxMoveGapMs = 0;
+                _lastCameraOffset = scene.Camera.Offset;
+                return;
+            }
+
+            if (_lastPlayerX != World.Player.X || _lastPlayerY != World.Player.Y || _lastPlayerZ != World.Player.Z)
+            {
+                long now = Time.Ticks;
+                _lastMoveGapMs = (int)Math.Max(0, now - _lastPlayerMoveTick);
+                if (_lastMoveGapMs > _maxMoveGapMs)
+                {
+                    _maxMoveGapMs = _lastMoveGapMs;
+                }
+
+                _lastPlayerX = World.Player.X;
+                _lastPlayerY = World.Player.Y;
+                _lastPlayerZ = World.Player.Z;
+                _lastPlayerMoveTick = now;
+            }
+
+            _lastCameraOffset = scene.Camera.Offset;
         }
 
 
