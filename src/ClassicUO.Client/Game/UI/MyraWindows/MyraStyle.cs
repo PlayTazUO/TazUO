@@ -18,6 +18,9 @@ public static class MyraStyle
         style.BorderThickness = new Thickness(4);
 
         Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
+
+        Stylesheet.Current.TabControlStyle.Background = new SolidBrush(Color.Transparent);
+        Stylesheet.Current.TabControlStyle.TabItemStyle.Background = new SolidBrush(Color.Transparent);
     }
 
     public static WidgetStyle GridStyle = new()

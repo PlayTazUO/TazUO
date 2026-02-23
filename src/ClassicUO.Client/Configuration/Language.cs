@@ -666,5 +666,23 @@ namespace ClassicUO.Configuration
         public string MinGumpDragDistTooltip { get; set; } = "How far you need to drag before a gump will move, this helps prevent accidentally dragging instead of clicking.";
         public string GameScale { get; set; } = "Game scale";
         public string GameScaleTooltip { get; set; } = "Adjust the scale of the entire game.";
+        public string TurnDelay { get; set; } = "Turn delay";
+        public string ObjectDelay { get; set; } = "Object delay";
+        public string AutoDelayChecker { get; set; } = "Auto delay checker";
+        public string AutoDelayCheckerTooltip { get; set; } = "Run a small test to try to determine the best object delay time.\nThis is an experimental feature, if it doesn't work for you just adjust your delay manually.";
+        public string Misc { get; set; } = "Misc";
+        public string QueueItemMoves { get; set; } = "Queue item moves";
+        public string QueueItemMovesTooltip { get; set; } = "Instead of instantly moving an item, put it in a queue to prevent \"You must wait\" messages.";
+        public string QueueObjectUses { get; set; } = "Queue object uses";
+        public string QueueObjectUsesTooltip { get; set; } = "Instead of instantly double clicking an item or mobile, put it in a queue to prevent \"You must wait\" messages.";
+        public string AutoOpenOwnCorpse { get; set; } = "Auto open own corpse";
+        public string AutoOpenOwnCorpseTooltip { get; set; } = "Automatically open your own corpse when you die, even if auto open corpses is disabled.";
+        public string AutoUnequipForActions { get; set; } = "Auto unequip for actions";
+        public string AutoUnequipForActionsTooltip { get; set; } = "Automatically unequip weapons for spells & potions, then reequip them after.";
+        public string DisableWeather { get; set; } = "Disable weather";
+        public string DisableWeatherTooltip { get; set; } = "Disable weather effects (rain, snow, storms).";
+        public string SetQuickHealSpell { get; set; } = "Set heal spell";
+        public string SetQuickCureSpell { get; set; } = "Set cure spell";
+        public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
     }
 }
