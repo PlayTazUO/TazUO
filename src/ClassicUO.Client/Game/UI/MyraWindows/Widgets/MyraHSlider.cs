@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using ClassicUO.Assets;
 using Myra.Events;
@@ -7,8 +8,8 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 public class MyraHSlider : Grid
 {
-    private readonly OverlayLabel _valueLabel;
-    private readonly HorizontalSlider _slider;
+    private OverlayLabel _valueLabel = new();
+    private HorizontalSlider _slider = new();
 
     public float Minimum
     {
@@ -40,19 +41,20 @@ public class MyraHSlider : Grid
 
     public MyraHSlider()
     {
+        Build();
+    }
+
+    private void Build()
+    {
         ColumnsProportions.Add(new Proportion(ProportionType.Auto));
         RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-        _slider = new();
-        _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
+        _valueLabel.Text = "0";
+        _valueLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _valueLabel.VerticalAlignment = VerticalAlignment.Center;
+        _valueLabel.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 12);
 
-        _valueLabel = new OverlayLabel
-        {
-            Text = "0",
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 12),
-        };
+        _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
 
         Widgets.Add(_slider);
         SetRow(_slider, 0);
@@ -63,11 +65,26 @@ public class MyraHSlider : Grid
         SetColumn(_valueLabel, 0);
     }
 
-    public static MyraHSlider CreateSliderWithCallback(float min, float max, float value, Action<float> onChanged)
+    public static MyraHSlider CreateSliderWithCallback(float min, float max, float value, Action<float>? onChanged)
     {
         var slider = new MyraHSlider { Minimum = min, Maximum = max, Value = value };
-        slider.ValueChangedByUser += (_, _) => onChanged(Math.Clamp(slider.Value, min, max));
+
+        if(onChanged != null)
+            slider.ValueChangedByUser += (_, _) => onChanged(Math.Clamp(slider.Value, min, max));
+
         return slider;
+    }
+
+    public static HorizontalStackPanel SliderWithLabel(string label, out MyraHSlider slider, Action<float>? onChanged = null, float min = 0f, float max = 100f, float value = 0f)
+    {
+        HorizontalStackPanel stack = new();
+
+        MyraHSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
+        stack.Widgets.Add(s);
+
+        stack.Widgets.Add(new MyraLabel(label, MyraLabel.Style.P));
+
+        return stack;
     }
 
     private static string FormatValue(float v) =>

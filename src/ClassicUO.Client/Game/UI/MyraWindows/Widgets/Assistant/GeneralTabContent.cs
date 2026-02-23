@@ -20,34 +20,30 @@ public static class GeneralTabContent
         float gameScale = Client.Game.RenderScale;
 
         var grid = new MyraGrid();
-        grid.AddColumn(new Proportion(ProportionType.Auto), 2);
+        grid.AddColumn(new Proportion(ProportionType.Auto));
         grid.AddColumn(new Proportion(ProportionType.Pixels, 10)); //Spacing
         grid.AddColumn(new Proportion(ProportionType.Auto), 2);
 
         int row = 0;
 
-        grid.AddWidget(new MyraLabel(lang.VisualConfig, MyraLabel.Style.H1), row, Col.LeftLabel.ToInt());
-        grid.AddWidget(new MyraLabel(lang.DelayConfig, MyraLabel.Style.H1), row, Col.RightLabel.ToInt());
+        grid.AddWidget(new MyraLabel(lang.VisualConfig, MyraLabel.Style.H1), row, Col.LeftColumn.ToInt());
+        grid.AddWidget(new MyraLabel(lang.DelayConfig, MyraLabel.Style.H1), row, Col.RightColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.CameraSmoothing, MyraLabel.Style.P) { Tooltip = lang.CameraSmoothingTooltip }, row, Col.LeftLabel.ToInt());
-        grid.AddWidget(MyraHSlider.CreateSliderWithCallback(0, 1, profile.CameraSmoothingFactor, v => profile.CameraSmoothingFactor = v), row, Col.LeftContent.ToInt());
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.CameraSmoothing, out _, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.HighlightGameObjects, MyraLabel.Style.P), row, Col.LeftLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.HighlightGameObjects, (b) => profile.HighlightGameObjects = b), row, Col.LeftContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.HighlightGameObjects, (b) => profile.HighlightGameObjects = b, lang.HighlightGameObjects), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.ShowNameplates, MyraLabel.Style.P), row, Col.LeftLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.NameOverheadToggled, (b) => profile.NameOverheadToggled = b), row, Col.LeftContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.NameOverheadToggled, (b) => profile.NameOverheadToggled = b, lang.ShowNameplates), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.PetScaling, MyraLabel.Style.P) { Tooltip = lang.PetScalingTooltip }, row, Col.LeftLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.EnablePetScaling, b =>
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.EnablePetScaling, b =>
         {
             profile.EnablePetScaling = b;
 
@@ -55,73 +51,64 @@ public static class GeneralTabContent
             foreach (Mobile mob in mobs)
                 if (mob != null && mob.IsRenamable)
                     mob.Scale = b ? 0.6f : 1f;
-        }), row, Col.LeftContent.ToInt());
+        }, lang.PetScaling, lang.PetScalingTooltip), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.OutlineMobiles, MyraLabel.Style.P), row, Col.LeftLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b), row, Col.LeftContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b, lang.OutlineMobiles), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.MinGumpDragDist, MyraLabel.Style.P) { Tooltip = lang.MinGumpDragDistTooltip }, row, Col.LeftLabel.ToInt());
-        grid.AddWidget(MyraHSlider.CreateSliderWithCallback(0, 20, profile.MinGumpMoveDistance, v => profile.MinGumpMoveDistance = (int)v), row, Col.LeftContent.ToInt());
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.MinGumpDragDist, out _, v => profile.MinGumpMoveDistance = (int)v, 0, 20, profile.MinGumpMoveDistance), row, Col.LeftColumn.ToInt());
 
         row++;
 
-        grid.AddWidget(new MyraLabel(lang.GameScale, MyraLabel.Style.P) { Tooltip = lang.GameScaleTooltip }, row, Col.LeftLabel.ToInt());
-        grid.AddWidget(MyraHSlider.CreateSliderWithCallback(Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE, Client.Game.RenderScale, v =>
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.GameScale, out MyraHSlider gsSlider, v =>
         {
             gameScale = Math.Clamp(v, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
-        }), row, Col.LeftContent.ToInt());
+        }, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE, Client.Game.RenderScale), row, Col.LeftColumn.ToInt());
+        gsSlider.Tooltip = lang.GameScaleTooltip;
 
         row++;
         grid.AddWidget(new MyraButton("Apply scale", () =>
         {
             Client.Game.SetScale(gameScale);
             _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, gameScale);
-        }), row, Col.LeftContent.ToInt());
+        }), row, Col.LeftColumn.ToInt());
 
-        // === Right side: Delay Config ===
+        // Right side
         int rightRow = 1;
 
-        grid.AddWidget(new MyraLabel(lang.TurnDelay, MyraLabel.Style.P), rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(MyraHSlider.CreateSliderWithCallback(0, 150, profile.TurnDelay, v => profile.TurnDelay = (ushort)v), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.TurnDelay, out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.ObjectDelay, MyraLabel.Style.P), rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(MyraHSlider.CreateSliderWithCallback(0, 3000, profile.MoveMultiObjectDelay, v => profile.MoveMultiObjectDelay = (int)v), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.ObjectDelay, out _, v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraButton(lang.AutoDelayChecker, () => AutomatedObjectDelay.Begin()) { Tooltip = lang.AutoDelayCheckerTooltip }, rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(new MyraButton(lang.AutoDelayChecker, () => AutomatedObjectDelay.Begin()) { Tooltip = lang.AutoDelayCheckerTooltip }, rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        // === Right side: Misc ===
-        grid.AddWidget(new MyraLabel(lang.Misc, MyraLabel.Style.H1), rightRow, Col.RightLabel.ToInt());
+        // Right side: Misc
+        grid.AddWidget(new MyraLabel(lang.Misc, MyraLabel.Style.H1), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.QueueItemMoves, MyraLabel.Style.P) { Tooltip = lang.QueueItemMovesTooltip }, rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.QueueManualItemMoves, b => profile.QueueManualItemMoves = b), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.QueueManualItemMoves, b => profile.QueueManualItemMoves = b, lang.QueueItemMoves, lang.QueueItemMovesTooltip), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.QueueObjectUses, MyraLabel.Style.P) { Tooltip = lang.QueueObjectUsesTooltip }, rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.QueueManualItemUses, b => profile.QueueManualItemUses = b), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.QueueManualItemUses, b => profile.QueueManualItemUses = b, lang.QueueObjectUses, lang.QueueObjectUsesTooltip), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.AutoOpenOwnCorpse, MyraLabel.Style.P) { Tooltip = lang.AutoOpenOwnCorpseTooltip }, rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.AutoOpenOwnCorpse, b => profile.AutoOpenOwnCorpse = b), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.AutoOpenOwnCorpse, b => profile.AutoOpenOwnCorpse = b, lang.AutoOpenOwnCorpse, lang.AutoOpenOwnCorpseTooltip), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.AutoUnequipForActions, MyraLabel.Style.P) { Tooltip = lang.AutoUnequipForActionsTooltip }, rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.AutoUnequipForActions, b => profile.AutoUnequipForActions = b), rightRow, Col.RightContent.ToInt());
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.AutoUnequipForActions, b => profile.AutoUnequipForActions = b, lang.AutoUnequipForActions, lang.AutoUnequipForActionsTooltip), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(new MyraLabel(lang.DisableWeather, MyraLabel.Style.P) { Tooltip = lang.DisableWeatherTooltip }, rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(CreateCheckBox(profile.DisableWeather, b =>
+        grid.AddWidget(MyraCheckButton.CreateWithCallback(profile.DisableWeather, b =>
         {
             profile.DisableWeather = b;
             if (b) World.Instance?.Weather.Reset();
-        }), rightRow, Col.RightContent.ToInt());
+        }, lang.DisableWeather, lang.DisableWeatherTooltip), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
         var healSpell = SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell);
@@ -136,8 +123,8 @@ public static class GeneralTabContent
                     profile.QuickHealSpell = s.ID;
                 }
             }, true).CenterInViewPort());
-        }), rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(healLabel, rightRow, Col.RightContent.ToInt());
+        }), rightRow, Col.RightColumn.ToInt());
+        grid.AddWidget(healLabel, rightRow, Col.RightNotesCol.ToInt());
         rightRow++;
 
         var cureSpell = SpellDefinition.FullIndexGetSpell(profile.QuickCureSpell);
@@ -152,8 +139,8 @@ public static class GeneralTabContent
                     profile.QuickCureSpell = s.ID;
                 }
             }, true).CenterInViewPort());
-        }), rightRow, Col.RightLabel.ToInt());
-        grid.AddWidget(cureLabel, rightRow, Col.RightContent.ToInt());
+        }), rightRow, Col.RightColumn.ToInt());
+        grid.AddWidget(cureLabel, rightRow, Col.RightNotesCol.ToInt());
 
         return grid;
     }
@@ -167,10 +154,9 @@ public static class GeneralTabContent
 
     private enum Col
     {
-        LeftLabel,
-        LeftContent,
+        LeftColumn,
         SpacingColumn,
-        RightLabel,
-        RightContent,
+        RightColumn,
+        RightNotesCol,
     }
 }
