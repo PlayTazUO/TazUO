@@ -24,25 +24,20 @@ public static class HudTabContent
         var checkButtons = new Dictionary<HideHudFlags, CheckButton>();
 
         foreach (HideHudFlags flag in regularFlags)
-            checkButtons[flag] = new CheckButton { IsChecked = ByteFlagHelper.HasFlag(profile.HideHudGumpFlags, (ulong)flag) };
-
-        var allCb = new CheckButton { IsChecked = ByteFlagHelper.HasFlag(profile.HideHudGumpFlags, (ulong)HideHudFlags.All) };
-        checkButtons[HideHudFlags.All] = allCb;
-
-        foreach (var (flag, cb) in checkButtons)
         {
-            if (flag == HideHudFlags.All) continue;
-            HideHudFlags f = flag;
-            cb.IsCheckedChanged += (_, _) =>
-            {
-                if (cb.IsChecked)
-                    profile.HideHudGumpFlags = ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)f);
-                else
-                    profile.HideHudGumpFlags = ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)f);
-            };
+            if(flag == HideHudFlags.All) continue;
+            checkButtons[flag] = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags,  (ulong)flag),
+                b =>
+                {
+                    profile.HideHudGumpFlags = b ? ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)flag) : ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)flag);
+                }, HideHudManager.GetFlagName(flag), GetTooltip(flag));
         }
 
-        allCb.IsCheckedChanged += (_, _) => SetAllChecked(checkButtons, profile, allCb.IsChecked);
+
+        var allCb = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags,  (ulong)HideHudFlags.All),
+            b => { SetAllChecked(checkButtons, profile, b); }, HideHudManager.GetFlagName(HideHudFlags.All), GetTooltip(HideHudFlags.All));
+
+        checkButtons[HideHudFlags.All] = allCb;
 
         var outerStack = new VerticalStackPanel { Spacing = 6 };
 
@@ -69,15 +64,13 @@ public static class HudTabContent
 
         foreach (HideHudFlags flag in regularFlags)
         {
-            HorizontalStackPanel pair = MakePair(checkButtons[flag], HideHudManager.GetFlagName(flag), GetTooltip(flag));
-            grid.AddWidget(pair, row, leftCol ? 0 : 2);
+            grid.AddWidget(checkButtons[flag], row, leftCol ? 0 : 2);
             if (!leftCol) row++;
             leftCol = !leftCol;
         }
 
-        // "All" at the end
-        HorizontalStackPanel allPair = MakePair(allCb, HideHudManager.GetFlagName(HideHudFlags.All), "Select/deselect all HUD elements at once");
-        grid.AddWidget(allPair, row, leftCol ? 0 : 2);
+        //All button at the end
+        grid.AddWidget(allCb, row, leftCol ? 0 : 2);
 
         outerStack.Widgets.Add(grid);
         return outerStack;

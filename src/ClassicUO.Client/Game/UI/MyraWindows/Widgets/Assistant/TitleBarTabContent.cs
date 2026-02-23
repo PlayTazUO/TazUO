@@ -18,21 +18,18 @@ public static class TitleBarTabContent
             MyraLabel.Style.P));
 
         // Enable
-
-        var enableRow = new HorizontalStackPanel { Spacing = 4 };
-        enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.EnableTitleBarStats, b =>
-        {
-            profile.EnableTitleBarStats = b;
-            if (b)
-                TitleBarStatsManager.ForceUpdate();
-            else
-                Client.Game.SetWindowTitle(
-                    string.IsNullOrEmpty(World.Instance.Player?.Name)
-                        ? string.Empty
-                        : World.Instance.Player.Name);
-        }));
-        enableRow.Widgets.Add(new MyraLabel("Enable title bar stats", MyraLabel.Style.P));
-        outer.Widgets.Add(enableRow);
+        outer.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.EnableTitleBarStats,
+            b =>
+            {
+                profile.EnableTitleBarStats = b;
+                if (b)
+                    TitleBarStatsManager.ForceUpdate();
+                else
+                    Client.Game.SetWindowTitle(
+                        string.IsNullOrEmpty(World.Instance.Player?.Name)
+                            ? string.Empty
+                            : World.Instance.Player.Name);
+            }, "Enable title bar stats"));
 
         // Display mode
         outer.Widgets.Add(new MyraLabel("Display Mode", MyraLabel.Style.H2));
