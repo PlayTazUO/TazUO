@@ -13,6 +13,7 @@ public static class GeneralTab
         tabs.AddTab("Title Bar", TitleBarTabContent.Build);
         tabs.AddTab("Spell Indicators", SpellIndicatorTabContent.Build);
         tabs.AddTab("Friends", FriendsListTabContent.Build);
+        tabs.AddTab("Pathfinding", PathfindingTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }
