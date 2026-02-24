@@ -2973,6 +2973,20 @@ namespace ClassicUO.Game.UI.Gumps
                 true, page
             );
 
+            content.BlankLine();
+
+            content.AddToRight
+            (
+                c = new CheckboxWithLabel(lang.GetTazUO.GridShowCapacityBar, 0, profile.Grid_ShowCapacityBar, (b) => { profile.Grid_ShowCapacityBar = b; }),
+                true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.GridMaxContainerItems, 0, ThemeSettings.SLIDER_WIDTH, 50, 250, profile.Grid_MaxContainerItems, (i) => { profile.Grid_MaxContainerItems = i; }),
+                true, page
+            );
+
             #endregion
 
             #region Journal

@@ -451,6 +451,8 @@ namespace ClassicUO.Configuration
             public string GridHighlightProperties { get; set; } = "Show highlighted item properties in tooltip";
             public string GridHighlightShowRuleName { get; set; } = "Show matched rule name in tooltip";
             public string GridDisableTargeting { get; set; } = "Disable Targeting Grid Containers";
+            public string GridShowCapacityBar { get; set; } = "Show container capacity bar";
+            public string GridMaxContainerItems { get; set; } = "Max container items";
             #endregion
 
             #region Journal

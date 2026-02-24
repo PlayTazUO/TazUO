@@ -410,6 +410,8 @@ namespace ClassicUO.Configuration
         public int Grid_DefaultRows { get; set; } = 5;
         public bool Grid_UseContainerHue { get; set; } = false;
         public bool Grid_HideBorder { get; set; } = false;
+        public bool Grid_ShowCapacityBar { get; set; } = true;
+        public int Grid_MaxContainerItems { get; set; } = 125;
         #endregion
 
         #region COOLDOWNS
