@@ -5,10 +5,13 @@ using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
+using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -81,26 +84,30 @@ public static class AutoLootAgentTabContent
                 return;
             }
 
-            // 6 columns: Graphic | Hue | Regex | Priority | Destination | Delete
+            // 7 columns: Art | Graphic | Hue | Regex | Priority | Destination | Actions
             var grid = new MyraGrid();
-            grid.AddColumn(null, 6);
+            grid.AddColumn(null, 7);
             grid.Border = new SolidBrush(MyraStyle.GridBorderColor);
             grid.BorderThickness = new Thickness(1);
             grid.GridLinesColor = MyraStyle.GridBorderColor;
             grid.ShowGridLines = true;
 
             // Header row
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Regex", MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Priority", MyraLabel.Style.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.Style.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.Style.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Regex", MyraLabel.Style.H3), 0, 3);
+            grid.AddWidget(new MyraLabel("Priority", MyraLabel.Style.H3), 0, 4);
+            grid.AddWidget(new MyraLabel("Destination", MyraLabel.Style.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.H3), 0, 6);
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
             {
                 AutoLootManager.AutoLootConfigEntry entry = entries[i];
+
+                // Art image (col 0)
+                grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name }, dataRow, 0);
 
                 // Graphic
                 var graphicBox = new TextBox
@@ -113,7 +120,7 @@ public static class AutoLootAgentTabContent
                     if (StringHelper.TryParseInt(graphicBox.Text, out int g))
                         entry.Graphic = g;
                 };
-                grid.AddWidget(graphicBox, dataRow, 0);
+                grid.AddWidget(graphicBox, dataRow, 1);
 
                 // Hue
                 var hueBox = new TextBox
@@ -128,26 +135,24 @@ public static class AutoLootAgentTabContent
                     else if (ushort.TryParse(hueBox.Text, out ushort h))
                         entry.Hue = h;
                 };
-                grid.AddWidget(hueBox, dataRow, 1);
+                grid.AddWidget(hueBox, dataRow, 2);
 
-                // Regex editor button + inline panel (spans all columns, below data row)
-                var regexPanel = new VerticalStackPanel { Visible = false, Spacing = 2 };
-                var regexBox = new TextBox
-                {
-                    Text = entry.RegexSearch ?? "",
-                    Multiline = true,
-                    Height = 60,
-                    Tooltip = "Regex to match against item name and properties."
-                };
-                regexBox.TextChangedByUser += (_, _) => entry.RegexSearch = regexBox.Text;
-                regexPanel.Widgets.Add(regexBox);
-                regexPanel.Widgets.Add(new MyraButton("Close", () => regexPanel.Visible = false));
-
+                // Regex edit — opens a MyraDialog (own Desktop, registered with UIManager)
                 grid.AddWidget(new MyraButton("Edit Regex", () =>
                 {
-                    regexBox.Text = entry.RegexSearch ?? "";
-                    regexPanel.Visible = !regexPanel.Visible;
-                }), dataRow, 2);
+                    var regexInput = new TextBox
+                    {
+                        Text = entry.RegexSearch ?? "",
+                        Multiline = true,
+                        Width = 300,
+                        Height = 80,
+                        Tooltip = "Regex to match against item name and properties."
+                    };
+                    new MyraDialog("Edit Regex", regexInput, ok =>
+                    {
+                        if (ok) entry.RegexSearch = regexInput.Text;
+                    });
+                }), dataRow, 3);
 
                 // Priority cycle: < label >
                 var priorityLabel = new MyraLabel(PriorityLabels[(int)entry.Priority], MyraLabel.Style.P);
@@ -165,7 +170,7 @@ public static class AutoLootAgentTabContent
                     entry.Priority = (AutoLootManager.AutoLootPriority)p;
                     priorityLabel.Text = PriorityLabels[p];
                 }));
-                grid.AddWidget(priorityRow, dataRow, 3);
+                grid.AddWidget(priorityRow, dataRow, 4);
 
                 // Destination box + Target button
                 var destBox = new TextBox
@@ -194,20 +199,15 @@ public static class AutoLootAgentTabContent
                         }
                     });
                 }) { Tooltip = "Target a container to use as the destination for this entry." });
-                grid.AddWidget(destCell, dataRow, 4);
+                grid.AddWidget(destCell, dataRow, 5);
 
                 grid.AddWidget(new MyraButton("Delete", () =>
                 {
                     AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.Uid);
                     BuildEntriesList();
-                }), dataRow, 5);
+                }), dataRow, 6);
 
-                // Regex panel spans all 6 columns in the row below
-                int regexRow = dataRow + 1;
-                Grid.SetColumnSpan(regexPanel, 6);
-                grid.AddWidget(regexPanel, regexRow, 0);
-
-                dataRow += 2;
+                dataRow += 1;
             }
 
             entriesPanel.Widgets.Add(grid);
