@@ -12,6 +12,7 @@ public static class GeneralTab
         tabs.AddTab("Spell Bar", SpellBarTabContent.Build);
         tabs.AddTab("Title Bar", TitleBarTabContent.Build);
         tabs.AddTab("Spell Indicators", SpellIndicatorTabContent.Build);
+        tabs.AddTab("Friends", FriendsListTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

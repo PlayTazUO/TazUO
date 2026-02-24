@@ -8,6 +8,8 @@ namespace ClassicUO.Game.UI.MyraWindows;
 
 public static class MyraStyle
 {
+    public static Color GridBorderColor { get; } = Color.Gray;
+
     private static Color TazUO_Orange = new(0.667f, 0.412f, 0.051f, 1f);
 
     public static void SetDefault()
