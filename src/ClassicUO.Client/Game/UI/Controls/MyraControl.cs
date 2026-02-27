@@ -166,7 +166,12 @@ public class MyraControl : IGui
         if(_disposeRequested) ExecuteDispose();
     }
 
-    public virtual void PreDraw() { }
+    public virtual void PreDraw()
+    {
+        if (IsDisposed) return;
+
+        if(_disposeRequested) ExecuteDispose();
+    }
 
     public virtual bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
@@ -212,6 +217,8 @@ public class MyraControl : IGui
 
     private void ExecuteDispose()
     {
+        if(IsDisposed) return;
+        
         _disposeRequested = false;
         IsDisposed = true;
 
