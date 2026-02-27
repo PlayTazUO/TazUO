@@ -163,7 +163,7 @@ public class MyraControl : IGui
     {
         if (IsDisposed) return;
 
-        if(_disposeRequested) Dispose();
+        if(_disposeRequested) ExecuteDispose();
     }
 
     public virtual void PreDraw() { }
@@ -207,7 +207,11 @@ public class MyraControl : IGui
     public void Dispose()
     {
         if(IsDisposed) return;
+        _disposeRequested = true;
+    }
 
+    private void ExecuteDispose()
+    {
         _disposeRequested = false;
         IsDisposed = true;
 

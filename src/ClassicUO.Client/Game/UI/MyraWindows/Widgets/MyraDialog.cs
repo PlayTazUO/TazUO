@@ -47,13 +47,13 @@ public class MyraDialog : MyraControl
 
     private void OnOk()
     {
-        _onClose?.Invoke(true);
         _disposeRequested = true;
+        _onClose?.Invoke(true);
     }
 
     private void OnCancel()
     {
-        _onClose?.Invoke(false);
         _disposeRequested = true;
+        _onClose?.Invoke(false);
     }
 }

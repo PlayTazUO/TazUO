@@ -107,7 +107,8 @@ public static class AutoLootAgentTabContent
                 AutoLootManager.AutoLootConfigEntry entry = entries[i];
 
                 // Art image (col 0)
-                grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name }, dataRow, 0);
+                if(entry.Graphic > 0)
+                    grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name }, dataRow, 0);
 
                 // Graphic
                 var graphicBox = new TextBox
@@ -234,6 +235,9 @@ public static class AutoLootAgentTabContent
         {
             if (StringHelper.TryParseInt(newGraphicBox.Text, out int graphic))
             {
+                if (graphic < 0 || graphic > ushort.MaxValue)
+                    return;
+
                 ushort hue = ushort.MaxValue;
                 if (!string.IsNullOrEmpty(newHueBox.Text) && newHueBox.Text != "-1")
                     ushort.TryParse(newHueBox.Text, out hue);
