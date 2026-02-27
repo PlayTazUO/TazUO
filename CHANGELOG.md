@@ -52,6 +52,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed a reliability issue with `API.OnHotKey` - [P.R 365](https://github.com/PlayTazUO/TazUO/pull/365) ([fpw](https://github.com/fpw))
 * Fixed healthbar collector occasionally becoming unresponsive to targeting/clicks - ([bittiez](https://github.com/bittiez))
 * Fixed a rare crash when removing messages from system chat - ([bittiez](https://github.com/bittiez))
+* Fixed a crash with invalid macros on creation
 
 ### Misc
 

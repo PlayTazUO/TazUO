@@ -556,9 +556,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.Yell:
                 case MacroType.RazorMacro:
 
-                    string text = ((MacroObjectString)macro).Text;
-
-                    if (!string.IsNullOrEmpty(text))
+                    if(macro is MacroObjectString { Text: { } text })
                     {
                         MessageType type = MessageType.Regular;
                         ushort hue = ProfileManager.CurrentProfile.SpeechHue;

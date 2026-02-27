@@ -23,7 +23,7 @@ public static class MyraStyle
         style.BorderThickness = new Thickness(2);
 
         //Labels
-        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
+        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
 
         //Tabs
         TabControlStyle tabControlStyle = Stylesheet.Current.TabControlStyle;

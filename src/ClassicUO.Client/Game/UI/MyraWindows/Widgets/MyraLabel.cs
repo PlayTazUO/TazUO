@@ -25,17 +25,17 @@ public class MyraLabel : Label
         switch (style)
         {
             case Style.H1:
-                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 20);
+                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 22);
                 break;
             case Style.H2:
-                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 18);
+                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 20);
                 break;
             case Style.H3:
-                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 18);
                 break;
             default:
             case Style.P:
-                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
+                styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
                 break;
         }
 
