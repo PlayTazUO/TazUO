@@ -32,6 +32,7 @@ public class MyraControl : IGui
         _rootWindow.TouchUp += DesktopOnTouchUp;
         _rootWindow.LocationChanged += DesktopWindowOnLocationChanged;
         _rootWindow.SizeChanged += RootWindowOnSizeChanged;
+        _rootWindow.ArrangeUpdated += RootWindowOnSizeChanged;
 
         _rootWindow.CloseKey = null;
     }
@@ -44,14 +45,16 @@ public class MyraControl : IGui
         _disposeRequested = true;
     }
 
-    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents();
+    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents(false);
 
     /// <summary>
     /// Update this <see cref="Bounds"/> to fit to the content of the window.
     /// </summary>
-    private void UpdateBoundsToContents()
+    private void UpdateBoundsToContents(bool arrange = true)
     {
-        _rootWindow.UpdateArrange();
+        if (arrange)
+            _rootWindow.UpdateArrange();
+
         Point mSize = _rootWindow.Measure(new Point(2000, 2000));
 
         Bounds.Width = mSize.X;
@@ -218,7 +221,7 @@ public class MyraControl : IGui
     private void ExecuteDispose()
     {
         if(IsDisposed) return;
-        
+
         _disposeRequested = false;
         IsDisposed = true;
 
@@ -233,6 +236,7 @@ public class MyraControl : IGui
             _rootWindow.TouchUp -= DesktopOnTouchUp;
             _rootWindow.LocationChanged -= DesktopWindowOnLocationChanged;
             _rootWindow.SizeChanged -= RootWindowOnSizeChanged;
+            _rootWindow.ArrangeUpdated += RootWindowOnSizeChanged;
         }
 
         _desktop.Widgets.Clear();
