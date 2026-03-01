@@ -44,7 +44,7 @@ public static class MyraStyle
 
         //HSlider
         Stylesheet.Current.HorizontalSliderStyle.Background = new SolidBrush(new Color(50, 49, 56, 50));
-        Stylesheet.Current.HorizontalSliderStyle.Width = 75;
+        Stylesheet.Current.HorizontalSliderStyle.Width = 100;
         Stylesheet.Current.HorizontalSliderStyle.Height = 20;
 
         //Button
