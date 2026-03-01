@@ -65,4 +65,14 @@ public static class MyraStyle
         grid.GridLinesColor = GridBorderColor;
         grid.ShowGridLines = true;
     }
+
+    public static Button ApplyButtonDangerStyle(Button button)
+    {
+        button.Background = new SolidBrush(new Color(155, 0, 0, 255));
+        button.DisabledBackground = new SolidBrush(new Color(155, 0, 0, 155));
+        button.OverBackground = new SolidBrush(new Color(100, 0, 0, 255));
+        button.PressedBackground = new SolidBrush(new Color(55, 0, 0, 255));
+
+        return button;
+    }
 }

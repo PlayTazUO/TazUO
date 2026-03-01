@@ -8,6 +8,10 @@ public static class AgentTab
     {
         var tabs = new MyraTabControl();
         tabs.AddTab("Auto Loot", AutoLootAgentTabContent.Build);
+        tabs.AddTab("Dress Agent", DressAgentTabContent.Build);
+        tabs.AddTab("Auto Buy", AutoBuyAgentTabContent.Build);
+        tabs.AddTab("Auto Sell", AutoSellAgentTabContent.Build);
+        tabs.AddTab("Bandage", BandageAgentTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }
