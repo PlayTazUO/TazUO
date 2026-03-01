@@ -76,7 +76,7 @@ public static class AutoBuyAgentTabContent
                 var graphicBox = new TextBox { Text = entry.Graphic.ToString(), Width = 60 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
-                    if (StringHelper.TryParseInt(graphicBox.Text, out int g))
+                    if (StringHelper.TryParseInt(graphicBox.Text, out int g) && g is > 0 and <= ushort.MaxValue)
                         entry.Graphic = (ushort)g;
                 };
                 grid.AddWidget(graphicBox, dataRow, 1);

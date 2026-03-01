@@ -49,7 +49,10 @@ public static class BandageAgentTabContent
         delayBox.TextChangedByUser += (_, _) =>
         {
             if (int.TryParse(delayBox.Text, out int delay))
+            {
                 profile.BandageAgentDelay = Math.Clamp(delay, 50, 30000);
+                delayBox.Text = profile.BandageAgentDelay.ToString();
+            }
         };
         var delayRow = new HorizontalStackPanel { Spacing = 4 };
         delayRow.Widgets.Add(delayBox);
