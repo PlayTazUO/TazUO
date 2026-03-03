@@ -389,6 +389,23 @@ namespace ClassicUO.Utility
             return int.TryParse(text, out graphic);
         }
 
+        /// <summary>
+        /// Tries to parse a graphic ID from a string, supporting both decimal and hexadecimal (0x prefix) formats.
+        /// </summary>
+        /// <param name="text">The input string to parse</param>
+        /// <param name="graphic">The parsed graphic ID</param>
+        /// <returns>True if parsing succeeded, false otherwise</returns>
+        public static bool TryParseUint(string text, out uint graphic)
+        {
+            graphic = 0;
+            if (string.IsNullOrEmpty(text)) return false;
+
+            if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return uint.TryParse(text.Substring(2), NumberStyles.AllowHexSpecifier, null, out graphic);
+
+            return uint.TryParse(text, out graphic);
+        }
+
         public static string FormatAsCurrency(int amount) => amount.ToString("N0", CultureInfo.CurrentCulture);
 
         public static bool TryParseCurrency(string text, out int result)

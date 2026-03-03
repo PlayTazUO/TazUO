@@ -31,7 +31,7 @@ public static class ItemDatabaseTabContent
 
         string searchName = "";
         string searchProps = "";
-        int searchGraphic = 0;
+        uint searchGraphic = 0;
         int searchHue = -1;
         int searchLayer = -1;
         int searchContainer = 0;
@@ -218,7 +218,7 @@ public static class ItemDatabaseTabContent
             Tooltip = "Graphic ID to search for (0 = any)" };
         graphicBox.TextChangedByUser += (_, _) =>
         {
-            if (StringHelper.TryParseInt(graphicBox.Text ?? "", out int g)) searchGraphic = g;
+            if (StringHelper.TryParseUint(graphicBox.Text ?? "", out uint g)) searchGraphic = g;
         };
 
         hueBox = new TextBox { Text = "-1", Width = 80,
