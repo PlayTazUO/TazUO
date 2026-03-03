@@ -3,6 +3,7 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -20,6 +21,7 @@ public class AssistantWindow : MyraControl
         tabs.AddTab("General", GeneralTab.Build);
         tabs.AddTab("Agents", AgentTab.Build);
         tabs.AddTab("Filters", FiltersTab.Build);
+        tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
         tabs.SelectFirst();
         SetRootContent(tabs);
     }
