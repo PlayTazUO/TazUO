@@ -27,6 +27,7 @@ namespace ClassicUO.Game.Data
         private const int SPELLWEAVING_SPELLS_OFFSETS = 166;
         private const int MYSTICISM_SPELLS_OFFSETS = 182;
         private const int MASTERY_SPELLS_OFFSETS = 198;
+        private const int CUSTOM_SPELLS_BASE_OFFSET = 214;
 
         #endregion
 
@@ -55,8 +56,13 @@ namespace ClassicUO.Game.Data
                     return SPELLWEAVING_SPELLS_OFFSETS;
                 case (int)SpellBookType.Mastery - 1:
                     return MASTERY_SPELLS_OFFSETS;
+                default:
+                    if (spellsGroup >= 20)
+                    {
+                        return CUSTOM_SPELLS_BASE_OFFSET + ((spellsGroup - 20) * 100);
+                    }
+                    return -1;
             }
-            return -1;
         }
     }
 }

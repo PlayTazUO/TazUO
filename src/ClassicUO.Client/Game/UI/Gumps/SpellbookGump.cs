@@ -9,8 +9,10 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
+using ClassicUO.Network;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -30,6 +32,10 @@ namespace ClassicUO.Game.UI.Gumps
         private SpellBookType _spellBookType;
         private readonly bool[] _spells = new bool[64];
         private int _enqueuePage = -1;
+
+        private bool _isDynamicSpellbook;
+        private bool _isWaitingForSpellbookData;
+        private Label _loadingLabel;
 
         public SpellBookType SpellBookType => _spellBookType;
 
@@ -109,6 +115,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             AssignGraphic(item);
 
+            _isDynamicSpellbook = IsDynamicSpellbook();
+
             GetBookInfo(
                 _spellBookType,
                 out ushort bookGraphic,
@@ -119,6 +127,14 @@ namespace ClassicUO.Game.UI.Gumps
                 out int dictionaryPagesCount
             );
 
+            if (bookGraphic == 0 || minimizedGraphic == 0)
+            {
+                Log.Warn($"[SPELLBOOK GUMP] BuildGump: Invalid graphics (book=0x{bookGraphic:X4}, minimized=0x{minimizedGraphic:X4}) - closing gump");
+                Dispose();
+                return;
+            }
+
+            Log.Trace($"[SPELLBOOK GUMP] BuildGump: bookGraphic=0x{bookGraphic:X4} ({bookGraphic}), type={_spellBookType}");
             Add(_picBase = new GumpPic(0, 0, bookGraphic, 0));
             _picBase.MouseDoubleClick += _picBase_MouseDoubleClick;
 
@@ -145,9 +161,92 @@ namespace ClassicUO.Game.UI.Gumps
             _pageCornerRight.MouseUp += PageCornerOnMouseClick;
             _pageCornerRight.MouseDoubleClick += PageCornerOnMouseDoubleClick;
 
+            if (_isDynamicSpellbook)
+            {
+                bool shouldRequest = SpellbookCacheManager.Instance.ShouldRequestSpellbook(
+                    (byte)_spellBookType,
+                    out uint cachedVersion
+                );
+
+                if (shouldRequest)
+                {
+                    ShowLoadingState();
+                    _isWaitingForSpellbookData = true;
+
+                    AsyncNetClient.Socket.Send_SpellbookRequest(
+                        LocalSerial,
+                        (byte)_spellBookType,
+                        cachedVersion,
+                        false
+                    );
+                }
+                else
+                {
+                    Log.Trace($"[SPELLBOOK GUMP] Using cached data for type {_spellBookType}");
+                    var cache = SpellbookCacheManager.Instance.GetCachedSpellbook((byte)_spellBookType);
+                    if (cache != null)
+                    {
+                        Log.Trace($"[SPELLBOOK GUMP] Found cache with {cache.Spells.Count} spells");
+                        UpdateSpellBitmaskFromServer(cache.SpellBitmask);
+
+                        SpellbookCacheManager.Instance.SyncCachedSpellsToRegistry((byte)_spellBookType);
+                    }
+                    else
+                    {
+                        Log.Warn($"[SPELLBOOK GUMP] No cache found for type {_spellBookType}!");
+                    }
+                }
+            }
+
             RequestUpdateContents();
 
             Client.Game.Audio.PlaySound(0x0055);
+        }
+
+        private bool IsDynamicSpellbook()
+        {
+            return DynamicSpellbookRegistry.IsDynamic(_spellBookType);
+        }
+
+        private void ShowLoadingState()
+        {
+            _loadingLabel = new Label("Loading spells...", false, 0x0288, font: 6)
+            {
+                X = 100,
+                Y = 80
+            };
+            _dataBox.Add(_loadingLabel, 1);
+        }
+
+        private void UpdateSpellBitmaskFromServer(ulong spellBitmask)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                _spells[i] = (spellBitmask & (1UL << i)) != 0;
+            }
+        }
+
+        public void OnCacheValidated(ulong spellBitmask)
+        {
+            _isWaitingForSpellbookData = false;
+            UpdateSpellBitmaskFromServer(spellBitmask);
+
+            SpellbookCacheManager.Instance.SyncCachedSpellsToRegistry((byte)_spellBookType);
+
+            RequestUpdateContents();
+        }
+
+        public void OnSpellbookDataReceived()
+        {
+            _isWaitingForSpellbookData = false;
+
+            var cache = SpellbookCacheManager.Instance.GetCachedSpellbook((byte)_spellBookType);
+            if (cache != null)
+            {
+                UpdateSpellBitmaskFromServer(cache.SpellBitmask);
+            }
+
+            RequestUpdateContents();
         }
 
         private void _picBase_MouseDoubleClick(object sender, MouseDoubleClickEventArgs e)
@@ -885,46 +984,51 @@ namespace ClassicUO.Game.UI.Gumps
         {
             SpellDefinition def = null;
 
+            if (_isDynamicSpellbook)
+            {
+                def = DynamicSpellbookRegistry.GetSpell(_spellBookType, idx);
+                if (def != null && def.ID != 0)
+                {
+                    return def;
+                }
+            }
+
             switch (_spellBookType)
             {
                 case SpellBookType.Magery:
                     def = SpellsMagery.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Necromancy:
                     def = SpellsNecromancy.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Chivalry:
                     def = SpellsChivalry.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Bushido:
                     def = SpellsBushido.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Ninjitsu:
                     def = SpellsNinjitsu.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Spellweaving:
                     def = SpellsSpellweaving.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Mysticism:
                     def = SpellsMysticism.GetSpell(idx);
-
                     break;
 
                 case SpellBookType.Mastery:
                     def = SpellsMastery.GetSpell(idx);
+                    break;
 
+                default:
+                    def = DynamicSpellbookRegistry.GetSpell(_spellBookType, idx);
                     break;
             }
 
@@ -941,15 +1045,33 @@ namespace ClassicUO.Game.UI.Gumps
             out int dictionaryPagesCount
         )
         {
+            if (DynamicSpellbookRegistry.IsDynamic(type))
+            {
+                var cache = SpellbookCacheManager.Instance.GetCachedSpellbook((byte)type);
+                if (cache != null)
+                {
+                    maxSpellsCount = cache.Spells.Count;
+                    bookGraphic = cache.BookGraphic;
+                    minimizedGraphic = cache.MinimizedGraphic;
+                    iconStartGraphic = 0; // Dynamic spellbooks use individual icon graphics from SpellDefinition
+                    spellsOnPage = cache.SpellsPerPageSide;
+                    dictionaryPagesCount = cache.MaxDictionaryPages;
+
+                    if (dictionaryPagesCount % 2 != 0)
+                    {
+                        dictionaryPagesCount++;
+                    }
+                    return;
+                }
+            }
+
             switch (type)
             {
-                default:
                 case SpellBookType.Magery:
                     maxSpellsCount = SpellsMagery.MaxSpellCount;
                     bookGraphic = 0x08AC;
                     minimizedGraphic = 0x08BA;
                     iconStartGraphic = 0x08C0;
-
                     break;
 
                 case SpellBookType.Necromancy:
@@ -957,7 +1079,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B00;
                     minimizedGraphic = 0x2B03;
                     iconStartGraphic = 0x5000;
-
                     break;
 
                 case SpellBookType.Chivalry:
@@ -965,7 +1086,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B01;
                     minimizedGraphic = 0x2B04;
                     iconStartGraphic = 0x5100;
-
                     break;
 
                 case SpellBookType.Bushido:
@@ -973,7 +1093,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B07;
                     minimizedGraphic = 0x2B09;
                     iconStartGraphic = 0x5400;
-
                     break;
 
                 case SpellBookType.Ninjitsu:
@@ -981,7 +1100,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B06;
                     minimizedGraphic = 0x2B08;
                     iconStartGraphic = 0x5300;
-
                     break;
 
                 case SpellBookType.Spellweaving:
@@ -989,7 +1107,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B2F;
                     minimizedGraphic = 0x2B2D;
                     iconStartGraphic = 0x59D8;
-
                     break;
 
                 case SpellBookType.Mysticism:
@@ -997,7 +1114,6 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x2B32;
                     minimizedGraphic = 0x2B30;
                     iconStartGraphic = 0x5DC0;
-
                     break;
 
                 case SpellBookType.Mastery:
@@ -1005,7 +1121,13 @@ namespace ClassicUO.Game.UI.Gumps
                     bookGraphic = 0x8AC;
                     minimizedGraphic = 0x08BA;
                     iconStartGraphic = 0x945;
+                    break;
 
+                default:
+                    maxSpellsCount = 64;
+                    bookGraphic = 0x08AC;
+                    minimizedGraphic = 0x08BA;
+                    iconStartGraphic = 0x08C0;
                     break;
             }
 
@@ -1076,15 +1198,26 @@ namespace ClassicUO.Game.UI.Gumps
             out string reagents
         )
         {
+            // Check if this is a dynamic spellbook first
+            if (_isDynamicSpellbook)
+            {
+                SpellDefinition dynDef = DynamicSpellbookRegistry.GetSpell(_spellBookType, offset + 1);
+                if (dynDef != null && dynDef.ID != 0)
+                {
+                    name = dynDef.Name;
+                    abbreviature = dynDef.PowerWords;
+                    reagents = dynDef.CreateReagentListString("\n");
+                    return;
+                }
+            }
+
             switch (_spellBookType)
             {
-                default:
                 case SpellBookType.Magery:
                     SpellDefinition def = SpellsMagery.GetSpell(offset + 1);
                     name = def.Name;
                     abbreviature = SpellsMagery.SpecialReagentsChars[offset];
                     reagents = def.CreateReagentListString("\n");
-
                     break;
 
                 case SpellBookType.Necromancy:
@@ -1092,7 +1225,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
-
                     break;
 
                 case SpellBookType.Chivalry:
@@ -1100,7 +1232,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
-
                     break;
 
                 case SpellBookType.Bushido:
@@ -1108,7 +1239,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
-
                     break;
 
                 case SpellBookType.Ninjitsu:
@@ -1116,7 +1246,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
-
                     break;
 
                 case SpellBookType.Spellweaving:
@@ -1124,7 +1253,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
-
                     break;
 
                 case SpellBookType.Mysticism:
@@ -1132,7 +1260,6 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
-
                     break;
 
                 case SpellBookType.Mastery:
@@ -1140,7 +1267,14 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
+                    break;
 
+                default:
+                    // Try to get from dynamic registry for unknown types
+                    def = DynamicSpellbookRegistry.GetSpell(_spellBookType, offset + 1);
+                    name = def?.Name ?? "Unknown";
+                    abbreviature = def?.PowerWords ?? "";
+                    reagents = def?.CreateReagentListString("\n") ?? "";
                     break;
             }
         }
@@ -1322,54 +1456,48 @@ namespace ClassicUO.Game.UI.Gumps
         {
             switch (item.Graphic)
             {
-                default:
                 case 0x0EFA:
                     _spellBookType = SpellBookType.Magery;
-
                     break;
 
                 case 0x2253:
                     _spellBookType = SpellBookType.Necromancy;
-
                     break;
 
                 case 0x2252:
                     _spellBookType = SpellBookType.Chivalry;
-
                     break;
 
                 case 0x238C:
-
                     if ((World.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
                     {
                         _spellBookType = SpellBookType.Bushido;
                     }
-
                     break;
 
                 case 0x23A0:
-
                     if ((World.ClientFeatures.Flags & CharacterListFlags.CLF_SAMURAI_NINJA) != 0)
                     {
                         _spellBookType = SpellBookType.Ninjitsu;
                     }
-
                     break;
 
                 case 0x2D50:
                     _spellBookType = SpellBookType.Spellweaving;
-
                     break;
 
                 case 0x2D9D:
                     _spellBookType = SpellBookType.Mysticism;
-
                     break;
 
-                case 0x225A:
                 case 0x225B:
                     _spellBookType = SpellBookType.Mastery;
+                    break;
 
+                default:
+                    // Check if this graphic is registered as a dynamic spellbook
+                    _spellBookType = SpellbookTypeRegistry.GetTypeForGraphic(item.Graphic);
+                    Log.Trace($"[SPELLBOOK GUMP] AssignGraphic: 0x{item.Graphic:X4} -> {_spellBookType}");
                     break;
             }
         }

@@ -578,10 +578,265 @@ internal static class ExtendedCommand
 
                 break;
 
+            //===========================================================================================
+            // Dynamic Spellbook Packet Handlers
+            //===========================================================================================
+            case 0x39: // Spellbook Cache Valid
+                OnSpellbookCacheValid(world, ref p);
+                break;
+
+            case 0x3A: // Spellbook Full Data
+                OnSpellbookFullData(world, ref p);
+                break;
+
+            case 0x3B: // Invalidate Spellbook Cache
+                OnInvalidateSpellbookCache(world, ref p);
+                break;
+
+            case 0x3C: // Register Spellbook ItemID
+                OnRegisterSpellbookItemID(world, ref p);
+                break;
+
             default:
                 Log.Warn($"Unhandled 0xBF - sub: {cmd.ToHex()}");
 
                 break;
         }
+    }
+
+    //===========================================================================================
+    // Dynamic Spellbook Packet Handlers
+    //===========================================================================================
+
+    private static void OnSpellbookCacheValid(World world, ref StackDataReader p)
+    {
+        uint serial = p.ReadUInt32BE();
+        byte type = p.ReadUInt8();
+        uint version = p.ReadUInt32BE();
+        ulong spellBitmask = p.ReadUInt64BE();
+
+        Log.Trace($"[CLIENT] ====== CACHE VALID RESPONSE ======");
+        Log.Trace($"[CLIENT] Serial: 0x{serial:X}");
+        Log.Trace($"[CLIENT] Type: {type}");
+        Log.Trace($"[CLIENT] Version: {version}");
+        Log.Trace($"[CLIENT] Spell Bitmask: 0x{spellBitmask:X}");
+
+        // Update cache manager
+        SpellbookCacheManager.Instance.OnCacheValid(type, version, spellBitmask);
+
+        // Notify any open spellbooks
+        var gump = UIManager.GetGump<SpellbookGump>(serial);
+        if (gump != null)
+        {
+            Log.Trace($"[CLIENT] Found gump, notifying of cache validation");
+            gump.OnCacheValidated(spellBitmask);
+        }
+        else
+        {
+            Log.Trace($"[CLIENT] No gump found for serial 0x{serial:X}");
+        }
+    }
+
+    private static void OnSpellbookFullData(World world, ref StackDataReader p)
+    {
+        uint serial = p.ReadUInt32BE();
+        byte type = p.ReadUInt8();
+        uint version = p.ReadUInt32BE();
+        ulong spellBitmask = p.ReadUInt64BE();
+        ushort bookGraphic = p.ReadUInt16BE();
+        ushort minimizedGraphic = p.ReadUInt16BE();
+        byte spellCount = p.ReadUInt8();
+        uint cacheTTL = p.ReadUInt32BE();
+        byte spellsPerPageSide = p.ReadUInt8();
+        byte maxDictionaryPages = p.ReadUInt8();
+        byte pageNameCount = p.ReadUInt8();
+        byte displayFlags = p.ReadUInt8();
+        bool displayManaCost = (displayFlags & 0x01) != 0;
+        bool displayMinSkill = (displayFlags & 0x02) != 0;
+
+        // Read custom property display settings (title, label, name)
+        byte customPropertyTitleLength = p.ReadUInt8();
+        string customPropertyTitle = null;
+        if (customPropertyTitleLength > 0)
+        {
+            customPropertyTitle = p.ReadASCII(customPropertyTitleLength);
+        }
+
+        byte customPropertyLabelLength = p.ReadUInt8();
+        string customPropertyLabel = null;
+        if (customPropertyLabelLength > 0)
+        {
+            customPropertyLabel = p.ReadASCII(customPropertyLabelLength);
+        }
+
+        byte customPropertyNameLength = p.ReadUInt8();
+        string customPropertyName = null;
+        if (customPropertyNameLength > 0)
+        {
+            customPropertyName = p.ReadASCII(customPropertyNameLength);
+        }
+
+        Log.Trace($"[CLIENT] ====== FULL SPELLBOOK DATA ======");
+        Log.Trace($"[CLIENT] CustomProperty: Title='{customPropertyTitle}', Label='{customPropertyLabel}', Name='{customPropertyName}'");
+        Log.Trace($"[CLIENT] Serial: 0x{serial:X}");
+        Log.Trace($"[CLIENT] Type: {type}");
+        Log.Trace($"[CLIENT] Version: {version}");
+        Log.Trace($"[CLIENT] Spell Count: {spellCount}");
+        Log.Trace($"[CLIENT] Spells Per Page Side: {spellsPerPageSide}");
+        Log.Trace($"[CLIENT] Max Dictionary Pages: {maxDictionaryPages}");
+        Log.Trace($"[CLIENT] Page Name Count: {pageNameCount}");
+
+        // Read page names
+        var pageNames = new string[pageNameCount];
+        for (int i = 0; i < pageNameCount; i++)
+        {
+            byte nameLength = p.ReadUInt8();
+            if (nameLength > 0)
+            {
+                pageNames[i] = p.ReadASCII(nameLength);
+            }
+            else
+            {
+                pageNames[i] = string.Empty;
+            }
+        }
+
+        // Read spell data
+        var spells = new List<DynamicSpellDefinition>();
+        for (int i = 0; i < spellCount; i++)
+        {
+            var spell = new DynamicSpellDefinition
+            {
+                SpellID = p.ReadUInt16BE(),
+                IconGraphic = p.ReadUInt16BE(),
+                NameCliloc = p.ReadInt32BE()
+            };
+
+            byte nameLength = p.ReadUInt8();
+            if (nameLength > 0)
+            {
+                spell.Name = p.ReadASCII(nameLength);
+            }
+
+            byte powerWordsLength = p.ReadUInt8();
+            if (powerWordsLength > 0)
+            {
+                spell.PowerWords = p.ReadASCII(powerWordsLength);
+            }
+
+            byte descriptionLength = p.ReadUInt8();
+            if (descriptionLength > 0)
+            {
+                spell.Description = p.ReadASCII(descriptionLength);
+            }
+
+            spell.ManaCost = p.ReadUInt8();
+            spell.MinSkill = p.ReadUInt8();
+            spell.TargetType = p.ReadUInt8();
+            spell.Reagents = p.ReadUInt16BE();
+
+            // Read custom reagents
+            byte customReagentCount = p.ReadUInt8();
+            if (customReagentCount > 0)
+            {
+                spell.CustomReagents = new string[customReagentCount];
+                for (int r = 0; r < customReagentCount; r++)
+                {
+                    byte reagentLength = p.ReadUInt8();
+                    if (reagentLength > 0)
+                    {
+                        spell.CustomReagents[r] = p.ReadASCII(reagentLength);
+                    }
+                    else
+                    {
+                        spell.CustomReagents[r] = string.Empty;
+                    }
+                }
+            }
+
+            spell.Cooldown = p.ReadUInt16BE();
+            spell.Page = p.ReadUInt8();  // Read page assignment
+
+            Log.Info($"[CLIENT DEBUG] Spell {i + 1}: ID={spell.SpellID}, Name='{spell.Name}', Icon=0x{spell.IconGraphic:X4}, Page={spell.Page}");
+
+            spells.Add(spell);
+        }
+
+        Log.Trace($"[SPELLBOOK PACKET] Received full data: type={type}, bookGraphic=0x{bookGraphic:X4}, minimized=0x{minimizedGraphic:X4}, spells={spellCount}");
+
+        // Update cache
+        SpellbookCacheManager.Instance.UpdateCache(
+            type, version, spellBitmask,
+            bookGraphic, minimizedGraphic,
+            spells, cacheTTL, spellsPerPageSide, maxDictionaryPages, pageNames,
+            displayManaCost, displayMinSkill, customPropertyTitle, customPropertyLabel, customPropertyName
+        );
+
+        // Notify or open spellbook
+        var gump = UIManager.GetGump<SpellbookGump>(serial);
+        if (gump != null)
+        {
+            Log.Trace($"[SPELLBOOK PACKET] Found existing gump, calling OnSpellbookDataReceived()");
+            gump.OnSpellbookDataReceived();
+        }
+        else
+        {
+            Log.Trace($"[SPELLBOOK PACKET] No existing gump, creating new SpellbookGump");
+            // Auto-open spellbook with new data
+            UIManager.Add(new SpellbookGump(world, serial));
+        }
+    }
+
+    private static void OnInvalidateSpellbookCache(World world, ref StackDataReader p)
+    {
+        byte type = p.ReadUInt8();
+        uint newVersion = p.ReadUInt32BE();
+        byte flags = p.ReadUInt8();
+        bool forceReload = (flags & 0x01) != 0;
+
+        Log.Trace($"[SPELLBOOK PACKET] Invalidate cache: type={type}, newVersion={newVersion}, forceReload={forceReload}");
+
+        // Invalidate cache
+        SpellbookCacheManager.Instance.InvalidateCache(type);
+
+        if (forceReload)
+        {
+            // Close and request refresh for any open spellbooks of this type
+            LinkedListNode<Gump> first = UIManager.Gumps.First;
+            while (first != null)
+            {
+                LinkedListNode<Gump> next = first.Next;
+                if (first.Value is SpellbookGump sbGump)
+                {
+                    if ((byte)sbGump.SpellBookType == type || type == 0xFF)
+                    {
+                        uint sbSerial = sbGump.LocalSerial;
+                        sbGump.Dispose();
+                        // Request new data
+                        AsyncNetClient.Socket.Send_SpellbookRequest(sbSerial, type, 0, true);
+                    }
+                }
+                first = next;
+            }
+        }
+    }
+
+    private static void OnRegisterSpellbookItemID(World world, ref StackDataReader p)
+    {
+        ushort itemGraphic = p.ReadUInt16BE();
+        byte spellbookType = p.ReadUInt8();
+
+        Log.Info($"[SPELLBOOK PACKET DEBUG] Register ItemID: 0x{itemGraphic:X4} -> SpellBookType byte={spellbookType}");
+
+        var bookType = (SpellBookType)spellbookType;
+
+        Log.Info($"[SPELLBOOK PACKET DEBUG] Converted to enum: {bookType} (numeric: {(byte)bookType})");
+
+        // Register in the type registry (maps item graphic to spellbook type)
+        SpellbookTypeRegistry.Register(itemGraphic, bookType);
+
+        // Register as a dynamic spellbook in the dynamic registry
+        DynamicSpellbookRegistry.RegisterDynamic(bookType);
+        Log.Info($"[SPELLBOOK PACKET DEBUG] Registered {bookType} as dynamic spellbook");
     }
 }
