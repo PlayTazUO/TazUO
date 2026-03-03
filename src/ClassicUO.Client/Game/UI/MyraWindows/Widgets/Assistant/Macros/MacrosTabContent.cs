@@ -20,6 +20,10 @@ public static class MacrosTabContent
     private static readonly MacroType[] _sortedMacroTypeValues;
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
 
+    private static Action? _cleanupAction;
+    /// <summary>Call when the owning window closes to unsubscribe any active hotkey-capture handler and re-enable hotkeys.</summary>
+    public static void Cleanup() => _cleanupAction?.Invoke();
+
     static MacrosTabContent()
     {
         MacroType[] macroTypes = Enum.GetValues<MacroType>()
@@ -543,6 +547,8 @@ public static class MacrosTabContent
 
         BuildMacroList();
         BuildEditor();
+
+        _cleanupAction = CancelCapture;
 
         var root = new VerticalStackPanel { Spacing = 4 };
         root.Widgets.Add(toolbar);

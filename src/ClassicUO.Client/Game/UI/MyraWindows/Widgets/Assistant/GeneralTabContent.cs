@@ -83,7 +83,7 @@ public static class GeneralTabContent
         grid.AddWidget(MyraHSlider.SliderWithLabel(lang.TurnDelay, out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
-        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.ObjectDelay, out var obDelaySlider, v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay), rightRow, Col.RightColumn.ToInt());
+        grid.AddWidget(MyraHSlider.SliderWithLabel(lang.ObjectDelay, out MyraHSlider obDelaySlider, v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay), rightRow, Col.RightColumn.ToInt());
         rightRow++;
 
         grid.AddWidget(new MyraButton(lang.AutoDelayChecker, () => AutomatedObjectDelay.Begin(() =>

@@ -212,7 +212,7 @@ public class MyraControl : IGui
         }
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         if(IsDisposed) return;
         _disposeRequested = true;

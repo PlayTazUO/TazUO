@@ -17,6 +17,13 @@ public class AssistantWindow : MyraControl
         CenterInViewPort();
     }
 
+    public override void Dispose()
+    {
+        base.Dispose();
+
+        MacrosTabContent.Cleanup();
+    }
+
     private void Build()
     {
         var tabs = new MyraTabControl();
