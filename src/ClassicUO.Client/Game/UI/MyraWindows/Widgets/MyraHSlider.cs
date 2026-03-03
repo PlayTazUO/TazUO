@@ -11,6 +11,12 @@ public class MyraHSlider : Grid
     private OverlayLabel _valueLabel = new();
     private HorizontalSlider _slider = new();
 
+    public bool RoundValues { get; set; } = true;
+    /// <summary>
+    /// This is only used when RoundValues is true
+    /// </summary>
+    public int DecimalPlaces { get; set; } = 0;
+
     public float Minimum
     {
         get => _slider.Minimum;
@@ -28,8 +34,9 @@ public class MyraHSlider : Grid
         get => _slider.Value;
         set
         {
-            _slider.Value = value;
-            _valueLabel.Text = FormatValue(value);
+            var val = ValidateValues(value);
+            _slider.Value = val;
+            _valueLabel.Text = FormatValue(val);
         }
     }
 
@@ -44,6 +51,15 @@ public class MyraHSlider : Grid
         Build();
     }
 
+    private float ValidateValues(float value)
+    {
+        if (!RoundValues) return value;
+
+        value = Math.Clamp(value, Minimum, Maximum);
+        value = (float)Math.Round(value, DecimalPlaces);
+        return value;
+    }
+
     private void Build()
     {
         ColumnsProportions.Add(new Proportion(ProportionType.Auto));
@@ -55,6 +71,10 @@ public class MyraHSlider : Grid
         _valueLabel.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 12);
 
         _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
+        _slider.ValueChanged += (sender, args) =>
+        {
+            Value = ValidateValues(args.NewValue); //This may get called twice: Value updated -> Event fired -> Value changes -> Event fired -> Value changes but the value is the same this time so this event isn't called again
+        };
 
         Widgets.Add(_slider);
         SetRow(_slider, 0);

@@ -63,10 +63,11 @@ public static class GeneralTabContent
 
         row++;
 
+
         grid.AddWidget(MyraHSlider.SliderWithLabel(lang.GameScale, out MyraHSlider gsSlider, v =>
         {
-            gameScale = Math.Clamp(v, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
-        }, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE, Client.Game.RenderScale), row, Col.LeftColumn.ToInt());
+            gameScale = Math.Clamp(v / 100, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
+        }, Constants.MIN_GAME_SCALE * 100, Constants.MAX_GAME_SCALE * 100, Client.Game.RenderScale * 100), row, Col.LeftColumn.ToInt());
         gsSlider.Tooltip = lang.GameScaleTooltip;
 
         row++;
