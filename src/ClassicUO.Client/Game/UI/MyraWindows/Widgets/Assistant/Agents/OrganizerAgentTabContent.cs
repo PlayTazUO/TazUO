@@ -329,7 +329,7 @@ public static class OrganizerAgentTabContent
                     OrganizerItemConfig newItemConfig = selectedConfig.NewItemConfig();
                     newItemConfig.Graphic = graphic;
 
-                    if (int.TryParse(newHueBox.Text, out int hue) && hue >= -1)
+                    if (int.TryParse(newHueBox.Text, out int hue) && hue is >= -1 and <= ushort.MaxValue)
                         newItemConfig.Hue = hue == -1 ? ushort.MaxValue : (ushort)hue;
 
                     newGraphicBox.Text = "";
