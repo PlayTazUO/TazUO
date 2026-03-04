@@ -63,6 +63,9 @@ public static class MyraStyle
         s.MinWidth = 1;
         s.MinHeight = 1;
         s.Padding = new Thickness(5);
+
+        TextBoxStyle inputS = Stylesheet.Current.TextBoxStyle;
+        inputS.Padding = new Thickness(3);
     }
 
     /// <summary>
