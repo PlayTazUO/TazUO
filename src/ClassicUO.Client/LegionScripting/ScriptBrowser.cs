@@ -14,7 +14,6 @@ using ImGuiNET;
 using System.Numerics;
 using System.Threading;
 using ClassicUO.Game.UI;
-using ClassicUO.Game.UI.ImGuiControls.Legion;
 using System.Text.Json.Serialization;
 using ClassicUO.Utility.Platforms;
 

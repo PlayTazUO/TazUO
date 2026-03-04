@@ -2485,7 +2485,7 @@ namespace ClassicUO.LegionScripting
                 if (entries != null)
                 {
                     var entryList = new List<Tuple<ushort, string>>();
-                    foreach (var entry in entries)
+                    foreach (object entry in entries)
                     {
                         if (entry is IList entryPair && entryPair.Count >= 2)
                         {

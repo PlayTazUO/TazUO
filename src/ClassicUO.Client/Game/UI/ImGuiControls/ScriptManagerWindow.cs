@@ -5,7 +5,6 @@ using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Game.UI.ImGuiControls.Legion;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility;

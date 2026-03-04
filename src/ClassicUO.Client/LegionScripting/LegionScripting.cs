@@ -16,7 +16,7 @@ using Microsoft.Scripting.Hosting;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using ClassicUO.Game.UI;
-using ClassicUO.Game.UI.ImGuiControls.Legion;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting.ApiClasses;
 using ClassicUO.Utility;
 using Microsoft.CodeAnalysis;
@@ -520,7 +520,7 @@ namespace ClassicUO.LegionScripting
 
                 if (errorLocations.Count > 0)
                 {
-                    ImGuiManager.AddWindow(new ScriptErrorWindow(new ScriptErrorDetails(e.Message, errorLocations, script)));
+                    new ScriptErrorWindow(new ScriptErrorDetails(e.Message, errorLocations, script));
                 }
                 else
                     GameActions.Print(_world, formattedEx, Constants.HUE_ERROR);
@@ -597,9 +597,7 @@ namespace ClassicUO.LegionScripting
                     .Where(d => d.Severity == DiagnosticSeverity.Error)
                     .Select(d => d.GetMessage()));
 
-                ImGuiManager.AddWindow(new ScriptErrorWindow(
-                    new ScriptErrorDetails(errorMsg, errorLocations, script)
-                ));
+                new ScriptErrorWindow(new ScriptErrorDetails(errorMsg, errorLocations, script));
             }
             else
             {
@@ -650,9 +648,7 @@ namespace ClassicUO.LegionScripting
 
             if (errorLocations.Count > 0)
             {
-                ImGuiManager.AddWindow(new ScriptErrorWindow(
-                    new ScriptErrorDetails(actualException.Message, errorLocations, script)
-                ));
+                new ScriptErrorWindow(new ScriptErrorDetails(actualException.Message, errorLocations, script));
             }
             else
             {
