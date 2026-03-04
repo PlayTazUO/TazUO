@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Numerics;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility;
 using ImGuiNET;
@@ -50,7 +51,7 @@ public class ScriptErrorWindow : ImGuiWindow
                 ImGui.Separator();
         }
 
-        if (ImGui.Button("Edit")) ImGuiManager.AddWindow(new ScriptEditorWindow(_errorDetails.Script));
+        if (ImGui.Button("Edit")) new ScriptEditorWindow(_errorDetails.Script);
 
         ImGui.SameLine();
 

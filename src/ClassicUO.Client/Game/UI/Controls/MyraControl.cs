@@ -26,7 +26,7 @@ public class MyraControl : IGui
     {
         _rootWindow = new Window { Title = title };
         _rootWindow.Closed += OnRootWindowOnClosed;
-        _rootWindow.TouchDoubleClick += (sender, args) =>
+        _rootWindow.TitlePanel.TouchDoubleClick += (sender, args) =>
         {
             _rootWindow.Content?.Visible = !_rootWindow.Content.Visible;
         };

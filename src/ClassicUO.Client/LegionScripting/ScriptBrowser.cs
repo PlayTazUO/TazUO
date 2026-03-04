@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ClassicUO.Game;
 using ClassicUO.Game.UI.ImGuiControls;
+using ClassicUO.Game.UI.MyraWindows;
 using ImGuiNET;
 using System.Numerics;
 using System.Threading;
@@ -374,7 +375,7 @@ public class ScriptBrowser : SingletonImGuiWindow<ScriptBrowser>
 
                     // Create ScriptFile object pointing to the saved file
                     var f = new ScriptFile(World.Instance, LegionScripting.ScriptPath, finalFileName);
-                    ImGuiManager.AddWindow(new ScriptEditorWindow(f));
+                    new ScriptEditorWindow(f);
 
                     GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
 

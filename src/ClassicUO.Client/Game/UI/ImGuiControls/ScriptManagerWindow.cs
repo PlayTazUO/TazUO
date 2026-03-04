@@ -808,7 +808,7 @@ public class ScriptManagerWindow : SingletonImGuiWindow<ScriptManagerWindow>
 
         if (ImGui.MenuItem("Edit"))
         {
-            ImGuiManager.AddWindow(new ScriptEditorWindow(script));
+            new MyraWindows.ScriptEditorWindow(script);
             _showContextMenu = false;
         }
 
