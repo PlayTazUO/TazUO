@@ -792,7 +792,7 @@ public class ScriptManagerWindow : SingletonImGuiWindow<ScriptManagerWindow>
         ImGui.SeparatorText("Options:");
 
         if(ImGui.MenuItem("Edit Constants"))
-            ImGuiManager.AddWindow(new ScriptConstantsEditorWindow(script));
+            new MyraWindows.ScriptConstantsEditorWindow(script);
 
         if (ImGui.MenuItem("Rename"))
         {
