@@ -25,10 +25,13 @@ public class ScriptEditorWindow : MyraControl
         {
             GameActions.Print("File too large to edit!", Constants.HUE_ERROR);
             _disposeRequested = true;
-            return;
+            IsVisible = false; //Need to still add to uimanager to properly dispose later.
+        }
+        else
+        {
+            Build(content);
         }
 
-        Build(content);
         CenterInViewPort();
         UIManager.Add(this);
         BringOnTop();
