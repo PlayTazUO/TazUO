@@ -309,9 +309,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 for (int j = 0; j < 2; j++)
                 {
-                    if (page == 1 && Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine
+                    if (page == 1
+                        && (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine
                             ? _spellBookType == SpellBookType.Chivalry || _spellBookType == SpellBookType.Cleric
-                            : _spellBookType == SpellBookType.Chivalry)
+                            : _spellBookType == SpellBookType.Chivalry))
                     {
                         var label = new Label(
                             ResGumps.TithingPointsAvailable + World.Player.TithingPoints,

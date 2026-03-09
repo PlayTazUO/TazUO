@@ -256,11 +256,11 @@ internal static class OpenContainer
             {
                 Item item = vendor.FindItemByLayer(layer);
 
+                if (item == null) continue;
+
                 LinkedObject first = item.Items;
 
-                if (first == null)
-                    //Log.Warn("buy item not found");
-                    continue;
+                if (first == null) continue;
 
                 bool reverse = item.Graphic != 0x2AF8; //hardcoded logic in original client that we must match
 
@@ -341,8 +341,6 @@ internal static class OpenContainer
                         && ProfileManager.CurrentProfile.UseLargeContainerGumps
                     )
                     {
-
-
                         if (graphic == 10009 || (graphic >= 10060 && graphic <= 10081) || (graphic >= 10258 && graphic <= 10291) || graphic == 11000 || graphic == 11156 || graphic == 11415 || graphic == 11417 || graphic == 11422 || (graphic >= 11747 && graphic <= 11750) || (graphic >= 11765 && graphic <= 11770) || (graphic >= 19800 && graphic <= 19835) || graphic == 29724 || graphic == 40558 || graphic == 40560 || graphic == 40562 || graphic == 40586 || graphic == 49922 || graphic == 49934 || graphic == 50138 || (graphic >= 50153 && graphic <= 50167) || (graphic >= 50246 && graphic == 50250) || (graphic >= 50298 && graphic == 50300))
                             graphic -= 10000;
 
