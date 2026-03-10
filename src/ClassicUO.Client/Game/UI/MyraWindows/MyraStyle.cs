@@ -20,6 +20,8 @@ public static class MyraStyle
     private static NinePatchRegion _ninePatchPanel;
     private static NinePatchRegion _ninePatchButtonUp;
     private static NinePatchRegion _ninePatchButtonDown;
+    private static NinePatchRegion _ninePatchButtonDangerUp;
+    private static NinePatchRegion _ninePatchButtonDangerDown;
 
     public static void SetDefault()
     {
@@ -28,6 +30,10 @@ public static class MyraStyle
             ModernUIConstants.ModernUIButtonUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
         _ninePatchButtonDown = new NinePatchRegion(ModernUIConstants.ModernUIButtonDown,
             ModernUIConstants.ModernUIButtonUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
+        _ninePatchButtonDangerUp = new NinePatchRegion(ModernUIConstants.ModernUIButtonDangerUp,
+            ModernUIConstants.ModernUIButtonDangerUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
+        _ninePatchButtonDangerDown = new NinePatchRegion(ModernUIConstants.ModernUIButtonDangerDown,
+            ModernUIConstants.ModernUIButtonDangerUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
 
         //Window style
         WindowStyle style = Stylesheet.Current.WindowStyle;
@@ -114,10 +120,9 @@ public static class MyraStyle
 
     public static Button ApplyButtonDangerStyle(Button button)
     {
-        button.Background = new SolidBrush(new Color(155, 0, 0, 255));
-        button.DisabledBackground = new SolidBrush(new Color(155, 0, 0, 155));
-        button.OverBackground = new SolidBrush(new Color(100, 0, 0, 255));
-        button.PressedBackground = new SolidBrush(new Color(55, 0, 0, 255));
+        button.Background = _ninePatchButtonDangerUp;
+        button.OverBackground = _ninePatchButtonDangerDown;
+        button.PressedBackground = _ninePatchButtonDangerDown;
 
         return button;
     }

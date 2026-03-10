@@ -188,20 +188,20 @@ public static class SpellIndicatorTabContent
             var deleteConfirmLabel = new MyraLabel($"Delete '{spell.Name}'?", MyraLabel.Style.P);
             var deleteConfirm = new HorizontalStackPanel { Spacing = 4, Visible = false };
             deleteConfirm.Widgets.Add(deleteConfirmLabel);
-            deleteConfirm.Widgets.Add(new MyraButton("Yes", () =>
+            deleteConfirm.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Yes", () =>
             {
                 SpellVisualRangeManager.Instance.SpellRangeCache.Remove(spell.ID);
                 Save();
                 ClearSelection();
-            }));
+            })));
             deleteConfirm.Widgets.Add(new MyraButton("No", () => deleteConfirm.Visible = false));
 
             var btnRow = new HorizontalStackPanel { Spacing = 4 };
-            btnRow.Widgets.Add(new MyraButton("Delete Spell", () =>
+            btnRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete Spell", () =>
             {
                 deleteConfirmLabel.Text = $"Delete '{spell.Name}'?";
                 deleteConfirm.Visible = !deleteConfirm.Visible;
-            }) { Tooltip = "Delete this spell indicator configuration." });
+            }) { Tooltip = "Delete this spell indicator configuration." }));
             btnRow.Widgets.Add(new MyraButton("Back to List", ClearSelection));
 
             spellEditorPanel.Widgets.Add(btnRow);

@@ -23,6 +23,8 @@ public static class ModernUIConstants
     /// </summary>
     public static Texture2D ModernUIButtonUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonUp.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUIButtonDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDown.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDangerUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerUp.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDangerDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerDown.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUICheckBoxChecked { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxChecked.png", out Texture2D texture); return texture; } }
     public static Texture2D ModernUICheckBoxUnChecked { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxUnChecked.png", out Texture2D texture); return texture; } }
 

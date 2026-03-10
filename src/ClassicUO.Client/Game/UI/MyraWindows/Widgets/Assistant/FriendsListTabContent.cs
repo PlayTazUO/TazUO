@@ -47,7 +47,7 @@ public static class FriendsListTabContent
                 grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.Style.P), row, 0);
                 grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.Style.P), row, 1);
                 grid.AddWidget(new MyraLabel(f.DateAdded.ToString("yyyy-MM-dd"), MyraLabel.Style.P), row, 2);
-                grid.AddWidget(new MyraButton("Remove", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
                 {
                     bool removed = f.Serial != 0
                         ? FriendsListManager.Instance.RemoveFriend(f.Serial)
@@ -58,7 +58,7 @@ public static class FriendsListTabContent
                         GameActions.Print(World.Instance, $"Removed {f.Name} from friends list");
                         BuildFriendsList();
                     }
-                }), row, 3);
+                })), row, 3);
 
                 row++;
             }
