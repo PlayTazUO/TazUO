@@ -39,33 +39,32 @@ public static class MyraStyle
         WindowStyle style = Stylesheet.Current.WindowStyle;
 
         style.Background = _ninePatchPanel;
-        //style.Border = _ninePatchRegion;
-        //style.BorderThickness = new Thickness(ModernUIConstants.ModernUIPanel_BorderSize);
-        //style.Background = new SolidBrush(new Color(12, 12, 12, 220));
-        //style.Border = new SolidBrush(TazUO_Orange);
-        //style.BorderThickness = new Thickness(2);
-
         style.Padding = new Thickness(6);
-        style.TitleStyle.Padding = new Thickness(2);
+        style.TitleStyle.Padding = new Thickness(3);
+        style.TitleStyle.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 18);
 
         //Labels
         Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
 
         //Tabs
         TabControlStyle tabControlStyle = Stylesheet.Current.TabControlStyle;
-        tabControlStyle.Background = new SolidBrush(Color.Transparent);
-        tabControlStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
-        tabControlStyle.BorderThickness = new Thickness(1);
+        // tabControlStyle.Background = new SolidBrush(Color.Transparent);
+        // tabControlStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
+        // tabControlStyle.BorderThickness = new Thickness(1);
+        // tabControlStyle.Margin = new Thickness(8, 0);
 
         tabControlStyle.ContentStyle ??= new WidgetStyle();
         tabControlStyle.ContentStyle.Background = new SolidBrush(Color.Transparent);
+        tabControlStyle.ContentStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
+        tabControlStyle.ContentStyle.BorderThickness = new Thickness(1);
 
         ImageTextButtonStyle tabItemStyle = tabControlStyle.TabItemStyle;
         tabItemStyle.Background = new SolidBrush(Color.Transparent);
         tabItemStyle.OverBackground = new SolidBrush(new Color(170, 105, 13, 80));
         tabItemStyle.PressedBackground = new SolidBrush(new Color(170, 105, 13, 160));
         tabItemStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
-        tabItemStyle.BorderThickness = new Thickness(1);
+        tabItemStyle.BorderThickness = new Thickness(1, 1, 1, 0); // remove bottom border to avoid overlap
+        tabItemStyle.Margin = new Thickness(1, 0);
         tabItemStyle.Padding = new Thickness(10, 2);
 
         //HSlider
@@ -75,7 +74,6 @@ public static class MyraStyle
         sStyle.KnobStyle.ImageStyle.Background = new SolidBrush(TazUO_Orange);
         sStyle.KnobStyle.ImageStyle.OverBackground = new SolidBrush(TazUO_Orange);
         sStyle.KnobStyle.ImageStyle.FocusedBackground = new SolidBrush(TazUO_Orange);
-
         sStyle.KnobStyle.ImageStyle.PressedImage = null;
         sStyle.KnobStyle.ImageStyle.Image = null;
         sStyle.Width = 100;
@@ -91,10 +89,6 @@ public static class MyraStyle
         s.MinHeight = 1;
         s.Padding = new Thickness(5);
 
-        TextBoxStyle inputS = Stylesheet.Current.TextBoxStyle;
-        inputS.Padding = new Thickness(3);
-
-
         //Checkbox style
         ImageTextButtonStyle cbStyle = Stylesheet.Current.CheckBoxStyle;
         cbStyle.ImageStyle.PressedImage = new TextureRegion(ModernUIConstants.ModernUICheckBoxChecked);
@@ -105,6 +99,7 @@ public static class MyraStyle
         inputStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
         inputStyle.Border = new SolidBrush(new Color(21, 21, 21, STANDARD_BORDER_ALPHA));
         inputStyle.BorderThickness = new Thickness(1);
+        inputStyle.Padding = new Thickness(3);
 
         ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
         svStyle.VerticalScrollBackground = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbar);
@@ -121,6 +116,9 @@ public static class MyraStyle
         grid.BorderThickness = new Thickness(1);
         grid.GridLinesColor = GridBorderColor;
         grid.ShowGridLines = true;
+        grid.Background = new SolidBrush(new Color(0, 0, 0, 25));
+        grid.ColumnSpacing = 4;
+        grid.RowSpacing = 1;
     }
 
     public static Button ApplyButtonDangerStyle(Button button)

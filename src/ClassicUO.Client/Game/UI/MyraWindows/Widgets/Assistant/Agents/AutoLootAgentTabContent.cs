@@ -7,6 +7,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D;
 using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
@@ -84,17 +85,19 @@ public static class AutoLootAgentTabContent
 
             // 7 columns: Art | Graphic | Hue | Regex | Priority | Destination | Actions
             var grid = new MyraGrid();
-            grid.AddColumn(null, 7);
+            grid.AddColumn(null, 5);
+            grid.AddColumn(new Proportion(ProportionType.Fill), 1);
+            grid.AddColumn(null, 1);
             MyraStyle.ApplyStandardGridStyling(grid);
 
             // Header row
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Regex", MyraLabel.Style.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Priority", MyraLabel.Style.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.Style.H3), 0, 5);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.H3), 0, 6);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.Style.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Regex", MyraLabel.Style.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Priority", MyraLabel.Style.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Destination", MyraLabel.Style.TableHeader), 0, 5);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.TableHeader), 0, 6);
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
@@ -103,13 +106,14 @@ public static class AutoLootAgentTabContent
 
                 // Art image (col 0)
                 if(entry.Graphic > 0)
-                    grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name }, dataRow, 0);
+                    grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name, Margin = new Thickness(2, 0) }, dataRow, 0);
 
                 // Graphic
                 var graphicBox = new TextBox
                 {
                     Text = entry.Graphic.ToString(),
-                    Tooltip = "Item graphic ID. Set to -1 to match any graphic."
+                    Tooltip = "Item graphic ID. Set to -1 to match any graphic.",
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
@@ -122,7 +126,9 @@ public static class AutoLootAgentTabContent
                 var hueBox = new TextBox
                 {
                     Text = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString(),
-                    Tooltip = "Item hue. Set to -1 to match any hue."
+                    Tooltip = "Item hue. Set to -1 to match any hue.",
+                    Width = 60,
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 hueBox.TextChangedByUser += (_, _) =>
                 {
@@ -169,11 +175,14 @@ public static class AutoLootAgentTabContent
                 grid.AddWidget(priorityRow, dataRow, 4);
 
                 // Destination box + Target button
+                var destCell = new HorizontalStackPanel { Spacing = 4 };
                 var destBox = new TextBox
                 {
                     Text = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}",
                     HintText = "Serial (hex)",
-                    Tooltip = "Destination container serial (hex). Leave empty to use grab bag."
+                    Tooltip = "Destination container serial (hex). Leave empty to use grab bag.",
+                    MinWidth = 100,
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 destBox.TextChangedByUser += (_, _) =>
                 {
@@ -182,7 +191,7 @@ public static class AutoLootAgentTabContent
                     else if (uint.TryParse(destBox.Text.Replace("0x", "").Replace("0X", ""), NumberStyles.HexNumber, null, out uint serial))
                         entry.DestinationContainer = serial;
                 };
-                var destCell = new HorizontalStackPanel { Spacing = 4 };
+                StackPanel.SetProportionType(destBox, ProportionType.Fill);
                 destCell.Widgets.Add(destBox);
                 destCell.Widgets.Add(new MyraButton("Target", () =>
                 {
@@ -197,11 +206,13 @@ public static class AutoLootAgentTabContent
                 }) { Tooltip = "Target a container to use as the destination for this entry." });
                 grid.AddWidget(destCell, dataRow, 5);
 
-                grid.AddWidget(new MyraButton("Delete", () =>
+                var delBtn = new MyraButton("Delete", () =>
                 {
                     AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.Uid);
                     BuildEntriesList();
-                }), dataRow, 6);
+                });
+                delBtn.VerticalAlignment = VerticalAlignment.Center;
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(delBtn), dataRow, 6);
 
                 dataRow += 1;
             }
@@ -213,8 +224,8 @@ public static class AutoLootAgentTabContent
 
         // Add entry inline panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new TextBox { HintText = "Graphic ID", Width = 80 };
-        var newHueBox = new TextBox { HintText = "Hue (-1=any)", Width = 80 };
+        var newGraphicBox = new TextBox { HintText = "Graphic ID", Width = 100 /*, Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16) */};
+        var newHueBox = new TextBox { HintText = "Hue (-1 = any)", Width = 100 };
         var newRegexBox = new TextBox { HintText = "Regex (optional)", Width = 200 };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };

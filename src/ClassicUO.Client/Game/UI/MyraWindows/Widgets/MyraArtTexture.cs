@@ -14,7 +14,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 /// </summary>
 public class MyraArtTexture : Image
 {
-    public MyraArtTexture(uint graphic, int maxSize = 40)
+    public MyraArtTexture(uint graphic, int maxSize = 36)
     {
         SpriteInfo artInfo = Client.Game.UO.Arts.GetArt(graphic);
 
@@ -28,5 +28,6 @@ public class MyraArtTexture : Image
 
         MaxWidth = maxSize;
         MaxHeight = maxSize;
+        // VerticalAlignment = VerticalAlignment.Bottom;
     }
 }

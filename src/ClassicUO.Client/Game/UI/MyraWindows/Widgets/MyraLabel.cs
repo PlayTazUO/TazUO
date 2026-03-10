@@ -1,6 +1,4 @@
 using ClassicUO.Assets;
-using FontStashSharp;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Styles;
@@ -42,6 +40,7 @@ public class MyraLabel : Label
             case Style.TableHeader:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 16);
                 styleSheet.Padding = new Thickness(4, 0);
+                styleSheet.Margin = new Thickness(2, 0);
                 break;
             default:
             case Style.P:

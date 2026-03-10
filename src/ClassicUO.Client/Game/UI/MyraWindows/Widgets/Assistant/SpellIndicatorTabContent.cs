@@ -6,8 +6,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D.TextureAtlases;
-using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 

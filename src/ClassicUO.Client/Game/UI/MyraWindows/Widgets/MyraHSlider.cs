@@ -81,7 +81,7 @@ public class MyraHSlider : Grid
         _valueLabel.Text = "0";
         _valueLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _valueLabel.VerticalAlignment = VerticalAlignment.Center;
-        _valueLabel.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 12);
+        _valueLabel.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
 
         _slider.WheelAdjustment = true;
         _slider.WheelStep = 1f;
