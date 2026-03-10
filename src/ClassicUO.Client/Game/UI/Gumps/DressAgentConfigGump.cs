@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.Gumps
         private List<DressConfig> _allConfigs;
 
         public DressAgentConfigGump(DressConfig config, bool readOnly = false)
-            : base(World.Instance, 100, 100, 600, 400, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
+            : base(World.Instance, 100, 100, 600, 400, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, false)
         {
             _config = config;
             _readOnly = readOnly;

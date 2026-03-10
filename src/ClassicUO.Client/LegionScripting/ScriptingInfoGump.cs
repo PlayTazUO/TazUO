@@ -27,7 +27,7 @@ namespace ClassicUO.LegionScripting
 
         public static ScriptingInfoGump Instance { get; private set; }
 
-        private ScriptingInfoGump() : base(World.Instance, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, MIN_WIDTH, MIN_HEIGHT)
+        private ScriptingInfoGump() : base(World.Instance, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, MIN_WIDTH, MIN_HEIGHT)
         {
             CanCloseWithRightClick = true;
             AcceptMouseInput = true;

@@ -23,7 +23,7 @@ public static class MyraStyle
 
     public static void SetDefault()
     {
-        _ninePatchPanel = new NinePatchRegion(ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel.Bounds, new Thickness(ModernUIConstants.ModernUIPanel_BoderSize));
+        _ninePatchPanel = new NinePatchRegion(ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel.Bounds, new Thickness(ModernUIConstants.ModernUIPanel_BorderSize));
         _ninePatchButtonUp = new NinePatchRegion(ModernUIConstants.ModernUIButtonUp,
             ModernUIConstants.ModernUIButtonUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
         _ninePatchButtonDown = new NinePatchRegion(ModernUIConstants.ModernUIButtonDown,
@@ -34,7 +34,7 @@ public static class MyraStyle
 
         style.Background = _ninePatchPanel;
         //style.Border = _ninePatchRegion;
-        //style.BorderThickness = new Thickness(ModernUIConstants.ModernUIPanel_BoderSize);
+        //style.BorderThickness = new Thickness(ModernUIConstants.ModernUIPanel_BorderSize);
         //style.Background = new SolidBrush(new Color(12, 12, 12, 220));
         //style.Border = new SolidBrush(TazUO_Orange);
         //style.BorderThickness = new Thickness(2);

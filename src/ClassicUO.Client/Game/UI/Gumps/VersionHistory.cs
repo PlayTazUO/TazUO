@@ -447,7 +447,7 @@ internal class VersionHistory : NineSliceGump
     private ScrollArea _scrollArea;
     private VBoxContainer _vBoxContainer;
 
-    public VersionHistory(World world) : base(world, 0, 0, 400, 500, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, 200, 200)
+    public VersionHistory(World world) : base(world, 0, 0, 400, 500, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, 200, 200)
     {
         CanCloseWithRightClick = true;
         CanMove = true;

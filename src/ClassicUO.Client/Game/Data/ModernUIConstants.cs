@@ -14,7 +14,7 @@ public static class ModernUIConstants
     /// <summary>
     /// Border size of the modern ui panel, used for the NineSliceGump class.
     /// </summary>
-    public const int ModernUIPanel_BoderSize = 13;
+    public const int ModernUIPanel_BorderSize = 13;
 
     /// <summary>
     /// Standard modern ui button. Used for a general button.

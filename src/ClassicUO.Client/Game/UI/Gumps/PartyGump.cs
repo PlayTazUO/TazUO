@@ -16,7 +16,7 @@ namespace ClassicUO.Game.UI.Gumps
         private const int GUMP_HEIGHT = 420;
         private SimpleProgressBar[] _healthBars = new SimpleProgressBar[10];
 
-        public PartyGump(World world, int x, int y, bool canloot) : base(world, x, y, GUMP_WIDTH, GUMP_HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, GUMP_WIDTH, GUMP_HEIGHT)
+        public PartyGump(World world, int x, int y, bool canloot) : base(world, x, y, GUMP_WIDTH, GUMP_HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, GUMP_WIDTH, GUMP_HEIGHT)
         {
             CanLoot = canloot;
 

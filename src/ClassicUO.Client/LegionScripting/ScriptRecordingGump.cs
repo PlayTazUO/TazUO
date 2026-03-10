@@ -34,7 +34,7 @@ namespace ClassicUO.LegionScripting
 
         private List<RecordedAction> _displayedActions = new List<RecordedAction>();
 
-        public ScriptRecordingGump() : base(World.Instance, _lastX, _lastY, _lastWidth, _lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
+        public ScriptRecordingGump() : base(World.Instance, _lastX, _lastY, _lastWidth, _lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, false)
         {
             CanCloseWithRightClick = true;
             AcceptMouseInput = true;

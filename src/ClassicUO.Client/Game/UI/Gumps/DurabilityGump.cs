@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
         private VBoxContainer _dataBox;
         public override GumpType GumpType => GumpType.DurabilityGump;
 
-        public DurabilitysGump(World world) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, 200, 200)
+        public DurabilitysGump(World world) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, 200, 200)
         {
             LayerOrder = UILayer.Default;
             CanCloseWithRightClick = true;

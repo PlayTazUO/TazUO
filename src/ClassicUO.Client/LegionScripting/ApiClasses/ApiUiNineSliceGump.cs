@@ -127,7 +127,7 @@ internal class ModernNineSliceGump : NineSliceGump
     private volatile bool _onResizeDispatchRequested;
 
     public ModernNineSliceGump(LegionAPI api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight)
-        : base(Game.World.Instance, x, y, width, height, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, resizable, minWidth, minHeight)
+        : base(Game.World.Instance, x, y, width, height, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, resizable, minWidth, minHeight)
     {
         _api = api;
     }

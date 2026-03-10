@@ -15,7 +15,7 @@ public class SpellQuickSearch : NineSliceGump
     private Action<SpellDefinition>  onClick;
     private bool disposeOnReturn;
 
-    public SpellQuickSearch(World world, int x, int y, Action<SpellDefinition> onClick = null, bool disposeOnReturn = false) : base(world, x, y, 200, 79, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
+    public SpellQuickSearch(World world, int x, int y, Action<SpellDefinition> onClick = null, bool disposeOnReturn = false) : base(world, x, y, 200, 79, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, false)
     {
         CanMove = true;
         X = x;
