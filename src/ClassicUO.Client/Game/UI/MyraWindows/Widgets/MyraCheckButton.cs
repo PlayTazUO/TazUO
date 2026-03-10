@@ -27,8 +27,8 @@ public class MyraCheckButton : CheckButton
 
     private void Build()
     {
-        CheckContentSpacing = 2;
-        Padding = new Thickness(1);
+        CheckContentSpacing = 0;
+        Padding = new Thickness(2);
     }
 
     /// <summary>

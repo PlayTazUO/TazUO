@@ -66,6 +66,7 @@ public static class MyraStyle
         tabItemStyle.PressedBackground = new SolidBrush(new Color(170, 105, 13, 160));
         tabItemStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
         tabItemStyle.BorderThickness = new Thickness(1);
+        tabItemStyle.Padding = new Thickness(10, 2);
 
         //HSlider
         SliderStyle sStyle = Stylesheet.Current.HorizontalSliderStyle;
