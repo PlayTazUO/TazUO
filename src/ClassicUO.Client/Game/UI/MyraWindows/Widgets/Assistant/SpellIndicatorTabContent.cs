@@ -6,6 +6,8 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.TextureAtlases;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 
@@ -69,14 +71,18 @@ public static class SpellIndicatorTabContent
 
             var grid = new MyraGrid();
             MyraStyle.ApplyStandardGridStyling(grid);
-            grid.AddColumn(new Proportion(ProportionType.Auto), 7);
 
-            grid.AddWidget(new MyraLabel("ID", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Power Words", MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Cast Range", MyraLabel.Style.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Cursor Size", MyraLabel.Style.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Cast Time", MyraLabel.Style.H3), 0, 5);
+            grid.AddColumn(new Proportion(ProportionType.Auto), 1); // ID
+            grid.AddColumn(new Proportion(ProportionType.Part), 2); // Name, Power Words
+            grid.AddColumn(new Proportion(ProportionType.Auto), 3); // Cast Range, Cursor Size, Cast Time
+            grid.AddColumn(new Proportion(ProportionType.Auto), 1); // Button
+
+            grid.AddWidget(new MyraLabel("ID", MyraLabel.Style.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Name", MyraLabel.Style.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Power Words", MyraLabel.Style.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Cast Range", MyraLabel.Style.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Cursor Size", MyraLabel.Style.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Cast Time", MyraLabel.Style.TableHeader), 0, 5);
 
             int row = 1;
             foreach (SpellRangeInfo spell in spells)

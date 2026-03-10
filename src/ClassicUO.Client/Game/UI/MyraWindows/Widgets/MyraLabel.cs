@@ -1,4 +1,7 @@
 using ClassicUO.Assets;
+using FontStashSharp;
+using Myra.Graphics2D.Brushes;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.Styles;
 
@@ -18,6 +21,7 @@ public class MyraLabel : Label
     {
         Wrap = true;
         Text = text;
+        VerticalAlignment = VerticalAlignment.Center;
 
         var styleSheet = Stylesheet.Current.LabelStyle.Clone() as LabelStyle;
 
@@ -33,10 +37,16 @@ public class MyraLabel : Label
                 break;
             case Style.H3:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 18);
+                styleSheet.Padding = new Thickness(4, 2);
+                break;
+            case Style.TableHeader:
+                styleSheet.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 16);
+                styleSheet.Padding = new Thickness(4, 0);
                 break;
             default:
             case Style.P:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+                styleSheet.Padding = new Thickness(4, 2);
                 break;
         }
 
@@ -48,6 +58,7 @@ public class MyraLabel : Label
         H1,
         H2,
         H3,
-        P
+        P,
+        TableHeader,
     }
 }
