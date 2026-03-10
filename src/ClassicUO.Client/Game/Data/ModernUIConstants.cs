@@ -29,4 +29,7 @@ public static class ModernUIConstants
     public static Texture2D ModernUICheckBoxUnChecked { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxUnChecked.png", out Texture2D texture); return texture; } }
 
     public const int ModernUIButton_BorderSize = 4;
+
+    public static Texture2D ModernUIVerticalScrollbar { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIVerticalScrollbarKnob { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll-knob-vertical.png", out Texture2D texture); return texture; } }
 }

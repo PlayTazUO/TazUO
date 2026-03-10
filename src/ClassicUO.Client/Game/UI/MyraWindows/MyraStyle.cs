@@ -105,6 +105,10 @@ public static class MyraStyle
         inputStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
         inputStyle.Border = new SolidBrush(new Color(21, 21, 21, STANDARD_BORDER_ALPHA));
         inputStyle.BorderThickness = new Thickness(1);
+
+        ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
+        svStyle.VerticalScrollBackground = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbar);
+        svStyle.VerticalScrollKnob = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbarKnob);
     }
 
     /// <summary>
