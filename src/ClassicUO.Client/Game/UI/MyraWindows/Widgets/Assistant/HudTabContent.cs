@@ -38,31 +38,30 @@ public static class HudTabContent
             "Select gump types to toggle visibility when using the Toggle Hud Visible macro.",
             MyraLabel.Style.P));
 
+
+        var grid = new MyraGrid();
+        grid.AddColumn(new Proportion(ProportionType.Auto), 4);
+        grid.ColumnSpacing = 12;
+        for (int i = 0; i < regularFlags.Count; i++) {
+            var flag = regularFlags[i];
+            grid.AddWidget(checkButtons[flag], i / 4, i % 4);
+        }
+        outerStack.Widgets.Add(grid);
+
+
         var buttonRow = new HorizontalStackPanel { Spacing = 4 };
         buttonRow.Widgets.Add(new MyraButton("Select All", () => SetAllChecked(checkButtons, profile, true)));
-        buttonRow.Widgets.Add(new MyraButton("Deselect All", () => SetAllChecked(checkButtons, profile, false)));
+
+        var deselectBtn = new MyraButton("Deselect All", () => SetAllChecked(checkButtons, profile, false));
+        StackPanel.SetProportionType(deselectBtn, ProportionType.Fill);
+        buttonRow.Widgets.Add(deselectBtn);
+
         buttonRow.Widgets.Add(new MyraButton("Toggle HUD Now", () => HideHudManager.ToggleHidden(profile.HideHudGumpFlags))
         {
             Tooltip = "Immediately toggle the visibility of selected HUD elements"
         });
         outerStack.Widgets.Add(buttonRow);
 
-        var grid = new MyraGrid();
-        grid.AddColumn(new Proportion(ProportionType.Auto));
-        grid.AddColumn(new Proportion(ProportionType.Pixels, 12));
-        grid.AddColumn(new Proportion(ProportionType.Auto));
-
-        int row = 0;
-        bool leftCol = true;
-
-        foreach (HideHudFlags flag in regularFlags)
-        {
-            grid.AddWidget(checkButtons[flag], row, leftCol ? 0 : 2);
-            if (!leftCol) row++;
-            leftCol = !leftCol;
-        }
-
-        outerStack.Widgets.Add(grid);
         return outerStack;
     }
 
