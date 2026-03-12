@@ -12,7 +12,7 @@ public static class FriendsListTabContent
 {
     public static Widget Build()
     {
-        var friendsListPanel = new VerticalStackPanel { Spacing = 2 };
+        var friendsListPanel = new VerticalStackPanel { Spacing = 4 };
 
         void BuildFriendsList()
         {
@@ -29,14 +29,13 @@ public static class FriendsListTabContent
             friendsListPanel.Widgets.Add(new MyraLabel("Current Friends:", MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 4);
-            grid.Border = new SolidBrush(MyraStyle.GridBorderColor);
-            grid.BorderThickness = new Thickness(1);
-            grid.GridLinesColor = MyraStyle.GridBorderColor;
-            grid.ShowGridLines = true;
+            MyraStyle.ApplyStandardGridStyling(grid);
+            grid.AddColumn(null); // serial
+            grid.AddColumn(new Proportion(ProportionType.Part), 2); // name & date
+            grid.AddColumn(null); // actions
 
-            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0, 1);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0, 0);
+            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 1);
             grid.AddWidget(new MyraLabel("Date Added", MyraLabel.TextStyle.TableHeader), 0, 2);
 
             int row = 1;
@@ -44,8 +43,8 @@ public static class FriendsListTabContent
             {
                 FriendEntry f = friends[i];
 
-                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 1);
-                grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.TextStyle.P), row, 0);
+                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 0);
+                grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.TextStyle.P), row, 1);
                 grid.AddWidget(new MyraLabel(f.DateAdded.ToString("yyyy-MM-dd"), MyraLabel.TextStyle.P), row, 2);
                 grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
                 {
