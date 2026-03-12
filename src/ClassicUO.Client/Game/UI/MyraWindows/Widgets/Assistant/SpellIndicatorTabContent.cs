@@ -5,6 +5,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.SpellVisualRange;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
@@ -18,7 +19,10 @@ public static class SpellIndicatorTabContent
             return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
 
         SpellRangeInfo? selectedSpell = null;
-        var searchBox = new TextBox { MinWidth = 200, HintText = "Search spells..." };
+        var searchBox = new TextBox
+        {
+            MinWidth = 200, HintText = "Search spells...", VerticalAlignment = VerticalAlignment.Center,
+        };
 
         var spellListPanel = new VerticalStackPanel { Spacing = 2 };
         var spellEditorPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
@@ -70,7 +74,7 @@ public static class SpellIndicatorTabContent
             var grid = new MyraGrid();
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddColumn(new Proportion(ProportionType.Auto), 1); // ID
+            grid.AddColumn(new Proportion(ProportionType.Auto)); // ID
             grid.AddColumn(new Proportion(ProportionType.Part), 2); // Name, Power Words
             grid.AddColumn(new Proportion(ProportionType.Auto), 3); // Cast Range, Cursor Size, Cast Time
             grid.AddColumn(new Proportion(ProportionType.Auto)); // Button
@@ -133,66 +137,134 @@ public static class SpellIndicatorTabContent
 
             grid.AddWidget(new MyraLabel("Name:", MyraLabel.TextStyle.P), row, 0);
             var nameBox = new TextBox { Text = spell.Name, MinWidth = 200 };
-            nameBox.TextChangedByUser += (_, _) => { spell.Name = nameBox.Text ?? ""; Save(); };
+            nameBox.TextChangedByUser += (_, _) =>
+            {
+                spell.Name = nameBox.Text ?? "";
+                Save();
+            };
             grid.AddWidget(nameBox, row, 2);
             row++;
 
-            var powerWordsBox = new TextBox { Text = spell.PowerWords ?? "", MinWidth = 200, Tooltip = "Power words must be exact, this is the best way we can detect spells." };
-            powerWordsBox.TextChangedByUser += (_, _) => { spell.PowerWords = powerWordsBox.Text ?? ""; Save(); };
             grid.AddWidget(new MyraLabel("Power Words:", MyraLabel.TextStyle.P), row, 0);
+            var powerWordsBox = new TextBox
+            {
+                Text = spell.PowerWords ?? "",
+                MinWidth = 200,
+                Tooltip = "Power words must be exact, this is the best way we can detect spells."
+            };
+            powerWordsBox.TextChangedByUser += (_, _) =>
+            {
+                spell.PowerWords = powerWordsBox.Text ?? "";
+                Save();
+            };
             grid.AddWidget(powerWordsBox, row, 2);
             row++;
 
-            var cursorSizeSpinner = new SpinButton { Integer = true, Value = spell.CursorSize, MinWidth = 100, Tooltip = "Area to show around the cursor, for area spells that affect the area near the target." };
-            cursorSizeSpinner.ValueChangedByUser += (_, _) => { spell.CursorSize = (int)Math.Clamp(cursorSizeSpinner.Value ?? 0f, 0f, int.MaxValue); Save(); };
             grid.AddWidget(new MyraLabel("Cursor Size:", MyraLabel.TextStyle.P), row, 0);
+            var cursorSizeSpinner = new SpinButton
+            {
+                Integer = true,
+                Value = spell.CursorSize,
+                MinWidth = 100,
+                Tooltip = "Area to show around the cursor, for area spells that affect the area near the target."
+            };
+            cursorSizeSpinner.ValueChangedByUser += (_, _) =>
+            {
+                spell.CursorSize = (int)Math.Clamp(cursorSizeSpinner.Value ?? 0f, 0f, int.MaxValue);
+                Save();
+            };
             grid.AddWidget(cursorSizeSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cast Range:", MyraLabel.TextStyle.P), row, 0);
             var castRangeSpinner = new SpinButton { Integer = true, Value = spell.CastRange, MinWidth = 100 };
-            castRangeSpinner.ValueChangedByUser += (_, _) => { spell.CastRange = (int)Math.Clamp(castRangeSpinner.Value ?? 1f, 1f, int.MaxValue); Save(); };
+            castRangeSpinner.ValueChangedByUser += (_, _) =>
+            {
+                spell.CastRange = (int)Math.Clamp(castRangeSpinner.Value ?? 1f, 1f, int.MaxValue);
+                Save();
+            };
             grid.AddWidget(castRangeSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cast Time:", MyraLabel.TextStyle.P), row, 0);
             var castTimeBox = new TextBox { Text = spell.CastTime.ToString(), MinWidth = 100 };
-            castTimeBox.TextChangedByUser += (_, _) => { if (double.TryParse(castTimeBox.Text, out double v)) { spell.CastTime = Math.Max(0.0, v); Save(); } };
+            castTimeBox.TextChangedByUser += (_, _) =>
+            {
+                if (double.TryParse(castTimeBox.Text, out double v))
+                {
+                    spell.CastTime = Math.Max(0.0, v);
+                    Save();
+                }
+            };
             grid.AddWidget(castTimeBox, row, 2);
             row++;
 
-            var maxDurSpinner = new SpinButton { Integer = true, Value = spell.MaxDuration, MinWidth = 100, Tooltip = "Fallback in case spell detection fails." };
-            maxDurSpinner.ValueChangedByUser += (_, _) => { spell.MaxDuration = (int)Math.Clamp(maxDurSpinner.Value ?? 0f, 0f, int.MaxValue); Save(); };
             grid.AddWidget(new MyraLabel("Max Duration:", MyraLabel.TextStyle.P), row, 0);
+            var maxDurSpinner = new SpinButton
+            {
+                Integer = true,
+                Value = spell.MaxDuration,
+                MinWidth = 100,
+                Tooltip = "Fallback in case spell detection fails."
+            };
+            maxDurSpinner.ValueChangedByUser += (_, _) =>
+            {
+                spell.MaxDuration = (int)Math.Clamp(maxDurSpinner.Value ?? 0f, 0f, int.MaxValue);
+                Save();
+            };
             grid.AddWidget(maxDurSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Cursor Hue:", MyraLabel.TextStyle.P), row, 0);
             var cursorHueSpinner = new SpinButton { Integer = true, Value = spell.CursorHue, MinWidth = 100 };
-            cursorHueSpinner.ValueChangedByUser += (_, _) => { spell.CursorHue = (ushort)Math.Clamp(cursorHueSpinner.Value ?? 0f, 0f, ushort.MaxValue); Save(); };
+            cursorHueSpinner.ValueChangedByUser += (_, _) =>
+            {
+                spell.CursorHue = (ushort)Math.Clamp(cursorHueSpinner.Value ?? 0f, 0f, ushort.MaxValue);
+                Save();
+            };
             grid.AddWidget(cursorHueSpinner, row, 2);
             row++;
 
             grid.AddWidget(new MyraLabel("Range Hue:", MyraLabel.TextStyle.P), row, 0);
             var rangeHueSpinner = new SpinButton { Integer = true, Value = spell.Hue, MinWidth = 100 };
-            rangeHueSpinner.ValueChangedByUser += (_, _) => { spell.Hue = (ushort)Math.Clamp(rangeHueSpinner.Value ?? 0f, 0f, ushort.MaxValue); Save(); };
+            rangeHueSpinner.ValueChangedByUser += (_, _) =>
+            {
+                spell.Hue = (ushort)Math.Clamp(rangeHueSpinner.Value ?? 0f, 0f, ushort.MaxValue);
+                Save();
+            };
             grid.AddWidget(rangeHueSpinner, row, 2);
             row++;
 
-            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.IsLinear, b => { spell.IsLinear = b; Save(); }, tooltip: "Used for spells like wall of stone that create a line."), row, 2);
             grid.AddWidget(new MyraLabel("Is Linear:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.IsLinear, b =>
+            {
+                spell.IsLinear = b;
+                Save();
+            }, tooltip: "Used for spells like wall of stone that create a line."), row, 2);
             row++;
 
-            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ShowCastRangeDuringCasting, b => { spell.ShowCastRangeDuringCasting = b; Save(); }), row, 2);
             grid.AddWidget(new MyraLabel("Show Range During Cast:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ShowCastRangeDuringCasting, b =>
+            {
+                spell.ShowCastRangeDuringCasting = b;
+                Save();
+            }), row, 2);
             row++;
 
-            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.FreezeCharacterWhileCasting, b => { spell.FreezeCharacterWhileCasting = b; Save(); }, tooltip: "Prevent yourself from moving and disrupting your spell."), row, 2);
             grid.AddWidget(new MyraLabel("Freeze While Casting:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.FreezeCharacterWhileCasting, b =>
+            {
+                spell.FreezeCharacterWhileCasting = b;
+                Save();
+            }, tooltip: "Prevent yourself from moving and disrupting your spell."), row, 2);
             row++;
 
-            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ExpectTargetCursor, b => { spell.ExpectTargetCursor = b; Save(); }), row, 2);
             grid.AddWidget(new MyraLabel("Expect Target Cursor:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ExpectTargetCursor, b =>
+            {
+                spell.ExpectTargetCursor = b;
+                Save();
+            }), row, 2);
 
             spellEditorPanel.Widgets.Add(grid);
 
@@ -341,7 +413,7 @@ public static class SpellIndicatorTabContent
             }
         };
 
-        var searchRow = new HorizontalStackPanel { Spacing = 4 };
+        var searchRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
         searchRow.Widgets.Add(new MyraLabel("Spell search:", MyraLabel.TextStyle.P));
         searchRow.Widgets.Add(searchBox);
         searchRow.Widgets.Add(new MyraButton("Clear", ClearSelection));
