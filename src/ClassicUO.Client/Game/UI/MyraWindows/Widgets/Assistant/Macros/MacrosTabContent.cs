@@ -45,7 +45,7 @@ public static class MacrosTabContent
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.Style.P);
+            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
 
         // ── State ────────────────────────────────────────────────────────────
         Macro? selectedMacro = null;
@@ -142,7 +142,7 @@ public static class MacrosTabContent
 
             if (display.Count == 0)
             {
-                macroListPanel.Widgets.Add(new MyraLabel("No macros.", MyraLabel.Style.P));
+                macroListPanel.Widgets.Add(new MyraLabel("No macros.", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -152,17 +152,17 @@ public static class MacrosTabContent
             grid.AddColumn(new Proportion(ProportionType.Auto)); // Edit
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Name",   MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Hotkey", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Edit",   MyraLabel.Style.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Name",   MyraLabel.TextStyle.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Hotkey", MyraLabel.TextStyle.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Edit",   MyraLabel.TextStyle.H3), 0, 2);
 
             int dataRow = 1;
             foreach (Macro macro in display)
             {
                 Macro captured = macro;
 
-                grid.AddWidget(new MyraLabel(macro.Name, MyraLabel.Style.P), dataRow, 0);
-                grid.AddWidget(new MyraLabel(GetHotkeyString(macro), MyraLabel.Style.P), dataRow, 1);
+                grid.AddWidget(new MyraLabel(macro.Name, MyraLabel.TextStyle.P), dataRow, 0);
+                grid.AddWidget(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P), dataRow, 1);
                 grid.AddWidget(new MyraButton("Edit", () =>
                 {
                     selectedMacro = captured;
@@ -183,7 +183,7 @@ public static class MacrosTabContent
 
             if (selectedMacro == null)
             {
-                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.Style.P));
+                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -191,7 +191,7 @@ public static class MacrosTabContent
 
             // Name row
             var nameRow = new HorizontalStackPanel { Spacing = 4 };
-            nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.Style.P));
+            nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
             var nameBox = new TextBox { Text = macro.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
@@ -224,7 +224,7 @@ public static class MacrosTabContent
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.Style.H2));
+            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.TextStyle.H2));
 
             BuildActionsPanel();
             editorPanel.Widgets.Add(new ScrollViewer { MaxHeight = 250, Content = actionsPanel });
@@ -256,7 +256,7 @@ public static class MacrosTabContent
             bottomRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete Macro", () =>
             {
                 new MyraDialog($"Delete '{macro.Name}'?",
-                    new MyraLabel($"Are you sure you want to delete '{macro.Name}'?", MyraLabel.Style.P),
+                    new MyraLabel($"Are you sure you want to delete '{macro.Name}'?", MyraLabel.TextStyle.P),
                     ok =>
                     {
                         if (!ok) return;
@@ -275,7 +275,7 @@ public static class MacrosTabContent
         void BuildHotkeyRow()
         {
             hotkeyRow.Widgets.Clear();
-            hotkeyRow.Widgets.Add(new MyraLabel("Hotkey:", MyraLabel.Style.P));
+            hotkeyRow.Widgets.Add(new MyraLabel("Hotkey:", MyraLabel.TextStyle.P));
 
             if (selectedMacro == null) return;
             Macro macro = selectedMacro;
@@ -285,7 +285,7 @@ public static class MacrosTabContent
                 string captureDisplay = capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN
                     ? KeysTranslator.TryGetKey(capturedKey, capturedMod)
                     : "Listening...";
-                hotkeyRow.Widgets.Add(new MyraLabel(captureDisplay, MyraLabel.Style.P));
+                hotkeyRow.Widgets.Add(new MyraLabel(captureDisplay, MyraLabel.TextStyle.P));
 
                 if (capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN)
                     hotkeyRow.Widgets.Add(new MyraButton("Apply", () =>
@@ -303,7 +303,7 @@ public static class MacrosTabContent
             }
             else
             {
-                hotkeyRow.Widgets.Add(new MyraLabel(GetHotkeyString(macro), MyraLabel.Style.P));
+                hotkeyRow.Widgets.Add(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P));
 
                 hotkeyRow.Widgets.Add(new MyraButton("Capture", () =>
                 {
@@ -377,7 +377,7 @@ public static class MacrosTabContent
                 int capturedIndex = actionIndex;
 
                 var actionRow = new HorizontalStackPanel { Spacing = 4 };
-                actionRow.Widgets.Add(new MyraLabel($"{capturedIndex + 1}.", MyraLabel.Style.P));
+                actionRow.Widgets.Add(new MyraLabel($"{capturedIndex + 1}.", MyraLabel.TextStyle.P));
 
                 // Action type ComboBox
 #pragma warning disable CS0612, CS0618
@@ -479,7 +479,7 @@ public static class MacrosTabContent
             }
 
             if (actionIndex == 0)
-                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.Style.P));
+                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.P));
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────

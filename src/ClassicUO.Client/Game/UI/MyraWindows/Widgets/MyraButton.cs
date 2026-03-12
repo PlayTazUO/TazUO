@@ -27,5 +27,5 @@ public class MyraButton : Button
         _onClick?.Invoke();
     }
 
-    private void Build() => Content = new MyraLabel(Text, MyraLabel.Style.P);
+    private void Build() => Content = new MyraLabel(Text, MyraLabel.TextStyle.P);
 }

@@ -42,7 +42,7 @@ public static class PathfindingTabContent
         genTimeSlider.Tooltip = "Target time in milliseconds for pathfinding cache generation per cycle. Higher values generate cache faster but may cause performance issues.";
         leftStack.Widgets.Add(genTimeRow);
 
-        var progressLabel = new MyraLabel("Cache Progress: N/A", MyraLabel.Style.P)
+        var progressLabel = new MyraLabel("Cache Progress: N/A", MyraLabel.TextStyle.P)
         {
             Tooltip = "Current map cache generation progress"
         };

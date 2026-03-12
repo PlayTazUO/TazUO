@@ -26,8 +26,8 @@ public static class GeneralTabContent
         mainContent.Widgets.Add(rightSide);
 
 
-        leftSide.Widgets.Add(new MyraLabel(lang.VisualConfig, MyraLabel.Style.H1));
-        rightSide.Widgets.Add(new MyraLabel(lang.DelayConfig, MyraLabel.Style.H1));
+        leftSide.Widgets.Add(new MyraLabel(lang.VisualConfig, MyraLabel.TextStyle.H1));
+        rightSide.Widgets.Add(new MyraLabel(lang.DelayConfig, MyraLabel.TextStyle.H1));
 
         leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.CameraSmoothing, out MyraHSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
         _cSmoothSlider.RoundValues = false;
@@ -78,7 +78,7 @@ public static class GeneralTabContent
         // Right side: Misc
         rightSide.Widgets.Add(new MyraSpacer(20, 15));
 
-        rightSide.Widgets.Add(new MyraLabel(lang.Misc, MyraLabel.Style.H1));
+        rightSide.Widgets.Add(new MyraLabel(lang.Misc, MyraLabel.TextStyle.H1));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.QueueManualItemMoves,
             b => profile.QueueManualItemMoves = b, lang.QueueItemMoves, lang.QueueItemMovesTooltip));
@@ -99,7 +99,7 @@ public static class GeneralTabContent
             }, lang.DisableWeather, lang.DisableWeatherTooltip));
 
         var healLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell)?.Name ??
-                                      profile.QuickHealSpell.ToString(), MyraLabel.Style.P) { Tooltip = lang.QuickSpellTooltip };
+                                      profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };
 
         rightSide.Widgets.Add(new MyraButton(lang.SetQuickHealSpell, () =>
         {
@@ -114,7 +114,7 @@ public static class GeneralTabContent
         }).PlaceBefore(healLabel));
 
         var cureLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickCureSpell)?.Name ??
-                                      profile.QuickCureSpell.ToString(), MyraLabel.Style.P) { Tooltip = lang.QuickSpellTooltip };
+                                      profile.QuickCureSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };
         rightSide.Widgets.Add(new MyraButton(lang.SetQuickCureSpell, () =>
         {
             UIManager.Add(new SpellQuickSearch(World.Instance, 0, 0, s =>

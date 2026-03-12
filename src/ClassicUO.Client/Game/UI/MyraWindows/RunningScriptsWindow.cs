@@ -59,7 +59,7 @@ public class RunningScriptsWindow : MyraControl
 
         if (scripts.Count == 0)
         {
-            _scriptList.Widgets.Add(new MyraLabel("No scripts currently running", MyraLabel.Style.P));
+            _scriptList.Widgets.Add(new MyraLabel("No scripts currently running", MyraLabel.TextStyle.P));
             return;
         }
 
@@ -71,7 +71,7 @@ public class RunningScriptsWindow : MyraControl
 
             row.Widgets.Add(new MyraButton("Stop", () => LegionScripting.LegionScripting.StopScript(script)));
 
-            row.Widgets.Add(new MyraLabel(script.FileName ?? "Unknown", MyraLabel.Style.P)
+            row.Widgets.Add(new MyraLabel(script.FileName ?? "Unknown", MyraLabel.TextStyle.P)
             {
                 Tooltip = $"Path: {script.FullPath ?? "N/A"}"
             });

@@ -5,7 +5,7 @@ using Myra.Graphics2D.UI.Styles;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
-public class MyraLabel : Label
+public sealed class MyraLabel : Label
 {
     public MyraLabel(string text, int fontSize)
     {
@@ -15,49 +15,61 @@ public class MyraLabel : Label
         Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, fontSize);
     }
 
-    public MyraLabel(string text, Style style)
+    public MyraLabel(string text, TextStyle style, AlignMode align = AlignMode.Left)
     {
         Wrap = true;
         Text = text;
         VerticalAlignment = VerticalAlignment.Center;
 
         var styleSheet = Stylesheet.Current.LabelStyle.Clone() as LabelStyle;
-
         if(styleSheet == null) return;
 
         switch (style)
         {
-            case Style.H1:
+            case TextStyle.H1:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 22);
                 break;
-            case Style.H2:
+            case TextStyle.H2:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 20);
                 break;
-            case Style.H3:
+            case TextStyle.H3:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 18);
                 styleSheet.Padding = new Thickness(4, 2);
                 break;
-            case Style.TableHeader:
+            case TextStyle.TableHeader:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 16);
                 styleSheet.Padding = new Thickness(4, 0);
                 styleSheet.Margin = new Thickness(2, 0);
                 break;
             default:
-            case Style.P:
+            case TextStyle.P:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
                 styleSheet.Padding = new Thickness(4, 2);
                 break;
         }
 
         ApplyLabelStyle(styleSheet);
+        HorizontalAlignment = align switch
+        {
+            AlignMode.Center => HorizontalAlignment.Center,
+            AlignMode.Right => HorizontalAlignment.Right,
+            _ => HorizontalAlignment.Left,
+        };
     }
 
-    public enum Style
+    public enum TextStyle
     {
         H1,
         H2,
         H3,
         P,
         TableHeader,
+    }
+
+    public enum AlignMode
+    {
+        Left,
+        Center,
+        Right,
     }
 }

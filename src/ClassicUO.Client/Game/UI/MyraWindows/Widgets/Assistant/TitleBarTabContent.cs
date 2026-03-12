@@ -15,7 +15,7 @@ public static class TitleBarTabContent
 
         outer.Widgets.Add(new MyraLabel(
             "Configure window title bar to show HP, Mana, and Stamina information.",
-            MyraLabel.Style.P));
+            MyraLabel.TextStyle.H3));
 
         // Enable
         outer.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.EnableTitleBarStats,
@@ -33,9 +33,9 @@ public static class TitleBarTabContent
 
         // Display mode
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Display Mode", MyraLabel.Style.H2));
+        outer.Widgets.Add(new MyraLabel("Display Mode", MyraLabel.TextStyle.H2));
 
-        var previewLabel = new MyraLabel(TitleBarStatsManager.GetPreviewText(), MyraLabel.Style.P);
+        var previewLabel = new MyraLabel(TitleBarStatsManager.GetPreviewText(), MyraLabel.TextStyle.P);
 
         void SetMode(TitleBarStatsMode mode)
         {
@@ -50,21 +50,21 @@ public static class TitleBarTabContent
 
         var rbText = new RadioButton
         {
-            Content = new MyraLabel("Text  (HP 85/100, MP 42/50, SP 95/100)", MyraLabel.Style.P),
+            Content = new MyraLabel("Text  (HP 85/100, MP 42/50, SP 95/100)", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Text
         };
         rbText.PressedChanged += (_, _) => { if (rbText.IsPressed) SetMode(TitleBarStatsMode.Text); };
 
         var rbPercent = new RadioButton
         {
-            Content = new MyraLabel("Percent  (HP 85%, MP 84%, SP 95%)", MyraLabel.Style.P),
+            Content = new MyraLabel("Percent  (HP 85%, MP 84%, SP 95%)", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Percent
         };
         rbPercent.PressedChanged += (_, _) => { if (rbPercent.IsPressed) SetMode(TitleBarStatsMode.Percent); };
 
         var rbBar = new RadioButton
         {
-            Content = new MyraLabel("Progress Bar  (HP [||||||    ] MP [||||||    ] SP [||||||    ])", MyraLabel.Style.P),
+            Content = new MyraLabel("Progress Bar  (HP [||||||    ] MP [||||||    ] SP [||||||    ])", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.ProgressBar
         };
         rbBar.PressedChanged += (_, _) => { if (rbBar.IsPressed) SetMode(TitleBarStatsMode.ProgressBar); };
@@ -76,7 +76,7 @@ public static class TitleBarTabContent
 
         // Preview
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Preview", MyraLabel.Style.H2));
+        outer.Widgets.Add(new MyraLabel("Preview", MyraLabel.TextStyle.H2));
         outer.Widgets.Add(previewLabel);
 
         return outer;

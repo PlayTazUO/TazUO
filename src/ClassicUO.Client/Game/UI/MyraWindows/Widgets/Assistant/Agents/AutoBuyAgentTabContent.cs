@@ -15,14 +15,14 @@ public static class AutoBuyAgentTabContent
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.Style.P);
+            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.BuyAgentEnabled, b => profile.BuyAgentEnabled = b, "Enable Auto Buy"));
 
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H3));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
             "Max total items",
             out _,
@@ -36,7 +36,7 @@ public static class AutoBuyAgentTabContent
             0, 100,
             profile.BuyAgentMaxUniques));
 
-        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H3));
 
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
@@ -47,7 +47,7 @@ public static class AutoBuyAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.Style.P));
+                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -55,14 +55,14 @@ public static class AutoBuyAgentTabContent
             grid.AddColumn(null, 8);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.Style.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Restock Up To", MyraLabel.Style.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Max Price", MyraLabel.Style.H3), 0, 5);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.Style.H3), 0, 6);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.H3), 0, 7);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.TextStyle.H3), 0, 3);
+            grid.AddWidget(new MyraLabel("Restock Up To", MyraLabel.TextStyle.H3), 0, 4);
+            grid.AddWidget(new MyraLabel("Max Price", MyraLabel.TextStyle.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.H3), 0, 6);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.H3), 0, 7);
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
@@ -155,17 +155,17 @@ public static class AutoBuyAgentTabContent
         var newMaxPriceBox = new TextBox { HintText = "Max Price (0=no limit)", Width = 110 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow1.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.Style.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newGraphicBox);
-        addFieldsRow1.Widgets.Add(new MyraLabel("Hue:", MyraLabel.Style.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newHueBox);
 
         var addFieldsRow2 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow2.Widgets.Add(new MyraLabel("Max Amount:", MyraLabel.Style.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("Max Amount:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newMaxAmountBox);
-        addFieldsRow2.Widgets.Add(new MyraLabel("Restock Up To:", MyraLabel.Style.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("Restock Up To:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newRestockBox);
-        addFieldsRow2.Widgets.Add(new MyraLabel("Max Price:", MyraLabel.Style.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("Max Price:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newMaxPriceBox);
 
         void ClearAddFields()
@@ -212,7 +212,7 @@ public static class AutoBuyAgentTabContent
             ClearAddFields();
         }));
 
-        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.Style.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow1);
         addEntryPanel.Widgets.Add(addFieldsRow2);
         addEntryPanel.Widgets.Add(addConfirmRow);

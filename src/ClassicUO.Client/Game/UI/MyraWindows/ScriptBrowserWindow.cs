@@ -66,7 +66,7 @@ public class ScriptBrowserWindow : MyraControl
         grid.AddRow();                                       // Row 1: preview (auto-height)
         grid.AddColumn(new Proportion(ProportionType.Fill));
 
-        _statusLabel = new MyraLabel("Loading repository contents...", MyraLabel.Style.P);
+        _statusLabel = new MyraLabel("Loading repository contents...", MyraLabel.TextStyle.P);
 
         var treeContainer = new VerticalStackPanel { Spacing = 4 };
         treeContainer.Widgets.Add(_statusLabel);
@@ -82,8 +82,8 @@ public class ScriptBrowserWindow : MyraControl
         // Preview panel - hidden until user clicks View on a script
         _previewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
 
-        _previewTitleLabel = new MyraLabel("", MyraLabel.Style.H2);
-        _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.Style.P);
+        _previewTitleLabel = new MyraLabel("", MyraLabel.TextStyle.H2);
+        _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.TextStyle.P);
 
         _previewContentBox = new TextBox
         {
@@ -166,13 +166,13 @@ public class ScriptBrowserWindow : MyraControl
         if (!node.IsLoaded && !node.IsLoading)
         {
             LoadDirectoryAsync(path);
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.Style.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
             return;
         }
 
         if (node.IsLoading)
         {
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.Style.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
             return;
         }
 
@@ -184,7 +184,7 @@ public class ScriptBrowserWindow : MyraControl
 
             var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
             if (depth > 0)
-                row.Widgets.Add(new MyraLabel(Indent(depth), MyraLabel.Style.P));
+                row.Widgets.Add(new MyraLabel(Indent(depth), MyraLabel.TextStyle.P));
 
             row.Widgets.Add(new MyraButton(isExpanded ? "[-]" : "[+]", () =>
             {
@@ -193,7 +193,7 @@ public class ScriptBrowserWindow : MyraControl
                 _directoryCache[d.Path].IsExpanded = !_directoryCache[d.Path].IsExpanded;
                 _rebuildPending = true;
             }));
-            row.Widgets.Add(new MyraLabel(d.Name, MyraLabel.Style.P));
+            row.Widgets.Add(new MyraLabel(d.Name, MyraLabel.TextStyle.P));
             _treePanel.Widgets.Add(row);
 
             if (isExpanded)
@@ -208,9 +208,9 @@ public class ScriptBrowserWindow : MyraControl
             GhFileObject f = file;
             var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
             if (depth > 0)
-                row.Widgets.Add(new MyraLabel(Indent(depth + 1), MyraLabel.Style.P));
+                row.Widgets.Add(new MyraLabel(Indent(depth + 1), MyraLabel.TextStyle.P));
 
-            row.Widgets.Add(new MyraLabel(f.Name, MyraLabel.Style.P));
+            row.Widgets.Add(new MyraLabel(f.Name, MyraLabel.TextStyle.P));
             row.Widgets.Add(new MyraButton("View",      () => ViewScript(f)));
             row.Widgets.Add(new MyraButton("Download",  () => DownloadAndOpenScript(f)));
             row.Widgets.Add(new MyraButton("Open Link", () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));

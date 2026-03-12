@@ -26,10 +26,10 @@ public class ScriptErrorWindow : MyraControl
     {
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
-        root.Widgets.Add(new MyraLabel("Your script encountered an error, here's what we know:", MyraLabel.Style.P));
+        root.Widgets.Add(new MyraLabel("Your script encountered an error, here's what we know:", MyraLabel.TextStyle.P));
 
         // Clickable red error message
-        var errorLabel = new MyraLabel(errorDetails.ErrorMsg, MyraLabel.Style.P)
+        var errorLabel = new MyraLabel(errorDetails.ErrorMsg, MyraLabel.TextStyle.P)
         {
             TextColor = Color.Red,
             Tooltip = "Click to copy to clipboard"
@@ -46,7 +46,7 @@ public class ScriptErrorWindow : MyraControl
         {
             ScriptErrorLocation loc = errorDetails.Locations[i];
 
-            root.Widgets.Add(new MyraLabel($"File: {loc.FileName}  |  Line: {loc.LineNumber}", MyraLabel.Style.P));
+            root.Widgets.Add(new MyraLabel($"File: {loc.FileName}  |  Line: {loc.LineNumber}", MyraLabel.TextStyle.P));
 
             if (!string.IsNullOrEmpty(loc.LineContent))
             {

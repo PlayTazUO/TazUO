@@ -13,7 +13,7 @@ public static class DressAgentTabContent
     public static Widget Build()
     {
         if (DressAgentManager.Instance == null)
-            return new MyraLabel("Dress Agent not loaded", MyraLabel.Style.P);
+            return new MyraLabel("Dress Agent not loaded", MyraLabel.TextStyle.P);
 
         DressConfig? selectedConfig = null;
         var leftPanel = new VerticalStackPanel { Spacing = 4 };
@@ -24,7 +24,7 @@ public static class DressAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.Items.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.Style.P));
+                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -34,18 +34,18 @@ public static class DressAgentTabContent
             grid.AddColumn(new Proportion(ProportionType.Auto), 2);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Serial", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Layer", MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.Style.H3), 0, 3);
+            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Layer", MyraLabel.TextStyle.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.H3), 0, 3);
 
             int dataRow = 1;
             for (int i = selectedConfig.Items.Count - 1; i >= 0; i--)
             {
                 DressItem item = selectedConfig.Items[i];
-                grid.AddWidget(new MyraLabel($"{item.Serial:X}", MyraLabel.Style.P), dataRow, 0);
-                grid.AddWidget(new MyraLabel(item.Name, MyraLabel.Style.P), dataRow, 1);
-                grid.AddWidget(new MyraLabel(((Layer)item.Layer).ToString(), MyraLabel.Style.P), dataRow, 2);
+                grid.AddWidget(new MyraLabel($"{item.Serial:X}", MyraLabel.TextStyle.P), dataRow, 0);
+                grid.AddWidget(new MyraLabel(item.Name, MyraLabel.TextStyle.P), dataRow, 1);
+                grid.AddWidget(new MyraLabel(((Layer)item.Layer).ToString(), MyraLabel.TextStyle.P), dataRow, 2);
                 DressItem captured = item;
                 grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
                 {
@@ -61,7 +61,7 @@ public static class DressAgentTabContent
         void BuildConfigList()
         {
             leftPanel.Widgets.Clear();
-            leftPanel.Widgets.Add(new MyraLabel("Dress Configurations", MyraLabel.Style.H3));
+            leftPanel.Widgets.Add(new MyraLabel("Dress Configurations", MyraLabel.TextStyle.H3));
             leftPanel.Widgets.Add(new MyraButton("Add Configuration", () =>
             {
                 DressConfig newConfig = DressAgentManager.Instance.CreateNewConfig(
@@ -90,7 +90,7 @@ public static class DressAgentTabContent
             rightPanel.Widgets.Clear();
             if (selectedConfig == null)
             {
-                rightPanel.Widgets.Add(new MyraLabel("Select a configuration to view details", MyraLabel.Style.P));
+                rightPanel.Widgets.Add(new MyraLabel("Select a configuration to view details", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -105,7 +105,7 @@ public static class DressAgentTabContent
                 }
             };
             var nameRow = new HorizontalStackPanel { Spacing = 4 };
-            nameRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.Style.P));
+            nameRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
             nameRow.Widgets.Add(nameBox);
             rightPanel.Widgets.Add(nameRow);
 
@@ -151,7 +151,7 @@ public static class DressAgentTabContent
 
             // Undress bag
             rightPanel.Widgets.Add(new MyraSpacer(15, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Undress Bag Settings", MyraLabel.Style.H3));
+            rightPanel.Widgets.Add(new MyraLabel("Undress Bag Settings", MyraLabel.TextStyle.H3));
             var undressBagRow = new HorizontalStackPanel { Spacing = 4 };
             undressBagRow.Widgets.Add(new MyraButton("Set Undress Bag", () =>
             {
@@ -171,7 +171,7 @@ public static class DressAgentTabContent
             }));
             if (selectedConfig.UndressBagSerial != 0)
             {
-                undressBagRow.Widgets.Add(new MyraLabel($"Current: ({selectedConfig.UndressBagSerial:X})", MyraLabel.Style.P));
+                undressBagRow.Widgets.Add(new MyraLabel($"Current: ({selectedConfig.UndressBagSerial:X})", MyraLabel.TextStyle.P));
                 undressBagRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear", () =>
                 {
                     DressAgentManager.Instance.SetUndressBag(selectedConfig, 0);
@@ -179,12 +179,12 @@ public static class DressAgentTabContent
                 })));
             }
             else
-                undressBagRow.Widgets.Add(new MyraLabel("Default: Your backpack", MyraLabel.Style.P));
+                undressBagRow.Widgets.Add(new MyraLabel("Default: Your backpack", MyraLabel.TextStyle.P));
             rightPanel.Widgets.Add(undressBagRow);
 
             // Items section
             rightPanel.Widgets.Add(new MyraSpacer(15, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Items to Dress/Undress", MyraLabel.Style.H3));
+            rightPanel.Widgets.Add(new MyraLabel("Items to Dress/Undress", MyraLabel.TextStyle.H3));
             var itemsPanel = new VerticalStackPanel { Spacing = 2 };
             var itemActionRow = new HorizontalStackPanel { Spacing = 4 };
             itemActionRow.Widgets.Add(new MyraButton("Add Currently Equipped", () =>

@@ -33,7 +33,7 @@ public static class SeasonFilterTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead.",
-            MyraLabel.Style.P) { MaxWidth = 500 });
+            MyraLabel.TextStyle.P) { MaxWidth = 500 });
 
         // Collect BuildCycleBtn delegates so Clear can refresh all wrappers
         var rebuildActions = new System.Collections.Generic.List<System.Action>();
@@ -44,22 +44,22 @@ public static class SeasonFilterTabContent
             foreach (System.Action rebuild in rebuildActions) rebuild();
         }) { Tooltip = "Remove all season filters and display seasons as sent by the server" });
 
-        root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.TextStyle.H3));
 
         var grid = new MyraGrid();
         grid.AddColumn(new Proportion(ProportionType.Auto));
         grid.AddColumn(new Proportion(ProportionType.Auto));
         MyraStyle.ApplyStandardGridStyling(grid);
 
-        grid.AddWidget(new MyraLabel("When Server Sends", MyraLabel.Style.H3), 0, 0);
-        grid.AddWidget(new MyraLabel("Show As", MyraLabel.Style.H3), 0, 1);
+        grid.AddWidget(new MyraLabel("When Server Sends", MyraLabel.TextStyle.H3), 0, 0);
+        grid.AddWidget(new MyraLabel("Show As", MyraLabel.TextStyle.H3), 0, 1);
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {
             Season incoming = AllSeasons[i];
             string incomingName = SeasonNames[i];
 
-            grid.AddWidget(new MyraLabel(incomingName, MyraLabel.Style.P), i + 1, 0);
+            grid.AddWidget(new MyraLabel(incomingName, MyraLabel.TextStyle.P), i + 1, 0);
 
             var cycleWrapper = new HorizontalStackPanel();
 
@@ -101,7 +101,7 @@ public static class SeasonFilterTabContent
         root.Widgets.Add(grid);
         root.Widgets.Add(new MyraLabel(
             "Click the button to cycle through options. 'None' disables the filter.",
-            MyraLabel.Style.P));
+            MyraLabel.TextStyle.P));
 
         return root;
     }

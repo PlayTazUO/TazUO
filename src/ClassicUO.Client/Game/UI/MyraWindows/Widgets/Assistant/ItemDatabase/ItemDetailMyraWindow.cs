@@ -43,10 +43,10 @@ public class ItemDetailMyraWindow : MyraControl
                 { Tooltip = $"Graphic: {_item.Graphic} (0x{_item.Graphic:X4})" });
 
         var infoCol = new VerticalStackPanel { Spacing = 2 };
-        infoCol.Widgets.Add(new MyraLabel($"Graphic ID: {_item.Graphic} (0x{_item.Graphic:X4})", MyraLabel.Style.P));
+        infoCol.Widgets.Add(new MyraLabel($"Graphic ID: {_item.Graphic} (0x{_item.Graphic:X4})", MyraLabel.TextStyle.P));
         infoCol.Widgets.Add(_item.Hue > 0
-            ? new MyraLabel($"Hue: {_item.Hue} (0x{_item.Hue:X4})", MyraLabel.Style.P)
-            : new MyraLabel("Hue: Default", MyraLabel.Style.P));
+            ? new MyraLabel($"Hue: {_item.Hue} (0x{_item.Hue:X4})", MyraLabel.TextStyle.P)
+            : new MyraLabel("Hue: Default", MyraLabel.TextStyle.P));
         row.Widgets.Add(infoCol);
         return row;
     }
@@ -54,25 +54,25 @@ public class ItemDetailMyraWindow : MyraControl
     private Widget BuildBasicInfoSection()
     {
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Basic Information", MyraLabel.Style.H3));
+        panel.Widgets.Add(new MyraLabel("Basic Information", MyraLabel.TextStyle.H3));
 
         if (_item.CustomName.NotNullNotEmpty())
-            panel.Widgets.Add(new MyraLabel($"Custom Name: {_item.CustomName}", MyraLabel.Style.P));
+            panel.Widgets.Add(new MyraLabel($"Custom Name: {_item.CustomName}", MyraLabel.TextStyle.P));
 
-        panel.Widgets.Add(new MyraLabel($"Name: {_item.Name} (0x{_item.Serial:X8})", MyraLabel.Style.P));
-        panel.Widgets.Add(new MyraLabel($"Layer: {_item.Layer} ({(int)_item.Layer})", MyraLabel.Style.P));
+        panel.Widgets.Add(new MyraLabel($"Name: {_item.Name} (0x{_item.Serial:X8})", MyraLabel.TextStyle.P));
+        panel.Widgets.Add(new MyraLabel($"Layer: {_item.Layer} ({(int)_item.Layer})", MyraLabel.TextStyle.P));
 
         TimeSpan timeAgo = DateTime.Now - _item.UpdatedTime;
         string timeText = timeAgo.TotalDays >= 1    ? $"{timeAgo.Days}d ago"
             : timeAgo.TotalHours >= 1               ? $"{timeAgo.Hours}h ago"
             : timeAgo.TotalMinutes >= 1             ? $"{(int)timeAgo.TotalMinutes}m ago"
             : "Just now";
-        panel.Widgets.Add(new MyraLabel($"Last seen: {timeText}", MyraLabel.Style.P));
+        panel.Widgets.Add(new MyraLabel($"Last seen: {timeText}", MyraLabel.TextStyle.P));
 
         string charServer = _item.CharacterName;
         if (!string.IsNullOrEmpty(_item.ServerName))
             charServer += $" (Server: {_item.ServerName})";
-        panel.Widgets.Add(new MyraLabel($"Character: {charServer}", MyraLabel.Style.P));
+        panel.Widgets.Add(new MyraLabel($"Character: {charServer}", MyraLabel.TextStyle.P));
 
         return panel;
     }
@@ -80,24 +80,24 @@ public class ItemDetailMyraWindow : MyraControl
     private Widget BuildLocationSection()
     {
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Location", MyraLabel.Style.H3));
+        panel.Widgets.Add(new MyraLabel("Location", MyraLabel.TextStyle.H3));
 
         if (_item.OnGround)
         {
-            panel.Widgets.Add(new MyraLabel($"On ground at {_item.X}, {_item.Y}", MyraLabel.Style.P));
+            panel.Widgets.Add(new MyraLabel($"On ground at {_item.X}, {_item.Y}", MyraLabel.TextStyle.P));
         }
         else
         {
-            panel.Widgets.Add(new MyraLabel("In container", MyraLabel.Style.P));
+            panel.Widgets.Add(new MyraLabel("In container", MyraLabel.TextStyle.P));
             if (_item.Container != 0)
             {
-                panel.Widgets.Add(new MyraLabel($"Container: 0x{_item.Container:X8}", MyraLabel.Style.P));
+                panel.Widgets.Add(new MyraLabel($"Container: 0x{_item.Container:X8}", MyraLabel.TextStyle.P));
 
                 Item? containerItem = Client.Game.UO?.World?.Items?.Get(_item.Container);
                 if (containerItem != null &&
                     containerItem.RootContainer != 0 &&
                     containerItem.RootContainer != _item.Container)
-                    panel.Widgets.Add(new MyraLabel($"Root Container: 0x{containerItem.RootContainer:X8}", MyraLabel.Style.P));
+                    panel.Widgets.Add(new MyraLabel($"Root Container: 0x{containerItem.RootContainer:X8}", MyraLabel.TextStyle.P));
             }
         }
 
@@ -107,17 +107,17 @@ public class ItemDetailMyraWindow : MyraControl
     private Widget BuildPropertiesSection()
     {
         var panel = new VerticalStackPanel { Spacing = 2 };
-        panel.Widgets.Add(new MyraLabel("Properties", MyraLabel.Style.H3));
+        panel.Widgets.Add(new MyraLabel("Properties", MyraLabel.TextStyle.H3));
 
         if (!string.IsNullOrEmpty(_item.Properties))
         {
             foreach (string prop in _item.Properties.Split('|'))
                 if (!string.IsNullOrWhiteSpace(prop))
-                    panel.Widgets.Add(new MyraLabel($"• {prop.Trim()}", MyraLabel.Style.P));
+                    panel.Widgets.Add(new MyraLabel($"• {prop.Trim()}", MyraLabel.TextStyle.P));
         }
         else
         {
-            panel.Widgets.Add(new MyraLabel("No properties available", MyraLabel.Style.P));
+            panel.Widgets.Add(new MyraLabel("No properties available", MyraLabel.TextStyle.P));
         }
 
         return panel;
@@ -126,7 +126,7 @@ public class ItemDetailMyraWindow : MyraControl
     private Widget BuildActionsSection()
     {
         var panel = new VerticalStackPanel { Spacing = 4 };
-        panel.Widgets.Add(new MyraLabel("Actions", MyraLabel.Style.H3));
+        panel.Widgets.Add(new MyraLabel("Actions", MyraLabel.TextStyle.H3));
 
         var row1 = new HorizontalStackPanel { Spacing = 4 };
 

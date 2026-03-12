@@ -16,7 +16,7 @@ public static class ItemDatabaseTabContent
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.Style.P);
+            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
@@ -50,7 +50,7 @@ public static class ItemDatabaseTabContent
         MyraHSlider? maxResultsSlider = null;
 
         var resultsPanel = new VerticalStackPanel { Spacing = 2 };
-        var statusLabel = new MyraLabel("Ready to search", MyraLabel.Style.P);
+        var statusLabel = new MyraLabel("Ready to search", MyraLabel.TextStyle.P);
 
         // ── Results grid ────────────────────────────────────────────────────
         void BuildResultsGrid()
@@ -58,7 +58,7 @@ public static class ItemDatabaseTabContent
             resultsPanel.Widgets.Clear();
             if (searchResults.Count == 0)
             {
-                resultsPanel.Widgets.Add(new MyraLabel("No results to display", MyraLabel.Style.P));
+                resultsPanel.Widgets.Add(new MyraLabel("No results to display", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -74,15 +74,15 @@ public static class ItemDatabaseTabContent
             grid.AddColumn(new Proportion(ProportionType.Auto));  // Actions
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Art",       MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Name",      MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue",       MyraLabel.Style.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Layer",     MyraLabel.Style.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Location",  MyraLabel.Style.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Container", MyraLabel.Style.H3), 0, 5);
-            grid.AddWidget(new MyraLabel("Character", MyraLabel.Style.H3), 0, 6);
-            grid.AddWidget(new MyraLabel("Updated",   MyraLabel.Style.H3), 0, 7);
-            grid.AddWidget(new MyraLabel("Actions",   MyraLabel.Style.H3), 0, 8);
+            grid.AddWidget(new MyraLabel("Art",       MyraLabel.TextStyle.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Name",      MyraLabel.TextStyle.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue",       MyraLabel.TextStyle.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Layer",     MyraLabel.TextStyle.H3), 0, 3);
+            grid.AddWidget(new MyraLabel("Location",  MyraLabel.TextStyle.H3), 0, 4);
+            grid.AddWidget(new MyraLabel("Container", MyraLabel.TextStyle.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Character", MyraLabel.TextStyle.H3), 0, 6);
+            grid.AddWidget(new MyraLabel("Updated",   MyraLabel.TextStyle.H3), 0, 7);
+            grid.AddWidget(new MyraLabel("Actions",   MyraLabel.TextStyle.H3), 0, 8);
 
             int dataRow = 1;
             foreach (ItemInfo item in searchResults)
@@ -93,34 +93,34 @@ public static class ItemDatabaseTabContent
                             { Tooltip = $"Graphic: {item.Graphic} (0x{item.Graphic:X})" },
                         dataRow, 0);
 
-                var nameLabel = new MyraLabel(item.Name, MyraLabel.Style.P);
+                var nameLabel = new MyraLabel(item.Name, MyraLabel.TextStyle.P);
                 if (!string.IsNullOrEmpty(item.Properties))
                     nameLabel.Tooltip = item.Properties.Replace("|", "\n");
                 grid.AddWidget(nameLabel, dataRow, 1);
 
-                grid.AddWidget(new MyraLabel($"{item.Hue}", MyraLabel.Style.P), dataRow, 2);
+                grid.AddWidget(new MyraLabel($"{item.Hue}", MyraLabel.TextStyle.P), dataRow, 2);
 
                 grid.AddWidget(
-                    new MyraLabel($"{item.Layer}", MyraLabel.Style.P)
+                    new MyraLabel($"{item.Layer}", MyraLabel.TextStyle.P)
                         { Tooltip = $"Layer value: {(int)item.Layer}" },
                     dataRow, 3);
 
                 string locationStr = item.OnGround ? $"{item.X}, {item.Y}" : "Container";
-                grid.AddWidget(new MyraLabel(locationStr, MyraLabel.Style.P), dataRow, 4);
+                grid.AddWidget(new MyraLabel(locationStr, MyraLabel.TextStyle.P), dataRow, 4);
 
                 string containerStr = (item.Container != 0 && item.Container != 0xFFFFFFFF)
                     ? $"0x{item.Container:X}"
                     : "Ground";
-                grid.AddWidget(new MyraLabel(containerStr, MyraLabel.Style.P), dataRow, 5);
+                grid.AddWidget(new MyraLabel(containerStr, MyraLabel.TextStyle.P), dataRow, 5);
 
-                grid.AddWidget(new MyraLabel(item.CharacterName, MyraLabel.Style.P), dataRow, 6);
+                grid.AddWidget(new MyraLabel(item.CharacterName, MyraLabel.TextStyle.P), dataRow, 6);
 
                 TimeSpan timeAgo = DateTime.Now - item.UpdatedTime;
                 string timeStr = timeAgo.TotalDays >= 1   ? $"{timeAgo.Days}d ago"
                     : timeAgo.TotalHours >= 1             ? $"{timeAgo.Hours}h ago"
                     : timeAgo.TotalMinutes >= 1           ? $"{(int)timeAgo.TotalMinutes}m ago"
                     : "Just now";
-                grid.AddWidget(new MyraLabel(timeStr, MyraLabel.Style.P), dataRow, 7);
+                grid.AddWidget(new MyraLabel(timeStr, MyraLabel.TextStyle.P), dataRow, 7);
 
                 ItemInfo captured = item;
                 grid.AddWidget(
@@ -206,7 +206,7 @@ public static class ItemDatabaseTabContent
         }
 
         // ── Basic search fields ─────────────────────────────────────────────
-        root.Widgets.Add(new MyraLabel("Search Options:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Search Options:", MyraLabel.TextStyle.H3));
 
         nameBox = new TextBox { HintText = "Item name (partial match)", Width = 280 };
         nameBox.TextChangedByUser += (_, _) => searchName = nameBox.Text ?? "";
@@ -236,24 +236,24 @@ public static class ItemDatabaseTabContent
         };
 
         var nameRow = new HorizontalStackPanel { Spacing = 4 };
-        nameRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.Style.P));
+        nameRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
         nameRow.Widgets.Add(nameBox);
         root.Widgets.Add(nameRow);
 
         var propsRow = new HorizontalStackPanel { Spacing = 4 };
-        propsRow.Widgets.Add(new MyraLabel("Properties:", MyraLabel.Style.P));
+        propsRow.Widgets.Add(new MyraLabel("Properties:", MyraLabel.TextStyle.P));
         propsRow.Widgets.Add(propsBox);
         root.Widgets.Add(propsRow);
 
         var graphicHueRow = new HorizontalStackPanel { Spacing = 8 };
-        graphicHueRow.Widgets.Add(new MyraLabel("Graphic ID:", MyraLabel.Style.P));
+        graphicHueRow.Widgets.Add(new MyraLabel("Graphic ID:", MyraLabel.TextStyle.P));
         graphicHueRow.Widgets.Add(graphicBox);
-        graphicHueRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.Style.P));
+        graphicHueRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
         graphicHueRow.Widgets.Add(hueBox);
         root.Widgets.Add(graphicHueRow);
 
         var layerRow = new HorizontalStackPanel { Spacing = 4 };
-        layerRow.Widgets.Add(new MyraLabel("Layer:", MyraLabel.Style.P));
+        layerRow.Widgets.Add(new MyraLabel("Layer:", MyraLabel.TextStyle.P));
         layerRow.Widgets.Add(layerBox);
         root.Widgets.Add(layerRow);
 
@@ -268,7 +268,7 @@ public static class ItemDatabaseTabContent
         };
 
         var contRow = new HorizontalStackPanel { Spacing = 4 };
-        contRow.Widgets.Add(new MyraLabel("Container Serial:", MyraLabel.Style.P));
+        contRow.Widgets.Add(new MyraLabel("Container Serial:", MyraLabel.TextStyle.P));
         contRow.Widgets.Add(containerBox);
         advancedPanel.Widgets.Add(contRow);
 
@@ -314,7 +314,7 @@ public static class ItemDatabaseTabContent
         root.Widgets.Add(actionRow);
 
         // ── Database maintenance ────────────────────────────────────────────
-        root.Widgets.Add(new MyraLabel("Database Maintenance:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Database Maintenance:", MyraLabel.TextStyle.H3));
 
         int[] clearDays = { 120 };
         bool[] clearInProgress = { false };
@@ -325,7 +325,7 @@ public static class ItemDatabaseTabContent
             if (int.TryParse(clearDaysBox.Text, out int d) && d >= 1) clearDays[0] = d;
         };
 
-        var clearStatusLabel = new MyraLabel("", MyraLabel.Style.P) { Visible = false };
+        var clearStatusLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
 
         async void DoClear()
         {
@@ -349,17 +349,17 @@ public static class ItemDatabaseTabContent
         }
 
         var maintenanceRow = new HorizontalStackPanel { Spacing = 4 };
-        maintenanceRow.Widgets.Add(new MyraLabel("Clear entries older than:", MyraLabel.Style.P));
+        maintenanceRow.Widgets.Add(new MyraLabel("Clear entries older than:", MyraLabel.TextStyle.P));
         maintenanceRow.Widgets.Add(clearDaysBox);
-        maintenanceRow.Widgets.Add(new MyraLabel("days", MyraLabel.Style.P));
+        maintenanceRow.Widgets.Add(new MyraLabel("days", MyraLabel.TextStyle.P));
         maintenanceRow.Widgets.Add(new MyraButton("Clear Old Entries", DoClear));
         root.Widgets.Add(maintenanceRow);
         root.Widgets.Add(clearStatusLabel);
 
         // ── Status + results ────────────────────────────────────────────────
-        root.Widgets.Add(new MyraLabel("Status:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Status:", MyraLabel.TextStyle.H3));
         root.Widgets.Add(statusLabel);
-        root.Widgets.Add(new MyraLabel("Results:", MyraLabel.Style.H3));
+        root.Widgets.Add(new MyraLabel("Results:", MyraLabel.TextStyle.H3));
         BuildResultsGrid();
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = resultsPanel });
 

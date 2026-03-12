@@ -38,7 +38,7 @@ public static class AutoLootAgentTabContent
 
         // Options
         root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.Style.H2));
+        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H2));
 
         var optRow1 = new HorizontalStackPanel { Spacing = 8 };
         optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
@@ -68,7 +68,7 @@ public static class AutoLootAgentTabContent
 
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.Style.H2));
+        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H2));
 
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
@@ -79,7 +79,7 @@ public static class AutoLootAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.Style.P));
+                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -91,13 +91,13 @@ public static class AutoLootAgentTabContent
             MyraStyle.ApplyStandardGridStyling(grid);
 
             // Header row
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.Style.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.Style.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.Style.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Regex", MyraLabel.Style.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("Priority", MyraLabel.Style.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.Style.TableHeader), 0, 5);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.Style.TableHeader), 0, 6);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Regex", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Priority", MyraLabel.TextStyle.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Destination", MyraLabel.TextStyle.TableHeader), 0, 5);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 6);
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
@@ -157,7 +157,7 @@ public static class AutoLootAgentTabContent
                 }), dataRow, 3);
 
                 // Priority cycle: < label >
-                var priorityLabel = new MyraLabel(PriorityLabels[(int)entry.Priority], MyraLabel.Style.P);
+                var priorityLabel = new MyraLabel(PriorityLabels[(int)entry.Priority], MyraLabel.TextStyle.P);
                 var priorityRow = new HorizontalStackPanel { Spacing = 2 };
                 priorityRow.Widgets.Add(new MyraButton("<", () =>
                 {
@@ -229,11 +229,11 @@ public static class AutoLootAgentTabContent
         var newRegexBox = new TextBox { HintText = "Regex (optional)", Width = 200 };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.Style.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newGraphicBox);
-        addFieldsRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.Style.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newHueBox);
-        addFieldsRow.Widgets.Add(new MyraLabel("Regex:", MyraLabel.Style.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("Regex:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newRegexBox);
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
@@ -266,7 +266,7 @@ public static class AutoLootAgentTabContent
             newRegexBox.Text = "";
         }));
 
-        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.Style.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
@@ -280,11 +280,11 @@ public static class AutoLootAgentTabContent
 
             if (otherConfigs.Count == 0)
             {
-                importCharPanel.Widgets.Add(new MyraLabel("No other character configurations found.", MyraLabel.Style.P));
+                importCharPanel.Widgets.Add(new MyraLabel("No other character configurations found.", MyraLabel.TextStyle.P));
             }
             else
             {
-                importCharPanel.Widgets.Add(new MyraLabel("Select a character to import from:", MyraLabel.Style.H3));
+                importCharPanel.Widgets.Add(new MyraLabel("Select a character to import from:", MyraLabel.TextStyle.H3));
                 foreach (KeyValuePair<string, List<AutoLootManager.AutoLootConfigEntry>> kv in otherConfigs.OrderBy(c => c.Key))
                 {
                     string charName = kv.Key;

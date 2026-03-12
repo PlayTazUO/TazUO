@@ -36,14 +36,14 @@ public static class HudTabContent
 
         outerStack.Widgets.Add(new MyraLabel(
             "Select gump types to toggle visibility when using the Toggle Hud Visible macro.",
-            MyraLabel.Style.P));
+            MyraLabel.TextStyle.H3));
 
 
         var grid = new MyraGrid();
         grid.AddColumn(new Proportion(ProportionType.Auto), 4);
         grid.ColumnSpacing = 12;
         for (int i = 0; i < regularFlags.Count; i++) {
-            var flag = regularFlags[i];
+            HideHudFlags flag = regularFlags[i];
             grid.AddWidget(checkButtons[flag], i / 4, i % 4);
         }
         outerStack.Widgets.Add(grid);
@@ -67,7 +67,7 @@ public static class HudTabContent
 
     private static HorizontalStackPanel MakePair(CheckButton cb, string text, string tooltip)
     {
-        var label = new MyraLabel(text, MyraLabel.Style.P);
+        var label = new MyraLabel(text, MyraLabel.TextStyle.P);
         if (!string.IsNullOrEmpty(tooltip))
             label.Tooltip = tooltip;
 

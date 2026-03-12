@@ -117,7 +117,7 @@ public class MyraHSlider : Grid
         MyraHSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
         stack.Widgets.Add(s);
 
-        stack.Widgets.Add(new MyraLabel(label, MyraLabel.Style.P));
+        stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
 
         return stack;
     }

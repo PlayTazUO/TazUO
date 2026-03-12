@@ -100,7 +100,7 @@ public static class SpellBarTabContent
 
         // Row management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Row Management", MyraLabel.Style.H2));
+        leftCol.Widgets.Add(new MyraLabel("Row Management", MyraLabel.TextStyle.H2));
         var rowBtns = new HorizontalStackPanel { Spacing = 4 };
         rowBtns.Widgets.Add(new MyraButton("Add Row", () =>
         {
@@ -117,12 +117,12 @@ public static class SpellBarTabContent
 
         // Preset management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Preset Management", MyraLabel.Style.H2));
+        leftCol.Widgets.Add(new MyraLabel("Preset Management", MyraLabel.TextStyle.H2));
 
         var presetSavePanel = new VerticalStackPanel { Spacing = 4, Visible = false };
         var presetNameBox = new TextBox { MinWidth = 150, HintText = "Preset name" };
         var presetSaveRow = new HorizontalStackPanel { Spacing = 4 };
-        presetSaveRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.Style.P));
+        presetSaveRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
         presetSaveRow.Widgets.Add(presetNameBox);
         presetSaveRow.Widgets.Add(new MyraButton("Save", () =>
         {
@@ -159,11 +159,11 @@ public static class SpellBarTabContent
             string[] presets = SpellBarManager.ListPresets();
             if (presets.Length == 0)
             {
-                presetListPanel.Widgets.Add(new MyraLabel("No presets available.", MyraLabel.Style.P));
+                presetListPanel.Widgets.Add(new MyraLabel("No presets available.", MyraLabel.TextStyle.P));
             }
             else
             {
-                presetListPanel.Widgets.Add(new MyraLabel("Select a preset to load:", MyraLabel.Style.P));
+                presetListPanel.Widgets.Add(new MyraLabel("Select a preset to load:", MyraLabel.TextStyle.P));
                 foreach (string preset in presets)
                 {
                     string p = preset;
@@ -184,7 +184,7 @@ public static class SpellBarTabContent
 
         // === Right column: hotkey configuration ===
         var rightCol = new VerticalStackPanel { Spacing = 6 };
-        rightCol.Widgets.Add(new MyraLabel("Hotkey Configuration", MyraLabel.Style.H2));
+        rightCol.Widgets.Add(new MyraLabel("Hotkey Configuration", MyraLabel.TextStyle.H2));
 
         var hotkeyGrid = new MyraGrid();
         hotkeyGrid.AddColumn(new Proportion(ProportionType.Pixels, 60));  // Slot label
@@ -197,7 +197,7 @@ public static class SpellBarTabContent
         {
             int slot = i;
 
-            keyLabels[slot] = new MyraLabel(GetKeyDisplay(slot), MyraLabel.Style.P);
+            keyLabels[slot] = new MyraLabel(GetKeyDisplay(slot), MyraLabel.TextStyle.P);
 
             normalPanels[slot] = new HorizontalStackPanel { Spacing = 4 };
             normalPanels[slot].Widgets.Add(new MyraButton("Set", () => StartListening(slot)));
@@ -216,7 +216,7 @@ public static class SpellBarTabContent
             actionsContainer.Widgets.Add(normalPanels[slot]);
             actionsContainer.Widgets.Add(editPanels[slot]);
 
-            hotkeyGrid.AddWidget(new MyraLabel($"Slot {slot}", MyraLabel.Style.P), slot, 0);
+            hotkeyGrid.AddWidget(new MyraLabel($"Slot {slot}", MyraLabel.TextStyle.P), slot, 0);
             hotkeyGrid.AddWidget(keyLabels[slot], slot, 2);
             hotkeyGrid.AddWidget(actionsContainer, slot, 4);
         }

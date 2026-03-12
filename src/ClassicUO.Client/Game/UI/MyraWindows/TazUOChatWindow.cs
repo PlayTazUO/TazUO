@@ -50,7 +50,7 @@ public class TazUOChatWindow : MyraControl
         RebuildContent();
         CenterInViewPort();
 
-        _titleNickName = new MyraLabel("", MyraLabel.Style.H3);
+        _titleNickName = new MyraLabel("", MyraLabel.TextStyle.H3);
         _rootWindow.TitlePanel.Widgets.Insert(1, _titleNickName);
 
         _nickName = _manager.CurrentNick;
@@ -114,7 +114,7 @@ public class TazUOChatWindow : MyraControl
         if (!_manager.IsConnected)
         {
             var row = new HorizontalStackPanel { Spacing = 6 };
-            row.Widgets.Add(new MyraLabel("Not connected..", MyraLabel.Style.P));
+            row.Widgets.Add(new MyraLabel("Not connected..", MyraLabel.TextStyle.P));
             row.Widgets.Add(new MyraButton("Try to connect", () =>
             {
                 _manager.Dispose();
@@ -193,7 +193,7 @@ public class TazUOChatWindow : MyraControl
         }
 
         _channelsPanel.Widgets.Clear();
-        _channelsPanel.Widgets.Add(new MyraLabel("Channels", MyraLabel.Style.P));
+        _channelsPanel.Widgets.Add(new MyraLabel("Channels", MyraLabel.TextStyle.P));
 
         foreach (string ch in channels)
         {
@@ -244,14 +244,14 @@ public class TazUOChatWindow : MyraControl
         {
             string[] messages = _manager.GetMessages(_selectedChannel);
             if (messages.Length == 0)
-                _messagesPanel.Widgets.Add(new MyraLabel("No messages yet.", MyraLabel.Style.P));
+                _messagesPanel.Widgets.Add(new MyraLabel("No messages yet.", MyraLabel.TextStyle.P));
             else
                 foreach (string msg in messages)
-                    _messagesPanel.Widgets.Add(new MyraLabel(msg, MyraLabel.Style.P) { MaxWidth = _messagesPanel.MaxWidth });
+                    _messagesPanel.Widgets.Add(new MyraLabel(msg, MyraLabel.TextStyle.P) { MaxWidth = _messagesPanel.MaxWidth });
         }
         else
         {
-            _messagesPanel.Widgets.Add(new MyraLabel("Select a channel.", MyraLabel.Style.P));
+            _messagesPanel.Widgets.Add(new MyraLabel("Select a channel.", MyraLabel.TextStyle.P));
         }
 
         _lastMessageCount = _manager.TotalMessageCount;
@@ -266,13 +266,13 @@ public class TazUOChatWindow : MyraControl
         if (!string.IsNullOrEmpty(_selectedChannel))
         {
             string[] users = _manager.GetUsers(_selectedChannel);
-            _usersPanel.Widgets.Add(new MyraLabel($"Users ({users.Length})", MyraLabel.Style.P));
+            _usersPanel.Widgets.Add(new MyraLabel($"Users ({users.Length})", MyraLabel.TextStyle.P));
             foreach (string user in users)
-                _usersPanel.Widgets.Add(new MyraLabel(user == _manager.CurrentNick ? $"/c[green]{user}" : user, MyraLabel.Style.P));
+                _usersPanel.Widgets.Add(new MyraLabel(user == _manager.CurrentNick ? $"/c[green]{user}" : user, MyraLabel.TextStyle.P));
         }
         else
         {
-            _usersPanel.Widgets.Add(new MyraLabel("Users", MyraLabel.Style.P));
+            _usersPanel.Widgets.Add(new MyraLabel("Users", MyraLabel.TextStyle.P));
         }
     }
 

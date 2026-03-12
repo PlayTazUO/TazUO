@@ -22,11 +22,11 @@ public static class FriendsListTabContent
 
             if (friends.Count == 0)
             {
-                friendsListPanel.Widgets.Add(new MyraLabel("No friends added yet.", MyraLabel.Style.P));
+                friendsListPanel.Widgets.Add(new MyraLabel("No friends added yet.", MyraLabel.TextStyle.P));
                 return;
             }
 
-            friendsListPanel.Widgets.Add(new MyraLabel("Current Friends:", MyraLabel.Style.H2));
+            friendsListPanel.Widgets.Add(new MyraLabel("Current Friends:", MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
             grid.AddColumn(null, 4);
@@ -35,18 +35,18 @@ public static class FriendsListTabContent
             grid.GridLinesColor = MyraStyle.GridBorderColor;
             grid.ShowGridLines = true;
 
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.Style.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Serial", MyraLabel.Style.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Date Added", MyraLabel.Style.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0, 1);
+            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Date Added", MyraLabel.TextStyle.TableHeader), 0, 2);
 
             int row = 1;
             for (int i = friends.Count - 1; i >= 0; i--)
             {
                 FriendEntry f = friends[i];
 
-                grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.Style.P), row, 0);
-                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.Style.P), row, 1);
-                grid.AddWidget(new MyraLabel(f.DateAdded.ToString("yyyy-MM-dd"), MyraLabel.Style.P), row, 2);
+                grid.AddWidget(new MyraLabel(f.Serial != 0 ? f.Serial.ToString() : "N/A", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 1);
+                grid.AddWidget(new MyraLabel(f.Name ?? "Unknown", MyraLabel.TextStyle.P), row, 0);
+                grid.AddWidget(new MyraLabel(f.DateAdded.ToString("yyyy-MM-dd"), MyraLabel.TextStyle.P), row, 2);
                 grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
                 {
                     bool removed = f.Serial != 0
@@ -69,7 +69,7 @@ public static class FriendsListTabContent
         BuildFriendsList();
 
         var root = new VerticalStackPanel { Spacing = 6 };
-        root.Widgets.Add(new MyraLabel("Manage your friends list.", MyraLabel.Style.P));
+        root.Widgets.Add(new MyraLabel("Manage your friends list.", MyraLabel.TextStyle.H3));
         root.Widgets.Add(new MyraButton("Add by Target", () =>
         {
             GameActions.Print(World.Instance, "Target a player to add to friends list");
