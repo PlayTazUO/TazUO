@@ -195,6 +195,8 @@ namespace ClassicUO
 
             Audio.Initialize();
 
+            VoiceRecognitionManager.Instance.TextRecognized += OnVoiceTextRecognized;
+
             Settings.GlobalSettings.Encryption = (byte)AsyncNetClient.Load(UO.FileManager.Version, (EncryptionType)Settings.GlobalSettings.Encryption);
 
             LoadPlugins();
@@ -203,6 +205,21 @@ namespace ClassicUO
 
             SetScene(new LoginScene(UO.World));
 #endif
+        }
+
+        private void OnVoiceTextRecognized(string text)
+        {
+            var chat = UIManager.SystemChat;
+            if (chat == null || chat.IsDisposed)
+                return;
+
+            if (!chat.IsActive)
+            {
+                chat.IsActive = true;
+                chat.SetFocus();
+            }
+
+            chat.TextBoxControl.AppendText(text);
         }
 
         private void LoadPlugins()
@@ -230,6 +247,7 @@ namespace ClassicUO
             );
 
             Audio?.StopMusic();
+            VoiceRecognitionManager.Instance.Dispose();
             Settings.GlobalSettings.Save();
 
             if (_pluginsInitialized)
@@ -448,6 +466,8 @@ namespace ClassicUO
             Profiler.EnterContext("UI Update");
             UIManager.Update();
             Profiler.ExitContext("UI Update");
+
+            VoiceRecognitionManager.Instance.Update();
 
             Profiler.EnterContext("MTQ");
             MainThreadQueue.ProcessQueue();

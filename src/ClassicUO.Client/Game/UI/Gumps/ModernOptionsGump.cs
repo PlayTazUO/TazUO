@@ -768,6 +768,62 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
             PositionHelper.PositionControl(s.FullControl);
+
+            BuildVoiceRecognition();
+        }
+
+        private void BuildVoiceRecognition()
+        {
+            SettingsOption s;
+            var voiceLang = lang.GetTazUO;
+            var voiceManager = VoiceRecognitionManager.Instance;
+
+            PositionHelper.BlankLine();
+            PositionHelper.BlankLine();
+
+            // Section header
+            var header = TextBox.GetOne(voiceLang.VoiceRecognition, ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE + 2, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
+            options.Add(s = new SettingsOption("", header, MainContent.RightWidth, (int)PAGE.Sound));
+            PositionHelper.PositionControl(s.FullControl);
+            PositionHelper.BlankLine();
+
+            // Enable checkbox
+            options.Add
+            (
+                s = new SettingsOption
+                (
+                    "", new CheckboxWithLabel(voiceLang.VoiceRecognitionEnable, 0, profile.VoiceRecognitionEnabled, (b) =>
+                    {
+                        profile.VoiceRecognitionEnabled = b;
+                        if (b)
+                            voiceManager.InitializeAsync(profile.VoiceModelPath, startListeningAfter: true);
+                        else
+                            voiceManager.StopListening();
+                    }),
+                    MainContent.RightWidth, (int)PAGE.Sound
+                )
+            );
+            PositionHelper.PositionControl(s.FullControl);
+            PositionHelper.BlankLine();
+
+            // Model path input
+            InputFieldWithLabel modelPathInput = new InputFieldWithLabel(voiceLang.VoiceModelPath, 300, profile.VoiceModelPath, onTextChange: (sender, e) =>
+            {
+                profile.VoiceModelPath = ((InputField.StbTextBox)sender).Text;
+            });
+            modelPathInput.SetTooltip(voiceLang.VoiceModelPathTooltip);
+            options.Add(s = new SettingsOption("", modelPathInput, MainContent.RightWidth, (int)PAGE.Sound));
+            PositionHelper.PositionControl(s.FullControl);
+            PositionHelper.BlankLine();
+
+            // Apply button
+            var applyBtn = new ModernButton(0, 0, 160, 30, ButtonAction.Activate, voiceLang.VoiceApplyModel, ThemeSettings.BUTTON_FONT_COLOR);
+            applyBtn.MouseUp += (sender, e) =>
+            {
+                voiceManager.Reinitialize();
+            };
+            options.Add(s = new SettingsOption("", applyBtn, MainContent.RightWidth, (int)PAGE.Sound));
+            PositionHelper.PositionControl(s.FullControl);
         }
 
         private void BuildVideo()

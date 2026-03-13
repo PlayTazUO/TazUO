@@ -620,6 +620,18 @@ namespace ClassicUO.Configuration
             public string Hotkeys { get; set; } = "Hotkeys";
 
 
+            #region VoiceRecognition
+            public string VoiceRecognition { get; set; } = "Voice Recognition";
+            public string VoiceRecognitionEnable { get; set; } = "Enable voice recognition";
+            public string VoiceModelPath { get; set; } = "Vosk model path";
+            public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory. Download models from alphacephei.com/vosk/models";
+            public string VoiceRecognitionStatus { get; set; } = "Status: {0}";
+            public string VoiceStatusReady { get; set; } = "Ready";
+            public string VoiceStatusNotInitialized { get; set; } = "Not initialized - set model path first";
+            public string VoiceStatusListening { get; set; } = "Listening...";
+            public string VoiceApplyModel { get; set; } = "Apply model path";
+            #endregion
+
             #region VisibileLayers
             public string VisibleLayers { get; set; } = "Visible Layers";
             public string VisLayersInfo { get; set; } = "These settings are to hide layers on in-game mobiles. Check the box to hide that layer.";

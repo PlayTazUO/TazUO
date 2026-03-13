@@ -57,6 +57,10 @@ namespace ClassicUO.Configuration
         [JsonIgnore] public string ServerName { get; set; }
         [JsonIgnore] public string CharacterName { get; set; }
 
+        // voice recognition
+        public bool VoiceRecognitionEnabled { get; set; } = false;
+        public string VoiceModelPath { get; set; } = string.Empty;
+
         // sounds
         public bool EnableSound { get; set; } = true;
         public int SoundVolume { get; set; } = 70;
