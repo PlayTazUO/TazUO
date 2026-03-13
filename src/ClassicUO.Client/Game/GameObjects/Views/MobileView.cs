@@ -169,9 +169,11 @@ namespace ClassicUO.Game.GameObjects
                     && mountGraphic < Client.Game.UO.Animations.MaxAnimationCount
                 )
                 {
+                    bool drawMountAsSingleLayer = false;
                     if (Mounts.TryGet(mount.Graphic, out MountInfo mountInfo))
                     {
                         mountOffsetY = mountInfo.OffsetY;
+                        drawMountAsSingleLayer = mountInfo.DrawAsSingleLayer;
                     }
 
                     // Calculate animation group once
@@ -246,7 +248,8 @@ namespace ClassicUO.Game.GameObjects
                         depth,
                         mountOffsetY,
                         overridenHue,
-                        charSitting
+                        charSitting,
+                        drawAsSingleLayer: drawMountAsSingleLayer
                     );
 
                     drawY += mountOffsetY;
@@ -340,7 +343,7 @@ namespace ClassicUO.Game.GameObjects
                 mountOffsetY,
                 overridenHue,
                 charSitting,
-                OutlineColor
+                outlineColor: OutlineColor
             );
 
             if (!IsEmpty)
@@ -424,7 +427,7 @@ namespace ClassicUO.Game.GameObjects
                                 mountOffsetY,
                                 overridenHue,
                                 charSitting,
-                                OutlineColor
+                                outlineColor: OutlineColor
                             );
 
                             if (layer == Layer.Robe && Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
@@ -459,7 +462,7 @@ namespace ClassicUO.Game.GameObjects
                                         mountOffsetY,
                                         overridenHue,
                                         charSitting,
-                                        OutlineColor
+                                        outlineColor: OutlineColor
                                     );
                                 }
                             }
@@ -664,6 +667,7 @@ namespace ClassicUO.Game.GameObjects
             sbyte mountOffset,
             ushort overridedHue,
             bool charIsSitting,
+            bool drawAsSingleLayer = false,
             Color? outlineColor = null
         )
         {
@@ -792,17 +796,7 @@ namespace ClassicUO.Game.GameObjects
                     }
                     else
                     {
-                        int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y) - mountOffset;
-
-                        int value = Math.Max(1, diffY);
-                        int count = Math.Max((spriteInfo.UV.Height / value) + 1, 2);
-
-                        rect.Height = Math.Min(value, rect.Height);
-                        int remains = spriteInfo.UV.Height - rect.Height;
-
-                        const int tiles = 2;
-
-                        for (int i = 0; i < count; ++i)
+                        if (isMount && drawAsSingleLayer)
                         {
                             batcher.Draw(
                                 spriteInfo.Texture,
@@ -813,13 +807,40 @@ namespace ClassicUO.Game.GameObjects
                                 Vector2.Zero,
                                 owner.Scale,
                                 mirror ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                                depth + 1f + (i * tiles)
+                                depth + 1f
                             );
+                        }
+                        else
+                        {
+                            int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y) - mountOffset;
 
-                            pos.Y += rect.Height * owner.Scale;
-                            rect.Y += rect.Height;
-                            rect.Height = remains;
-                            remains -= rect.Height;
+                            int value = Math.Max(1, diffY);
+                            int count = Math.Max((spriteInfo.UV.Height / value) + 1, 2);
+
+                            rect.Height = Math.Min(value, rect.Height);
+                            int remains = spriteInfo.UV.Height - rect.Height;
+
+                            const int tiles = 2;
+
+                            for (int i = 0; i < count; ++i)
+                            {
+                                batcher.Draw(
+                                    spriteInfo.Texture,
+                                    pos,
+                                    rect,
+                                    hueVec,
+                                    0f,
+                                    Vector2.Zero,
+                                    owner.Scale,
+                                    mirror ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                                    depth + 1f + (i * tiles)
+                                );
+
+                                pos.Y += rect.Height * owner.Scale;
+                                rect.Y += rect.Height;
+                                rect.Height = remains;
+                                remains -= rect.Height;
+                            }
                         }
 
                         if (outlineColor.HasValue)

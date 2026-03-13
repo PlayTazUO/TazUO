@@ -57,18 +57,18 @@ internal static class Mounts
         _mounts[0x3EC5] = new(0x00D5, 0x3EC5, 0); // 16069
         _mounts[0x3F3A] = new(0x00D5, 0x3F3A, 0); // 16186 snow bear ???
         _mounts[0x3EC6] = new(0x01B0, 0x3EC6, 9); // 16070 Boura
-        _mounts[0x3EC7] = new(0x04E6, 0x3EC7, 18); // 16071 Tiger
-        _mounts[0x3EC8] = new(0x04E7, 0x3EC8, 18); // 16072 Tiger
+        _mounts[0x3EC7] = new(0x04E6, 0x3EC7, 18, true); // 16071 Tiger
+        _mounts[0x3EC8] = new(0x04E7, 0x3EC8, 18, true); // 16072 Tiger
         _mounts[0x3EC9] = new(0x042D, 0x3EC9, 3); // 16073
         _mounts[0x3ECA] = new(0x0579, 0x3ECA, 9); // tarantula
         _mounts[0x3ECC] = new(0x0582, 0x3ECC, 0); // 16016
         _mounts[0x3ED1] = new(0x05E6, 0x3ED1, 0); // CoconutCrab
         _mounts[0x3ECB] = new(0x057F, 0x3ECB, 0); // Lasher
-        _mounts[0x3ED0] = new(0x05A1, 0x3ED0, 18); // SkeletalCat
+        _mounts[0x3ED0] = new(0x05A1, 0x3ED0, 18, true); // SkeletalCat
         _mounts[0x3ED2] = new(0x05F6, 0x3ED2, 9); // war boar
         _mounts[0x3ECD] = new(0x0580, 0x3ECD, 0); // Palomino
         _mounts[0x3ECF] = new(0x05A0, 0x3ECF, 9); // Eowmu
-        _mounts[0x3ED3] = new(0x05F7, 0x3ED3, 18); // capybara
+        _mounts[0x3ED3] = new(0x05F7, 0x3ED3, 11, true); // capybara
         _mounts[0x3ED4] = new(0x060A, 0x3ED4, 0); // (no description provided)
         _mounts[0x3ED5] = new(0x060B, 0x3ED5, 0); // a wolf
         _mounts[0x3ED6] = new(0x060C, 0x3ED6, 0); // an orange dog 2?
@@ -77,8 +77,8 @@ internal static class Mounts
         _mounts[0x3ED9] = new(0x0610, 0x3ED9, 0); // a doberman?
         _mounts[0x3EDA] = new(0x0590, 0x3EDA, 9); // Frostmites Beetles
         _mounts[0x3EDE] = new(0x0673, 0x3EDE, 0); // Clydesdale?
-        _mounts[0x3EDC] = new(0x0666, 0x3EDC, 0); // Moldering Ursine?
-        _mounts[0x3EDB] = new(0x0611, 0x3EDB, 9); // Manticore
+        _mounts[0x3EDC] = new(0x0666, 0x3EDC, 12, true); // Moldering Ursine?
+        _mounts[0x3EDB] = new(0x0611, 0x3EDB, 14, true); // Manticore
         _mounts[0x3EDD] = new(0x0581, 0x3EDD, 0); // Dragon_Hildebrandt
         _mounts[0x3EDF] = new(0x0674, 0x3EDF, 0); // Horse_Elemental_Earth
         _mounts[0x3EE0] = new(0x0675, 0x3EE0, 0); // Horse_Elemental_Fire
@@ -118,12 +118,13 @@ internal readonly struct MountInfo
     public readonly ushort Graphic;
     public readonly ushort AnimationId;
     public readonly sbyte OffsetY;
+    public readonly bool DrawAsSingleLayer;
 
-
-    public MountInfo(ushort graphic, ushort animId, sbyte offsetY)
+    public MountInfo(ushort graphic, ushort animId, sbyte offsetY, bool drawAsSingleLayer = false)
     {
         Graphic = graphic;
         AnimationId = animId;
         OffsetY = offsetY;
+        DrawAsSingleLayer = drawAsSingleLayer;
     }
 }
