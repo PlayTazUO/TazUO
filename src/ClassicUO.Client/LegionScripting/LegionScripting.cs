@@ -521,7 +521,7 @@ namespace ClassicUO.LegionScripting
                 }
 
                 if (errorLocations.Count > 0)
-                    MainThreadQueue.InvokeOnMainThread(() => new ScriptErrorWindow(new ScriptErrorDetails(e.Message, errorLocations, script)));
+                    MainThreadQueue.EnqueueAction(() => { new ScriptErrorWindow(new ScriptErrorDetails(e.Message, errorLocations, script)); });
                 else
                     GameActions.Print(_world, formattedEx, Constants.HUE_ERROR);
             }

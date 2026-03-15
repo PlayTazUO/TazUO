@@ -104,6 +104,10 @@ public static class MainThreadQueue
         {
             return default;
         }
+        catch (ThreadInterruptedException)
+        {
+            return default;
+        }
 
         return result;
 
