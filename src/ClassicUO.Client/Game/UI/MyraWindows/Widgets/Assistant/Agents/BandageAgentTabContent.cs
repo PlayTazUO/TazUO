@@ -30,6 +30,11 @@ public static class BandageAgentTabContent
             profile.BandageAgentBandageFriends,
             b => profile.BandageAgentBandageFriends = b,
             "Bandage friends"));
+        enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BandageAgentBandageAllies,
+            b => profile.BandageAgentBandageAllies = b,
+            "Bandage allies",
+            "Bandage nearby guild/alliance members (notoriety: ally)"));
         root.Widgets.Add(enableRow);
 
         enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(

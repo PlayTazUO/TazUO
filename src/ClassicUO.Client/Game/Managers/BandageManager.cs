@@ -35,6 +35,7 @@ namespace ClassicUO.Game.Managers
 
         private bool IsEnabled => ProfileManager.CurrentProfile?.EnableBandageAgent ?? false;
         private bool FriendBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandageFriends ?? false;
+        private bool AllyBandagingEnabled => ProfileManager.CurrentProfile?.BandageAgentBandageAllies ?? false;
         private int HealDelayMs => ProfileManager.CurrentProfile?.BandageAgentDelay ?? 3000;
         private bool CheckForBuff => ProfileManager.CurrentProfile?.BandageAgentCheckForBuff ?? false;
         private ushort BandageGraphic => ProfileManager.CurrentProfile?.BandageAgentGraphic ?? 0x0E21;
@@ -185,7 +186,8 @@ namespace ClassicUO.Game.Managers
 
             bool isPlayer = mobile == player;
             bool isFriend = !isPlayer && FriendBandagingEnabled && FriendsListManager.Instance.IsFriend(mobile);
-            if (!isPlayer && !isFriend)
+            bool isAlly = !isPlayer && AllyBandagingEnabled && mobile.NotorietyFlag == NotorietyFlag.Ally;
+            if (!isPlayer && !isFriend && !isAlly)
                 return false;
 
             if (isPlayer && DisableSelfHeal)
@@ -207,18 +209,19 @@ namespace ClassicUO.Game.Managers
             if (mobile.IsDead)
                 return false;
 
-            // Check if this is the player or a friend
+            // Check if this is the player or a friend/ally
             bool isPlayer = mobile == player;
             bool isFriend = !isPlayer && FriendBandagingEnabled && FriendsListManager.Instance.IsFriend(mobile.Serial);
-            if (!isPlayer && !isFriend)
+            bool isAlly = !isPlayer && AllyBandagingEnabled && mobile.NotorietyFlag == NotorietyFlag.Ally;
+            if (!isPlayer && !isFriend && !isAlly)
                 return false;
 
             // Check if self-healing is disabled
             if (isPlayer && DisableSelfHeal)
                 return false;
 
-            // Check distance for friends (within 3 tiles)
-            if (isFriend && mobile.Distance > 3)
+            // Check distance for friends/allies (within 3 tiles)
+            if ((isFriend || isAlly) && mobile.Distance > 3)
                 return false;
 
             // Guard against divide-by-zero and invul
