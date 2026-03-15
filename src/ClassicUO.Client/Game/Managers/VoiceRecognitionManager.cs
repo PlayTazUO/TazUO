@@ -30,8 +30,10 @@ namespace ClassicUO.Game.Managers
         private volatile bool _initializing;
 
         private readonly ConcurrentQueue<string> _recognizedTexts = new();
+        private readonly ConcurrentQueue<string> _statusMessages = new();
 
         public event Action<string> TextRecognized;
+        public event Action<string> StatusMessage;
         public event Action InitializationComplete;
 
         public bool IsListening => _isListening;
@@ -147,6 +149,7 @@ namespace ClassicUO.Game.Managers
 
                 SDL.SDL_ResumeAudioStreamDevice(_audioStream);
                 _isListening = true;
+                _statusMessages.Enqueue("[Voice] Listening...");
                 Log.Info("[VoiceRecognition] Started listening");
             }
             catch (Exception ex)
@@ -280,6 +283,9 @@ namespace ClassicUO.Game.Managers
         // Call from main thread each frame
         public void Update()
         {
+            while (_statusMessages.TryDequeue(out string msg))
+                StatusMessage?.Invoke(msg);
+
             while (_recognizedTexts.TryDequeue(out string text))
                 TextRecognized?.Invoke(text);
         }

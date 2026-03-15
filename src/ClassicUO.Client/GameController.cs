@@ -196,6 +196,7 @@ namespace ClassicUO
             Audio.Initialize();
 
             VoiceRecognitionManager.Instance.TextRecognized += OnVoiceTextRecognized;
+            VoiceRecognitionManager.Instance.StatusMessage += msg => GameActions.Print(msg);
 
             Settings.GlobalSettings.Encryption = (byte)AsyncNetClient.Load(UO.FileManager.Version, (EncryptionType)Settings.GlobalSettings.Encryption);
 

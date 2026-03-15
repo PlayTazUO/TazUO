@@ -1438,6 +1438,37 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.ToggleVoiceRecognition:
+                {
+                    VoiceRecognitionManager vm = VoiceRecognitionManager.Instance;
+                    if (vm.IsInitializing)
+                    {
+                        GameActions.Print(_world, "[Voice] Model is still loading...");
+                    }
+                    else if (!vm.IsInitialized)
+                    {
+                        Configuration.Profile profile = ProfileManager.CurrentProfile;
+                        if (profile != null && !string.IsNullOrEmpty(profile.VoiceModelPath))
+                        {
+                            GameActions.Print(_world, "[Voice] Loading model...");
+                            vm.InitializeAsync(profile.VoiceModelPath, startListeningAfter: true);
+                        }
+                        else
+                        {
+                            GameActions.Print(_world, "[Voice] No model path set - configure in Options > Sound");
+                        }
+                    }
+                    else
+                    {
+                        vm.ToggleListening();
+                        if (!vm.IsListening)
+                            GameActions.Print(_world, "[Voice] Off");
+                        // "[Voice] Listening..." is printed by VoiceRecognitionManager.StatusMessage when recording actually starts
+                    }
+
+                    break;
+                }
+
                 case MacroType.LastObject:
 
                     if (_world.Get(_world.LastObject) != null)
@@ -2991,7 +3022,8 @@ namespace ClassicUO.Game.Managers
         EquipHands,
         UseType,
         CastMasterySpell,
-        ToggleAutoLoot
+        ToggleAutoLoot,
+        ToggleVoiceRecognition
     }
 
     public enum MacroSubType
@@ -3294,5 +3326,5 @@ namespace ClassicUO.Game.Managers
         Whispering,
         CombatTraining,
         Boarding,
-    }
+        }
 }

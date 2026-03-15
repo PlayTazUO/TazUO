@@ -231,6 +231,9 @@ namespace ClassicUO.Game.Scenes
 
             if(!ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin)
                 TazUOChatManager.Instance.Init();
+
+            if (ProfileManager.CurrentProfile.VoiceRecognitionEnabled)
+                VoiceRecognitionManager.Instance.InitializeAsync(ProfileManager.CurrentProfile.VoiceModelPath, startListeningAfter: true);
         }
 
         private void ChatOnMessageReceived(object sender, MessageEventArgs e)
