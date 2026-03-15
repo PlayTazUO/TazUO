@@ -482,16 +482,13 @@ namespace ClassicUO.Game.UI.Controls
     {
         bool childRemoved = false;
         for (int i = Children.Count - 1; i >= 0; i--)
-            if (i < Children.Count)
+        {
+            if (i < Children.Count && Children[i]?.IsDisposed == true)
             {
-                IGui c = Children[i];
-
-                if (c?.IsDisposed == true)
-                {
-                    Children.Remove(c);
-                    childRemoved = true;
-                }
+                Children.RemoveAt(i);
+                childRemoved = true;
             }
+        }
 
         if (childRemoved)
             OnChildRemoved();
