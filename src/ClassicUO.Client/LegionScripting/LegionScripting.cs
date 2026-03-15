@@ -425,20 +425,16 @@ namespace ClassicUO.LegionScripting
 
             try
             {
-                try
-                {
-                    ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
-                    source?.Execute(script.PythonScope);
-                }
-                catch (ThreadInterruptedException) { }
-                catch (ThreadAbortException) { }
-                catch (OperationCanceledException) { }
-                catch (Exception e)
-                {
-                    ShowScriptError(script, e);
-                }
+                ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
+                source?.Execute(script.PythonScope);
             }
             catch (ThreadInterruptedException) { }
+            catch (ThreadAbortException) { }
+            catch (OperationCanceledException) { }
+            catch (Exception e)
+            {
+                ShowScriptError(script, e);
+            }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
         }
@@ -447,40 +443,36 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                try
-                {
-                    script.SetupCSharpScript();
-                    script.SetupCSharpGlobals();
+                script.SetupCSharpScript();
+                script.SetupCSharpGlobals();
 
-                    // Execute with cancellation support
-                    Task<ScriptState<object>> task = script.CSharpCompiledScript.RunAsync(
-                        new ScriptGlobals { GlobalApiInstance = script.ScopedApi },
-                        script.ScopedApi.CancellationToken.Token
-                    );
+                // Execute with cancellation support
+                Task<ScriptState<object>> task = script.CSharpCompiledScript.RunAsync(
+                    new ScriptGlobals { GlobalApiInstance = script.ScopedApi },
+                    script.ScopedApi.CancellationToken.Token
+                );
 
-                    // Block thread until the script completes or is canceled
-                    task.Wait(script.ScopedApi.CancellationToken.Token);
-                }
-                catch (CompilationErrorException e)
-                {
-                    ShowCSharpCompilationError(script, e);
-                }
-                catch (AggregateException ae) when (ae.InnerException is OperationCanceledException or ThreadInterruptedException or ThreadAbortException)
-                {
-                    // Script was canceled via the stop button
-                }
-                catch (OperationCanceledException)
-                {
-                    // Script was canceled
-                }
-                catch (ThreadInterruptedException) { }
-                catch (ThreadAbortException) { }
-                catch (Exception e)
-                {
-                    ShowCSharpRuntimeError(script, e);
-                }
+                // Block thread until the script completes or is canceled
+                task.Wait(script.ScopedApi.CancellationToken.Token);
+            }
+            catch (CompilationErrorException e)
+            {
+                ShowCSharpCompilationError(script, e);
+            }
+            catch (AggregateException ae) when (ae.InnerException is OperationCanceledException or ThreadInterruptedException or ThreadAbortException)
+            {
+                // Script was canceled via the stop button
+            }
+            catch (OperationCanceledException)
+            {
+                // Script was canceled
             }
             catch (ThreadInterruptedException) { }
+            catch (ThreadAbortException) { }
+            catch (Exception e)
+            {
+                ShowCSharpRuntimeError(script, e);
+            }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
         }
