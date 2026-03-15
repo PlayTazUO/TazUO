@@ -404,9 +404,9 @@ namespace ClassicUO.LegionScripting
 
                 // Route to correct executor based on script type
                 if (script.Type == ScriptFile.ScriptType.CSharp)
-                    script.ScriptThread = new Thread(() => ExecuteCSharpScript(script)) { Name = $"Legion: {script.FileName}" };
+                    script.ScriptThread = new Thread(() => { try { ExecuteCSharpScript(script); } catch (ThreadInterruptedException) { } }) { Name = $"Legion: {script.FileName}" };
                 else
-                    script.ScriptThread = new Thread(() => ExecutePythonScript(script)) { Name = $"Legion: {script.FileName}" };
+                    script.ScriptThread = new Thread(() => { try { ExecutePythonScript(script); } catch (ThreadInterruptedException) { } }) { Name = $"Legion: {script.FileName}" };
 
                 if(!PyThreads.TryAdd(script.ScriptThread.ManagedThreadId, script))
                     PyThreads[script.ScriptThread.ManagedThreadId] = script;
