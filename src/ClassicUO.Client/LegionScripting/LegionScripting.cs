@@ -433,7 +433,8 @@ namespace ClassicUO.LegionScripting
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                ShowScriptError(script, e);
+                try { ShowScriptError(script, e); }
+                catch (ThreadInterruptedException) { }
             }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
@@ -471,7 +472,8 @@ namespace ClassicUO.LegionScripting
             catch (ThreadAbortException) { }
             catch (Exception e)
             {
-                ShowCSharpRuntimeError(script, e);
+                try { ShowCSharpRuntimeError(script, e); }
+                catch (ThreadInterruptedException) { }
             }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
