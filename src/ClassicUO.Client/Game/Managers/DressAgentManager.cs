@@ -436,7 +436,7 @@ namespace ClassicUO.Game.Managers
                 if (currentlyEquipped == null) continue;
 
                 if(!kr)
-                    ObjectActionQueue.Instance.Enqueue(new MoveRequest(currentlyEquipped, undressBag).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                    ObjectActionQueue.Instance.Enqueue(new MoveRequest(currentlyEquipped, undressBag).ToObjectActionQueueItem(), ActionPriority.UnequipItem);
                 else
                     toUnequip.Add((Layer)layer);
             }
