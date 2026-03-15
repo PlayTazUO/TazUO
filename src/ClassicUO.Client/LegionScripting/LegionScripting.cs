@@ -425,17 +425,20 @@ namespace ClassicUO.LegionScripting
 
             try
             {
-                ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
-                source?.Execute(script.PythonScope);
+                try
+                {
+                    ScriptSource source = script.PythonEngine.CreateScriptSourceFromString(script.FileContentsJoined, script.FullPath, SourceCodeKind.File);
+                    source?.Execute(script.PythonScope);
+                }
+                catch (ThreadInterruptedException) { }
+                catch (ThreadAbortException) { }
+                catch (OperationCanceledException) { }
+                catch (Exception e)
+                {
+                    ShowScriptError(script, e);
+                }
             }
             catch (ThreadInterruptedException) { }
-            catch (ThreadAbortException) { }
-            catch (OperationCanceledException) { }
-            catch (Exception e)
-            {
-                try { ShowScriptError(script, e); }
-                catch (ThreadInterruptedException) { }
-            }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
         }
@@ -444,37 +447,40 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                script.SetupCSharpScript();
-                script.SetupCSharpGlobals();
+                try
+                {
+                    script.SetupCSharpScript();
+                    script.SetupCSharpGlobals();
 
-                // Execute with cancellation support
-                Task<ScriptState<object>> task = script.CSharpCompiledScript.RunAsync(
-                    new ScriptGlobals { GlobalApiInstance = script.ScopedApi },
-                    script.ScopedApi.CancellationToken.Token
-                );
+                    // Execute with cancellation support
+                    Task<ScriptState<object>> task = script.CSharpCompiledScript.RunAsync(
+                        new ScriptGlobals { GlobalApiInstance = script.ScopedApi },
+                        script.ScopedApi.CancellationToken.Token
+                    );
 
-                // Block thread until the script completes or is canceled
-                task.Wait(script.ScopedApi.CancellationToken.Token);
-            }
-            catch (CompilationErrorException e)
-            {
-                ShowCSharpCompilationError(script, e);
-            }
-            catch (AggregateException ae) when (ae.InnerException is OperationCanceledException or ThreadInterruptedException or ThreadAbortException)
-            {
-                // Script was canceled via the stop button
-            }
-            catch (OperationCanceledException)
-            {
-                // Script was canceled
+                    // Block thread until the script completes or is canceled
+                    task.Wait(script.ScopedApi.CancellationToken.Token);
+                }
+                catch (CompilationErrorException e)
+                {
+                    ShowCSharpCompilationError(script, e);
+                }
+                catch (AggregateException ae) when (ae.InnerException is OperationCanceledException or ThreadInterruptedException or ThreadAbortException)
+                {
+                    // Script was canceled via the stop button
+                }
+                catch (OperationCanceledException)
+                {
+                    // Script was canceled
+                }
+                catch (ThreadInterruptedException) { }
+                catch (ThreadAbortException) { }
+                catch (Exception e)
+                {
+                    ShowCSharpRuntimeError(script, e);
+                }
             }
             catch (ThreadInterruptedException) { }
-            catch (ThreadAbortException) { }
-            catch (Exception e)
-            {
-                try { ShowCSharpRuntimeError(script, e); }
-                catch (ThreadInterruptedException) { }
-            }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
         }
