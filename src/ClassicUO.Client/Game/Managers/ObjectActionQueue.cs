@@ -26,7 +26,7 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
                 continue;
             }
 
-            if (priority >= ActionPriority.MoveItem && Client.Game.UO.GameCursor.ItemHold.Enabled)
+            if (priority >= ActionPriority.UnequipItem && Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
                 Enqueue(item,  priority, sequence); //Return to queue to retry again when not holding an item
                 return;
@@ -96,6 +96,7 @@ public enum ActionPriority
     ManualUseItem, //Higher priority than regular useitem which may occur in scripts
     UseItem,
     OpenCorpse,
+    UnequipItem, //Unequip item to make room for equipping - must run before EquipItem
     EquipItem,
     MoveItem,
     LootItemHigh,   //Auto-loot: High priority items (still lower than manual moves)
