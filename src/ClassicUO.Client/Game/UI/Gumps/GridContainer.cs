@@ -316,14 +316,13 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             #region TOP BAR AREA
-            _containerNameLabel = new Label(GetContainerName(), true, 0x0481, 150, ishtml: true)
+            _containerNameLabel = new Label(GetContainerName(), true, 0x0481, 0, ishtml: true)
             {
                 X = _borderWidth,
                 Y = _borderWidth,
                 AcceptMouseInput = true,
                 CanMove = true
             };
-            _containerNameLabel.SetTooltip(GetContainerName(true, false));
             _containerNameLabel.MouseDoubleClick += OnMinimizeToggleDoubleClick;
 
             _searchBox = new StbTextBox(0xFF, 20, 0, true, FontStyle.None, 0x0481)
@@ -475,6 +474,8 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
+
+            UpdateContainerNameLabel();
 
             if (ShouldUseOldContainerStyle())
             {
@@ -641,8 +642,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     _gridContainerEntry?.CustomName = r == InputRequest.Result.BUTTON1 ? s : null;
 
-                    _containerNameLabel.Text = GetContainerName();
-                    _containerNameLabel.SetTooltip(GetContainerName(true, false));
+                    UpdateContainerNameLabel();
                 }, GetContainerName(true));
                 input.CenterXInViewPort();
                 input.CenterYInViewPort();
@@ -807,8 +807,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            _containerNameLabel.Text = GetContainerName();
-            _containerNameLabel.SetTooltip(GetContainerName(true, false));
+            UpdateContainerNameLabel();
 
             if (_autoSortContainer)
                 overrideSort = true;
@@ -983,6 +982,36 @@ namespace ClassicUO.Game.UI.Gumps
                 if (item.IsCorpse)
                     SelectedObject.CorpseObject = item;
             }
+        }
+
+        private void UpdateContainerNameLabel()
+        {
+            string rawName = GridContainerEntry?.CustomName.NotNullNotEmpty() == true
+                ? GridContainerEntry.CustomName
+                : !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+
+            string countSuffix = SlotManager != null ? $" ({SlotManager.ContainerContents.Count})" : "";
+
+            // Available width = from left border to the sort button, minus a small padding
+            int availableWidth = _sortContents.X - _borderWidth - 2;
+
+            // Start with the standard 21-char truncation
+            string displayName = rawName.Truncate(21);
+            _containerNameLabel.Text = displayName + countSuffix;
+
+            // If the rendered text is too wide, trim the name char by char until it fits
+            if (_containerNameLabel.Width > availableWidth)
+            {
+                string baseName = displayName.EndsWith("...") ? displayName[..^3] : displayName;
+
+                while (_containerNameLabel.Width > availableWidth && baseName.Length > 0)
+                {
+                    baseName = baseName[..^1];
+                    _containerNameLabel.Text = (baseName.Length > 0 ? baseName + "..." : "") + countSuffix;
+                }
+            }
+
+            _containerNameLabel.SetTooltip(rawName);
         }
 
         private string GetContainerName(bool skipCount = false, bool truncate = true)
