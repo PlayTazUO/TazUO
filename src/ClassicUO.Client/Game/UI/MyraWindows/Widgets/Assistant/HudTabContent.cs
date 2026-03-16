@@ -23,21 +23,20 @@ public static class HudTabContent
 
         var checkButtons = new Dictionary<HideHudFlags, CheckButton>();
 
-        foreach (HideHudFlags flag in regularFlags)
-        {
-            if(flag == HideHudFlags.All) continue;
-            checkButtons[flag] = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags,  (ulong)flag),
-                b =>
-                {
-                    profile.HideHudGumpFlags = b ? ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)flag) : ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)flag);
-                }, HideHudManager.GetFlagName(flag), GetTooltip(flag));
-        }
-
-
-        var allCb = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags,  (ulong)HideHudFlags.All),
+        var allCb = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags, (ulong)HideHudFlags.All),
             b => { SetAllChecked(checkButtons, profile, b); }, HideHudManager.GetFlagName(HideHudFlags.All), GetTooltip(HideHudFlags.All));
 
         checkButtons[HideHudFlags.All] = allCb;
+
+        foreach (HideHudFlags flag in regularFlags)
+        {
+            checkButtons[flag] = MyraCheckButton.CreateWithCallback(ByteFlagHelper.HasFlag(profile.HideHudGumpFlags, (ulong)flag),
+                b =>
+                {
+                    profile.HideHudGumpFlags = b ? ByteFlagHelper.AddFlag(profile.HideHudGumpFlags, (ulong)flag) : ByteFlagHelper.RemoveFlag(profile.HideHudGumpFlags, (ulong)flag);
+                    if (!b) allCb.IsChecked = false;
+                }, HideHudManager.GetFlagName(flag), GetTooltip(flag));
+        }
 
         var outerStack = new VerticalStackPanel { Spacing = 6 };
 
