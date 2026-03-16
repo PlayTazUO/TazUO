@@ -122,6 +122,7 @@ public static class HudTabContent
         HideHudFlags.Mouse => "Mouse cursor",
         HideHudFlags.HealthBarCollector => "Health bar collector window",
         HideHudFlags.AbilityButtons => "Ability button windows",
+        HideHudFlags.DebugGump => "Debug information window",
         _ => null
     };
 }
