@@ -25,13 +25,25 @@ namespace ClassicUO.Utility
 
         public static void Memset(void* ptr, byte value, int count)
         {
-            long* c = (long*) ptr;
+            ulong pattern = value;
+            pattern |= pattern << 8;
+            pattern |= pattern << 16;
+            pattern |= pattern << 32;
 
-            count /= 8;
+            ulong* c = (ulong*) ptr;
+            int longCount = count / 8;
 
-            for (int i = 0; i < count; ++i)
+            for (int i = 0; i < longCount; ++i)
             {
-                *c++ = (long) value;
+                *c++ = pattern;
+            }
+
+            byte* b = (byte*) c;
+            int remainder = count % 8;
+
+            for (int i = 0; i < remainder; ++i)
+            {
+                *b++ = value;
             }
         }
 

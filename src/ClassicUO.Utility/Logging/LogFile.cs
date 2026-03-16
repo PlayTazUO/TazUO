@@ -29,11 +29,12 @@ namespace ClassicUO.Utility.Logging
 
         public void Write(string message)
         {
-            byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(message.Length);
+            int maxByteCount = Encoding.UTF8.GetMaxByteCount(message.Length);
+            byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(maxByteCount);
 
             try
             {
-                Encoding.UTF8.GetBytes
+                int byteCount = Encoding.UTF8.GetBytes
                 (
                     message,
                     0,
@@ -42,7 +43,7 @@ namespace ClassicUO.Utility.Logging
                     0
                 );
 
-                logStream.Write(buffer, 0, message.Length);
+                logStream.Write(buffer, 0, byteCount);
                 logStream.WriteByte((byte) '\n');
                 logStream.Flush();
             }
@@ -54,11 +55,12 @@ namespace ClassicUO.Utility.Logging
 
         public async Task WriteAsync(string message)
         {
-            byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(message.Length);
+            int maxByteCount = Encoding.UTF8.GetMaxByteCount(message.Length);
+            byte[] buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(maxByteCount);
 
             try
             {
-                Encoding.UTF8.GetBytes
+                int byteCount = Encoding.UTF8.GetBytes
                 (
                     message,
                     0,
@@ -67,7 +69,7 @@ namespace ClassicUO.Utility.Logging
                     0
                 );
 
-                await logStream.WriteAsync(buffer, 0, message.Length);
+                await logStream.WriteAsync(buffer, 0, byteCount);
                 logStream.WriteByte((byte) '\n');
                 await logStream.FlushAsync();
             }

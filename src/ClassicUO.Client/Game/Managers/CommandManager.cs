@@ -327,13 +327,13 @@ namespace ClassicUO.Game.Managers
 
         public void OnHueTarget(Entity entity)
         {
+            Mouse.LastLeftButtonClickTime = 0;
+
             if (entity != null)
             {
                 _world.TargetManager.Target(entity);
+                GameActions.Print(_world, string.Format(ResGeneral.ItemID0Hue1, entity.Graphic, entity.Hue));
             }
-
-            Mouse.LastLeftButtonClickTime = 0;
-            GameActions.Print(_world, string.Format(ResGeneral.ItemID0Hue1, entity.Graphic, entity.Hue));
         }
     }
 }
