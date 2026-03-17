@@ -89,8 +89,11 @@ namespace ClassicUO.Game.Managers
                 catch (Exception ex)
                 {
                     Log.Error($"[VoiceRecognition] Failed to initialize: {ex.Message}");
+                    _recognizer?.Dispose();
+                    _recognizer = null;
                     _model?.Dispose();
                     _model = null;
+                    _initialized = false;
                 }
                 finally
                 {
@@ -166,6 +169,12 @@ namespace ClassicUO.Game.Managers
             catch (Exception ex)
             {
                 Log.Error($"[VoiceRecognition] Error starting: {ex.Message}");
+                _processingRunning = false;
+                if (_processingThread != null && _processingThread.IsAlive)
+                {
+                    _processingThread.Join(2000);
+                }
+                _processingThread = null;
                 CleanupStream();
             }
         }
