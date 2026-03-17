@@ -2461,7 +2461,7 @@ namespace ClassicUO.LegionScripting
         /// OPL consists of item name and tooltip text(properties).
         /// </summary>
         /// <param name="serials">A list of object serials to request OPL data for</param>
-        public void RequestOPLData(IList<uint> serials) => OnMain(() =>
+        public void RequestOPLData(IList<int> serials) => OnMain(() =>
         {
             foreach (uint s in serials)
                 World.OPL.Contains(s); //Check if it already exists, if not request it
