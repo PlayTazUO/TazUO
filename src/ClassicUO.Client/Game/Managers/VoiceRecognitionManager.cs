@@ -63,8 +63,8 @@ namespace ClassicUO.Game.Managers
                 try
                 {
                     Vosk.Vosk.SetLogLevel(-1);
-                    Model model = new Model(modelPath);
-                    VoskRecognizer recognizer = new VoskRecognizer(model, (float)SAMPLE_RATE);
+                    var model = new Model(modelPath);
+                    var recognizer = new VoskRecognizer(model, (float)SAMPLE_RATE);
                     _model = model;
                     _recognizer = recognizer;
                     _initialized = true;
@@ -118,7 +118,7 @@ namespace ClassicUO.Game.Managers
 
             try
             {
-                SDL.SDL_AudioSpec spec = new SDL.SDL_AudioSpec
+                var spec = new SDL.SDL_AudioSpec
                 {
                     format = SDL.SDL_AudioFormat.SDL_AUDIO_S16LE,
                     channels = CHANNELS,
@@ -272,7 +272,7 @@ namespace ClassicUO.Game.Managers
                 return null;
             try
             {
-                using JsonDocument doc = JsonDocument.Parse(json);
+                using var doc = JsonDocument.Parse(json);
                 if (doc.RootElement.TryGetProperty(field, out JsonElement element))
                     return element.GetString();
             }
