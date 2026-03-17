@@ -37,7 +37,7 @@ public static class DressAgentTabContent
             grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader), 0, 0);
             grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 1);
             grid.AddWidget(new MyraLabel("Layer", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 3);
 
             int dataRow = 1;
             for (int i = selectedConfig.Items.Count - 1; i >= 0; i--)
@@ -47,7 +47,7 @@ public static class DressAgentTabContent
                 grid.AddWidget(new MyraLabel(item.Name, MyraLabel.TextStyle.P), dataRow, 1);
                 grid.AddWidget(new MyraLabel(((Layer)item.Layer).ToString(), MyraLabel.TextStyle.P), dataRow, 2);
                 DressItem captured = item;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
                 {
                     DressAgentManager.Instance.RemoveItemFromConfig(selectedConfig, captured.Serial);
                     BuildItemsGrid(itemsPanel);

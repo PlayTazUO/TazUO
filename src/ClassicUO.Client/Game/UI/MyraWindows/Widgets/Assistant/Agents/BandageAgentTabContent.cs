@@ -19,7 +19,7 @@ public static class BandageAgentTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Automatically use bandages to heal when HP drops below threshold.",
-            MyraLabel.TextStyle.P));
+            MyraLabel.TextStyle.H3));
 
         var enableRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
         enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
@@ -29,7 +29,8 @@ public static class BandageAgentTabContent
         enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.BandageAgentBandageFriends,
             b => profile.BandageAgentBandageFriends = b,
-            "Bandage friends"));
+            "Bandage friends",
+            "Bandage mobiles in Friends list"));
         enableRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.BandageAgentBandageAllies,
             b => profile.BandageAgentBandageAllies = b,

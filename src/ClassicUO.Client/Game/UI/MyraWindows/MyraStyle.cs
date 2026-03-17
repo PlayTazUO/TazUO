@@ -67,18 +67,18 @@ public static class MyraStyle
         style.TitleStyle.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 18);
 
         //Labels
-        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(
+            TrueTypeLoader.EMBEDDED_FONT,
+            16
+        );
 
         //Tabs
         TabControlStyle tabControlStyle = Stylesheet.Current.TabControlStyle;
-        // tabControlStyle.Background = new SolidBrush(Color.Transparent);
-        // tabControlStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
-        // tabControlStyle.BorderThickness = new Thickness(1);
-        // tabControlStyle.Margin = new Thickness(8, 0);
-
         tabControlStyle.ContentStyle ??= new WidgetStyle();
         tabControlStyle.ContentStyle.Background = new SolidBrush(Color.Transparent);
-        tabControlStyle.ContentStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
+        tabControlStyle.ContentStyle.Border = new SolidBrush(
+            new Color(0, 0, 0, STANDARD_BORDER_ALPHA)
+        );
         tabControlStyle.ContentStyle.BorderThickness = new Thickness(1);
 
         ImageTextButtonStyle tabItemStyle = tabControlStyle.TabItemStyle;
@@ -114,7 +114,9 @@ public static class MyraStyle
 
         //Checkbox style
         ImageTextButtonStyle cbStyle = Stylesheet.Current.CheckBoxStyle;
-        cbStyle.ImageStyle.PressedImage = new TextureRegion(ModernUIConstants.ModernUICheckBoxChecked);
+        cbStyle.ImageStyle.PressedImage = new TextureRegion(
+            ModernUIConstants.ModernUICheckBoxChecked
+        );
         cbStyle.ImageStyle.Image = new TextureRegion(ModernUIConstants.ModernUICheckBoxUnChecked);
         cbStyle.ImageStyle.Background = null;
 
@@ -123,10 +125,16 @@ public static class MyraStyle
         inputStyle.Border = new SolidBrush(new Color(21, 21, 21, STANDARD_BORDER_ALPHA));
         inputStyle.BorderThickness = new Thickness(1);
         inputStyle.Padding = new Thickness(3);
+        // inputStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
 
         ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
-        svStyle.VerticalScrollBackground = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbar);
-        svStyle.VerticalScrollKnob = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbarKnob);
+        svStyle.VerticalScrollBackground = new TextureRegion(
+            ModernUIConstants.ModernUIVerticalScrollbar
+        );
+        svStyle.VerticalScrollKnob = new TextureRegion(
+            ModernUIConstants.ModernUIVerticalScrollbarKnob
+        );
+
         ComboBoxStyle comboStyle = Stylesheet.Current.ComboBoxStyle;
         comboStyle.Padding = new Thickness(3);
         // comboStyle.Border = new SolidBrush(GridBorderColor);

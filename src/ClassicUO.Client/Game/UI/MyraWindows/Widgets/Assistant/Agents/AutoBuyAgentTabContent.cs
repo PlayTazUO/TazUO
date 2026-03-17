@@ -47,7 +47,7 @@ public static class AutoBuyAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.P));
+                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.H3));
                 return;
             }
 
@@ -74,7 +74,8 @@ public static class AutoBuyAgentTabContent
                 if (entry.Graphic > 0)
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic), dataRow, 0);
 
-                var graphicBox = new TextBox {
+                var graphicBox = new TextBox
+                {
                     Text = entry.Graphic.ToString(),
                     VerticalAlignment = VerticalAlignment.Center,
                 };
@@ -89,7 +90,7 @@ public static class AutoBuyAgentTabContent
                 {
                     Text = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString(),
                     Tooltip = "Set to -1 to match any hue.",
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 hueBox.TextChangedByUser += (_, _) =>
                 {
@@ -102,7 +103,7 @@ public static class AutoBuyAgentTabContent
                 {
                     Text = entry.MaxAmount == ushort.MaxValue ? "0" : entry.MaxAmount.ToString(),
                     Tooltip = "Set to 0 for unlimited.",
-                    VerticalAlignment = VerticalAlignment.Center
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 maxAmountBox.TextChangedByUser += (_, _) =>
                 {

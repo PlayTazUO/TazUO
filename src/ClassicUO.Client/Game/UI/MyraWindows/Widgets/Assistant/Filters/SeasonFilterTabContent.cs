@@ -33,7 +33,7 @@ public static class SeasonFilterTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead.",
-            MyraLabel.TextStyle.P) { MaxWidth = 500 });
+            MyraLabel.TextStyle.H3) { MaxWidth = 500 });
 
         // Collect BuildCycleBtn delegates so Clear can refresh all wrappers
         var rebuildActions = new System.Collections.Generic.List<System.Action>();
@@ -51,8 +51,8 @@ public static class SeasonFilterTabContent
         grid.AddColumn(new Proportion(ProportionType.Auto));
         MyraStyle.ApplyStandardGridStyling(grid);
 
-        grid.AddWidget(new MyraLabel("When Server Sends", MyraLabel.TextStyle.H3), 0, 0);
-        grid.AddWidget(new MyraLabel("Show As", MyraLabel.TextStyle.H3), 0, 1);
+        grid.AddWidget(new MyraLabel("When Server Sends", MyraLabel.TextStyle.TableHeader), 0, 0);
+        grid.AddWidget(new MyraLabel("Show As", MyraLabel.TextStyle.TableHeader), 0, 1);
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {

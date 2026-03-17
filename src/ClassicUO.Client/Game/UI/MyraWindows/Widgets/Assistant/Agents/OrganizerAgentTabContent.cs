@@ -5,6 +5,7 @@ using System.Linq;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using TextBox = Myra.Graphics2D.UI.TextBox;
 
@@ -23,25 +24,22 @@ public static class OrganizerAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.ItemConfigs.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.P));
+                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Auto));     // Art
-            grid.AddColumn(new Proportion(ProportionType.Auto));     // Hue
-            grid.AddColumn(new Proportion(ProportionType.Auto));     // Amount
-            grid.AddColumn(new Proportion(ProportionType.Fill));     // Destination
-            grid.AddColumn(new Proportion(ProportionType.Auto));     // Enabled
-            grid.AddColumn(new Proportion(ProportionType.Auto));     // Del
+            grid.AddColumn(null, 3); // Art, Hue, Amount
+            grid.AddColumn(new Proportion(ProportionType.Part)); // Destination
+            grid.AddColumn(null, 2); // Controls
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Amount", MyraLabel.TextStyle.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.TextStyle.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Amount", MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Destination", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 5);
 
             int dataRow = 1;
             for (int i = selectedConfig.ItemConfigs.Count - 1; i >= 0; i--)
@@ -49,17 +47,23 @@ public static class OrganizerAgentTabContent
                 OrganizerItemConfig item = selectedConfig.ItemConfigs[i];
 
                 // Art / Graphic
-                Widget artWidget = item.Graphic > 0
-                    ? new MyraArtTexture((uint)item.Graphic) { Tooltip = $"Graphic: {item.Graphic:X4}" }
-                    : new MyraLabel($"{item.Graphic:X4}", MyraLabel.TextStyle.P);
+                Widget artWidget =
+                    item.Graphic > 0
+                        ? new MyraArtTexture((uint)item.Graphic)
+                        {
+                            Tooltip = $"Graphic: {item.Graphic:X4}",
+                            Margin = new Thickness(2, 0),
+                        }
+                        : new MyraLabel($"{item.Graphic:X4}", MyraLabel.TextStyle.P);
                 grid.AddWidget(artWidget, dataRow, 0);
 
                 // Hue
                 var hueBox = new TextBox
                 {
                     Text = item.Hue == ushort.MaxValue ? "ANY" : item.Hue.ToString(),
-                    Width = 55,
-                    Tooltip = "Set to ANY to match any hue."
+                    Tooltip = "Set to ANY to match any hue.",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Width = 80,
                 };
                 hueBox.TextChangedByUser += (_, _) =>
                 {
@@ -74,8 +78,9 @@ public static class OrganizerAgentTabContent
                 var amountBox = new TextBox
                 {
                     Text = item.Amount.ToString(),
-                    Width = 55,
-                    Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)"
+                    Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)",
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Width = 80,
                 };
                 amountBox.TextChangedByUser += (_, _) =>
                 {
@@ -85,7 +90,8 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(amountBox, dataRow, 2);
 
                 // Destination (rebuild the cell in-place via a container panel)
-                var destCell = new HorizontalStackPanel { Spacing = 2 };
+                var destCell = new HorizontalStackPanel { Spacing = 4 };
+                StackPanel.SetProportionType(destCell, ProportionType.Fill);
                 OrganizerItemConfig captured = item;
 
                 void BuildDestCell()
@@ -127,10 +133,12 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(destCell, dataRow, 3);
 
                 // Enabled
-                grid.AddWidget(MyraCheckButton.CreateWithCallback(item.Enabled, b => item.Enabled = b), dataRow, 4);
+                var cb = MyraCheckButton.CreateWithCallback(item.Enabled, b => item.Enabled = b);
+                cb.HorizontalAlignment = HorizontalAlignment.Center;
+                grid.AddWidget(cb, dataRow, 4);
 
                 // Delete
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
                 {
                     selectedConfig.DeleteItemConfig(captured);
                     BuildItemsGrid(itemsPanel);

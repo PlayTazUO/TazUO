@@ -48,21 +48,23 @@ public static class AutoSellAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.P));
+                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 7);
+            grid.AddColumn(null, 1);
+            grid.AddColumn(new Proportion(ProportionType.Part), 4);
+            grid.AddColumn(null, 2);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.TextStyle.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Min on Hand", MyraLabel.TextStyle.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.H3), 0, 5);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.H3), 0, 6);
+            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("Min on Hand", MyraLabel.TextStyle.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.TableHeader), 0, 5);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 6);
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)
@@ -72,7 +74,11 @@ public static class AutoSellAgentTabContent
                 if (entry.Graphic > 0)
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic), dataRow, 0);
 
-                var graphicBox = new TextBox { Text = entry.Graphic.ToString(), Width = 60 };
+                var graphicBox = new TextBox
+                {
+                    Text = entry.Graphic.ToString(),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
                     if (StringHelper.TryParseInt(graphicBox.Text, out int g) && g is > 0 and <= ushort.MaxValue)
@@ -83,8 +89,8 @@ public static class AutoSellAgentTabContent
                 var hueBox = new TextBox
                 {
                     Text = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString(),
-                    Width = 50,
-                    Tooltip = "Set to -1 to match any hue."
+                    Tooltip = "Set to -1 to match any hue.",
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 hueBox.TextChangedByUser += (_, _) =>
                 {
@@ -96,8 +102,8 @@ public static class AutoSellAgentTabContent
                 var maxAmountBox = new TextBox
                 {
                     Text = entry.MaxAmount == ushort.MaxValue ? "0" : entry.MaxAmount.ToString(),
-                    Width = 60,
-                    Tooltip = "Set to 0 for unlimited."
+                    Tooltip = "Set to 0 for unlimited.",
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 maxAmountBox.TextChangedByUser += (_, _) =>
                 {
@@ -109,8 +115,8 @@ public static class AutoSellAgentTabContent
                 var restockBox = new TextBox
                 {
                     Text = entry.RestockUpTo.ToString(),
-                    Width = 60,
-                    Tooltip = "Minimum amount to keep on hand (0 = disabled)."
+                    Tooltip = "Minimum amount to keep on hand (0 = disabled).",
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 restockBox.TextChangedByUser += (_, _) =>
                 {
@@ -118,7 +124,9 @@ public static class AutoSellAgentTabContent
                 };
                 grid.AddWidget(restockBox, dataRow, 4);
 
-                grid.AddWidget(MyraCheckButton.CreateWithCallback(entry.Enabled, b => entry.Enabled = b), dataRow, 5);
+                var cb = MyraCheckButton.CreateWithCallback(entry.Enabled, b => entry.Enabled = b);
+                cb.HorizontalAlignment = HorizontalAlignment.Center;
+                grid.AddWidget(cb, dataRow, 5);
 
                 grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
                 {

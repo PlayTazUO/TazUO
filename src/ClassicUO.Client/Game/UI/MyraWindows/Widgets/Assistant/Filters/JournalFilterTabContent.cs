@@ -16,7 +16,7 @@ public static class JournalFilterTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Journal Filter hides specific messages from the journal. Messages that match exactly will be filtered out.",
-            MyraLabel.TextStyle.P));
+            MyraLabel.TextStyle.H3));
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
         var newFilterBox = new TextBox { HintText = "Filter text (exact match)", Width = 300 };
@@ -30,7 +30,7 @@ public static class JournalFilterTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No filters configured.", MyraLabel.TextStyle.P));
+                filtersPanel.Widgets.Add(new MyraLabel("No filters configured.", MyraLabel.TextStyle.H3));
                 return;
             }
 
@@ -39,8 +39,8 @@ public static class JournalFilterTabContent
             grid.AddColumn(new Proportion(ProportionType.Auto));
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Filter Text", MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.H3), 0, 1);
+            grid.AddWidget(new MyraLabel("Filter Text", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 1);
 
             int dataRow = 1;
             for (int i = filters.Count - 1; i >= 0; i--)
@@ -49,7 +49,7 @@ public static class JournalFilterTabContent
 
                 // Track current value so we can remove-old/add-new on every edit
                 string[] current = { filter };
-                var filterBox = new TextBox { Text = filter };
+                var filterBox = new TextBox { Text = filter, VerticalAlignment = VerticalAlignment.Center };
                 filterBox.TextChangedByUser += (_, _) =>
                 {
                     string newVal = filterBox.Text ?? "";
@@ -63,7 +63,7 @@ public static class JournalFilterTabContent
                 };
                 grid.AddWidget(filterBox, dataRow, 0);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
                 {
                     JournalFilterManager.Instance.RemoveFilter(current[0]);
                     JournalFilterManager.Instance.Save(false);

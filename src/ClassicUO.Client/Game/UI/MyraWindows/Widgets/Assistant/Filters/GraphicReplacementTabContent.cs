@@ -22,7 +22,7 @@ public static class GraphicReplacementTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Replace graphics with other graphics. Mobile = animations, Land = terrain tiles, Static = items/statics.",
-            MyraLabel.TextStyle.P));
+            MyraLabel.TextStyle.H3));
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
 
@@ -33,25 +33,22 @@ public static class GraphicReplacementTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No replacements configured.", MyraLabel.TextStyle.P));
+                filtersPanel.Widgets.Add(new MyraLabel("No replacements configured.", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Original
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Type
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Replacement
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Preview
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // New Hue
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Del
+            grid.AddColumn(null, 2); // Original, Type
+            grid.AddColumn(new Proportion(ProportionType.Part), 3); // Replacement, Preview, New Hue
+            grid.AddColumn();  // Delete
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Original", MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Type", MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Replacement", MyraLabel.TextStyle.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Preview", MyraLabel.TextStyle.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("New Hue", MyraLabel.TextStyle.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.H3), 0, 5);
+            grid.AddWidget(new MyraLabel("Original", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Type", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Replacement", MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.AddWidget(new MyraLabel("Preview", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.AddWidget(new MyraLabel("New Hue", MyraLabel.TextStyle.TableHeader), 0, 4);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 5);
 
             var filterList = filters.Values.ToList();
             int dataRow = 1;
@@ -103,7 +100,11 @@ public static class GraphicReplacementTabContent
                 grid.AddWidget(previewWrapper, dataRow, 3);
 
                 // Replacement Graphic — inline edit, immediate commit + preview update
-                var replacementBox = new TextBox { Text = $"0x{filter.ReplacementGraphic:X4}", Width = 90 };
+                var replacementBox = new TextBox
+                {
+                    Text = $"0x{filter.ReplacementGraphic:X4}",
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
                 replacementBox.TextChangedByUser += (_, _) =>
                 {
                     string txt = replacementBox.Text ?? "";
@@ -120,8 +121,8 @@ public static class GraphicReplacementTabContent
                 var hueBox = new TextBox
                 {
                     Text = filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString(),
-                    Width = 60,
-                    Tooltip = "-1 will not change the hue"
+                    Tooltip = "-1 will not change the hue",
+                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 hueBox.TextChangedByUser += (_, _) =>
                 {
@@ -136,7 +137,7 @@ public static class GraphicReplacementTabContent
                 // Delete
                 ushort capturedOrigGraphic = filter.OriginalGraphic;
                 byte capturedOrigType = filter.OriginalType;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
                 {
                     GraphicsReplacement.DeleteFilter(capturedOrigGraphic, capturedOrigType);
                     BuildFilterList();

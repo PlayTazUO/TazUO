@@ -64,7 +64,7 @@ public static class SkillsTabContent
                     row, 0);
             }
 
-            var name = new MyraLabel(skill.Name, MyraLabel.Style.P);
+            var name = new MyraLabel(skill.Name, MyraLabel.TextStyle.P);
             if (skill.IsClickable)
             {
                 name.TouchDoubleClick += (_, _) => UIManager.Add(new SkillButtonGump(World.Instance, skill,
@@ -72,9 +72,9 @@ public static class SkillsTabContent
                 name.Tooltip = $"Double click to create a skill button for {skill.Name}";
             }
             grid.AddWidget(name, row, 1);
-            grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.Style.P), row, 2);
-            grid.AddWidget(new MyraLabel(skill.Base.ToString("F1"), MyraLabel.Style.P), row, 3);
-            grid.AddWidget(new MyraLabel(skill.Cap.ToString("F1"), MyraLabel.Style.P), row, 4);
+            grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 2);
+            grid.AddWidget(new MyraLabel(skill.Base.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 3);
+            grid.AddWidget(new MyraLabel(skill.Cap.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 4);
 
             float delta = skill.Base - skill.BaseAtLogin;
             string deltaStr;
@@ -162,16 +162,12 @@ public static class SkillsTabContent
             gridPanel.Widgets.Clear();
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Use
-            grid.AddColumn(new Proportion(ProportionType.Fill)); // Name
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Value
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Base
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Cap
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // +/-
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Lock
+            grid.AddColumn();
+            grid.AddColumn(new Proportion(ProportionType.Fill));
+            grid.AddColumn(null, 5);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Use", MyraLabel.TextStyle.H3), 0, 0);
+            grid.AddWidget(new MyraLabel("Use", MyraLabel.TextStyle.TableHeader), 0, 0);
 
             void AddSortHeader(string name, int col, int gridCol)
             {

@@ -18,7 +18,7 @@ public static class SoundFilterTabContent
 
         root.Widgets.Add(new MyraLabel(
             "Sound Filter allows you to mute specific in-game sounds by their ID.",
-            MyraLabel.TextStyle.P));
+            MyraLabel.TextStyle.H3));
 
         var lastSoundPanel = new VerticalStackPanel { Spacing = 2 };
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
@@ -43,14 +43,11 @@ public static class SoundFilterTabContent
             })));
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Auto));
-            grid.AddColumn(new Proportion(ProportionType.Auto));
-            grid.AddColumn(new Proportion(ProportionType.Auto));
+            grid.AddColumn(null, 2);
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Sound ID", MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Del", MyraLabel.TextStyle.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Sound ID", MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 1);
 
             int dataRow = 1;
             for (int i = filterList.Count - 1; i >= 0; i--)
@@ -59,7 +56,12 @@ public static class SoundFilterTabContent
 
                 // Track current ID so we can remove-old/add-new on edit without rebuilding
                 int[] current = { soundId };
-                var soundBox = new TextBox { Text = soundId.ToString(), Width = 80 };
+                var soundBox = new TextBox
+                {
+                    Text = soundId.ToString(),
+                    Width = 100,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
                 soundBox.TextChangedByUser += (_, _) =>
                 {
                     if (int.TryParse(soundBox.Text, out int newId))
@@ -76,17 +78,31 @@ public static class SoundFilterTabContent
                 grid.AddWidget(soundBox, dataRow, 0);
 
                 int capturedId = soundId;
-                var actionsPanel = new HorizontalStackPanel { Spacing = 2 };
-                actionsPanel.Widgets.Add(new MyraButton("Play", () =>
-                    Client.Game.Audio.PlaySound(current[0], true))
-                { Tooltip = "Test play this sound (bypasses filter)" });
+                var actionsPanel = new HorizontalStackPanel { Spacing = 4 };
+                actionsPanel.Widgets.Add(
+                    new MyraButton("Play", () => Client.Game.Audio.PlaySound(current[0], true))
+                    {
+                        Tooltip = "Test play this sound (bypasses filter)",
+                    }
+                );
+                actionsPanel.Widgets.Add(
+                    MyraStyle.ApplyButtonDangerStyle(
+                        new MyraButton(
+                            "Delete",
+                            () =>
+                            {
+                                SoundFilterManager.Instance.RemoveFilter(current[0]);
+                                BuildFilterList();
+                            }
+                        )
+                        {
+                            Tooltip = "Delete this filter",
+                        }
+                    )
+                );
+
                 grid.AddWidget(actionsPanel, dataRow, 1);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
-                {
-                    SoundFilterManager.Instance.RemoveFilter(current[0]);
-                    BuildFilterList();
-                }) { Tooltip = "Delete this filter" }), dataRow, 2);
 
                 dataRow++;
             }
@@ -130,7 +146,12 @@ public static class SoundFilterTabContent
         }
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newSoundBox = new TextBox { HintText = "Sound ID (0-65535)", Width = 120 };
+        var newSoundBox = new TextBox
+        {
+            HintText = "Sound ID (0-65535)",
+            Width = 120,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
         addConfirmRow.Widgets.Add(new MyraButton("Add", () =>

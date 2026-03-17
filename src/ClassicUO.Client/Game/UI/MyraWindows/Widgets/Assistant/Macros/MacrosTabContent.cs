@@ -152,9 +152,9 @@ public static class MacrosTabContent
             grid.AddColumn(new Proportion(ProportionType.Auto)); // Edit
             MyraStyle.ApplyStandardGridStyling(grid);
 
-            grid.AddWidget(new MyraLabel("Name",   MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Hotkey", MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Edit",   MyraLabel.TextStyle.H3), 0, 2);
+            grid.AddWidget(new MyraLabel("Name",   MyraLabel.TextStyle.TableHeader), 0, 0);
+            grid.AddWidget(new MyraLabel("Hotkey", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.AddWidget(new MyraLabel("Edit",   MyraLabel.TextStyle.TableHeader), 0, 2);
 
             int dataRow = 1;
             foreach (Macro macro in display)
@@ -183,7 +183,7 @@ public static class MacrosTabContent
 
             if (selectedMacro == null)
             {
-                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.TextStyle.P));
+                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.TextStyle.H3));
                 return;
             }
 
@@ -192,7 +192,12 @@ public static class MacrosTabContent
             // Name row
             var nameRow = new HorizontalStackPanel { Spacing = 4 };
             nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
-            var nameBox = new TextBox { Text = macro.Name, Width = 200 };
+            var nameBox = new TextBox
+            {
+                Text = macro.Name,
+                Width = 200,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 macro.Name = nameBox.Text ?? "";
@@ -224,7 +229,7 @@ public static class MacrosTabContent
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.TextStyle.H2));
+            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.TextStyle.P));
 
             BuildActionsPanel();
             editorPanel.Widgets.Add(new ScrollViewer { MaxHeight = 250, Content = actionsPanel });
@@ -381,7 +386,11 @@ public static class MacrosTabContent
 
                 // Action type ComboBox
 #pragma warning disable CS0612, CS0618
-                var typeCombo = new ComboBox { Width = 160 };
+                var typeCombo = new ComboBox
+                {
+                    Width = 160,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
                 foreach (string typeName in _sortedMacroTypeNames)
                     typeCombo.Items.Add(new ListItem(typeName));
 
@@ -417,9 +426,15 @@ public static class MacrosTabContent
                     if (curSubIdx < 0 || curSubIdx >= subCount) curSubIdx = 0;
 
 #pragma warning disable CS0612, CS0618
-                    var subCombo = new ComboBox { Width = 160 };
+                    var subCombo = new ComboBox
+                    {
+                        Width = 160,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
+
                     foreach (string subName in subNames)
                         subCombo.Items.Add(new ListItem(subName));
+
                     subCombo.SelectedIndex = curSubIdx;
                     subCombo.SelectedIndexChanged += (_, _) =>
                     {
@@ -436,7 +451,12 @@ public static class MacrosTabContent
                     string currentText = capturedAction.HasString()
                         ? ((MacroObjectString)capturedAction).Text
                         : "";
-                    var textBox = new TextBox { Text = currentText, Width = 180 };
+                    var textBox = new TextBox
+                    {
+                        Text = currentText,
+                        Width = 180,
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
                     textBox.TextChangedByUser += (_, _) =>
                     {
                         string newText = textBox.Text ?? "";
@@ -465,7 +485,7 @@ public static class MacrosTabContent
                 }
 
                 // Remove button
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
                 {
                     macro.Remove(capturedAction);
                     MarkDirty();
@@ -479,7 +499,7 @@ public static class MacrosTabContent
             }
 
             if (actionIndex == 0)
-                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.P));
+                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.H3));
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────
@@ -536,7 +556,12 @@ public static class MacrosTabContent
             GameActions.Print($"Exported {cnt} macro(s) to your clipboard!", Constants.HUE_SUCCESS);
         }) { Tooltip = "Export all macros to clipboard" });
 
-        var filterBox = new TextBox { HintText = "Filter...", Width = 150 };
+        var filterBox = new TextBox
+        {
+            HintText = "Filter...",
+            Width = 150,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         filterBox.TextChangedByUser += (_, _) =>
         {
             filterText = filterBox.Text ?? "";
