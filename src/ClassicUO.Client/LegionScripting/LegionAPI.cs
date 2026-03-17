@@ -1058,7 +1058,7 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serials">The list of serials to dress</param>
         /// <param name="kr">True to use the faster KR packet (not supported everywhere)</param>
-        public void DressItems(IList<int> serials, bool kr = true) => OnMain(() =>
+        public void DressItems(IList<int> serials, bool kr = false) => OnMain(() =>
         {
             if (serials == null || serials.Count == 0) return;
 

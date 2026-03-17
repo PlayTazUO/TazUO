@@ -845,7 +845,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | `serials` | `IList<int>` | ❌ No | The list of serials to dress |
-| `kr` | `bool` | ✅ Yes | Whether to use the faster KR packet |
+| `kr` | `bool` | ✅ Yes | True to use the faster KR packet (not supported everywhere) |
 
 **Return Type:** `void` *(Does not return anything)*
 
