@@ -87,21 +87,17 @@ public static class SkillsTabContent
             void BuildLockBtn()
             {
                 lockWrapper.Widgets.Clear();
-                string lockText = skill.Lock switch
-                {
-                    Lock.Up     => "Up",
-                    Lock.Down   => "Dn",
-                    Lock.Locked => "==",
-                    _           => "?"
-                };
                 int capturedSkillIdx = skill.Index;
-                lockWrapper.Widgets.Add(new MyraButton(lockText, () =>
+
+                var btn = new MyraButton("", () =>
                 {
                     byte nextLock = (byte)(((byte)skill.Lock + 1) % 3);
                     GameActions.ChangeSkillLockStatus((ushort)capturedSkillIdx, nextLock);
                     AsyncNetClient.Socket.Send_SkillsRequest(player.Serial);
                     BuildLockBtn();
-                }) { Tooltip = $"Lock: {skill.Lock}. Click to cycle." });
+                });
+                btn.Tooltip = $"Lock: {skill.Lock}. Click to cycle.";
+                lockWrapper.Widgets.Add(MyraStyle.ApplySkillButtonStyle(btn, skill.Lock));
             }
             BuildLockBtn();
             grid.AddWidget(lockWrapper, row, 6);

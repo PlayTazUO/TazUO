@@ -22,18 +22,41 @@ public static class MyraStyle
     private static NinePatchRegion _ninePatchButtonDown;
     private static NinePatchRegion _ninePatchButtonDangerUp;
     private static NinePatchRegion _ninePatchButtonDangerDown;
+    private static TextureRegion _skillUpButton;
+    private static TextureRegion _skillDownButton;
+    private static TextureRegion _skillLockBtn;
 
     public static void SetDefault()
     {
-        _ninePatchPanel = new NinePatchRegion(ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel.Bounds, new Thickness(ModernUIConstants.ModernUIPanel_BorderSize));
-        _ninePatchButtonUp = new NinePatchRegion(ModernUIConstants.ModernUIButtonUp,
-            ModernUIConstants.ModernUIButtonUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
-        _ninePatchButtonDown = new NinePatchRegion(ModernUIConstants.ModernUIButtonDown,
-            ModernUIConstants.ModernUIButtonUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
-        _ninePatchButtonDangerUp = new NinePatchRegion(ModernUIConstants.ModernUIButtonDangerUp,
-            ModernUIConstants.ModernUIButtonDangerUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
-        _ninePatchButtonDangerDown = new NinePatchRegion(ModernUIConstants.ModernUIButtonDangerDown,
-            ModernUIConstants.ModernUIButtonDangerUp.Bounds, new Thickness(ModernUIConstants.ModernUIButton_BorderSize));
+        _ninePatchPanel = new NinePatchRegion(
+            ModernUIConstants.ModernUIPanel,
+            ModernUIConstants.ModernUIPanel.Bounds,
+            new Thickness(ModernUIConstants.ModernUIPanel_BorderSize)
+        );
+        _ninePatchButtonUp = new NinePatchRegion(
+            ModernUIConstants.ModernUIButtonUp,
+            ModernUIConstants.ModernUIButtonUp.Bounds,
+            new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
+        );
+        _ninePatchButtonDown = new NinePatchRegion(
+            ModernUIConstants.ModernUIButtonDown,
+            ModernUIConstants.ModernUIButtonUp.Bounds,
+            new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
+        );
+        _ninePatchButtonDangerUp = new NinePatchRegion(
+            ModernUIConstants.ModernUIButtonDangerUp,
+            ModernUIConstants.ModernUIButtonDangerUp.Bounds,
+            new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
+        );
+        _ninePatchButtonDangerDown = new NinePatchRegion(
+            ModernUIConstants.ModernUIButtonDangerDown,
+            ModernUIConstants.ModernUIButtonDangerUp.Bounds,
+            new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
+        );
+
+        _skillUpButton = new TextureRegion(ModernUIConstants.ModernUISkillUp);
+        _skillDownButton = new TextureRegion(ModernUIConstants.ModernUISkillDown);
+        _skillLockBtn = new TextureRegion(ModernUIConstants.ModernUISkillLock);
 
         //Window style
         WindowStyle style = Stylesheet.Current.WindowStyle;
@@ -127,6 +150,24 @@ public static class MyraStyle
         button.OverBackground = _ninePatchButtonDangerDown;
         button.PressedBackground = _ninePatchButtonDangerDown;
 
+        return button;
+    }
+
+    public static Button ApplySkillButtonStyle(Button button, Lock skillLock)
+    {
+        var img = new Image()
+        {
+            Renderable = skillLock switch
+            {
+                Lock.Up => _skillUpButton,
+                Lock.Down => _skillDownButton,
+                Lock.Locked => _skillLockBtn,
+                _ => _skillLockBtn,
+            },
+        };
+
+        button.Content = img;
+        button.HorizontalAlignment = HorizontalAlignment.Center;
         return button;
     }
 }
