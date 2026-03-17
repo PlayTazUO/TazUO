@@ -127,6 +127,23 @@ public static class MyraStyle
         ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
         svStyle.VerticalScrollBackground = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbar);
         svStyle.VerticalScrollKnob = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbarKnob);
+        ComboBoxStyle comboStyle = Stylesheet.Current.ComboBoxStyle;
+        comboStyle.Padding = new Thickness(3);
+        // comboStyle.Border = new SolidBrush(GridBorderColor);
+        // comboStyle.BorderThickness = new Thickness(1);
+        // comboStyle.Background = new SolidBrush(Color.Transparent);
+        comboStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
+        comboStyle.OverBackground = new SolidBrush(new Color(170, 105, 13, 80));
+        comboStyle.ListBoxStyle.Background = new SolidBrush("#242941");
+        comboStyle.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+
+        var comboItemStyle = comboStyle.ListBoxStyle.ListItemStyle;
+        comboItemStyle.Background = new SolidBrush(Color.Transparent);
+        comboItemStyle.OverBackground = new SolidBrush(new Color(170, 105, 13, 80));
+        comboItemStyle.PressedBackground = new SolidBrush(new Color(170, 105, 13, 160));
+
+        comboItemStyle.Padding = new Thickness(2);
+        comboItemStyle.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
     }
 
     /// <summary>
