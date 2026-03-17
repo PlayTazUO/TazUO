@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -1047,6 +1047,30 @@ namespace ClassicUO.LegionScripting
         {
             return DressAgentManager.Instance?.CurrentPlayerConfigs?.Select((cfg) => cfg.Name)?.ToList() ?? [];
         });
+
+        /// <summary>
+        /// Dress items by serial
+        /// example:
+        /// ```py
+        /// serials = [0xabc, 0xdef]
+        /// API.DressItems(serials, kr=True)
+        /// ```
+        /// </summary>
+        /// <param name="serials">The list of serials to dress</param>
+        /// <param name="kr">Whether to use the faster KR packet</param>
+        public void DressItems(IList<int> serials, bool kr = true)
+        {
+            // create temporary dress agent entry
+            var temp = new DressConfig {
+                UseKREquipPacket = kr,
+                Items = serials.Select(i => new DressItem { Serial = (uint)i }).ToList()
+            };
+
+            if (temp != null)
+            {
+                DressAgentManager.Instance.DressFromConfig(temp);
+            }
+        }
 
         /// <summary>
         /// Runs an organizer agent to move items between containers.

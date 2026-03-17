@@ -1522,6 +1522,18 @@ def GetAvailableDressOutfits() -> "list[str]":
     """
     pass
 
+def DressItems(serials: "list[int]", kr: "bool" = True) -> None:
+    """
+     Dress items by serial
+     example:
+     ```py
+     serials = [0xabc, 0xdef]
+     API.DressItems(serials, kr=True)
+     ```
+    
+    """
+    pass
+
 def Organizer(name: "str", source: "int" = 0, destination: "int" = 0) -> None:
     """
      Runs an organizer agent to move items between containers.

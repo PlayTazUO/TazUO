@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `3/12/26`.*
+*This was generated on `3/15/26`.*
 
 ## Properties
 ### `Events`
@@ -827,6 +827,27 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 
 **Return Type:** `IList<string>`
+
+---
+
+### DressItems
+`(serials, kr)`
+ Dress items by serial
+ example:
+ ```py
+ serials = [0xabc, 0xdef]
+ API.DressItems(serials, kr=True)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serials` | `IList<int>` | ❌ No | The list of serials to dress |
+| `kr` | `bool` | ✅ Yes | Whether to use the faster KR packet |
+
+**Return Type:** `void` *(Does not return anything)*
 
 ---
 
