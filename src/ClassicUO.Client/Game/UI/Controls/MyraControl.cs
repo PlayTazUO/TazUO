@@ -21,24 +21,35 @@ namespace ClassicUO.Game.UI.Controls;
 /// </summary>
 public class MyraControl : IGui
 {
-#region Internal Controls
+    #region Internal Controls
     protected Desktop _desktop = new();
     protected Window _rootWindow;
     private Widget _minimizedContent;
-#endregion
+    #endregion
 
     public MyraControl(string title)
     {
         _rootWindow = new Window { Title = title };
         _rootWindow.Closed += OnRootWindowOnClosed;
-        _rootWindow.TitlePanel.TouchDoubleClick += (_, _) => { MinMaximize(); };
+        _rootWindow.TitlePanel.TouchDoubleClick += (_, _) =>
+        {
+            MinMaximize();
+        };
         _rootWindow.TitlePanel.Background = new SolidBrush(new Color(0, 0, 0, 75));
-        _rootWindow.TitlePanel.Border = new SolidBrush(new Color(0, 0, 0, MyraStyle.STANDARD_BORDER_ALPHA));
+        _rootWindow.TitlePanel.Border = new SolidBrush(
+            new Color(0, 0, 0, MyraStyle.STANDARD_BORDER_ALPHA)
+        );
         _rootWindow.TitlePanel.BorderThickness = new Thickness(1);
 
         MyraStyle.ApplyButtonDangerStyle(_rootWindow.CloseButton);
+        _rootWindow.CloseButton.VerticalAlignment = VerticalAlignment.Center;
+        _rootWindow.CloseButton.Margin = new Thickness(2, 0);
 
-        var minButton = new Myra.Graphics2D.UI.Button { Content = new MyraLabel("^", 16), Tooltip = "Minimize or maximize this window."};
+        var minButton = new Myra.Graphics2D.UI.Button
+        {
+            Content = new MyraLabel("^", 16),
+            Tooltip = "Minimize or maximize this window.",
+        };
         minButton.TouchDown += (_, _) => MinMaximize();
         _rootWindow.TitlePanel.Widgets.Insert(0, minButton);
 
@@ -56,17 +67,20 @@ public class MyraControl : IGui
         UIManager.TopMostChanged += UIManagerOnTopMostChanged;
     }
 
-#region Event Handlers
-    private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
+    #region Event Handlers
+    private void UIManagerOnTopMostChanged(object sender, EventArgs e) =>
+        _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
 
     private void OnRootWindowOnClosed(object s, EventArgs a)
     {
-        if (IsDisposed) return;
+        if (IsDisposed)
+            return;
 
         _disposeRequested = true;
     }
 
-    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents(false);
+    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) =>
+        UpdateBoundsToContents(false);
 
     /// <summary>
     /// Update this <see cref="Bounds"/> to fit to the content of the window.
@@ -78,10 +92,10 @@ public class MyraControl : IGui
 
         Point mSize = _rootWindow.Measure(new Point(2000, 2000));
 
-        if(_rootWindow.Left < 0)
+        if (_rootWindow.Left < 0)
             _rootWindow.Left = 0;
 
-        if(_rootWindow.Top < 0)
+        if (_rootWindow.Top < 0)
             _rootWindow.Top = 0;
 
         Bounds.Width = mSize.X;
@@ -96,12 +110,15 @@ public class MyraControl : IGui
         Bounds.Y = _rootWindow.Top;
     }
 
-    private void DesktopOnTouchUp(object sender, EventArgs e) => OnMouseUp(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
+    private void DesktopOnTouchUp(object sender, EventArgs e) =>
+        OnMouseUp(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
 
-    private void DesktopOnTouchDown(object sender, EventArgs e) => OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
+    private void DesktopOnTouchDown(object sender, EventArgs e) =>
+        OnMouseDown(Mouse.Position.X, Mouse.Position.Y, MouseButtonType.Left);
+
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e)
     {
-        if(e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox)
+        if (e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox)
             SetKeyboardFocus();
         else
             UIManager.KeyboardFocusControl = null;
@@ -109,12 +126,12 @@ public class MyraControl : IGui
 
     #endregion
 
-#region Fields
+    #region Fields
     protected Rectangle _bounds = new();
     protected bool _disposeRequested = false;
-#endregion
+    #endregion
 
-#region Properties
+    #region Properties
     public bool IsFocused { get; set; }
     public bool CanBeSaved { get; set; } = false;
     public bool AcceptKeyboardInput { get; set; } = true;
@@ -127,13 +144,15 @@ public class MyraControl : IGui
     public IGui Parent { get; set; }
     public ref Rectangle Bounds => ref _bounds;
     public object Tooltip { get; set; }
-    public bool HasTooltip  => Tooltip != null;
+    public bool HasTooltip => Tooltip != null;
     public bool CanMove { get; set; } = true;
     public bool IsEditable { get; set; }
     public uint ServerSerial { get; set; }
     public uint LocalSerial { get; set; }
+
     /// <summary> Setting this does not affect position of this window, use SetPosition() instead </summary>
     public ref int X => ref Bounds.X;
+
     /// <summary> Setting this does not affect position of this window, use SetPosition() instead </summary>
     public ref int Y => ref Bounds.Y;
     public int ScreenCoordinateX => X;
@@ -155,27 +174,27 @@ public class MyraControl : IGui
     public Point Location { get; set; } = Point.Zero;
     public bool HasKeyboardFocus => UIManager.KeyboardFocusControl == this;
     public bool ModalClickOutsideAreaClosesThisControl { get; } = true;
-#endregion
+    #endregion
 
-protected void MinMaximize()
-{
-    if (_rootWindow.Content == null)
+    protected void MinMaximize()
     {
-        if (_minimizedContent != null)
+        if (_rootWindow.Content == null)
         {
-            _rootWindow.Content = _minimizedContent;
-            _minimizedContent = null;
+            if (_minimizedContent != null)
+            {
+                _rootWindow.Content = _minimizedContent;
+                _minimizedContent = null;
+            }
+            return;
         }
-        return;
-    }
 
-    _minimizedContent = _rootWindow.Content;
-    _rootWindow.Content = null;
-    _rootWindow.Width = null;
-    _rootWindow.Height = null;
-    //_rootWindow.Content?.Visible = !_rootWindow.Content.Visible;
-    UpdateBoundsToContents();
-}
+        _minimizedContent = _rootWindow.Content;
+        _rootWindow.Content = null;
+        _rootWindow.Width = null;
+        _rootWindow.Height = null;
+        //_rootWindow.Content?.Visible = !_rootWindow.Content.Visible;
+        UpdateBoundsToContents();
+    }
 
     protected void SetRootContent(Widget widget)
     {
@@ -185,7 +204,8 @@ protected void MinMaximize()
 
     public void SetKeyboardFocus()
     {
-        if (AcceptKeyboardInput && !HasKeyboardFocus) UIManager.KeyboardFocusControl = this;
+        if (AcceptKeyboardInput && !HasKeyboardFocus)
+            UIManager.KeyboardFocusControl = this;
     }
 
     public MyraControl CenterInViewPort()
@@ -194,10 +214,10 @@ protected void MinMaximize()
         X = camera.Bounds.X + (camera.Bounds.Width - Width) / 2;
         Y = camera.Bounds.Y + (camera.Bounds.Height - Height) / 2;
 
-        if(X < 0)
+        if (X < 0)
             X = 0;
 
-        if(X < 0)
+        if (X < 0)
             X = 0;
 
         SetPosition(X, Y);
@@ -214,21 +234,26 @@ protected void MinMaximize()
 
     public virtual void Update()
     {
-        if (IsDisposed) return;
+        if (IsDisposed)
+            return;
 
-        if(_disposeRequested) ExecuteDispose();
+        if (_disposeRequested)
+            ExecuteDispose();
     }
 
     public virtual void PreDraw()
     {
-        if (IsDisposed) return;
+        if (IsDisposed)
+            return;
 
-        if(_disposeRequested) ExecuteDispose();
+        if (_disposeRequested)
+            ExecuteDispose();
     }
 
     public virtual bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
-        if (IsDisposed || !IsVisible || _desktop == null || _desktop.Root == null) return false;
+        if (IsDisposed || !IsVisible || _desktop == null || _desktop.Root == null)
+            return false;
 
         batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
 
@@ -250,8 +275,7 @@ protected void MinMaximize()
         {
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-            batcher.DrawRectangle
-            (
+            batcher.DrawRectangle(
                 SolidColorTextureCache.GetTexture(Color.Green),
                 x,
                 y,
@@ -273,29 +297,32 @@ protected void MinMaximize()
     {
         if (xml.GetAttribute("x") is { } x && xml.GetAttribute("y") is { } y)
             if (int.TryParse(xml.GetAttribute("x"), out int xInt) && xInt > 0)
-                if(int.TryParse(xml.GetAttribute("y"), out int yInt))
+                if (int.TryParse(xml.GetAttribute("y"), out int yInt))
                     SetPosition(xInt, yInt);
     }
 
     public virtual void Dispose()
     {
-        if(IsDisposed) return;
+        if (IsDisposed)
+            return;
         _disposeRequested = true;
     }
 
     private void ExecuteDispose()
     {
-        if(IsDisposed) return;
+        if (IsDisposed)
+            return;
 
         _disposeRequested = false;
         IsDisposed = true;
 
-        if (_desktop is null) return;
+        if (_desktop is null)
+            return;
 
         _desktop.WidgetGotKeyboardFocus -= DesktopOnWidgetGotKeyboardFocus;
         UIManager.TopMostChanged -= UIManagerOnTopMostChanged;
 
-        if(_rootWindow is not null)
+        if (_rootWindow is not null)
         {
             _rootWindow.Closed -= OnRootWindowOnClosed;
             _rootWindow.TouchDown -= DesktopOnTouchDown;
@@ -320,16 +347,22 @@ protected void MinMaximize()
     #region Invokations
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeTextInput(string c) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeControllerButtonUp(SDL.SDL_GamepadButton button) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeControllerButtonDown(SDL.SDL_GamepadButton button) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseDown(Point position, MouseButtonType button) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseUp(Point position, MouseButtonType button) { }
 
@@ -337,24 +370,30 @@ protected void MinMaximize()
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseEnter(Point position) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseExit(Point position) { }
 
-    public bool InvokeMouseDoubleClick(Point position, MouseButtonType button) => OnMouseDoubleClick(position.X, position.Y, button);
+    public bool InvokeMouseDoubleClick(Point position, MouseButtonType button) =>
+        OnMouseDoubleClick(position.X, position.Y, button);
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseWheel(MouseEventType delta) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseCloseGumpWithRClick() { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeDragBegin(Point position) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeDragEnd(Point position) { }
-#endregion
+    #endregion
 
     public virtual void HitTest(Point position, ref IGui res)
     {
-        if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput) return;
+        if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput)
+            return;
 
         if (Bounds.Contains(position.X, position.Y) || Contains(position.X, position.Y))
         {
@@ -372,27 +411,34 @@ protected void MinMaximize()
 
     public bool Contains(int x, int y)
     {
-        if(_desktop == null) return false;
+        if (_desktop == null)
+            return false;
 
         if (Bounds.Contains(x + ParentX, y + ParentY))
             return true;
 
         if (_desktop.ContextMenu is { Visible: true } contextMenu)
         {
-            var realBounds = new Rectangle(contextMenu.Left, contextMenu.Top,
-                contextMenu.Bounds.Width, contextMenu.Bounds.Height);
-            if(realBounds.Contains(x + ParentX, y + ParentY)) return true;
+            var realBounds = new Rectangle(
+                contextMenu.Left,
+                contextMenu.Top,
+                contextMenu.Bounds.Width,
+                contextMenu.Bounds.Height
+            );
+            if (realBounds.Contains(x + ParentX, y + ParentY))
+                return true;
         }
 
         return false;
     }
 
-#region OnEventOccured
+    #region OnEventOccured
     public virtual void OnHitTestSuccess(int x, int y, ref IGui res) { }
 
     public virtual void OnMouseUp(int x, int y, MouseButtonType button) { }
 
     public virtual void OnMouseDown(int x, int y, MouseButtonType button) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void OnMouseWheel(MouseEventType delta) { }
 
@@ -405,26 +451,37 @@ protected void MinMaximize()
 
         return false;
     }
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void OnButtonClick(int buttonID) { }
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void OnKeyboardReturn(int textID, string text) { }
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void OnPageChanged() { }
-#endregion
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public IEnumerable<T> FindControls<T>() where T : IGui => Array.Empty<T>();
+    public void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod) { }
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public void OnButtonClick(int buttonID) { }
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public void OnKeyboardReturn(int textID, string text) { }
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public void OnPageChanged() { }
+    #endregion
+
+    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
+    public IEnumerable<T> FindControls<T>()
+        where T : IGui => Array.Empty<T>();
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void KeyboardTabToNextFocus(IGui c) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void UpdateOffset(int x, int y) { }
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public T Add<T>(T c, int page = 0) where T : IGui => c;
+    public T Add<T>(T c, int page = 0)
+        where T : IGui => c;
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void Remove(IGui c) => Children.Remove(c);
 
@@ -455,17 +512,26 @@ protected void MinMaximize()
 
     public virtual void ForceSizeUpdate(bool onlyIfLarger = true)
     {
-        if (_desktop == null) return;
+        if (_desktop == null)
+            return;
 
         UpdateBoundsToContents();
     }
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public IGui ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false) => this;
+    public IGui ApplyScale(
+        double scale,
+        bool scalePosition = true,
+        bool scaleSize = true,
+        bool force = false
+    ) => this;
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public IGui SetInternalScale(double scale) => this;
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public IGui GetFirstControlAcceptKeyboardInput() => null;
+
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void Insert(int index, IGui c, int page = 0) { }
 
@@ -487,5 +553,6 @@ protected void MinMaximize()
         _desktop.ShowContextMenu(menu, Mouse.Position);
     }
 
-    public string ContextMenuLabelToggle(bool status, string label) => $"{(status ? "[/c[green]Enabled/cd]" : "[/c[red]Disabled/cd]")} {label}";
+    public string ContextMenuLabelToggle(bool status, string label) =>
+        $"{(status ? "[/c[green]Enabled/cd]" : "[/c[red]Disabled/cd]")} {label}";
 }
