@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
@@ -51,7 +53,14 @@ namespace ClassicUO.Game.Managers
             if (_initialized || _initializing)
                 return;
 
-            if (string.IsNullOrEmpty(modelPath) || !System.IO.Directory.Exists(modelPath))
+            if (string.IsNullOrEmpty(modelPath))
+            {
+                Log.Warn("[VoiceRecognition] Model path is empty");
+                return;
+            }
+
+            bool isZip = modelPath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(modelPath);
+            if (!isZip && !Directory.Exists(modelPath))
             {
                 Log.Warn($"[VoiceRecognition] Model path not found: {modelPath}");
                 return;
@@ -62,11 +71,13 @@ namespace ClassicUO.Game.Managers
             {
                 try
                 {
+                    string resolvedPath = isZip ? ExtractZipModel(modelPath) : modelPath;
+                    if (resolvedPath == null)
+                        return;
+
                     Vosk.Vosk.SetLogLevel(-1);
-                    var model = new Model(modelPath);
-                    var recognizer = new VoskRecognizer(model, (float)SAMPLE_RATE);
-                    _model = model;
-                    _recognizer = recognizer;
+                    _model = new Model(resolvedPath);
+                    _recognizer = new VoskRecognizer(_model, (float)SAMPLE_RATE);
                     _initialized = true;
                     Log.Info("[VoiceRecognition] Initialized successfully");
 
@@ -167,10 +178,10 @@ namespace ClassicUO.Game.Managers
             _isListening = false;
             _processingRunning = false;
 
-            CleanupStream();
-
             _processingThread?.Join(2000);
             _processingThread = null;
+
+            CleanupStream();
 
             // Get any remaining text
             if (_initialized && _recognizer != null)
@@ -194,6 +205,38 @@ namespace ClassicUO.Game.Managers
                 StopListening();
             else
                 StartListening();
+        }
+
+        private static string ExtractZipModel(string zipPath)
+        {
+            try
+            {
+                string voskDir = Path.Combine(CUOEnviroment.ExecutablePath, "vosk");
+                Directory.CreateDirectory(voskDir);
+
+                // Vosk zips contain a single top-level folder with the same name as the zip
+                string modelDirName = Path.GetFileNameWithoutExtension(zipPath);
+                string modelDir = Path.Combine(voskDir, modelDirName);
+
+                if (!Directory.Exists(modelDir))
+                {
+                    Log.Info($"[VoiceRecognition] Extracting {zipPath} ...");
+                    ZipFile.ExtractToDirectory(zipPath, voskDir);
+                }
+
+                if (!Directory.Exists(modelDir))
+                {
+                    Log.Error($"[VoiceRecognition] Expected model directory not found after extraction: {modelDir}");
+                    return null;
+                }
+
+                return modelDir;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[VoiceRecognition] Failed to extract zip: {ex.Message}");
+                return null;
+            }
         }
 
         private void CleanupStream()

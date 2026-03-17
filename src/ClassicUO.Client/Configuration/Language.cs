@@ -624,7 +624,7 @@ namespace ClassicUO.Configuration
             public string VoiceRecognition { get; set; } = "Voice Recognition";
             public string VoiceRecognitionEnable { get; set; } = "Enable voice recognition";
             public string VoiceModelPath { get; set; } = "Vosk model path";
-            public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory. Download models from alphacephei.com/vosk/models";
+            public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory or .zip file. Download models from alphacephei.com/vosk/models - zip files will be auto-extracted to the vosk/ folder.";
             public string VoiceRecognitionStatus { get; set; } = "Status: {0}";
             public string VoiceStatusReady { get; set; } = "Ready";
             public string VoiceStatusNotInitialized { get; set; } = "Not initialized - set model path first";
