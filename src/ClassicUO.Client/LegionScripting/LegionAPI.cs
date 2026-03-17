@@ -1057,20 +1057,27 @@ namespace ClassicUO.LegionScripting
         /// ```
         /// </summary>
         /// <param name="serials">The list of serials to dress</param>
-        /// <param name="kr">Whether to use the faster KR packet</param>
-        public void DressItems(IList<int> serials, bool kr = true)
+        /// <param name="kr">True to use the faster KR packet (not supported everywhere)</param>
+        public void DressItems(IList<int> serials, bool kr = true) => OnMain(() =>
         {
-            // create temporary dress agent entry
-            var temp = new DressConfig {
+            if (serials == null || serials.Count == 0) return;
+
+            var config = new DressConfig
+            {
                 UseKREquipPacket = kr,
-                Items = serials.Select(i => new DressItem { Serial = (uint)i }).ToList()
+                Items = serials
+                    .Where(s => s > 0)
+                    .Select(s => (serial: (uint)s, item: World.Items.Get((uint)s)))
+                    .Where(t => t.item != null)
+                    .Select(t => new DressItem
+                    {
+                        Serial = t.serial,
+                        Layer = t.item.ItemData.Layer,
+                    }).ToList()
             };
 
-            if (temp != null)
-            {
-                DressAgentManager.Instance.DressFromConfig(temp);
-            }
-        }
+            DressAgentManager.Instance.DressFromConfig(config);
+        });
 
         /// <summary>
         /// Runs an organizer agent to move items between containers.

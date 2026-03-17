@@ -2035,7 +2035,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `serials` | `IList<uint>` | ❌ No | A list of object serials to request OPL data for |
+| `serials` | `IList<int>` | ❌ No | A list of object serials to request OPL data for |
 
 **Return Type:** `void` *(Does not return anything)*
 
