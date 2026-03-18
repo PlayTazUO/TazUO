@@ -148,14 +148,11 @@ public class PersistentVarsWindow : MyraControl
         }
 
         var grid = new MyraGrid();
-        grid.AddColumn(new Proportion(ProportionType.Auto));  // Key
-        grid.AddColumn(new Proportion(ProportionType.Fill));  // Value
-        grid.AddColumn(new Proportion(ProportionType.Auto));  // Actions
-        MyraStyle.ApplyStandardGridStyling(grid);
-
-        grid.AddWidget(new MyraLabel("Key",     MyraLabel.TextStyle.H3), 0, 0);
-        grid.AddWidget(new MyraLabel("Value",   MyraLabel.TextStyle.H3), 0, 1);
-        grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.H3), 0, 2);
+        grid.SetupWithHeaders(
+            GridColumnInfo.Auto("Key"),
+            GridColumnInfo.Fill("Value"),
+            GridColumnInfo.Auto("Actions")
+        );
 
         int dataRow = 1;
         foreach (KeyValuePair<string, string> kvp in variables)

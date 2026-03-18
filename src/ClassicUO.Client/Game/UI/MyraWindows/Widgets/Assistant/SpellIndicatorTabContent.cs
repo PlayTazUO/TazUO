@@ -67,22 +67,15 @@ public static class SpellIndicatorTabContent
             spellListPanel.Widgets.Add(new MyraLabel("All Spell Indicators:", MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // ID
-            grid.AddColumn(new Proportion(ProportionType.Part), 2); // Name, Power Words
-            grid.AddColumn(new Proportion(ProportionType.Auto), 3); // Cast Range, Cursor Size, Cast Time
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Button
-
-            grid.AddWidget(new MyraLabel("ID", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0, 0);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Power Words", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Cast Range", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0,
-                3);
-            grid.AddWidget(new MyraLabel("Cursor Size", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0,
-                4);
-            grid.AddWidget(new MyraLabel("Cast Time", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0,
-                5);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("ID"),
+                GridColumnInfo.Fill("Name"),
+                GridColumnInfo.Fill("Power Words"),
+                GridColumnInfo.Numeric("Cast Range"),
+                GridColumnInfo.Numeric("Cursor Size"),
+                GridColumnInfo.Numeric("Cast Time"),
+                GridColumnInfo.Auto("")
+            );
 
             int row = 1;
             foreach (SpellRangeInfo spell in spells)

@@ -28,17 +28,14 @@ public static class OrganizerAgentTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 3); // Art, Hue, Amount
-            grid.AddColumn(new Proportion(ProportionType.Part)); // Destination
-            grid.AddColumn(null, 2); // Controls
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Amount", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.TextStyle.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 5);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Art"),
+                GridColumnInfo.Auto("Hue"),
+                GridColumnInfo.Auto("Amount"),
+                GridColumnInfo.Fill("Destination"),
+                GridColumnInfo.Auto("Enabled"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             for (int i = selectedConfig.ItemConfigs.Count - 1; i >= 0; i--)

@@ -28,15 +28,12 @@ public static class DressAgentTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn();
-            grid.AddColumn(new Proportion(ProportionType.Fill));
-            grid.AddColumn(null, 2);
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Layer", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 3);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Serial"),
+                GridColumnInfo.Fill("Name"),
+                GridColumnInfo.Auto("Layer"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             for (int i = selectedConfig.Items.Count - 1; i >= 0; i--)

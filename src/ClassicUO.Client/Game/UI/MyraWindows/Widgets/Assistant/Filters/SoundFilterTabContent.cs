@@ -42,11 +42,10 @@ public static class SoundFilterTabContent
             })));
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 2);
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Sound ID", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Sound ID"),
+                GridColumnInfo.Fill("Actions")
+            );
 
             int dataRow = 1;
             for (int i = filterList.Count - 1; i >= 0; i--)

@@ -62,26 +62,17 @@ public static class ItemDatabaseTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Art
-            grid.AddColumn(new Proportion(ProportionType.Fill));  // Name
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Hue
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Layer
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Location
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Container
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Character
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Updated
-            grid.AddColumn(new Proportion(ProportionType.Auto));  // Actions
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Art",       MyraLabel.TextStyle.H3), 0, 0);
-            grid.AddWidget(new MyraLabel("Name",      MyraLabel.TextStyle.H3), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue",       MyraLabel.TextStyle.H3), 0, 2);
-            grid.AddWidget(new MyraLabel("Layer",     MyraLabel.TextStyle.H3), 0, 3);
-            grid.AddWidget(new MyraLabel("Location",  MyraLabel.TextStyle.H3), 0, 4);
-            grid.AddWidget(new MyraLabel("Container", MyraLabel.TextStyle.H3), 0, 5);
-            grid.AddWidget(new MyraLabel("Character", MyraLabel.TextStyle.H3), 0, 6);
-            grid.AddWidget(new MyraLabel("Updated",   MyraLabel.TextStyle.H3), 0, 7);
-            grid.AddWidget(new MyraLabel("Actions",   MyraLabel.TextStyle.H3), 0, 8);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Art"),
+                GridColumnInfo.Fill("Name"),
+                GridColumnInfo.Auto("Hue"),
+                GridColumnInfo.Auto("Layer"),
+                GridColumnInfo.Auto("Location"),
+                GridColumnInfo.Auto("Container"),
+                GridColumnInfo.Auto("Character"),
+                GridColumnInfo.Auto("Updated"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             foreach (ItemInfo item in searchResults)

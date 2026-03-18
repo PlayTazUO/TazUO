@@ -1,7 +1,6 @@
 #nullable enable
 using System.Collections.Generic;
 using ClassicUO.Configuration;
-using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
@@ -52,18 +51,15 @@ public static class AutoSellAgentTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 1);
-            grid.AddColumn(new Proportion(ProportionType.Part), 4);
-            grid.AddColumn(null, 2);
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.TextStyle.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("Min on Hand", MyraLabel.TextStyle.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.TableHeader), 0, 5);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 6);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Art"),
+                GridColumnInfo.Fill("Graphic"),
+                GridColumnInfo.Fill("Hue"),
+                GridColumnInfo.Fill("Max Amount"),
+                GridColumnInfo.Fill("Min on Hand"),
+                GridColumnInfo.Auto("Enabled"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)

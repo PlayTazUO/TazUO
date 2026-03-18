@@ -114,14 +114,11 @@ public class ScriptConstantsEditorWindow : MyraControl
         }
 
         var grid = new MyraGrid();
-        grid.AddColumn(new Proportion(ProportionType.Auto));  // Name
-        grid.AddColumn(new Proportion(ProportionType.Fill));  // Value
-        grid.AddColumn(new Proportion(ProportionType.Auto));  // Line
-        MyraStyle.ApplyStandardGridStyling(grid);
-
-        grid.AddWidget(new MyraLabel("Constant", MyraLabel.TextStyle.H3), 0, 0);
-        grid.AddWidget(new MyraLabel("Value",    MyraLabel.TextStyle.H3), 0, 1);
-        grid.AddWidget(new MyraLabel("Line",     MyraLabel.TextStyle.H3), 0, 2);
+        grid.SetupWithHeaders(
+            GridColumnInfo.Auto("Constant"),
+            GridColumnInfo.Fill("Value"),
+            GridColumnInfo.Auto("Line")
+        );
 
         int row = 1;
         foreach (ConstantEntry c in list)

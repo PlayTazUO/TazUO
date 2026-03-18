@@ -82,21 +82,16 @@ public static class AutoLootAgentTabContent
                 return;
             }
 
-            // 7 columns: Art | Graphic | Hue | Regex | Priority | Destination | Actions
             var grid = new MyraGrid();
-            grid.AddColumn(null, 5);
-            grid.AddColumn(new Proportion(ProportionType.Fill), 1);
-            grid.AddColumn(null, 1);
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            // Header row
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Regex", MyraLabel.TextStyle.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("Priority", MyraLabel.TextStyle.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Destination", MyraLabel.TextStyle.TableHeader), 0, 5);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 6);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Art"),
+                GridColumnInfo.Auto("Graphic"),
+                GridColumnInfo.Auto("Hue"),
+                GridColumnInfo.Auto("Regex"),
+                GridColumnInfo.Auto("Priority"),
+                GridColumnInfo.Fill("Destination"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)

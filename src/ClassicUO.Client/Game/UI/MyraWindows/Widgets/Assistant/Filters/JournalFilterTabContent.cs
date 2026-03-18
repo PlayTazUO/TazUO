@@ -34,12 +34,7 @@ public static class JournalFilterTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Fill));
-            grid.AddColumn(new Proportion(ProportionType.Auto));
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Filter Text", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 1);
+            grid.SetupWithHeaders(GridColumnInfo.Fill("Filter Text"), GridColumnInfo.Auto("Actions"));
 
             int dataRow = 1;
             for (int i = filters.Count - 1; i >= 0; i--)

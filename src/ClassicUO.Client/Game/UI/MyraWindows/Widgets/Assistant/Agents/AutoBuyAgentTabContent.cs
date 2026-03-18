@@ -51,19 +51,16 @@ public static class AutoBuyAgentTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(null);
-            grid.AddColumn(new Proportion(ProportionType.Part), 5);
-            grid.AddColumn(null, 2);
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Art", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Graphic", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Hue", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Max Amount", MyraLabel.TextStyle.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("Restock Up To", MyraLabel.TextStyle.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Max Price", MyraLabel.TextStyle.TableHeader), 0, 5);
-            grid.AddWidget(new MyraLabel("Enabled", MyraLabel.TextStyle.TableHeader), 0, 6);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 7);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Art"),
+                GridColumnInfo.Fill("Graphic"),
+                GridColumnInfo.Fill("Hue"),
+                GridColumnInfo.Fill("Max Amount"),
+                GridColumnInfo.Fill("Restock Up To"),
+                GridColumnInfo.Fill("Max Price"),
+                GridColumnInfo.Auto("Enabled"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             int dataRow = 1;
             for (int i = entries.Count - 1; i >= 0; i--)

@@ -37,17 +37,14 @@ public static class GraphicReplacementTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(null, 2); // Original, Type
-            grid.AddColumn(new Proportion(ProportionType.Part), 3); // Replacement, Preview, New Hue
-            grid.AddColumn();  // Delete
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Original", MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Type", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Replacement", MyraLabel.TextStyle.TableHeader), 0, 2);
-            grid.AddWidget(new MyraLabel("Preview", MyraLabel.TextStyle.TableHeader), 0, 3);
-            grid.AddWidget(new MyraLabel("New Hue", MyraLabel.TextStyle.TableHeader), 0, 4);
-            grid.AddWidget(new MyraLabel("Actions", MyraLabel.TextStyle.TableHeader), 0, 5);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto("Original"),
+                GridColumnInfo.Auto("Type"),
+                GridColumnInfo.Fill("Replacement"),
+                GridColumnInfo.Fill("Preview"),
+                GridColumnInfo.Fill("New Hue"),
+                GridColumnInfo.Auto("Actions")
+            );
 
             var filterList = filters.Values.ToList();
             int dataRow = 1;

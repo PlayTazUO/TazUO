@@ -146,14 +146,11 @@ public static class MacrosTabContent
             }
 
             var grid = new MyraGrid();
-            grid.AddColumn(new Proportion(ProportionType.Fill)); // Name
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Hotkey
-            grid.AddColumn(new Proportion(ProportionType.Auto)); // Edit
-            MyraStyle.ApplyStandardGridStyling(grid);
-
-            grid.AddWidget(new MyraLabel("Name",   MyraLabel.TextStyle.TableHeader), 0, 0);
-            grid.AddWidget(new MyraLabel("Hotkey", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Edit",   MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Fill("Name"),
+                GridColumnInfo.Auto("Hotkey"),
+                GridColumnInfo.Auto("Edit")
+            );
 
             int dataRow = 1;
             foreach (Macro macro in display)

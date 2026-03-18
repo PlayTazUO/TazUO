@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
-using Myra.Graphics2D;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
@@ -29,14 +27,12 @@ public static class FriendsListTabContent
             friendsListPanel.Widgets.Add(new MyraLabel("Current Friends:", MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
-            MyraStyle.ApplyStandardGridStyling(grid);
-            grid.AddColumn(null); // serial
-            grid.AddColumn(new Proportion(ProportionType.Part), 2); // name & date
-            grid.AddColumn(null); // actions
-
-            grid.AddWidget(new MyraLabel("Serial", MyraLabel.TextStyle.TableHeader, MyraLabel.AlignMode.Right), 0, 0);
-            grid.AddWidget(new MyraLabel("Name", MyraLabel.TextStyle.TableHeader), 0, 1);
-            grid.AddWidget(new MyraLabel("Date Added", MyraLabel.TextStyle.TableHeader), 0, 2);
+            grid.SetupWithHeaders(
+                GridColumnInfo.Numeric("Serial"),
+                GridColumnInfo.Fill("Name", 2),
+                GridColumnInfo.Auto("Date Added"),
+                GridColumnInfo.Auto("")
+            );
 
             int row = 1;
             for (int i = friends.Count - 1; i >= 0; i--)

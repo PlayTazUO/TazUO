@@ -47,12 +47,7 @@ public static class SeasonFilterTabContent
         root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.TextStyle.H3));
 
         var grid = new MyraGrid();
-        grid.AddColumn(new Proportion(ProportionType.Auto));
-        grid.AddColumn(new Proportion(ProportionType.Auto));
-        MyraStyle.ApplyStandardGridStyling(grid);
-
-        grid.AddWidget(new MyraLabel("When Server Sends", MyraLabel.TextStyle.TableHeader), 0, 0);
-        grid.AddWidget(new MyraLabel("Show As", MyraLabel.TextStyle.TableHeader), 0, 1);
+        grid.SetupWithHeaders(GridColumnInfo.Auto("When Server Sends"), GridColumnInfo.Auto("Show As"));
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {
