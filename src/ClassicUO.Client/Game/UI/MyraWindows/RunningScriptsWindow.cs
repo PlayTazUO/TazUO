@@ -3,6 +3,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows;
@@ -45,7 +46,7 @@ public class RunningScriptsWindow : MyraControl
 
     private void Build()
     {
-        var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+        var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Padding = new Thickness(4) };
         root.Widgets.Add(_scriptList);
         RebuildList();
         SetRootContent(root);
@@ -59,7 +60,9 @@ public class RunningScriptsWindow : MyraControl
 
         if (scripts.Count == 0)
         {
-            _scriptList.Widgets.Add(new MyraLabel("No scripts currently running", MyraLabel.TextStyle.P));
+            _scriptList.Widgets.Add(
+                new MyraLabel("No scripts currently running", MyraLabel.TextStyle.P) { Margin = new Thickness(4) }
+            );
             return;
         }
 
