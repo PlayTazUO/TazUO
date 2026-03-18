@@ -6,6 +6,7 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.Brushes;
 using System.Linq;
 
 namespace ClassicUO.Game.UI.MyraWindows;
@@ -53,6 +54,7 @@ public class ScriptEditorWindow : MyraControl
             Enabled = false,
             Font = monoFont,
             // HorizontalAlignment = HorizontalAlignment.Right,
+            Background = new SolidBrush(new Color(0, 0, 0, 75)),
             VerticalAlignment = VerticalAlignment.Stretch,
         };
 
