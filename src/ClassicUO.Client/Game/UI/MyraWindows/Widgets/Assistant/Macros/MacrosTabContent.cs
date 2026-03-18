@@ -186,7 +186,7 @@ public static class MacrosTabContent
             Macro macro = selectedMacro;
 
             // Name row
-            var nameRow = new HorizontalStackPanel { Spacing = 4 };
+            var nameRow = new HorizontalStackPanel { Spacing = 2 };
             nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
             var nameBox = new MyraInputBox { Text = macro.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
@@ -227,7 +227,7 @@ public static class MacrosTabContent
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 1));
 
-            var bottomRow = new HorizontalStackPanel { Spacing = 4 };
+            var bottomRow = new HorizontalStackPanel { Spacing = 2 };
             bottomRow.Widgets.Add(new MyraButton("Add Action", () =>
             {
                 MacroObject newAction = Macro.Create(MacroType.Say);
@@ -372,7 +372,7 @@ public static class MacrosTabContent
                 MacroObject capturedAction = action;
                 int capturedIndex = actionIndex;
 
-                var actionRow = new HorizontalStackPanel { Spacing = 4 };
+                var actionRow = new HorizontalStackPanel { Spacing = 2 };
                 actionRow.Widgets.Add(new MyraLabel($"{capturedIndex + 1}.", MyraLabel.TextStyle.P));
 
                 // Action type ComboBox
@@ -489,7 +489,7 @@ public static class MacrosTabContent
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────
-        var toolbar = new HorizontalStackPanel { Spacing = 4 };
+        var toolbar = new HorizontalStackPanel { Spacing = 2 };
 
         toolbar.Widgets.Add(new MyraButton("Add", () =>
         {
@@ -542,7 +542,7 @@ public static class MacrosTabContent
             GameActions.Print($"Exported {cnt} macro(s) to your clipboard!", Constants.HUE_SUCCESS);
         }) { Tooltip = "Export all macros to clipboard" });
 
-        var filterBox = new MyraInputBox { HintText = "Filter..." };
+        var filterBox = new MyraInputBox { HintText = "Filter...", Width = 150 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             filterText = filterBox.Text ?? "";
@@ -551,7 +551,7 @@ public static class MacrosTabContent
         toolbar.Widgets.Add(filterBox);
 
         // ── Main layout ───────────────────────────────────────────────────────
-        var mainArea = new HorizontalStackPanel { Spacing = 8 };
+        var mainArea = new HorizontalStackPanel { Spacing = 4 };
 
         var listScroll = new ScrollViewer { MaxHeight = 450, Content = macroListPanel };
         mainArea.Widgets.Add(listScroll);
@@ -562,7 +562,7 @@ public static class MacrosTabContent
 
         _cleanupAction = CancelCapture;
 
-        var root = new VerticalStackPanel { Spacing = 4 };
+        var root = new VerticalStackPanel { Spacing = 2 };
         root.Widgets.Add(toolbar);
         root.Widgets.Add(mainArea);
         return root;

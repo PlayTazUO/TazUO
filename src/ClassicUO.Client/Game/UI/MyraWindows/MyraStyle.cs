@@ -1,5 +1,6 @@
 using ClassicUO.Assets;
 using ClassicUO.Game.Data;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -17,6 +18,7 @@ public static class MyraStyle
 
     private static Color TazUO_Orange = new(0.667f, 0.412f, 0.051f, 1f);
 
+    private static SpriteFontBase _uiFont;
     private static NinePatchRegion _ninePatchPanel;
     private static NinePatchRegion _ninePatchButtonUp;
     private static NinePatchRegion _ninePatchButtonDown;
@@ -58,6 +60,8 @@ public static class MyraStyle
         _skillDownButton = new TextureRegion(ModernUIConstants.ModernUISkillDown);
         _skillLockBtn = new TextureRegion(ModernUIConstants.ModernUISkillLock);
 
+        _uiFont = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+
         //Window style
         WindowStyle style = Stylesheet.Current.WindowStyle;
 
@@ -67,18 +71,13 @@ public static class MyraStyle
         style.TitleStyle.Font = TrueTypeLoader.Instance.GetFont("Roboto-Bold", 18);
 
         //Labels
-        Stylesheet.Current.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(
-            TrueTypeLoader.EMBEDDED_FONT,
-            16
-        );
+        Stylesheet.Current.LabelStyle.Font = _uiFont;
 
         //Tabs
         TabControlStyle tabControlStyle = Stylesheet.Current.TabControlStyle;
         tabControlStyle.ContentStyle ??= new WidgetStyle();
         tabControlStyle.ContentStyle.Background = new SolidBrush(Color.Transparent);
-        tabControlStyle.ContentStyle.Border = new SolidBrush(
-            new Color(0, 0, 0, STANDARD_BORDER_ALPHA)
-        );
+        tabControlStyle.ContentStyle.Border = new SolidBrush(new Color(0, 0, 0, STANDARD_BORDER_ALPHA));
         tabControlStyle.ContentStyle.BorderThickness = new Thickness(1);
 
         ImageTextButtonStyle tabItemStyle = tabControlStyle.TabItemStyle;
@@ -114,9 +113,7 @@ public static class MyraStyle
 
         //Checkbox style
         ImageTextButtonStyle cbStyle = Stylesheet.Current.CheckBoxStyle;
-        cbStyle.ImageStyle.PressedImage = new TextureRegion(
-            ModernUIConstants.ModernUICheckBoxChecked
-        );
+        cbStyle.ImageStyle.PressedImage = new TextureRegion(ModernUIConstants.ModernUICheckBoxChecked);
         cbStyle.ImageStyle.Image = new TextureRegion(ModernUIConstants.ModernUICheckBoxUnChecked);
         cbStyle.ImageStyle.Background = null;
 
@@ -125,25 +122,18 @@ public static class MyraStyle
         inputStyle.Border = new SolidBrush(new Color(21, 21, 21, STANDARD_BORDER_ALPHA));
         inputStyle.BorderThickness = new Thickness(1);
         inputStyle.Padding = new Thickness(3);
-        // inputStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+        // inputStyle.Font = _uiFont;
 
         ScrollViewerStyle svStyle = Stylesheet.Current.ScrollViewerStyle;
-        svStyle.VerticalScrollBackground = new TextureRegion(
-            ModernUIConstants.ModernUIVerticalScrollbar
-        );
-        svStyle.VerticalScrollKnob = new TextureRegion(
-            ModernUIConstants.ModernUIVerticalScrollbarKnob
-        );
+        svStyle.VerticalScrollBackground = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbar);
+        svStyle.VerticalScrollKnob = new TextureRegion(ModernUIConstants.ModernUIVerticalScrollbarKnob);
 
         ComboBoxStyle comboStyle = Stylesheet.Current.ComboBoxStyle;
         comboStyle.Padding = new Thickness(3);
-        // comboStyle.Border = new SolidBrush(GridBorderColor);
-        // comboStyle.BorderThickness = new Thickness(1);
-        // comboStyle.Background = new SolidBrush(Color.Transparent);
         comboStyle.Background = new SolidBrush(new Color(21, 21, 21, 75));
         comboStyle.OverBackground = new SolidBrush(new Color(170, 105, 13, 80));
         comboStyle.ListBoxStyle.Background = new SolidBrush("#242941");
-        comboStyle.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+        comboStyle.LabelStyle.Font = _uiFont;
 
         var comboItemStyle = comboStyle.ListBoxStyle.ListItemStyle;
         comboItemStyle.Background = new SolidBrush(Color.Transparent);
@@ -151,7 +141,17 @@ public static class MyraStyle
         comboItemStyle.PressedBackground = new SolidBrush(new Color(170, 105, 13, 160));
 
         comboItemStyle.Padding = new Thickness(2);
-        comboItemStyle.LabelStyle.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
+        comboItemStyle.LabelStyle.Font = _uiFont;
+
+        var menuStyle = Stylesheet.Current.VerticalMenuStyle;
+        menuStyle.Padding = new Thickness(0);
+        menuStyle.Margin = new Thickness(0);
+        menuStyle.Background = new SolidBrush("#242941");
+        menuStyle.Border = new SolidBrush(TazUO_Orange);
+        menuStyle.SelectionBackground = new SolidBrush(new Color(170, 105, 13, 160));
+        menuStyle.SelectionHoverBackground = new SolidBrush(new Color(170, 105, 13, 80));
+        menuStyle.LabelStyle.Font = _uiFont;
+        menuStyle.LabelStyle.Margin = new Thickness(2);
     }
 
     /// <summary>
