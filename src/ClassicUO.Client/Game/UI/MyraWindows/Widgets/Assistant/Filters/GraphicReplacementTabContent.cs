@@ -5,7 +5,6 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
@@ -57,14 +56,14 @@ public static class GraphicReplacementTabContent
                 GraphicChangeFilter filter = filterList[i];
 
                 // Original — show as label (changing original = key change, use delete+re-add)
-                grid.AddWidget(new MyraLabel($"0x{filter.OriginalGraphic:X4}", MyraLabel.TextStyle.P), dataRow, 0);
+                grid.AddWidget(new MyraLabel($"0x{filter.OriginalGraphic:X4}", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), dataRow, 0);
 
                 // Type — cycle button using wrapper panel (key change requires rebuild)
                 var typeWrapper = new HorizontalStackPanel();
                 void BuildTypeBtn()
                 {
                     typeWrapper.Widgets.Clear();
-                    typeWrapper.Widgets.Add(new MyraButton(GetTypeName(filter.OriginalType), () =>
+                    var btn = new MyraButton(GetTypeName(filter.OriginalType), () =>
                     {
                         int idx = System.Array.IndexOf(TypeValues, filter.OriginalType);
                         byte newType = TypeValues[(idx + 1) % TypeValues.Length];
@@ -74,7 +73,9 @@ public static class GraphicReplacementTabContent
                             filter.ReplacementGraphic, newType,
                             filter.NewHue);
                         BuildFilterList();
-                    }) { Tooltip = "Click to cycle: Mobile / Land / Static" });
+                    }) { Tooltip = "Click to cycle: Mobile / Land / Static", MinWidth = 65 };
+                    btn.Content.HorizontalAlignment = HorizontalAlignment.Center;
+                    typeWrapper.Widgets.Add(btn);
                 }
                 BuildTypeBtn();
                 grid.AddWidget(typeWrapper, dataRow, 1);
@@ -100,11 +101,7 @@ public static class GraphicReplacementTabContent
                 grid.AddWidget(previewWrapper, dataRow, 3);
 
                 // Replacement Graphic — inline edit, immediate commit + preview update
-                var replacementBox = new TextBox
-                {
-                    Text = $"0x{filter.ReplacementGraphic:X4}",
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var replacementBox = new MyraInputBox { Text = $"0x{filter.ReplacementGraphic:X4}" };
                 replacementBox.TextChangedByUser += (_, _) =>
                 {
                     string txt = replacementBox.Text ?? "";
@@ -118,12 +115,7 @@ public static class GraphicReplacementTabContent
                 grid.AddWidget(replacementBox, dataRow, 2);
 
                 // Hue — inline edit, immediate commit
-                var hueBox = new TextBox
-                {
-                    Text = filter.NewHue == ushort.MaxValue ? "-1" : filter.NewHue.ToString(),
-                    Tooltip = "-1 will not change the hue",
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var hueBox = MyraInputBox.Hue(filter.NewHue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
                     string txt = hueBox.Text ?? "";
@@ -151,9 +143,9 @@ public static class GraphicReplacementTabContent
 
         // Add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newOriginalBox = new TextBox { HintText = "Original graphic (e.g. 0x0EED)", Width = 170 };
-        var newReplacementBox = new TextBox { HintText = "Replacement graphic", Width = 170 };
-        var newHueBox = new TextBox { HintText = "Hue (-1 = unchanged)", Width = 120 };
+        var newOriginalBox = new MyraInputBox { HintText = "Original graphic (e.g. 0x0EED)", Width = 170 };
+        var newReplacementBox = new MyraInputBox { HintText = "Replacement graphic", Width = 170 };
+        var newHueBox = new MyraInputBox { HintText = "Hue (-1 = unchanged)", Width = 120 };
         int[] newTypeIndex = { 2 }; // Default: Static
 
         var newTypeWrapper = new HorizontalStackPanel();

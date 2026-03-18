@@ -7,7 +7,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -58,13 +57,7 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(artWidget, dataRow, 0);
 
                 // Hue
-                var hueBox = new TextBox
-                {
-                    Text = item.Hue == ushort.MaxValue ? "ANY" : item.Hue.ToString(),
-                    Tooltip = "Set to ANY to match any hue.",
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Width = 80,
-                };
+                var hueBox = MyraInputBox.Hue(item.Hue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
                     if (hueBox.Text == "ANY")
@@ -75,11 +68,10 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(hueBox, dataRow, 1);
 
                 // Amount
-                var amountBox = new TextBox
+                var amountBox = new MyraInputBox
                 {
                     Text = item.Amount.ToString(),
                     Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)",
-                    VerticalAlignment = VerticalAlignment.Center,
                     Width = 80,
                 };
                 amountBox.TextChangedByUser += (_, _) =>
@@ -91,7 +83,6 @@ public static class OrganizerAgentTabContent
 
                 // Destination (rebuild the cell in-place via a container panel)
                 var destCell = new HorizontalStackPanel { Spacing = 4 };
-                StackPanel.SetProportionType(destCell, ProportionType.Fill);
                 OrganizerItemConfig captured = item;
 
                 void BuildDestCell()
@@ -99,8 +90,9 @@ public static class OrganizerAgentTabContent
                     destCell.Widgets.Clear();
                     if (captured.DestContSerial != 0)
                     {
-                        destCell.Widgets.Add(new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P)
-                            { Tooltip = "Per-item destination" });
+                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = "Per-item destination" };
+                        StackPanel.SetProportionType(label, ProportionType.Fill);
+                        destCell.Widgets.Add(label);
                         destCell.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
                         {
                             captured.DestContSerial = 0;
@@ -109,8 +101,9 @@ public static class OrganizerAgentTabContent
                     }
                     else
                     {
-                        destCell.Widgets.Add(new MyraLabel("Config", MyraLabel.TextStyle.P)
-                            { Tooltip = "Using configuration's destination" });
+                        var label = new MyraLabel("Config", MyraLabel.TextStyle.P) { Tooltip = "Using configuration's destination" };
+                        StackPanel.SetProportionType(label, ProportionType.Fill);
+                        destCell.Widgets.Add(label);
                         destCell.Widgets.Add(new MyraButton("Set", () =>
                         {
                             GameActions.Print("Select [DESTINATION] Container for this item", 82);
@@ -188,7 +181,7 @@ public static class OrganizerAgentTabContent
             var topRow = new HorizontalStackPanel { Spacing = 8 };
             topRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
                 selectedConfig.Enabled, b => selectedConfig.Enabled = b, "Enabled"));
-            var nameBox = new TextBox { Text = selectedConfig.Name, Width = 150 };
+            var nameBox = new MyraInputBox { Text = selectedConfig.Name, Width = 150 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 if (!string.IsNullOrWhiteSpace(nameBox.Text))
@@ -299,8 +292,8 @@ public static class OrganizerAgentTabContent
 
             // Add item buttons
             var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-            var newGraphicBox = new TextBox { HintText = "Graphic (hex, e.g. 0EED)", Width = 150 };
-            var newHueBox = new TextBox { HintText = "Hue (-1=any)", Width = 80 };
+            var newGraphicBox = new MyraInputBox { HintText = "Graphic (hex, e.g. 0EED)", Width = 150 };
+            var newHueBox = new MyraInputBox { HintText = "Hue (-1 = any)", Width = 80 };
 
             var addItemRow = new HorizontalStackPanel { Spacing = 4 };
             addItemRow.Widgets.Add(new MyraButton("Target Item to Add", () =>

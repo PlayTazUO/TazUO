@@ -9,7 +9,6 @@ using ClassicUO.Input;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 using SDL3;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 
@@ -192,12 +191,7 @@ public static class MacrosTabContent
             // Name row
             var nameRow = new HorizontalStackPanel { Spacing = 4 };
             nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
-            var nameBox = new TextBox
-            {
-                Text = macro.Name,
-                Width = 200,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
+            var nameBox = new MyraInputBox { Text = macro.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 macro.Name = nameBox.Text ?? "";
@@ -451,12 +445,7 @@ public static class MacrosTabContent
                     string currentText = capturedAction.HasString()
                         ? ((MacroObjectString)capturedAction).Text
                         : "";
-                    var textBox = new TextBox
-                    {
-                        Text = currentText,
-                        Width = 180,
-                        VerticalAlignment = VerticalAlignment.Center,
-                    };
+                    var textBox = new MyraInputBox { Text = currentText, Width = 180 };
                     textBox.TextChangedByUser += (_, _) =>
                     {
                         string newText = textBox.Text ?? "";
@@ -556,12 +545,7 @@ public static class MacrosTabContent
             GameActions.Print($"Exported {cnt} macro(s) to your clipboard!", Constants.HUE_SUCCESS);
         }) { Tooltip = "Export all macros to clipboard" });
 
-        var filterBox = new TextBox
-        {
-            HintText = "Filter...",
-            Width = 150,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var filterBox = new MyraInputBox { HintText = "Filter..." };
         filterBox.TextChangedByUser += (_, _) =>
         {
             filterText = filterBox.Text ?? "";

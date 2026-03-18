@@ -5,7 +5,6 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -50,7 +49,7 @@ public class ScriptErrorWindow : MyraControl
 
             if (!string.IsNullOrEmpty(loc.LineContent))
             {
-                root.Widgets.Add(new TextBox
+                root.Widgets.Add(new MyraInputBox
                 {
                     Text = loc.LineContent,
                     Multiline = true,

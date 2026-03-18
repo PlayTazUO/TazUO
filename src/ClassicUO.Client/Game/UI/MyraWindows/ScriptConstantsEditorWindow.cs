@@ -9,7 +9,6 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -55,7 +54,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new TextBox { HintText = "Filter constants...", Width = 175, Text = _filterText };
+        var filterBox = new MyraInputBox { HintText = "Filter constants...", Width = 175, Text = _filterText };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -147,7 +146,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     private Widget BuildTextEditor(ConstantEntry constant)
     {
         string original = constant.OriginalValue;
-        var box = new TextBox { Text = constant.EditValue };
+        var box = new MyraInputBox { Text = constant.EditValue };
         box.TextChangedByUser += (_, _) =>
         {
             constant.EditValue = box.Text ?? "";
@@ -184,7 +183,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         string original = constant.OriginalValue;
         var row = new HorizontalStackPanel { Spacing = 4 };
-        var readonlyBox = new TextBox { Text = constant.EditValue, Enabled = false };
+        var readonlyBox = new MyraInputBox { Text = constant.EditValue, Enabled = false };
         if (constant.OriginalValue != constant.EditValue)
             readonlyBox.Tooltip = $"Original: {original}";
         row.Widgets.Add(readonlyBox);
@@ -207,7 +206,7 @@ public class ScriptConstantsEditorWindow : MyraControl
                 int idx = i;
                 var eRow = new HorizontalStackPanel { Spacing = 4 };
                 eRow.Widgets.Add(new MyraLabel($"[{idx}]", MyraLabel.TextStyle.P));
-                var eBox = new TextBox { Text = elementsCopy[idx], MinWidth = 180 };
+                var eBox = new MyraInputBox { Text = elementsCopy[idx], MinWidth = 180 };
                 eBox.TextChangedByUser += (_, _) => elementsCopy[idx] = eBox.Text ?? "";
                 eRow.Widgets.Add(eBox);
                 eRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>

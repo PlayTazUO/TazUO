@@ -9,7 +9,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 
@@ -152,7 +151,7 @@ public class ItemDetailMyraWindow : MyraControl
 
         row1.Widgets.Add(new MyraButton("Set Custom Name", () =>
         {
-            var nameBox = new TextBox { Text = _item.CustomName, Width = 220 };
+            var nameBox = new MyraInputBox { Text = _item.CustomName, Width = 220 };
             new MyraDialog("Set Custom Name", nameBox, ok =>
             {
                 if (!ok) return;

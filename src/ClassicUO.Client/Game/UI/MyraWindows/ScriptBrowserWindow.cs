@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ClassicUO.Game;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -14,7 +13,6 @@ using ClassicUO.Utility.Platforms;
 using GhFileObject = ClassicUO.LegionScripting.ScriptBrowser.GhFileObject;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -35,7 +33,7 @@ public class ScriptBrowserWindow : MyraControl
     private VerticalStackPanel _previewPanel;
     private MyraLabel _previewTitleLabel;
     private MyraLabel _previewLoadingLabel;
-    private TextBox _previewContentBox;
+    private MyraInputBox _previewContentBox;
 
     public ScriptBrowserWindow() : base("Public Script Browser")
     {
@@ -85,7 +83,7 @@ public class ScriptBrowserWindow : MyraControl
         _previewTitleLabel = new MyraLabel("", MyraLabel.TextStyle.H2);
         _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.TextStyle.P);
 
-        _previewContentBox = new TextBox
+        _previewContentBox = new MyraInputBox
         {
             Readonly = true,
             Multiline = true,

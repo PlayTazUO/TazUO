@@ -15,7 +15,6 @@ using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -168,7 +167,7 @@ public class ScriptManagerWindow : MyraControl
         bar.Widgets.Add(new MyraButton("Menu", ShowMainMenu));
         bar.Widgets.Add(new MyraButton("Add +", ShowAddMenu));
 
-        var searchBox = new TextBox { HintText = "Search...", Width = 180 };
+        var searchBox = new MyraInputBox { HintText = "Search...", Width = 180 };
         searchBox.TextChangedByUser += (_, _) =>
         {
             _searchFilter = searchBox.Text ?? "";
@@ -414,7 +413,7 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewScriptDialog(string contextGroup, string contextSubGroup)
     {
-        var nameBox = new TextBox { HintText = "script_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = "script_name", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
         content.Widgets.Add(new MyraLabel("Enter a name for this script:", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
@@ -430,7 +429,7 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewGroupDialog()
     {
-        var nameBox = new TextBox { HintText = "group_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = "group_name", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
         content.Widgets.Add(new MyraLabel("Enter a name for this group:", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
@@ -448,7 +447,7 @@ public class ScriptManagerWindow : MyraControl
         int dot = displayName.LastIndexOf('.');
         if (dot != -1) displayName = displayName.Substring(0, dot);
 
-        var nameBox = new TextBox { Text = displayName, Width = 220 };
+        var nameBox = new MyraInputBox { Text = displayName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
         content.Widgets.Add(new MyraLabel($"New name for '{displayName}':", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
@@ -461,7 +460,7 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowRenameGroupDialog(string groupName, string parentGroup)
     {
-        var nameBox = new TextBox { Text = groupName, Width = 220 };
+        var nameBox = new MyraInputBox { Text = groupName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
         content.Widgets.Add(new MyraLabel($"New name for group '{groupName}':", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);

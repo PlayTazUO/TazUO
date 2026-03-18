@@ -6,7 +6,6 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -74,11 +73,7 @@ public static class AutoSellAgentTabContent
                 if (entry.Graphic > 0)
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic), dataRow, 0);
 
-                var graphicBox = new TextBox
-                {
-                    Text = entry.Graphic.ToString(),
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var graphicBox = new MyraInputBox { Text = entry.Graphic.ToString() };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
                     if (StringHelper.TryParseInt(graphicBox.Text, out int g) && g is > 0 and <= ushort.MaxValue)
@@ -86,12 +81,8 @@ public static class AutoSellAgentTabContent
                 };
                 grid.AddWidget(graphicBox, dataRow, 1);
 
-                var hueBox = new TextBox
-                {
-                    Text = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString(),
-                    Tooltip = "Set to -1 to match any hue.",
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var hueBox = MyraInputBox.Hue(entry.Hue);
+                hueBox.Width = null;
                 hueBox.TextChangedByUser += (_, _) =>
                 {
                     if (hueBox.Text == "-1") entry.Hue = ushort.MaxValue;
@@ -99,11 +90,10 @@ public static class AutoSellAgentTabContent
                 };
                 grid.AddWidget(hueBox, dataRow, 2);
 
-                var maxAmountBox = new TextBox
+                var maxAmountBox = new MyraInputBox
                 {
                     Text = entry.MaxAmount == ushort.MaxValue ? "0" : entry.MaxAmount.ToString(),
                     Tooltip = "Set to 0 for unlimited.",
-                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 maxAmountBox.TextChangedByUser += (_, _) =>
                 {
@@ -112,11 +102,10 @@ public static class AutoSellAgentTabContent
                 };
                 grid.AddWidget(maxAmountBox, dataRow, 3);
 
-                var restockBox = new TextBox
+                var restockBox = new MyraInputBox
                 {
                     Text = entry.RestockUpTo.ToString(),
                     Tooltip = "Minimum amount to keep on hand (0 = disabled).",
-                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 restockBox.TextChangedByUser += (_, _) =>
                 {
@@ -144,10 +133,10 @@ public static class AutoSellAgentTabContent
 
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new TextBox { HintText = "Graphic ID", Width = 80 };
-        var newHueBox = new TextBox { HintText = "Hue (-1=any)", Width = 80 };
-        var newMaxAmountBox = new TextBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
-        var newRestockBox = new TextBox { HintText = "Min on Hand (0=disabled)", Width = 130 };
+        var newGraphicBox = new MyraInputBox { HintText= "Graphic ID", Width= 80 };
+        var newHueBox = new MyraInputBox { HintText = "Hue (-1=any)", Width = 80 };
+        var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
+        var newRestockBox = new MyraInputBox { HintText = "Min on Hand (0=disabled)", Width = 130 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
         addFieldsRow1.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));

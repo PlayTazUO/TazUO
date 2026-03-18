@@ -120,7 +120,7 @@ public static class SpellBarTabContent
         leftCol.Widgets.Add(new MyraLabel("Preset Management", MyraLabel.TextStyle.H2));
 
         var presetSavePanel = new VerticalStackPanel { Spacing = 4, Visible = false };
-        var presetNameBox = new TextBox { MinWidth = 150, HintText = "Preset name" };
+        var presetNameBox = new MyraInputBox { MinWidth = 150, HintText = "Preset name" };
         var presetSaveRow = new HorizontalStackPanel { Spacing = 4 };
         presetSaveRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
         presetSaveRow.Widgets.Add(presetNameBox);

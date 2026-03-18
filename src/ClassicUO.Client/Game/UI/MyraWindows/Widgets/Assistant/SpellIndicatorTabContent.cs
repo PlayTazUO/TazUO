@@ -5,7 +5,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.SpellVisualRange;
-using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
@@ -19,11 +18,7 @@ public static class SpellIndicatorTabContent
             return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
 
         SpellRangeInfo? selectedSpell = null;
-        var searchBox = new TextBox
-        {
-            MinWidth = 200, HintText = "Search spells...", VerticalAlignment = VerticalAlignment.Center,
-        };
-
+        var searchBox = new MyraInputBox { HintText = "Search spells...", MinWidth = 200 };
         var spellListPanel = new VerticalStackPanel { Spacing = 2 };
         var spellEditorPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
         var addNewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
@@ -136,7 +131,7 @@ public static class SpellIndicatorTabContent
             row++;
 
             grid.AddWidget(new MyraLabel("Name:", MyraLabel.TextStyle.P), row, 0);
-            var nameBox = new TextBox { Text = spell.Name, MinWidth = 200 };
+            var nameBox = new MyraInputBox { Text = spell.Name, MinWidth = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 spell.Name = nameBox.Text ?? "";
@@ -146,11 +141,11 @@ public static class SpellIndicatorTabContent
             row++;
 
             grid.AddWidget(new MyraLabel("Power Words:", MyraLabel.TextStyle.P), row, 0);
-            var powerWordsBox = new TextBox
+            var powerWordsBox = new MyraInputBox
             {
-                Text = spell.PowerWords ?? "",
                 MinWidth = 200,
-                Tooltip = "Power words must be exact, this is the best way we can detect spells."
+                Text = spell.PowerWords ?? "",
+                Tooltip = "Power words must be exact, this is the best way we can detect spells.",
             };
             powerWordsBox.TextChangedByUser += (_, _) =>
             {
@@ -187,7 +182,7 @@ public static class SpellIndicatorTabContent
             row++;
 
             grid.AddWidget(new MyraLabel("Cast Time:", MyraLabel.TextStyle.P), row, 0);
-            var castTimeBox = new TextBox { Text = spell.CastTime.ToString(), MinWidth = 100 };
+            var castTimeBox = new MyraInputBox { Text = spell.CastTime.ToString(), MinWidth = 100 };
             castTimeBox.TextChangedByUser += (_, _) =>
             {
                 if (double.TryParse(castTimeBox.Text, out double v))
@@ -292,8 +287,8 @@ public static class SpellIndicatorTabContent
         }
 
         // Add New Spell panel
-        var newIdBox = new TextBox { MinWidth = 150, HintText = "Spell ID (number)" };
-        var newNameBox = new TextBox { MinWidth = 200, HintText = "Spell Name" };
+        var newIdBox = new MyraInputBox { MinWidth = 150, HintText = "Spell ID (number)" };
+        var newNameBox = new MyraInputBox { MinWidth = 200, HintText = "Spell Name" };
         var addErrorLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
 
         var addGrid = new MyraGrid();

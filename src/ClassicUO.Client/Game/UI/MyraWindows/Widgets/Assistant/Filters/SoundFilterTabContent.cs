@@ -6,7 +6,6 @@ using System.Text.Json;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
@@ -56,12 +55,7 @@ public static class SoundFilterTabContent
 
                 // Track current ID so we can remove-old/add-new on edit without rebuilding
                 int[] current = { soundId };
-                var soundBox = new TextBox
-                {
-                    Text = soundId.ToString(),
-                    Width = 100,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var soundBox = new MyraInputBox { Text = soundId.ToString() };
                 soundBox.TextChangedByUser += (_, _) =>
                 {
                     if (int.TryParse(soundBox.Text, out int newId))
@@ -146,12 +140,7 @@ public static class SoundFilterTabContent
         }
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newSoundBox = new TextBox
-        {
-            HintText = "Sound ID (0-65535)",
-            Width = 120,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
+        var newSoundBox = new MyraInputBox { HintText = "Sound ID (0-65535)", Width = 120 };
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
         addConfirmRow.Widgets.Add(new MyraButton("Add", () =>

@@ -4,7 +4,6 @@ using System.Linq;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
@@ -19,7 +18,7 @@ public static class JournalFilterTabContent
             MyraLabel.TextStyle.H3));
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newFilterBox = new TextBox { HintText = "Filter text (exact match)", Width = 300 };
+        var newFilterBox = new MyraInputBox { HintText = "Filter text (exact match)", Width = 300 };
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
 
@@ -49,7 +48,7 @@ public static class JournalFilterTabContent
 
                 // Track current value so we can remove-old/add-new on every edit
                 string[] current = { filter };
-                var filterBox = new TextBox { Text = filter, VerticalAlignment = VerticalAlignment.Center };
+                var filterBox = new MyraInputBox { Text = filter };
                 filterBox.TextChangedByUser += (_, _) =>
                 {
                     string newVal = filterBox.Text ?? "";

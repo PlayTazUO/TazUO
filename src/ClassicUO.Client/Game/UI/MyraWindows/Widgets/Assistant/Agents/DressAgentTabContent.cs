@@ -4,7 +4,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -43,7 +42,7 @@ public static class DressAgentTabContent
             for (int i = selectedConfig.Items.Count - 1; i >= 0; i--)
             {
                 DressItem item = selectedConfig.Items[i];
-                grid.AddWidget(new MyraLabel($"{item.Serial:X}", MyraLabel.TextStyle.P), dataRow, 0);
+                grid.AddWidget(new MyraLabel($"{item.Serial:X}", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), dataRow, 0);
                 grid.AddWidget(new MyraLabel(item.Name, MyraLabel.TextStyle.P), dataRow, 1);
                 grid.AddWidget(new MyraLabel(((Layer)item.Layer).ToString(), MyraLabel.TextStyle.P), dataRow, 2);
                 DressItem captured = item;
@@ -95,7 +94,7 @@ public static class DressAgentTabContent
             }
 
             // Name
-            var nameBox = new TextBox { Text = selectedConfig.Name, Width = 200 };
+            var nameBox = new MyraInputBox { Text = selectedConfig.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 if (!string.IsNullOrWhiteSpace(nameBox.Text))

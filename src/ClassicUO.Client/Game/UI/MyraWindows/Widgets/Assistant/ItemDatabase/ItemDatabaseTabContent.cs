@@ -6,7 +6,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 
@@ -98,10 +97,10 @@ public static class ItemDatabaseTabContent
                     nameLabel.Tooltip = item.Properties.Replace("|", "\n");
                 grid.AddWidget(nameLabel, dataRow, 1);
 
-                grid.AddWidget(new MyraLabel($"{item.Hue}", MyraLabel.TextStyle.P), dataRow, 2);
+                grid.AddWidget(new MyraLabel($"{item.Hue}", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), dataRow, 2);
 
                 grid.AddWidget(
-                    new MyraLabel($"{item.Layer}", MyraLabel.TextStyle.P)
+                    new MyraLabel($"{item.Layer}", MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right)
                         { Tooltip = $"Layer value: {(int)item.Layer}" },
                     dataRow, 3);
 
@@ -208,28 +207,25 @@ public static class ItemDatabaseTabContent
         // ── Basic search fields ─────────────────────────────────────────────
         root.Widgets.Add(new MyraLabel("Search Options:", MyraLabel.TextStyle.H3));
 
-        nameBox = new TextBox { HintText = "Item name (partial match)", Width = 280 };
+        nameBox = new MyraInputBox { HintText = "Item name (partial match)", Width = 280 };
         nameBox.TextChangedByUser += (_, _) => searchName = nameBox.Text ?? "";
 
-        propsBox = new TextBox { HintText = "Property text (partial match)", Width = 280 };
+        propsBox = new MyraInputBox { HintText = "Property text (partial match)", Width = 280 };
         propsBox.TextChangedByUser += (_, _) => searchProps = propsBox.Text ?? "";
 
-        graphicBox = new TextBox { Text = "0", Width = 100,
-            Tooltip = "Graphic ID to search for (0 = any)" };
+        graphicBox = new MyraInputBox { Text = "0", Width = 100, Tooltip = "Graphic ID to search for (0 = any)" };
         graphicBox.TextChangedByUser += (_, _) =>
         {
             if (StringHelper.TryParseUint(graphicBox.Text ?? "", out uint g)) searchGraphic = g;
         };
 
-        hueBox = new TextBox { Text = "-1", Width = 80,
-            Tooltip = "Hue to search for (-1 = any)" };
+        hueBox = new MyraInputBox { Text = "-1", Width = 80, Tooltip = "Hue to search for (-1 = any)" };
         hueBox.TextChangedByUser += (_, _) =>
         {
             if (int.TryParse(hueBox.Text, out int h)) searchHue = h;
         };
 
-        layerBox = new TextBox { Text = "-1", Width = 80,
-            Tooltip = "Layer to search for (-1 = any, 0 = on ground)" };
+        layerBox = new MyraInputBox { Text = "-1", Width = 80, Tooltip = "Layer to search for (-1 = any, 0 = on ground)" };
         layerBox.TextChangedByUser += (_, _) =>
         {
             if (int.TryParse(layerBox.Text, out int l)) searchLayer = l;
@@ -260,8 +256,7 @@ public static class ItemDatabaseTabContent
         // ── Advanced search ─────────────────────────────────────────────────
         var advancedPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
 
-        containerBox = new TextBox { Text = "0", Width = 120,
-            Tooltip = "Search only in this container serial (0 = any)" };
+        containerBox = new MyraInputBox { Text = "0", Width = 120, Tooltip = "Search only in this container serial (0 = any)" };
         containerBox.TextChangedByUser += (_, _) =>
         {
             if (StringHelper.TryParseInt(containerBox.Text ?? "", out int c)) searchContainer = c;
@@ -318,8 +313,7 @@ public static class ItemDatabaseTabContent
 
         int[] clearDays = { 120 };
         bool[] clearInProgress = { false };
-        var clearDaysBox = new TextBox { Text = "120", Width = 60,
-            Tooltip = "Delete all database entries older than this many days" };
+        var clearDaysBox = new MyraInputBox { Text = "120", Width = 60, Tooltip = "Delete all database entries older than this many days" };
         clearDaysBox.TextChangedByUser += (_, _) =>
         {
             if (int.TryParse(clearDaysBox.Text, out int d) && d >= 1) clearDays[0] = d;

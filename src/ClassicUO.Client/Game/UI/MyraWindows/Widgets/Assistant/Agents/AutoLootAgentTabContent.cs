@@ -8,7 +8,6 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -109,11 +108,10 @@ public static class AutoLootAgentTabContent
                     grid.AddWidget(new MyraArtTexture((uint)entry.Graphic) { Tooltip = entry.Name, Margin = new Thickness(2, 0) }, dataRow, 0);
 
                 // Graphic
-                var graphicBox = new TextBox
+                var graphicBox = new MyraInputBox
                 {
                     Text = entry.Graphic.ToString(),
                     Tooltip = "Item graphic ID. Set to -1 to match any graphic.",
-                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
@@ -123,13 +121,7 @@ public static class AutoLootAgentTabContent
                 grid.AddWidget(graphicBox, dataRow, 1);
 
                 // Hue
-                var hueBox = new TextBox
-                {
-                    Text = entry.Hue == ushort.MaxValue ? "-1" : entry.Hue.ToString(),
-                    Tooltip = "Item hue. Set to -1 to match any hue.",
-                    Width = 60,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
+                var hueBox = MyraInputBox.Hue(entry.Hue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
                     if (hueBox.Text == "-1")
@@ -142,7 +134,7 @@ public static class AutoLootAgentTabContent
                 // Regex edit — opens a MyraDialog (own Desktop, registered with UIManager)
                 grid.AddWidget(new MyraButton("Edit Regex", () =>
                 {
-                    var regexInput = new TextBox
+                    var regexInput = new MyraInputBox
                     {
                         Text = entry.RegexSearch ?? "",
                         Multiline = true,
@@ -176,13 +168,12 @@ public static class AutoLootAgentTabContent
 
                 // Destination box + Target button
                 var destCell = new HorizontalStackPanel { Spacing = 4 };
-                var destBox = new TextBox
+                var destBox = new MyraInputBox
                 {
                     Text = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}",
                     HintText = "Serial (hex)",
                     Tooltip = "Destination container serial (hex). Leave empty to use grab bag.",
                     MinWidth = 100,
-                    VerticalAlignment = VerticalAlignment.Center,
                 };
                 destBox.TextChangedByUser += (_, _) =>
                 {
@@ -224,9 +215,9 @@ public static class AutoLootAgentTabContent
 
         // Add entry inline panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new TextBox { HintText = "Graphic ID", Width = 100 /*, Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16) */};
-        var newHueBox = new TextBox { HintText = "Hue (-1 = any)", Width = 100 };
-        var newRegexBox = new TextBox { HintText = "Regex (optional)", Width = 200 };
+        var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 100 /*, Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16) */};
+        var newHueBox = new MyraInputBox { HintText = "Hue (-1 = any)", Width = 100 };
+        var newRegexBox = new MyraInputBox { HintText = "Regex (optional)", Width = 200 };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
         addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));

@@ -3,7 +3,6 @@ using System;
 using System.Globalization;
 using ClassicUO.Configuration;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -45,11 +44,11 @@ public static class BandageAgentTabContent
             "When enabled, bandage agent will only heal friends and not yourself"));
 
         // Delay
-        var delayBox = new TextBox
+        var delayBox = new MyraInputBox
         {
             Text = profile.BandageAgentDelay.ToString(),
+            Tooltip = "Delay between bandage attempts in milliseconds (50-30000)",
             Width = 80,
-            Tooltip = "Delay between bandage attempts in milliseconds (50-30000)"
         };
         delayBox.TextChangedByUser += (_, _) =>
         {
@@ -105,11 +104,11 @@ public static class BandageAgentTabContent
             "Skip bandage if yellow hits"));
 
         // Bandage graphic
-        var graphicBox = new TextBox
+        var graphicBox = new MyraInputBox
         {
             Text = $"0x{profile.BandageAgentGraphic:X4}",
+            Tooltip = "Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)",
             Width = 80,
-            Tooltip = "Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)"
         };
         graphicBox.TextChangedByUser += (_, _) =>
         {

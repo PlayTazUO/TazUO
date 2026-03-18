@@ -9,7 +9,6 @@ using ClassicUO.LegionScripting;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -20,7 +19,7 @@ public class PersistentVarsWindow : MyraControl
     private string? _editingKey;
     private string _editingValue = "";
 
-    private readonly VerticalStackPanel _varsPanel   = new() { Spacing = 2 };
+    private readonly VerticalStackPanel _varsPanel = new() { Spacing = 2 };
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
@@ -109,7 +108,7 @@ public class PersistentVarsWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new TextBox { HintText = "Filter variables...", Width = 200, Text = _filterText };
+        var filterBox = new MyraInputBox { Text = _filterText, HintText = "Filter variables...", Width = 200 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -168,7 +167,7 @@ public class PersistentVarsWindow : MyraControl
 
             if (_editingKey == key)
             {
-                var editBox = new TextBox { Text = _editingValue, MinWidth = 180 };
+                var editBox = new MyraInputBox { Text = _editingValue, MinWidth = 180 };
                 editBox.TextChangedByUser += (_, _) => _editingValue = editBox.Text ?? "";
                 grid.AddWidget(editBox, dataRow, 1);
 
@@ -214,8 +213,8 @@ public class PersistentVarsWindow : MyraControl
 
     private void ShowAddDialog()
     {
-        var keyBox   = new TextBox { HintText = "Key name...", Width = 300 };
-        var valueBox = new TextBox { HintText = "Value...",    Width = 300 };
+        var keyBox   = new MyraInputBox { HintText = "Key name...", Width = 300 };
+        var valueBox = new MyraInputBox { HintText = "Value...",    Width = 300 };
 
         var form = new VerticalStackPanel { Spacing = 4 };
         form.Widgets.Add(new MyraLabel($"Add new variable to {_selectedScope} scope:", MyraLabel.TextStyle.P));

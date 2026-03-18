@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.Input;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
-using TextBox = Myra.Graphics2D.UI.TextBox;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -31,7 +30,7 @@ public class TazUOChatWindow : MyraControl
     private VerticalStackPanel? _messagesPanel;
     private VerticalStackPanel? _usersPanel;
     private ScrollViewer?       _messageScroll;
-    private TextBox?            _chatInput;
+    private MyraInputBox?       _chatInput;
     private MyraLabel?          _titleNickName;
     private string _nickName
     {
@@ -153,7 +152,7 @@ public class TazUOChatWindow : MyraControl
 
     private Widget BuildInputRow()
     {
-        _chatInput = new TextBox
+        _chatInput = new MyraInputBox
         {
             HintText = "Type a message...",
             Width = MSG_WIDTH + CHANNEL_WIDTH + 3
@@ -218,7 +217,7 @@ public class TazUOChatWindow : MyraControl
         }
 
         // Join input row
-        var joinBox = new TextBox { HintText = "channel...", Width = CHANNEL_WIDTH - 30 };
+        var joinBox = new MyraInputBox { HintText = "channel...", Width = CHANNEL_WIDTH - 30 };
         var joinRow = new HorizontalStackPanel { Spacing = 2 };
         joinRow.Widgets.Add(joinBox);
         joinRow.Widgets.Add(new MyraButton("+", () => DoJoin(joinBox))
@@ -285,7 +284,7 @@ public class TazUOChatWindow : MyraControl
         _chatInput.Text = "";
     }
 
-    private void DoJoin(TextBox joinBox)
+    private void DoJoin(MyraInputBox joinBox)
     {
         string ch = joinBox.Text?.Trim() ?? "";
         if (string.IsNullOrEmpty(ch)) return;
