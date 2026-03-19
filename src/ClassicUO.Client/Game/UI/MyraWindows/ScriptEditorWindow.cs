@@ -1,28 +1,33 @@
 #nullable enable
+using System;
+using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using Microsoft.Xna.Framework;
-using Myra.Graphics2D.UI;
 using Myra.Graphics2D.Brushes;
-using System.Linq;
+using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
 public class ScriptEditorWindow : MyraControl
 {
     private readonly ScriptFile _script;
-    private bool _hasChanges;
     private MyraButton _saveButton = null!;
     private MyraInputBox _editor = null!;
     private MyraInputBox _lines = null!;
     private ScrollViewer _scrollViewer = null!;
 
     private const int MAX_LENGTH = 1024 * 1024;
+    private const int LINE_NUMBER_DEBOUNCE_MS = 50;
+    private double _lineNumberDebounceTimer;
+    private bool _lineNumbersDirty;
+    private int _lastLineCount = -1;
 
-    public ScriptEditorWindow(ScriptFile script) : base(script.FileName)
+    public ScriptEditorWindow(ScriptFile script)
+        : base(script.FileName)
     {
         _script = script;
         string content = string.Join("\n", script.ReadFromFile());
@@ -67,7 +72,6 @@ public class ScriptEditorWindow : MyraControl
             VerticalAlignment = VerticalAlignment.Stretch,
         };
 
-
         var codeRow = new HorizontalStackPanel { Spacing = 0 };
         codeRow.Widgets.Add(_lines);
         codeRow.Widgets.Add(_editor);
@@ -78,19 +82,24 @@ public class ScriptEditorWindow : MyraControl
 
         _editor.TextChangedByUser += (_, _) =>
         {
-            _hasChanges = true;
             _saveButton.Enabled = true;
-            UpdateLineNumbers();
+            _lineNumbersDirty = true;
+            _lineNumberDebounceTimer = Environment.TickCount;
         };
 
         _editor.CursorPositionChanged += (_, _) => EnsureCursorVisible();
 
-        _saveButton = new MyraButton("Save Changes", () =>
+        _saveButton = new MyraButton(
+            "Save Changes",
+            () =>
+            {
+                _script.OverrideFileContents(_editor.Text ?? "");
+                _saveButton.Enabled = false;
+            }
+        )
         {
-            _script.OverrideFileContents(_editor.Text ?? "");
-            _hasChanges = false;
-            _saveButton.Enabled = false;
-        }) { Enabled = false };
+            Enabled = false,
+        };
 
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
         root.Widgets.Add(_scrollViewer);
@@ -98,13 +107,35 @@ public class ScriptEditorWindow : MyraControl
         SetRootContent(root);
     }
 
+    public override void Update()
+    {
+        base.Update();
+
+        if (_lineNumbersDirty && Environment.TickCount - _lineNumberDebounceTimer >= LINE_NUMBER_DEBOUNCE_MS)
+        {
+            _lineNumbersDirty = false;
+            UpdateLineNumbers();
+        }
+    }
+
     private void UpdateLineNumbers()
     {
-        int lineCount = (_editor.Text ?? "").Split('\n').Length;
+        string text = _editor.Text ?? "";
+
+        int lineCount = 1;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (text[i] == '\n')
+                lineCount++;
+        }
+
+        if (lineCount == _lastLineCount)
+            return;
+
+        _lastLineCount = lineCount;
         var maxDigits = lineCount.ToString().Length;
 
-        var numbers = Enumerable.Range(1, lineCount)
-            .Select(n => n.ToString().PadLeft(maxDigits + 1));
+        var numbers = Enumerable.Range(1, lineCount).Select(n => n.ToString().PadLeft(maxDigits + 1));
 
         _lines.Text = string.Join("\n", numbers);
     }
