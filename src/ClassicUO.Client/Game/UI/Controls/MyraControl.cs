@@ -36,9 +36,7 @@ public class MyraControl : IGui
             MinMaximize();
         };
         _rootWindow.TitlePanel.Background = new SolidBrush(new Color(0, 0, 0, 75));
-        _rootWindow.TitlePanel.Border = new SolidBrush(
-            new Color(0, 0, 0, MyraStyle.STANDARD_BORDER_ALPHA)
-        );
+        _rootWindow.TitlePanel.Border = new SolidBrush(new Color(0, 0, 0, MyraStyle.STANDARD_BORDER_ALPHA));
         _rootWindow.TitlePanel.BorderThickness = new Thickness(1);
 
         MyraStyle.ApplyButtonDangerStyle(_rootWindow.CloseButton);
@@ -79,8 +77,7 @@ public class MyraControl : IGui
         _disposeRequested = true;
     }
 
-    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) =>
-        UpdateBoundsToContents(false);
+    private void RootWindowOnSizeChanged(object sender = null, EventArgs e = null) => UpdateBoundsToContents(false);
 
     /// <summary>
     /// Update this <see cref="Bounds"/> to fit to the content of the window.
@@ -217,9 +214,6 @@ public class MyraControl : IGui
         if (X < 0)
             X = 0;
 
-        if (X < 0)
-            X = 0;
-
         SetPosition(X, Y);
 
         return this;
@@ -275,14 +269,7 @@ public class MyraControl : IGui
         {
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
-            batcher.DrawRectangle(
-                SolidColorTextureCache.GetTexture(Color.Green),
-                x,
-                y,
-                Width,
-                Height,
-                hueVector
-            );
+            batcher.DrawRectangle(SolidColorTextureCache.GetTexture(Color.Green), x, y, Width, Height, hueVector);
         }
     }
 
@@ -519,12 +506,7 @@ public class MyraControl : IGui
     }
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public IGui ApplyScale(
-        double scale,
-        bool scalePosition = true,
-        bool scaleSize = true,
-        bool force = false
-    ) => this;
+    public IGui ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false) => this;
 
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public IGui SetInternalScale(double scale) => this;
