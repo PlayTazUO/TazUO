@@ -57,7 +57,7 @@ public static class OrganizerAgentTabContent
                 var hueBox = MyraInputBox.Hue(item.Hue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
-                    if (hueBox.Text == "ANY")
+                    if (hueBox.Text == "-1")
                         item.Hue = ushort.MaxValue;
                     else if (ushort.TryParse(hueBox.Text, NumberStyles.HexNumber, null, out ushort hue))
                         item.Hue = hue == 0xFFFF ? ushort.MaxValue : hue;
