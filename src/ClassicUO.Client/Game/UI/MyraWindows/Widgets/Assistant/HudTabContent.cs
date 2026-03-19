@@ -65,18 +65,6 @@ public static class HudTabContent
         return outerStack;
     }
 
-    private static HorizontalStackPanel MakePair(CheckButton cb, string text, string tooltip)
-    {
-        var label = new MyraLabel(text, MyraLabel.TextStyle.P);
-        if (!string.IsNullOrEmpty(tooltip))
-            label.Tooltip = tooltip;
-
-        var pair = new HorizontalStackPanel { Spacing = 4 };
-        pair.Widgets.Add(cb);
-        pair.Widgets.Add(label);
-        return pair;
-    }
-
     private static void SetAllChecked(Dictionary<HideHudFlags, CheckButton> buttons, Profile profile, bool state)
     {
         profile.HideHudGumpFlags = state ? (ulong)HideHudFlags.All : 0UL;

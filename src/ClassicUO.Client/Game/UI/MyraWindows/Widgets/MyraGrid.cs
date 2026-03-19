@@ -1,7 +1,5 @@
 #nullable enable
 using Myra.Graphics2D.UI;
-using Myra.Graphics2D.Brushes;
-using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 

@@ -28,6 +28,5 @@ public class MyraArtTexture : Image
 
         MaxWidth = maxSize;
         MaxHeight = maxSize;
-        // VerticalAlignment = VerticalAlignment.Bottom;
     }
 }
