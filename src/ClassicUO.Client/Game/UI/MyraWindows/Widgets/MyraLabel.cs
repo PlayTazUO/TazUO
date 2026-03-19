@@ -41,8 +41,8 @@ public sealed class MyraLabel : Label
                 styleSheet.Padding = new Thickness(4, 0);
                 styleSheet.Margin = new Thickness(2, 0);
                 break;
-            default:
             case TextStyle.P:
+            default:
                 styleSheet.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16);
                 styleSheet.Padding = new Thickness(4, 2);
                 break;

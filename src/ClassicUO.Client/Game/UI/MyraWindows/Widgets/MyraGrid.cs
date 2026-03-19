@@ -55,7 +55,7 @@ public class MyraGrid : Grid
     }
 }
 
-public readonly struct GridColumnInfo
+internal readonly struct GridColumnInfo
 {
     public readonly string Label;
     public readonly ColumnType Type;
@@ -82,7 +82,7 @@ public readonly struct GridColumnInfo
 
 }
 
-public enum ColumnType
+internal enum ColumnType
 {
     Auto,
     Fill,
