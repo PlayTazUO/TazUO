@@ -72,9 +72,9 @@ public static class SkillsTabContent
                 name.Tooltip = $"Double click to create a skill button for {skill.Name}";
             }
             grid.AddWidget(name, row, 1);
-            grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 2);
-            grid.AddWidget(new MyraLabel(skill.Base.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 3);
-            grid.AddWidget(new MyraLabel(skill.Cap.ToString("F1"), MyraLabel.TextStyle.TableHeader), row, 4);
+            grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.TextStyle.P), row, 2);
+            grid.AddWidget(new MyraLabel(skill.Base.ToString("F1"), MyraLabel.TextStyle.P), row, 3);
+            grid.AddWidget(new MyraLabel(skill.Cap.ToString("F1"), MyraLabel.TextStyle.P), row, 4);
 
             float delta = skill.Base - skill.BaseAtLogin;
             string deltaStr;
