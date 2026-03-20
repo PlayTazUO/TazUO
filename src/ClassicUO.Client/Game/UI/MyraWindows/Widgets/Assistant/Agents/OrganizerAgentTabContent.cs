@@ -57,10 +57,8 @@ public static class OrganizerAgentTabContent
                 var hueBox = MyraInputBox.Hue(item.Hue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
-                    if (hueBox.Text == "-1")
-                        item.Hue = ushort.MaxValue;
-                    else if (ushort.TryParse(hueBox.Text, NumberStyles.HexNumber, null, out ushort hue))
-                        item.Hue = hue == 0xFFFF ? ushort.MaxValue : hue;
+                    if (MyraInputBox.TryParseHue(hueBox.Text, out ushort hue))
+                        item.Hue = hue;
                 };
                 grid.AddWidget(hueBox, dataRow, 1);
 
@@ -290,7 +288,7 @@ public static class OrganizerAgentTabContent
             // Add item buttons
             var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
             var newGraphicBox = new MyraInputBox { HintText = "Graphic (hex, e.g. 0EED)", Width = 150 };
-            var newHueBox = new MyraInputBox { HintText = "Hue (-1 = any)", Width = 80 };
+            var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1 = any)");
 
             var addItemRow = new HorizontalStackPanel { Spacing = 4 };
             addItemRow.Widgets.Add(new MyraButton("Target Item to Add", () =>
@@ -328,8 +326,8 @@ public static class OrganizerAgentTabContent
                     OrganizerItemConfig newItemConfig = selectedConfig.NewItemConfig();
                     newItemConfig.Graphic = graphic;
 
-                    if (int.TryParse(newHueBox.Text, out int hue) && hue is >= -1 and <= ushort.MaxValue)
-                        newItemConfig.Hue = hue == -1 ? ushort.MaxValue : (ushort)hue;
+                    if (MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
+                        newItemConfig.Hue = hue;
 
                     newGraphicBox.Text = "";
                     newHueBox.Text = "";

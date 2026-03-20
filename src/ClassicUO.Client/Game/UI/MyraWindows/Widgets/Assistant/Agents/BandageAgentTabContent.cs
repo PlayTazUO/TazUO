@@ -1,7 +1,7 @@
 #nullable enable
 using System;
-using System.Globalization;
 using ClassicUO.Configuration;
+using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
@@ -112,8 +112,8 @@ public static class BandageAgentTabContent
         };
         graphicBox.TextChangedByUser += (_, _) =>
         {
-            if (TryParseBandageGraphic(graphicBox.Text, out ushort graphic))
-                profile.BandageAgentGraphic = graphic;
+            if (StringHelper.TryParseInt(graphicBox.Text, out int graphic) && graphic >= 0 && graphic <= ushort.MaxValue)
+                profile.BandageAgentGraphic = (ushort)graphic;
         };
         var graphicRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
         graphicRow.Widgets.Add(new MyraLabel("Bandage graphic ID:", MyraLabel.TextStyle.P));
@@ -123,10 +123,4 @@ public static class BandageAgentTabContent
         return root;
     }
 
-    private static bool TryParseBandageGraphic(string text, out ushort graphic)
-    {
-        if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-            return ushort.TryParse(text[2..], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out graphic);
-        return ushort.TryParse(text, out graphic);
-    }
 }

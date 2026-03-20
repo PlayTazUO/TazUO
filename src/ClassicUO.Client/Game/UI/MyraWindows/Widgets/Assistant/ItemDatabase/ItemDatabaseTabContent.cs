@@ -210,10 +210,13 @@ public static class ItemDatabaseTabContent
             if (StringHelper.TryParseUint(graphicBox.Text ?? "", out uint g)) searchGraphic = g;
         };
 
-        hueBox = new MyraInputBox { Text = "-1", Width = 80, Tooltip = "Hue to search for (-1 = any)" };
+        hueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue to search for (-1 = any)");
         hueBox.TextChangedByUser += (_, _) =>
         {
-            if (int.TryParse(hueBox.Text, out int h)) searchHue = h;
+            if (MyraInputBox.TryParseHue(hueBox.Text, out ushort h))
+                searchHue = h;
+            else if (hueBox.Text == "-1")
+                searchHue = -1;
         };
 
         layerBox = new MyraInputBox { Text = "-1", Width = 80, Tooltip = "Layer to search for (-1 = any, 0 = on ground)" };

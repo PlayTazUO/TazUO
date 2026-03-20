@@ -115,11 +115,8 @@ public static class GraphicReplacementTabContent
                 var hueBox = MyraInputBox.Hue(filter.NewHue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
-                    string txt = hueBox.Text ?? "";
-                    if (txt == "-1")
-                        filter.NewHue = ushort.MaxValue;
-                    else if (ushort.TryParse(txt, out ushort newHue))
-                        filter.NewHue = newHue;
+                    if (MyraInputBox.TryParseHue(hueBox.Text, out ushort hue))
+                        filter.NewHue = hue;
                 };
                 grid.AddWidget(hueBox, dataRow, 4);
 
@@ -142,7 +139,7 @@ public static class GraphicReplacementTabContent
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
         var newOriginalBox = new MyraInputBox { HintText = "Original graphic (e.g. 0x0EED)", Width = 170 };
         var newReplacementBox = new MyraInputBox { HintText = "Replacement graphic", Width = 170 };
-        var newHueBox = new MyraInputBox { HintText = "Hue (-1 = unchanged)", Width = 120 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 120, "Hue (-1 = unchanged)");
         int[] newTypeIndex = { 2 }; // Default: Static
 
         var newTypeWrapper = new HorizontalStackPanel();
@@ -169,16 +166,16 @@ public static class GraphicReplacementTabContent
                 !StringHelper.TryParseInt(replText, out int replGraphic))
                 return;
 
-            ushort hue = ushort.MaxValue;
-            string hueText = newHueBox.Text ?? "";
-            if (!string.IsNullOrEmpty(hueText) && hueText != "-1")
+            if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
             {
-                if (!ushort.TryParse(hueText, out hue))
+                if (!string.IsNullOrEmpty(newHueBox.Text))
                 {
-                    validationLabel.Text = $"Invalid hue: '{hueText}'. Must be 0-65535 or -1";
+                    validationLabel.Text = $"Invalid hue: '{newHueBox.Text}'. Must be 0-65535, 0x hex, or -1";
                     validationLabel.Visible = true;
                     return;
                 }
+
+                hue = ushort.MaxValue;
             }
 
             validationLabel.Visible = false;

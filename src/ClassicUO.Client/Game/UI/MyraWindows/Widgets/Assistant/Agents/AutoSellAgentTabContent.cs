@@ -81,8 +81,8 @@ public static class AutoSellAgentTabContent
                 hueBox.Width = null;
                 hueBox.TextChangedByUser += (_, _) =>
                 {
-                    if (hueBox.Text == "-1") entry.Hue = ushort.MaxValue;
-                    else if (ushort.TryParse(hueBox.Text, out ushort h)) entry.Hue = h;
+                    if (MyraInputBox.TryParseHue(hueBox.Text, out ushort hue))
+                        entry.Hue = hue;
                 };
                 grid.AddWidget(hueBox, dataRow, 2);
 
@@ -130,7 +130,7 @@ public static class AutoSellAgentTabContent
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
         var newGraphicBox = new MyraInputBox { HintText= "Graphic ID", Width= 80 };
-        var newHueBox = new MyraInputBox { HintText = "Hue (-1=any)", Width = 80 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1=any)");
         var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
         var newRestockBox = new MyraInputBox { HintText = "Min on Hand (0=disabled)", Width = 130 };
 
@@ -162,10 +162,8 @@ public static class AutoSellAgentTabContent
                 BuySellItemConfig newConfig = BuySellAgent.Instance.NewSellConfig();
                 newConfig.Graphic = (ushort)graphic;
 
-                if (!string.IsNullOrEmpty(newHueBox.Text) && newHueBox.Text != "-1")
-                {
-                    if (ushort.TryParse(newHueBox.Text, out ushort hue)) newConfig.Hue = hue;
-                }
+                if (MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
+                    newConfig.Hue = hue;
                 else
                     newConfig.Hue = ushort.MaxValue;
 

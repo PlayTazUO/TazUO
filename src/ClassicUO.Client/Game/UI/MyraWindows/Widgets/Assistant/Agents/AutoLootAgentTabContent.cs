@@ -119,10 +119,8 @@ public static class AutoLootAgentTabContent
                 var hueBox = MyraInputBox.Hue(entry.Hue);
                 hueBox.TextChangedByUser += (_, _) =>
                 {
-                    if (hueBox.Text == "-1")
-                        entry.Hue = ushort.MaxValue;
-                    else if (ushort.TryParse(hueBox.Text, out ushort h))
-                        entry.Hue = h;
+                    if (MyraInputBox.TryParseHue(hueBox.Text, out ushort hue))
+                        entry.Hue = hue;
                 };
                 grid.AddWidget(hueBox, dataRow, 2);
 
@@ -211,7 +209,7 @@ public static class AutoLootAgentTabContent
         // Add entry inline panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
         var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 100 /*, Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 16) */};
-        var newHueBox = new MyraInputBox { HintText = "Hue (-1 = any)", Width = 100 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 100, "Hue (-1 = any)");
         var newRegexBox = new MyraInputBox { HintText = "Regex (optional)", Width = 200 };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
@@ -230,9 +228,8 @@ public static class AutoLootAgentTabContent
                 if (graphic < 0 || graphic > ushort.MaxValue)
                     return;
 
-                ushort hue = ushort.MaxValue;
-                if (!string.IsNullOrEmpty(newHueBox.Text) && newHueBox.Text != "-1")
-                    ushort.TryParse(newHueBox.Text, out hue);
+                if (!MyraInputBox.TryParseHue(newHueBox.Text, out ushort hue))
+                    hue = ushort.MaxValue;
 
                 AutoLootManager.AutoLootConfigEntry? entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, "");
                 entry.RegexSearch = newRegexBox.Text;
