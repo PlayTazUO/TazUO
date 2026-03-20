@@ -1067,7 +1067,7 @@ namespace ClassicUO.LegionScripting
                 UseKREquipPacket = kr,
                 Items = serials
                     .Cast<object>()
-                    .Select(o => Convert.ToUInt32(o))
+                    .Select(o => Utility.TryGetSerial(o, out uint s) ? s : 0u)
                     .Where(s => s != 0)
                     .Select(s => (serial: s, item: World.Items.Get(s)))
                     .Where(t => t.item != null)
@@ -2473,7 +2473,10 @@ namespace ClassicUO.LegionScripting
         public void RequestOPLData(IEnumerable serials) => OnMain(() =>
         {
             foreach (object o in serials)
-                World.OPL.Contains(Convert.ToUInt32(o)); //Check if it already exists, if not request it
+            {
+                if (Utility.TryGetSerial(o, out uint serial))
+                    World.OPL.Contains(Convert.ToUInt32(o)); //Check if it already exists, if not request it
+            }
         });
 
         /// <summary>
