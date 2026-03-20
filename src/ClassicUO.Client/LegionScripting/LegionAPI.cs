@@ -2472,9 +2472,10 @@ namespace ClassicUO.LegionScripting
         /// <param name="serials">A list of object serials to request OPL data for</param>
         public void RequestOPLData(IEnumerable serials) => OnMain(() =>
         {
+            if (serials == null) return;
             foreach (object o in serials)
             {
-                if (Utility.TryGetSerial(o, out uint serial))
+                if (Utility.TryGetSerial(o, out uint serial) && serial != 0)
                     World.OPL.Contains(serial); //Check if it already exists, if not request it
             }
         });
