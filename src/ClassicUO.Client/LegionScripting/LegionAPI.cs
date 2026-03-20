@@ -1058,16 +1058,18 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         /// <param name="serials">The list of serials to dress</param>
         /// <param name="kr">True to use the faster KR packet (not supported everywhere)</param>
-        public void DressItems(IList<int> serials, bool kr = false) => OnMain(() =>
+        public void DressItems(IEnumerable serials, bool kr = false) => OnMain(() =>
         {
-            if (serials == null || serials.Count == 0) return;
+            if (serials == null) return;
 
             var config = new DressConfig
             {
                 UseKREquipPacket = kr,
                 Items = serials
-                    .Where(s => s > 0)
-                    .Select(s => (serial: (uint)s, item: World.Items.Get((uint)s)))
+                    .Cast<object>()
+                    .Select(o => Convert.ToUInt32(o))
+                    .Where(s => s != 0)
+                    .Select(s => (serial: s, item: World.Items.Get(s)))
                     .Where(t => t.item != null)
                     .Select(t => new DressItem
                     {
@@ -2468,10 +2470,10 @@ namespace ClassicUO.LegionScripting
         /// OPL consists of item name and tooltip text(properties).
         /// </summary>
         /// <param name="serials">A list of object serials to request OPL data for</param>
-        public void RequestOPLData(IList<int> serials) => OnMain(() =>
+        public void RequestOPLData(IEnumerable serials) => OnMain(() =>
         {
-            foreach (uint s in serials)
-                World.OPL.Contains(s); //Check if it already exists, if not request it
+            foreach (object o in serials)
+                World.OPL.Contains(Convert.ToUInt32(o)); //Check if it already exists, if not request it
         });
 
         /// <summary>
