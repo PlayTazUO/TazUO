@@ -274,23 +274,7 @@ internal static class Utility
         return Color.Black;
     }
 
-    /// <summary>
-    ///     Attempts to convert an arbitrary scripting object to a uint serial.
-    ///     Handles uint, non-negative int, non-negative long, and string representations.
-    ///     Returns false and sets serial to 0 for negative or non-numeric values.
-    /// </summary>
-    /// <param name="o">The value to convert</param>
-    /// <param name="serial">The conversion result</param>
-    /// <returns>True if conversion succeeded, false otherwise</returns>
-    public static bool TryGetSerial(object o, out uint serial)
-    {
-        if (o is uint u) { serial = u; return true; }
-        if (o is int i && i >= 0) { serial = (uint)i; return true; }
-        if (o is long l && l >= 0 && l <= uint.MaxValue) { serial = (uint)l; return true; }
-        if (uint.TryParse(o?.ToString(), out uint parsed)) { serial = parsed; return true; }
-        serial = 0;
-        return false;
-    }
+
 
     /// <summary>
     ///     Converts the given values into an array of <see cref="LegionAPI.Notoriety" />

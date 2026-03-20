@@ -1067,7 +1067,7 @@ namespace ClassicUO.LegionScripting
                 UseKREquipPacket = kr,
                 Items = serials
                     .Cast<object>()
-                    .Select(o => Utility.TryGetSerial(o, out uint s) ? s : 0u)
+                    .Select(o => Convert.ToUInt32(o))
                     .Where(s => s != 0)
                     .Select(s => (serial: s, item: World.Items.Get(s)))
                     .Where(t => t.item != null)
@@ -2475,7 +2475,7 @@ namespace ClassicUO.LegionScripting
             if (serials == null) return;
             foreach (object o in serials)
             {
-                if (Utility.TryGetSerial(o, out uint serial) && serial != 0)
+                if (Convert.ToUInt32(o) is uint serial && serial != 0)
                     World.OPL.Contains(serial); //Check if it already exists, if not request it
             }
         });
