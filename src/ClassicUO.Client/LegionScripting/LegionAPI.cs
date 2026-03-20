@@ -2475,7 +2475,7 @@ namespace ClassicUO.LegionScripting
             foreach (object o in serials)
             {
                 if (Utility.TryGetSerial(o, out uint serial))
-                    World.OPL.Contains(Convert.ToUInt32(o)); //Check if it already exists, if not request it
+                    World.OPL.Contains(serial); //Check if it already exists, if not request it
             }
         });
 
