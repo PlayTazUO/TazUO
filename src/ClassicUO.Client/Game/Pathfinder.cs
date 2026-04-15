@@ -61,6 +61,18 @@ namespace ClassicUO.Game
 
         public bool UseLongDistancePathfinding;
 
+        /// <summary>
+        /// Fired when a step of a path provided through <see cref="StartComputedPath"/> is
+        /// rejected at the client or server.  Hooked by WorldMapPathfinder so it can mark
+        /// the blocked tile (dynamic item like a lamp post, rock, placed door, etc.) and
+        /// re-plan around it.  Arguments: (blocked tile X, blocked tile Y).
+        /// Not used for regular <see cref="WalkTo"/> paths.
+        /// </summary>
+        public Action<int, int> OnComputedPathStepFailed;
+
+        /// <summary>Set by StartComputedPath; cleared by StopAutoWalk.  Gates OnComputedPathStepFailed.</summary>
+        private bool _computedPathActive;
+
         public Pathfinder(World world)
         {
             _world = world;
@@ -897,11 +909,6 @@ namespace ClassicUO.Game
                 if (_goalNode is not null)
                 {
                     ReconstructPath(_goalNode);
-
-#if DEBUG
-                    foreach (PathNode step in _path) World.Instance.Map.GetTile(step.X, step.Y).Hue = 32;
-#endif
-
                     return true;
                 }
 
@@ -976,6 +983,58 @@ namespace ClassicUO.Game
             return result;
         }
 
+        /// <summary>
+        /// Loads a pre-computed path (produced by an external pathfinder, e.g. WorldMapPathfinder)
+        /// into the walker state and starts walking.  Must be called on the main thread.
+        /// Each point in <paramref name="points"/> is (x, y, z, direction) for a single step.
+        /// </summary>
+        public void StartComputedPath(IReadOnlyList<(int X, int Y, int Z, int Direction)> points, bool run = true)
+        {
+            if (_world.Player == null || _world.Player.IsParalyzed || points == null || points.Count == 0)
+                return;
+
+            CleanupPathfinding();
+            _pointIndex = 0;
+            _goalNode = null;
+            _run = run;
+            _startPoint.X = _world.Player.X;
+            _startPoint.Y = _world.Player.Y;
+
+            // Prepend the player's current tile as _path[0] so we match the existing walker's
+            // convention: _path[0] is the start tile (direction ignored), _path[1..] are the steps.
+            // Without this, ProcessAutoWalk would read the SECOND step's direction while the
+            // player is still at the start → it walks the wrong way, hits a wall, and stops.
+            var startNode = PathNode.Get();
+            startNode.X = _world.Player.X;
+            startNode.Y = _world.Player.Y;
+            startNode.Z = _world.Player.Z;
+            startNode.Direction = (int)_world.Player.Direction;
+            startNode.IsValid = true;
+            _path.Add(startNode);
+
+            foreach (var p in points)
+            {
+                var node = PathNode.Get();
+                node.X = p.X;
+                node.Y = p.Y;
+                node.Z = p.Z;
+                node.Direction = p.Direction;
+                node.IsValid = true;
+                _path.Add(node);
+            }
+
+            if (_path.Count > 1)
+            {
+                _endPoint.X = _path[_path.Count - 1].X;
+                _endPoint.Y = _path[_path.Count - 1].Y;
+                _endPointZ = _path[_path.Count - 1].Z;
+                _pointIndex = 1;
+                AutoWalking = true;
+                _computedPathActive = true;
+                ProcessAutoWalk();
+            }
+        }
+
         public bool WalkTo(int x, int y, int z, int distance)
         {
             if (_world.Player == null /*|| World.Player.Stamina == 0*/ || _world.Player.IsParalyzed)
@@ -1035,7 +1094,23 @@ namespace ClassicUO.Game
 
                     if (!_world.Player.Walk((Direction)p.Direction, _run))
                     {
-                        StopAutoWalk();
+                        // If this is a pre-computed path (WorldMap nav), give the pathfinder
+                        // a chance to replan around the blocked tile (likely a dynamic item
+                        // like a lamp post, rock, or placed door not present in statics.mul).
+                        // Fire the hook, THEN stop — the hook may start a new computed path.
+                        if (_computedPathActive && OnComputedPathStepFailed != null)
+                        {
+                            var hook = OnComputedPathStepFailed;
+                            int blockedX = p.X;
+                            int blockedY = p.Y;
+                            // Tear down first so the hook can safely issue a new StartComputedPath.
+                            StopAutoWalk();
+                            hook.Invoke(blockedX, blockedY);
+                        }
+                        else
+                        {
+                            StopAutoWalk();
+                        }
                     }
                 }
                 else
@@ -1049,6 +1124,7 @@ namespace ClassicUO.Game
         {
             AutoWalking = false;
             _run = false;
+            _computedPathActive = false;
             CleanupPathfinding();
         }
 
