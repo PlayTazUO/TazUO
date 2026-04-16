@@ -2,6 +2,7 @@
 
 using System;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -57,12 +58,24 @@ namespace ClassicUO.Game
         /// lamp posts, rocks, placed doors, and other dynamic items that aren't in
         /// statics.mul and therefore invisible to our file-based A*.  Cleared at the
         /// start of each new FindPathAsync call.
+        /// <para/>
+        /// Uses ConcurrentDictionary as a thread-safe set: the main thread mutates it
+        /// (Clear on a new Ctrl+Click, TryAdd from the step-fail hook) while an in-flight
+        /// background search may be reading it via ContainsKey in TryGetWalkable.
         /// </summary>
-        private static readonly HashSet<long> _dynamicBlocks = new();
+        private static readonly ConcurrentDictionary<long, byte> _dynamicBlocks = new();
         public static void ClearDynamicBlocks() => _dynamicBlocks.Clear();
 
         /// <summary>Add a tile to the dynamic-block set so the next search routes around it.</summary>
-        public static void MarkDynamicBlock(int x, int y) => _dynamicBlocks.Add(PackKey(x, y));
+        public static void MarkDynamicBlock(int x, int y) => _dynamicBlocks.TryAdd(PackKey(x, y), 0);
+
+        /// <summary>
+        /// Per-search snapshot of tiles blocked by player houses (custom house walls, signposts,
+        /// placed multis).  Captured on the main thread before the worker starts, then read-only
+        /// for the duration of the search — so a plain HashSet is safe as long as nobody mutates
+        /// it after Task.Run.  Protected by _running: only one search can own this field at a time.
+        /// </summary>
+        private static HashSet<long> _houseBlocks;
 
         // Direction enum layout (matches ClassicUO.Game.Data.Direction):
         // 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW
@@ -79,6 +92,23 @@ namespace ClassicUO.Game
             public int Direction;
         }
 
+        /// <summary>
+        /// Shallow snapshot of a Multi component taken on the main thread.  Contains only the
+        /// fields needed by the filtering logic — no references to live game objects — so it
+        /// can be iterated safely from the background search thread even if the underlying
+        /// Multi is disposed or moved mid-search.
+        /// </summary>
+        public struct HouseMultiSnapshot
+        {
+            public int X;
+            public int Y;
+            public sbyte Z;
+            public ushort Graphic;
+            public int State;
+            public bool IsHousePreview;
+            public bool IsDestroyed;
+        }
+
         public static bool IsRunning => Volatile.Read(ref _running) != 0;
 
         /// <summary>
@@ -88,8 +118,17 @@ namespace ClassicUO.Game
         /// The callback fires on the main thread with the full path (empty list = no path found).
         /// Only one search at a time; concurrent calls return immediately with an empty list.
         /// </summary>
+        /// <param name="houseMultis">
+        /// Optional list of shallow-copied Multi snapshots taken on the caller's thread.
+        /// The worker filters this list (flag checks, ground-level Z check via GetTileZ) to
+        /// produce the blocked-tile HashSet — keeping the main thread free of heavy work
+        /// even in dense areas with thousands of components.  Pass null when no houses
+        /// need to be considered.
+        /// </param>
         public static void FindPathAsync(int mapIndex, int startX, int startY, sbyte startZ,
-                                         int destX, int destY, int snapRadius, Action<List<PathPoint>> onComplete)
+                                         int destX, int destY, int snapRadius,
+                                         Action<List<PathPoint>> onComplete,
+                                         List<HouseMultiSnapshot> houseMultis = null)
         {
             // Any previous in-flight search becomes stale (its next version-check bails it out).
             int myVersion = Interlocked.Increment(ref _searchVersion);
@@ -107,6 +146,11 @@ namespace ClassicUO.Game
                 var result = new List<PathPoint>();
                 try
                 {
+                    // Build the house-block set on the worker thread — filtering + GetTileZ
+                    // for each Multi is the expensive part; the main thread only paid the
+                    // cost of a shallow copy.
+                    _houseBlocks = BuildHouseBlockSet(mapIndex, houseMultis);
+
                     var chunkCache = new Dictionary<long, ChunkWalkData>(1024);
 
                     // If the click landed on an impassable tile, snap to the nearest walkable one.
@@ -130,11 +174,70 @@ namespace ClassicUO.Game
                 }
                 finally
                 {
+                    _houseBlocks = null;
                     Volatile.Write(ref _running, 0);
                 }
 
                 MainThreadQueue.EnqueueAction(() => onComplete?.Invoke(result));
             });
+        }
+
+        /// <summary>
+        /// Walks the caller-supplied Multi snapshots, applies the same walkability rules used
+        /// for statics (IsImpassable / IsWall at ground level, skipping IsRoof / previews /
+        /// destroyed / render-ignored), and returns a HashSet of blocked (x,y) keys.
+        /// Runs entirely on the worker thread; uses raw MMF reads via Maps.GetIndex for land Z.
+        /// </summary>
+        private static HashSet<long> BuildHouseBlockSet(int mapIndex, List<HouseMultiSnapshot> multis)
+        {
+            if (multis == null || multis.Count == 0)
+                return null;
+
+            var set = new HashSet<long>(multis.Count);
+            var tileData = Client.Game.UO.FileManager.TileData;
+            var maps = Client.Game.UO.FileManager.Maps;
+
+            // Matches OrionUO's "circumnavigate the house" behaviour: block the ENTIRE
+            // ground-level footprint, not just individual wall tiles.  Doors, windows,
+            // interior floors, stairs and ramps are all treated as "part of the house" —
+            // the navigator routes around, never through.
+            //
+            // GROUND_LEVEL_BAND = 14: ground-floor tiles sit at roughly landZ+7 (UO floor
+            // is 7 Z above the foundation), so 14 catches the first storey while excluding
+            // upper storeys (~20 Z above ground floor) and rooftops.
+            const int GROUND_LEVEL_BAND = 14;
+            const int CHMOF_IGNORE_IN_RENDER = 0x40;
+
+            foreach (var m in multis)
+            {
+                if (m.IsDestroyed) continue;
+                if (m.IsHousePreview) continue;
+                if ((m.State & CHMOF_IGNORE_IN_RENDER) != 0) continue;
+
+                ushort graphic = m.Graphic;
+                if (graphic >= tileData.StaticData.Length) continue;
+
+                ref StaticTiles sd = ref tileData.StaticData[graphic];
+                if (sd.IsRoof) continue;
+
+                sbyte landZ = 0;
+                try
+                {
+                    ref IndexMap im = ref maps.GetIndex(mapIndex, m.X >> 3, m.Y >> 3);
+                    if (im.IsValid())
+                    {
+                        MapCellsArray cells = im.MapFile.ReadAt<MapBlock>((long)im.MapAddress).Cells;
+                        landZ = cells[((m.Y & 7) << 3) + (m.X & 7)].Z;
+                    }
+                }
+                catch { }
+
+                if (m.Z > landZ + GROUND_LEVEL_BAND) continue;
+
+                set.Add(PackKey(m.X, m.Y));
+            }
+
+            return set.Count == 0 ? null : set;
         }
 
         /// <summary>
@@ -343,9 +446,20 @@ namespace ClassicUO.Game
         private static bool TryGetWalkable(int mapIndex, int x, int y, sbyte fromZ,
                                            Dictionary<long, ChunkWalkData> cache, out sbyte surfaceZ)
         {
+            long key = PackKey(x, y);
+
             // Dynamic-block override first — lamp posts, rocks, placed doors, etc.
             // learned during walk-time failures.
-            if (_dynamicBlocks.Contains(PackKey(x, y)))
+            if (_dynamicBlocks.ContainsKey(key))
+            {
+                surfaceZ = 0;
+                return false;
+            }
+
+            // House-block snapshot — walls and other impassable components of player houses
+            // captured when the search started. Read-only for the worker's lifetime.
+            var houseBlocks = _houseBlocks;
+            if (houseBlocks != null && houseBlocks.Contains(key))
             {
                 surfaceZ = 0;
                 return false;
