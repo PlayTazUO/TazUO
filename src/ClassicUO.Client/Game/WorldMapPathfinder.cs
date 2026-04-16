@@ -154,19 +154,26 @@ namespace ClassicUO.Game
                     var chunkCache = new Dictionary<long, ChunkWalkData>(1024);
 
                     // If the click landed on an impassable tile, snap to the nearest walkable one.
+                    // Use a flag instead of early-return so execution falls through to the
+                    // completion callback below — WorldMapGump relies on it to clear _navDest
+                    // and _navPath when a nav fails, and the previous early-return skipped it.
                     int targetX = destX;
                     int targetY = destY;
+                    bool canSearch = true;
                     if (!TryGetWalkable(mapIndex, destX, destY, startZ, chunkCache, out _))
                     {
                         if (!SnapToNearestWalkable(mapIndex, destX, destY, startZ, snapRadius, chunkCache,
                                                     out targetX, out targetY))
                         {
-                            return;  // no walkable tile within radius; finally block still resets _running
+                            canSearch = false;  // no walkable tile within radius → empty result
                         }
                     }
 
-                    long deadline = Time.Ticks + MAX_SEARCH_MS;
-                    result = FindPath(mapIndex, startX, startY, startZ, targetX, targetY, chunkCache, myVersion, deadline);
+                    if (canSearch)
+                    {
+                        long deadline = Time.Ticks + MAX_SEARCH_MS;
+                        result = FindPath(mapIndex, startX, startY, startZ, targetX, targetY, chunkCache, myVersion, deadline);
+                    }
                 }
                 catch (Exception ex)
                 {
