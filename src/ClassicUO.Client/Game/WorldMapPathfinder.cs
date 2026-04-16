@@ -130,16 +130,19 @@ namespace ClassicUO.Game
                                          Action<List<PathPoint>> onComplete,
                                          List<HouseMultiSnapshot> houseMultis = null)
         {
-            // Any previous in-flight search becomes stale (its next version-check bails it out).
-            int myVersion = Interlocked.Increment(ref _searchVersion);
-
-            // Only one search runs at a time; if another is still tearing down, skip this request.
-            // The stale one exits within a few ms of the version bump above.
+            // Only one search runs at a time; if another is still running, drop this request
+            // rather than cancelling the in-flight search (which would leave BOTH empty).
             if (Interlocked.CompareExchange(ref _running, 1, 0) != 0)
             {
                 onComplete?.Invoke(new List<PathPoint>());
                 return;
             }
+
+            // We now own the lock — bump the version so any PREVIOUS (already-finishing)
+            // search that hasn't fully torn down yet sees the mismatch and bails out.
+            // Placed after the lock to avoid the old race: increment-then-fail-lock would
+            // cancel the running search AND return empty, so both calls produced nothing.
+            int myVersion = Interlocked.Increment(ref _searchVersion);
 
             Task.Run(() =>
             {
