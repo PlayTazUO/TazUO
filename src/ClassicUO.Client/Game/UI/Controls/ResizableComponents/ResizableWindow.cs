@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Assets;
@@ -61,6 +62,18 @@ public class ResizableWindow : Window, IDisposable
     /// </remarks>
     public bool IsCurrentlyResizable => Props.Resize.Enabled && !IsMinimized;
 
+    [Category("Appearance")]
+    public new string Title
+    {
+        get => base.Title;
+
+        set
+        {
+            base.Title = value;
+            _titlePanelFullWidth = TitlePanel.Measure(new Point(2000, 2000)).X;
+        }
+    }
+
     private string MinMaxButtonText => IsMinimized ? "□" : "−";
 
     private SpriteFontBase MinMaxButtonFont => IsMinimized
@@ -85,6 +98,8 @@ public class ResizableWindow : Window, IDisposable
     private bool _restoreAutoHeight;
 
     private bool _isOverridingCursorStyle;
+
+    private int _titlePanelFullWidth;
 
     #region Components
 
@@ -646,6 +661,15 @@ public class ResizableWindow : Window, IDisposable
         Top = newBounds.Y;
         Width = newBounds.Width;
         Height = newBounds.Height;
+
+        // We can allow the label text to span under the button, but beyond that, it starts looking broken.
+        int closeButtonWidth = CloseButton?.Visible == true
+            ? Math.Max(0, CloseButton.Measure(new Point(2000, 2000)).X - (CloseButton.Margin.Right + CloseButton.Padding.Right))
+            : 0;
+
+        // Since the window may be resized to any size, we need to ensure the title label does not overflow;
+        // Myra does not handle this gracefully, not even with ellipsis.
+        _titleLabel.Visible = _titlePanelFullWidth - closeButtonWidth <= Width.Value;
 
         Resized?.Invoke(this, new ResizeEventArgs { NewWidth = newBounds.Width, NewHeight = newBounds.Height });
     }

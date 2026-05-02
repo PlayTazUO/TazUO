@@ -5,21 +5,25 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.LegionScripting;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
 public class RunningScriptsWindow : MyraControl
 {
-    private readonly VerticalStackPanel _scriptList = new() { Spacing = MyraStyle.STANDARD_SPACING };
+    private readonly WrapPanel _scriptList = new()
+    {
+        HorizontalSpacing = MyraStyle.STANDARD_SPACING,
+        VerticalSpacing = MyraStyle.STANDARD_SPACING,
+        Orientation = Orientation.Vertical,
+    };
 
     public RunningScriptsWindow() : base("Running Scripts")
     {
-        const int startingWidth = 240;
-        const int startingHeight = 130;
-        _rootWindow.Props.Resize.MinHeight = startingHeight;
-        _rootWindow.Props.Resize.MinWidth = startingWidth;
-        _rootWindow.Height = startingHeight;
-        _rootWindow.Width = startingWidth;
+        const int minWidth = 120;
+        const int minHeight = 110;
+        _rootWindow.Props.Resize.MinWidth = minWidth;
+        _rootWindow.Props.Resize.MinHeight = minHeight;
 
         CanBeSaved = true;
         Build();
@@ -53,7 +57,12 @@ public class RunningScriptsWindow : MyraControl
 
     private void Build()
     {
-        var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Padding = new Thickness(4) };
+        var root = new WrapPanel
+        {
+            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
+            VerticalSpacing = MyraStyle.STANDARD_SPACING,
+            Padding = new Thickness(4)
+        };
         root.Widgets.Add(_scriptList);
         RebuildList();
         SetRootContent(root);
