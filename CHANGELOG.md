@@ -24,6 +24,7 @@ All notable changes to TazUO will be recorded here.
 * Split stack gump now accepts spacebar in addition to enter to accept the amount - ([bittiez](https://github.com/bittiez))
 * Removed anonymous metrics - ([bittiez](https://github.com/bittiez))
 * Removed TazUO Chat - ([bittiez](https://github.com/bittiez))
+* Running Scripts window can now effectivley make use of allocated space via wrapping -  [P.R 460](https://github.com/PlayTazUO/TazUO/pull/460) ([yuval-po](https://github.com/yuval-po))
 
 ### Fixes
 * Fix for latest UO Publish causing a crash in animation loading - ([bittiez](https://github.com/bittiez))
