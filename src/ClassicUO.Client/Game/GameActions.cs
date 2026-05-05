@@ -1277,10 +1277,10 @@ internal static class GameActions
 
     // ===================================================
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
+    public static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
 
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
+    public static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
     // ===================================================
 
     internal static void QuestArrow(bool rightClick) => Socket.Send_ClickQuestArrow(rightClick);
