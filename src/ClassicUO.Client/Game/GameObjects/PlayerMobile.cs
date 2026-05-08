@@ -41,10 +41,6 @@ namespace ClassicUO.Game.GameObjects
                 }
             };
 
-
-            if(ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
-                UIManager.Add(new CastTimerProgressBar(world));
-
             IsPlayer = true;
         }
 

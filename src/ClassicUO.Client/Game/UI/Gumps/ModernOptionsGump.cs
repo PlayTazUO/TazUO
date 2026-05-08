@@ -16,6 +16,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ClassicUO.Common.Enums;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using static ClassicUO.Configuration.ProfileManager;
 
@@ -4333,7 +4334,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (lang.GetTazUO.MouseSesitivity, 0, ThemeSettings.SLIDER_WIDTH, 1, 20,
-                    profile.ControllerMouseSensativity, (i) => { profile.ControllerMouseSensativity = i; }),
+                    profile.ControllerMouseSensitivity, (i) => { profile.ControllerMouseSensitivity = i; }),
                 true, page
             );
 

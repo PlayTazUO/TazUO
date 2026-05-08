@@ -1,6 +1,7 @@
 using ClassicUO.Game;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.IO;
 
 namespace ClassicUO.Network.PacketHandlers;

@@ -272,8 +272,11 @@ namespace ClassicUO.Configuration
                 sb.AppendLine("            set");
                 sb.AppendLine("            {");
                 sb.AppendLine("                if (field != value)");
+                sb.AppendLine("                {");
                 sb.AppendLine($"                    _ = Client.Settings.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
-                sb.AppendLine("                field = value;");
+                sb.AppendLine("                    field = value;");
+                sb.AppendLine("                    OnPropertyChanged();");
+                sb.AppendLine("                }");
                 sb.AppendLine("            }");
 
                 if (IsNonDefaultValue(m.TypeName, m.DefaultValueLiteral))

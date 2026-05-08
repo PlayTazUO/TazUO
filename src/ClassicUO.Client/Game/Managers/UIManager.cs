@@ -473,22 +473,22 @@ namespace ClassicUO.Game.Managers
 
         public static void Add(IGui gump, bool front = true)
         {
-            if (!gump.IsDisposed)
+            if (gump.IsDisposed)
+                return;
+
+            if (front)
             {
-                if (front)
-                {
-                    Gumps.AddFirst(gump);
-                    TopMostControl = gump; // Set the gump as the top-most so Myra's aware of it
-                }
-                else
-                {
-                    Gumps.AddLast(gump);
-                }
-
-                _needSort = Gumps.Count > 1;
-
-                RegisterGump(gump);
+                Gumps.AddFirst(gump);
+                TopMostControl = gump; // Set the gump as the top-most so Myra's aware of it
             }
+            else
+            {
+                Gumps.AddLast(gump);
+            }
+
+            _needSort = Gumps.Count > 1;
+
+            RegisterGump(gump);
         }
 
         public static void Clear()
