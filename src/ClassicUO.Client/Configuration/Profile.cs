@@ -669,14 +669,20 @@ namespace ClassicUO.Configuration
 
         public List<string> AutoOpenXmlGumps { get; set => SetProperty(ref field, value); } = new List<string>();
 
-        public int ControllerMouseSensitivity
+        /// <summary>
+        /// The sensitivity of the controller mouse input.
+        /// </summary>
+        /// <remarks>
+        /// The typo here is a bit problematic as it's also serialized, meaning if we change it here, we essentially invalidate the user's configuration.
+        /// </remarks>
+        public int ControllerMouseSensativity
         {
-            get => Input.Mouse.ControllerSensativity;
+            get => Input.Mouse.ControllerSensitivity;
             set
             {
-                if (Input.Mouse.ControllerSensativity != value)
+                if (Input.Mouse.ControllerSensitivity != value)
                 {
-                    Input.Mouse.ControllerSensativity = value;
+                    Input.Mouse.ControllerSensitivity = value;
                     OnPropertyChanged();
                 }
             }

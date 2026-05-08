@@ -153,7 +153,7 @@ namespace ClassicUO.Input
 
         public static bool MouseInWindow { get; set; }
 
-        public static int ControllerSensativity { get; set; } = 10;
+        public static int ControllerSensitivity { get; set; } = 10;
 
         private static bool _isWarpingMouse = false;
 
@@ -180,8 +180,8 @@ namespace ClassicUO.Input
 
                 if (gamePadState.IsConnected && gamePadState.ThumbSticks.Right != Vector2.Zero)
                 {
-                    Position.X += (int)(ControllerSensativity * gamePadState.ThumbSticks.Right.X);
-                    Position.Y -= (int)(ControllerSensativity * gamePadState.ThumbSticks.Right.Y);
+                    Position.X += (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.X);
+                    Position.Y -= (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.Y);
 
                     _isWarpingMouse = true;
                     SDL.SDL_WarpMouseInWindow(Client.Game.Window.Handle, Position.X, Position.Y);

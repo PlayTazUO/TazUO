@@ -4334,7 +4334,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (lang.GetTazUO.MouseSesitivity, 0, ThemeSettings.SLIDER_WIDTH, 1, 20,
-                    profile.ControllerMouseSensitivity, (i) => { profile.ControllerMouseSensitivity = i; }),
+                    profile.ControllerMouseSensativity, (i) => { profile.ControllerMouseSensativity = i; }),
                 true, page
             );
 
