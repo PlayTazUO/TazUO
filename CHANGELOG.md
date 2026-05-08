@@ -34,6 +34,8 @@ All notable changes to TazUO will be recorded here.
 * Fixed a crash that occurred when clicking an empty `Combobox` - [P.R 451](https://github.com/PlayTazUO/TazUO/pull/451) ([yuval-po](https://github.com/yuval-po))
 * Dramatically reduced memory footprint and load times for system fonts - [P.R 446](https://github.com/PlayTazUO/TazUO/pull/446) ([yuval-po](https://github.com/yuval-po))
 * Eventine-specific paperdoll layer ordering - [P.R 458](https://github.com/PlayTazUO/TazUO/pull/458) ([yuval-po](https://github.com/yuval-po))
+* Crash when using the Plugin API's UsePrimaryAbility/UseSecondaryAbility methods - [P.R 461](https://github.com/PlayTazUO/TazUO/pull/461) ([yuval-po](https://github.com/yuval-po))
+* HTML control text dispalyed in GridLootGump name label in UO POL based servers - [P.R 462](https://github.com/PlayTazUO/TazUO/pull/462) ([yuval-po](https://github.com/yuval-po) & [bittiez](https://github.com/bittiez))
 
 ## V5.1.0
 
