@@ -476,7 +476,7 @@ namespace ClassicUO.Game.Data
         {
             if (fullidx < 1) return EmptySpell;
 
-            if (fullidx >= 800)
+            if (fullidx >= 2000)
             {
                 var bookType = SpellbookCacheManager.Instance.GetSpellBookType(fullidx);
                 if (bookType.HasValue)
