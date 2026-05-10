@@ -7,6 +7,8 @@ namespace ClassicUO.Game.Data
     [JsonSerializable(typeof(List<PersistentCacheEntry>))]
     [JsonSerializable(typeof(PersistentCacheEntry))]
     [JsonSerializable(typeof(DynamicSpellDefinition))]
+    [JsonSerializable(typeof(SpellbookInfoPage))]
+    [JsonSerializable(typeof(SpellbookBookmarkInfo))]
     internal partial class SpellbookCacheJsonContext : JsonSerializerContext
     {
     }

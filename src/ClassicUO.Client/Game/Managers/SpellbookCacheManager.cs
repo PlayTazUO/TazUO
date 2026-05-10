@@ -102,7 +102,6 @@ namespace ClassicUO.Game.Managers
         {
             if (_clientToServerSpellId.TryGetValue(clientSpellId, out int serverSpellId))
             {
-                Log.Trace($"[SPELLBOOK CACHE] Mapped client spell ID {clientSpellId} to server spell ID {serverSpellId}");
                 return serverSpellId;
             }
             // No mapping, return client ID (for standard spells)
@@ -157,9 +156,27 @@ namespace ClassicUO.Game.Managers
             string[] pageNames = null,
             bool displayManaCost = false,
             bool displayMinSkill = false,
+            bool displayPowerWords = true,
+            string manaCostLabel = null,
+            string minSkillLabel = null,
             string customPropertyTitle = null,
             string customPropertyLabel = null,
-            string customPropertyName = null)
+            string customPropertyName = null,
+            ushort bookHue = 0,
+            ushort textColor = 0,
+            ushort spellNameColor = 0,
+            short contentOffsetX = 0,
+            short contentOffsetY = 0,
+            ushort pageTurnLeftGraphic = 0,
+            ushort pageTurnRightGraphic = 0,
+            short pageTurnLeftX = 0,
+            short pageTurnLeftY = 0,
+            short pageTurnRightX = 0,
+            short pageTurnRightY = 0,
+            ushort[] overlayGraphics = null,
+            ushort titleColor = 0,
+            List<SpellbookInfoPage> infoPages = null,
+            SpellbookBookmarkInfo bookmark = null)
         {
             var entry = new SpellbookCacheEntry
             {
@@ -175,9 +192,27 @@ namespace ClassicUO.Game.Managers
                 PageNames = pageNames ?? Array.Empty<string>(),
                 DisplayManaCost = displayManaCost,
                 DisplayMinSkill = displayMinSkill,
+                DisplayPowerWords = displayPowerWords,
+                ManaCostLabel = manaCostLabel,
+                MinSkillLabel = minSkillLabel,
                 CustomPropertyTitle = customPropertyTitle,
                 CustomPropertyLabel = customPropertyLabel,
-                CustomPropertyName = customPropertyName
+                CustomPropertyName = customPropertyName,
+                BookHue = bookHue,
+                TextColor = textColor,
+                SpellNameColor = spellNameColor,
+                ContentOffsetX = contentOffsetX,
+                ContentOffsetY = contentOffsetY,
+                PageTurnLeftGraphic = pageTurnLeftGraphic,
+                PageTurnRightGraphic = pageTurnRightGraphic,
+                PageTurnLeftX = pageTurnLeftX,
+                PageTurnLeftY = pageTurnLeftY,
+                PageTurnRightX = pageTurnRightX,
+                PageTurnRightY = pageTurnRightY,
+                OverlayGraphics = overlayGraphics ?? Array.Empty<ushort>(),
+                TitleColor = titleColor,
+                InfoPages = infoPages ?? new(),
+                Bookmark = bookmark
             };
 
             foreach (var spell in spells)
@@ -200,7 +235,6 @@ namespace ClassicUO.Game.Managers
         {
             if (!_cache.TryGetValue(spellbookType, out var cached))
             {
-                Log.Warn($"[SPELLBOOK CACHE] SyncCachedSpellsToRegistry: No cache for type {spellbookType}");
                 return;
             }
 
@@ -211,12 +245,9 @@ namespace ClassicUO.Game.Managers
         }
         private void SyncDynamicSpellsToRegistry(SpellBookType bookType, List<DynamicSpellDefinition> spells)
         {
-            Log.Trace($"[SPELLBOOK CACHE] SyncDynamicSpellsToRegistry called with {spells.Count} spells for {bookType}");
-
             var spellDict = DynamicSpellbookRegistry.GetSpellDictionary(bookType);
             spellDict.Clear();
             _clientToServerSpellId.Clear();
-            Log.Trace($"[SPELLBOOK CACHE] Cleared spell dictionary for {bookType} and client-to-server mapping");
 
             var sortedSpells = new List<DynamicSpellDefinition>(spells);
             sortedSpells.Sort((a, b) => a.SpellID.CompareTo(b.SpellID));
@@ -225,14 +256,13 @@ namespace ClassicUO.Game.Managers
             {
                 int baseSpellId = sortedSpells[0].SpellID;
                 _spellBookBaseId[bookType] = baseSpellId;
-                Log.Trace($"[SPELLBOOK CACHE] Base spell ID for {bookType}: {baseSpellId}");
             }
 
             for (int i = 0; i < sortedSpells.Count; i++)
             {
                 var dynSpell = sortedSpells[i];
 
-                int fullSpellID = dynSpell.SpellID;
+                int fullSpellID = dynSpell.SpellID + 1;
 
                 int dictionaryIndex = i + 1;
 
@@ -240,26 +270,21 @@ namespace ClassicUO.Game.Managers
 
                 _spellIdToBookType[fullSpellID] = bookType;
 
-                Log.Trace($"[SPELLBOOK CACHE] Syncing spell {i + 1}: ServerSpellID={dynSpell.SpellID}, ClientID={fullSpellID}, StorageIndex={dictionaryIndex}, BookType={bookType}, Name='{dynSpell.Name}', Icon=0x{dynSpell.IconGraphic:X4}");
-
                 var spellDef = new SpellDefinition(
                     name: string.IsNullOrEmpty(dynSpell.Name) ? $"Spell {dynSpell.SpellID}" : dynSpell.Name,
                     index: fullSpellID,
                     gumpIconID: dynSpell.IconGraphic,
                     gumpSmallIconID: dynSpell.IconGraphic,
                     powerwords: dynSpell.PowerWords ?? "",
-                    manacost: 0,
-                    minskill: 0,
+                    manacost: dynSpell.ManaCost,
+                    minskill: dynSpell.MinSkill,
                     tithingcost: 0,
                     target: (TargetType)dynSpell.TargetType,
                     regs: new Reagents[0]
                 );
 
                 spellDict[dictionaryIndex] = spellDef;
-                Log.Trace($"[SPELLBOOK CACHE] SetSpell called for index {dictionaryIndex} with MappedID={fullSpellID}");
             }
-
-            Log.Trace($"[SPELLBOOK CACHE] Synced {sortedSpells.Count} dynamic spells to {bookType} registry");
         }
 
         public void InvalidateCache(byte spellbookType)
@@ -323,24 +348,14 @@ namespace ClassicUO.Game.Managers
 
                 if (persistent != null)
                 {
-                    Log.Info($"[SPELLBOOK CACHE] LoadFromDisk: Found {persistent.Count} cached spellbook(s)");
 
                     foreach (var entry in persistent)
                     {
                         _cache[entry.SpellbookType] = entry.ToRuntimeCache(DEFAULT_TTL);
 
                         var bookType = (SpellBookType)entry.SpellbookType;
-                        Log.Info($"[SPELLBOOK CACHE] Registering dynamic spellbook type: {bookType} (byte value: {entry.SpellbookType})");
                         DynamicSpellbookRegistry.RegisterDynamic(bookType);
-                        Log.Info($"[SPELLBOOK CACHE] Syncing {entry.Spells.Count} spells from disk cache for {bookType}");
                         SyncDynamicSpellsToRegistry(bookType, entry.Spells);
-
-                        ushort itemGraphic = entry.ItemGraphic;
-                        if (itemGraphic > 0)
-                        {
-                            SpellbookTypeRegistry.Register(itemGraphic, bookType);
-                            Log.Trace($"[SPELLBOOK CACHE] Registered ItemGraphic 0x{itemGraphic:X4} -> {bookType} from cache");
-                        }
                     }
 
                     Log.Trace($"Loaded {persistent.Count} spellbook caches from disk");

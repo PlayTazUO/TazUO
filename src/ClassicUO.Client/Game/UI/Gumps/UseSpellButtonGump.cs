@@ -62,6 +62,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(cliloc), 80);
             }
+            else if (!string.IsNullOrEmpty(_spell.Name))
+            {
+                SetTooltip(_spell.Name, 80);
+            }
 
             if (ProfileManager.CurrentProfile.SpellIcon_DisplayHotkey)
             {

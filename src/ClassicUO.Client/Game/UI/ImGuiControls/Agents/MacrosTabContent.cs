@@ -491,27 +491,41 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // SubMenuType 1: Dropdown for sub-options
             if (action.SubMenuType == 1)
             {
-                // Get the valid sub-options for this specific macro type
                 int count = 0;
                 int offset = 0;
-                Macro.GetBoundByCode(action.Code, ref count, ref offset);
+                string[] subNames;
+                int[] customSpellSubCodes = null;
+                int currentSubIndex;
 
-                // Build the names array for this specific action type
-                string[] subNames = new string[count];
-                for (int i = 0; i < count; i++)
+                if (action.Code == MacroType.CastCustomSpell)
                 {
-                    subNames[i] = ((MacroSubType)(i + offset)).ToString();
+                    Macro.BuildCastCustomSpellPicker(action.SubCode, out subNames, out customSpellSubCodes, out currentSubIndex);
                 }
-
-                // Find current selection index within this subset
-                int currentSubIndex = (int)action.SubCode - offset;
-                if (currentSubIndex < 0 || currentSubIndex >= count)
-                    currentSubIndex = 0;
+                else
+                {
+                    Macro.GetBoundByCode(action.Code, ref count, ref offset);
+                    subNames = new string[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        subNames[i] = ((MacroSubType)(i + offset)).ToString();
+                    }
+                    currentSubIndex = (int)action.SubCode - offset;
+                    if (currentSubIndex < 0 || currentSubIndex >= count)
+                        currentSubIndex = 0;
+                }
 
                 ImGui.SetNextItemWidth(150);
                 if (ImGui.Combo($"##ActionSubType{index}", ref currentSubIndex, subNames, subNames.Length))
                 {
-                    action.SubCode = (MacroSubType)(currentSubIndex + offset);
+                    if (customSpellSubCodes != null)
+                    {
+                        if (currentSubIndex >= 0 && currentSubIndex < customSpellSubCodes.Length)
+                            action.SubCode = (MacroSubType)customSpellSubCodes[currentSubIndex];
+                    }
+                    else
+                    {
+                        action.SubCode = (MacroSubType)(currentSubIndex + offset);
+                    }
                     MarkDirty();
                 }
                 ImGui.SameLine();

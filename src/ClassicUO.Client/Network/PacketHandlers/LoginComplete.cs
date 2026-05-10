@@ -16,6 +16,8 @@ internal static class LoginComplete
     {
         if (world.Player != null && Client.Game.Scene is LoginScene)
         {
+            SpellbookCacheManager.Instance.Initialize();
+
             var scene = new GameScene(world);
             Client.Game.SetScene(scene);
             LoginScene.Instance?.Dispose();

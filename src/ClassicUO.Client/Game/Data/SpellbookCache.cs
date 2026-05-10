@@ -4,6 +4,32 @@ using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Game.Data
 {
+    public class SpellbookInfoPage
+    {
+        public string Title { get; set; }
+        public string Body { get; set; }
+    }
+
+    public static class SpellbookBookmarkAction
+    {
+        public const byte None           = 0;
+        public const byte JumpToPage     = 1; // Action payload = 1-based logical page index inside the spellbook
+        public const byte ServerCallback = 2; // Action payload = opaque token; client sends 0xBF/0x3E back
+    }
+
+    public class SpellbookBookmarkInfo
+    {
+        public ushort Graphic { get; set; }
+        public ushort PressedGraphic { get; set; } // 0 = same as Graphic
+        public short X { get; set; }
+        public short Y { get; set; }
+        public ushort Hue { get; set; }
+        public byte DisplayPage { get; set; } // 0 = show on every page
+        public byte ActionType { get; set; }
+        public uint Action { get; set; }
+        public string Tooltip { get; set; }
+    }
+
     public class DynamicSpellDefinition
     {
         public ushort SpellID { get; set; }
@@ -61,9 +87,30 @@ namespace ClassicUO.Game.Data
         public string[] PageNames { get; set; } = Array.Empty<string>();  // Page names
         public bool DisplayManaCost { get; set; }               // Whether to display mana cost
         public bool DisplayMinSkill { get; set; }               // Whether to display minimum skill
+        public bool DisplayPowerWords { get; set; } = true;     // Whether to display power words (runes) on detail pages
+        public string ManaCostLabel { get; set; }               // Custom label for mana cost (null = "Mana Cost")
+        public string MinSkillLabel { get; set; }               // Custom label for min skill (null = "Min. Skill")
         public string CustomPropertyTitle { get; set; }         // Custom property title (line 1)
         public string CustomPropertyLabel { get; set; }         // Custom property label (line 2 before value)
         public string CustomPropertyName { get; set; }          // Custom property to read from Mobile
+
+        // Layout customization (0 = use client defaults)
+        public ushort BookHue { get; set; }
+        public ushort TextColor { get; set; }
+        public ushort SpellNameColor { get; set; }
+        public ushort TitleColor { get; set; }
+        public short ContentOffsetX { get; set; }
+        public short ContentOffsetY { get; set; }
+        public ushort PageTurnLeftGraphic { get; set; }
+        public ushort PageTurnRightGraphic { get; set; }
+        public short PageTurnLeftX { get; set; }
+        public short PageTurnLeftY { get; set; }
+        public short PageTurnRightX { get; set; }
+        public short PageTurnRightY { get; set; }
+        public ushort[] OverlayGraphics { get; set; } = Array.Empty<ushort>();
+        public List<SpellbookInfoPage> InfoPages { get; set; } = new();
+        public SpellbookBookmarkInfo Bookmark { get; set; } // null = no bookmark
+
         public Dictionary<ushort, DynamicSpellDefinition> Spells { get; set; }
 
         public SpellbookCacheEntry()
@@ -105,6 +152,7 @@ namespace ClassicUO.Game.Data
         public byte SpellbookType { get; set; }
         public uint Version { get; set; }
         public DateTime CachedAt { get; set; }
+        public ulong SpellBitmask { get; set; }
         public ushort ItemGraphic { get; set; }  // Item graphic for this spellbook (e.g., 0x2259)
         public ushort BookGraphic { get; set; }
         public ushort MinimizedGraphic { get; set; }
@@ -113,9 +161,30 @@ namespace ClassicUO.Game.Data
         public string[] PageNames { get; set; } = Array.Empty<string>();
         public bool DisplayManaCost { get; set; }
         public bool DisplayMinSkill { get; set; }
+        public bool DisplayPowerWords { get; set; } = true;
+        public string ManaCostLabel { get; set; }
+        public string MinSkillLabel { get; set; }
         public string CustomPropertyTitle { get; set; }
         public string CustomPropertyLabel { get; set; }
         public string CustomPropertyName { get; set; }
+
+        // Layout customization
+        public ushort BookHue { get; set; }
+        public ushort TextColor { get; set; }
+        public ushort SpellNameColor { get; set; }
+        public ushort TitleColor { get; set; }
+        public short ContentOffsetX { get; set; }
+        public short ContentOffsetY { get; set; }
+        public ushort PageTurnLeftGraphic { get; set; }
+        public ushort PageTurnRightGraphic { get; set; }
+        public short PageTurnLeftX { get; set; }
+        public short PageTurnLeftY { get; set; }
+        public short PageTurnRightX { get; set; }
+        public short PageTurnRightY { get; set; }
+        public ushort[] OverlayGraphics { get; set; } = Array.Empty<ushort>();
+        public List<SpellbookInfoPage> InfoPages { get; set; } = new();
+        public SpellbookBookmarkInfo Bookmark { get; set; }
+
         public List<DynamicSpellDefinition> Spells { get; set; }
 
         public PersistentCacheEntry()
@@ -131,6 +200,7 @@ namespace ClassicUO.Game.Data
                 Version = Version,
                 CachedAt = CachedAt,
                 ExpiresAt = DateTime.UtcNow.AddSeconds(defaultTTL),
+                SpellBitmask = SpellBitmask,
                 BookGraphic = BookGraphic,
                 MinimizedGraphic = MinimizedGraphic,
                 SpellsPerPageSide = SpellsPerPageSide,
@@ -138,9 +208,27 @@ namespace ClassicUO.Game.Data
                 PageNames = PageNames ?? Array.Empty<string>(),
                 DisplayManaCost = DisplayManaCost,
                 DisplayMinSkill = DisplayMinSkill,
+                DisplayPowerWords = DisplayPowerWords,
+                ManaCostLabel = ManaCostLabel,
+                MinSkillLabel = MinSkillLabel,
                 CustomPropertyTitle = CustomPropertyTitle,
                 CustomPropertyLabel = CustomPropertyLabel,
-                CustomPropertyName = CustomPropertyName
+                CustomPropertyName = CustomPropertyName,
+                BookHue = BookHue,
+                TextColor = TextColor,
+                SpellNameColor = SpellNameColor,
+                TitleColor = TitleColor,
+                ContentOffsetX = ContentOffsetX,
+                ContentOffsetY = ContentOffsetY,
+                PageTurnLeftGraphic = PageTurnLeftGraphic,
+                PageTurnRightGraphic = PageTurnRightGraphic,
+                PageTurnLeftX = PageTurnLeftX,
+                PageTurnLeftY = PageTurnLeftY,
+                PageTurnRightX = PageTurnRightX,
+                PageTurnRightY = PageTurnRightY,
+                OverlayGraphics = OverlayGraphics ?? Array.Empty<ushort>(),
+                InfoPages = InfoPages ?? new(),
+                Bookmark = Bookmark
             };
 
             foreach (var spell in Spells)
@@ -160,6 +248,7 @@ namespace ClassicUO.Game.Data
                 SpellbookType = entry.SpellbookType,
                 Version = entry.Version,
                 CachedAt = entry.CachedAt,
+                SpellBitmask = entry.SpellBitmask,
                 BookGraphic = entry.BookGraphic,
                 MinimizedGraphic = entry.MinimizedGraphic,
                 SpellsPerPageSide = entry.SpellsPerPageSide,
@@ -167,9 +256,27 @@ namespace ClassicUO.Game.Data
                 PageNames = entry.PageNames ?? Array.Empty<string>(),
                 DisplayManaCost = entry.DisplayManaCost,
                 DisplayMinSkill = entry.DisplayMinSkill,
+                DisplayPowerWords = entry.DisplayPowerWords,
+                ManaCostLabel = entry.ManaCostLabel,
+                MinSkillLabel = entry.MinSkillLabel,
                 CustomPropertyTitle = entry.CustomPropertyTitle,
                 CustomPropertyLabel = entry.CustomPropertyLabel,
                 CustomPropertyName = entry.CustomPropertyName,
+                BookHue = entry.BookHue,
+                TextColor = entry.TextColor,
+                SpellNameColor = entry.SpellNameColor,
+                TitleColor = entry.TitleColor,
+                ContentOffsetX = entry.ContentOffsetX,
+                ContentOffsetY = entry.ContentOffsetY,
+                PageTurnLeftGraphic = entry.PageTurnLeftGraphic,
+                PageTurnRightGraphic = entry.PageTurnRightGraphic,
+                PageTurnLeftX = entry.PageTurnLeftX,
+                PageTurnLeftY = entry.PageTurnLeftY,
+                PageTurnRightX = entry.PageTurnRightX,
+                PageTurnRightY = entry.PageTurnRightY,
+                OverlayGraphics = entry.OverlayGraphics ?? Array.Empty<ushort>(),
+                InfoPages = entry.InfoPages ?? new(),
+                Bookmark = entry.Bookmark,
                 Spells = sortedSpells
             };
         }

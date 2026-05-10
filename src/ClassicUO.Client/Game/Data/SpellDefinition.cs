@@ -485,7 +485,7 @@ namespace ClassicUO.Game.Data
                 if (bookType.HasValue)
                 {
                     int baseId = SpellbookCacheManager.Instance.GetSpellBookBaseId(bookType.Value);
-                    int spellIndex = fullidx - baseId + 1;
+                    int spellIndex = fullidx - baseId;
                     return DynamicSpellbookRegistry.GetSpell(bookType.Value, spellIndex);
                 }
                 return EmptySpell;

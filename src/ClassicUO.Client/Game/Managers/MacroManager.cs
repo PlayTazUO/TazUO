@@ -1414,6 +1414,12 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.CastCustomSpell:
+                    if (Macro.IsCustomSpellSubCode((int)macro.SubCode))
+                        GameActions.CastSpell((int)macro.SubCode);
+
+                    break;
+
                 case MacroType.LastSpell:
                     GameActions.CastSpell(GameActions.LastSpellIndex);
 
@@ -2785,7 +2791,52 @@ namespace ClassicUO.Game.Managers
                     offset = (int)MacroSubType.Inspire;
                     count = 1 + (int)MacroSubType.Boarding - (int)MacroSubType.Inspire;
                     break;
+
+                case MacroType.CastCustomSpell:
+                    offset = 0;
+                    count = 1;
+                    break;
             }
+        }
+
+        public static void BuildCastCustomSpellPicker(MacroSubType currentSubCode, out string[] names, out int[] subCodes, out int currentIndex)
+        {
+            var entries = new List<(string Name, int ClientId)>();
+            foreach (var bookType in DynamicSpellbookRegistry.GetAllRegisteredTypes())
+            {
+                var dict = DynamicSpellbookRegistry.GetSpellDictionary(bookType);
+                foreach (var kv in dict.OrderBy(kv => kv.Key))
+                {
+                    string spellName = string.IsNullOrEmpty(kv.Value.Name) ? $"Spell {kv.Value.ID}" : kv.Value.Name;
+                    entries.Add((spellName, kv.Value.ID));
+                }
+            }
+
+            names = new string[entries.Count];
+            subCodes = new int[entries.Count];
+            for (int i = 0; i < entries.Count; i++)
+            {
+                names[i] = entries[i].Name;
+                subCodes[i] = entries[i].ClientId;
+            }
+
+            currentIndex = Array.IndexOf(subCodes, (int)currentSubCode);
+            if (currentIndex < 0)
+                currentIndex = 0;
+        }
+
+        public static bool IsCustomSpellSubCode(int subCode)
+        {
+            foreach (var bookType in DynamicSpellbookRegistry.GetAllRegisteredTypes())
+            {
+                var dict = DynamicSpellbookRegistry.GetSpellDictionary(bookType);
+                foreach (var spell in dict.Values)
+                {
+                    if (spell.ID == subCode)
+                        return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -2817,6 +2868,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.UseObject:
                 case MacroType.LookAtMouse:
                 case MacroType.CastMasterySpell:
+                case MacroType.CastCustomSpell:
 
                     if (sub == MacroSubType.MSC_NONE)
                     {
@@ -2978,7 +3030,8 @@ namespace ClassicUO.Game.Managers
         ClearHands,
         EquipHands,
         UseType,
-        CastMasterySpell
+        CastMasterySpell,
+        CastCustomSpell
     }
 
     public enum MacroSubType

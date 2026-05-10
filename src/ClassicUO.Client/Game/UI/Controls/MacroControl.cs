@@ -481,13 +481,23 @@ namespace ClassicUO.Game.UI.Controls
                     case 1:
                         int count = 0;
                         int offset = 0;
-                        Macro.GetBoundByCode(obj.Code, ref count, ref offset);
+                        string[] names;
+                        int[] customSpellSubCodes = null;
+                        int selectedIndex;
 
-                        string[] names = new string[count];
-
-                        for (int i = 0; i < count; i++)
+                        if (obj.Code == MacroType.CastCustomSpell)
                         {
-                            names[i] = _allSubHotkeysNames[i + offset];
+                            Macro.BuildCastCustomSpellPicker(obj.SubCode, out names, out customSpellSubCodes, out selectedIndex);
+                        }
+                        else
+                        {
+                            Macro.GetBoundByCode(obj.Code, ref count, ref offset);
+                            names = new string[count];
+                            for (int i = 0; i < count; i++)
+                            {
+                                names[i] = _allSubHotkeysNames[i + offset];
+                            }
+                            selectedIndex = (int)obj.SubCode - offset;
                         }
 
                         var sub = new Combobox
@@ -496,15 +506,22 @@ namespace ClassicUO.Game.UI.Controls
                             Height,
                             180,
                             names,
-                            (int) obj.SubCode - offset,
+                            selectedIndex,
                             300
                         );
 
                         sub.OnOptionSelected += (senderr, ee) =>
                         {
-                            Macro.GetBoundByCode(obj.Code, ref count, ref offset);
-                            var subType = (MacroSubType) (offset + ee);
-                            obj.SubCode = subType;
+                            if (customSpellSubCodes != null)
+                            {
+                                if (ee >= 0 && ee < customSpellSubCodes.Length)
+                                    obj.SubCode = (MacroSubType)customSpellSubCodes[ee];
+                            }
+                            else
+                            {
+                                Macro.GetBoundByCode(obj.Code, ref count, ref offset);
+                                obj.SubCode = (MacroSubType)(offset + ee);
+                            }
                         };
 
                         Add(sub);

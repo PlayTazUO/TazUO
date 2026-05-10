@@ -7,6 +7,7 @@ namespace ClassicUO.Game.Managers
     internal static class SpellbookTypeRegistry
     {
         private static readonly Dictionary<ushort, SpellBookType> _graphicToType = new();
+        private static readonly Dictionary<uint, SpellBookType> _serialToType = new();
 
         static SpellbookTypeRegistry()
         {
@@ -40,30 +41,34 @@ namespace ClassicUO.Game.Managers
             // (0x225A is commonly used for custom spellbooks)
             Register(0x225B, SpellBookType.Mastery);
 
-            Log.Trace("[SPELLBOOK REGISTRY] Registered standard spellbook types");
         }
 
         public static void Register(ushort itemGraphic, SpellBookType type)
         {
-            if (_graphicToType.ContainsKey(itemGraphic))
-            {
-                Log.Warn($"[SPELLBOOK REGISTRY DEBUG] Overwriting existing mapping: 0x{itemGraphic:X4} was {_graphicToType[itemGraphic]}, now {type}");
-            }
-
             _graphicToType[itemGraphic] = type;
-            Log.Info($"[SPELLBOOK REGISTRY DEBUG] Registered: ItemGraphic=0x{itemGraphic:X4} -> SpellBookType={type} (numeric value: {(byte)type})");
+        }
+
+        public static void RegisterSerial(uint serial, SpellBookType type)
+        {
+            _serialToType[serial] = type;
+        }
+
+        public static SpellBookType? GetTypeForSerial(uint serial)
+        {
+            if (_serialToType.TryGetValue(serial, out var type))
+            {
+                return type;
+            }
+            return null;
         }
 
         public static SpellBookType GetTypeForGraphic(ushort itemGraphic)
         {
             if (_graphicToType.TryGetValue(itemGraphic, out var type))
             {
-                Log.Info($"[SPELLBOOK REGISTRY DEBUG] GetTypeForGraphic: 0x{itemGraphic:X4} -> {type} (numeric: {(byte)type})");
                 return type;
             }
 
-            // Default to Magery for unknown graphics
-            Log.Warn($"[SPELLBOOK REGISTRY DEBUG] Unknown item graphic 0x{itemGraphic:X4}, defaulting to Magery");
             return SpellBookType.Magery;
         }
 
@@ -74,8 +79,8 @@ namespace ClassicUO.Game.Managers
         public static void ClearDynamic()
         {
             _graphicToType.Clear();
+            _serialToType.Clear();
             RegisterStandardSpellbooks();
-            Log.Trace("[SPELLBOOK REGISTRY] Cleared dynamic registrations, re-registered standard types");
         }
 
         public static IEnumerable<ushort> GetAllRegisteredGraphics()
