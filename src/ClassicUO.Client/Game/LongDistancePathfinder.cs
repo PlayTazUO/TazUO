@@ -936,53 +936,55 @@ namespace ClassicUO.Game
         /// </summary>
         private static List<Point> SmoothPath(List<Point> path)
         {
-            return path; //Disabled for now, not sure it's helping
-            if (path == null || path.Count <= 2)
-                return path;
-
-            var keyPoints = new List<Point>();
-            int currentIndex = 0;
-            keyPoints.Add(path[0]);
-
-            // Find key waypoints (corners where direction changes)
-            while (currentIndex < path.Count - 1)
-            {
-                int furthestIndex = currentIndex + 1;
-
-                // Try to find the furthest point we can reach in a straight line
-                for (int i = currentIndex + 2; i < path.Count; i++)
-                {
-                    if (HasLineOfSight(path[currentIndex], path[i]))
-                    {
-                        furthestIndex = i;
-                    }
-                    else
-                    {
-                        break; // Can't see further, stop checking
-                    }
-                }
-
-                // Add the furthest reachable point
-                keyPoints.Add(path[furthestIndex]);
-                currentIndex = furthestIndex;
-            }
-
-            // Now fill in all tiles along the straight line segments between key points
-            var smoothedPath = new List<Point>();
-            for (int i = 0; i < keyPoints.Count - 1; i++)
-            {
-                List<Point> segment = GenerateLineSegment(keyPoints[i], keyPoints[i + 1]);
-                // Add all points except the last one (to avoid duplicates)
-                for (int j = 0; j < segment.Count - 1; j++)
-                {
-                    smoothedPath.Add(segment[j]);
-                }
-            }
-            // Add the final point
-            smoothedPath.Add(keyPoints[keyPoints.Count - 1]);
-
-            Log.Debug($"[LongDistancePathfinder] Path smoothing: {path.Count} tiles -> {smoothedPath.Count} tiles ({keyPoints.Count} key points)");
-            return smoothedPath;
+            // ReSharper disable once ArrangeMethodOrOperatorBody
+            return path;
+            //Disabled for now, not sure it's helping
+            // if (path == null || path.Count <= 2)
+            //     return path;
+            //
+            // var keyPoints = new List<Point>();
+            // int currentIndex = 0;
+            // keyPoints.Add(path[0]);
+            //
+            // // Find key waypoints (corners where direction changes)
+            // while (currentIndex < path.Count - 1)
+            // {
+            //     int furthestIndex = currentIndex + 1;
+            //
+            //     // Try to find the furthest point we can reach in a straight line
+            //     for (int i = currentIndex + 2; i < path.Count; i++)
+            //     {
+            //         if (HasLineOfSight(path[currentIndex], path[i]))
+            //         {
+            //             furthestIndex = i;
+            //         }
+            //         else
+            //         {
+            //             break; // Can't see further, stop checking
+            //         }
+            //     }
+            //
+            //     // Add the furthest reachable point
+            //     keyPoints.Add(path[furthestIndex]);
+            //     currentIndex = furthestIndex;
+            // }
+            //
+            // // Now fill in all tiles along the straight line segments between key points
+            // var smoothedPath = new List<Point>();
+            // for (int i = 0; i < keyPoints.Count - 1; i++)
+            // {
+            //     List<Point> segment = GenerateLineSegment(keyPoints[i], keyPoints[i + 1]);
+            //     // Add all points except the last one (to avoid duplicates)
+            //     for (int j = 0; j < segment.Count - 1; j++)
+            //     {
+            //         smoothedPath.Add(segment[j]);
+            //     }
+            // }
+            // // Add the final point
+            // smoothedPath.Add(keyPoints[keyPoints.Count - 1]);
+            //
+            // Log.Debug($"[LongDistancePathfinder] Path smoothing: {path.Count} tiles -> {smoothedPath.Count} tiles ({keyPoints.Count} key points)");
+            // return smoothedPath;
         }
 
         /// <summary>

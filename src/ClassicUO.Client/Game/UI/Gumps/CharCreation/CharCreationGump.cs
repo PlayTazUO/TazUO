@@ -141,7 +141,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                     break;
 
                 case CharCreationStep.ChooseProfession:
-                    Control existing = Children.FirstOrDefault(page => page.Page == 2);
+                    IGui existing = Children.FirstOrDefault(page => page.Page == 2);
 
                     if (existing != null)
                     {

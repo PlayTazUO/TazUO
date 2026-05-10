@@ -13,7 +13,7 @@ using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using ClassicUO.Game.UI.Gumps.SpellBar;
-using ClassicUO.Game.UI.ImGuiControls;
+using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -147,7 +147,10 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 1,
                 FontCenter = true
             }, 1);
-            assistant.MouseUp += (s, e) => { AssistantWindow.Show(); };
+            assistant.MouseUp += (s, e) =>
+            {
+                AssistantWindow.Show();
+            };
             startX += largeWidth + 1;
 
             RighClickableButton lscript;
@@ -168,7 +171,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontCenter = true
             }, 1);
             lscript.MouseUp += (s, e) => {
-                ScriptManagerWindow.Show();
+                MyraWindows.ScriptManagerWindow.Show();
             };
             startX += largeWidth + 1;
 
@@ -197,6 +200,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
             moreMenu.ContextMenu = new ContextMenuControl(this);
             moreMenu.MouseUp += (s, e) => { moreMenu.ContextMenu?.Show(); };
+            //moreMenu.ContextMenu.Add(new ContextMenuItemEntry("TazUO Chat", () => { MyraWindows.TazUOChatWindow.Show(); }));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.TopBarGump.CommandsEntry, () =>
             {
                 UIManager.Add(new CommandsGump(world));
@@ -244,8 +248,6 @@ namespace ClassicUO.Game.UI.Gumps
 
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Toggle nameplates", () => { World.NameOverHeadManager.ToggleOverheads(); }));
 
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Discord", () => { UIManager.Add(new DiscordGump(World)); }));
-
             var submenu = new ContextMenuItemEntry("Tools");
             submenu.Add(new ContextMenuItemEntry("Spell quick cast", () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
             submenu.Add(new ContextMenuItemEntry("Open boat control", () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
@@ -253,13 +255,13 @@ namespace ClassicUO.Game.UI.Gumps
             submenu.Add(new ContextMenuItemEntry("Healthbar Collector", () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
             submenu.Add(new ContextMenuItemEntry("Retrieve gumps", () =>
             {
-                for (LinkedListNode<Gump> last = UIManager.Gumps.Last; last != null; last = last.Previous)
+                for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
-                    Gump c = last.Value;
+                    IGui c = last.Value;
 
-                    if (!c.IsDisposed)
+                    if (!c.IsDisposed && c is Gump g)
                     {
-                        c.SetInScreen();
+                        g.SetInScreen();
                     }
                 }
             }));
@@ -379,7 +381,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Right && (X != 0 || Y != 0))
             {
@@ -472,7 +474,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public RighClickableButton(List<string> parts) : base(parts) { }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 base.OnMouseUp(x, y, button);
                 Parent?.InvokeMouseUp(new Point(x, y), button);

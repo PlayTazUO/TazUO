@@ -205,7 +205,7 @@ namespace ClassicUO.Game.GameObjects
                 if (outlineColor.HasValue)
                 {
                     Color oc = outlineColor.Value;
-                    Vector3 outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
+                    var outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
                     Vector3 outlineHue = ShaderHueTranslator.GetOutlineHueVector(hue.Z);
 
                     batcher.DrawOutlined(
@@ -373,7 +373,7 @@ namespace ClassicUO.Game.GameObjects
                 if (outlineColor.HasValue)
                 {
                     Color oc = outlineColor.Value;
-                    Vector3 outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
+                    var outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
                     Vector3 outlineHue = ShaderHueTranslator.GetOutlineHueVector(hue.Z);
 
                     batcher.DrawOutlined(

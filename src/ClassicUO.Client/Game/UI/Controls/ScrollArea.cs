@@ -128,7 +128,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 for (int i = 1; i < Children.Count; i++)
                 {
-                    Control child = Children[i];
+                    IGui child = Children[i];
 
                     if (!child.IsVisible)
                     {
@@ -146,7 +146,7 @@ namespace ClassicUO.Game.UI.Controls
             return true;
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             switch (delta)
             {
@@ -179,7 +179,7 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 1; i < Children.Count; i++)
             {
-                Control c = Children[i];
+                IGui c = Children[i];
 
                 if (c.IsVisible && !c.IsDisposed)
                 {

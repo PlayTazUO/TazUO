@@ -56,7 +56,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public bool IsMinimized { get; set; }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {

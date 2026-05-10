@@ -191,7 +191,7 @@ public class BaseOptionsGump : Gump
 
     protected static void SetParentsForMatchingSearch(Control c, int page)
     {
-        for (Control p = c.Parent; p != null; p = p.Parent)
+        for (IGui p = c.Parent; p != null; p = p.Parent)
         {
             if (p is LeftSideMenuRightSideContent content)
             {
@@ -614,7 +614,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+        public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
             if (IsActive)
             {
@@ -653,7 +653,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Middle || button == MouseButtonType.XButton1 || button == MouseButtonType.XButton2)
             {
@@ -692,7 +692,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
@@ -1150,13 +1150,13 @@ public class BaseOptionsGump : Gump
                 UpdateCaretScreenPosition();
             }
 
-            internal override void OnFocusEnter()
+            public override void OnFocusEnter()
             {
                 base.OnFocusEnter();
                 CaretIndex = Text?.Length ?? 0;
             }
 
-            internal override void OnFocusLost()
+            public override void OnFocusLost()
             {
                 if (Stb != null)
                     Stb.SelectStart = Stb.SelectEnd = 0;
@@ -1164,7 +1164,7 @@ public class BaseOptionsGump : Gump
                 base.OnFocusLost();
             }
 
-            protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
             {
                 ControlKeys? stb_key = null;
                 bool update_caret = false;
@@ -1618,7 +1618,7 @@ public class BaseOptionsGump : Gump
                 }
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left && IsEditable)
                 {
@@ -1633,7 +1633,7 @@ public class BaseOptionsGump : Gump
                 base.OnMouseDown(x, y, button);
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left)
                 {
@@ -1643,7 +1643,7 @@ public class BaseOptionsGump : Gump
                 base.OnMouseUp(x, y, button);
             }
 
-            protected override void OnMouseOver(int x, int y)
+            public override void OnMouseOver(int x, int y)
             {
                 base.OnMouseOver(x, y);
 
@@ -1663,7 +1663,7 @@ public class BaseOptionsGump : Gump
                 base.Dispose();
             }
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
             {
                 if (!NoSelection && CaretIndex < Text.Length && CaretIndex >= 0 && !char.IsWhiteSpace(Text[CaretIndex]))
                 {
@@ -1762,7 +1762,7 @@ public class BaseOptionsGump : Gump
 
                 if (value)
                 {
-                    Control p = Parent;
+                    IGui p = Parent;
 
                     if (p == null)
                     {
@@ -1797,7 +1797,7 @@ public class BaseOptionsGump : Gump
             return null;
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -1932,7 +1932,7 @@ public class BaseOptionsGump : Gump
             {
                 for (int i = start; i < Children.Count; i++)
                 {
-                    Control child = Children[i];
+                    IGui child = Children[i];
 
                     if (!child.IsVisible || (child.Page != ActivePage && child.Page != 0))
                     {
@@ -1960,7 +1960,7 @@ public class BaseOptionsGump : Gump
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             if (IsDisposed || _scrollBar == null)
             {
@@ -1997,7 +1997,7 @@ public class BaseOptionsGump : Gump
 
             for (int i = 1; i < Children.Count; i++)
             {
-                Control c = Children[i];
+                IGui c = Children[i];
 
                 if (c.IsVisible && !c.IsDisposed && (c.Page == 0 || c.Page == ActivePage))
                 {
@@ -2085,7 +2085,7 @@ public class BaseOptionsGump : Gump
 
             protected override int GetScrollableArea() => Height - _rectSlider.Height;
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 base.OnMouseDown(x, y, button);
 
@@ -2140,7 +2140,16 @@ public class BaseOptionsGump : Gump
         private Combobox _comboBox;
         private readonly string[] options;
 
-        public ComboBoxWithLabel(World world, string label, int labelWidth, int comboWidth, string[] options, int selectedIndex, Action<int, string> onOptionSelected = null)
+        public ComboBoxWithLabel(
+            World world,
+            string label,
+            int labelWidth,
+            int comboWidth,
+            string[] options,
+            int selectedIndex,
+            Action<int, string> onOptionSelected = null,
+            bool autoSortComboboxItems = true
+        )
         {
             AcceptMouseInput = true;
             CanMove = true;
@@ -2152,7 +2161,7 @@ public class BaseOptionsGump : Gump
 
             Add
             (
-                _comboBox = new Combobox(world, comboWidth, options, selectedIndex, onOptionSelected: onOptionSelected)
+                _comboBox = new Combobox(world, comboWidth, options, selectedIndex, onOptionSelected: onOptionSelected, sortItems:autoSortComboboxItems)
                 {
                     X = _label.MeasuredSize.X + _label.X + 5
                 }
@@ -2224,7 +2233,15 @@ public class BaseOptionsGump : Gump
 
             private World world;
 
-            public Combobox(World world, int width, string[] items, int selected = -1, int maxHeight = 400, Action<int, string> onOptionSelected = null)
+            public Combobox(
+                World world,
+                int width,
+                string[] items,
+                int selected = -1,
+                int maxHeight = 400,
+                Action<int, string> onOptionSelected = null,
+                bool sortItems = true
+            )
             {
                 this.world = world;
                 Width = width;
@@ -2234,13 +2251,13 @@ public class BaseOptionsGump : Gump
                 OnOptionSelected = onOptionSelected;
                 AcceptMouseInput = true;
 
-                // Create sorted items with original index mapping
+                // When sorting is on, create a sorted items array with original index mapping
                 _originalIndices = Enumerable.Range(0, items.Length).ToArray();
                 _sortedItems = new string[items.Length];
                 Array.Copy(items, _sortedItems, items.Length);
 
-                // Sort both arrays together
-                Array.Sort(_sortedItems, _originalIndices);
+                if (sortItems)
+                    Array.Sort(_sortedItems, _originalIndices); // Sort both arrays together
 
                 // Find the display index for the selected original index
                 int displayIndex = selected > -1 ? Array.IndexOf(_originalIndices, selected) : -1;
@@ -2280,7 +2297,7 @@ public class BaseOptionsGump : Gump
 
             public Action<int, string> OnOptionSelected { get; }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
                 {
@@ -2405,7 +2422,7 @@ public class BaseOptionsGump : Gump
                     }
 
                     public bool DrawBackgroundCurrentIndex = true;
-                    public bool IsSelected, ForceHover;
+                    public bool IsSelected;
 
                     public Color Hue;
 
@@ -2419,7 +2436,7 @@ public class BaseOptionsGump : Gump
                                 _label.FontColor = Hue;
                             }
                         }
-                        else if (MouseIsOver || ForceHover)
+                        else if (MouseIsOver)
                         {
                             if (Hue != _overHue)
                             {
@@ -2683,7 +2700,7 @@ public class BaseOptionsGump : Gump
 
         protected virtual void OnCheckedChanged() => ValueChanged?.Invoke(IsChecked);
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left && MouseIsOver)
             {
@@ -2869,7 +2886,7 @@ public class BaseOptionsGump : Gump
                 return base.Draw(batcher, x, y);
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
                 {
@@ -2879,7 +2896,7 @@ public class BaseOptionsGump : Gump
                 _clicked = true;
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
                 {
@@ -2890,7 +2907,7 @@ public class BaseOptionsGump : Gump
                 CalculateNew(x);
             }
 
-            protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
             {
                 base.OnKeyUp(key, mod);
 

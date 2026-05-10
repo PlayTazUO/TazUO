@@ -282,7 +282,7 @@ namespace ClassicUO.LegionScripting
 
         public void RecordVirtue(string virtue) => RecordAction("virtue", new Dictionary<string, object> { { "virtue", virtue } });
 
-        public void RecordWaitForGump(string gumpid) => RecordAction("waitforgump", new Dictionary<string, object> { { "id", gumpid } });
+        public void RecordWaitForGump(uint gumpid) => RecordAction("waitforgump", new Dictionary<string, object> { { "id", gumpid } });
 
         public List<RecordedAction> GetRecordedActions()
         {
@@ -401,7 +401,7 @@ namespace ClassicUO.LegionScripting
                             action.Parameters.TryGetValue("z", out object targZ))
                         {
                             if (action.Parameters.TryGetValue("graphic", out object graphic))
-                                script.AppendLine($"API.Target({targX}, {targY}, {targZ}, {graphic})");
+                                script.AppendLine($"API.Target({targX}, {targY}, {targZ}, 0x{graphic:X4})");
                             else
                                 script.AppendLine($"API.Target({targX}, {targY}, {targZ})");
                         }
@@ -470,13 +470,22 @@ namespace ClassicUO.LegionScripting
                     case "replygump":
                         if (action.Parameters.TryGetValue("button", out object gumpButton))
                         {
-                            string switches = "";
+                            bool hasSwitches = action.Parameters.TryGetValue("switches", out object switchesValue);
+                            bool hasEntries = action.Parameters.TryGetValue("entries", out object entriesValue);
 
-                            if (action.Parameters.TryGetValue("switches", out object switchesValue))
-                                switches = ", [" + switchesValue + "]";
+                            string switches = hasSwitches ? ", [" + switchesValue + "]" : (hasEntries ? ", None" : "");
+
+                            string entries = "";
+                            if (hasEntries)
+                            {
+                                IEnumerable<string> tuples = entriesValue.ToString().Split(';')
+                                    .Select(p => { string[] kv = p.Split(':', 2); return kv.Length == 2 ? $"({kv[0]}, \"{kv[1]}\")" : null; })
+                                    .Where(t => t != null);
+                                entries = ", [" + string.Join(", ", tuples) + "]";
+                            }
 
                             if (action.Parameters.TryGetValue("gumpid", out object gumpId))
-                                script.AppendLine($"API.ReplyGump({gumpButton}, 0x{gumpId:X8}{switches})");
+                                script.AppendLine($"API.ReplyGump({gumpButton}, 0x{gumpId:X8}{switches}{entries})");
                             else
                                 script.AppendLine($"API.ReplyGump({gumpButton})");
                         }
@@ -540,7 +549,7 @@ namespace ClassicUO.LegionScripting
                     case "waitforgump":
                         if (action.Parameters.TryGetValue("id", out object gumpid))
                         {
-                            script.AppendLine($"while not API.HasGump({gumpid}):");
+                            script.AppendLine($"while not API.HasGump(0x{gumpid:X8}):");
                             script.AppendLine($"    API.Pause(0.1)");
                         }
                         break;

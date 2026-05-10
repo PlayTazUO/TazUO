@@ -58,7 +58,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.Debug;
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -110,7 +110,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (Profiler.Enabled)
                     {
                         double timeTotal = Profiler.TrackedTime;
-                        
+
                         foreach (Profiler.ProfileData pd in Profiler.AllFrameData)
                         {
                             sb.Append($"\n[{pd.Context[pd.Context.Length - 1]}] [Last: {pd.LastTime:0.0}ms] [Total %: {100d * (pd.TimeInContext / timeTotal):0.00}]");

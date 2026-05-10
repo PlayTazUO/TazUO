@@ -171,12 +171,6 @@ namespace ClassicUO.Game.Scenes
         {
             switch (newStep)
             {
-                case LoginSteps.Main:
-                    break;
-                case LoginSteps.Connecting:
-                    break;
-                case LoginSteps.VerifyingAccount:
-                    break;
                 case LoginSteps.ServerSelection:
                     if (CanAutologin && Servers != null && Servers.Length != 0)
                     {
@@ -200,31 +194,46 @@ namespace ClassicUO.Game.Scenes
                 case LoginSteps.CharacterSelection:
                     _world.ClientFeatures.SetFlags((CharacterListFlags)LoginHandshake.Instance.CharacterListFlags);
                     break;
-                case LoginSteps.EnteringBritania:
-                    break;
-                case LoginSteps.CharacterCreation:
-                    break;
-                case LoginSteps.CharacterCreationDone:
-                    break;
                 case LoginSteps.PopUpMessage:
                     if(LoginHandshake.Instance.ErrorPacket != byte.MaxValue)
                         PopupMessage = ServerErrorMessages.GetError(LoginHandshake.Instance.ErrorPacket, LoginHandshake.Instance.ErrorCode, LoginDelay);
                     else if(!string.IsNullOrEmpty(LoginHandshake.Instance.ErrorMessage))
                         PopupMessage = LoginHandshake.Instance.ErrorMessage;
                     break;
+
+                case LoginSteps.Main:
+                case LoginSteps.Connecting:
+                case LoginSteps.VerifyingAccount:
+                case LoginSteps.EnteringBritania:
+                case LoginSteps.CharacterCreation:
+                case LoginSteps.CharacterCreationDone:
+                default:
+                    break;
             }
 
-            if (_lastLoginStep != newStep)
-            {
-                Client.Game.UO.GameCursor.IsLoading = false;
+            if (_lastLoginStep == newStep)
+                return;
 
-                // this trick avoid the flickering
-                Gump g = _currentGump;
+            // This trick is to avoid UI flickering
+            //
+            // Note that this callback may be run from the threadpool so using MT dispatch can help mitigate concurrent modification issues
+            //
+            // This is a sort-of deferred refresh, not a strict state machine; The MT disposes the previous UI and renders
+            // whatever's right for the state that happens to be current when the callback is invoked
+            Gump g = _currentGump;
+            MainThreadQueue.InvokeOnMainThread(() =>
+            {
+                // Since this is slightly deferred, we could've been disposed in the time between enqueuing and invocation.
+                // We don't wanna mutate UI if that's the case
+                if (IsDestroyed)
+                    return;
+
+                Client.Game.UO.GameCursor.IsLoading = false;
                 UIManager.Add(_currentGump = GetGumpForStep());
                 g?.Dispose();
+            });
 
-                _lastLoginStep = newStep;
-            }
+            _lastLoginStep = newStep;
         }
 
         public override void Update()

@@ -27,7 +27,20 @@ namespace ClassicUO.IO.Audio
             {
                 if (!IsNullOrEmpty(value))
                 {
-                    m_Name = value.Replace(".mp3", "");
+                    string[] extensions = { ".mp3", ".wav" };
+                    string result = value;
+
+                    foreach (string ext in extensions)
+                    {
+                        int index = value.IndexOf(ext, StringComparison.InvariantCultureIgnoreCase);
+                        if (index != -1)
+                        {
+                            result = value.Substring(0, index + ext.Length);
+                            break;
+                        }
+                    }
+
+                    m_Name = result;
                 }
                 else
                 {

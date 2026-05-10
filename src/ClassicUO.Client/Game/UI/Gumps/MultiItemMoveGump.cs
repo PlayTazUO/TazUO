@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
         public MultiItemMoveGump(int x, int y)
             // resizable = true, with sensible minimums
             : base(World.Instance, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel,
-                   ModernUIConstants.ModernUIPanel_BoderSize, true, WIDTH, HEIGHT)
+                   ModernUIConstants.ModernUIPanel_BorderSize, true, WIDTH, HEIGHT)
         {
             CanMove = true;
             AcceptMouseInput = true;

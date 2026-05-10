@@ -401,7 +401,7 @@ namespace ClassicUO.Network
 
         public void Send(Span<byte> message, bool ignorePlugin = false, bool skipEncryption = false)
         {
-            if (!IsConnected || message == null || message.Length == 0)
+            if (!IsConnected || message is [])
             {
                 return;
             }

@@ -11,6 +11,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.Managers
 {
@@ -49,10 +50,7 @@ namespace ClassicUO.Game.Managers
 
         public PromptData PromptData { get; set; }
 
-        public event EventHandler<MessageEventArgs> MessageReceived;
-
         public event EventHandler<MessageEventArgs> LocalizedMessageReceived;
-
 
         public void HandleMessage
         (
@@ -195,7 +193,7 @@ namespace ClassicUO.Game.Managers
                 case MessageType.Label:
                     if (textType == TextType.OBJECT)
                     {
-                        for (LinkedListNode<Gump> gump = UIManager.Gumps.Last; gump != null; gump = gump.Previous)
+                        for (LinkedListNode<IGui> gump = UIManager.Gumps.Last; gump != null; gump = gump.Previous)
                         {
                             if (gump.Value is GridContainer && !gump.Value.IsDisposed)
                             {
@@ -238,9 +236,9 @@ namespace ClassicUO.Game.Managers
                             msg.IsTextGump = true;
                             bool found = false;
 
-                            for (LinkedListNode<Gump> gump = UIManager.Gumps.Last; gump != null; gump = gump.Previous)
+                            for (LinkedListNode<IGui> gump = UIManager.Gumps.Last; gump != null; gump = gump.Previous)
                             {
-                                Control g = gump.Value;
+                                IGui g = gump.Value;
 
                                 if (!g.IsDisposed)
                                 {

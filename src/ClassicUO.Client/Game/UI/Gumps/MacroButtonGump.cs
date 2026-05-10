@@ -149,7 +149,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, MouseButtonType.Left);
 
@@ -161,7 +161,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (ProfileManager.CurrentProfile.CastSpellsByOneClick || button != MouseButtonType.Left)
             {

@@ -12,7 +12,12 @@ namespace ClassicUO.Utility
 
         private static ICompressor _compressor;
 
-        public static bool ManagedZlibForced { get; private set; } = false;
+        public static bool ManagedZlibForced { get; private set; } =
+#if DEBUG
+            true;
+#else
+            false;
+#endif
 
         static ZLib()
         {

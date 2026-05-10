@@ -4,15 +4,15 @@ using ClassicUO.Game.GameObjects;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ClassicUO.Game.Managers.SpellVisualRange;
 using Timer = System.Timers.Timer;
 
-namespace ClassicUO.Game.Managers
+namespace ClassicUO.Game.Managers.SpellVisualRange
 {
     using Utility.Logging;
 
@@ -36,6 +36,11 @@ namespace ClassicUO.Game.Managers
 
         private bool isCasting { get; set; } = false;
         private SpellRangeInfo currentSpell { get; set; }
+
+        /// <summary>
+        /// An instance of a cast timer bar. May be null, depending on profile settings
+        /// </summary>
+        private static CastTimerProgressBar _castTimerBar;
 
         //Taken from Dust client
         private static readonly int[] stopAtClilocs = new int[]
@@ -105,14 +110,51 @@ namespace ClassicUO.Game.Managers
         public SpellRangeInfo GetCurrentSpell() => currentSpell;
 
         #region Load and unload
-        public void OnSceneLoad() => EventSink.RawMessageReceived += OnRawMessageReceived;
+
+        public void OnSceneLoad()
+        {
+            EventSink.RawMessageReceived += OnRawMessageReceived;
+
+            // Register a settings listener so we can dynamically enable/disable the spell progress bar
+            ProfileManager.CurrentProfilePropertyChanged += UpdateSpellProgressBarPresence;
+            UpdateSpellProgressBarPresence(null, new PropertyChangedEventArgs(nameof(Profile.EnableSpellIndicators)));
+        }
 
         public void OnSceneUnload()
         {
             EventSink.RawMessageReceived -= OnRawMessageReceived;
+
+            // Remove settings listener. Leave gump destruction to UI Mgr. disposal.
+            ProfileManager.CurrentProfilePropertyChanged -= UpdateSpellProgressBarPresence;
+
             instance = null;
+
         }
         #endregion
+
+        /// <summary>
+        /// Adds/removes the spell progress bar, depending on current configuration
+        /// </summary>
+        /// <param name="sender">The event's source; Effectivly always null</param>
+        /// <param name="e">The event args. Used to ignore irrelevant updates</param>
+        private void UpdateSpellProgressBarPresence(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(Profile.EnableSpellIndicators))
+                return;
+
+            if (ProfileManager.CurrentProfile?.EnableSpellIndicators != true)
+            {
+                _castTimerBar?.Dispose();
+                _castTimerBar = null;
+                return;
+            }
+
+            if (_castTimerBar is { IsDisposed: false })
+                return;
+
+            _castTimerBar = new CastTimerProgressBar(World);
+            UIManager.Add(_castTimerBar);
+        }
 
         public bool IsTargetingAfterCasting()
         {

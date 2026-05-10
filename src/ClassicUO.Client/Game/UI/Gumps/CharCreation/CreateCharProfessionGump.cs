@@ -167,7 +167,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
 
         public Action<ProfessionInfo> Selected;
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
 

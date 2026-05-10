@@ -16,25 +16,25 @@
 The easiest way to play with TazUO is via our [launcher](https://github.com/PlayTazUO/TUO-Launcher/releases/latest)!
 
 # TazUO features
-Check out our [wiki](../../wiki) for details on all the changes TazUO has made for players!  
+Check out our [website](https://tazuo.org) for details on all the changes TazUO has made for players!  
 
 ***Most*** features can be disabled if you don't want to use said feature.  
 
-- [Launcher](../../wiki/TazUO.Updater-Launcher) - Managing profiles for multiple accounts/servers
-- [Grid containers](../../wiki/TazUO.Grid-Containers) - Easily find and move items with our fully customizable grid containers
-- [Custom build-in scripting](../../wiki/TazUO.Legion-Scripting) - Build in powerful scripting languages. **Python** and Legion Script.
+- [Launcher](https://tazuo.org/?q=launcher) - Managing profiles for multiple accounts/servers
+- [Grid containers](https://tazuo.org/?q=grid+containers) - Easily find and move items with our fully customizable grid containers
+- [Custom build-in scripting](https://tazuo.org/?q=legion+scripting) - Build in powerful scripting languages. **Python** and Legion Script.
 - **Assistant features built-in** - Like Auto buy, sell, auto loot and more.
-- [Journal](../../wiki/TazUO.Journal) - Vastly improved journal for readability and organization
-- [Alternative paperdoll](../../wiki/TazUO.Alternate-Paperdoll) - A new flavor of your paperdoll
-- [Improved buff bar](../../wiki/TazUO.Buff-Bars)
-- [Client commands](../../wiki/TazUO.Commands) - Several commands have been added for various features
-- [Controller support](../../wiki/TazUO.Controller-Support) - That's right, play with your controller!
-- [Cooldown bars](../../wiki/TazUO.Cooldown-bars) - Customizable cooldown bars
-- [Grid Highlighting](../../wiki/TazUO.Grid-highlighting-based-on-item-properties) - Grid highlighting of items that have specific properties, easier looting!
-- [Tooltip overrides](../../wiki/TazUO.Tooltip-Override) - Customize and override any text in tooltips!
-- [Custom fonts](../../wiki/TazUO.TTF-Fonts) - BYOF, Bring your own fonts for better readability.
+- [Journal](https://tazuo.org/?q=journal) - Vastly improved journal for readability and organization
+- [Alternative paperdoll](https://tazuo.org/?q=alternate+paperdoll) - A new flavor of your paperdoll
+- [Improved buff bar](https://tazuo.org/?q=buff+bars)
+- [Client commands](https://tazuo.org/?q=commands) - Several commands have been added for various features
+- [Controller support](https://tazuo.org/?q=controller+support) - That's right, play with your controller!
+- [Cooldown bars](https://tazuo.org/?q=cooldown+bars) - Customizable cooldown bars
+- [Grid Highlighting](https://tazuo.org/?q=grid+highlighting) - Grid highlighting of items that have specific properties, easier looting!
+- [Tooltip overrides](https://tazuo.org/?q=tooltip+override) - Customize and override any text in tooltips!
+- [Custom fonts](https://tazuo.org/?q=ttf+fonts) - BYOF, Bring your own fonts for better readability.
 
-There are ***many*** more features to check out in our [wiki](../../wiki) or in game, this list is just a sample!
+There are ***many*** more features to check out in our [website](https://tazuo.org) or in game, this list is just a sample!
 
 
 # Screenshots

@@ -31,10 +31,7 @@ namespace ClassicUO.Renderer
         public static Vector3 GetHueVector(int hue) => GetHueVector(hue, false, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 GetOutlineHueVector(float alpha = 1f)
-        {
-            return new Vector3(0, SHADER_OUTLINE, alpha);
-        }
+        public static Vector3 GetOutlineHueVector(float alpha = 1f) => new(0, SHADER_OUTLINE, alpha);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 GetHueVector(int hue, bool partial, float alpha, bool gump = false, bool effect = false)

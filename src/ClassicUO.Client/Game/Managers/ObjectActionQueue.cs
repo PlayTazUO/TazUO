@@ -26,7 +26,7 @@ public class ObjectActionQueue : ConcurrentPriorityQueue<ObjectActionQueueItem, 
                 continue;
             }
 
-            if (priority == ActionPriority.MoveItem && Client.Game.UO.GameCursor.ItemHold.Enabled)
+            if (priority >= ActionPriority.UnequipItem && Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
                 Enqueue(item,  priority, sequence); //Return to queue to retry again when not holding an item
                 return;
@@ -59,9 +59,9 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
             moveRequest.Execute();
         });
 
-    public static ObjectActionQueueItem? QuickLoot(uint serial) => World.Instance.Items.TryGetValue(serial, out Item item) ? QuickLoot(item) : null;
+    public static ObjectActionQueueItem QuickLoot(uint serial) => World.Instance.Items.TryGetValue(serial, out Item item) ? QuickLoot(item) : null;
 
-    public static ObjectActionQueueItem? QuickLoot(Item item)
+    public static ObjectActionQueueItem QuickLoot(Item item)
     {
         if (item == null) return null;
         MoveRequest? moveRequest = item.ToLootBag();
@@ -72,7 +72,7 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
         return null;
     }
 
-    public static ObjectActionQueueItem? EquipItem(uint serial, Layer layer)
+    public static ObjectActionQueueItem EquipItem(uint serial, Layer layer)
     {
         MoveRequest? moveRequest = MoveRequest.EquipItem(serial, layer);
 
@@ -82,7 +82,7 @@ public class ObjectActionQueueItem(Action action, Action<ObjectActionQueueItem> 
         return null;
     }
 
-    public static ObjectActionQueueItem? DoubleClick(uint serial, bool ignoreWarMode = false)
+    public static ObjectActionQueueItem DoubleClick(uint serial, bool ignoreWarMode = false)
     {
         if(serial == 0) return null;
 
@@ -96,7 +96,10 @@ public enum ActionPriority
     ManualUseItem, //Higher priority than regular useitem which may occur in scripts
     UseItem,
     OpenCorpse,
+    UnequipItem, //Unequip item to make room for equipping - must run before EquipItem
     EquipItem,
     MoveItem,
-    LootItem, //Same as Moveitem, but lower priority in case user tries to manually move an item, it will happen before auto loot continues
+    LootItemHigh,   //Auto-loot: High priority items (still lower than manual moves)
+    LootItemMedium, //Auto-loot: Normal priority items
+    LootItem,       //Auto-loot: Low priority items - lowest overall priority
 }

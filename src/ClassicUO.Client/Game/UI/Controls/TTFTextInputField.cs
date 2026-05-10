@@ -376,13 +376,13 @@ namespace ClassicUO.Game.UI.Controls
                 UpdateCaretScreenPosition();
             }
 
-            internal override void OnFocusEnter()
+            public override void OnFocusEnter()
             {
                 base.OnFocusEnter();
                 CaretIndex = Text?.Length ?? 0;
             }
 
-            internal override void OnFocusLost()
+            public override void OnFocusLost()
             {
                 if (Stb != null)
                     Stb.SelectStart = Stb.SelectEnd = 0;
@@ -390,7 +390,7 @@ namespace ClassicUO.Game.UI.Controls
                 base.OnFocusLost();
             }
 
-            protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
             {
                 ControlKeys? stb_key = null;
                 bool update_caret = false;
@@ -908,7 +908,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left && IsEditable)
                 {
@@ -923,7 +923,7 @@ namespace ClassicUO.Game.UI.Controls
                 base.OnMouseDown(x, y, button);
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left)
                 {
@@ -933,7 +933,7 @@ namespace ClassicUO.Game.UI.Controls
                 base.OnMouseUp(x, y, button);
             }
 
-            protected override void OnMouseOver(int x, int y)
+            public override void OnMouseOver(int x, int y)
             {
                 base.OnMouseOver(x, y);
 
@@ -954,7 +954,7 @@ namespace ClassicUO.Game.UI.Controls
                 base.Dispose();
             }
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
             {
                 if (!NoSelection && CaretIndex < Text.Length && CaretIndex >= 0 && !char.IsWhiteSpace(Text[CaretIndex]))
                 {

@@ -39,3 +39,10 @@ ushort COUNT  // Enhanced Packets Support Count
 for x int count
     ushort ID //Enhanced packet id to enable
 ```
+
+## TazUO Identifier : 2
+### Client -> Server
+```cs
+HEADER
+string TazUO Version
+```

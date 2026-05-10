@@ -24,7 +24,7 @@ namespace ClassicUO.Game
         //    }
         //}
 
-        public void PushToBack(LinkedObject item)
+        public virtual void PushToBack(LinkedObject item)
         {
             if (item == null)
             {
@@ -48,7 +48,7 @@ namespace ClassicUO.Game
             }
         }
 
-        public void Remove(LinkedObject item)
+        public virtual void Remove(LinkedObject item)
         {
             if (item == null)
             {

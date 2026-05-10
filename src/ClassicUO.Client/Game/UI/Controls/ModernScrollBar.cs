@@ -210,7 +210,7 @@ namespace ClassicUO.Game.UI.Controls
             _thumbHovered = _thumbRect.Contains(mousePos) && !_btnSliderClicked;
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
                 return;
@@ -233,7 +233,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             _thumbPressed = false;

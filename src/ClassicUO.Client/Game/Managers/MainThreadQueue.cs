@@ -8,7 +8,7 @@ public static class MainThreadQueue
 {
     private static int _threadId;
     private static bool _isMainThread => Thread.CurrentThread.ManagedThreadId == _threadId;
-    private static ConcurrentQueue<Action> _queuedActions { get; } = new();
+    private static ConcurrentQueue<(Action Action, CancellationToken? Token)> _queuedActions { get; } = new();
 
     /// <summary>
     /// Must be called from main thread
@@ -17,16 +17,14 @@ public static class MainThreadQueue
 
     /// <summary>
     /// This will not wait for the action to complete.
+    /// If a cancellation token is provided, the action will be skipped at execution time if cancelled.
     /// </summary>
-    /// <param name="action"></param>
-    public static void EnqueueAction(Action action) => _queuedActions.Enqueue(action);
+    public static void EnqueueAction(Action action, CancellationToken? cancellationToken = null)
+        => _queuedActions.Enqueue((action, cancellationToken));
 
     /// <summary>
     ///     Wraps the given function with a try/catch, returning any caught exception
     /// </summary>
-    /// <param name="callback">The function to wrap</param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>A tuple of the Result and Exception (if one occurred)</returns>
     private static Func<(T, Exception)> WrapCallback<T>(Func<T> callback) =>
         () =>
         {
@@ -43,11 +41,6 @@ public static class MainThreadQueue
     /// <summary>
     ///     Dispatches the given function for invocation on the main thread and waits synchronously for the result
     /// </summary>
-    /// <param name="func">The function to invoke on the main thread</param>
-    /// <param name="cancellationToken">An optional cancellation token to interrupt result wait</param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>The result of the function's invocation</returns>
-    /// <exception cref="Exception">The exception, if any, raised by the function invocation</exception>
     private static T BubblingDispatchToMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null)
     {
         // The MT is so slow there's no real point in spinning; Just wastes CPU.
@@ -56,7 +49,7 @@ public static class MainThreadQueue
         T mtResult = default;
         Exception ex = null;
 
-        _queuedActions.Enqueue(MtAction);
+        _queuedActions.Enqueue((MtAction, cancellationToken));
 
         // Wait for the main thread to complete the operation
         resultEvent.Wait(cancellationToken ?? CancellationToken.None);
@@ -77,35 +70,44 @@ public static class MainThreadQueue
     ///     If the current thread is the main thread, the function will run immediately as-is,
     ///     otherwise, the function will be dispatched and waited for.
     ///     Any exceptions raised on the main thread's context will be captured and bubbled back.
+    ///     If a cancellation token is provided and already cancelled, returns default without executing.
     /// </summary>
-    /// <param name="func">The function to execute</param>
-    /// <param name="cancellationToken">An optional cancellation token to interrupt result wait</param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>The function's result</returns>
-    /// <exception cref="Exception">On any exception thrown by the given function</exception>
-    public static T BubblingInvokeOnMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null) =>
-        _isMainThread
-            ? func()
-            : BubblingDispatchToMainThread(func, cancellationToken);
+    public static T BubblingInvokeOnMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null)
+    {
+        if (cancellationToken?.IsCancellationRequested == true) return default;
+        return _isMainThread ? func() : BubblingDispatchToMainThread(func, cancellationToken);
+    }
 
     /// <summary>
     /// This will wait for the returned result.
+    /// If a cancellation token is provided and already cancelled, returns default without executing.
     /// </summary>
-    /// <param name="func"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public static T InvokeOnMainThread<T>(Func<T> func)
+    public static T InvokeOnMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null)
     {
+        if (cancellationToken?.IsCancellationRequested == true) return default;
         if (_isMainThread) return func();
 
         // The MT is so slow there's no real point in spinning; Just wastes CPU.
-        var resultEvent = new ManualResetEvent(false);
+        var resultEvent = new ManualResetEventSlim(false, 0);
         T result = default;
 
-        _queuedActions.Enqueue(Action);
+        _queuedActions.Enqueue((Action, cancellationToken));
 
-        // Wait for the main thread to complete the operation
-        resultEvent.WaitOne();
+        try
+        {
+            // Wait for the main thread to complete the operation.
+            // If the token is cancelled, Wait throws and we return default;
+            // ProcessQueue will skip the action since the token is cancelled.
+            resultEvent.Wait(cancellationToken ?? CancellationToken.None);
+        }
+        catch (OperationCanceledException)
+        {
+            return default;
+        }
+        catch (ThreadInterruptedException)
+        {
+            return default;
+        }
 
         return result;
 
@@ -118,17 +120,18 @@ public static class MainThreadQueue
 
     /// <summary>
     /// This will not wait for the returned result.
+    /// If a cancellation token is provided, the action is skipped at execution time if canceled.
     /// </summary>
-    /// <param name="action"></param>
-    public static void InvokeOnMainThread(Action action)
+    public static void InvokeOnMainThread(Action action, CancellationToken? cancellationToken = null)
     {
+        if (cancellationToken?.IsCancellationRequested == true) return;
         if (_isMainThread)
         {
             action();
             return;
         }
 
-        _queuedActions.Enqueue(action);
+        _queuedActions.Enqueue((action, cancellationToken));
     }
 
     /// <summary>
@@ -136,9 +139,10 @@ public static class MainThreadQueue
     /// </summary>
     public static void ProcessQueue()
     {
-        while (_queuedActions.TryDequeue(out Action action))
+        while (_queuedActions.TryDequeue(out (Action Action, CancellationToken? Token) item))
         {
-            action();
+            if (item.Token?.IsCancellationRequested != true)
+                item.Action();
         }
     }
 

@@ -83,7 +83,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
 
@@ -120,7 +120,7 @@ namespace ClassicUO.Game.UI.Gumps
             ProfileManager.CurrentProfile.StatusGumpPosition = Location;
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (World.TargetManager.IsTargeting)
             {

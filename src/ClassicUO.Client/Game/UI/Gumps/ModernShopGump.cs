@@ -308,7 +308,7 @@ namespace ClassicUO.Game.UI.Gumps
                 textBoxName.Text = Name;
             }
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
             {
                 base.OnMouseDoubleClick(x, y, button);
 

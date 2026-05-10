@@ -22,16 +22,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ClassicUO.Network.PacketHandlers;
-using ImGuiNET;
+using Myra;
 using SDL3;
 using static SDL3.SDL;
 using Keyboard = ClassicUO.Input.Keyboard;
 using Mouse = ClassicUO.Input.Mouse;
+using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO
 {
@@ -53,6 +53,13 @@ namespace ClassicUO
 
         private static Vector3 bgHueShader = new(0, 0, 0.3f);
         private bool drawScene;
+
+#if DEBUG
+        static GameController()
+        {
+            RegisterFnaLoggerListeners();
+        }
+#endif
 
         public GameController(IPluginHost pluginHost)
         {
@@ -163,7 +170,6 @@ namespace ClassicUO
         protected override void LoadContent()
         {
             base.LoadContent();
-
             Fonts.Initialize(GraphicsDevice);
             SolidColorTextureCache.Initialize(GraphicsDevice);
 
@@ -182,7 +188,14 @@ namespace ClassicUO
             PNGLoader.Instance.GraphicsDevice = GraphicsDevice;
             PNGLoader.Instance.LoadResourceAssets(Client.Game.UO.Gumps.GetGumpsLoader);
 
+            MyraEnvironment.Game = this;
+            MyraEnvironment.SetMouseCursorFromWidget = false;
+            MyraEnvironment.MouseInfoGetter = Mouse.GetMyraMouseInfo;
+            MyraStyle.SetDefault(); //Must occur after png loading
+
             Audio.Initialize();
+
+            VoiceRecognitionManager.Instance.TextRecognized += OnVoiceTextRecognized;
 
             Settings.GlobalSettings.Encryption = (byte)AsyncNetClient.Load(UO.FileManager.Version, (EncryptionType)Settings.GlobalSettings.Encryption);
 
@@ -192,8 +205,21 @@ namespace ClassicUO
 
             SetScene(new LoginScene(UO.World));
 #endif
-            new DiscordManager(UO.World); //Instance is set inside the constructor
-            DiscordManager.Instance.FromSavedToken();
+        }
+
+        private void OnVoiceTextRecognized(string text)
+        {
+            SystemChatControl chat = UIManager.SystemChat;
+            if (chat == null || chat.IsDisposed)
+                return;
+
+            if (!chat.IsActive)
+            {
+                chat.IsActive = true;
+                chat.SetFocus();
+            }
+
+            chat.TextBoxControl.AppendText(text);
         }
 
         private void LoadPlugins()
@@ -212,7 +238,6 @@ namespace ClassicUO
 
         protected override void UnloadContent()
         {
-            DiscordManager.Instance?.BeginDisconnect();
             ItemDatabaseManager.Instance.Dispose();
             SDL_GetWindowBordersSize(Window.Handle, out int top, out int left, out _, out _);
 
@@ -222,6 +247,7 @@ namespace ClassicUO
             );
 
             Audio?.StopMusic();
+            VoiceRecognitionManager.Instance.Dispose();
             Settings.GlobalSettings.Save();
 
             if (_pluginsInitialized)
@@ -231,7 +257,6 @@ namespace ClassicUO
             _screenRenderTarget = null;
 
             UO.Unload();
-            DiscordManager.Instance?.FinalizeDisconnect();
             base.UnloadContent();
         }
 
@@ -261,6 +286,9 @@ namespace ClassicUO
         public void SetScene(Scene scene)
         {
             Scene?.Dispose();
+
+            UIManager.Clear(); //Ensure we clear out all UI from previous scene
+
             Scene = scene;
             Scene?.Load();
 
@@ -420,13 +448,9 @@ namespace ClassicUO
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            Profiler.EnterContext("Mouse");
             Mouse.Update();
-            Profiler.ExitContext("Mouse");
 
-            Profiler.EnterContext("Packets");
             ProcessNetworkPackets();
-            Profiler.ExitContext("Packets");
 
             if(_pluginsInitialized)
                 Plugin.Tick();
@@ -438,13 +462,9 @@ namespace ClassicUO
                 Profiler.ExitContext("Update");
             }
 
-            Profiler.EnterContext("UI Update");
             UIManager.Update();
-            Profiler.ExitContext("UI Update");
 
-            Profiler.EnterContext("MTQ");
             MainThreadQueue.ProcessQueue();
-            Profiler.ExitContext("MTQ");
 
             _totalElapsed += gameTime.ElapsedGameTime.TotalMilliseconds;
             _currentFpsTime += gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -483,8 +503,6 @@ namespace ClassicUO
 
             UO.GameCursor?.Update();
             Audio?.Update();
-
-            DiscordManager.Instance?.Update();
 
             base.Update(gameTime);
         }
@@ -601,10 +619,6 @@ namespace ClassicUO
             // Render ImGui and plugins to the render target (for consistent scaling)
             if (useRenderTarget)
             {
-                Profiler.EnterContext("ImGui");
-                ImGuiManager.Update(gameTime);
-                Profiler.ExitContext("ImGui");
-
                 if(_pluginsInitialized)
                 {
                     Profiler.EnterContext("Plugins");
@@ -632,11 +646,6 @@ namespace ClassicUO
             }
             else
             {
-                // Fallback: render ImGui and plugins directly if render target is not available
-                Profiler.EnterContext("ImGui");
-                ImGuiManager.Update(gameTime);
-                Profiler.ExitContext("ImGui");
-
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
             }
@@ -687,10 +696,7 @@ namespace ClassicUO
                     viewport.Y = 0;
                 }
                 else
-                {
-                    // Ensure regular viewports stay within bounds when window resizes
                     viewport.OnWindowResized();
-                }
             }
         }
 
@@ -732,9 +738,7 @@ namespace ClassicUO
                         Plugin.OnFocusLost();
                     break;
 
-                case SDL_EventType.SDL_EVENT_KEY_DOWN:
-                    if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureKeyboard) break;
-
+                case SDL_EventType.SDL_EVENT_KEY_DOWN when Scene is not null:
                     Keyboard.OnKeyDown(sdlEvent->key);
 
                     if (Plugin.ProcessHotkeys(
@@ -760,9 +764,7 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_KEY_UP:
-                    if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureKeyboard) break;
-
+                case SDL_EventType.SDL_EVENT_KEY_UP when Scene is not null:
                     var key = (SDL_Keycode)sdlEvent->key.key;
 
                     Keyboard.OnKeyUp(sdlEvent->key);
@@ -787,7 +789,7 @@ namespace ClassicUO
                             }
                             else if (UIManager.MouseOverControl != null && UIManager.MouseOverControl.IsVisible)
                             {
-                                Control c = UIManager.MouseOverControl.RootParent;
+                                IGui c = UIManager.MouseOverControl.RootParent;
                                 if (c != null)
                                 {
                                     ClipboardScreenshot(c.Bounds, GraphicsDevice);
@@ -806,9 +808,7 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_TEXT_INPUT:
-                    if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureKeyboard) break;
-
+                case SDL_EventType.SDL_EVENT_TEXT_INPUT when Scene is not null:
                     if (_ignoreNextTextInput)
                     {
                         break;
@@ -834,7 +834,7 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_MOUSE_MOTION:
+                case SDL_EventType.SDL_EVENT_MOUSE_MOTION when Scene is not null:
 
                     if (UO.GameCursor != null && !UO.GameCursor.AllowDrawSDLCursor)
                     {
@@ -854,9 +854,7 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
-                    if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse) break;
-
+                case SDL_EventType.SDL_EVENT_MOUSE_WHEEL when Scene is not null:
                     Mouse.Update();
                     bool isScrolledUp = sdlEvent->wheel.y > 0;
 
@@ -870,10 +868,8 @@ namespace ClassicUO
 
                     break;
 
-                case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN:
+                case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN when Scene is not null:
                     {
-                        if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse) break;
-
                         SDL_MouseButtonEvent mouse = sdlEvent->button;
 
                         // The values in MouseButtonType are chosen to exactly match the SDL values
@@ -921,14 +917,7 @@ namespace ClassicUO
                                 Scene.OnMouseDoubleClick(buttonType)
                                 || UIManager.OnMouseDoubleClick(buttonType);
 
-                            if (!res)
-                            {
-                                if (!Scene.OnMouseDown(buttonType))
-                                {
-                                    UIManager.OnMouseButtonDown(buttonType);
-                                }
-                            }
-                            else
+                            if (res)
                             {
                                 lastClickTime = 0xFFFF_FFFF;
                             }
@@ -973,10 +962,8 @@ namespace ClassicUO
                         break;
                     }
 
-                case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP:
+                case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when Scene is not null:
                     {
-                        if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse) break;
-
                         SDL_MouseButtonEvent mouse = sdlEvent->button;
 
                         // The values in MouseButtonType are chosen to exactly match the SDL values
@@ -1024,7 +1011,7 @@ namespace ClassicUO
                         break;
                     }
 
-                case SDL_EventType.SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+                case SDL_EventType.SDL_EVENT_GAMEPAD_BUTTON_DOWN when Scene is not null:
                     if (!IsActive || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled)
                     {
                         break;
@@ -1061,7 +1048,7 @@ namespace ClassicUO
                     }
                     break;
 
-                case SDL_EventType.SDL_EVENT_GAMEPAD_BUTTON_UP:
+                case SDL_EventType.SDL_EVENT_GAMEPAD_BUTTON_UP when Scene is not null:
                     if (!IsActive || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled)
                     {
                         break;
@@ -1086,7 +1073,7 @@ namespace ClassicUO
                     }
                     break;
 
-                case SDL_EventType.SDL_EVENT_GAMEPAD_AXIS_MOTION: //Work around because sdl doesn't see trigger buttons as buttons, they are axis probably for pressure support
+                case SDL_EventType.SDL_EVENT_GAMEPAD_AXIS_MOTION when Scene is not null: //Work around because sdl doesn't see trigger buttons as buttons, they are axis probably for pressure support
                                                                   //GameActions.Print(typeof(SDL_GamepadButton).GetEnumName((SDL_GamepadButton)sdlEvent->gbutton.button));
                     if (!IsActive || ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.ControllerEnabled)
                     {
@@ -1239,6 +1226,29 @@ namespace ClassicUO
                     GameActions.Print(UO.World, message, 0x44, MessageType.System);
                 }
             }
+        }
+
+        private static void FnaLogInfo(string message)=> Log.Info(message);
+
+        private static void FnaLogWarn(string message)
+        {
+            {
+                // This message spams the console and is generally unhelpful.
+                if (message == null || message.StartsWith("Scissor rect and viewport"))
+                    return;
+
+                Log.Warn(message);
+            }
+        }
+
+        private static void FnaLogError(string message) => Log.Error(message);
+
+
+        private static void RegisterFnaLoggerListeners()
+        {
+            FNALoggerEXT.LogInfo += FnaLogInfo;
+            FNALoggerEXT.LogWarn += FnaLogWarn;
+            FNALoggerEXT.LogError += FnaLogError;
         }
     }
 }

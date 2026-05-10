@@ -49,22 +49,21 @@ namespace ClassicUO
             //DllMap.Init();
 
             CUOEnviroment.GameThread = Thread.CurrentThread;
-            CUOEnviroment.GameThread.Name = "CUO_MAIN_THREAD";
+            CUOEnviroment.GameThread.Name = "TUO_MAIN_THREAD";
 
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
-                var sb = new System.Text.StringBuilder();
+                var sb = new StringBuilder();
                 sb.AppendLine("######################## [START LOG] ########################");
 
-#if DEV_BUILD
+#if DEV_BUILD || DEBUG
                 sb.AppendLine($"TazUO [DEV_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}");
 #else
                 sb.AppendLine($"TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}");
 #endif
-                sb.AppendLine($"Framework: {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}");
+                sb.AppendLine($"Framework: {RuntimeInformation.FrameworkDescription}");
 
-                sb.AppendLine
-                    ($"OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})");
+                sb.AppendLine($"OS: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})");
 
                 sb.AppendLine($"Thread: {Thread.CurrentThread.Name}");
                 sb.AppendLine();
@@ -234,6 +233,13 @@ namespace ClassicUO
         {
             try
             {
+                if (e is ArgumentOutOfRangeException argumentOutOfRangeException &&
+                    argumentOutOfRangeException.StackTrace?.Contains("Microsoft.Xna.Framework.Graphics.GraphicsAdapter.get_DefaultAdapter()") == true)
+                {
+                    return "It appears TazUO was unable to find a suitable graphics adapter to use. " +
+                           "This can sometimes occur if your operating system shuts down your graphics adapter to preserve power.";
+                }
+
                 if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException graphicsException &&
                     graphicsException.Message.Contains("Could not create swapchain!"))
                 {
@@ -537,12 +543,6 @@ namespace ClassicUO
 
                     case "zlib":
                         ZLib.SetForceManagedZlib(true);
-
-                        break;
-
-                    case "nometrics":
-                        AnonMetrics.MetricsEnabled = false;
-                        Log.Info("Anonymous metrics disabled");
 
                         break;
                 }

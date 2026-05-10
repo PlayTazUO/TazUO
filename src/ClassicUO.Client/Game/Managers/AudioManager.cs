@@ -24,8 +24,13 @@ namespace ClassicUO.Game.Managers
         private readonly int[] _currentMusicIndices = { 0, 0 };
         public int LoginMusicIndex { get; private set; }
         public int DeathMusicIndex { get; } = 42;
-        private int _lastPlayedSoundId = -1;
-        public int LastPlayedSoundId => _lastPlayedSoundId;
+        private long _nextAudioHealthCheck = 0;
+
+        /// <summary>
+        /// Index, Name
+        /// </summary>
+        public LimitedFIFOCollection<(int, string)> LastPlayedSounds { get; } = new(5);
+        public LimitedFIFOCollection<(int, string)> LastPlayedMusic { get; } = new(5);
 
         public void Initialize()
         {
@@ -111,9 +116,6 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            // Track last played sound
-            _lastPlayedSoundId = index;
-
             float volume = currentProfile.SoundVolume / SOUND_DELTA;
 
             if (Client.Game.IsActive)
@@ -142,6 +144,9 @@ namespace ClassicUO.Game.Managers
 
             if (sound != null)
             {
+                // Track last played sound
+                LastPlayedSounds.Add((index, sound.Name));
+
                 try
                 {
                     if (sound.Play(Time.Ticks, volume))
@@ -168,14 +173,10 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            // Check if sound is filtered
             if (SoundFilterManager.Instance.IsSoundFiltered(index))
             {
                 return;
             }
-
-            // Track last played sound
-            _lastPlayedSoundId = index;
 
             int distX = Math.Abs(x - world.Player.X);
             int distY = Math.Abs(y - world.Player.Y);
@@ -210,6 +211,9 @@ namespace ClassicUO.Game.Managers
 
             if (sound != null)
             {
+                // Track last played sound
+                LastPlayedSounds.Add((index, sound.Name));
+
                 try
                 {
                     if (sound.Play(Time.Ticks, volume, distanceFactor))
@@ -229,7 +233,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void PlayMusic(int music, bool iswarmode = false, bool is_login = false)
+        public void PlayMusic(int music, bool iswarmode = false, bool is_login = false, bool skipIgnore = false)
         {
             if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
@@ -237,6 +241,11 @@ namespace ClassicUO.Game.Managers
             }
 
             if (music >= Constants.MAX_MUSIC_DATA_INDEX_COUNT)
+            {
+                return;
+            }
+
+            if (!skipIgnore && SoundFilterManager.Instance.IsSoundFiltered(music, true))
             {
                 return;
             }
@@ -289,6 +298,7 @@ namespace ClassicUO.Game.Managers
                 try
                 {
                     _currentMusic[idx].Play(Time.Ticks, volume);
+                    LastPlayedMusic.Add((music, m.Name));
                 }
                 catch (Exception ex)
                 {
@@ -421,7 +431,11 @@ namespace ClassicUO.Game.Managers
                 }
             }
 
-            CheckAudioDeviceHealth();
+            if(Time.Ticks > _nextAudioHealthCheck)
+            {
+                CheckAudioDeviceHealth();
+                _nextAudioHealthCheck = Time.Ticks + 5000;
+            }
 
             bool runninWarMusic = _currentMusic[1] != null;
             Profile currentProfile = ProfileManager.CurrentProfile;

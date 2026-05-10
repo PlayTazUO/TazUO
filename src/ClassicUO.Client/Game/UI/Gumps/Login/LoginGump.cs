@@ -12,6 +12,7 @@ using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using SDL3;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ClassicUO.Game.UI.Gumps.Login
 {
@@ -257,6 +258,17 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     }
                 );
 
+                if (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
+                {
+                    Add
+                    (
+                        new Label("Eventine Shard Detected!", false, 0xFFFF, font: 9)
+                        {
+                            X = 242,
+                            Y = 5
+                        }
+                    );
+                }
 
                 Add
                 (
@@ -717,7 +729,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 }
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 base.OnMouseDown(x, y, button);
 
@@ -727,7 +739,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 }
             }
 
-            protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
             {
                 base.OnKeyDown(key, mod);
                 UpdateCaretScreenPosition();
@@ -758,7 +770,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 UpdateCaretScreenPosition();
             }
 
-            internal override void OnFocusEnter()
+            public override void OnFocusEnter()
             {
                 base.OnFocusEnter();
                 CaretIndex = Text?.Length ?? 0;

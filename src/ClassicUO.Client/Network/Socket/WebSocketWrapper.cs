@@ -13,7 +13,7 @@ namespace ClassicUO.Network.Socket;
 
 /// <summary>
 /// Handles websocket connections to shards that support it. `ws(s)://[hostname]` as the ip in settings.json.
-/// For testing see `tools/ws/README.md` 
+/// For testing see `tools/ws/README.md`
 /// </summary>
 sealed class WebSocketWrapper : SocketWrapper
 {
@@ -120,8 +120,8 @@ sealed class WebSocketWrapper : SocketWrapper
 
         Log.Trace($"Connected WebSocket: {uri}");
 
-        // Kicks off the async receiving loop 
-        StartReceiveAsync().ConfigureAwait(false);
+        // Kicks off the async receiving loop
+        _ = StartReceiveAsync().ConfigureAwait(false);
     }
 
     private async Task StartReceiveAsync()

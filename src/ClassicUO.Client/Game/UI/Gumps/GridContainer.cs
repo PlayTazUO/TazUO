@@ -316,14 +316,13 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             #region TOP BAR AREA
-            _containerNameLabel = new Label(GetContainerName(), true, 0x0481, 150, ishtml: true)
+            _containerNameLabel = new Label(GetContainerName(), true, 0x0481, 0, ishtml: true)
             {
                 X = _borderWidth,
                 Y = _borderWidth,
                 AcceptMouseInput = true,
                 CanMove = true
             };
-            _containerNameLabel.SetTooltip(GetContainerName(true, false));
             _containerNameLabel.MouseDoubleClick += OnMinimizeToggleDoubleClick;
 
             _searchBox = new StbTextBox(0xFF, 20, 0, true, FontStyle.None, 0x0481)
@@ -434,7 +433,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e.Button == MouseButtonType.Left)
                 {
                     // Only toggle if clicking on empty space (not on grid items)
-                    Control clickedControl = UIManager.MouseOverControl;
+                    IGui clickedControl = UIManager.MouseOverControl;
                     if (clickedControl == _scrollArea)
                     {
                         OnMinimizeToggleDoubleClick(sender, e);
@@ -475,6 +474,8 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
             SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
+
+            UpdateContainerNameLabel();
 
             if (ShouldUseOldContainerStyle())
             {
@@ -641,8 +642,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     _gridContainerEntry?.CustomName = r == InputRequest.Result.BUTTON1 ? s : null;
 
-                    _containerNameLabel.Text = GetContainerName();
-                    _containerNameLabel.SetTooltip(GetContainerName(true, false));
+                    UpdateContainerNameLabel();
                 }, GetContainerName(true));
                 input.CenterXInViewPort();
                 input.CenterYInViewPort();
@@ -807,8 +807,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            _containerNameLabel.Text = GetContainerName();
-            _containerNameLabel.SetTooltip(GetContainerName(true, false));
+            UpdateContainerNameLabel();
 
             if (_autoSortContainer)
                 overrideSort = true;
@@ -985,6 +984,36 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        private void UpdateContainerNameLabel()
+        {
+            string rawName = GridContainerEntry?.CustomName.NotNullNotEmpty() == true
+                ? GridContainerEntry.CustomName
+                : !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+
+            string countSuffix = SlotManager != null ? $" ({SlotManager.ContainerContents.Count})" : "";
+
+            // Available width = from left border to the sort button, minus a small padding
+            int availableWidth = _sortContents.X - _borderWidth - 2;
+
+            // Start with the standard 21-char truncation
+            string displayName = rawName.Truncate(21);
+            _containerNameLabel.Text = displayName + countSuffix;
+
+            // If the rendered text is too wide, trim the name char by char until it fits
+            if (_containerNameLabel.Width > availableWidth)
+            {
+                string baseName = displayName.EndsWith("...") ? displayName[..^3] : displayName;
+
+                while (_containerNameLabel.Width > availableWidth && baseName.Length > 0)
+                {
+                    baseName = baseName[..^1];
+                    _containerNameLabel.Text = (baseName.Length > 0 ? baseName + "..." : "") + countSuffix;
+                }
+            }
+
+            _containerNameLabel.SetTooltip(rawName);
+        }
+
         private string GetContainerName(bool skipCount = false, bool truncate = true)
         {
             string containerName =
@@ -1020,11 +1049,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildBorder();
         }
 
-        public static void UpdateAllGridContainers()
-        {
-            foreach (GridContainer _ in UIManager.Gumps.OfType<GridContainer>())
-                _.OptionsUpdated();
-        }
+        public static void UpdateAllGridContainers() => UIManager.ForEach<GridContainer>(c => c.OptionsUpdated());
 
         public void HandleObjectMessage(Entity parent, string text, ushort hue)
         {
@@ -1105,6 +1130,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (CUOEnviroment.Debug)
                 batcher.DrawString(Renderer.Fonts.Bold, LocalSerial.ToString(), x, y - 40, ShaderHueTranslator.GetHueVector(32));
             return base.Draw(batcher, x, y);
+        }
+
+        public static void OpenOrUpdate(uint serial, ushort graphic)
+        {
+            GridContainer gridContainer = UIManager.GetGump<GridContainer>(serial);
+            if (gridContainer != null)
+                gridContainer.RequestUpdateContents();
+            else
+                UIManager.Add(new GridContainer(World.Instance, serial, graphic));
         }
 
         public enum GridSortMode
@@ -1261,7 +1295,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// </summary>
             public static void StaticGridContainerSettingUpdated() => _borderHueVec = ShaderHueTranslator.GetHueVector(ProfileManager.CurrentProfile.GridBorderHue, false, (float)ProfileManager.CurrentProfile.GridBorderAlpha / 100);
 
-            protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType e)
+            public override bool OnMouseDoubleClick(int x, int y, MouseButtonType e)
             {
                 base.OnMouseDoubleClick(x, y, e);
 
@@ -1311,7 +1345,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType e)
+            public override void OnMouseUp(int x, int y, MouseButtonType e)
             {
                 base.OnMouseUp(x, y, e);
 
@@ -2126,8 +2160,6 @@ namespace ClassicUO.Game.UI.Gumps
             public int ScrollMinValue => _scrollBar.MinValue;
             public int ScrollMaxValue => _scrollBar.MaxValue;
 
-            public Rectangle ScissorRectangle;
-
             public override void Update()
             {
                 base.Update();
@@ -2168,18 +2200,18 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 _scrollBar.Draw(batcher, x + _scrollBar.X, y + _scrollBar.Y);
 
-                if (batcher.ClipBegin(x + ScissorRectangle.X, y + ScissorRectangle.Y, Width - 14 + ScissorRectangle.Width, Height + ScissorRectangle.Height))
+                if (batcher.ClipBegin(x, y, Width - 14, Height))
                 {
                     for (int i = 1; i < Children.Count; i++)
                     {
-                        Control child = Children[i];
+                        IGui child = Children[i];
 
                         if (!child.IsVisible)
                         {
                             continue;
                         }
 
-                        int finalY = y + child.Y - _scrollBar.Value + ScissorRectangle.Y;
+                        int finalY = y + child.Y - _scrollBar.Value;
 
                         child.Draw(batcher, x + child.X, finalY);
                     }
@@ -2190,7 +2222,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             }
 
-            protected override void OnMouseWheel(MouseEventType delta)
+            public override void OnMouseWheel(MouseEventType delta)
             {
                 switch (delta)
                 {
@@ -2223,7 +2255,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 for (int i = 1; i < Children.Count; i++)
                 {
-                    Control c = Children[i];
+                    IGui c = Children[i];
 
                     if (c.IsVisible && !c.IsDisposed)
                     {
@@ -2251,7 +2283,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 int width = Math.Abs(startX) + Math.Abs(endX);
                 int height = Math.Abs(startY) + Math.Abs(endY) - _scrollBar.Height;
-                height = Math.Max(0, height - (-ScissorRectangle.Y + ScissorRectangle.Height));
+                height = Math.Max(0, height);
 
                 if (height > 0)
                 {
@@ -2271,7 +2303,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 for (int i = 1; i < Children.Count; i++)
                 {
-                    Children[i].UpdateOffset(0, -_scrollBar.Value + ScissorRectangle.Y);
+                    Children[i].UpdateOffset(0, -_scrollBar.Value);
                 }
             }
         }

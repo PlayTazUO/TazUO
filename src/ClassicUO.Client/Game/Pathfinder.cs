@@ -55,6 +55,8 @@ namespace ClassicUO.Game
 
         public bool BlockMoving { get; set; }
 
+        private int _zLevelDiff;
+
         private World _world;
 
         public bool UseLongDistancePathfinding;
@@ -62,7 +64,7 @@ namespace ClassicUO.Game
         public Pathfinder(World world)
         {
             _world = world;
-            Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, false, (b) => UseLongDistancePathfinding = b);
+            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, false, (b) => UseLongDistancePathfinding = b);
         }
 
         public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
@@ -771,7 +773,7 @@ namespace ClassicUO.Game
             _openSet.Enqueue(updatedNode);
 
             if (MathHelper.GetDistance(_endPoint, new Point(x, y)) <= _pathfindDistance &&
-                Math.Abs(_endPointZ - z) < Constants.ALLOWED_Z_DIFFERENCE)
+                Math.Abs(_endPointZ - z) < _zLevelDiff)
             {
                 _goalNode = updatedNode;
             }
@@ -946,6 +948,8 @@ namespace ClassicUO.Game
 
         public List<(int X, int Y, int Z)> GetPathTo(int x, int y, int z, int distance)
         {
+            _zLevelDiff = ProfileManager.CurrentProfile.PathfindingZLevelDiff;
+
             CleanupPathfinding();
             _pointIndex = 0;
             _goalNode = null;
@@ -978,6 +982,8 @@ namespace ClassicUO.Game
             {
                 return false;
             }
+
+            _zLevelDiff = ProfileManager.CurrentProfile.PathfindingZLevelDiff;
 
             EventSink.InvokeOnPathFinding(null, new Vector4(x, y, z, distance));
 

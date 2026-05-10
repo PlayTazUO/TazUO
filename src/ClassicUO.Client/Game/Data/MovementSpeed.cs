@@ -99,32 +99,22 @@ namespace ClassicUO.Game.Data
                 }
             }
 
-            int valueX = (int) x;
-
-            if (Math.Abs(valueX) > checkX)
+            if (x < -checkX)
             {
-                if (valueX < 0)
-                {
-                    x = -checkX;
-                }
-                else
-                {
-                    x = checkX;
-                }
+                x = -checkX;
+            }
+            else if (x > checkX)
+            {
+                x = checkX;
             }
 
-            int valueY = (int) y;
-
-            if (Math.Abs(valueY) > checkY)
+            if (y < -checkY)
             {
-                if (valueY < 0)
-                {
-                    y = -checkY;
-                }
-                else
-                {
-                    y = checkY;
-                }
+                y = -checkY;
+            }
+            else if (y > checkY)
+            {
+                y = checkY;
             }
         }
     }

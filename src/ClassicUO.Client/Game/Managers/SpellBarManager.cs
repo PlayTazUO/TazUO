@@ -148,7 +148,7 @@ public class SpellBarManager
         spellBarSettings.KeyMod[slot] = (int)mod;
         spellBarSettings.HotKeys[slot] = (int)key;
         if( controllerButtons == null) return;
-        spellBarSettings.ControllerButtons[slot] = controllerButtons.Select(x => x == null ? -1 : (int)x).ToArray();
+        spellBarSettings.ControllerButtons[slot] = controllerButtons.Select(x => (int)x).ToArray();
     }
 
     public static bool IsEnabled()

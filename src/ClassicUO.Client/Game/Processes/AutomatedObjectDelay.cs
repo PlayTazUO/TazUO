@@ -20,10 +20,12 @@ public static class AutomatedObjectDelay
     private static int _delay = 1100;
     private static Timer _timer;
     private static Item _item;
+    private static Action _onCompletion = null;
 
-    public static void Begin()
+    public static void Begin(Action onCompletion = null)
     {
         _delay = ProfileManager.CurrentProfile.MoveMultiObjectDelay = 1100;
+        _onCompletion = onCompletion;
         GameActions.Print("Please select an item in your backpack we can move around for this test.", Constants.HUE_SUCCESS);
         GameActions.Print("Please do not do anything until this test is complete.", Constants.HUE_ERROR);
         World.Instance.TargetManager.SetTargeting((o) =>
@@ -97,6 +99,8 @@ public static class AutomatedObjectDelay
         _item = null;
         _timer?.Stop();
         _timer = null;
+        _onCompletion?.Invoke();
+        _onCompletion = null;
         EventSink.ClilocMessageReceived -= EventSinkOnClilocMessageReceived;
     }
 }

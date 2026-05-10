@@ -16,6 +16,25 @@ using System.Threading.Tasks;
 
 namespace ClassicUO.Assets
 {
+    public static class CustomServerSettings
+    {
+        public static bool HasCustomAnimPath { get; private set; }
+
+        /// <summary>
+        /// Expects .mul and .idx anim files to be in the same location. This should return a path, not the final file.
+        /// It will add anim#.mul and anim#.idx to this path.
+        /// </summary>
+        public static Func<string> GetCustomAnimPath
+        {
+            get;
+            set
+            {
+                field = value;
+                HasCustomAnimPath = true;
+            }
+        }
+    }
+
     public unsafe sealed class AnimationsLoader : UOFileLoader
     {
         public const int MAX_ACTIONS = 80; // gargoyle is like 78
@@ -53,15 +72,31 @@ namespace ClassicUO.Assets
 
         public override void Load()
         {
+            void LoadAnimFromUOPath(int animIndex)
+            {
+                string pathmul = FileManager.GetUOFilePath("anim" + (animIndex == 0 ? string.Empty : (animIndex + 1).ToString()) + ".mul");
+                string pathidx = FileManager.GetUOFilePath("anim" + (animIndex == 0 ? string.Empty : (animIndex + 1).ToString()) + ".idx");
+
+                if (File.Exists(pathmul) && File.Exists(pathidx)) _files[animIndex] = new UOFileMul(pathmul, pathidx);
+            }
+
             for (int i = 0; i < _files.Length; i++)
             {
-                string pathmul = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".mul");
-                string pathidx = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".idx");
-
-                if (File.Exists(pathmul) && File.Exists(pathidx))
+                if (CustomServerSettings.HasCustomAnimPath)
                 {
-                    _files[i] = new UOFileMul(pathmul, pathidx);
+                    string muullocation = CustomServerSettings.GetCustomAnimPath();
+
+                    string pathmul = Path.Combine(muullocation, "anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".mul");
+                    string pathidx = Path.Combine(muullocation, "anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".idx");
+
+
+                    if (File.Exists(pathmul) && File.Exists(pathidx))
+                        _files[i] = new UOFileMul(pathmul, pathidx);
+                    else
+                        LoadAnimFromUOPath(i);
                 }
+                else
+                    LoadAnimFromUOPath(i);
             }
 
             if (FileManager.IsUOPInstallation)
@@ -130,14 +165,20 @@ namespace ClassicUO.Assets
 
                             if (commentIdx > 0)
                             {
-                                parts[2] = parts[2].Substring(0, commentIdx - 1);
+                                parts[2] = parts[2].Substring(0, commentIdx - 1).Trim();
                             }
                             else if (commentIdx == 0)
                             {
                                 continue;
                             }
 
-                            uint number = uint.Parse(parts[2], NumberStyles.HexNumber);
+                            //uint number = uint.Parse(parts[2], NumberStyles.HexNumber);
+
+                            if (!uint.TryParse(parts[2], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint number))
+                            {
+                                Log.Error("Failed to parse expected number.");
+                                continue;
+                            }
 
                             for (int i = 0; i < 5; i++)
                             {

@@ -1,8 +1,9 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
-using ClassicUO.Configuration;
-using ClassicUO.Game;
+using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using Myra.Graphics2D.UI;
 using SDL3;
 
 namespace ClassicUO.Input
@@ -10,6 +11,32 @@ namespace ClassicUO.Input
     internal static class Mouse
     {
         public const int MOUSE_DELAY_DOUBLE_CLICK = 350;
+
+        /// <summary>
+        /// Invoked whenever the mouse position changes
+        /// </summary>
+        public static event EventHandler<MouseMovedEventArgs> Moved;
+
+        /// <summary>
+        /// Invoked whenever the left mouse button is pressed or released
+        /// </summary>
+        public static event EventHandler<MouseLeftButtonClickStateChangedEventArgs> LeftButtonClickStateChanged;
+
+        public static MouseInfo GetMyraMouseInfo()
+        {
+            var info = new MouseInfo();
+
+            info.IsLeftButtonDown = LButtonPressed;
+            info.IsRightButtonDown = RButtonPressed;
+            info.IsMiddleButtonDown = MButtonPressed;
+            info.Position = Position;
+
+            MouseState fnaMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
+
+            info.Wheel = fnaMouseState.ScrollWheelValue;
+
+            return info;
+        }
 
         /* Log a button press event at the given time. */
         public static void ButtonPress(MouseButtonType type)
@@ -95,7 +122,20 @@ namespace ClassicUO.Input
 
         public static bool CancelDoubleClick { get; set; }
 
-        public static bool LButtonPressed { get; set; }
+        public static bool LButtonPressed
+        {
+            get;
+            set
+            {
+                if (field == value)
+                    return;
+
+                var eArgs = new MouseLeftButtonClickStateChangedEventArgs(field, value);
+
+                field = value;
+                LeftButtonClickStateChanged?.Invoke(null, eArgs);
+            }
+        }
 
         public static bool RButtonPressed { get; set; }
 
@@ -113,14 +153,16 @@ namespace ClassicUO.Input
 
         public static bool MouseInWindow { get; set; }
 
-        public static int ControllerSensativity { get; set; } = 10;
+        public static int ControllerSensitivity { get; set; } = 10;
 
         private static bool _isWarpingMouse = false;
 
         public static void Update()
         {
-            if (_isWarpingMouse)            
-                return;            
+            if (_isWarpingMouse)
+                return;
+
+            Point previous = Position;
 
             if (!MouseInWindow)
             {
@@ -134,12 +176,12 @@ namespace ClassicUO.Input
                 SDL.SDL_GetMouseState(out float x, out float y);
                 Position.X = (int)x;
                 Position.Y = (int)y;
-                Microsoft.Xna.Framework.Input.GamePadState gamePadState = Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One);
+                GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
 
                 if (gamePadState.IsConnected && gamePadState.ThumbSticks.Right != Vector2.Zero)
                 {
-                    Position.X += (int)(ControllerSensativity * gamePadState.ThumbSticks.Right.X);
-                    Position.Y -= (int)(ControllerSensativity * gamePadState.ThumbSticks.Right.Y);
+                    Position.X += (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.X);
+                    Position.Y -= (int)(ControllerSensitivity * gamePadState.ThumbSticks.Right.Y);
 
                     _isWarpingMouse = true;
                     SDL.SDL_WarpMouseInWindow(Client.Game.Window.Handle, Position.X, Position.Y);
@@ -152,6 +194,11 @@ namespace ClassicUO.Input
             Position.Y = (int)(((double)Position.Y * Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height) / Client.Game.RenderScale);
 
             IsDragging = LButtonPressed || RButtonPressed || MButtonPressed;
+
+            // Check for null first;
+            // While a point comparison is not a 'heavy' operation, a null check should generally be quicker.
+            if (Moved != null && previous != Position)
+                Moved?.Invoke(null, new MouseMovedEventArgs(previous, Position));
         }
     }
 }

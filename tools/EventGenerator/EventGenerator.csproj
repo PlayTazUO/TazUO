@@ -1,15 +1,57 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <IsRoslynComponent>true</IsRoslynComponent>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsRoslynComponent>true</IsRoslynComponent>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
-  </ItemGroup>
+    <!-- Common configuration -->
+    <ItemGroup>
+        <EmbeddedResource Include="Templates\LegionApiEventsDeclaration.hbs" />
+        <PackageReference Include="Handlebars.Net" Version="2.1.6">
+            <IncludeAssets>runtime; compile; contentfiles; native</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <EmbeddedResource Include="Templates\ApiCallbackDispatcher.hbs"/>
+    </ItemGroup>
+
+    <!-- netstandard2.0 config - allows build but doesn't really work for debugging the source generator (https://youtrack.jetbrains.com/issue/RIDER-120065) -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all"/>
+    </ItemGroup>
+    
+    <!-- net10.0 config - allows resting the generator and such but doesn't work for actual build -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+        <Reference Include="xunit.core">
+            <HintPath>$(NuGetPackageRoot)xunit.extensibility.core\2.9.0\lib\netstandard1.1\xunit.core.dll</HintPath>
+        </Reference>
+
+        <PackageReference Include="Microsoft.CodeAnalysis" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="5.0.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
+        <PackageReference Include="xunit" Version="2.9.0"/>
+
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+
+    <Target Name="GetDependencyTargetPaths">
+        <ItemGroup>
+            <TargetPathWithTargetPlatformMoniker Include="$(TargetDir)\Handlebars.dll" IncludeRuntimeDependency="false" />
+        </ItemGroup>
+    </Target>
 
 </Project>

@@ -170,7 +170,7 @@ namespace ClassicUO.Game.GameObjects
         {
             var i = new Item(world); // _pool.GetOne();
             i.Serial = serial;
-            //i.TryGetCustomName(); //Need a more efficient way to do this in bulk or some sort of "debounce"-like system to bulk many items at the same time
+            i.TryGetCustomName();
             return i;
         }
 

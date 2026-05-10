@@ -28,6 +28,18 @@ namespace ClassicUO.IO
         }
 
         public void Seek(long index, SeekOrigin origin) => _position = Reader.BaseStream.Seek(index, origin);
+
+        public virtual T ReadAt<T>(long offset) where T : unmanaged
+        {
+            Seek(offset, SeekOrigin.Begin);
+            return Read<T>();
+        }
+
+        public virtual void ReadAt(long offset, Span<byte> buffer)
+        {
+            Seek(offset, SeekOrigin.Begin);
+            Read(buffer);
+        }
         public sbyte ReadInt8() { _position += sizeof(sbyte); return Reader.ReadSByte(); }
         public byte ReadUInt8() { _position += sizeof(byte); return Reader.ReadByte(); }
         public short ReadInt16() { _position += sizeof(short); return Reader.ReadInt16(); }

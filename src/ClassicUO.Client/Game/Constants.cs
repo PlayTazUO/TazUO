@@ -12,8 +12,6 @@ namespace ClassicUO.Game
         public const int CHARACTER_ANIMATION_DELAY = 80;
         public const int ITEM_EFFECT_ANIMATION_DELAY = 50;
 
-        public const int ALLOWED_Z_DIFFERENCE = 10;
-
         public const int MAX_STEP_COUNT = 5;
         public const int WALKING_DELAY = 150; // 750
         public const int PLAYER_WALKING_DELAY = 150;
@@ -89,8 +87,7 @@ namespace ClassicUO.Game
 
         public const int PREDICTABLE_CHUNKS = 300;
         public const float MAX_GAME_SCALE = 1.5f;
-        public const float MIN_GAME_SCALE = -0.6f;
-        public static Color SELECTED_COLOR = Color.DarkRed;
+        public const float MIN_GAME_SCALE = 0.7f;
 
         public static readonly bool[] BAD_CONTAINER_LAYERS =
         {
@@ -105,6 +102,7 @@ namespace ClassicUO.Game
         public const uint RECHECK_HITS_STATUS = 20000;
 
         public const ushort HUE_ERROR = 32;
+        public const ushort HUE_WARN = 53;
         public const ushort HUE_SUCCESS = 62;
 
         public static class SqlSettings
@@ -122,6 +120,7 @@ namespace ClassicUO.Game
             public const string GAME_SCALE = "game_scale";
             public const string AUTO_UNEQUIP_FOR_ACTIONS = "auto_unequip_for_actions";
             public const string SOUND_FILTER_IDS = "sound_filter_ids";
+            public const string MUSIC_FILTER_IDS = "music_filter_ids";
             public const string DISABLE_WEATHER = "disable_weather";
             public const string SEASON_FILTER = "season_filter";
             public const string ENABLE_ENHANCED_PACKETS = "enhanced_packets_enabled";
@@ -130,6 +129,10 @@ namespace ClassicUO.Game
             public const string QUEUE_MANUAL_ITEM_MOVES = "queue_manual_item_moves";
             public const string QUEUE_MANUAL_ITEM_USES = "queue_manual_item_uses";
             public const string HUE_CORPSE_AFTER_AUTOLOOT = "hue_corpse_after_autoloot";
+            public const string OUTLINE_NOTORIETIES = "outline_notorieties";
+            public const string IRC_AUTO_CONNECT = "irc_disable_auto_connect";
+            public const string PATH_Z_LEVEL = "path_z_level";
+            public const string SINGLE_CLICK_SET_LAST_TARG = "single_click_set_last_targ";
         }
     }
 }

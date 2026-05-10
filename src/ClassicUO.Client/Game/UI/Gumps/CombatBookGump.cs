@@ -49,7 +49,7 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             _primAbility = null;
             _secAbility = null;
-            
+
             Add(new GumpPic(0, 0, 0x2B02, 0));
 
             Add(_pageCornerLeft = new GumpPic(50, 8, 0x08BB, 0));
@@ -340,7 +340,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private static UseAbilityButtonGump GetSpellFloatingButton(int id)
         {
-            for (LinkedListNode<Gump> i = UIManager.Gumps.Last; i != null; i = i.Previous)
+            for (LinkedListNode<IGui> i = UIManager.Gumps.Last; i != null; i = i.Previous)
             {
                 if (i.Value is UseAbilityButtonGump g && g.Index == id)
                 {

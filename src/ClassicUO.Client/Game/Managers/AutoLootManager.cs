@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ClassicUO.Common;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Utility.Logging;
 
@@ -17,6 +18,7 @@ namespace ClassicUO.Game.Managers
 {
     [JsonSerializable(typeof(AutoLootManager.AutoLootConfigEntry))]
     [JsonSerializable(typeof(List<AutoLootManager.AutoLootConfigEntry>))]
+    [JsonSerializable(typeof(AutoLootManager.AutoLootPriority))]
     [JsonSourceGenerationOptions(WriteIndented = true)]
     public partial class AutoLootJsonContext : JsonSerializerContext
     {
@@ -38,7 +40,7 @@ namespace ClassicUO.Game.Managers
 
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
-        private static readonly Queue<(uint item, AutoLootConfigEntry entry)> _lootItems = new ();
+        private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), AutoLootPriority> _lootItems = new ();
         private List<AutoLootConfigEntry> _autoLootItems = new ();
         private bool _loaded = false;
         private readonly string _savePath;
@@ -64,11 +66,13 @@ namespace ClassicUO.Game.Managers
             if (item != null) LootItem(item, null);
         }
 
-        public void LootItem(Item item, AutoLootConfigEntry entry = null)
+        public void LootItem(Item item, AutoLootConfigEntry entry = null, AutoLootPriority priority = AutoLootPriority.Normal)
         {
             if (item == null || !_recentlyLooted.Add(item.Serial) || !_quickContainsLookup.Add(item.Serial)) return;
 
-            _lootItems.Enqueue((item, entry));
+            if (entry != null)
+                priority = entry.Priority;
+            _lootItems.Enqueue((item, entry), priority);
             _currentLootTotalCount++;
             _nextClearRecents = Time.Ticks + 5000;
         }
@@ -164,7 +168,7 @@ namespace ClassicUO.Game.Managers
 
             for (LinkedObject i = corpse.Items; i != null; i = i.Next)
                 CheckAndLoot((Item)i);
-            
+
             if(ProfileManager.CurrentProfile.HueCorpseAfterAutoloot)
                 corpse.Hue = 73;
         }
@@ -209,8 +213,8 @@ namespace ClassicUO.Game.Managers
         {
             Load();
             EventSink.OPLOnReceive += OnOPLReceived;
-            EventSink.OnItemCreated += OnItemCreatedOrUpdated;
-            EventSink.OnItemUpdated += OnItemCreatedOrUpdated;
+            EventSink.OnItemCreatedInternal += OnItemCreatedOrUpdated;
+            EventSink.OnItemUpdatedInternal += OnItemCreatedOrUpdated;
             EventSink.OnOpenContainer += OnOpenContainer;
             EventSink.OnPositionChanged += OnPositionChanged;
         }
@@ -218,8 +222,8 @@ namespace ClassicUO.Game.Managers
         public void OnSceneUnload()
         {
             EventSink.OPLOnReceive -= OnOPLReceived;
-            EventSink.OnItemCreated -= OnItemCreatedOrUpdated;
-            EventSink.OnItemUpdated -= OnItemCreatedOrUpdated;
+            EventSink.OnItemCreatedInternal -= OnItemCreatedOrUpdated;
+            EventSink.OnItemUpdatedInternal -= OnItemCreatedOrUpdated;
             EventSink.OnOpenContainer -= OnOpenContainer;
             EventSink.OnPositionChanged -= OnPositionChanged;
             Save();
@@ -351,7 +355,15 @@ namespace ClassicUO.Game.Managers
             }
 
             if (destinationSerial != 0)
-                ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, destinationSerial, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.LootItem);
+            {
+                ActionPriority lootPriority = entry?.Priority switch
+                {
+                    AutoLootPriority.High => ActionPriority.LootItemHigh,
+                    AutoLootPriority.Low => ActionPriority.LootItem,
+                    _ => ActionPriority.LootItemMedium,
+                };
+                ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, destinationSerial, moveItem.Amount).ToObjectActionQueueItem(), lootPriority);
+            }
             else
                 GameActions.Print("Could not find a container to loot into. Try setting a grab bag.");
 
@@ -364,7 +376,7 @@ namespace ClassicUO.Game.Managers
             {
                 _progressBarGump = new ProgressBarGump(_world, "Auto looting...", 0)
                 {
-                    Y = (ProfileManager.CurrentProfile.GameWindowPosition.Y + ProfileManager.CurrentProfile.GameWindowSize.Y) - 150,
+                    Y = ProfileManager.CurrentProfile.GameWindowPosition.Y + ProfileManager.CurrentProfile.GameWindowSize.Y - 150,
                     ForegrouneColor = Color.DarkOrange
                 };
                 _progressBarGump.CenterXInViewPort();
@@ -423,39 +435,13 @@ namespace ClassicUO.Game.Managers
                 catch (Exception e) { Console.WriteLine(e.ToString()); }
         }
 
-        public void ExportToFile(string filePath)
+        public void ClearActiveLootQueue()
         {
-            try
-            {
-                string fileData = JsonSerializer.Serialize(_autoLootItems, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
-                File.WriteAllText(filePath, fileData);
-                GameActions.Print($"Autoloot configuration exported to: {filePath}", 0x48);
-            }
-            catch (Exception e)
-            {
-                GameActions.Print($"Error exporting autoloot configuration: {e.Message}", Constants.HUE_ERROR);
-            }
-        }
-
-        public void ImportFromFile(string filePath)
-        {
-            try
-            {
-                if (!File.Exists(filePath))
-                {
-                    GameActions.Print($"File not found: {filePath}", Constants.HUE_ERROR);
-                    return;
-                }
-
-                string data = File.ReadAllText(filePath);
-                List<AutoLootConfigEntry> importedItems = JsonSerializer.Deserialize(data, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
-
-                if (importedItems != null) ImportEntries(importedItems, $"file: {filePath}");
-            }
-            catch (Exception e)
-            {
-                GameActions.Print($"Error importing autoloot configuration: {e.Message}", Constants.HUE_ERROR);
-            }
+            while (_lootItems.TryDequeue(out _, out _));
+            _currentLootTotalCount = 0;
+            _quickContainsLookup.Clear();
+            _progressBarGump?.Dispose();
+            _progressBarGump = null;
         }
 
         public void ImportFromOtherCharacter(string characterName, List<AutoLootConfigEntry> entries)
@@ -586,13 +572,17 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
+        public enum AutoLootPriority { Low = 0, Normal = 1, High = 2 }
+
         public class AutoLootConfigEntry
         {
             public string Name { get; set; } = "";
             public int Graphic { get; set; } = 0;
             public ushort Hue { get; set; } = ushort.MaxValue;
+            [JsonConverter(typeof(RawStringConverter))]
             public string RegexSearch { get; set; } = string.Empty;
             public uint DestinationContainer { get; set; } = 0;
+            public AutoLootPriority Priority { get; set; } = AutoLootPriority.Normal;
             private bool RegexMatch => !string.IsNullOrEmpty(RegexSearch);
             /// <summary>
             /// Do not set this manually.

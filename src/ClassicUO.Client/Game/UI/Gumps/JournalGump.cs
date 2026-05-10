@@ -239,7 +239,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta) => _scrollBar.InvokeMouseWheel(delta);
+        public override void OnMouseWheel(MouseEventType delta) => _scrollBar.InvokeMouseWheel(delta);
 
 
         public override void Dispose()

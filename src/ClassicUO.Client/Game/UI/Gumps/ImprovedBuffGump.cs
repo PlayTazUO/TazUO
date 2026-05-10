@@ -165,12 +165,18 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Save(XmlTextWriter writer)
         {
-            base.Save(writer);
+            //Need to override base here, don't call it.
+
+            writer.WriteAttributeString("type", ((int)GumpType).ToString());
+            writer.WriteAttributeString("x", X.ToString());
+            writer.WriteAttributeString("y", (_direction ? Y : Bounds.Bottom - _background.Height - 7).ToString());
+            writer.WriteAttributeString("serial", LocalSerial.ToString());
+            writer.WriteAttributeString("serverSerial", ServerSerial.ToString());
+            writer.WriteAttributeString("isLocked", IsLocked.ToString());
+            writer.WriteAttributeString("alphaOffset", AlphaOffset.ToString());
+
             writer.WriteAttributeString("graphic", _graphic.ToString());
             writer.WriteAttributeString("updown", _direction.ToString());
-            writer.WriteAttributeString("lastX", X.ToString());
-            writer.WriteAttributeString("lastY", Y.ToString());
-            writer.WriteAttributeString("anchorY", (Y + _background.Y).ToString());
         }
 
         public override void Restore(XmlElement xml)
@@ -179,25 +185,6 @@ namespace ClassicUO.Game.UI.Gumps
 
             _graphic = ushort.Parse(xml.GetAttribute("graphic"));
             _direction = bool.Parse(xml.GetAttribute("updown"));
-            int.TryParse(xml.GetAttribute("lastX"), out X);
-
-            string anchorYStr = xml.GetAttribute("anchorY");
-            if (!string.IsNullOrEmpty(anchorYStr) && int.TryParse(anchorYStr, out int anchorY))
-            {
-                if (_direction)
-                {
-                    Y = anchorY;
-                }
-                else
-                {
-                    int dynamicHeight = CalculateDynamicHeight();
-                    Y = anchorY - (dynamicHeight - 11);
-                }
-            }
-            else
-            {
-                int.TryParse(xml.GetAttribute("lastY"), out Y);
-            }
 
             RequestUpdateContents();
         }

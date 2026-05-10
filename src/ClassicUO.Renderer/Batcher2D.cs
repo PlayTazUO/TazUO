@@ -1237,10 +1237,8 @@ namespace ClassicUO.Renderer
             float rotationCos,
             float depth,
             byte effects
-        )
-        {
+        ) =>
             AddSprite(texture, sourceX, sourceY, sourceW, sourceH, destinationX, destinationY, destinationW, destinationH, color, originX, originY, rotationSin, rotationCos, depth, effects, null);
-        }
 
         private void AddSprite
         (
@@ -1310,6 +1308,13 @@ namespace ClassicUO.Renderer
             _started = false;
             _customEffect = null;
         }
+
+        /// <summary>
+        /// Flushes pending draw calls to the GPU without ending the batch.
+        /// Use this before rendering with an external pipeline (e.g. Myra) so that
+        /// previously queued sprites are committed before the external render runs.
+        /// </summary>
+        public void FlushBatch() => Flush();
 
         private void SetVertex
         (

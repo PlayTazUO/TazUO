@@ -63,13 +63,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void UpdateOptions() => ResetItems();
 
-        public static void UpdateAllOptions()
-        {
-            foreach (InfoBarGump g in UIManager.Gumps.OfType<InfoBarGump>())
-            {
-                g.UpdateOptions();
-            }
-        }
+        public static void UpdateAllOptions() => UIManager.ForEach<InfoBarGump>(c => c.UpdateOptions());
 
         public override void Update()
         {

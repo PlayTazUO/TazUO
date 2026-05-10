@@ -42,7 +42,7 @@ namespace ClassicUO.Game.UI.Gumps
             return base.Draw(batcher, x, y);
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left && DurabilityManager.HasDurabilityData)
             {
@@ -69,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
         private VBoxContainer _dataBox;
         public override GumpType GumpType => GumpType.DurabilityGump;
 
-        public DurabilitysGump(World world) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, 200, 200)
+        public DurabilitysGump(World world) : base(world, lastX, lastY, lastWidth, lastHeight, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, 200, 200)
         {
             LayerOrder = UILayer.Default;
             CanCloseWithRightClick = true;

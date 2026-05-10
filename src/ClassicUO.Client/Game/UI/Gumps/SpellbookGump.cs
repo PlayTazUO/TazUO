@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml;
+using ClassicUO.Common.Enums;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -466,10 +467,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 for (int j = 0; j < 2; j++)
                 {
-                    int actualPageNum = _isDynamicSpellbook
-                        ? ((page - dictStartPage) * 2 + j + 1)
-                        : page;
-                    if (page == dictStartPage && _spellBookType == SpellBookType.Chivalry)
+                    if (page == dictStartPage
+                        && (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine
+                            ? _spellBookType == SpellBookType.Chivalry || _spellBookType == SpellBookType.Cleric
+                            : _spellBookType == SpellBookType.Chivalry))
                     {
                         var label = new Label(
                             ResGumps.TithingPointsAvailable + World.Player.TithingPoints,
@@ -1235,7 +1236,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private static UseSpellButtonGump GetSpellFloatingButton(int id)
         {
-            for (LinkedListNode<Gump> i = UIManager.Gumps.Last; i != null; i = i.Previous)
+            for (LinkedListNode<IGui> i = UIManager.Gumps.Last; i != null; i = i.Previous)
             {
                 if (i.Value is UseSpellButtonGump g && g.SpellID == id)
                 {
@@ -1306,6 +1307,15 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mastery:
                     def = SpellsMastery.GetSpell(idx);
+                    break;
+
+                case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsDruid.GetSpell(idx);
+
+                    break;
+                case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsCleric.GetSpell(idx);
+
                     break;
             }
 
@@ -1406,6 +1416,20 @@ namespace ClassicUO.Game.UI.Gumps
                     minimizedGraphic = 0x08BA;
                     iconStartGraphic = 0x08C0;
                     break;
+
+                case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    maxSpellsCount = SpellsDruid.MaxSpellCount;
+                    bookGraphic = 0x2B18;
+                    minimizedGraphic = 0x2B2D;
+                    iconStartGraphic = 0x5A2A;
+                    break;
+
+                case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    maxSpellsCount = SpellsCleric.MaxSpellCount;
+                    bookGraphic = 0x2B0E;
+                    minimizedGraphic = 0x2B0C;
+                    iconStartGraphic = 0x59EC;
+                    break;
             }
 
             spellsOnPage = Math.Min(maxSpellsCount >> 1, 8);
@@ -1458,6 +1482,16 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mastery:
                     offset = 0;
+
+                    break;
+
+                case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    offset = 1136632;
+
+                    break;
+
+                case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    offset = 1136654;
 
                     break;
 
@@ -1544,6 +1578,22 @@ namespace ClassicUO.Game.UI.Gumps
                     name = def.Name;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
+                    break;
+
+                case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsDruid.GetSpell(offset + 1);
+                    name = def.Name;
+                    abbreviature = def.PowerWords;
+                    reagents = def.CreateReagentListString("\n");
+
+                    break;
+
+                case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsCleric.GetSpell(offset + 1);
+                    name = def.Name;
+                    abbreviature = def.PowerWords;
+                    reagents = string.Empty;
+
                     break;
             }
         }
@@ -1639,6 +1689,20 @@ namespace ClassicUO.Game.UI.Gumps
                     }
 
                     return;
+
+                case SpellBookType.Druidic when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsDruid.GetSpell(offset + 1);
+                    manaCost = def.ManaCost;
+                    minSkill = def.MinSkill;
+
+                    break;
+
+                case SpellBookType.Cleric when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    def = SpellsCleric.GetSpell(offset + 1);
+                    manaCost = def.ManaCost;
+                    minSkill = def.MinSkill;
+
+                    break;
 
                 default:
                     if (DynamicSpellbookRegistry.IsDynamic(_spellBookType))
@@ -1782,6 +1846,14 @@ namespace ClassicUO.Game.UI.Gumps
 
                 default:
                     _spellBookType = SpellBookType.Magery;
+                    break;
+                case 0xCE3A when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    _spellBookType = SpellBookType.Druidic;
+
+                    break;
+                case 0xCE3B when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    _spellBookType = SpellBookType.Cleric;
+
                     break;
             }
         }
@@ -1974,7 +2046,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// <param name="x"></param>
             /// <param name="y"></param>
             /// <param name="button"></param>
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left && ShowEdit)
                 {

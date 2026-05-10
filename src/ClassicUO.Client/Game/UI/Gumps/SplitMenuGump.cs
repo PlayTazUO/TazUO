@@ -4,6 +4,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using Microsoft.Xna.Framework;
+using SDL3;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -78,7 +79,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             _textBox.SetText(item.Amount.ToString());
             _textBox.TextChanged += (sender, args) => { UpdateText(); };
+            _textBox.KeyDown += (sender, args) => { if (args.Key == SDL.SDL_Keycode.SDLK_SPACE) PickUp(); };
             _textBox.SetKeyboardFocus();
+
             _slider.ValueChanged += (sender, args) => { UpdateText(); };
         }
 

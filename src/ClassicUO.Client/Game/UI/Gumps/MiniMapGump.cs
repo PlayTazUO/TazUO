@@ -1,7 +1,9 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Buffers;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Xml;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -187,7 +189,7 @@ namespace ClassicUO.Game.UI.Gumps
             return base.Draw(batcher, x, y);
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {
@@ -281,16 +283,16 @@ namespace ClassicUO.Game.UI.Gumps
 
                     staticsZ.Fill(d);
 
-                    MapCellsArray cells;
-                    lock (Map.Map.MapFileIOLock)
-                    {
-                        indexMap.StaticFile.Seek((long)indexMap.StaticAddress, System.IO.SeekOrigin.Begin);
-                        indexMap.MapFile.Seek((long)indexMap.MapAddress, System.IO.SeekOrigin.Begin);
-                        cells = indexMap.MapFile.Read<MapBlock>().Cells;
+                    MapCellsArray cells = indexMap.MapFile.ReadAt<MapBlock>((long)indexMap.MapAddress).Cells;
 
-                        for (int c = 0; c < indexMap.StaticCount; ++c)
+                    if (indexMap.StaticCount > 0)
+                    {
+                        StaticsBlock[] staticsBuffer = ArrayPool<StaticsBlock>.Shared.Rent((int)indexMap.StaticCount);
+                        Span<StaticsBlock> staticsSpan = staticsBuffer.AsSpan(0, (int)indexMap.StaticCount);
+                        indexMap.StaticFile.ReadAt((long)indexMap.StaticAddress, MemoryMarshal.AsBytes(staticsSpan));
+
+                        foreach (ref StaticsBlock stblock in staticsSpan)
                         {
-                            StaticsBlock stblock = indexMap.StaticFile.Read<StaticsBlock>();
                             if (stblock.Color > 0 && stblock.Color != 0xFFFF && GameObject.CanBeDrawn(World, stblock.Color))
                             {
                                 ref ColorInfo st = ref staticsZ[stblock.Y * 8 + stblock.X];
@@ -302,6 +304,8 @@ namespace ClassicUO.Game.UI.Gumps
                                 }
                             }
                         }
+
+                        ArrayPool<StaticsBlock>.Shared.Return(staticsBuffer);
                     }
 
                     Chunk block = World.Map.GetChunk(blockIndex);

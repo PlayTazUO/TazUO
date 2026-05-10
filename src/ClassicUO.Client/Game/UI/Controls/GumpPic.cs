@@ -60,7 +60,7 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 0; i < Children.Count; i++)
             {
-                Control c = Children[i];
+                IGui c = Children[i];
 
                 // might be wrong x, y. They should be calculated by position
                 if (c.Contains(x, y))
@@ -78,7 +78,7 @@ namespace ClassicUO.Game.UI.Controls
         private Texture2D _customTexture;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
@@ -90,7 +90,7 @@ namespace ClassicUO.Game.UI.Controls
             Y = y;
             _customTexture = texture;
             Hue = hue;
-            
+
             if(_customTexture != null){
                 Width = _customTexture.Width;
                 Height = _customTexture.Height;
@@ -145,7 +145,7 @@ namespace ClassicUO.Game.UI.Controls
                 )
             )
         { }
-        
+
         public bool ContainsByBounds { get; set; }
 
         public override bool Contains(int x, int y) => ContainsByBounds || base.Contains(x, y);
@@ -196,7 +196,7 @@ namespace ClassicUO.Game.UI.Controls
             _world = world;
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {

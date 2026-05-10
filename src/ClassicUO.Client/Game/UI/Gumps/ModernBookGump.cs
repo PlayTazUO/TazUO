@@ -344,7 +344,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
         }
 
-        protected override void CloseWithRightClick()
+        public override void CloseWithRightClick()
         {
             SetActivePage(0);
 
@@ -494,7 +494,7 @@ namespace ClassicUO.Game.UI.Gumps
             _bookPage?.Dispose();
         }
 
-        public override void OnHitTestSuccess(int x, int y, ref Control res)
+        public override void OnHitTestSuccess(int x, int y, ref IGui res)
         {
             if (!IsDisposed)
             {
@@ -576,7 +576,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return 0;
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left)
                 {
@@ -612,7 +612,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            protected override void OnMouseOver(int x, int y)
+            public override void OnMouseOver(int x, int y)
             {
                 if (_leftWasDown)
                 {
@@ -634,7 +634,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (_focusPage >= 0 && _focusPage < _pageCoords.GetLength(0))
                 {
@@ -844,7 +844,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _is_writing = false;
             }
 
-            protected override void CloseWithRightClick()
+            public override void CloseWithRightClick()
             {
                 if (_gump != null && !_gump.IsDisposed)
                 {

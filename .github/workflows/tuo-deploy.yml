@@ -42,7 +42,7 @@ jobs:
       release_notes: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
       version: ${{ steps.version.outputs.VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: 'main'
 
@@ -176,6 +176,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete ${{ env.TAG_NAME }} --yes --cleanup-tag || true
+          echo "Waiting for GitHub API to propagate deletion..."
+          sleep 15
 
       - name: Upload all zips to release
         uses: ncipollo/release-action@v1.16.0

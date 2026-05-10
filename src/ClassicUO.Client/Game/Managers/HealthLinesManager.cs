@@ -313,7 +313,8 @@ namespace ClassicUO.Game.Managers
                     ? Notoriety.GetHue(mobile.NotorietyFlag)
                     : Notoriety.GetHue(NotorietyFlag.Gray);
 
-            Vector3 hueVec = ShaderHueTranslator.GetHueVector(hue, false, alpha);
+            Vector3 hueVecZero = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            Vector3 hueVecNoto = ShaderHueTranslator.GetHueVector(hue, false, alpha);
 
             if (mobile == null)
             {
@@ -338,7 +339,21 @@ namespace ClassicUO.Game.Managers
 
                 uint topGump;
                 uint bottomGump;
-                uint gumpHue = 0x7570;
+                uint gumpHue = 0x7572; // gray
+
+                if (mobile.NotorietyFlag == NotorietyFlag.Innocent)
+                    gumpHue = 0x7570; // blue
+                else if (mobile.NotorietyFlag == NotorietyFlag.Ally)
+                    gumpHue = 0x7571; // green
+                else if (mobile.NotorietyFlag == NotorietyFlag.Criminal || mobile.NotorietyFlag == NotorietyFlag.Gray)
+                    gumpHue = 0x7572; // grey
+                else if (mobile.NotorietyFlag == NotorietyFlag.Enemy)
+                    gumpHue = 0x7573; // orange
+
+                if (mobile.NotorietyFlag == NotorietyFlag.Invulnerable)
+                    gumpHue = 0x7575; // yellow
+                else if (mobile.NotorietyFlag == NotorietyFlag.Murderer)
+                    gumpHue = 0x7577; // red
                 if (width >= 80)
                 {
                     topGump = 0x756D;
@@ -365,7 +380,7 @@ namespace ClassicUO.Game.Managers
                         newTargGumpInfo.Texture,
                         new Vector2(targetX, y - topTargetY),
                         newTargGumpInfo.UV,
-                        hueVec
+                        hueVecZero
                     );
 
                 if (hueGumpInfo.Texture != null)
@@ -373,7 +388,7 @@ namespace ClassicUO.Game.Managers
                         hueGumpInfo.Texture,
                         new Vector2(targetX, y - topTargetY),
                         hueGumpInfo.UV,
-                        hueVec
+                        hueVecZero
                     );
 
                 y += 7 + newTargGumpInfo.UV.Height / 2 - centerY;
@@ -384,7 +399,7 @@ namespace ClassicUO.Game.Managers
                         newTargGumpInfo.Texture,
                         new Vector2(targetX, y - 1 - newTargGumpInfo.UV.Height / 2f),
                         newTargGumpInfo.UV,
-                        hueVec
+                        hueVecZero
                     );
             }
 
@@ -399,20 +414,20 @@ namespace ClassicUO.Game.Managers
                 gumpInfo.Texture,
                 new Rectangle(x, y, gumpInfo.UV.Width * multiplier, gumpInfo.UV.Height * multiplier),
                 gumpInfo.UV,
-                hueVec
+                hueVecNoto
             );
 
-            hueVec.X = 90;
+            hueVecNoto.X = 90;
 
             if (mobile != null)
             {
                 if (mobile.IsPoisoned)
                 {
-                    hueVec.X = 63;
+                    hueVecNoto.X = 63;
                 }
                 else if (mobile.IsYellowHits)
                 {
-                    hueVec.X = 53;
+                    hueVecNoto.X = 53;
                 }
             }
 
@@ -425,7 +440,7 @@ namespace ClassicUO.Game.Managers
                 SolidColorTextureCache.GetTexture(Color.White),
                 new Vector2(x + (3 * multiplier), y + (4 * multiplier)),
                 new Rectangle(0, 0, (int)(((BAR_WIDTH * multiplier) - (6 * multiplier)) * hitPerecentage), (bounds.Height * multiplier) - (6 * multiplier)),
-                hueVec
+                hueVecNoto
                 );
         }
     }

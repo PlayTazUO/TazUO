@@ -3,9 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ClassicUO.Renderer;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Controls
 {
@@ -47,8 +48,8 @@ namespace ClassicUO.Game.UI.Controls
 
             try
             {
-                using var client = new WebClient();
-                byte[] data = client.DownloadData(url);
+                using HttpClient client = new();
+                byte[] data = client.GetByteArrayAsync(new Uri(url)).Result;
 
                 using var ms = new MemoryStream(data);
                 var texture = Texture2D.FromStream(Client.Game.GraphicsDevice, ms);

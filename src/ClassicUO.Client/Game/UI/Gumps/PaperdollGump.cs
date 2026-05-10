@@ -71,12 +71,14 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     _isMinimized = value;
 
-                    _picBase.Dispose();
-                    _picBase = new GumpPic(0, 0, value ? Settings.Graphic_Button_Minimized : (LocalSerial == World.Player ? Settings.Graphic_Background_Player : Settings.Graphic_Background_Other), 0);
-                    _picBase.MouseDoubleClick += _picBase_MouseDoubleClick;
-                    Insert(0, _picBase);
+                    _picBase.Graphic =
+                        value
+                            ? Settings.Graphic_Button_Minimized
+                            : (LocalSerial == World.Player
+                                ? Settings.Graphic_Background_Player
+                                : Settings.Graphic_Background_Other);
 
-                    foreach (Control c in Children)
+                    foreach (IGui c in Children)
                     {
                         c.IsVisible = !value;
                     }
@@ -259,7 +261,7 @@ namespace ClassicUO.Game.UI.Gumps
                 profileX += _profilePic.Width;
                 _profilePic.MouseDoubleClick += Profile_MouseDoubleClickEvent;
 
-                Add(_partyManifestPic = new GumpPic(profileX, Settings.Position_Y_Profile, Settings.Graphic_Button_Party, 0));
+                Add(_partyManifestPic = new GumpPic(profileX - 4, Settings.Position_Y_Profile, Settings.Graphic_Button_Party, 0));
                 _partyManifestPic.MouseDoubleClick += PartyManifest_MouseDoubleClickEvent;
 
                 _hitBox = new HitBox(Settings.Position_X_MinimizeButton, Settings.Position_Y_MinimizeButton, Settings.Size_Width_MinimizeButton, Settings.Size_Height_MinimizeButton, alpha: 0f);
@@ -501,7 +503,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if (button == MouseButtonType.Left && World.InGame)
@@ -806,7 +808,7 @@ namespace ClassicUO.Game.UI.Gumps
                 WantUpdateSize = false;
             }
 
-            public override Control ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false)
+            public override IGui ApplyScale(double scale, bool scalePosition = true, bool scaleSize = true, bool force = false)
             {
                 forcedScale = scale;
                 bg?.ApplyScale(scale, scalePosition, scaleSize, force);

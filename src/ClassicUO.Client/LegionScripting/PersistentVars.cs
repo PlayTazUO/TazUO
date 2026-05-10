@@ -162,28 +162,28 @@ namespace ClassicUO.LegionScripting
                        .Replace("\\\\", "\\");
         }
 
-        private static (API.PersistentVar scope, string scopeKey) GetScopeKeyPair(API.PersistentVar scope)
+        private static (LegionAPI.PersistentVar scope, string scopeKey) GetScopeKeyPair(LegionAPI.PersistentVar scope)
         {
             switch (scope)
             {
-                case API.PersistentVar.Char:
+                case LegionAPI.PersistentVar.Char:
                     return (scope, _charScopeKey);
-                case API.PersistentVar.Account:
+                case LegionAPI.PersistentVar.Account:
                     return (scope, _accountScopeKey);
-                case API.PersistentVar.Server:
+                case LegionAPI.PersistentVar.Server:
                     return (scope, _serverScopeKey);
-                case API.PersistentVar.Global:
+                case LegionAPI.PersistentVar.Global:
                     return (scope, GlobalScopeKey);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, null);
             }
         }
 
-        public static string GetVar(API.PersistentVar scope, string key, string defaultValue = "") => GetVarAsync(scope, key, defaultValue).Result;
+        public static string GetVar(LegionAPI.PersistentVar scope, string key, string defaultValue = "") => GetVarAsync(scope, key, defaultValue).Result;
 
-        public static async Task<string> GetVarAsync(API.PersistentVar scope, string key, string defaultValue = "")
+        public static async Task<string> GetVarAsync(LegionAPI.PersistentVar scope, string key, string defaultValue = "")
         {
-            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            (LegionAPI.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
             string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
@@ -216,13 +216,13 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static void SaveVar(API.PersistentVar scope, string key, string value) => SaveVarAsync(scope, key, value, null).ConfigureAwait(false);
+        public static void SaveVar(LegionAPI.PersistentVar scope, string key, string value) => SaveVarAsync(scope, key, value, null).ConfigureAwait(false);
 
-        public static void SaveVar(API.PersistentVar scope, string key, string value, Action onComplete) => SaveVarAsync(scope, key, value, onComplete).ConfigureAwait(false);
+        public static void SaveVar(LegionAPI.PersistentVar scope, string key, string value, Action onComplete) => SaveVarAsync(scope, key, value, onComplete).ConfigureAwait(false);
 
-        public static async Task SaveVarAsync(API.PersistentVar scope, string key, string value, Action onComplete = null)
+        public static async Task SaveVarAsync(LegionAPI.PersistentVar scope, string key, string value, Action onComplete = null)
         {
-            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            (LegionAPI.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
             string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
@@ -255,13 +255,13 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static void DeleteVar(API.PersistentVar scope, string key) => DeleteVarAsync(scope, key, null).ConfigureAwait(false);
+        public static void DeleteVar(LegionAPI.PersistentVar scope, string key) => DeleteVarAsync(scope, key, null).ConfigureAwait(false);
 
-        public static void DeleteVar(API.PersistentVar scope, string key, Action onComplete) => DeleteVarAsync(scope, key, onComplete).ConfigureAwait(false);
+        public static void DeleteVar(LegionAPI.PersistentVar scope, string key, Action onComplete) => DeleteVarAsync(scope, key, onComplete).ConfigureAwait(false);
 
-        public static async Task DeleteVarAsync(API.PersistentVar scope, string key, Action onComplete = null)
+        public static async Task DeleteVarAsync(LegionAPI.PersistentVar scope, string key, Action onComplete = null)
         {
-            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            (LegionAPI.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
             string scopeStr = s.ToString();
 
             await _dbLock.WaitAsync();
@@ -294,7 +294,7 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static Dictionary<string, string> GetAllVars(API.PersistentVar scope) => GetAllVarsAsync(scope).Result;
+        public static Dictionary<string, string> GetAllVars(LegionAPI.PersistentVar scope) => GetAllVarsAsync(scope).Result;
 
         public static void Unload()
         {
@@ -304,9 +304,9 @@ namespace ClassicUO.LegionScripting
             _dbLock.Release();
         }
 
-        public static async Task<Dictionary<string, string>> GetAllVarsAsync(API.PersistentVar scope)
+        public static async Task<Dictionary<string, string>> GetAllVarsAsync(LegionAPI.PersistentVar scope)
         {
-            (API.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
+            (LegionAPI.PersistentVar s, string scopeKey) = GetScopeKeyPair(scope);
             string scopeStr = s.ToString();
             var result = new Dictionary<string, string>();
 

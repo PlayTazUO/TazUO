@@ -115,7 +115,7 @@ namespace ClassicUO.Game.UI.Gumps
             UIManager.KeyboardFocusControl.SetKeyboardFocus();
         }
 
-        protected override void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+        public override void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
         {
             base.OnKeyUp(key, mod);
 

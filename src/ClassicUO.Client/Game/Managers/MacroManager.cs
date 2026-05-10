@@ -16,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using ClassicUO.Common.Enums;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.LegionScripting;
 using static SDL3.SDL;
@@ -102,12 +103,13 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void Save()
+        public void Save(string? path = null)
         {
             List<Macro> list = GetAllMacros();
 
             string tempPath = Path.GetTempFileName();
-            string path = Path.Combine(ProfileManager.ProfilePath, "macros.xml");
+
+            path ??= Path.Combine(ProfileManager.ProfilePath, "macros.xml");
 
             if (!File.Exists(tempPath))
             {
@@ -232,6 +234,8 @@ namespace ClassicUO.Game.Managers
 
         private void CreateDefaultMacros()
         {
+            if (LoadFromDefaultMacroSave()) return;
+
             PushToBack
             (
                 new Macro
@@ -335,6 +339,40 @@ namespace ClassicUO.Game.Managers
             );
         }
 
+        private bool LoadFromDefaultMacroSave()
+        {
+            string defaultMacroXmlPath = Path.Combine(ProfileManager.RootPath, "macros.xml");
+
+            if (!Path.Exists(defaultMacroXmlPath)) return false;
+
+            var doc = new XmlDocument();
+
+            try
+            {
+                doc.Load(defaultMacroXmlPath);
+                Clear();
+
+                XmlElement root = doc["macros"];
+
+                if (root != null)
+                {
+                    foreach (XmlElement xml in root.GetElementsByTagName("macro"))
+                    {
+                        var macro = new Macro(xml.GetAttribute("name"));
+                        macro.Load(xml);
+                        PushToBack(macro);
+                    }
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+            return false;
+        }
 
         public List<Macro> GetAllMacros()
         {
@@ -556,9 +594,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.Yell:
                 case MacroType.RazorMacro:
 
-                    string text = ((MacroObjectString)macro).Text;
-
-                    if (!string.IsNullOrEmpty(text))
+                    if(macro is MacroObjectString { Text: { } text })
                     {
                         MessageType type = MessageType.Regular;
                         ushort hue = ProfileManager.CurrentProfile.SpeechHue;
@@ -1446,6 +1482,37 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.ToggleVoiceRecognition:
+                {
+                    VoiceRecognitionManager vm = VoiceRecognitionManager.Instance;
+                    if (vm.IsInitializing)
+                    {
+                        GameActions.Print(_world, "[Voice] Model is still loading...");
+                    }
+                    else if (!vm.IsInitialized)
+                    {
+                        Configuration.Profile profile = ProfileManager.CurrentProfile;
+                        if (profile != null && !string.IsNullOrEmpty(profile.VoiceModelPath))
+                        {
+                            GameActions.Print(_world, "[Voice] Loading model...");
+                            vm.InitializeAsync(profile.VoiceModelPath, startListeningAfter: true);
+                        }
+                        else
+                        {
+                            GameActions.Print(_world, "[Voice] No model path set - configure in Options > Sound");
+                        }
+                    }
+                    else
+                    {
+                        vm.ToggleListening();
+                        if (!vm.IsListening)
+                            GameActions.Print(_world, "[Voice] Off");
+                        // "[Voice] Listening..." is printed by VoiceRecognitionManager.StatusMessage when recording actually starts
+                    }
+
+                    break;
+                }
+
                 case MacroType.LastObject:
 
                     if (_world.Get(_world.LastObject) != null)
@@ -1722,7 +1789,16 @@ namespace ClassicUO.Game.Managers
 
                 case MacroType.TargetSystemOnOff:
 
-                    GameActions.Print(_world, ResGeneral.TargetSystemNotImplemented);
+                    if (ProfileManager.CurrentProfile.UseNewTargetSystem)
+                    {
+                        ProfileManager.CurrentProfile.UseNewTargetSystem = false;
+                        GameActions.Print(_world, "Target System: Off");
+                    }
+                    else
+                    {
+                        ProfileManager.CurrentProfile.UseNewTargetSystem = true;
+                        GameActions.Print(_world, "Target System: On");
+                    }
 
                     break;
 
@@ -2345,6 +2421,24 @@ namespace ClassicUO.Game.Managers
 
                     GameActions.CastSpell(mspell);
                     break;
+
+                case MacroType.ToggleAutoLoot:
+                    ProfileManager.CurrentProfile.EnableAutoLoot = !ProfileManager.CurrentProfile.EnableAutoLoot;
+                    if (!ProfileManager.CurrentProfile.EnableAutoLoot) AutoLootManager.Instance.ClearActiveLootQueue();
+                    break;
+
+                case MacroType.SetLastTarget:
+                    GameActions.Print("Who would you like to set as last target?");
+                    _world.TargetManager.SetTargeting((o) =>
+                    {
+                        if(o is Entity e)
+                            SetLastTarget(e);
+                    });
+                    break;
+
+                case MacroType.ToggleAutoWalk:
+                    GameScene.Instance.ToggleAutoWalk(null);
+                    break;
             }
 
             return result;
@@ -2953,417 +3047,5 @@ namespace ClassicUO.Game.Managers
         public string Text { get; set; }
 
         public override bool HasString() => true;
-    }
-
-    public enum MacroType
-    {
-        None = 0,
-        Say,
-        Emote,
-        Whisper,
-        Yell,
-        Walk,
-        WarPeace,
-        Paste,
-        Open,
-        Close,
-        Minimize,
-        Maximize,
-        OpenDoor,
-        UseSkill,
-        LastSkill,
-        CastSpell,
-        LastSpell,
-        LastObject,
-        Bow,
-        Salute,
-        QuitGame,
-        AllNames,
-        LastTarget,
-        TargetSelf,
-        ArmDisarm,
-        WaitForTarget,
-        TargetNext,
-        AttackLast,
-        Delay,
-        CircleTrans,
-        CloseGump,
-        AlwaysRun,
-        SaveDesktop,
-        KillGumpOpen,
-        PrimaryAbility,
-        SecondaryAbility,
-        EquipLastWeapon,
-        SetUpdateRange,
-        ModifyUpdateRange,
-        IncreaseUpdateRange,
-        DecreaseUpdateRange,
-        MaxUpdateRange,
-        MinUpdateRange,
-        DefaultUpdateRange,
-        EnableRangeColor,
-        DisableRangeColor,
-        ToggleRangeColor,
-        InvokeVirtue,
-        SelectNext,
-        SelectPrevious,
-        SelectNearest,
-        AttackSelectedTarget,
-        UseSelectedTarget,
-        CurrentTarget,
-        TargetSystemOnOff,
-        ToggleBuffIconGump,
-        BandageSelf,
-        BandageTarget,
-        ToggleGargoyleFly,
-        Zoom,
-        ToggleChatVisibility,
-        INVALID,
-        Aura,
-        AuraOnOff,
-        Grab,
-        SetGrabBag,
-        NamesOnOff,
-        UseItemInHand,
-        UsePotion,
-        CloseAllHealthBars,
-        RazorMacro,
-        ToggleDrawRoofs,
-        ToggleTreeStumps,
-        ToggleVegetation,
-        BorderCaveTiles,
-        CloseInactiveHealthBars,
-        CloseCorpses,
-        UseObject,
-        LookAtMouse,
-        UseCounterBar,
-        ClientCommand,
-        StunAbility,
-        DisarmAbility,
-        ToggleGump,
-        ToggleDurabilityGump,
-        ShowNearbyItems,
-        ToggleNearbyLootGump,
-        ToggleLegionScripting,
-        SetSpellBarRow,
-        SpellBarRowUp,
-        SpellBarRowDown,
-        Dismount,
-        ToggleHouses,
-        ToggleHudVisible,
-        Resync,
-        Mount,
-        SetMount,
-        AddFriend,
-        RemoveFriend,
-        ToggleHotkeys,
-        ToggleMount,
-        ClearHands,
-        EquipHands,
-        UseType,
-        CastMasterySpell,
-        CastCustomSpell
-    }
-
-    public enum MacroSubType
-    {
-        MSC_NONE = 0,
-        NW, //Walk group
-        N,
-        NE,
-        E,
-        SE,
-        S,
-        SW,
-        W,
-        Configuration, //Open/Close/Minimize/Maximize group
-        Paperdoll,
-        Status,
-        Journal,
-        Skills,
-        MageSpellbook,
-        Chat,
-        Backpack,
-        Overview,
-        WorldMap,
-        Mail,
-        PartyManifest,
-        PartyChat,
-        NecroSpellbook,
-        PaladinSpellbook,
-        CombatBook,
-        BushidoSpellbook,
-        NinjitsuSpellbook,
-        Guild,
-        SpellWeavingSpellbook,
-        QuestLog,
-        MysticismSpellbook,
-        RacialAbilitiesBook,
-        BardSpellbook,
-        Anatomy, //Skills group
-        AnimalLore,
-        AnimalTaming,
-        ArmsLore,
-        Begging,
-        Cartography,
-        DetectingHidden,
-        Discordance,
-        EvaluatingIntelligence,
-        ForensicEvaluation,
-        Hiding,
-        Imbuing,
-        Inscription,
-        ItemIdentification,
-        Meditation,
-        Peacemaking,
-        Poisoning,
-        Provocation,
-        RemoveTrap,
-        SpiritSpeak,
-        Stealing,
-        Stealth,
-        TasteIdentification,
-        Tracking,
-        LeftHand,
-        ///Arm/Disarm group
-        RightHand,
-        Honor, //Invoke Virture group
-        Sacrifice,
-        Valor,
-        Clumsy, //Cast Spell group
-        CreateFood,
-        Feeblemind,
-        Heal,
-        MagicArrow,
-        NightSight,
-        ReactiveArmor,
-        Weaken,
-        Agility,
-        Cunning,
-        Cure,
-        Harm,
-        MagicTrap,
-        MagicUntrap,
-        Protection,
-        Strength,
-        Bless,
-        Fireball,
-        MagicLock,
-        Poison,
-        Telekinesis,
-        Teleport,
-        Unlock,
-        WallOfStone,
-        ArchCure,
-        ArchProtection,
-        Curse,
-        FireField,
-        GreaterHeal,
-        Lightning,
-        ManaDrain,
-        Recall,
-        BladeSpirits,
-        DispellField,
-        Incognito,
-        MagicReflection,
-        MindBlast,
-        Paralyze,
-        PoisonField,
-        SummonCreature,
-        Dispel,
-        EnergyBolt,
-        Explosion,
-        Invisibility,
-        Mark,
-        MassCurse,
-        ParalyzeField,
-        Reveal,
-        ChainLightning,
-        EnergyField,
-        FlameStrike,
-        GateTravel,
-        ManaVampire,
-        MassDispel,
-        MeteorSwarm,
-        Polymorph,
-        Earthquake,
-        EnergyVortex,
-        Resurrection,
-        AirElemental,
-        SummonDaemon,
-        EarthElemental,
-        FireElemental,
-        WaterElemental,
-        AnimateDead,
-        BloodOath,
-        CorpseSkin,
-        CurseWeapon,
-        EvilOmen,
-        HorrificBeast,
-        LichForm,
-        MindRot,
-        PainSpike,
-        PoisonStrike,
-        Strangle,
-        SummonFamiliar,
-        VampiricEmbrace,
-        VengefulSpirit,
-        Wither,
-        WraithForm,
-        Exorcism,
-        CleanseByFire,
-        CloseWounds,
-        ConsecrateWeapon,
-        DispelEvil,
-        DivineFury,
-        EnemyOfOne,
-        HolyLight,
-        NobleSacrifice,
-        RemoveCurse,
-        SacredJourney,
-        HonorableExecution,
-        Confidence,
-        Evasion,
-        CounterAttack,
-        LightingStrike,
-        MomentumStrike,
-        FocusAttack,
-        DeathStrike,
-        AnimalForm,
-        KiAttack,
-        SurpriseAttack,
-        Backstab,
-        Shadowjump,
-        MirrorImage,
-        ArcaneCircle,
-        GiftOfRenewal,
-        ImmolatingWeapon,
-        Attunement,
-        Thunderstorm,
-        NaturesFury,
-        SummonFey,
-        SummonFiend,
-        ReaperForm,
-        Wildfire,
-        EssenceOfWind,
-        DryadAllure,
-        EtherealVoyage,
-        WordOfDeath,
-        GiftOfLife,
-        ArcaneEmpowerment,
-        NetherBolt,
-        HealingStone,
-        PurgeMagic,
-        Enchant,
-        Sleep,
-        EagleStrike,
-        AnimatedWeapon,
-        StoneForm,
-        SpellTrigger,
-        MassSleep,
-        CleansingWinds,
-        Bombard,
-        SpellPlague,
-        HailStorm,
-        NetherCyclone,
-        RisingColossus,
-        DEPRECATED, //Can't remove without breaking peoples setups
-        DEPRECATED0,
-        DEPRECATED1,
-        DEPRECATED2,
-        DEPRECATED3,
-        DEPRECATED4,
-
-
-
-        Hostile, //Select Next/Preveous/Nearest group
-        Party,
-        Follower,
-        Object,
-        Mobile,
-        MscTotalCount,
-
-        INVALID_0,
-        INVALID_1,
-        INVALID_2,
-        INVALID_3,
-
-
-        ConfusionBlastPotion = 215,
-        CurePotion,
-        AgilityPotion,
-        StrengthPotion,
-        PoisonPotion,
-        RefreshPotion,
-        HealPotion,
-        ExplosionPotion,
-
-        DefaultZoom,
-        ZoomIn,
-        ZoomOut,
-
-        BestHealPotion,
-        BestCurePotion,
-        BestRefreshPotion,
-        BestStrengthPotion,
-        BestAgiPotion,
-        BestExplosionPotion,
-        BestConflagPotion,
-        EnchantedApple,
-        PetalsOfTrinsic,
-        OrangePetals,
-        TrappedBox,
-        SmokeBomb,
-        HealStone,
-        SpellStone,
-
-        LookForwards,
-        LookBackwards,
-
-        Inspire,
-        Invigorate,
-        Resilience,
-        Perseverance,
-        Tribulation,
-        Despair,
-        DeathRay,
-        EtherealBurst,
-        NetherBlast,
-        MysticWeapon,
-        CommandUndead,
-        Conduit,
-        ManaShield,
-        SummonReaper,
-        EnchantedSummoning,
-        AnticipateHit,
-        Warcry,
-        Intuition,
-        Rejuvenate,
-        HolyFist,
-        Shadow,
-        WhiteTigerForm,
-        FlamingShot,
-        PlayingTheOdds,
-        Thrust,
-        Pierce,
-        Stagger,
-        Toughness,
-        Onslaught,
-        FocusedEye,
-        ElementalFury,
-        CalledShot,
-        WarriorsGifts,
-        ShieldBash,
-        Bodyguard,
-        HeightenSenses,
-        Tolerance,
-        InjectedStrike,
-        Potency,
-        Rampage,
-        FistsofFury,
-        Knockout,
-        Whispering,
-        CombatTraining,
-        Boarding,
     }
 }

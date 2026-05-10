@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Network;
 using ClassicUO.Utility.Logging;
 
@@ -67,6 +68,12 @@ namespace ClassicUO.Game.Managers
 
             SellConfigs?.Remove(config);
             BuyConfigs?.Remove(config);
+        }
+
+        public bool TryGetSellConfig(ushort graphic, ushort hue, out BuySellItemConfig config)
+        {
+            config = sellItems?.FirstOrDefault(c => c.Graphic == graphic && c.Hue == hue);
+            return config != null;
         }
 
         public BuySellItemConfig NewSellConfig()
@@ -181,7 +188,7 @@ namespace ClassicUO.Game.Managers
                 // Check restock functionality
                 if (buyConfigEntry.RestockUpTo > 0)
                 {
-                    ushort currentBackpackAmount = GetBackpackItemCount(buyConfigEntry.Graphic, buyConfigEntry.Hue);
+                    ushort currentBackpackAmount = GetItemCount(buyConfigEntry.Graphic, buyConfigEntry.Hue);
                     if (currentBackpackAmount >= buyConfigEntry.RestockUpTo)
                     {
                         continue; // Already have enough, skip this item
@@ -230,18 +237,25 @@ namespace ClassicUO.Game.Managers
             UIManager.GetGump(shopSerial)?.Dispose();
         }
 
-        private ushort GetBackpackItemCount(ushort graphic, ushort hue)
+        private ushort GetItemCount(ushort graphic, ushort hue, Item container = null)
         {
-            Item backpack = World.Instance.Player?.Backpack;
-            if (backpack == null) return 0;
+            Item searchContainer = container ?? World.Instance.Player?.Backpack;
+            if (searchContainer == null) return 0;
+
+            bool subContainers = ProfileManager.CurrentProfile.BuyAgentSubContainers;
 
             ushort count = 0;
-            var item = (Item)backpack.Items;
+            var item = (Item)searchContainer.Items;
             while (item != null)
             {
                 if (item.Graphic == graphic && (hue == ushort.MaxValue || item.Hue == hue))
                 {
                     count += item.Amount;
+                }
+
+                if(subContainers && !item.IsEmpty)
+                {
+                    count += GetItemCount(graphic, hue, item);
                 }
                 item = (Item)item.Next;
             }
@@ -287,7 +301,7 @@ namespace ClassicUO.Game.Managers
                 ushort backpackTotal = 0;
                 if (sellConfig.RestockUpTo > 0)
                 {
-                    backpackTotal = GetBackpackItemCount(sellConfig.Graphic, sellConfig.Hue);
+                    backpackTotal = GetItemCount(sellConfig.Graphic, sellConfig.Hue);
                     if (backpackTotal <= sellConfig.RestockUpTo)
                     {
                         continue; // Skip selling this item type - already at or below minimum
@@ -339,7 +353,8 @@ namespace ClassicUO.Game.Managers
 
             AsyncNetClient.Socket.Send_SellRequest(vendorSerial, sellList.ToArray());
             GameActions.Print(Client.Game.UO.World, $"Sold {total_count} items for {val} gold.");
-            UIManager.GetGump(vendorSerial)?.Dispose();
+            UIManager.ForEach<ModernShopGump>(g => g.Dispose(), vendorSerial);
+            UIManager.ForEach<ShopGump>(g => g.Dispose(), vendorSerial);
         }
     }
 

@@ -660,8 +660,8 @@ namespace ClassicUO.Game.Managers
 
                     if (sizeData != null && sizeData.TryGetValue("width", out int width) && sizeData.TryGetValue("height", out int height))
                     {
-                        Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_width", width);
-                        Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_height", height);
+                        _ = Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_width", width);
+                        _ = Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_height", height);
 
                         response.StatusCode = 200;
                         byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
@@ -727,8 +727,8 @@ namespace ClassicUO.Game.Managers
                         stateData.TryGetValue("journalMinimized", out bool journalMinimized) &&
                         stateData.TryGetValue("controlsMinimized", out bool controlsMinimized))
                     {
-                        Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_minimized", journalMinimized);
-                        Client.Settings.SetAsync(SettingsScope.Global, "webmap_controls_minimized", controlsMinimized);
+                        _ = Client.Settings.SetAsync(SettingsScope.Global, "webmap_journal_minimized", journalMinimized);
+                        _ = Client.Settings.SetAsync(SettingsScope.Global, "webmap_controls_minimized", controlsMinimized);
 
                         response.StatusCode = 200;
                         byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");

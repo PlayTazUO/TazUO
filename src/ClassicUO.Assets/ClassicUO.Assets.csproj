@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <PackageReference Update="System.Text.Json" Version="8.0.5" />
+    <PackageReference Include="SixLabors.Fonts" Version="2.1.3" />
   </ItemGroup>
 
 </Project>

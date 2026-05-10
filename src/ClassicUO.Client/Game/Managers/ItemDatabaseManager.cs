@@ -20,6 +20,7 @@ namespace ClassicUO.Game.Managers
     public sealed class ItemDatabaseManager : IDisposable
     {
         private const int PENDING_ITEMS_FLUSH_INTERVAL_MS = 3000;
+        private const int PENDING_CUSTOM_NAME_REQUESTS_DELAY_MS = 1000;
         private const int MAX_BATCH_SIZE = 500;
         private const int MAX_SEARCH_LIMIT = 10000;
 
@@ -27,12 +28,15 @@ namespace ClassicUO.Game.Managers
 
         private readonly Lock _dbLock = new();
         private readonly Lock _timerLock = new();
+        private readonly Lock _customNameTimerLock = new();
         private readonly string _databasePath;
         private string _connectionString;
         private bool _initialized;
         private bool _disposed;
         private readonly ConcurrentQueue<ItemInfo> _pendingItems = new();
+        private readonly ConcurrentDictionary<uint, TaskCompletionSource<string>> _pendingCustomNameRequests = new();
         private Timer _pendingItemsTimer;
+        private Timer _customNameRequestsTimer;
 
         public static ItemDatabaseManager Instance => _instance.Value;
 
@@ -60,34 +64,108 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public async Task<string> GetItemCustomName(uint serial) =>
+        public Task<string> GetItemCustomName(uint serial)
+        {
+            TaskCompletionSource<string> tcs = _pendingCustomNameRequests.GetOrAdd(serial, _ => new TaskCompletionSource<string>());
+
+            lock (_customNameTimerLock)
+            {
+                if (_customNameRequestsTimer == null)
+                {
+                    _customNameRequestsTimer = new Timer(PENDING_CUSTOM_NAME_REQUESTS_DELAY_MS);
+                    _customNameRequestsTimer.AutoReset = false;
+                    _customNameRequestsTimer.Elapsed += CustomNameRequestsTimerOnElapsed;
+                    _customNameRequestsTimer.Start();
+                }
+            }
+
+            return tcs.Task;
+        }
+
+        private void CustomNameRequestsTimerOnElapsed(object sender, ElapsedEventArgs e) => Task.Run(async () =>
+        {
+            try
+            {
+                await FlushCustomNameRequestsAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error flushing custom name requests: {ex}");
+            }
+        });
+
+        private async Task FlushCustomNameRequestsAsync()
+        {
+            var requests = new Dictionary<uint, TaskCompletionSource<string>>();
+            foreach (uint serial in _pendingCustomNameRequests.Keys)
+            {
+                if (_pendingCustomNameRequests.TryRemove(serial, out TaskCompletionSource<string> tcs))
+                    requests[serial] = tcs;
+            }
+
+            lock (_customNameTimerLock)
+            {
+                if (_customNameRequestsTimer != null)
+                {
+                    _customNameRequestsTimer.Elapsed -= CustomNameRequestsTimerOnElapsed;
+                    _customNameRequestsTimer.Dispose();
+                    _customNameRequestsTimer = null;
+                }
+            }
+
+            if (requests.Count == 0)
+                return;
+
             await Task.Run(() =>
             {
                 try
                 {
+                    var results = new Dictionary<uint, string>();
                     lock (_dbLock)
                     {
-                        if (!_initialized) return string.Empty;
+                        if (!_initialized)
+                        {
+                            foreach (TaskCompletionSource<string> tcs in requests.Values)
+                                tcs.TrySetResult(string.Empty);
+                            return;
+                        }
 
                         using SqliteConnection connection = GetOpenConnection();
 
-                        string selectQuery = @"SELECT CustomName FROM Items WHERE Serial = @Serial";
+                        var allSerials = requests.Keys.ToList();
+                        for (int offset = 0; offset < allSerials.Count; offset += MAX_BATCH_SIZE)
+                        {
+                            List<uint> chunk = allSerials.GetRange(offset, Math.Min(MAX_BATCH_SIZE, allSerials.Count - offset));
+                            string paramList = string.Join(",", chunk.Select((_, i) => $"@s{i}"));
+                            string query = $"SELECT Serial, CustomName FROM Items WHERE Serial IN ({paramList})";
 
-                        using var command = new SqliteCommand(selectQuery, connection);
-                        command.Parameters.AddWithValue("@Serial", serial);
+                            using var command = new SqliteCommand(query, connection);
+                            for (int i = 0; i < chunk.Count; i++)
+                                command.Parameters.AddWithValue($"@s{i}", chunk[i]);
 
-                        using SqliteDataReader reader = command.ExecuteReader();
-                        if(reader.Read())
-                            return reader["CustomName"].ToString();
+                            using SqliteDataReader reader = command.ExecuteReader();
+                            while (reader.Read())
+                            {
+                                uint s = Convert.ToUInt32(reader["Serial"]);
+                                results[s] = reader["CustomName"].ToString() ?? string.Empty;
+                            }
+                        }
+                    }
+
+                    foreach ((uint serial, TaskCompletionSource<string> tcs) in requests)
+                    {
+                        string name = results.TryGetValue(serial, out string n) ? n : string.Empty;
+                        tcs.TrySetResult(name);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error($"Failed to find item: {ex}");
+                    Log.Error($"Failed to batch fetch custom names: {ex}");
+                    foreach (TaskCompletionSource<string> tcs in requests.Values)
+                        tcs.TrySetResult(string.Empty);
                 }
-
-                return string.Empty;
             });
+        }
 
         public void SearchItems(Action<List<ItemInfo>> onResults,
             uint? serial = null,
@@ -625,6 +703,22 @@ namespace ClassicUO.Game.Managers
                     _pendingItemsTimer.Dispose();
                     _pendingItemsTimer = null;
                 }
+            }
+
+            lock (_customNameTimerLock)
+            {
+                if (_customNameRequestsTimer != null)
+                {
+                    _customNameRequestsTimer.Elapsed -= CustomNameRequestsTimerOnElapsed;
+                    _customNameRequestsTimer.Dispose();
+                    _customNameRequestsTimer = null;
+                }
+            }
+
+            foreach (uint serial in _pendingCustomNameRequests.Keys)
+            {
+                if (_pendingCustomNameRequests.TryRemove(serial, out TaskCompletionSource<string> tcs))
+                    tcs.TrySetResult(string.Empty);
             }
 
             // Flush remaining items synchronously

@@ -169,9 +169,11 @@ namespace ClassicUO.Game.GameObjects
                     && mountGraphic < Client.Game.UO.Animations.MaxAnimationCount
                 )
                 {
+                    bool drawMountAsSingleLayer = false;
                     if (Mounts.TryGet(mount.Graphic, out MountInfo mountInfo))
                     {
                         mountOffsetY = mountInfo.OffsetY;
+                        drawMountAsSingleLayer = mountInfo.DrawAsSingleLayer;
                     }
 
                     // Calculate animation group once
@@ -246,7 +248,8 @@ namespace ClassicUO.Game.GameObjects
                         depth,
                         mountOffsetY,
                         overridenHue,
-                        charSitting
+                        charSitting,
+                        drawAsSingleLayer: drawMountAsSingleLayer
                     );
 
                     drawY += mountOffsetY;
@@ -340,16 +343,11 @@ namespace ClassicUO.Game.GameObjects
                 mountOffsetY,
                 overridenHue,
                 charSitting,
-                OutlineColor
+                outlineColor: OutlineColor
             );
 
-            Profiler.EnterContext("SECTION 5");
             if (!IsEmpty)
             {
-                // Cache profile properties for hot loop
-                bool hiddenLayersEnabled = profile.HiddenLayersEnabled;
-                bool hideLayersForSelf = profile.HideLayersForSelf;
-
                 for (int i = 0; i < Constants.USED_LAYER_COUNT; i++)
                 {
                     Layer layer = LayerOrder.UsedLayers[layerDir, i];
@@ -368,7 +366,9 @@ namespace ClassicUO.Game.GameObjects
 
                     if (isHuman)
                     {
-                        if (hiddenLayersEnabled && profile.HiddenLayers.Contains((int)layer) && ((hideLayersForSelf && IsPlayer) || !hideLayersForSelf))
+                        bool hideLayersForSelf = profile.HideLayersForSelf;
+
+                        if (profile.HiddenLayersEnabled && profile.HiddenLayers.Contains((int)layer) && ((hideLayersForSelf && IsPlayer) || !hideLayersForSelf))
                         {
                             continue;
                         }
@@ -427,8 +427,45 @@ namespace ClassicUO.Game.GameObjects
                                 mountOffsetY,
                                 overridenHue,
                                 charSitting,
-                                OutlineColor
+                                outlineColor: OutlineColor
                             );
+
+                            if (layer == Layer.Robe && Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
+                            {
+                                // Search for item with graphic 0xA413
+                                Item aboveRobe = GetItemByGraphic(0xA413);
+
+                                if (aboveRobe != null)
+                                {
+                                    ushort specialGraphic = aboveRobe.ItemData.AnimID != 0 ? aboveRobe.ItemData.AnimID : aboveRobe.Graphic;
+                                    if (isGargoyle)
+                                        FixGargoyleEquipments(ref specialGraphic);
+                                    byte specialGroup = isGargoyle ? GetGroupForAnimation(this, specialGraphic, true) : animGroup;
+                                    DrawInternal(
+                                        batcher,
+                                        this,
+                                        aboveRobe,
+                                        drawX,
+                                        drawY,
+                                        hueVec,
+                                        IsFlipped,
+                                        animIndex,
+                                        false,
+                                        specialGraphic,
+                                        specialGroup,
+                                        dir,
+                                        isHuman,
+                                        true,
+                                        false,
+                                        isGargoyle,
+                                        depth,
+                                        mountOffsetY,
+                                        overridenHue,
+                                        charSitting,
+                                        outlineColor: OutlineColor
+                                    );
+                                }
+                            }
                         }
                         else
                         {
@@ -454,7 +491,6 @@ namespace ClassicUO.Game.GameObjects
             FrameInfo.Y = Math.Abs(FrameInfo.Y);
             FrameInfo.Width = FrameInfo.X + FrameInfo.Width;
             FrameInfo.Height = FrameInfo.Y + FrameInfo.Height;
-            Profiler.ExitContext("SECTION 5");
             return true;
         }
 
@@ -631,6 +667,7 @@ namespace ClassicUO.Game.GameObjects
             sbyte mountOffset,
             ushort overridedHue,
             bool charIsSitting,
+            bool drawAsSingleLayer = false,
             Color? outlineColor = null
         )
         {
@@ -658,6 +695,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (frames.Length == 0)
             {
+                if (entity != null && entity.ItemData.IsLight) GameScene.Instance.AddLight(owner, owner, x, y);
                 return;
             }
 
@@ -758,17 +796,7 @@ namespace ClassicUO.Game.GameObjects
                     }
                     else
                     {
-                        int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y) - mountOffset;
-
-                        int value = Math.Max(1, diffY);
-                        int count = Math.Max((spriteInfo.UV.Height / value) + 1, 2);
-
-                        rect.Height = Math.Min(value, rect.Height);
-                        int remains = spriteInfo.UV.Height - rect.Height;
-
-                        const int tiles = 2;
-
-                        for (int i = 0; i < count; ++i)
+                        if (isMount && drawAsSingleLayer)
                         {
                             batcher.Draw(
                                 spriteInfo.Texture,
@@ -779,19 +807,46 @@ namespace ClassicUO.Game.GameObjects
                                 Vector2.Zero,
                                 owner.Scale,
                                 mirror ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
-                                depth + 1f + (i * tiles)
+                                depth + 1f
                             );
+                        }
+                        else
+                        {
+                            int diffY = (spriteInfo.UV.Height + spriteInfo.Center.Y) - mountOffset;
 
-                            pos.Y += rect.Height * owner.Scale;
-                            rect.Y += rect.Height;
-                            rect.Height = remains;
-                            remains -= rect.Height;
+                            int value = Math.Max(1, diffY);
+                            int count = Math.Max((spriteInfo.UV.Height / value) + 1, 2);
+
+                            rect.Height = Math.Min(value, rect.Height);
+                            int remains = spriteInfo.UV.Height - rect.Height;
+
+                            const int tiles = 2;
+
+                            for (int i = 0; i < count; ++i)
+                            {
+                                batcher.Draw(
+                                    spriteInfo.Texture,
+                                    pos,
+                                    rect,
+                                    hueVec,
+                                    0f,
+                                    Vector2.Zero,
+                                    owner.Scale,
+                                    mirror ? SpriteEffects.FlipHorizontally : SpriteEffects.None,
+                                    depth + 1f + (i * tiles)
+                                );
+
+                                pos.Y += rect.Height * owner.Scale;
+                                rect.Y += rect.Height;
+                                rect.Height = remains;
+                                remains -= rect.Height;
+                            }
                         }
 
                         if (outlineColor.HasValue)
                         {
                             Color oc = outlineColor.Value;
-                            Vector3 outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
+                            var outlineNormal = new Vector3(oc.R / 255f, oc.G / 255f, oc.B / 255f);
                             Vector3 outlineHue = ShaderHueTranslator.GetOutlineHueVector(hueVec.Z);
 
                             batcher.DrawOutlined(
@@ -1165,12 +1220,12 @@ namespace ClassicUO.Game.GameObjects
                     Item pants = mobile.FindItemByLayer(Layer.Pants);
                     Item robe;
 
-                    if (
-                        mobile.FindItemByLayer(Layer.Legs) != null
+                    //Eventine ignores pants layers
+                    if ((Settings.GlobalSettings.CustomServer != Settings.CustomServers.Eventine && mobile.FindItemByLayer(Layer.Legs) != null)
                         || pants != null
-                            && (
-                                pants.Graphic == 0x1411 /*|| pants.Graphic == 0x141A*/
-                            )
+                        && (
+                            pants.Graphic == 0x1411 /*|| pants.Graphic == 0x141A*/
+                        )
                     )
                     {
                         return true;
@@ -1195,8 +1250,8 @@ namespace ClassicUO.Game.GameObjects
                     robe = mobile.FindItemByLayer(Layer.Robe);
                     pants = mobile.FindItemByLayer(Layer.Pants);
 
-                    if (
-                        mobile.FindItemByLayer(Layer.Legs) != null
+                    //Eventine ignores pants layers
+                    if ((Settings.GlobalSettings.CustomServer != Settings.CustomServers.Eventine && mobile.FindItemByLayer(Layer.Legs) != null)
                         || robe != null && robe.Graphic == 0x0504
                     )
                     {

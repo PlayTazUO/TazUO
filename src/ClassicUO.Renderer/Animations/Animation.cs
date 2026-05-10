@@ -247,7 +247,9 @@ namespace ClassicUO.Renderer.Animations
                     }
                 }
 
-                if (index.FileIndex == 0)
+                useUOP = (index.Flags & AnimationFlags.UseUopAnimation) != 0;
+
+                if (!useUOP && index.FileIndex == 0)
                 {
                     bool replaced = isCorpse ? _animationLoader.ReplaceCorpse(ref id, ref hue) : _animationLoader.ReplaceBody(ref id, ref hue);
                     if (replaced)
@@ -272,7 +274,6 @@ namespace ClassicUO.Renderer.Animations
                 }
             } while (index == null);
 
-            useUOP = (index.Flags & AnimationFlags.UseUopAnimation) != 0;
             index.Hue = hue;
 
             if (useUOP)

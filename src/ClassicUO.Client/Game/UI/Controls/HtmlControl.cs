@@ -194,7 +194,7 @@ namespace ClassicUO.Game.UI.Controls
             //    Width = _gameText.Width;
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             switch (delta)
             {
@@ -248,7 +248,7 @@ namespace ClassicUO.Game.UI.Controls
 
                 int offset = HasBackground ? 4 : 0;
 
-                _gameText.Draw
+                _gameText?.Draw
                 (
                     batcher,
                     x + offset,
@@ -266,7 +266,7 @@ namespace ClassicUO.Game.UI.Controls
             return true;
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {

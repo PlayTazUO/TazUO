@@ -249,13 +249,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public static void UpdateAllOptions()
-        {
-            foreach (ModernPaperdoll p in UIManager.Gumps.OfType<ModernPaperdoll>())
-            {
-                p.UpdateOptions();
-            }
-        }
+        public static void UpdateAllOptions() => UIManager.ForEach<ModernPaperdoll>(p => p.UpdateOptions());
 
         protected override void OnMove(int x, int y)
         {
@@ -289,7 +283,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
 
@@ -436,7 +430,7 @@ this.world = world;
                 Item = null;
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 base.OnMouseUp(x, y, button);
                 Parent?.InvokeMouseUp(new Point(x, y), button);
@@ -862,7 +856,7 @@ this.world = world;
                 };
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 base.OnMouseUp(x, y, button);
                 if (button == MouseButtonType.Left)

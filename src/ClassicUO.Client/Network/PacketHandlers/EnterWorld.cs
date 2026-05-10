@@ -74,6 +74,6 @@ internal static class EnterWorld
 
         if (ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.WebMapAutoStart &&
             !MapWebServerManager.Instance.IsRunning)
-            MapWebServerManager.Instance.Start();
+            _ = MapWebServerManager.Instance.Start();
     }
 }

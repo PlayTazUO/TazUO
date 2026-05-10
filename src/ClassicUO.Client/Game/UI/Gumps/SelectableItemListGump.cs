@@ -113,7 +113,7 @@ public class SelectableItemListGump : Gump
         }
     }
 
-    protected override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+    public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
     {
         switch (key)
         {

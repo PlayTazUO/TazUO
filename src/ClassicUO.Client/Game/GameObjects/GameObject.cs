@@ -148,12 +148,7 @@ namespace ClassicUO.Game.GameObjects
                 RealScreenPosition.Y + (Offset.Y - Offset.Z)
             );
 
-        public int DistanceFrom(Vector2 pos)
-        {
-            if (pos == null) { return int.MaxValue; }
-
-            return Math.Max(Math.Abs(X - (int)pos.X), Math.Abs(Y - (int)pos.Y));
-        }
+        public int DistanceFrom(Vector2 pos) => Math.Max(Math.Abs(X - (int)pos.X), Math.Abs(Y - (int)pos.Y));
 
         public void AddToTile() => AddToTile(X, Y);
 

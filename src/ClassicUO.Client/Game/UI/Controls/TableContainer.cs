@@ -37,7 +37,7 @@ public class TableContainer : Control
             Reposition();
         else
             UpdateSize(c); //Reposition is not requested, so we update the size of the container
-        
+
         return c;
     }
 
@@ -60,7 +60,7 @@ public class TableContainer : Control
         pos.Reset();
         pos.StartTable(columns, columnWidth, leftPad);
 
-        foreach (Control child in Children)
+        foreach (IGui child in Children)
         {
             if (!child.IsVisible || child.IsDisposed)
                 continue;
@@ -74,7 +74,7 @@ public class TableContainer : Control
     private void UpdateSize()
     {
         int h = 0;
-        foreach (Control child in Children)
+        foreach (IGui child in Children)
         {
             if(!child.IsVisible || child.IsDisposed) continue;
 
@@ -85,7 +85,7 @@ public class TableContainer : Control
         Height = h;
     }
 
-    private void UpdateSize(Control c)
+    private void UpdateSize(IGui c)
     {
         if(!c.IsVisible || c.IsDisposed) return;
 

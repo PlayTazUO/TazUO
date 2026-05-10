@@ -90,60 +90,16 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                if (File.Exists(SavePath))
-                {
-                    string json = File.ReadAllText(SavePath);
-                    List<TileMarkerEntry> entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
-                    markedTiles = entries.ToDictionary(e => e.Location, e => e.Hue);
-                }
-                else
-                {
-                    // Try to migrate from old binary format
-                    MigrateFromLegacyFormat();
-                }
+                if (!File.Exists(SavePath)) return;
+
+                string json = File.ReadAllText(SavePath);
+                List<TileMarkerEntry> entries = JsonSerializer.Deserialize(json, TileMarkerJsonContext.Default.ListTileMarkerEntry) ?? new List<TileMarkerEntry>();
+                markedTiles = entries.ToDictionary(e => e.Location, e => e.Hue);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to load marked tile data: {ex.Message}");
                 markedTiles = new Dictionary<TileLocation, ushort>();
-            }
-        }
-
-        [Obsolete("Obsolete")]
-        private void MigrateFromLegacyFormat()
-        {
-            string legacyPath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Profiles", "TileMarkers.bin");
-            if (File.Exists(legacyPath))
-            {
-                try
-                {
-                    using (FileStream fs = File.OpenRead(legacyPath))
-                    {
-                        var bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-                        var oldData = (Dictionary<string, ushort>)bf.Deserialize(fs);
-
-                        foreach (KeyValuePair<string, ushort> kvp in oldData)
-                        {
-                            // Parse old string key format "x.y.map"
-                            string[] parts = kvp.Key.Split('.');
-                            if (parts.Length == 3 &&
-                                int.TryParse(parts[0], out int x) &&
-                                int.TryParse(parts[1], out int y) &&
-                                int.TryParse(parts[2], out int map))
-                            {
-                                markedTiles[new TileLocation(x, y, map)] = kvp.Value;
-                            }
-                        }
-
-                        // Save in new format and delete old file
-                        Save();
-                        File.Delete(legacyPath);
-                    }
-                }
-                catch
-                {
-                    // Migration failed, start fresh
-                }
             }
         }
 

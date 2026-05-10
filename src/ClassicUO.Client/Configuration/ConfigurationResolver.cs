@@ -17,7 +17,6 @@ namespace ClassicUO.Configuration
             if (!File.Exists(file))
             {
                 Log.Warn(file + " not found.");
-
                 return null;
             }
 
@@ -33,7 +32,15 @@ namespace ClassicUO.Configuration
                 RegexOptions.IgnorePatternWhitespace
             );
 
-            return JsonSerializer.Deserialize(text, ctx);
+            try
+            {
+                return JsonSerializer.Deserialize(text, ctx);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to load configuration file '{file}' - {e}");
+                throw;
+            }
         }
 
         public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class

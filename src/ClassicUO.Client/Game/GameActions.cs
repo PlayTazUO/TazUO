@@ -4,11 +4,12 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Game.UI.ImGuiControls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network;
@@ -400,7 +401,7 @@ internal static class GameActions
         MapWebServerManager server = MapWebServerManager.Instance;
 
         if (!server.IsRunning)
-            server.Start();
+            _ = server.Start();
 
         // Open browser
         try
@@ -550,7 +551,7 @@ internal static class GameActions
 
     internal static void Attack(World world, uint serial)
     {
-        if (ProfileManager.CurrentProfile.EnabledCriminalActionQuery)
+        if (ProfileManager.CurrentProfile is { EnabledCriminalActionQuery:true })
         {
             Mobile m = world.Mobiles.Get(serial);
 
@@ -574,16 +575,32 @@ internal static class GameActions
             }
         }
 
-            // Record action for script recording
-            ScriptRecorder.Instance.RecordAttack(serial);
-            ScriptingInfoGump.AddOrUpdateInfo("Last Attacked", $"0x{serial:X}");
+        // Record action for script recording
+        ScriptRecorder.Instance.RecordAttack(serial);
+        ScriptingInfoGump.AddOrUpdateInfo("Last Attacked", $"0x{serial:X8}");
 
         world.TargetManager.NewTargetSystemSerial = serial;
         world.TargetManager.LastAttack = serial;
         Socket.Send_AttackRequest(serial);
     }
 
-    internal static void QueueOpenCorpse(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.OpenCorpse);
+    internal static void QueueOpenCorpse(uint serial) =>
+        ObjectActionQueue.Instance.Enqueue(
+            new ObjectActionQueueItem(() =>
+            {
+                if (serial == 0)
+                    return;
+
+                Item item = World.Instance?.Items?.Get(serial);
+                if (item != null &&
+                    !item.IsDestroyed &&
+                    item.IsCorpse &&
+                    item.Distance <= ProfileManager.CurrentProfile.AutoOpenCorpseRange
+                   )
+                    ObjectActionQueueItem.DoubleClick(serial).Action(); // Using the 'Action' here to remain DRY.
+            }),
+            ActionPriority.OpenCorpse
+        );
 
     internal static void DoubleClickQueued(uint serial) => ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.DoubleClick(serial), ActionPriority.UseItem);
 
@@ -641,6 +658,10 @@ internal static class GameActions
 
         if (isItem || (isMobile && (world.Mobiles.Get(serial)?.IsHuman ?? false)))
         {
+            if (SerialHelper.IsMobile(serial))
+            {
+                world.TargetManager.NewTargetSystemSerial = serial;
+            }
             world.LastObject = serial;
         }
         else
@@ -712,6 +733,12 @@ internal static class GameActions
         }
     }
 
+    /// <summary>
+    /// Prints a warning message to the client/user, bypassing normal event chain processing
+    /// </summary>
+    /// <param name="world">The 'world' instance to use</param>
+    /// <param name="message">The message to display</param>
+    internal static void PrintUserWarn(World world, string message) => Print(world, message, Constants.HUE_WARN);
 
     internal static void Print(string message, ushort hue = 946, MessageType type = MessageType.Regular, byte font = 3, bool unicode = true) => Print(World.Instance, message, hue, type, font, unicode);
 
@@ -746,7 +773,7 @@ internal static class GameActions
         );
     }
 
-    internal static void Print
+    private static void Print
     (
         World world,
         Entity entity,
@@ -800,7 +827,8 @@ internal static class GameActions
         int y,
         int amount = -1,
         Point? offset = null,
-        bool is_gump = false
+        bool isGump = false,
+        bool skipQueue = false
     )
     {
         if (world.Player.IsDead || Client.Game.UO.GameCursor.ItemHold.Enabled)
@@ -846,9 +874,9 @@ internal static class GameActions
 
         Client.Game.UO.GameCursor.ItemHold.Clear();
         Client.Game.UO.GameCursor.ItemHold.Set(item, (ushort)amount, offset);
-        Client.Game.UO.GameCursor.ItemHold.IsGumpTexture = is_gump;
+        Client.Game.UO.GameCursor.ItemHold.IsGumpTexture = isGump;
 
-        if (!ProfileManager.CurrentProfile.QueueManualItemMoves)
+        if (!ProfileManager.CurrentProfile.QueueManualItemMoves || skipQueue)
             Socket.Send_PickUpRequest(item, (ushort)amount);
 
         ScriptingInfoGump.AddOrUpdateInfo("Last Picked Up Item", $"0x{item.Serial:X}");
@@ -1250,10 +1278,10 @@ internal static class GameActions
 
     // ===================================================
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
+    public static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
 
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
+    public static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
     // ===================================================
 
     internal static void QuestArrow(bool rightClick) => Socket.Send_ClickQuestArrow(rightClick);

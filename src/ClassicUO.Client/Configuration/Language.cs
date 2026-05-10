@@ -12,10 +12,13 @@ namespace ClassicUO.Configuration
 
     public class Language
     {
-        public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new ModernOptionsGumpLanguage();
-        public ErrorsLanguage ErrorsLanguage { get; set; } = new ErrorsLanguage();
-        public MapLanguage MapLanguage { get; set; } = new MapLanguage();
-        public TopBarGumpLanguage TopBarGump { get; set; } = new TopBarGumpLanguage();
+        public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
+        public ErrorsLanguage ErrorsLanguage { get; set; } = new();
+        public MapLanguage MapLanguage { get; set; } = new();
+        public TopBarGumpLanguage TopBarGump { get; set; } = new();
+        public ScriptingLanguage Scripting { get; set; } = new();
+        public AssistantLanguage Assistant { get; set; } = new();
+        public UiCommonsLanguage UiCommons { get; set; } = new();
 
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
@@ -24,7 +27,7 @@ namespace ClassicUO.Configuration
         public string CommandGump { get; set; } = "Available Client Commands";
 
         [JsonIgnore]
-        public static Language Instance { get; private set; } = new Language();
+        public static Language Instance { get; private set; } = new();
 
         public static void Load()
         {
@@ -86,20 +89,20 @@ namespace ClassicUO.Configuration
         public string ButtonLighting { get; set; } = "Lighting";
         public string ButtonShadows { get; set; } = "Shadows";
 
-        public General GetGeneral { get; set; } = new General();
-        public Video GetVideo { get; set; } = new Video();
-        public Sound GetSound { get; set; } = new Sound();
-        public Macros GetMacros { get; set; } = new Macros();
-        public ToolTips GetToolTips { get; set; } = new ToolTips();
-        public Speech GetSpeech { get; set; } = new Speech();
-        public CombatSpells GetCombatSpells { get; set; } = new CombatSpells();
-        public Counters GetCounters { get; set; } = new Counters();
-        public InfoBars GetInfoBars { get; set; } = new InfoBars();
-        public Containers GetContainers { get; set; } = new Containers();
-        public Experimental GetExperimental { get; set; } = new Experimental();
-        public NamePlates GetNamePlates { get; set; } = new NamePlates();
-        public Cooldowns GetCooldowns { get; set; } = new Cooldowns();
-        public TazUO GetTazUO { get; set; } = new TazUO();
+        public General GetGeneral { get; set; } = new();
+        public Video GetVideo { get; set; } = new();
+        public Sound GetSound { get; set; } = new();
+        public Macros GetMacros { get; set; } = new();
+        public ToolTips GetToolTips { get; set; } = new();
+        public Speech GetSpeech { get; set; } = new();
+        public CombatSpells GetCombatSpells { get; set; } = new();
+        public Counters GetCounters { get; set; } = new();
+        public InfoBars GetInfoBars { get; set; } = new();
+        public Containers GetContainers { get; set; } = new();
+        public Experimental GetExperimental { get; set; } = new();
+        public NamePlates GetNamePlates { get; set; } = new();
+        public Cooldowns GetCooldowns { get; set; } = new();
+        public TazUO GetTazUO { get; set; } = new();
 
         public class General
         {
@@ -584,10 +587,13 @@ namespace ClassicUO.Configuration
                 "You have {0} other profiles that will may overridden with the settings in this profile.\n\n" +
                 "This will not override: Macros, skill groups, info bar, grid container data, or gump saved positions.";
             public string OverrideAll { get; set; } = "Override {0} other profiles with this one.";
+            public string OverrideAllMacros { get; set; } = "Override {0} other profile's macros with this one.";
             public string OverrideSuccess { get; set; } = "{0} profiles overriden.";
             public string OverrideSame { get; set; } = "Override {0} other profiles on this same server with this one.";
             public string SetAsDefault { get; set; } = "Set this profile as the default for new characters.";
+            public string SetMacrosAsDefault { get; set; } = "Set this profile's macros as the default for new characters.";
             public string SetAsDefaultSuccess { get; set; } = "This profile is now the default for new characters.";
+            public string SetMacrosAsDefaultSuccess { get; set; } = "This profile's macros are now the default for new characters.";
 
             #endregion
 
@@ -618,6 +624,19 @@ namespace ClassicUO.Configuration
             public string Hotkeys { get; set; } = "Hotkeys";
 
 
+            #region VoiceRecognition
+            public string VoiceRecognition { get; set; } = "Voice Recognition";
+            public string VoiceRecognitionEnable { get; set; } = "Enable voice recognition";
+            public string VoiceModelPath { get; set; } = "Vosk model path";
+            public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory or .zip file. Download models from alphacephei.com/vosk/models - zip files will be auto-extracted to the vosk/ folder.";
+            public string VoiceRecognitionStatus { get; set; } = "Status: {0}";
+            public string VoiceStatusReady { get; set; } = "Ready";
+            public string VoiceStatusNotInitialized { get; set; } = "Not initialized - set model path first";
+            public string VoiceStatusListening { get; set; } = "Listening...";
+            public string VoiceApplyModel { get; set; } = "Apply model path";
+            public string VoiceCreateMacro { get; set; } = "Create macro button";
+            #endregion
+
             #region VisibileLayers
             public string VisibleLayers { get; set; } = "Visible Layers";
             public string VisLayersInfo { get; set; } = "These settings are to hide layers on in-game mobiles. Check the box to hide that layer.";
@@ -625,6 +644,19 @@ namespace ClassicUO.Configuration
             public string HiddenLayersEnabled { get; set; } = "Enable visible layer system";
             #endregion
         }
+    }
+
+    public class ScriptingLanguage
+    {
+        public string OpenLocation { get; set; } = "Open Location";
+        public string OpenLocationFailed { get; set; } = "Failed to open location '{0}'";
+    }
+
+    public class UiCommonsLanguage
+    {
+        public string DragToResize { get; set; } = "Drag to resize";
+        public string MinMaxWindowButtonTooltip { get; set; } = "Minimize or maximize this window";
+        public string ResetWindowSizeButtonTooltip { get; set; } = "Reset window size";
     }
 
     public class ErrorsLanguage
@@ -641,5 +673,41 @@ namespace ClassicUO.Configuration
     public class TopBarGumpLanguage
     {
         public string CommandsEntry { get; set; } = "Client Commands";
+    }
+
+    public class AssistantLanguage
+    {
+        public string VisualConfig { get; set; } = "Visual Config";
+        public string DelayConfig { get; set; } = "Delay Config";
+        public string CameraSmoothing { get; set; } = "Camera smoothing";
+        public string CameraSmoothingTooltip { get; set; } = "Smooth camera following when moving. 0 = instant (classic), 1 = very smooth/floaty.";
+        public string HighlightGameObjects { get; set; } = "Highlight game objects";
+        public string ShowNameplates { get; set; } = "Show nameplates";
+        public string PetScaling { get; set; } = "Pet scaling";
+        public string PetScalingTooltip { get; set; } = "Toggle the display of names above characters and NPCs in the game world.";
+        public string OutlineMobiles { get; set; } = "Outline mobiles";
+        public string MinGumpDragDist { get; set; } = "Min gump drag distance";
+        public string MinGumpDragDistTooltip { get; set; } = "How far you need to drag before a gump will move, this helps prevent accidentally dragging instead of clicking.";
+        public string GameScale { get; set; } = "Game scale";
+        public string GameScaleTooltip { get; set; } = "Adjust the scale of the entire game.";
+        public string TurnDelay { get; set; } = "Turn delay";
+        public string ObjectDelay { get; set; } = "Object delay";
+        public string AutoDelayChecker { get; set; } = "Auto delay checker";
+        public string AutoDelayCheckerTooltip { get; set; } = "Run a small test to try to determine the best object delay time.\nThis is an experimental feature, if it doesn't work for you just adjust your delay manually.";
+        public string Misc { get; set; } = "Misc";
+        public string QueueItemMoves { get; set; } = "Queue item moves";
+        public string QueueItemMovesTooltip { get; set; } = "Instead of instantly moving an item, put it in a queue to prevent \"You must wait\" messages.";
+        public string QueueObjectUses { get; set; } = "Queue object uses";
+        public string QueueObjectUsesTooltip { get; set; } = "Instead of instantly double clicking an item or mobile, put it in a queue to prevent \"You must wait\" messages.";
+        public string AutoOpenOwnCorpse { get; set; } = "Auto open own corpse";
+        public string AutoOpenOwnCorpseTooltip { get; set; } = "Automatically open your own corpse when you die, even if auto open corpses is disabled.";
+        public string AutoUnequipForActions { get; set; } = "Auto unequip for actions";
+        public string AutoUnequipForActionsTooltip { get; set; } = "Automatically unequip weapons for spells & potions, then reequip them after.";
+        public string DisableWeather { get; set; } = "Disable weather";
+        public string DisableWeatherTooltip { get; set; } = "Disable weather effects (rain, snow, storms).";
+        public string SetQuickHealSpell { get; set; } = "Set heal spell";
+        public string SetQuickCureSpell { get; set; } = "Set cure spell";
+        public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
+        public string SingleClickLastTarg { get; set; } = "Single clicking a mobile will set it as last target.";
     }
 }

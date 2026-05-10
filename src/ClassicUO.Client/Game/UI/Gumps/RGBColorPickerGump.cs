@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Gumps
         private ColorSelectorControl _colorSelector;
         private readonly Action<Color> _onColorSelected;
 
-        private RGBColorPickerGump(Color initialColor, Action<Color> onColorSelected) : base(World.Instance, 0, 0, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, false)
+        private RGBColorPickerGump(Color initialColor, Action<Color> onColorSelected) : base(World.Instance, 0, 0, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, false)
         {
             _onColorSelected = onColorSelected;
 

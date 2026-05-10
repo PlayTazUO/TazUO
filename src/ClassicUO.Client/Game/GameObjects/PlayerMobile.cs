@@ -12,6 +12,7 @@ using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers.SpellVisualRange;
+using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.GameObjects
 {
@@ -32,7 +33,7 @@ namespace ClassicUO.Game.GameObjects
             Walker = new WalkerManager(this);
             Pathfinder = new Pathfinder(world);
 
-            Skill.SkillValueChangedEvent += (s, e) =>
+            EventSink.SkillValueChangedEvent += (s, e) =>
             {
                 if (ProfileManager.CurrentProfile.DisplaySkillBarOnChange)
                 {
@@ -40,14 +41,10 @@ namespace ClassicUO.Game.GameObjects
                 }
             };
 
-
-            if(ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
-                UIManager.Add(new CastTimerProgressBar(world));
-
             IsPlayer = true;
         }
 
-        public bool IsVisible { get; set; } = true;
+        public new bool IsVisible { get; set; } = true;
 
         public Skill[] Skills { get; }
         public override bool InWarMode { get; set; }
@@ -482,7 +479,7 @@ namespace ClassicUO.Game.GameObjects
                 if (UIManager.Gumps.Count > i)
                     continue;
 
-                Gump gump = UIManager.Gumps.ElementAt(i);
+                IGui gump = UIManager.Gumps.ElementAt(i);
                 //}
                 //foreach (Gump gump in UIManager.Gumps)
                 //{

@@ -97,33 +97,31 @@ float4 PixelShader_Hue(PS_INPUT IN) : COLOR0
 
 	int mode = int(IN.Hue.y);
 
-	if (mode == OUTLINE)
-	{
-		float alpha = IN.Hue.z;
+    if (mode == OUTLINE)
+    {
+        if (color.a > 0.0f) discard;
 
-		if (color.a > 0.0f)
-		{
-			discard;
-		}
+        // Use a fixed thickness
+        const int thickness = 1;
 
-		float2 offsets[16] = {
-			float2(-1, 0), float2(1, 0), float2(0, -1), float2(0, 1),
-			float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1),
-			float2(-1, 0), float2(1, 0), float2(0, -1), float2(0, 1),
-			float2(-1, -1), float2(1, -1), float2(-1, 1), float2(1, 1)
-		};
+        for (int x = -thickness; x <= thickness; x++)
+        {
+            for (int y = -thickness; y <= thickness; y++)
+            {
+                float2 offset = float2(x, y) * TexelSize;
 
-		for (int i = 0; i < 16; i++)
-		{
-			float2 samplePos = IN.TexCoord.xy + offsets[i] * TexelSize;
-			if (tex2D(DrawSampler, samplePos).a > 0.0f)
-			{
-				return float4(IN.Normal.rgb, alpha);
-			}
-		}
+                // 2. Use tex2Dlod to avoid the "Gradient Instruction" warning
+                // float4(UV, 0, MipLevel)
+                float4 sample = tex2Dlod(DrawSampler, float4(IN.TexCoord + offset, 0, 0));
 
-		discard;
-	}
+                if (sample.a > 0.0f)
+                {
+                    return float4(IN.Normal.rgb, IN.Hue.z);
+                }
+            }
+        }
+        discard;
+    }
 
 	if (color.a == 0.0f)
 		discard;

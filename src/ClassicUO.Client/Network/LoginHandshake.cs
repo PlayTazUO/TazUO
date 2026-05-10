@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.IO;
 using ClassicUO.Network.Encryption;
@@ -267,8 +268,6 @@ namespace ClassicUO.Network
             {
                 AsyncNetClient.Socket.Send_SelectCharacter(index, Characters[index], AsyncNetClient.Socket.LocalIP);
                 SetLoginStep(LoginSteps.EnteringBritania);
-                if(!LastServerName.Contains(Account) && !LastServerName.Contains(Password))
-                    AnonMetrics.TrackLoginFireAndForget(LastServerName);
             }
             else
             {
@@ -309,7 +308,7 @@ namespace ClassicUO.Network
 
         private void OnNetClientConnected(object sender, EventArgs e)
         {
-            Log.Info("[HandShake] Connected!");
+            Log.Info("Connected!");
             SetLoginStep(LoginSteps.VerifyingAccount);
 
             uint address = AsyncNetClient.Socket.LocalIP;
@@ -402,6 +401,9 @@ namespace ClassicUO.Network
 
                 AsyncNetClient.Socket.Send_SecondLogin(Account, Password, seed);
                 Log.TraceDebug($"[HandShake] Sent second login.");
+
+                if (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine || Settings.GlobalSettings.CustomServer == Settings.CustomServers.LOCAL_SERVER)
+                    AsyncNetClient.Socket.Send_TazUO();
             }
             else
             {

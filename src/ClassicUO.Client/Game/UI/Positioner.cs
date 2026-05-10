@@ -155,7 +155,7 @@ public class Positioner
         _maxRowHeight = 0;
     }
 
-    public Control Position(Control c)
+    public IGui Position(IGui c)
     {
         if (_tableMode)
         {
@@ -181,7 +181,7 @@ public class Positioner
         return c;
     }
 
-    private Control PositionInTable(Control c)
+    private IGui PositionInTable(IGui c)
     {
         // Calculate column position
         int alignedX = _tableStartX + (_currentColumn * (_columnWidth + _columnPadding));
@@ -229,7 +229,7 @@ public class Positioner
     /// <param name="column">Column index (0-based)</param>
     /// <param name="row">Row index (0-based)</param>
     /// <returns></returns>
-    public Control PositionInTableCell(Control c, int column, int row)
+    public IGui PositionInTableCell(IGui c, int column, int row)
     {
         if (!_tableMode)
         {
@@ -250,7 +250,7 @@ public class Positioner
         return c;
     }
 
-    public Control PositionRightOf(Control c, Control other, int padding = 5)
+    public IGui PositionRightOf(IGui c, IGui other, int padding = 5)
     {
         c.Y = other.Y;
         c.X = other.X + other.Width + padding;
@@ -258,7 +258,7 @@ public class Positioner
         return c;
     }
 
-    public Control PositionLeftOf(Control c, Control other, int padding = 5)
+    public IGui PositionLeftOf(IGui c, IGui other, int padding = 5)
     {
         c.Y = other.Y;
         c.X = other.X - c.Width - padding;
@@ -266,7 +266,7 @@ public class Positioner
         return c;
     }
 
-    public Control PositionExact(Control c, int x, int y)
+    public IGui PositionExact(IGui c, int x, int y)
     {
         c.X = x;
         c.Y = y;

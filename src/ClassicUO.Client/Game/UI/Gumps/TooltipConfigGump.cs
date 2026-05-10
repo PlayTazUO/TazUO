@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.Gumps
         private VBoxContainer mainContainer;
         private VBoxContainer dataContainer;
 
-        public TooltipConfigGump(int x = 100, int y = 100) : base(World.Instance, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, WIDTH, HEIGHT)
+        public TooltipConfigGump(int x = 100, int y = 100) : base(World.Instance, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, WIDTH, HEIGHT)
         {
             CanMove = true;
             AcceptMouseInput = true;

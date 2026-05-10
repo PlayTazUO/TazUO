@@ -296,13 +296,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildBorder();
         }
 
-        public static void UpdateJournalOptions()
-        {
-            foreach (ResizableJournal j in UIManager.Gumps.OfType<ResizableJournal>())
-            {
-                j.UpdateOptions();
-            }
-        }
+        public static void UpdateJournalOptions() => UIManager.ForEach<ResizableJournal>(p => p.UpdateOptions());
 
         public override void Save(XmlTextWriter writer)
         {
@@ -345,7 +339,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildBorder();
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             base.OnMouseWheel(delta);
             if (_scrollBarBase != null)

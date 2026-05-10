@@ -88,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             x -= (int) World.Player.Offset.X;
             y -= (int) (World.Player.Offset.Y - World.Player.Offset.Z);
-            y += World.Player.Z << 2;
+            //y += World.Player.Z << 2;
 
 
             switch (dir)
@@ -177,7 +177,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (CanCloseWithRightClick) return; //This is set to true in Python API, we can ignore server-side stuff
 

@@ -187,7 +187,7 @@ namespace ClassicUO.Game.UI.Controls
                 if (Options != null && Options.Width.HasValue)
                     return Options.Width.Value;
 
-                if (_rtl != null && _rtl.Size != null)
+                if (_rtl is { Size: { } })
                     return _rtl.Size.X;
 
                 return 0;

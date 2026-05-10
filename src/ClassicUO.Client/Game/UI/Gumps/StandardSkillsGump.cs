@@ -587,7 +587,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
             }
 
-            protected override void OnMouseOver(int x, int y)
+            public override void OnMouseOver(int x, int y)
             {
                 if (UIManager.LastControlMouseDown(MouseButtonType.Left) is SkillItemControl skillControl)
                 {
@@ -673,7 +673,7 @@ namespace ClassicUO.Game.UI.Gumps
                 base.OnKeyboardReturn(textID, text);
             }
 
-            protected override void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            public override void OnKeyUp(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
             {
                 base.OnKeyUp(key, mod);
 
@@ -933,7 +933,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            protected override void OnMouseUp(int x, int y, MouseButtonType button)
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
                 if (button != MouseButtonType.Left)
                 {
@@ -958,7 +958,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             private static SkillButtonGump GetSpellFloatingButton(int id)
             {
-                for (LinkedListNode<Gump> i = UIManager.Gumps.Last; i != null; i = i.Previous)
+                for (LinkedListNode<IGui> i = UIManager.Gumps.Last; i != null; i = i.Previous)
                 {
                     if (i.Value is SkillButtonGump g && g.SkillID == id)
                     {
@@ -969,7 +969,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return null;
             }
 
-            protected override void OnMouseDown(int x, int y, MouseButtonType button)
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
             {
                 if (button == MouseButtonType.Left)
                 {

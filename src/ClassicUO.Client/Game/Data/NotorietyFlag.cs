@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Configuration;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.Data
 {
@@ -58,6 +59,27 @@ namespace ClassicUO.Game.Data
                 case NotorietyFlag.Invulnerable: return "<basefont color=\"yellow\">";
 
                 default: return string.Empty;
+            }
+        }
+
+        public static Color? GetColor(NotorietyFlag flag)
+        {
+            switch (flag)
+            {
+                case NotorietyFlag.Innocent: return Color.Cyan;
+
+                case NotorietyFlag.Ally: return Color.Lime;
+
+                case NotorietyFlag.Criminal:
+                case NotorietyFlag.Gray: return Color.Gray;
+
+                case NotorietyFlag.Enemy: return Color.Orange;
+
+                case NotorietyFlag.Murderer: return Color.Red;
+
+                case NotorietyFlag.Invulnerable: return Color.Yellow;
+
+                default: return null;
             }
         }
     }

@@ -105,7 +105,7 @@ namespace ClassicUO.Game.UI.Controls
         }
 
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {
@@ -216,8 +216,18 @@ namespace ClassicUO.Game.UI.Controls
                     labels[i] = label;
                 }
 
-                int totalHeight = Math.Min(maxHeight, labels.Max(o => o.Y + o.Height));
-                int maxWidth = Math.Max(width, labels.Max(o => o.X + o.Width));
+                int totalHeight, maxWidth;
+                if (labels.Length > 0)
+                {
+                    totalHeight = Math.Min(maxHeight, labels.Max(o => o.Y + o.Height));
+                    maxWidth = Math.Max(width, labels.Max(o => o.X + o.Width));
+                }
+                else
+                {
+                    // Render a small empty card so user knows the component is working, if empty
+                    totalHeight = Math.Min(45, maxHeight);
+                    maxWidth = width;
+                }
 
                 var area = new ScrollArea
                 (

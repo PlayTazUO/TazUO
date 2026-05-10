@@ -142,7 +142,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseWheel(MouseEventType delta)
+        public override void OnMouseWheel(MouseEventType delta)
         {
             switch (delta)
             {
@@ -158,7 +158,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        public override void OnMouseDown(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {
@@ -184,7 +184,7 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {

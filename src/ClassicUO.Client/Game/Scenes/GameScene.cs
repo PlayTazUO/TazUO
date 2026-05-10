@@ -20,11 +20,11 @@ using SDL3;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.LegionScripting;
 using ClassicUO.Network.PacketHandlers.Helpers;
-using ImGuiNET;
 
 namespace ClassicUO.Game.Scenes
 {
@@ -178,8 +178,6 @@ namespace ClassicUO.Game.Scenes
         public override void Load()
         {
             base.Load();
-            ImGuiManager.Initialize(Client.Game);
-
             GridContainerSaveData.Instance.Load();
 
             Client.Game.UO.GameCursor.ItemHold.Clear();
@@ -232,6 +230,12 @@ namespace ClassicUO.Game.Scenes
             SpellBarManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
                 StaticFilters.ApplyCaveTileBorder();
+
+            // if(!ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin)
+            //     TazUOChatManager.Instance.Init();
+
+            if (ProfileManager.CurrentProfile.VoiceRecognitionEnabled)
+                VoiceRecognitionManager.Instance.InitializeAsync(ProfileManager.CurrentProfile.VoiceModelPath, startListeningAfter: true);
         }
 
         private void ChatOnMessageReceived(object sender, MessageEventArgs e)
@@ -256,41 +260,18 @@ namespace ClassicUO.Game.Scenes
                 case MessageType.Limit3Spell:
 
                     if (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial))
-                    {
-                        if (ProfileManager.CurrentProfile.HideJournalSystemPrefix)
-                        {
-                            name = null;
-                        }
-                        else
-                        {
-                            name = ResGeneral.System;
-                        }
-                    }
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
                     else
-                    {
                         name = e.Name;
-                    }
 
                     text = e.Text;
-
                     break;
 
                 case MessageType.System:
                     if (string.IsNullOrEmpty(e.Name) || string.Equals(e.Name, "system", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        if (ProfileManager.CurrentProfile.HideJournalSystemPrefix)
-                        {
-                            name = null;
-                        }
-                        else
-                        {
-                            name = ResGeneral.System;
-                        }
-                    }
+                        name = ProfileManager.CurrentProfile?.HideJournalSystemPrefix == true ? null : ResGeneral.System;
                     else
-                    {
                         name = e.Name;
-                    }
 
                     text = e.Text;
 
@@ -381,6 +362,8 @@ namespace ClassicUO.Game.Scenes
 
             Instance = null;
 
+            TazUOChatManager.Instance.Dispose();
+
             LongDistancePathfinder.Dispose();
             WalkableManager.Instance.Shutdown();
 
@@ -434,7 +417,6 @@ namespace ClassicUO.Game.Scenes
             UIManager.GetGump<WorldMapGump>()?.SaveSettings();
 
             ProfileManager.CurrentProfile?.Save(_world, ProfileManager.ProfilePath);
-            ImGuiManager.Dispose();
             MapWebServerManager.Instance.Stop();
             TileMarkerManager.Instance.Save();
             SpellVisualRangeManager.Instance.Save();
@@ -1446,28 +1428,18 @@ namespace ClassicUO.Game.Scenes
         {
             if (!_isSelectionActive) return;
 
-            if (ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse)
-            {
-                _isSelectionActive = false;
-                return;
-            }
-
             var selectionHue = new Vector3 { Z = 0.7f };
 
-            var selStart = new Point(
-                Math.Min(_selectionStart.X, Mouse.Position.X),
-                Math.Min(_selectionStart.Y, Mouse.Position.Y)
-            );
-            var selEnd = new Point(
-                Math.Max(_selectionStart.X, Mouse.Position.X),
-                Math.Max(_selectionStart.Y, Mouse.Position.Y)
-            );
-
-            // Convert to viewport-relative coordinates
-            selStart.X -= Camera.Bounds.X;
-            selStart.Y -= Camera.Bounds.Y;
-            selEnd.X -= Camera.Bounds.X;
-            selEnd.Y -= Camera.Bounds.Y;
+            // Convert to viewport-relative then to game space so the rectangle
+            // renders at the correct position after Camera.ViewTransformMatrix is applied.
+            Point selStart = Camera.ScreenToWorld(new Point(
+                Math.Min(_selectionStart.X, Mouse.Position.X) - Camera.Bounds.X,
+                Math.Min(_selectionStart.Y, Mouse.Position.Y) - Camera.Bounds.Y
+            ));
+            Point selEnd = Camera.ScreenToWorld(new Point(
+                Math.Max(_selectionStart.X, Mouse.Position.X) - Camera.Bounds.X,
+                Math.Max(_selectionStart.Y, Mouse.Position.Y) - Camera.Bounds.Y
+            ));
 
             var selectionRect = new Rectangle(
                 selStart.X,

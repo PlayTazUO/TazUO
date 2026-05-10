@@ -5,11 +5,18 @@
     <ApplicationIcon>cuoicon.ico</ApplicationIcon>
     <AssemblyName>TazUO</AssemblyName>
     <RootNamespace>ClassicUO</RootNamespace>
-    <AssemblyVersion>4.17.0</AssemblyVersion>
-    <FileVersion>4.17.0</FileVersion>
+    <AssemblyVersion>5.1.12</AssemblyVersion>
+    <FileVersion>5.1.12</FileVersion>
     <PackageProjectUrl>https://github.com/PlayTazUO/TazUO</PackageProjectUrl>
     <PublishAot>false</PublishAot>
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Forces generated sources (incl. source generators) to be written to disk -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -36,13 +43,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\DiscordSocialSDK.Wrapper\DiscordSocialSDK.Wrapper\DiscordSocialSDK.Wrapper.csproj" />
     <ProjectReference Include="..\..\external\FNA\FNA.Core.csproj" />
     <ProjectReference Include="..\ClassicUO.Assets\ClassicUO.Assets.csproj" />
     <ProjectReference Include="..\ClassicUO.Renderer\ClassicUO.Renderer.csproj" />
     <ProjectReference Include="..\ClassicUO.Utility\ClassicUO.Utility.csproj" />
     <ProjectReference Include="..\ClassicUO.CUOAPI\ClassicUO.CUOAPI.csproj" />
     <ProjectReference Include="..\..\tools\EventGenerator\EventGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\ClassicUO.SourceGenerators\ClassicUO.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\Async.IRC\Async.IRC.csproj" />
+    <ProjectReference Include="..\..\external\Myra\src\Myra\Myra.FNA.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -94,8 +103,9 @@
 
   <ItemGroup>
     <PackageReference Include="IronPython" Version="3.4.2" />
-    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
+    <PackageReference Include="Vosk" Version="0.3.38" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -127,9 +137,16 @@
   ">true</_IsLinux>
   </PropertyGroup>
 
+  <Target Name="IncludeGeneratedFiles" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <None Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
-    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/PyClasses/*.cs" />
-    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/API.cs" />
+    <DocSourceFiles Include="$(ProjectDir)/LegionScripting/ApiClasses/*.cs" />
+    <DocSourceFiles Include="LegionScripting\LegionAPI.cs" />
+    <DocSourceFiles Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" />
   </ItemGroup>
 
   <PropertyGroup>

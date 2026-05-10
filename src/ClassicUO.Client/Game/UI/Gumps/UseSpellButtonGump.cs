@@ -9,6 +9,7 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
+using ClassicUO.Common.Enums;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 
@@ -156,57 +157,39 @@ namespace ClassicUO.Game.UI.Gumps
         private static int GetSpellTooltip(int id)
         {
             if (id >= 1 && id <= 64) // Magery
-            {
                 return 3002011 + (id - 1);
-            }
 
             if (id >= 101 && id <= 117) // necro
-            {
                 return 1060509 + (id - 101);
+
+            if (id >= 201 && id <= 210) return 1060585 + (id - 201);
+
+            if (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
+            {
+                if (id >= 301 && id <= 322) return 1063816 + (id - 302);
+
+                if (id >= 341 && id <= 354) return 1063580 + (id - 342);
             }
 
-            if (id >= 201 && id <= 210)
-            {
-                return 1060585 + (id - 201);
-            }
+            if (id >= 401 && id <= 406) return 1060595 + (id - 401);
 
-            if (id >= 401 && id <= 406)
-            {
-                return 1060595 + (id - 401);
-            }
+            if (id >= 501 && id <= 508) return 1060610 + (id - 501);
 
-            if (id >= 501 && id <= 508)
-            {
-                return 1060610 + (id - 501);
-            }
+            if (id >= 601 && id <= 616) return 1071026 + (id - 601);
 
-            if (id >= 601 && id <= 616)
-            {
-                return 1071026 + (id - 601);
-            }
-
-            if (id >= 678 && id <= 693)
-            {
-                return 1031678 + (id - 678);
-            }
+            if (id >= 678 && id <= 693) return 1031678 + (id - 678);
 
             if (id >= 701 && id <= 745)
             {
-                if (id <= 706)
-                {
-                    return 1115612 + (id - 701);
-                }
+                if (id <= 706) return 1115612 + (id - 701);
 
-                if (id <= 745)
-                {
-                    return 1155896 + (id - 707);
-                }
+                if (id <= 745) return 1155896 + (id - 707);
             }
 
             return 0;
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
 
@@ -237,7 +220,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (
                 !ProfileManager.CurrentProfile.CastSpellsByOneClick

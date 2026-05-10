@@ -1,4 +1,5 @@
 using ClassicUO.Game;
+using ClassicUO.Game.Managers;
 using ClassicUO.IO;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -19,5 +20,6 @@ internal static class PlaySoundEffect
         short z = (short)p.ReadUInt16BE();
 
         Client.Game.Audio.PlaySoundWithDistance(world, index, x, y);
+        EventSink.InvokeSoundPlayed(new SoundEventArgs(index, x, y));
     }
 }

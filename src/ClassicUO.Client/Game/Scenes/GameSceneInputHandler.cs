@@ -15,9 +15,8 @@ using Microsoft.Xna.Framework;
 using SDL3;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Assets;
-using ClassicUO.Game.UI;
-using ClassicUO.Utility.Logging;
-using ImGuiNET;
+using ClassicUO.Common.Enums;
+using ClassicUO.Game.UI.Controls;
 
 namespace ClassicUO.Game.Scenes
 {
@@ -36,6 +35,12 @@ namespace ClassicUO.Game.Scenes
         private Point _selectionStart,
             _selectionEnd;
         private int AnchorOffset => ProfileManager.CurrentProfile.DragSelectAsAnchor ? 0 : 2;
+
+        /// <summary>
+        /// Toggle auto walk on/off
+        /// </summary>
+        /// <param name="on">Use null to toggle on/off, or set explicitely</param>
+        internal void ToggleAutoWalk(bool? on = true) => _continueRunning = on.HasValue ? on.Value : !_continueRunning;
 
         private bool MoveCharacterByMouseInput()
         {
@@ -213,10 +218,14 @@ namespace ClassicUO.Game.Scenes
                 _selectionEnd.Y = Mouse.Position.Y;
             }
 
-            _rectangleObj.X = _selectionStart.X - Camera.Bounds.X;
-            _rectangleObj.Y = _selectionStart.Y - Camera.Bounds.Y;
-            _rectangleObj.Width = _selectionEnd.X - Camera.Bounds.X - _rectangleObj.X;
-            _rectangleObj.Height = _selectionEnd.Y - Camera.Bounds.Y - _rectangleObj.Y;
+            // Convert viewport-local mouse positions to game space so the intersection
+            // check matches RealScreenPosition (which is also in game space, pre-zoom).
+            Point selMin = Camera.ScreenToWorld(new Point(_selectionStart.X - Camera.Bounds.X, _selectionStart.Y - Camera.Bounds.Y));
+            Point selMax = Camera.ScreenToWorld(new Point(_selectionEnd.X - Camera.Bounds.X, _selectionEnd.Y - Camera.Bounds.Y));
+            _rectangleObj.X = selMin.X;
+            _rectangleObj.Y = selMin.Y;
+            _rectangleObj.Width = selMax.X - selMin.X;
+            _rectangleObj.Height = selMax.Y - selMin.Y;
 
             int finalX = ProfileManager.CurrentProfile.DragSelectStartX;
             int finalY = ProfileManager.CurrentProfile.DragSelectStartY;
@@ -284,11 +293,9 @@ namespace ClassicUO.Game.Scenes
 
                 var size = new Point(p.X + mobile.FrameInfo.Width, p.Y + mobile.FrameInfo.Height);
 
-                p = Camera.WorldToScreen(p);
+                // Keep in game space (RealScreenPosition space) to match _rectangleObj
                 _rectanglePlayer.X = p.X;
                 _rectanglePlayer.Y = p.Y;
-
-                size = Camera.WorldToScreen(size);
                 _rectanglePlayer.Width = size.X - p.X;
                 _rectanglePlayer.Height = size.Y - p.Y;
 
@@ -445,9 +452,14 @@ namespace ClassicUO.Game.Scenes
                         || _world.CustomHouseManager.SeekTile
                     )
                     && SelectedObject.Object is GameObject obj
+                    && (
+                        obj.X != _lastSelectedMultiPositionInHouseCustomization.X
+                        || obj.Y != _lastSelectedMultiPositionInHouseCustomization.Y
+                    )
                 )
                 {
                     _world.CustomHouseManager.OnTargetWorld(obj);
+                    _timeToPlaceMultiInHouseCustomization = Time.Ticks + 50;
                     _lastSelectedMultiPositionInHouseCustomization.X = obj.X;
                     _lastSelectedMultiPositionInHouseCustomization.Y = obj.Y;
                 }
@@ -456,7 +468,7 @@ namespace ClassicUO.Game.Scenes
             {
                 SelectedObject.LastLeftDownObject = SelectedObject.Object;
 
-                if (ProfileManager.CurrentProfile.EnableDragSelect && DragSelectModifierActive() && !(ImGuiManager.IsInitialized && ImGui.GetIO().WantCaptureMouse))
+                if (ProfileManager.CurrentProfile.EnableDragSelect && DragSelectModifierActive())
                 {
                     if (CanDragSelectOnObject(SelectedObject.Object as GameObject))
                     {
@@ -469,6 +481,12 @@ namespace ClassicUO.Game.Scenes
                     _isMouseLeftDown = true;
                     _holdMouse2secOverItemTime = Time.Ticks;
                 }
+
+                if (UIManager.TopMostControl is MyraControl)
+                    UIManager.TopMostControl = null;
+
+                if (ProfileManager.CurrentProfile.SingleClickMobileSetsLastTarget && SelectedObject.Object is Mobile m)
+                    World.Instance.TargetManager.LastTargetInfo.SetEntity(m);
             }
 
             return true;
@@ -516,7 +534,7 @@ namespace ClassicUO.Game.Scenes
 
             if (!ProfileManager.CurrentProfile.DisableAutoMove && _rightMousePressed)
             {
-                _continueRunning = true;
+                ToggleAutoWalk();
             }
 
             BaseGameObject lastObj = SelectedObject.Object;

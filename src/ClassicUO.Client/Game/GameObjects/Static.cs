@@ -25,7 +25,7 @@ namespace ClassicUO.Game.GameObjects
 
         public string Name => ItemData.Name;
 
-        public ushort OriginalGraphic { get; private set; }
+        public new ushort OriginalGraphic { get; private set; }
 
         public ref StaticTiles ItemData
         {

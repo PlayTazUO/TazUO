@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -33,6 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
             _savedSize;
         private readonly GameScene _scene;
         private readonly SystemChatControl _systemChatControl;
+        private List<(string, ushort)>? _userNotifications = null;
 
         private static Texture2D damageWindowOutline = SolidColorTextureCache.GetTexture(Color.White);
         public static Vector3 DamageWindowOutlineHue = ShaderHueTranslator.GetHueVector(32);
@@ -85,6 +87,10 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             };
 
+            _button.MouseEnter += (sender, e) => _button.Alpha = 1f;
+            _button.MouseExit += (sender, e) => _button.Alpha = 0.3f;
+            _button.Alpha = 0.3f;
+
             _button.SetTooltip(ResGumps.ResizeGameWindow);
             Width = scene.Camera.Bounds.Width + borderOffset;
             Height = scene.Camera.Bounds.Height + borderOffset;
@@ -100,8 +106,8 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
             Add(_borderControl);
-            Add(_button);
             Add(_systemChatControl);
+            Add(_button);
             Resize();
 
             if (ProfileManager.CurrentProfile.LastVersionHistoryShown != CUOEnviroment.Version.ToString())
@@ -114,14 +120,34 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Settings.GlobalSettings.FPS < GameController.SupportedRefreshRate)
             {
-                var fps = new Timer(TimeSpan.FromSeconds(5));
-                fps.Elapsed += (sender, args) =>
+                _userNotifications ??= new();
+                _userNotifications.Add(($"Your monitor supports {GameController.SupportedRefreshRate} fps, but you currently have your fps limited to {Settings.GlobalSettings.FPS}. " +
+                                        $"To update this type -syncfps", Constants.HUE_ERROR));
+            }
+
+            if (Settings.GlobalSettings.UltimaOnlineDirectory.StartsWith(CUOEnviroment.ExecutablePath))
+            {
+                _userNotifications ??= new();
+                _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
+            }
+
+            if (_userNotifications != null) //Why is this here? This ensures the user is in-game and can see the world viewport before sending them messages
+            {
+                var timer = new Timer(TimeSpan.FromSeconds(5));
+                timer.Elapsed += (sender, args) =>
                 {
                     if (World.Instance != null)
-                        GameActions.Print($"Your monitor supports {GameController.SupportedRefreshRate} fps, but you currently have your fps limited to {Settings.GlobalSettings.FPS}. To update this type -syncfps", Constants.HUE_ERROR);
-                    fps?.Stop();
+                        _userNotifications.ForEach((s) =>
+                        {
+                            (string item1, ushort item2) = s;
+                            GameActions.Print(item1, item2);
+                        });
+
+                    _userNotifications.Clear();
+                    _userNotifications = null;
+                    timer?.Stop();
                 };
-                fps.Start();
+                timer.Start();
             }
         }
 
@@ -288,12 +314,12 @@ namespace ClassicUO.Game.UI.Gumps
             int borderSize = isFullSize ? 0 : BORDER_WIDTH;
             int borderOffset = isFullSize ? 0 : BORDER_WIDTH * 2;
 
-            _borderControl.Width = Width;
-            _borderControl.Height = Height;
+            _borderControl.Width = _scene.Camera.Bounds.Width + borderOffset;
+            _borderControl.Height = _scene.Camera.Bounds.Height + borderOffset;
             _borderControl.IsVisible = !isFullSize;  // Hide border in full-size mode
 
-            _button.X = Width - (_button.Width >> 1);
-            _button.Y = Height - (_button.Height >> 1);
+            _button.X = Width - (_button.Width);
+            _button.Y = Height - (_button.Height);
             _button.IsVisible = !isFullSize;  // Hide resize button in full-size mode
 
             // Update system chat control position and size
@@ -303,7 +329,7 @@ namespace ClassicUO.Game.UI.Gumps
             _systemChatControl.Width = _scene.Camera.Bounds.Width;
             _systemChatControl.Height = _scene.Camera.Bounds.Height;
             _systemChatControl.Resize();
-            WantUpdateSize = true;
+            //WantUpdateSize = true;
 
             UpdateGameWindowPos();
         }
@@ -371,7 +397,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Resize();
 
                 // Ensure viewport stays in bounds after resize
-                ClampViewportToWindowBounds();
+                //ClampViewportToWindowBounds();
             }
 
             return newSize;
@@ -380,7 +406,7 @@ namespace ClassicUO.Game.UI.Gumps
         public void OnWindowResized()
         {
             // Clamp viewport to new window bounds
-            ClampViewportToWindowBounds();
+            //ClampViewportToWindowBounds(); //Disabled, too many people complained =/
 
             // Update internal state
             _lastSize.X = _scene.Camera.Bounds.Width;

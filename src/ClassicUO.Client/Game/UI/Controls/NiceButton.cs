@@ -71,7 +71,7 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (value)
                 {
-                    Control p = Parent;
+                    IGui p = Parent;
 
                     if (p == null)
                     {
@@ -92,7 +92,7 @@ namespace ClassicUO.Game.UI.Controls
         }
 
         public bool AlwaysShowBackground;
-        
+
         internal static NiceButton GetSelected(Control p, int group)
         {
             IEnumerable<NiceButton> list = p.FindControls<NiceButton>();
@@ -108,7 +108,7 @@ namespace ClassicUO.Game.UI.Controls
             return null;
         }
 
-        protected override void OnMouseUp(int x, int y, MouseButtonType button)
+        public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left)
             {

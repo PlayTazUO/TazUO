@@ -679,7 +679,7 @@ namespace ClassicUO.Game.UI.Gumps
                 base.OnDragEnd(x, y);
         }
 
-        protected override void OnMouseOver(int x, int y)
+        public override void OnMouseOver(int x, int y)
         {
             base.OnMouseOver(x, y);
 
@@ -691,7 +691,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private static SkillButtonGump GetSpellFloatingButton(int id)
         {
-            for (LinkedListNode<Gump> i = UIManager.Gumps.Last; i != null; i = i.Previous)
+            for (LinkedListNode<IGui> i = UIManager.Gumps.Last; i != null; i = i.Previous)
             {
                 if (i.Value is SkillButtonGump g && g.SkillID == id)
                 {

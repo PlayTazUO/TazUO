@@ -113,5 +113,28 @@ namespace ClassicUO.Utility
                 Log.Error("Error opening file: " + ex.Message);
             }
         }
+
+        public static bool OpenLocation(string dirOrFilePath)
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(dirOrFilePath);
+                if (string.IsNullOrWhiteSpace(dir) || !Directory.Exists(dir))
+                    return false;
+
+                // This may not be 100% water-tight.
+                // Think this may work better than relying on ton xdg-open for Linux, though.
+                Process.Start(new ProcessStartInfo(dir) { UseShellExecute = true, Verb = "open" });
+
+                // We return a 'true' here to avoid having to wait sync on the UI thread (since async introduces some undue complexity).
+                // Suboptimal but good enough for this case. The same issue is already present in `OpenFileWithDefaultApp` equivalent
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error opening directory '{dirOrFilePath}': {ex.Message}");
+                return false;
+            }
+        }
     }
 }

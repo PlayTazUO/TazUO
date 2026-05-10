@@ -19,6 +19,7 @@ namespace ClassicUO.Game.UI
         private TextBox _textBox;
         private string _textHTML;
         private readonly World _world;
+        private Item _item;
 
         public Tooltip(World world)
         {
@@ -36,7 +37,19 @@ namespace ClassicUO.Game.UI
 
         public bool IsEmpty => Text == null;
 
-        public uint Serial { get; private set; }
+        public uint Serial
+        {
+            get => field;
+            private set
+            {
+                field = value;
+
+                _item = null;
+
+                if(SerialHelper.IsItem(field))
+                    _item = _world.Items.Get(field);
+            }
+        }
 
         public bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
@@ -94,6 +107,9 @@ namespace ClassicUO.Game.UI
 
                 if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(_textHTML)) //Fix for vendor search
                     finalString = Managers.ToolTipOverrideData.ProcessTooltipText(_textHTML);
+
+                if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
+                    finalString = $"[{_item.CustomName}]\n" + finalString;
 
                 if (_textBox == null || _textBox.IsDisposed)
                 {
@@ -279,7 +295,7 @@ namespace ClassicUO.Game.UI
             return string.IsNullOrEmpty(result) ? null : result;
         }
 
-        public void SetText(string text, int maxWidth = 0)
+        public void SetText(string text)
         {
             if (ProfileManager.CurrentProfile != null && !ProfileManager.CurrentProfile.UseTooltip)
             {

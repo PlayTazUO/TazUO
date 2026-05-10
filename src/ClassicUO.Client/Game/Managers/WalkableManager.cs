@@ -346,8 +346,6 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private static Direction _irrelevantDirection = Direction.NONE;
-
         private bool CalculateWalkabilityForTile(int x, int y)
         {
             try

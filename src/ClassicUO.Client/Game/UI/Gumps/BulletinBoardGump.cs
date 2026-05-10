@@ -74,7 +74,7 @@ namespace ClassicUO.Game.UI.Gumps
                 127,
                 159,
                 241,
-                195,
+                BulletinBoardObject.ITEM_HEIGHT * 9,
                 false
             );
 
@@ -92,20 +92,14 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
-            for (LinkedListNode<Gump> g = UIManager.Gumps.Last; g != null; g = g.Previous)
-            {
-                if (g.Value is BulletinBoardItem)
-                {
-                    g.Value.Dispose();
-                }
-            }
+            UIManager.ForEach<BulletinBoardGump>(g => g.Dispose()); //Not 100% certain closing all bulletin board gumps is intentional..
 
             base.Dispose();
         }
 
         public void RemoveBulletinObject(uint serial)
         {
-            foreach (Control child in _databox.Children)
+            foreach (IGui child in _databox.Children)
             {
                 if (child.LocalSerial == serial)
                 {
@@ -121,7 +115,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void AddBulletinObject(uint serial, string msg)
         {
-            foreach (Control c in _databox.Children)
+            foreach (IGui c in _databox.Children)
             {
                 if (c.LocalSerial == serial)
                 {
@@ -484,12 +478,14 @@ namespace ClassicUO.Game.UI.Gumps
 
     public class BulletinBoardObject : Control
     {
+        public const int ITEM_HEIGHT = 18;
+
         public BulletinBoardObject(uint serial, string text)
         {
             LocalSerial = serial; //board
             CanMove = true;
             Width = 230;
-            Height = 18;
+            Height = ITEM_HEIGHT;
 
             Add(new GumpPic(0, 0, 0x1523, 0));
 
@@ -535,14 +531,14 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
 
-        protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
+        public override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {
                 return false;
             }
 
-            Control root = RootParent;
+            IGui root = RootParent;
 
             if (root != null)
             {

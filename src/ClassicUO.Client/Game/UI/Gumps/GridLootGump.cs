@@ -135,7 +135,8 @@ namespace ClassicUO.Game.UI.Gumps
                     true,
                     0x0481,
                     align: TEXT_ALIGN_TYPE.TS_CENTER,
-                    maxwidth: 300
+                    maxwidth: 300,
+                    ishtml: true
                 )
                 {
                     Width = 300,

@@ -16,7 +16,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private SettingsSection highlightSection;
         private ScrollArea highlightSectionScroll;
 
-        public GridHighlightMenu(World world, int x = 100, int y = 100) : base(world, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, WIDTH, HEIGHT)
+        public GridHighlightMenu(World world, int x = 100, int y = 100) : base(world, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, WIDTH, HEIGHT)
         {
             CanMove = true;
             AcceptMouseInput = true;

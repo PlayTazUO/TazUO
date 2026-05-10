@@ -17,7 +17,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         GridHighlightData data;
         private readonly int keyLoc;
         private readonly Dictionary<string, Checkbox> slotCheckboxes = new();
-        public GridHighlightProperties(World world, int keyLoc, int x, int y) : base(world, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BoderSize, true, WIDTH, HEIGHT)
+        public GridHighlightProperties(World world, int keyLoc, int x, int y) : base(world, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, WIDTH, HEIGHT)
         {
             data = GridHighlightData.GetGridHighlightData(keyLoc);
             CanMove = true;
@@ -37,7 +37,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             Clear();
             Positioner pos = new();
-            Control temp;
+            IGui temp;
 
             // Scroll area
             Add(mainScrollArea = new ScrollArea(BorderSize, BorderSize, Width - (BorderSize * 2), Height - (BorderSize * 2), true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });

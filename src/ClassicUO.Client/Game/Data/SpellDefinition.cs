@@ -171,7 +171,7 @@ namespace ClassicUO.Game.Data
             try
             {
                 Log.Debug($"Loading custom spells from {path}");
-                
+
                 if (!File.Exists(path))
                     return;
 
@@ -474,10 +474,7 @@ namespace ClassicUO.Game.Data
 
         public static SpellDefinition FullIndexGetSpell(int fullidx)
         {
-            if (fullidx < 1)
-            {
-                return EmptySpell;
-            }
+            if (fullidx < 1) return EmptySpell;
 
             if (fullidx >= 800)
             {
@@ -491,40 +488,28 @@ namespace ClassicUO.Game.Data
                 return EmptySpell;
             }
 
-            if (fullidx < 100)
-            {
-                return SpellsMagery.GetSpell(fullidx);
-            }
+            if (fullidx < 100) return SpellsMagery.GetSpell(fullidx);
 
-            if (fullidx < 200)
-            {
-                return SpellsNecromancy.GetSpell(fullidx % 100);
-            }
+            if (fullidx < 200) return SpellsNecromancy.GetSpell(fullidx % 100);
 
-            if (fullidx < 300)
-            {
-                return SpellsChivalry.GetSpell(fullidx % 100);
-            }
+            if (fullidx < 300) return SpellsChivalry.GetSpell(fullidx % 100);
 
-            if (fullidx < 500)
+            #region Custom eventine spells
+            if (Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine)
             {
-                return SpellsBushido.GetSpell(fullidx % 100);
-            }
+                if (fullidx < 340 ) return SpellsDruid.GetSpell((fullidx - 1) % 100);
 
-            if (fullidx < 600)
-            {
-                return SpellsNinjitsu.GetSpell(fullidx % 100);
+                if (fullidx < 400) return SpellsCleric.GetSpell((fullidx - 41) % 100);
             }
+            #endregion
 
-            if (fullidx < 678)
-            {
-                return SpellsSpellweaving.GetSpell(fullidx % 100);
-            }
+            if (fullidx < 500) return SpellsBushido.GetSpell(fullidx % 100);
 
-            if (fullidx < 700)
-            {
-                return SpellsMysticism.GetSpell((fullidx - 77) % 100);
-            }
+            if (fullidx < 600) return SpellsNinjitsu.GetSpell(fullidx % 100);
+
+            if (fullidx < 678) return SpellsSpellweaving.GetSpell(fullidx % 100);
+
+            if (fullidx < 700) return SpellsMysticism.GetSpell((fullidx - 77) % 100);
 
             if (fullidx < 800)
             {
@@ -621,7 +606,7 @@ namespace ClassicUO.Game.Data
 
                 list.Add(spellJson);
             }
-            
+
             File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "Data", "spelldef.json"),JsonSerializer.Serialize(list, SpellJsonContext.Default.ListSpellJson));
 
             GameActions.Print(world, $"Saved all spells as a json file at {Path.Combine(CUOEnviroment.ExecutablePath, "Data", "spelldef.json")}");
@@ -642,49 +627,25 @@ namespace ClassicUO.Game.Data
             params Reagents[] regs
         )
         {
-            if (fullidx < 1 || fullidx > 799)
-            {
-                return;
-            }
+            if (fullidx < 1 || fullidx > 799) return;
 
             SpellDefinition sd = FullIndexGetSpell(fullidx);
 
             if (sd.ID == fullidx) //we are not using an emptyspell spelldefinition
             {
-                if (iconid == 0)
-                {
-                    iconid = sd.GumpIconID;
-                }
+                if (iconid == 0) iconid = sd.GumpIconID;
 
-                if (smalliconid == 0)
-                {
-                    smalliconid = sd.GumpIconSmallID;
-                }
+                if (smalliconid == 0) smalliconid = sd.GumpIconSmallID;
 
-                if (tithing == 0)
-                {
-                    tithing = sd.TithingCost;
-                }
+                if (tithing == 0) tithing = sd.TithingCost;
 
-                if (manacost == 0)
-                {
-                    manacost = sd.ManaCost;
-                }
+                if (manacost == 0) manacost = sd.ManaCost;
 
-                if (minskill == 0)
-                {
-                    minskill = sd.MinSkill;
-                }
+                if (minskill == 0) minskill = sd.MinSkill;
 
-                if (!string.IsNullOrEmpty(sd.PowerWords) && sd.PowerWords != words)
-                {
-                    WordToTargettype.Remove(sd.PowerWords);
-                }
+                if (!string.IsNullOrEmpty(sd.PowerWords) && sd.PowerWords != words) WordToTargettype.Remove(sd.PowerWords);
 
-                if (!string.IsNullOrEmpty(sd.Name) && sd.Name != name)
-                {
-                    WordToTargettype.Remove(sd.Name);
-                }
+                if (!string.IsNullOrEmpty(sd.Name) && sd.Name != name) WordToTargettype.Remove(sd.Name);
             }
 
             sd = new SpellDefinition
@@ -701,37 +662,42 @@ namespace ClassicUO.Game.Data
                 regs
             );
 
-            if (fullidx < 100)
+            switch (fullidx)
             {
-                SpellsMagery.SetSpell(id, in sd);
-            }
-            else if (fullidx < 200)
-            {
-                SpellsNecromancy.SetSpell(id, in sd);
-            }
-            else if (fullidx < 300)
-            {
-                SpellsChivalry.SetSpell(id, in sd);
-            }
-            else if (fullidx < 500)
-            {
-                SpellsBushido.SetSpell(id, in sd);
-            }
-            else if (fullidx < 600)
-            {
-                SpellsNinjitsu.SetSpell(id, in sd);
-            }
-            else if (fullidx < 678)
-            {
-                SpellsSpellweaving.SetSpell(id, in sd);
-            }
-            else if (fullidx < 700)
-            {
-                SpellsMysticism.SetSpell(id - 77, in sd);
-            }
-            else
-            {
-                SpellsMastery.SetSpell(id, in sd);
+                case < 100:
+                    SpellsMagery.SetSpell(id, in sd);
+                    break;
+                case < 200:
+                    SpellsNecromancy.SetSpell(id, in sd);
+                    break;
+                case < 300:
+                    SpellsChivalry.SetSpell(id, in sd);
+                    break;
+
+                #region Custom eventine spells
+                case < 340 when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    SpellsDruid.SetSpell(id - 1, in sd);
+                    break;
+                case < 400 when Settings.GlobalSettings.CustomServer == Settings.CustomServers.Eventine:
+                    SpellsCleric.SetSpell(id - 41, in sd);
+                    break;
+                #endregion
+
+                case < 500:
+                    SpellsBushido.SetSpell(id, in sd);
+                    break;
+                case < 600:
+                    SpellsNinjitsu.SetSpell(id, in sd);
+                    break;
+                case < 678:
+                    SpellsSpellweaving.SetSpell(id, in sd);
+                    break;
+                case < 700:
+                    SpellsMysticism.SetSpell(id - 77, in sd);
+                    break;
+                default:
+                    SpellsMastery.SetSpell(id, in sd);
+                    break;
             }
         }
     }
@@ -740,7 +706,7 @@ namespace ClassicUO.Game.Data
     public partial class SpellJsonContext : JsonSerializerContext
     {
     }
-    
+
     public class SpellJson
     {
         public string School { get; set; } = "Magery";
