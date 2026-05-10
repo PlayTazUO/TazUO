@@ -4665,7 +4665,6 @@ namespace ClassicUO.Game.UI.Gumps
         private class MacroControl : Control
         {
             private static readonly string[] _allHotkeysNames = Enum.GetNames(typeof(MacroType));
-            private static readonly string[] _allSubHotkeysNames = Enum.GetNames(typeof(MacroSubType));
             private readonly DataBox _databox;
             private readonly HotkeyBox _hotkeyBox;
 
@@ -5068,75 +5067,53 @@ namespace ClassicUO.Game.UI.Gumps
                     switch (obj.SubMenuType)
                     {
                         case 1:
-                            int count = 0;
-                            int offset = 0;
-                            string[] names;
-                            int[] customSpellSubCodes = null;
-                            int selectedIndex;
+                            Macro.BuildSubCodePicker(obj.Code, obj.SubCode, out string[] names, out int[] customSpellSubCodes, out int offset, out int selectedIndex);
 
-                            if (obj.Code == MacroType.CastCustomSpell)
+                            if (obj.Code == MacroType.CastSpell)
                             {
-                                Macro.BuildCastCustomSpellPicker(obj.SubCode, out names, out customSpellSubCodes, out selectedIndex);
-                            }
-                            else
-                            {
-                                Macro.GetBoundByCode(obj.Code, ref count, ref offset);
+                                var namesList = new List<string>(names);
 
-                                names = new string[count];
+                                namesList.Remove("Hostile");
+                                namesList.Remove("Party");
+                                namesList.Remove("Follower");
+                                namesList.Remove("Object");
+                                namesList.Remove("Mobile");
+                                namesList.Remove("MscTotalCount");
+                                namesList.Remove("INVALID_0");
+                                namesList.Remove("INVALID_1");
+                                namesList.Remove("INVALID_2");
+                                namesList.Remove("INVALID_3");
+                                namesList.Remove("ConfusionBlastPotion");
+                                namesList.Remove("CurePotion");
+                                namesList.Remove("AgilityPotion");
+                                namesList.Remove("StrengthPotion");
+                                namesList.Remove("PoisonPotion");
+                                namesList.Remove("RefreshPotion");
+                                namesList.Remove("HealPotion");
+                                namesList.Remove("ExplosionPotion");
 
-                                for (int i = 0; i < count; i++)
-                                {
-                                    names[i] = _allSubHotkeysNames[i + offset];
-                                }
+                                namesList.Remove("DefaultZoom");
+                                namesList.Remove("ZoomIn");
+                                namesList.Remove("ZoomOut");
 
-                                if (obj.Code == MacroType.CastSpell)
-                                {
-                                    var namesList = new List<string>(names);
+                                namesList.Remove("BestHealPotion");
+                                namesList.Remove("BestCurePotion");
+                                namesList.Remove("BestRefreshPotion");
+                                namesList.Remove("BestStrengthPotion");
+                                namesList.Remove("BestAgiPotion");
+                                namesList.Remove("BestExplosionPotion");
+                                namesList.Remove("BestConflagPotion");
+                                namesList.Remove("EnchantedApple");
+                                namesList.Remove("PetalsOfTrinsic");
+                                namesList.Remove("OrangePetals");
+                                namesList.Remove("TrappedBox");
+                                namesList.Remove("SmokeBomb");
+                                namesList.Remove("HealStone");
+                                namesList.Remove("SpellStone");
 
-                                    namesList.Remove("Hostile");
-                                    namesList.Remove("Party");
-                                    namesList.Remove("Follower");
-                                    namesList.Remove("Object");
-                                    namesList.Remove("Mobile");
-                                    namesList.Remove("MscTotalCount");
-                                    namesList.Remove("INVALID_0");
-                                    namesList.Remove("INVALID_1");
-                                    namesList.Remove("INVALID_2");
-                                    namesList.Remove("INVALID_3");
-                                    namesList.Remove("ConfusionBlastPotion");
-                                    namesList.Remove("CurePotion");
-                                    namesList.Remove("AgilityPotion");
-                                    namesList.Remove("StrengthPotion");
-                                    namesList.Remove("PoisonPotion");
-                                    namesList.Remove("RefreshPotion");
-                                    namesList.Remove("HealPotion");
-                                    namesList.Remove("ExplosionPotion");
-
-                                    namesList.Remove("DefaultZoom");
-                                    namesList.Remove("ZoomIn");
-                                    namesList.Remove("ZoomOut");
-
-                                    namesList.Remove("BestHealPotion");
-                                    namesList.Remove("BestCurePotion");
-                                    namesList.Remove("BestRefreshPotion");
-                                    namesList.Remove("BestStrengthPotion");
-                                    namesList.Remove("BestAgiPotion");
-                                    namesList.Remove("BestExplosionPotion");
-                                    namesList.Remove("BestConflagPotion");
-                                    namesList.Remove("EnchantedApple");
-                                    namesList.Remove("PetalsOfTrinsic");
-                                    namesList.Remove("OrangePetals");
-                                    namesList.Remove("TrappedBox");
-                                    namesList.Remove("SmokeBomb");
-                                    namesList.Remove("HealStone");
-                                    namesList.Remove("SpellStone");
-
-                                    namesList.Remove("LookForwards");
-                                    namesList.Remove("LookBackwards");
-                                    names = namesList.ToArray();
-                                }
-
-                                selectedIndex = (int)obj.SubCode - offset;
+                                namesList.Remove("LookForwards");
+                                namesList.Remove("LookBackwards");
+                                names = namesList.ToArray();
                             }
 
                             var sub = new ComboBoxWithLabel
@@ -5150,7 +5127,6 @@ namespace ClassicUO.Game.UI.Gumps
                                     }
                                     else
                                     {
-                                        Macro.GetBoundByCode(obj.Code, ref count, ref offset);
                                         obj.SubCode = (MacroSubType)(offset + i);
                                     }
                                 }

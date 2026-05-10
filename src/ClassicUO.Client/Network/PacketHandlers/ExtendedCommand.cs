@@ -578,26 +578,19 @@ internal static class ExtendedCommand
 
                 break;
 
-            //===========================================================================================
-            // Dynamic Spellbook Packet Handlers
-            //===========================================================================================
-            case 0x39: // Spellbook Cache Valid
+            case 0x39:
                 OnSpellbookCacheValid(world, ref p);
                 break;
 
-            case 0x3A: // Spellbook Full Data
+            case 0x3A:
                 OnSpellbookFullData(world, ref p);
                 break;
 
-            case 0x3B: // Invalidate Spellbook Cache
+            case 0x3B:
                 OnInvalidateSpellbookCache(world, ref p);
                 break;
 
-            case 0x3C: // Register Spellbook ItemID
-                OnRegisterSpellbookItemID(world, ref p);
-                break;
-
-            case 0x3D: // Register Spellbook Serial (per-item type mapping)
+            case 0x3D:
                 OnRegisterSpellbookSerial(world, ref p);
                 break;
 
@@ -608,10 +601,6 @@ internal static class ExtendedCommand
         }
     }
 
-    //===========================================================================================
-    // Dynamic Spellbook Packet Handlers
-    //===========================================================================================
-
     private static void OnSpellbookCacheValid(World world, ref StackDataReader p)
     {
         uint serial = p.ReadUInt32BE();
@@ -621,270 +610,192 @@ internal static class ExtendedCommand
 
         SpellbookCacheManager.Instance.OnCacheValid(type, version, spellBitmask);
 
-        var gump = UIManager.GetGump<SpellbookGump>(serial);
-        if (gump != null)
-        {
-            gump.OnCacheValidated(spellBitmask);
-        }
-        
+        UIManager.GetGump<SpellbookGump>(serial)?.OnCacheValidated(spellBitmask);
     }
 
     private static void OnSpellbookFullData(World world, ref StackDataReader p)
     {
-        uint serial = p.ReadUInt32BE();
-        byte type = p.ReadUInt8();
-        uint version = p.ReadUInt32BE();
-        ulong spellBitmask = p.ReadUInt64BE();
-        ushort bookGraphic = p.ReadUInt16BE();
-        ushort minimizedGraphic = p.ReadUInt16BE();
-        byte spellCount = p.ReadUInt8();
-        uint cacheTTL = p.ReadUInt32BE();
-        byte spellsPerPageSide = p.ReadUInt8();
-        byte maxDictionaryPages = p.ReadUInt8();
-        byte pageNameCount = p.ReadUInt8();
-        byte displayFlags = p.ReadUInt8();
-        bool displayManaCost = (displayFlags & 0x01) != 0;
-        bool displayMinSkill = (displayFlags & 0x02) != 0;
-        bool displayPowerWords = (displayFlags & 0x04) != 0;
-
-        ushort bookHue = p.ReadUInt16BE();
-        ushort textColor = p.ReadUInt16BE();
-        ushort spellNameColor = p.ReadUInt16BE();
-        short contentOffsetX = (short)p.ReadUInt16BE();
-        short contentOffsetY = (short)p.ReadUInt16BE();
-        ushort pageTurnLeftGraphic = p.ReadUInt16BE();
-        ushort pageTurnRightGraphic = p.ReadUInt16BE();
-        short pageTurnLeftX = (short)p.ReadUInt16BE();
-        short pageTurnLeftY = (short)p.ReadUInt16BE();
-        short pageTurnRightX = (short)p.ReadUInt16BE();
-        short pageTurnRightY = (short)p.ReadUInt16BE();
-        byte overlayCount = p.ReadUInt8();
-        ushort[] overlayGraphics = new ushort[overlayCount];
-        for (int i = 0; i < overlayCount; i++)
-        {
-            overlayGraphics[i] = p.ReadUInt16BE();
-        }
-
-        byte customPropertyTitleLength = p.ReadUInt8();
-        string customPropertyTitle = null;
-        if (customPropertyTitleLength > 0)
-        {
-            customPropertyTitle = p.ReadASCII(customPropertyTitleLength);
-        }
-
-        byte customPropertyLabelLength = p.ReadUInt8();
-        string customPropertyLabel = null;
-        if (customPropertyLabelLength > 0)
-        {
-            customPropertyLabel = p.ReadASCII(customPropertyLabelLength);
-        }
-
-        byte customPropertyNameLength = p.ReadUInt8();
-        string customPropertyName = null;
-        if (customPropertyNameLength > 0)
-        {
-            customPropertyName = p.ReadASCII(customPropertyNameLength);
-        }
-
-        var pageNames = new string[pageNameCount];
-        for (int i = 0; i < pageNameCount; i++)
-        {
-            byte nameLength = p.ReadUInt8();
-            if (nameLength > 0)
-            {
-                pageNames[i] = p.ReadASCII(nameLength);
-            }
-            else
-            {
-                pageNames[i] = string.Empty;
-            }
-        }
-
-        var spells = new List<DynamicSpellDefinition>();
-        for (int i = 0; i < spellCount; i++)
-        {
-            var spell = new DynamicSpellDefinition
-            {
-                SpellID = p.ReadUInt16BE(),
-                IconGraphic = p.ReadUInt16BE(),
-                NameCliloc = p.ReadInt32BE()
-            };
-
-            byte nameLength = p.ReadUInt8();
-            if (nameLength > 0)
-            {
-                spell.Name = p.ReadASCII(nameLength);
-            }
-
-            byte powerWordsLength = p.ReadUInt8();
-            if (powerWordsLength > 0)
-            {
-                spell.PowerWords = p.ReadASCII(powerWordsLength);
-            }
-
-            byte descriptionLength = p.ReadUInt8();
-            if (descriptionLength > 0)
-            {
-                spell.Description = p.ReadASCII(descriptionLength);
-            }
-
-            spell.ManaCost = p.ReadUInt8();
-            spell.MinSkill = p.ReadUInt8();
-            spell.TargetType = p.ReadUInt8();
-            spell.Reagents = p.ReadUInt16BE();
-
-            byte customReagentCount = p.ReadUInt8();
-            if (customReagentCount > 0)
-            {
-                spell.CustomReagents = new string[customReagentCount];
-                for (int r = 0; r < customReagentCount; r++)
-                {
-                    byte reagentLength = p.ReadUInt8();
-                    if (reagentLength > 0)
-                    {
-                        spell.CustomReagents[r] = p.ReadASCII(reagentLength);
-                    }
-                    else
-                    {
-                        spell.CustomReagents[r] = string.Empty;
-                    }
-                }
-            }
-
-            spell.Cooldown = p.ReadUInt16BE();
-            spell.Page = p.ReadUInt8();
-
-            spells.Add(spell);
-        }
-
-        string manaCostLabel = null;
-        string minSkillLabel = null;
-        ushort titleColor = 0;
-        var infoPages = new List<SpellbookInfoPage>();
-        SpellbookBookmarkInfo bookmark = null;
-        if (p.Remaining > 0)
-        {
-            byte manaCostLabelLen = p.ReadUInt8();
-            if (manaCostLabelLen > 0)
-                manaCostLabel = p.ReadASCII(manaCostLabelLen);
-
-            byte minSkillLabelLen = p.ReadUInt8();
-            if (minSkillLabelLen > 0)
-                minSkillLabel = p.ReadASCII(minSkillLabelLen);
-
-            titleColor = p.ReadUInt16BE();
-
-            byte infoPageCount = p.ReadUInt8();
-            for (int i = 0; i < infoPageCount; i++)
-            {
-                var infoPage = new SpellbookInfoPage();
-
-                ushort titleLen = p.ReadUInt16BE();
-                if (titleLen > 0)
-                    infoPage.Title = p.ReadASCII(titleLen);
-
-                ushort bodyLen = p.ReadUInt16BE();
-                if (bodyLen > 0)
-                    infoPage.Body = p.ReadASCII(bodyLen);
-
-                infoPages.Add(infoPage);
-            }
-
-
-            if (p.Remaining > 0)
-            {
-                byte hasBookmark = p.ReadUInt8();
-                if (hasBookmark != 0)
-                {
-                    bookmark = new SpellbookBookmarkInfo
-                    {
-                        Graphic = p.ReadUInt16BE(),
-                        PressedGraphic = p.ReadUInt16BE(),
-                        X = (short)p.ReadUInt16BE(),
-                        Y = (short)p.ReadUInt16BE(),
-                        Hue = p.ReadUInt16BE(),
-                        DisplayPage = p.ReadUInt8(),
-                        ActionType = p.ReadUInt8(),
-                        Action = p.ReadUInt32BE()
-                    };
-
-                    byte tooltipLen = p.ReadUInt8();
-                    if (tooltipLen > 0)
-                        bookmark.Tooltip = p.ReadASCII(tooltipLen);
-
-                }
-            }
-        }
-
-        SpellbookCacheManager.Instance.UpdateCache(
-            type, version, spellBitmask,
-            bookGraphic, minimizedGraphic,
-            spells, cacheTTL, spellsPerPageSide, maxDictionaryPages, pageNames,
-            displayManaCost, displayMinSkill, displayPowerWords, manaCostLabel, minSkillLabel, customPropertyTitle, customPropertyLabel, customPropertyName,
-            bookHue, textColor, spellNameColor, contentOffsetX, contentOffsetY,
-            pageTurnLeftGraphic, pageTurnRightGraphic,
-            pageTurnLeftX, pageTurnLeftY, pageTurnRightX, pageTurnRightY,
-            overlayGraphics, titleColor, infoPages, bookmark
-        );
+        var entry = ReadSpellbookEntry(ref p, out uint serial, out uint ttl);
+        SpellbookCacheManager.Instance.UpdateCache(entry, ttl);
 
         var gump = UIManager.GetGump<SpellbookGump>(serial);
         if (gump != null)
-        {
             gump.OnSpellbookDataReceived();
-        }
         else
-        {
             UIManager.Add(new SpellbookGump(world, serial));
-        }
     }
 
     private static void OnInvalidateSpellbookCache(World world, ref StackDataReader p)
     {
         byte type = p.ReadUInt8();
-        uint newVersion = p.ReadUInt32BE();
+        _ = p.ReadUInt32BE();
         byte flags = p.ReadUInt8();
         bool forceReload = (flags & 0x01) != 0;
 
-        SpellbookCacheManager.Instance.InvalidateCache(type);
+        if (type == 0xFF)
+            SpellbookCacheManager.Instance.InvalidateAll();
+        else
+            SpellbookCacheManager.Instance.InvalidateCache(type);
 
-        if (forceReload)
+        if (!forceReload)
+            return;
+
+        LinkedListNode<Gump> first = UIManager.Gumps.First;
+        while (first != null)
         {
-            LinkedListNode<Gump> first = UIManager.Gumps.First;
-            while (first != null)
+            LinkedListNode<Gump> next = first.Next;
+            if (first.Value is SpellbookGump sbGump && ((byte)sbGump.SpellBookType == type || type == 0xFF))
             {
-                LinkedListNode<Gump> next = first.Next;
-                if (first.Value is SpellbookGump sbGump)
-                {
-                    if ((byte)sbGump.SpellBookType == type || type == 0xFF)
-                    {
-                        uint sbSerial = sbGump.LocalSerial;
-                        sbGump.Dispose();
-                        AsyncNetClient.Socket.Send_SpellbookRequest(sbSerial, type, 0, true);
-                    }
-                }
-                first = next;
+                uint sbSerial = sbGump.LocalSerial;
+                sbGump.Dispose();
+                AsyncNetClient.Socket.Send_SpellbookRequest(sbSerial, type, 0, true);
             }
+            first = next;
         }
-    }
-
-    private static void OnRegisterSpellbookItemID(World world, ref StackDataReader p)
-    {
-        ushort itemGraphic = p.ReadUInt16BE();
-        byte spellbookType = p.ReadUInt8();
-
-        var bookType = (SpellBookType)spellbookType;
-
-        DynamicSpellbookRegistry.RegisterDynamic(bookType);
     }
 
     private static void OnRegisterSpellbookSerial(World world, ref StackDataReader p)
     {
         uint serial = p.ReadUInt32BE();
-        byte spellbookType = p.ReadUInt8();
-
-        var bookType = (SpellBookType)spellbookType;
+        var bookType = (SpellBookType)p.ReadUInt8();
 
         SpellbookTypeRegistry.RegisterSerial(serial, bookType);
         DynamicSpellbookRegistry.RegisterDynamic(bookType);
+    }
+
+    private static SpellbookCacheEntry ReadSpellbookEntry(ref StackDataReader p, out uint serial, out uint ttl)
+    {
+        serial = p.ReadUInt32BE();
+
+        var entry = new SpellbookCacheEntry
+        {
+            SpellbookType = p.ReadUInt8(),
+            Version = p.ReadUInt32BE(),
+            SpellBitmask = p.ReadUInt64BE(),
+            BookGraphic = p.ReadUInt16BE(),
+            MinimizedGraphic = p.ReadUInt16BE()
+        };
+
+        byte spellCount = p.ReadUInt8();
+        ttl = p.ReadUInt32BE();
+        entry.SpellsPerPageSide = p.ReadUInt8();
+        entry.MaxDictionaryPages = p.ReadUInt8();
+        byte pageNameCount = p.ReadUInt8();
+
+        byte displayFlags = p.ReadUInt8();
+        entry.DisplayManaCost = (displayFlags & 0x01) != 0;
+        entry.DisplayMinSkill = (displayFlags & 0x02) != 0;
+        entry.DisplayPowerWords = (displayFlags & 0x04) != 0;
+
+        entry.BookHue = p.ReadUInt16BE();
+        entry.TextColor = p.ReadUInt16BE();
+        entry.SpellNameColor = p.ReadUInt16BE();
+        entry.ContentOffsetX = (short)p.ReadUInt16BE();
+        entry.ContentOffsetY = (short)p.ReadUInt16BE();
+        entry.PageTurnLeftGraphic = p.ReadUInt16BE();
+        entry.PageTurnRightGraphic = p.ReadUInt16BE();
+        entry.PageTurnLeftX = (short)p.ReadUInt16BE();
+        entry.PageTurnLeftY = (short)p.ReadUInt16BE();
+        entry.PageTurnRightX = (short)p.ReadUInt16BE();
+        entry.PageTurnRightY = (short)p.ReadUInt16BE();
+
+        byte overlayCount = p.ReadUInt8();
+        var overlays = new ushort[overlayCount];
+        for (int i = 0; i < overlayCount; i++)
+            overlays[i] = p.ReadUInt16BE();
+        entry.OverlayGraphics = overlays;
+
+        entry.CustomPropertyTitle = ReadOptionalAscii8(ref p);
+        entry.CustomPropertyLabel = ReadOptionalAscii8(ref p);
+        entry.CustomPropertyName = ReadOptionalAscii8(ref p);
+
+        var pageNames = new string[pageNameCount];
+        for (int i = 0; i < pageNameCount; i++)
+            pageNames[i] = ReadOptionalAscii8(ref p) ?? string.Empty;
+        entry.PageNames = pageNames;
+
+        var spells = new List<DynamicSpellDefinition>(spellCount);
+        for (int i = 0; i < spellCount; i++)
+            spells.Add(ReadSpellDefinition(ref p));
+
+        if (p.Remaining > 0)
+        {
+            entry.ManaCostLabel = ReadOptionalAscii8(ref p);
+            entry.MinSkillLabel = ReadOptionalAscii8(ref p);
+            entry.TitleColor = p.ReadUInt16BE();
+
+            byte infoPageCount = p.ReadUInt8();
+            var infoPages = new List<SpellbookInfoPage>(infoPageCount);
+            for (int i = 0; i < infoPageCount; i++)
+            {
+                infoPages.Add(new SpellbookInfoPage
+                {
+                    Title = ReadOptionalAscii16(ref p),
+                    Body = ReadOptionalAscii16(ref p)
+                });
+            }
+            entry.InfoPages = infoPages;
+
+            if (p.Remaining > 0 && p.ReadUInt8() != 0)
+            {
+                entry.Bookmark = new SpellbookBookmarkInfo
+                {
+                    Graphic = p.ReadUInt16BE(),
+                    PressedGraphic = p.ReadUInt16BE(),
+                    X = (short)p.ReadUInt16BE(),
+                    Y = (short)p.ReadUInt16BE(),
+                    Hue = p.ReadUInt16BE(),
+                    DisplayPage = p.ReadUInt8(),
+                    ActionType = p.ReadUInt8(),
+                    Action = p.ReadUInt32BE(),
+                    Tooltip = ReadOptionalAscii8(ref p)
+                };
+            }
+        }
+
+        entry.Spells = spells;
+        return entry;
+    }
+
+    private static DynamicSpellDefinition ReadSpellDefinition(ref StackDataReader p)
+    {
+        var spell = new DynamicSpellDefinition
+        {
+            SpellID = p.ReadUInt16BE(),
+            IconGraphic = p.ReadUInt16BE(),
+            NameCliloc = p.ReadInt32BE(),
+            Name = ReadOptionalAscii8(ref p),
+            PowerWords = ReadOptionalAscii8(ref p),
+            Description = ReadOptionalAscii8(ref p),
+            ManaCost = p.ReadUInt8(),
+            MinSkill = p.ReadUInt8(),
+            TargetType = p.ReadUInt8(),
+            Reagents = p.ReadUInt16BE()
+        };
+
+        byte customReagentCount = p.ReadUInt8();
+        if (customReagentCount > 0)
+        {
+            spell.CustomReagents = new string[customReagentCount];
+            for (int r = 0; r < customReagentCount; r++)
+                spell.CustomReagents[r] = ReadOptionalAscii8(ref p) ?? string.Empty;
+        }
+
+        spell.Cooldown = p.ReadUInt16BE();
+        spell.Page = p.ReadUInt8();
+
+        return spell;
+    }
+
+    private static string ReadOptionalAscii8(ref StackDataReader p)
+    {
+        byte len = p.ReadUInt8();
+        return len > 0 ? p.ReadASCII(len) : null;
+    }
+
+    private static string ReadOptionalAscii16(ref StackDataReader p)
+    {
+        ushort len = p.ReadUInt16BE();
+        return len > 0 ? p.ReadASCII(len) : null;
     }
 }

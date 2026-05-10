@@ -16,7 +16,6 @@ namespace ClassicUO.Game.UI.Controls
     public class MacroControl : Control
     {
         private static readonly string[] _allHotkeysNames = Enum.GetNames(typeof(MacroType));
-        private static readonly string[] _allSubHotkeysNames = Enum.GetNames(typeof(MacroSubType));
         private readonly DataBox _databox;
         private readonly HotkeyBox _hotkeyBox;
         private readonly Gumps.Gump _gump;
@@ -479,26 +478,7 @@ namespace ClassicUO.Game.UI.Controls
                 switch (obj.SubMenuType)
                 {
                     case 1:
-                        int count = 0;
-                        int offset = 0;
-                        string[] names;
-                        int[] customSpellSubCodes = null;
-                        int selectedIndex;
-
-                        if (obj.Code == MacroType.CastCustomSpell)
-                        {
-                            Macro.BuildCastCustomSpellPicker(obj.SubCode, out names, out customSpellSubCodes, out selectedIndex);
-                        }
-                        else
-                        {
-                            Macro.GetBoundByCode(obj.Code, ref count, ref offset);
-                            names = new string[count];
-                            for (int i = 0; i < count; i++)
-                            {
-                                names[i] = _allSubHotkeysNames[i + offset];
-                            }
-                            selectedIndex = (int)obj.SubCode - offset;
-                        }
+                        Macro.BuildSubCodePicker(obj.Code, obj.SubCode, out string[] names, out int[] customSpellSubCodes, out int offset, out int selectedIndex);
 
                         var sub = new Combobox
                         (
@@ -519,7 +499,6 @@ namespace ClassicUO.Game.UI.Controls
                             }
                             else
                             {
-                                Macro.GetBoundByCode(obj.Code, ref count, ref offset);
                                 obj.SubCode = (MacroSubType)(offset + ee);
                             }
                         };

@@ -4,8 +4,8 @@ using System.Text.Json.Serialization;
 namespace ClassicUO.Game.Data
 {
     [JsonSourceGenerationOptions(WriteIndented = true)]
-    [JsonSerializable(typeof(List<PersistentCacheEntry>))]
-    [JsonSerializable(typeof(PersistentCacheEntry))]
+    [JsonSerializable(typeof(List<SpellbookCacheEntry>))]
+    [JsonSerializable(typeof(SpellbookCacheEntry))]
     [JsonSerializable(typeof(DynamicSpellDefinition))]
     [JsonSerializable(typeof(SpellbookInfoPage))]
     [JsonSerializable(typeof(SpellbookBookmarkInfo))]

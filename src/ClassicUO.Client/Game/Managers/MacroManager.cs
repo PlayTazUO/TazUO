@@ -2825,6 +2825,37 @@ namespace ClassicUO.Game.Managers
                 currentIndex = 0;
         }
 
+        public static void BuildSubCodePicker(
+            MacroType code,
+            MacroSubType currentSubCode,
+            out string[] names,
+            out int[] customSpellSubCodes,
+            out int offset,
+            out int selectedIndex)
+        {
+            if (code == MacroType.CastCustomSpell)
+            {
+                BuildCastCustomSpellPicker(currentSubCode, out names, out customSpellSubCodes, out selectedIndex);
+                offset = 0;
+                return;
+            }
+
+            customSpellSubCodes = null;
+            int count = 0;
+            offset = 0;
+            GetBoundByCode(code, ref count, ref offset);
+
+            names = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                names[i] = ((MacroSubType)(i + offset)).ToString();
+            }
+
+            selectedIndex = (int)currentSubCode - offset;
+            if (selectedIndex < 0 || selectedIndex >= count)
+                selectedIndex = 0;
+        }
+
         public static bool IsCustomSpellSubCode(int subCode)
         {
             foreach (var bookType in DynamicSpellbookRegistry.GetAllRegisteredTypes())

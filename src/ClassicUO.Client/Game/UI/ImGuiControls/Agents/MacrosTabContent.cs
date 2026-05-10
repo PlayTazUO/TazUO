@@ -491,28 +491,7 @@ namespace ClassicUO.Game.UI.ImGuiControls
             // SubMenuType 1: Dropdown for sub-options
             if (action.SubMenuType == 1)
             {
-                int count = 0;
-                int offset = 0;
-                string[] subNames;
-                int[] customSpellSubCodes = null;
-                int currentSubIndex;
-
-                if (action.Code == MacroType.CastCustomSpell)
-                {
-                    Macro.BuildCastCustomSpellPicker(action.SubCode, out subNames, out customSpellSubCodes, out currentSubIndex);
-                }
-                else
-                {
-                    Macro.GetBoundByCode(action.Code, ref count, ref offset);
-                    subNames = new string[count];
-                    for (int i = 0; i < count; i++)
-                    {
-                        subNames[i] = ((MacroSubType)(i + offset)).ToString();
-                    }
-                    currentSubIndex = (int)action.SubCode - offset;
-                    if (currentSubIndex < 0 || currentSubIndex >= count)
-                        currentSubIndex = 0;
-                }
+                Macro.BuildSubCodePicker(action.Code, action.SubCode, out string[] subNames, out int[] customSpellSubCodes, out int offset, out int currentSubIndex);
 
                 ImGui.SetNextItemWidth(150);
                 if (ImGui.Combo($"##ActionSubType{index}", ref currentSubIndex, subNames, subNames.Length))

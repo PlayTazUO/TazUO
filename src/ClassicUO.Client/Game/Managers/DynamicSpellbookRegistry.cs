@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Game.Data;
-using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
@@ -18,17 +16,14 @@ namespace ClassicUO.Game.Managers
                 {
                     _dynamicSpellDictionaries[type] = new Dictionary<int, SpellDefinition>();
                 }
-
-                Log.Trace($"[DYNAMIC SPELLBOOK] Registered {type} as dynamic spellbook");
             }
         }
 
         public static bool IsDynamic(SpellBookType type)
         {
-            bool isDynamic = _dynamicSpellbooks.Contains(type);
-            Log.Trace($"[DYNAMIC REGISTRY] IsDynamic({type}): {isDynamic} (total registered: {_dynamicSpellbooks.Count})");
-            return isDynamic;
+            return _dynamicSpellbooks.Contains(type);
         }
+
         public static Dictionary<int, SpellDefinition> GetSpellDictionary(SpellBookType type)
         {
             if (_dynamicSpellDictionaries.TryGetValue(type, out var dict))
@@ -43,24 +38,10 @@ namespace ClassicUO.Game.Managers
 
         public static SpellDefinition GetSpell(SpellBookType type, int spellIndex)
         {
-            if (_dynamicSpellDictionaries.TryGetValue(type, out var dict))
+            if (_dynamicSpellDictionaries.TryGetValue(type, out var dict) && dict.TryGetValue(spellIndex, out var spell))
             {
-                if (dict.TryGetValue(spellIndex, out var spell))
-                {
-                    Log.Trace($"[DYNAMIC REGISTRY] GetSpell({type}, {spellIndex}): Found spell ID={spell.ID}, Name='{spell.Name}'");
-                    return spell;
-                }
-                else
-                {
-                    Log.Warn($"[DYNAMIC REGISTRY] GetSpell({type}, {spellIndex}): Dictionary exists but index not found. Available indices: {string.Join(", ", dict.Keys.OrderBy(k => k))}");
-                }
+                return spell;
             }
-            else
-            {
-                Log.Warn($"[DYNAMIC REGISTRY] GetSpell({type}, {spellIndex}): No dictionary found for spellbook type {type}. IsDynamic={IsDynamic(type)}");
-            }
-
-            Log.Warn($"[DYNAMIC REGISTRY] GetSpell({type}, {spellIndex}): Returning EmptySpell (ID={SpellDefinition.EmptySpell.ID})");
             return SpellDefinition.EmptySpell;
         }
 
@@ -68,8 +49,8 @@ namespace ClassicUO.Game.Managers
         {
             _dynamicSpellbooks.Clear();
             _dynamicSpellDictionaries.Clear();
-            Log.Trace("[DYNAMIC SPELLBOOK] Cleared all dynamic spellbook registrations");
         }
+
         public static void ClearType(SpellBookType type)
         {
             _dynamicSpellbooks.Remove(type);
@@ -77,7 +58,6 @@ namespace ClassicUO.Game.Managers
             {
                 dict.Clear();
             }
-            Log.Trace($"[DYNAMIC SPELLBOOK] Cleared dynamic spellbook {type}");
         }
 
         public static int GetMaxSpellCount(SpellBookType type)
@@ -91,9 +71,7 @@ namespace ClassicUO.Game.Managers
 
         public static List<SpellBookType> GetAllRegisteredTypes()
         {
-            var types = new List<SpellBookType>(_dynamicSpellbooks);
-            Log.Trace($"[DYNAMIC REGISTRY] GetAllRegisteredTypes(): Returning {types.Count} registered types: {string.Join(", ", types)}");
-            return types;
+            return new List<SpellBookType>(_dynamicSpellbooks);
         }
     }
 }

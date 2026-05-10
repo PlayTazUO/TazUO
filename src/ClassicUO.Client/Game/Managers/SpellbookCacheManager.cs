@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Utility.Logging;
@@ -13,264 +15,103 @@ namespace ClassicUO.Game.Managers
         private static SpellbookCacheManager _instance;
         public static SpellbookCacheManager Instance => _instance ??= new SpellbookCacheManager();
 
-        private readonly Dictionary<byte, SpellbookCacheEntry> _cache;
-        private readonly Dictionary<byte, ulong> _spellBitmasks;
-        private readonly Dictionary<int, int> _clientToServerSpellId; // Maps client spell ID to server spell ID
-        private readonly Dictionary<int, SpellBookType> _spellIdToBookType; // Maps spell ID to spellbook type
-        private readonly Dictionary<SpellBookType, int> _spellBookBaseId; // Maps spellbook type to its base spell ID
+        private readonly Dictionary<byte, SpellbookCacheEntry> _cache = new();
+        private readonly Dictionary<int, SpellBookType> _spellIdToBookType = new();
+        private readonly Dictionary<SpellBookType, int> _spellBookBaseId = new();
+        private readonly SemaphoreSlim _saveLock = new(1, 1);
         private string _cacheFilePath;
-        private const uint DEFAULT_TTL = 14400; // 4 hours
-        private bool _isInitialized;
+        private const uint DEFAULT_TTL = 14400;
 
-        private SpellbookCacheManager()
-        {
-            _cache = new Dictionary<byte, SpellbookCacheEntry>();
-            _spellBitmasks = new Dictionary<byte, ulong>();
-            _clientToServerSpellId = new Dictionary<int, int>();
-            _spellIdToBookType = new Dictionary<int, SpellBookType>();
-            _spellBookBaseId = new Dictionary<SpellBookType, int>();
-            _isInitialized = false;
-        }
+        private SpellbookCacheManager() { }
 
         public void Initialize()
         {
-            if (_isInitialized)
-            {
-                Log.Trace("SpellbookCacheManager already initialized");
+            if (_cacheFilePath != null)
                 return;
-            }
 
-            if (string.IsNullOrEmpty(ProfileManager.ProfilePath))
-            {
-                Log.Warn("SpellbookCacheManager.Initialize called before ProfileManager.Load - using fallback path");
-                _cacheFilePath = Path.Combine(
-                    CUOEnviroment.ExecutablePath,
-                    "Data",
-                    "Cache",
-                    "spellbooks.json"
-                );
-            }
-            else
-            {
-                _cacheFilePath = Path.Combine(ProfileManager.ProfilePath, "spellbook_cache.json");
-                Log.Trace($"SpellbookCacheManager initialized with profile path: {_cacheFilePath}");
-            }
+            _cacheFilePath = string.IsNullOrEmpty(ProfileManager.ProfilePath)
+                ? Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Cache", "spellbooks.json")
+                : Path.Combine(ProfileManager.ProfilePath, "spellbook_cache.json");
 
             LoadFromDisk();
-            _isInitialized = true;
-        }
-
-        public bool ShouldRequestSpellbook(byte spellbookType, out uint cachedVersion)
-        {
-            Log.Trace($"[CLIENT CACHE] ====== CHECKING CACHE ======");
-            Log.Trace($"[CLIENT CACHE] Spellbook Type: {spellbookType}");
-
-            if (!_cache.TryGetValue(spellbookType, out var cached))
-            {
-                // No cache at all - request with version 0
-                Log.Trace($"[CLIENT CACHE] No cache found - requesting from server with version 0");
-                cachedVersion = 0;
-                return true;
-            }
-
-            Log.Trace($"[CLIENT CACHE] Cache found - Version: {cached.Version}");
-            Log.Trace($"[CLIENT CACHE] Cache Expiry: {cached.ExpiresAt}");
-            Log.Trace($"[CLIENT CACHE] Current Time: {DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
-            Log.Trace($"[CLIENT CACHE] Is Expired: {cached.IsExpired()}");
-            Log.Trace($"[CLIENT CACHE] Sending verification request to server with cached version {cached.Version}");
-            cachedVersion = cached.Version;
-            return true;
         }
 
         public SpellbookCacheEntry GetCachedSpellbook(byte spellbookType)
         {
-            if (!_isInitialized)
-            {
-                Log.Warn("SpellbookCacheManager.GetCachedSpellbook called before Initialize()");
-                return null;
-            }
-
-            if (_cache.TryGetValue(spellbookType, out var cached))
-            {
-                if (cached.IsFresh())
-                    return cached;
-            }
+            if (_cache.TryGetValue(spellbookType, out var cached) && !cached.IsExpired())
+                return cached;
             return null;
         }
 
-        public int GetServerSpellId(int clientSpellId)
-        {
-            if (_clientToServerSpellId.TryGetValue(clientSpellId, out int serverSpellId))
-            {
-                return serverSpellId;
-            }
-            // No mapping, return client ID (for standard spells)
-            return clientSpellId;
-        }
         public SpellBookType? GetSpellBookType(int spellId)
         {
-            if (_spellIdToBookType.TryGetValue(spellId, out SpellBookType bookType))
-            {
-                return bookType;
-            }
-            return null;
+            return _spellIdToBookType.TryGetValue(spellId, out var bookType) ? bookType : null;
         }
+
         public int GetSpellBookBaseId(SpellBookType bookType)
         {
-            if (_spellBookBaseId.TryGetValue(bookType, out int baseId))
-            {
-                return baseId;
-            }
-            return 0;
+            return _spellBookBaseId.TryGetValue(bookType, out var baseId) ? baseId : 0;
         }
+
         public void OnCacheValid(byte spellbookType, uint version, ulong spellBitmask, uint ttl = DEFAULT_TTL)
         {
-            if (_cache.TryGetValue(spellbookType, out var cached))
-            {
-                if (cached.Version == version)
-                {
-                    cached.RefreshTTL(ttl);
-                    cached.SpellBitmask = spellBitmask;
-                    _spellBitmasks[spellbookType] = spellBitmask;
+            if (!_cache.TryGetValue(spellbookType, out var cached))
+                return;
 
-                    Log.Trace($"Spellbook cache valid for type {spellbookType}, version {version}");
-                }
-                else
-                {
-                    Log.Warn($"Version mismatch for spellbook {spellbookType}: cached={cached.Version}, server={version}");
-                    InvalidateCache(spellbookType);
-                }
+            if (cached.Version == version)
+            {
+                cached.RefreshTTL(ttl);
+                cached.SpellBitmask = spellBitmask;
+            }
+            else
+            {
+                InvalidateCache(spellbookType);
             }
         }
 
-        public void UpdateCache(
-            byte spellbookType,
-            uint version,
-            ulong spellBitmask,
-            ushort bookGraphic,
-            ushort minimizedGraphic,
-            List<DynamicSpellDefinition> spells,
-            uint ttl = DEFAULT_TTL,
-            byte spellsPerPageSide = 8,
-            byte maxDictionaryPages = 2,
-            string[] pageNames = null,
-            bool displayManaCost = false,
-            bool displayMinSkill = false,
-            bool displayPowerWords = true,
-            string manaCostLabel = null,
-            string minSkillLabel = null,
-            string customPropertyTitle = null,
-            string customPropertyLabel = null,
-            string customPropertyName = null,
-            ushort bookHue = 0,
-            ushort textColor = 0,
-            ushort spellNameColor = 0,
-            short contentOffsetX = 0,
-            short contentOffsetY = 0,
-            ushort pageTurnLeftGraphic = 0,
-            ushort pageTurnRightGraphic = 0,
-            short pageTurnLeftX = 0,
-            short pageTurnLeftY = 0,
-            short pageTurnRightX = 0,
-            short pageTurnRightY = 0,
-            ushort[] overlayGraphics = null,
-            ushort titleColor = 0,
-            List<SpellbookInfoPage> infoPages = null,
-            SpellbookBookmarkInfo bookmark = null)
+        public void UpdateCache(SpellbookCacheEntry entry, uint ttl = DEFAULT_TTL)
         {
-            var entry = new SpellbookCacheEntry
-            {
-                SpellbookType = spellbookType,
-                Version = version,
-                CachedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddSeconds(ttl),
-                SpellBitmask = spellBitmask,
-                BookGraphic = bookGraphic,
-                MinimizedGraphic = minimizedGraphic,
-                SpellsPerPageSide = spellsPerPageSide,
-                MaxDictionaryPages = maxDictionaryPages,
-                PageNames = pageNames ?? Array.Empty<string>(),
-                DisplayManaCost = displayManaCost,
-                DisplayMinSkill = displayMinSkill,
-                DisplayPowerWords = displayPowerWords,
-                ManaCostLabel = manaCostLabel,
-                MinSkillLabel = minSkillLabel,
-                CustomPropertyTitle = customPropertyTitle,
-                CustomPropertyLabel = customPropertyLabel,
-                CustomPropertyName = customPropertyName,
-                BookHue = bookHue,
-                TextColor = textColor,
-                SpellNameColor = spellNameColor,
-                ContentOffsetX = contentOffsetX,
-                ContentOffsetY = contentOffsetY,
-                PageTurnLeftGraphic = pageTurnLeftGraphic,
-                PageTurnRightGraphic = pageTurnRightGraphic,
-                PageTurnLeftX = pageTurnLeftX,
-                PageTurnLeftY = pageTurnLeftY,
-                PageTurnRightX = pageTurnRightX,
-                PageTurnRightY = pageTurnRightY,
-                OverlayGraphics = overlayGraphics ?? Array.Empty<ushort>(),
-                TitleColor = titleColor,
-                InfoPages = infoPages ?? new(),
-                Bookmark = bookmark
-            };
+            if (entry.CachedAt == default)
+                entry.CachedAt = DateTime.UtcNow;
+            entry.RefreshTTL(ttl);
 
-            foreach (var spell in spells)
-            {
-                entry.Spells[spell.SpellID] = spell;
-            }
+            _cache[entry.SpellbookType] = entry;
 
-            _cache[spellbookType] = entry;
-            _spellBitmasks[spellbookType] = spellBitmask;
-
-            Log.Trace($"Updated spellbook cache for type {spellbookType}, version {version}, {spells.Count} spells");
-
-            var bookType = (SpellBookType)spellbookType;
+            var bookType = (SpellBookType)entry.SpellbookType;
             DynamicSpellbookRegistry.RegisterDynamic(bookType);
-            SyncDynamicSpellsToRegistry(bookType, spells);
+            SyncDynamicSpellsToRegistry(bookType, entry.Spells);
 
-            SaveToDiskAsync();
+            QueueSave();
         }
+
         public void SyncCachedSpellsToRegistry(byte spellbookType)
         {
             if (!_cache.TryGetValue(spellbookType, out var cached))
-            {
                 return;
-            }
 
             var bookType = (SpellBookType)spellbookType;
-            var spellList = new List<DynamicSpellDefinition>(cached.Spells.Values);
             DynamicSpellbookRegistry.RegisterDynamic(bookType);
-            SyncDynamicSpellsToRegistry(bookType, spellList);
+            SyncDynamicSpellsToRegistry(bookType, cached.Spells);
         }
-        private void SyncDynamicSpellsToRegistry(SpellBookType bookType, List<DynamicSpellDefinition> spells)
+
+        private void SyncDynamicSpellsToRegistry(SpellBookType bookType, List<DynamicSpellDefinition> sortedSpells)
         {
+            ClearMappingsForBookType(bookType);
+
             var spellDict = DynamicSpellbookRegistry.GetSpellDictionary(bookType);
             spellDict.Clear();
-            _clientToServerSpellId.Clear();
-
-            var sortedSpells = new List<DynamicSpellDefinition>(spells);
-            sortedSpells.Sort((a, b) => a.SpellID.CompareTo(b.SpellID));
 
             if (sortedSpells.Count > 0)
-            {
-                int baseSpellId = sortedSpells[0].SpellID;
-                _spellBookBaseId[bookType] = baseSpellId;
-            }
+                _spellBookBaseId[bookType] = sortedSpells[0].SpellID;
 
             for (int i = 0; i < sortedSpells.Count; i++)
             {
                 var dynSpell = sortedSpells[i];
-
                 int fullSpellID = dynSpell.SpellID + 1;
-
-                int dictionaryIndex = i + 1;
-
-                _clientToServerSpellId[fullSpellID] = dynSpell.SpellID;
 
                 _spellIdToBookType[fullSpellID] = bookType;
 
-                var spellDef = new SpellDefinition(
+                spellDict[i + 1] = new SpellDefinition(
                     name: string.IsNullOrEmpty(dynSpell.Name) ? $"Spell {dynSpell.SpellID}" : dynSpell.Name,
                     index: fullSpellID,
                     gumpIconID: dynSpell.IconGraphic,
@@ -280,85 +121,69 @@ namespace ClassicUO.Game.Managers
                     minskill: dynSpell.MinSkill,
                     tithingcost: 0,
                     target: (TargetType)dynSpell.TargetType,
-                    regs: new Reagents[0]
+                    regs: Array.Empty<Reagents>()
                 );
+            }
+        }
 
-                spellDict[dictionaryIndex] = spellDef;
+        private void ClearMappingsForBookType(SpellBookType bookType)
+        {
+            _spellBookBaseId.Remove(bookType);
+
+            List<int> toRemove = null;
+            foreach (var pair in _spellIdToBookType)
+            {
+                if (pair.Value == bookType)
+                {
+                    toRemove ??= new List<int>();
+                    toRemove.Add(pair.Key);
+                }
+            }
+            if (toRemove != null)
+            {
+                foreach (var key in toRemove)
+                    _spellIdToBookType.Remove(key);
             }
         }
 
         public void InvalidateCache(byte spellbookType)
         {
-            if (spellbookType == 0xFF)
-            {
-                _cache.Clear();
-                _spellBitmasks.Clear();
-                Log.Trace("Invalidated all spellbook caches");
-            }
-            else
-            {
-                _cache.Remove(spellbookType);
-                _spellBitmasks.Remove(spellbookType);
-                Log.Trace($"Invalidated spellbook cache for type {spellbookType}");
-            }
-
-            SaveToDiskAsync();
+            _cache.Remove(spellbookType);
+            QueueSave();
         }
 
-        public ulong GetSpellBitmask(byte spellbookType)
+        public void InvalidateAll()
         {
-            return _spellBitmasks.TryGetValue(spellbookType, out var mask) ? mask : 0;
+            _cache.Clear();
+            QueueSave();
         }
-        public bool HasSpell(byte spellbookType, ushort spellID)
+
+        private void QueueSave()
         {
-            if (!_cache.TryGetValue(spellbookType, out var cached))
-                return false;
-
-            var sortedSpells = new List<DynamicSpellDefinition>(cached.Spells.Values);
-            sortedSpells.Sort((a, b) => a.SpellID.CompareTo(b.SpellID));
-
-            int index = sortedSpells.FindIndex(s => s.SpellID == spellID);
-            if (index < 0 || index >= 64)
-                return false;
-
-            ulong mask = GetSpellBitmask(spellbookType);
-            return (mask & (1UL << index)) != 0;
+            _ = SaveToDiskAsync();
         }
+
         private void LoadFromDisk()
         {
             try
             {
-                if (string.IsNullOrEmpty(_cacheFilePath))
-                {
-                    Log.Warn("Cache file path not set - call Initialize() first");
+                if (string.IsNullOrEmpty(_cacheFilePath) || !File.Exists(_cacheFilePath))
                     return;
-                }
-
-                if (!File.Exists(_cacheFilePath))
-                {
-                    Log.Trace("No spellbook cache file found");
-                    return;
-                }
 
                 string json = File.ReadAllText(_cacheFilePath);
-                var persistent = JsonSerializer.Deserialize(
-                    json,
-                    SpellbookCacheJsonContext.Default.ListPersistentCacheEntry
-                );
+                var entries = JsonSerializer.Deserialize(json, SpellbookCacheJsonContext.Default.ListSpellbookCacheEntry);
 
-                if (persistent != null)
+                if (entries == null)
+                    return;
+
+                foreach (var entry in entries)
                 {
+                    entry.RefreshTTL(DEFAULT_TTL);
+                    _cache[entry.SpellbookType] = entry;
 
-                    foreach (var entry in persistent)
-                    {
-                        _cache[entry.SpellbookType] = entry.ToRuntimeCache(DEFAULT_TTL);
-
-                        var bookType = (SpellBookType)entry.SpellbookType;
-                        DynamicSpellbookRegistry.RegisterDynamic(bookType);
-                        SyncDynamicSpellsToRegistry(bookType, entry.Spells);
-                    }
-
-                    Log.Trace($"Loaded {persistent.Count} spellbook caches from disk");
+                    var bookType = (SpellBookType)entry.SpellbookType;
+                    DynamicSpellbookRegistry.RegisterDynamic(bookType);
+                    SyncDynamicSpellsToRegistry(bookType, entry.Spells);
                 }
             }
             catch (Exception ex)
@@ -366,45 +191,32 @@ namespace ClassicUO.Game.Managers
                 Log.Error($"Failed to load spellbook cache: {ex.Message}");
             }
         }
-        private async void SaveToDiskAsync()
+
+        private async Task SaveToDiskAsync()
         {
+            await _saveLock.WaitAsync();
             try
             {
                 if (string.IsNullOrEmpty(_cacheFilePath))
-                {
-                    Log.Warn("Cache file path not set - cannot save to disk");
                     return;
-                }
 
                 var directory = Path.GetDirectoryName(_cacheFilePath);
                 if (!Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
-                var persistent = new List<PersistentCacheEntry>();
-                foreach (var entry in _cache.Values)
-                {
-                    persistent.Add(PersistentCacheEntry.FromRuntimeCache(entry));
-                }
-
-                string json = JsonSerializer.Serialize(
-                    persistent,
-                    SpellbookCacheJsonContext.Default.ListPersistentCacheEntry
-                );
+                var snapshot = new List<SpellbookCacheEntry>(_cache.Values);
+                string json = JsonSerializer.Serialize(snapshot, SpellbookCacheJsonContext.Default.ListSpellbookCacheEntry);
 
                 await File.WriteAllTextAsync(_cacheFilePath, json);
-
-                Log.Trace($"Saved {persistent.Count} spellbook caches to disk");
             }
             catch (Exception ex)
             {
                 Log.Error($"Failed to save spellbook cache: {ex.Message}");
-                // Non-fatal, continue
             }
-        }
-        public void Clear()
-        {
-            _cache.Clear();
-            _spellBitmasks.Clear();
+            finally
+            {
+                _saveLock.Release();
+            }
         }
     }
 }

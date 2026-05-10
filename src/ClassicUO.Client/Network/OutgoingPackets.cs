@@ -4752,12 +4752,6 @@ namespace ClassicUO.Network
             const byte ID = 0xBF;
             const int length = 15;
 
-            Console.WriteLine($"[CLIENT] ====== SENDING SPELLBOOK REQUEST ======");
-            Console.WriteLine($"[CLIENT] Serial: 0x{spellbookSerial:X}");
-            Console.WriteLine($"[CLIENT] Type: {spellbookType}");
-            Console.WriteLine($"[CLIENT] Cached Version: {cachedVersion}");
-            Console.WriteLine($"[CLIENT] Force Refresh: {forceRefresh}");
-
             var writer = new StackDataWriter(length);
             writer.WriteUInt8(ID);
             writer.WriteUInt16BE(length); // Length
