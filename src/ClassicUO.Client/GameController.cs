@@ -61,6 +61,8 @@ namespace ClassicUO
         }
 #endif
 
+        private static string DefaultWindowTitle => $"[TazUO - {CUOEnviroment.Version}]";
+
         public GameController(IPluginHost pluginHost)
         {
             GraphicManager = new GraphicsDeviceManager(this);
@@ -75,7 +77,7 @@ namespace ClassicUO
 
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
             Window.AllowUserResizing = true;
-            Window.Title = $"TazUO - {CUOEnviroment.Version}";
+            Window.Title = DefaultWindowTitle;
             IsMouseVisible = Settings.GlobalSettings.RunMouseInASeparateThread;
 
             IsFixedTimeStep = false; // Settings.GlobalSettings.FixedTimeStep;
@@ -267,7 +269,7 @@ namespace ClassicUO
 #if DEV_BUILD
                 Window.Title = $"TazUO [dev] - {CUOEnviroment.Version}";
 #else
-                Window.Title = $"[TazUO {CUOEnviroment.Version}]";
+                Window.Title = DefaultWindowTitle;
 #endif
             }
             else
@@ -275,7 +277,7 @@ namespace ClassicUO
 #if DEV_BUILD
                 Window.Title = $"{title} - TazUO [dev] - {CUOEnviroment.Version}";
 #else
-                Window.Title = $"{title} - [TazUO {CUOEnviroment.Version}]";
+                Window.Title = $"{title} - {DefaultWindowTitle}";
 #endif
             }
         }
