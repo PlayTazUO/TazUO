@@ -2931,6 +2931,13 @@ namespace ClassicUO.Game.Managers
             {
                 BuildCastCustomSpellPicker(currentSubCode, out names, out customSpellSubCodes, out selectedIndex);
                 offset = 0;
+
+                if (names.Length == 0)
+                {
+                    names = new[] { "(no custom spells loaded)" };
+                    customSpellSubCodes = new[] { 0 };
+                    selectedIndex = 0;
+                }
                 return;
             }
 
@@ -2938,6 +2945,13 @@ namespace ClassicUO.Game.Managers
             int count = 0;
             offset = 0;
             GetBoundByCode(code, ref count, ref offset);
+
+            if (count <= 0)
+            {
+                names = new[] { "(none)" };
+                selectedIndex = 0;
+                return;
+            }
 
             names = new string[count];
             for (int i = 0; i < count; i++)
