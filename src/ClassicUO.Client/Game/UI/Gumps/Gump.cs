@@ -240,8 +240,11 @@ namespace ClassicUO.Game.UI.Gumps
             int newX = (int)MathHelper.Clamp(X, -halfWidth, windowBounds.Width - halfWidth);
             int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowBounds.Height - halfHeight);
 
-            X = newX;
-            Y = newY;
+            if (newX >= 0)
+                X = newX;
+            if (newY >= 0)
+                Y = newY;
+
         }
 
         public virtual void Restore(XmlElement xml)
