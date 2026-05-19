@@ -610,6 +610,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         Point off = Mouse.LDragOffset;
 
+                        // Dispatch a request to get the context menu for the item
                         World.DelayedObjectClickManager.Set(
                             item.Serial,
                             Mouse.Position.X - off.X - ScreenCoordinateX,
