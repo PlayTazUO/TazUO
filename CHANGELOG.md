@@ -38,6 +38,7 @@ All notable changes to TazUO will be recorded here.
 * HTML control text dispalyed in GridLootGump name label in UO POL based servers - [P.R 462](https://github.com/PlayTazUO/TazUO/pull/462) ([yuval-po](https://github.com/yuval-po) & [bittiez](https://github.com/bittiez))
 * Spell progress indicator never shows - [P.R 464](https://github.com/PlayTazUO/TazUO/pull/464) ([yuval-po](https://github.com/yuval-po))
 * Add missing Shirt and Kilt slot to paperdoll - [P.R 467](https://github.com/PlayTazUO/TazUO/pull/467) ([yuval-po](https://github.com/yuval-po))
+* Two Modern Paperdoll issues (closure and context menus) - [P.R 468](https://github.com/PlayTazUO/TazUO/pull/468) ([yuval-po](https://github.com/yuval-po))
 
 ## V5.1.0
 
