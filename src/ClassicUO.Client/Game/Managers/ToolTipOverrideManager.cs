@@ -179,7 +179,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (!Directory.Exists(p))
                 {
-                    GameActions.Print(World.Instance, "Directory doesn't exist!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, "目录不存在!", Constants.HUE_ERROR);
                     return;
                 }
 
@@ -192,7 +192,7 @@ namespace ClassicUO.Game.Managers
                 }
                 catch (Exception e)
                 {
-                    GameActions.Print(World.Instance, "Failed to save the override file!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, "保存覆盖文件失败!", Constants.HUE_ERROR);
                     Log.Error(e.ToString());
                 }
             }));
@@ -202,7 +202,7 @@ namespace ClassicUO.Game.Managers
                                                                 {
                                                                     if (!File.Exists(p))
                                                                     {
-                                                                        GameActions.Print(World.Instance, "File doesn't exist!", Constants.HUE_ERROR);
+                                                                        GameActions.Print(World.Instance, "文件不存在!", Constants.HUE_ERROR);
                                                                         return;
                                                                     }
 
@@ -220,7 +220,7 @@ namespace ClassicUO.Game.Managers
                                                                     catch (System.Exception e)
                                                                     {
                                                                         Log.Error(e.ToString());
-                                                                        GameActions.Print(World.Instance, "It looks like there was an error trying to import your override settings.", Constants.HUE_ERROR);
+                                                                        GameActions.Print(World.Instance, "导入覆盖设置时发生错误。", Constants.HUE_ERROR);
                                                                     }
                                                                 }));
 

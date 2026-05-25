@@ -59,7 +59,7 @@ public static class SpellBarTabContent
             capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
             capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
-            keyLabels[slot].Text = "Press a key...";
+            keyLabels[slot].Text = "按下一个键...";
             normalPanels[slot].Visible = false;
             editPanels[slot].Visible = true;
 
@@ -86,7 +86,7 @@ public static class SpellBarTabContent
                 else
                     Game.UI.Gumps.SpellBar.SpellBar.Instance?.Dispose();
             },
-            "Enable spellbar", "Enable or disable the spell bar feature"));
+            "启用法术条", "启用或禁用法术条功能"));
 
         // Show hotkeys
         leftCol.Widgets.Add(MyraCheckButton.CreateWithCallback(
@@ -96,35 +96,35 @@ public static class SpellBarTabContent
                 profile.SpellBar_ShowHotkeys = b;
                 Game.UI.Gumps.SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
             },
-            "Display hotkeys on spellbar", "Show hotkey assignments on the spell bar buttons"));
+            "在法术条上显示快捷键", "在法术条按钮上显示快捷键分配"));
 
         // Row management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Row Management", MyraLabel.TextStyle.H2));
+        leftCol.Widgets.Add(new MyraLabel("行管理", MyraLabel.TextStyle.H2));
         var rowBtns = new HorizontalStackPanel { Spacing = 4 };
-        rowBtns.Widgets.Add(new MyraButton("Add Row", () =>
+        rowBtns.Widgets.Add(new MyraButton("添加行", () =>
         {
             SpellBarManager.SpellBarRows.Add(new SpellBarRow());
             Game.UI.Gumps.SpellBar.SpellBar.Instance?.Build();
-        }) { Tooltip = "Add a new spell bar row" });
-        rowBtns.Widgets.Add(new MyraButton("Remove Row", () =>
+        }) { Tooltip = "添加新的法术条行" });
+        rowBtns.Widgets.Add(new MyraButton("移除行", () =>
         {
             if (SpellBarManager.SpellBarRows.Count > 1)
                 SpellBarManager.SpellBarRows.RemoveAt(SpellBarManager.SpellBarRows.Count - 1);
             Game.UI.Gumps.SpellBar.SpellBar.Instance?.Build();
-        }) { Tooltip = "Remove the last row. If you have 5 rows, row 5 will be removed." });
+        }) { Tooltip = "移除最后一行。如果您有5行，第5行将被移除。" });
         leftCol.Widgets.Add(rowBtns);
 
         // Preset management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Preset Management", MyraLabel.TextStyle.H2));
+        leftCol.Widgets.Add(new MyraLabel("预设管理", MyraLabel.TextStyle.H2));
 
         var presetSavePanel = new VerticalStackPanel { Spacing = 4, Visible = false };
-        var presetNameBox = new MyraInputBox { MinWidth = 150, HintText = "Preset name" };
+        var presetNameBox = new MyraInputBox { MinWidth = 150, HintText = "预设名称" };
         var presetSaveRow = new HorizontalStackPanel { Spacing = 4 };
-        presetSaveRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+        presetSaveRow.Widgets.Add(new MyraLabel("名称:", MyraLabel.TextStyle.P));
         presetSaveRow.Widgets.Add(presetNameBox);
-        presetSaveRow.Widgets.Add(new MyraButton("Save", () =>
+        presetSaveRow.Widgets.Add(new MyraButton("保存", () =>
         {
             if (!string.IsNullOrEmpty(presetNameBox.Text))
             {
@@ -133,7 +133,7 @@ public static class SpellBarTabContent
                 presetSavePanel.Visible = false;
             }
         }));
-        presetSaveRow.Widgets.Add(new MyraButton("Cancel", () =>
+        presetSaveRow.Widgets.Add(new MyraButton("取消", () =>
         {
             presetNameBox.Text = "";
             presetSavePanel.Visible = false;
@@ -143,15 +143,15 @@ public static class SpellBarTabContent
         var presetLoadPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
         var presetListPanel = new VerticalStackPanel { Spacing = 2 };
         presetLoadPanel.Widgets.Add(presetListPanel);
-        presetLoadPanel.Widgets.Add(new MyraButton("Cancel", () => presetLoadPanel.Visible = false));
+        presetLoadPanel.Widgets.Add(new MyraButton("取消", () => presetLoadPanel.Visible = false));
 
         var presetActionBtns = new HorizontalStackPanel { Spacing = 4 };
-        presetActionBtns.Widgets.Add(new MyraButton("Save Preset...", () =>
+        presetActionBtns.Widgets.Add(new MyraButton("保存预设...", () =>
         {
             presetLoadPanel.Visible = false;
             presetSavePanel.Visible = !presetSavePanel.Visible;
-        }) { Tooltip = "Save the current spell bar row as a preset" });
-        presetActionBtns.Widgets.Add(new MyraButton("Load Preset...", () =>
+        }) { Tooltip = "将当前法术条行保存为预设" });
+        presetActionBtns.Widgets.Add(new MyraButton("加载预设...", () =>
         {
             presetSavePanel.Visible = false;
 
@@ -159,11 +159,11 @@ public static class SpellBarTabContent
             string[] presets = SpellBarManager.ListPresets();
             if (presets.Length == 0)
             {
-                presetListPanel.Widgets.Add(new MyraLabel("No presets available.", MyraLabel.TextStyle.P));
+                presetListPanel.Widgets.Add(new MyraLabel("没有可用的预设。", MyraLabel.TextStyle.P));
             }
             else
             {
-                presetListPanel.Widgets.Add(new MyraLabel("Select a preset to load:", MyraLabel.TextStyle.P));
+                presetListPanel.Widgets.Add(new MyraLabel("选择要加载的预设:", MyraLabel.TextStyle.P));
                 foreach (string preset in presets)
                 {
                     string p = preset;
@@ -176,7 +176,7 @@ public static class SpellBarTabContent
             }
 
             presetLoadPanel.Visible = !presetLoadPanel.Visible;
-        }) { Tooltip = "Load a saved preset" });
+        }) { Tooltip = "加载已保存的预设" });
 
         leftCol.Widgets.Add(presetActionBtns);
         leftCol.Widgets.Add(presetSavePanel);
@@ -184,7 +184,7 @@ public static class SpellBarTabContent
 
         // === Right column: hotkey configuration ===
         var rightCol = new VerticalStackPanel { Spacing = 6 };
-        rightCol.Widgets.Add(new MyraLabel("Hotkey Configuration", MyraLabel.TextStyle.H2));
+        rightCol.Widgets.Add(new MyraLabel("快捷键配置", MyraLabel.TextStyle.H2));
 
         var hotkeyGrid = new MyraGrid();
         hotkeyGrid.AddColumn(new Proportion(ProportionType.Pixels, 60));  // Slot label
@@ -200,8 +200,8 @@ public static class SpellBarTabContent
             keyLabels[slot] = new MyraLabel(GetKeyDisplay(slot), MyraLabel.TextStyle.P);
 
             normalPanels[slot] = new HorizontalStackPanel { Spacing = 4 };
-            normalPanels[slot].Widgets.Add(new MyraButton("Set", () => StartListening(slot)));
-            normalPanels[slot].Widgets.Add(new MyraButton("Clear", () =>
+            normalPanels[slot].Widgets.Add(new MyraButton("设置", () => StartListening(slot)));
+            normalPanels[slot].Widgets.Add(new MyraButton("清除", () =>
             {
                 SpellBarManager.SetButtons(slot, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, []);
                 keyLabels[slot].Text = GetKeyDisplay(slot);

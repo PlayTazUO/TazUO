@@ -36,7 +36,7 @@ public class ScriptEditorWindow : MyraControl
 
         if (content.Length > MAX_LENGTH)
         {
-            GameActions.Print("File too large to edit!", Constants.HUE_ERROR);
+            GameActions.Print("文件太大无法编辑!", Constants.HUE_ERROR);
             _disposeRequested = true;
             IsVisible = false; //Need to still add to uimanager to properly dispose later.
         }
@@ -92,7 +92,7 @@ public class ScriptEditorWindow : MyraControl
         _editor.CursorPositionChanged += (_, _) => EnsureCursorVisible();
 
         _saveButton = new MyraButton(
-            "Save Changes",
+            "保存更改",
             () =>
             {
                 _script.OverrideFileContents(_editor.Text ?? "");

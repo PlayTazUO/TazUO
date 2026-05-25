@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Controls
 {
@@ -100,6 +103,52 @@ namespace ClassicUO.Game.UI.Controls
         {
             base.Dispose();
             _gText.Destroy();
+        }
+
+        public static bool IsCJKLanguage =>
+            string.Equals(Settings.GlobalSettings?.Language, "CHS", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Settings.GlobalSettings?.Language, "CHT", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Settings.GlobalSettings?.Language, "JPN", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Settings.GlobalSettings?.Language, "KOR", StringComparison.OrdinalIgnoreCase);
+
+        public static bool ContainsCJK(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return false;
+
+            foreach (char c in text)
+                if (c >= 0x4E00 && c <= 0x9FFF)
+                    return true;
+
+            return false;
+        }
+
+        public static Control CreateCJK(
+            string text, bool isunicode, ushort hue,
+            int maxwidth = 0, byte font = 0xFF,
+            FontStyle style = FontStyle.None,
+            TEXT_ALIGN_TYPE align = TEXT_ALIGN_TYPE.TS_LEFT,
+            bool ishtml = false)
+        {
+            if (IsCJKLanguage && ContainsCJK(text))
+            {
+                string fontName = TrueTypeLoader.Instance.Fonts.Contains("simhei")
+                    ? "simhei" : TrueTypeLoader.EMBEDDED_FONT;
+
+                float fontSize = font switch
+                {
+                    1 => 14, 2 => 15, 3 => 16, 6 => 14, 9 => 12, _ => 14
+                };
+
+                var options = TextBox.RTLOptions.Default();
+                if (maxwidth > 0)
+                    options.Width = maxwidth;
+
+                var color = TextBox.ConvertHueToColor(hue);
+                return TextBox.GetOne(text, fontName, fontSize, color, options);
+            }
+
+            return new Label(text, isunicode, hue, maxwidth, font, style, align, ishtml);
         }
     }
 }

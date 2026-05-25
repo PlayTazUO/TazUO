@@ -758,6 +758,58 @@ namespace ClassicUO.Game.UI.Gumps
 
             #endregion
 
+            #region Language
+
+            page = ((int)PAGE.General + 1005);
+            content.AddToLeft(SubCategoryButton(lang.ButtonLanguage, page, content.LeftWidth));
+            content.ResetRightSide();
+
+            int currentLangIndex = Settings.GlobalSettings.Language switch
+            {
+                "CHS" => 1, "CHT" => 2, "JPN" => 3, "KOR" => 4,
+                "RUS" => 5, "FRA" => 6, "DEU" => 7, "ESP" => 8,
+                "PTB" => 9, "ITA" => 10, _ => 0
+            };
+
+            content.AddToRight
+            (
+                new ComboBoxWithLabel
+                (World,
+                    lang.GetGeneral.LanguageSelector, 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[]
+                    {
+                        "English", "简体中文", "繁體中文", "日本語", "한국어",
+                        "Русский", "Français", "Deutsch", "Español", "Português", "Italiano"
+                    },
+                    currentLangIndex,
+                    (s, n) =>
+                    {
+                        string[] languageCodes = { "ENU", "CHS", "CHT", "JPN", "KOR", "RUS", "FRA", "DEU", "ESP", "PTB", "ITA" };
+                        string selectedLang = languageCodes[s];
+                        Settings.GlobalSettings.Language = selectedLang;
+                        Settings.GlobalSettings.Save();
+                        Language.Reload();
+                        string culture = selectedLang switch
+                        {
+                            "CHS" => "zh-Hans", "CHT" => "zh-Hant", "JPN" => "ja", "KOR" => "ko",
+                            "RUS" => "ru", "FRA" => "fr", "DEU" => "de", "ESP" => "es",
+                            "PTB" => "pt-BR", "ITA" => "it", _ => "en-US"
+                        };
+                        try
+                        {
+                            CultureInfo.CurrentUICulture = new CultureInfo(culture);
+                        }
+                        catch
+                        {
+                            CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+                        }
+                        GameActions.Print(World, ResGumps.ChangingLanguageNeedsRestartToTakeEffect);
+                    }
+                ), true, page
+            );
+
+            #endregion
+
             options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.General));
         }
 

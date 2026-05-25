@@ -72,7 +72,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             var _menuHit = new HitBox(Width - 26, 1, 25, 16, alpha: 0f);
             Add(_menuHit);
-            _menuHit.SetTooltip("Open paperdoll menu");
+            _menuHit.SetTooltip("打开角色纸娃娃菜单");
             _menuHit.MouseUp += (sender, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -180,7 +180,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(titleLabel = new Label("", true, 0xffff, maxwidth: WIDTH - 30, align: TEXT_ALIGN_TYPE.TS_CENTER) { X = 15, Y = 273 + CELL_SPACING + TOP_SPACING, AcceptMouseInput = false });
 
             var _minHit = new HitBox(1, 1, 14, 18, alpha: 0f);
-            _minHit.SetTooltip("Minimize paperdoll");
+            _minHit.SetTooltip("最小化纸娃娃");
             _minHit.MouseUp += (s, e) =>
             {
                 Dispose();
@@ -849,7 +849,7 @@ this.world = world;
 
                 Add(_ = new Checkbox(0x00D2, 0x00D3) { X = 66, Y = 2 });
                 _.IsChecked = ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc;
-                _.SetTooltip("Open paperdoll at this location");
+                _.SetTooltip("在此位置打开纸娃娃");
                 _.MouseUp += (s, e) =>
                 {
                     ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc = _.IsChecked;

@@ -15,10 +15,10 @@ public static class SpellIndicatorTabContent
     {
         Profile profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel("未加载配置文件", MyraLabel.TextStyle.P);
 
         SpellRangeInfo? selectedSpell = null;
-        var searchBox = new MyraInputBox { HintText = "Search spells...", MinWidth = 200 };
+        var searchBox = new MyraInputBox { HintText = "搜索法术...", MinWidth = 200 };
         var spellListPanel = new VerticalStackPanel { Spacing = 2 };
         var spellEditorPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
         var addNewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
@@ -60,20 +60,20 @@ public static class SpellIndicatorTabContent
 
             if (spells.Count == 0)
             {
-                spellListPanel.Widgets.Add(new MyraLabel("No spell indicators configured", MyraLabel.TextStyle.P));
+                spellListPanel.Widgets.Add(new MyraLabel("没有配置法术指示器", MyraLabel.TextStyle.P));
                 return;
             }
 
-            spellListPanel.Widgets.Add(new MyraLabel("All Spell Indicators:", MyraLabel.TextStyle.H2));
+            spellListPanel.Widgets.Add(new MyraLabel("所有法术指示器:", MyraLabel.TextStyle.H2));
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
                 GridColumnInfo.Auto("ID"),
-                GridColumnInfo.Fill("Name"),
-                GridColumnInfo.Fill("Power Words"),
-                GridColumnInfo.Numeric("Cast Range"),
-                GridColumnInfo.Numeric("Cursor Size"),
-                GridColumnInfo.Numeric("Cast Time"),
+                GridColumnInfo.Fill("名称"),
+                GridColumnInfo.Fill("咒语"),
+                GridColumnInfo.Numeric("施法范围"),
+                GridColumnInfo.Numeric("光标大小"),
+                GridColumnInfo.Numeric("施法时间"),
                 GridColumnInfo.Auto("")
             );
 
@@ -91,7 +91,7 @@ public static class SpellIndicatorTabContent
                     row, 4);
                 grid.AddWidget(
                     new MyraLabel(s.CastTime.ToString("F1"), MyraLabel.TextStyle.P, MyraLabel.AlignMode.Right), row, 5);
-                grid.AddWidget(new MyraButton("Edit", () =>
+                grid.AddWidget(new MyraButton("编辑", () =>
                 {
                     selectedSpell = s;
                     searchBox.Text = s.Name;
@@ -108,7 +108,7 @@ public static class SpellIndicatorTabContent
         void BuildEditor(SpellRangeInfo spell)
         {
             spellEditorPanel.Widgets.Clear();
-            spellEditorPanel.Widgets.Add(new MyraLabel("Spell Configuration:", MyraLabel.TextStyle.H2));
+            spellEditorPanel.Widgets.Add(new MyraLabel("法术配置:", MyraLabel.TextStyle.H2));
 
             void Save() => SpellVisualRangeManager.Instance.DelayedSave();
 
@@ -119,11 +119,11 @@ public static class SpellIndicatorTabContent
 
             int row = 0;
 
-            grid.AddWidget(new MyraLabel("Spell ID:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("法术ID:", MyraLabel.TextStyle.P), row, 0);
             grid.AddWidget(new MyraLabel(spell.ID.ToString(), MyraLabel.TextStyle.P), row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Name:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("名称:", MyraLabel.TextStyle.P), row, 0);
             var nameBox = new MyraInputBox { Text = spell.Name, MinWidth = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
@@ -133,12 +133,12 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(nameBox, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Power Words:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("咒语:", MyraLabel.TextStyle.P), row, 0);
             var powerWordsBox = new MyraInputBox
             {
                 MinWidth = 200,
                 Text = spell.PowerWords ?? "",
-                Tooltip = "Power words must be exact, this is the best way we can detect spells.",
+                Tooltip = "咒语必须精确匹配，这是我们检测法术的最佳方式。",
             };
             powerWordsBox.TextChangedByUser += (_, _) =>
             {
@@ -148,13 +148,13 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(powerWordsBox, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Cursor Size:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("光标大小:", MyraLabel.TextStyle.P), row, 0);
             var cursorSizeSpinner = new SpinButton
             {
                 Integer = true,
                 Value = spell.CursorSize,
                 MinWidth = 100,
-                Tooltip = "Area to show around the cursor, for area spells that affect the area near the target."
+                Tooltip = "光标周围显示的区域，用于影响目标附近区域的范围法术。"
             };
             cursorSizeSpinner.ValueChangedByUser += (_, _) =>
             {
@@ -164,7 +164,7 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(cursorSizeSpinner, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Cast Range:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("施法范围:", MyraLabel.TextStyle.P), row, 0);
             var castRangeSpinner = new SpinButton { Integer = true, Value = spell.CastRange, MinWidth = 100 };
             castRangeSpinner.ValueChangedByUser += (_, _) =>
             {
@@ -174,7 +174,7 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(castRangeSpinner, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Cast Time:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("施法时间:", MyraLabel.TextStyle.P), row, 0);
             var castTimeBox = new MyraInputBox { Text = spell.CastTime.ToString(), MinWidth = 100 };
             castTimeBox.TextChangedByUser += (_, _) =>
             {
@@ -187,13 +187,13 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(castTimeBox, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Max Duration:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("最大持续时间:", MyraLabel.TextStyle.P), row, 0);
             var maxDurSpinner = new SpinButton
             {
                 Integer = true,
                 Value = spell.MaxDuration,
                 MinWidth = 100,
-                Tooltip = "Fallback in case spell detection fails."
+                Tooltip = "法术检测失败时的后备方案。"
             };
             maxDurSpinner.ValueChangedByUser += (_, _) =>
             {
@@ -203,7 +203,7 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(maxDurSpinner, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Cursor Hue:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("光标色调:", MyraLabel.TextStyle.P), row, 0);
             var cursorHueSpinner = new SpinButton { Integer = true, Value = spell.CursorHue, MinWidth = 100 };
             cursorHueSpinner.ValueChangedByUser += (_, _) =>
             {
@@ -213,7 +213,7 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(cursorHueSpinner, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Range Hue:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("范围色调:", MyraLabel.TextStyle.P), row, 0);
             var rangeHueSpinner = new SpinButton { Integer = true, Value = spell.Hue, MinWidth = 100 };
             rangeHueSpinner.ValueChangedByUser += (_, _) =>
             {
@@ -223,15 +223,15 @@ public static class SpellIndicatorTabContent
             grid.AddWidget(rangeHueSpinner, row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Is Linear:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("是否线性:", MyraLabel.TextStyle.P), row, 0);
             grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.IsLinear, b =>
             {
                 spell.IsLinear = b;
                 Save();
-            }, tooltip: "Used for spells like wall of stone that create a line."), row, 2);
+            }, tooltip: "用于像石墙这样创建直线的法术。"), row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Show Range During Cast:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("施法时显示范围:", MyraLabel.TextStyle.P), row, 0);
             grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ShowCastRangeDuringCasting, b =>
             {
                 spell.ShowCastRangeDuringCasting = b;
@@ -239,15 +239,15 @@ public static class SpellIndicatorTabContent
             }), row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Freeze While Casting:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("施法时冻结:", MyraLabel.TextStyle.P), row, 0);
             grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.FreezeCharacterWhileCasting, b =>
             {
                 spell.FreezeCharacterWhileCasting = b;
                 Save();
-            }, tooltip: "Prevent yourself from moving and disrupting your spell."), row, 2);
+            }, tooltip: "防止自己移动并中断法术。"), row, 2);
             row++;
 
-            grid.AddWidget(new MyraLabel("Expect Target Cursor:", MyraLabel.TextStyle.P), row, 0);
+            grid.AddWidget(new MyraLabel("预期目标光标:", MyraLabel.TextStyle.P), row, 0);
             grid.AddWidget(MyraCheckButton.CreateWithCallback(spell.ExpectTargetCursor, b =>
             {
                 spell.ExpectTargetCursor = b;
@@ -256,73 +256,73 @@ public static class SpellIndicatorTabContent
 
             spellEditorPanel.Widgets.Add(grid);
 
-            var deleteConfirmLabel = new MyraLabel($"Delete '{spell.Name}'?", MyraLabel.TextStyle.P);
+            var deleteConfirmLabel = new MyraLabel($"删除 '{spell.Name}'？", MyraLabel.TextStyle.P);
             var deleteConfirm = new HorizontalStackPanel { Spacing = 4, Visible = false };
             deleteConfirm.Widgets.Add(deleteConfirmLabel);
-            deleteConfirm.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Yes", () =>
+            deleteConfirm.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("是", () =>
             {
                 SpellVisualRangeManager.Instance.SpellRangeCache.Remove(spell.ID);
                 Save();
                 ClearSelection();
             })));
-            deleteConfirm.Widgets.Add(new MyraButton("No", () => deleteConfirm.Visible = false));
+            deleteConfirm.Widgets.Add(new MyraButton("否", () => deleteConfirm.Visible = false));
 
             var btnRow = new HorizontalStackPanel { Spacing = 4 };
-            btnRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete Spell", () =>
+            btnRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除法术", () =>
             {
-                deleteConfirmLabel.Text = $"Delete '{spell.Name}'?";
+                deleteConfirmLabel.Text = $"删除 '{spell.Name}'？";
                 deleteConfirm.Visible = !deleteConfirm.Visible;
-            }) { Tooltip = "Delete this spell indicator configuration." }));
-            btnRow.Widgets.Add(new MyraButton("Back to List", ClearSelection));
+            }) { Tooltip = "删除此法术指示器配置。" }));
+            btnRow.Widgets.Add(new MyraButton("返回列表", ClearSelection));
 
             spellEditorPanel.Widgets.Add(btnRow);
             spellEditorPanel.Widgets.Add(deleteConfirm);
         }
 
         // Add New Spell panel
-        var newIdBox = new MyraInputBox { MinWidth = 150, HintText = "Spell ID (number)" };
-        var newNameBox = new MyraInputBox { MinWidth = 200, HintText = "Spell Name" };
+        var newIdBox = new MyraInputBox { MinWidth = 150, HintText = "法术ID（数字）" };
+        var newNameBox = new MyraInputBox { MinWidth = 200, HintText = "法术名称" };
         var addErrorLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
 
         var addGrid = new MyraGrid();
         addGrid.AddColumn(new Proportion(ProportionType.Pixels, 100));
         addGrid.AddColumn(new Proportion(ProportionType.Pixels, 8));
         addGrid.AddColumn(new Proportion(ProportionType.Auto));
-        addGrid.AddWidget(new MyraLabel("Spell ID:", MyraLabel.TextStyle.P), 0, 0);
+        addGrid.AddWidget(new MyraLabel("法术ID:", MyraLabel.TextStyle.P), 0, 0);
         addGrid.AddWidget(newIdBox, 0, 2);
-        addGrid.AddWidget(new MyraLabel("Spell Name:", MyraLabel.TextStyle.P), 1, 0);
+        addGrid.AddWidget(new MyraLabel("法术名称:", MyraLabel.TextStyle.P), 1, 0);
         addGrid.AddWidget(newNameBox, 1, 2);
 
         var addBtnRow = new HorizontalStackPanel { Spacing = 4 };
-        addBtnRow.Widgets.Add(new MyraButton("Create Spell", () =>
+        addBtnRow.Widgets.Add(new MyraButton("创建法术", () =>
         {
             string idText = newIdBox.Text ?? "";
             string nameText = newNameBox.Text ?? "";
 
             if (string.IsNullOrWhiteSpace(idText) || string.IsNullOrWhiteSpace(nameText))
             {
-                addErrorLabel.Text = "Please fill in both Spell ID and Name.";
+                addErrorLabel.Text = "请填写法术ID和名称。";
                 addErrorLabel.Visible = true;
                 return;
             }
 
             if (!int.TryParse(idText, out int spellId))
             {
-                addErrorLabel.Text = "Spell ID must be a valid number.";
+                addErrorLabel.Text = "法术ID必须是有效数字。";
                 addErrorLabel.Visible = true;
                 return;
             }
 
             if (spellId <= 0)
             {
-                addErrorLabel.Text = "Spell ID must be a positive number.";
+                addErrorLabel.Text = "法术ID必须是正数。";
                 addErrorLabel.Visible = true;
                 return;
             }
 
             if (SpellVisualRangeManager.Instance.SpellRangeCache.ContainsKey(spellId))
             {
-                addErrorLabel.Text = "A spell with this ID already exists.";
+                addErrorLabel.Text = "此ID的法术已存在。";
                 addErrorLabel.Visible = true;
                 return;
             }
@@ -364,7 +364,7 @@ public static class SpellIndicatorTabContent
             ClearSelection();
         }));
 
-        addNewPanel.Widgets.Add(new MyraLabel("Create a new spell indicator configuration:", MyraLabel.TextStyle.H2));
+        addNewPanel.Widgets.Add(new MyraLabel("创建新的法术指示器配置:", MyraLabel.TextStyle.H2));
         addNewPanel.Widgets.Add(addGrid);
         addNewPanel.Widgets.Add(addErrorLabel);
         addNewPanel.Widgets.Add(addBtnRow);
@@ -402,10 +402,10 @@ public static class SpellIndicatorTabContent
         };
 
         var searchRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-        searchRow.Widgets.Add(new MyraLabel("Spell search:", MyraLabel.TextStyle.P));
+        searchRow.Widgets.Add(new MyraLabel("法术搜索:", MyraLabel.TextStyle.P));
         searchRow.Widgets.Add(searchBox);
-        searchRow.Widgets.Add(new MyraButton("Clear", ClearSelection));
-        searchRow.Widgets.Add(new MyraButton("Add New Spell", () =>
+        searchRow.Widgets.Add(new MyraButton("清除", ClearSelection));
+        searchRow.Widgets.Add(new MyraButton("添加新法术", () =>
         {
             if (addNewPanel.Visible)
                 ClearSelection();
@@ -423,8 +423,8 @@ public static class SpellIndicatorTabContent
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableSpellIndicators,
             b => profile.EnableSpellIndicators = b,
-            "Enable Spell Indicators",
-            "Enable visual spell range indicators that show casting range and area of effect for spells."));
+            "启用法术指示器",
+            "启用可视化法术范围指示器，显示法术的施法范围和效果区域。"));
         root.Widgets.Add(searchRow);
         root.Widgets.Add(spellListPanel);
         root.Widgets.Add(spellEditorPanel);

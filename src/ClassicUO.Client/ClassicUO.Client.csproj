@@ -11,6 +11,7 @@
     <PublishAot>false</PublishAot>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Nullable>disable</Nullable>
+
   </PropertyGroup>
 
   <PropertyGroup>

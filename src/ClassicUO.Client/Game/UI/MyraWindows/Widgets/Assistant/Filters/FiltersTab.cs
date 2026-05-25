@@ -7,11 +7,11 @@ public static class FiltersTab
     public static Widget Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab("Graphics", GraphicReplacementTabContent.Build);
-        tabs.AddTab("Journal Filter", JournalFilterTabContent.Build);
-        tabs.AddTab("Sound Filter", SoundFilterTabContent.Build);
-        tabs.AddTab("Music Filter", MusicFilterTabContent.Build);
-        tabs.AddTab("Season Filter", SeasonFilterTabContent.Build);
+        tabs.AddTab("图形", GraphicReplacementTabContent.Build);
+        tabs.AddTab("日志过滤器", JournalFilterTabContent.Build);
+        tabs.AddTab("声音过滤器", SoundFilterTabContent.Build);
+        tabs.AddTab("音乐过滤器", MusicFilterTabContent.Build);
+        tabs.AddTab("季节过滤器", SeasonFilterTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

@@ -9,6 +9,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
+using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps.SpellBar;
@@ -136,10 +137,10 @@ public class SpellBar : Gump
         };
 
         menu.ContextMenu = new ContextMenuControl(this);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Save preset", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry("保存预设", () =>
         {
             Gump g;
-            UIManager.Add(g = new InputRequest(World, "Preset name", "Save", "Cancel", (r, n) =>
+            UIManager.Add(g = new InputRequest(World, "预设名称", "保存预设", ResGumps.Cancel, (r, n) =>
             {
                 if (r == InputRequest.Result.BUTTON1)
                     SpellBarManager.SaveCurrentRowPreset(n);
@@ -148,17 +149,17 @@ public class SpellBar : Gump
             g.CenterYInViewPort();
         }));
         menu.ContextMenu.Add(import);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Lock/Unlock spellbar movement", (() =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry("锁定/解锁法术条移动", (() =>
         {
             IsLocked = !IsLocked;
         })));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Add row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry("添加行", () =>
         {
             SpellBarManager.SpellBarRows.Add(new SpellBarRow());
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
             Build();
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Delete row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry("删除行", () =>
         {
             if (SpellBarManager.SpellBarRows.Count > 1)
             {
@@ -167,7 +168,7 @@ public class SpellBar : Gump
                 Build();
             }
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Set row color", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry("设置行颜色", () =>
         {
             UIManager.Add(new ModernColorPicker(World, (h) =>
             {
@@ -175,7 +176,7 @@ public class SpellBar : Gump
                 Build();
             }));
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("More options", AssistantWindow.Show));
+        menu.ContextMenu.Add(new ContextMenuItemEntry("更多选项", AssistantWindow.Show));
 
         Add(menu);
     }

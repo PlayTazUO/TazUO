@@ -23,11 +23,11 @@ public static class PathfindingTabContent
                         World.Instance.Player.Pathfinder.UseLongDistancePathfinding = b;
                     Client.Settings?.SetAsync(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, b);
                 },
-                "Long-Distance Pathfinding",
-                "This is currently in beta."));
+                "长距离寻路",
+                "此功能目前处于测试阶段。"));
 
         HorizontalStackPanel genTimeRow = MyraHSlider.SliderWithLabel(
-            "Pathfinding Gen Time (ms)",
+            "寻路生成时间（毫秒）",
             out MyraHSlider genTimeSlider,
             v =>
             {
@@ -39,12 +39,12 @@ public static class PathfindingTabContent
             min: 1,
             max: 50,
             value: Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.LONG_DISTANCE_PATHING_SPEED, 2));
-        genTimeSlider.Tooltip = "Target time in milliseconds for pathfinding cache generation per cycle. Higher values generate cache faster but may cause performance issues.";
+        genTimeSlider.Tooltip = "每周期寻路缓存生成的目标时间（毫秒）。较高的值能更快生成缓存，但可能导致性能问题。";
         leftStack.Widgets.Add(genTimeRow);
 
-        var progressLabel = new MyraLabel("Cache Progress: N/A", MyraLabel.TextStyle.P)
+        var progressLabel = new MyraLabel("缓存进度: N/A", MyraLabel.TextStyle.P)
         {
-            Tooltip = "Current map cache generation progress"
+            Tooltip = "当前地图缓存生成进度"
         };
 
         void RefreshProgress()
@@ -53,9 +53,9 @@ public static class PathfindingTabContent
             {
                 var (current, total) = WalkableManager.Instance.GetCurrentMapGenerationProgress();
                 if (total > 0)
-                    progressLabel.Text = $"Cache Progress: {current}/{total} chunks ({(float)current / total * 100f:F1}%)";
+                    progressLabel.Text = $"缓存进度: {current}/{total} 块 ({(float)current / total * 100f:F1}%)";
                 else
-                    progressLabel.Text = "Cache Progress: N/A";
+                    progressLabel.Text = "缓存进度: N/A";
             }
             else
             {
@@ -67,16 +67,16 @@ public static class PathfindingTabContent
 
         var progressRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
         progressRow.Widgets.Add(progressLabel);
-        progressRow.Widgets.Add(new MyraButton("Refresh", RefreshProgress));
+        progressRow.Widgets.Add(new MyraButton("刷新", RefreshProgress));
         leftStack.Widgets.Add(progressRow);
 
-        leftStack.Widgets.Add(new MyraButton("Reset current map cache", () =>
+        leftStack.Widgets.Add(new MyraButton("重置当前地图缓存", () =>
         {
             if (World.Instance != null)
                 WalkableManager.Instance?.StartFreshGeneration(World.Instance.MapIndex);
             RefreshProgress();
         })
-        { Tooltip = "This will start regeneration of the current map cache." });
+        { Tooltip = "这将重新生成当前地图缓存。" });
 
         root.Widgets.Add(leftStack);
         #endregion
@@ -86,13 +86,13 @@ public static class PathfindingTabContent
         var rightSide = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
         HorizontalStackPanel zLevelSliderWidget = MyraHSlider.SliderWithLabel(
-            "Pathfinding Z level difference",
+            "寻路Z轴差异",
             out MyraHSlider zLevelSlider, v
                 => { ProfileManager.CurrentProfile?.PathfindingZLevelDiff = (int)v; },
             1,
             50,
             ProfileManager.CurrentProfile.PathfindingZLevelDiff);
-        zLevelSlider.Tooltip = "This is an advanced setting, adjust at your own peril.\nThis adjusts the maximum z level(height) difference between pathfinding nodes.";
+        zLevelSlider.Tooltip = "这是一个高级设置，请自行承担风险调整。\n此设置调整寻路节点之间的最大Z轴（高度）差异。";
 
         rightSide.Widgets.Add(zLevelSliderWidget);
 

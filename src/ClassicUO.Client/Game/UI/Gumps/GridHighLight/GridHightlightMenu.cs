@@ -207,7 +207,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             List<GridHighlightSetupEntry> data = ProfileManager.CurrentProfile.GridHighlightSetup;
 
-            RunFileDialog(world, true, "Save grid highlight settings", file =>
+            RunFileDialog(world, true, "保存网格高亮设置", file =>
             {
                 if (Directory.Exists(file))
                 {
@@ -222,7 +222,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(file, json);
-                GameActions.Print(world, $"Saved highlight export to: {file}");
+                GameActions.Print(world, $"高亮配置已导出到: {file}");
             });
         }
 
@@ -246,7 +246,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                                                                                      }
                                                                                      catch (Exception ex)
                                                                                      {
-                                                                                         GameActions.Print(world, "Error importing highlight config", Constants.HUE_ERROR);
+                                                                                         GameActions.Print(world, "导入高亮配置错误", Constants.HUE_ERROR);
                                                                                          Log.Error(ex.ToString());
                                                                                      }
                                                                                  });

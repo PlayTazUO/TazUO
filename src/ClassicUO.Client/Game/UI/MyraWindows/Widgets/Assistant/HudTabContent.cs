@@ -35,7 +35,7 @@ public static class HudTabContent
         var outerStack = new VerticalStackPanel { Spacing = 6 };
 
         outerStack.Widgets.Add(new MyraLabel(
-            "Select gump types to toggle visibility when using the Toggle Hud Visible macro.",
+            "选择在使用切换HUD可见性宏时要切换可见性的窗口类型。",
             MyraLabel.TextStyle.H3));
 
 
@@ -50,15 +50,15 @@ public static class HudTabContent
 
 
         var buttonRow = new HorizontalStackPanel { Spacing = 4 };
-        buttonRow.Widgets.Add(new MyraButton("Select All", () => SetAllChecked(checkButtons, profile, true)));
+        buttonRow.Widgets.Add(new MyraButton("全选", () => SetAllChecked(checkButtons, profile, true)));
 
-        var deselectBtn = new MyraButton("Deselect All", () => SetAllChecked(checkButtons, profile, false));
+        var deselectBtn = new MyraButton("取消全选", () => SetAllChecked(checkButtons, profile, false));
         StackPanel.SetProportionType(deselectBtn, ProportionType.Fill);
         buttonRow.Widgets.Add(deselectBtn);
 
-        buttonRow.Widgets.Add(new MyraButton("Toggle HUD Now", () => HideHudManager.ToggleHidden(profile.HideHudGumpFlags))
+        buttonRow.Widgets.Add(new MyraButton("立即切换HUD", () => HideHudManager.ToggleHidden(profile.HideHudGumpFlags))
         {
-            Tooltip = "Immediately toggle the visibility of selected HUD elements"
+            Tooltip = "立即切换所选HUD元素的可见性"
         });
         outerStack.Widgets.Add(buttonRow);
 
@@ -74,32 +74,32 @@ public static class HudTabContent
 
     private static string GetTooltip(HideHudFlags flag) => flag switch
     {
-        HideHudFlags.Paperdoll => "Character paperdoll windows",
-        HideHudFlags.WorldMap => "World map window",
-        HideHudFlags.GridContainers => "Grid-style container windows",
-        HideHudFlags.Containers => "Traditional container windows",
-        HideHudFlags.Healthbars => "Health bar windows",
-        HideHudFlags.StatusBar => "Character status windows",
-        HideHudFlags.SpellBar => "Spell bar windows",
-        HideHudFlags.Journal => "Journal/chat windows",
-        HideHudFlags.XMLGumps => "Server-sent XML gump windows",
-        HideHudFlags.NearbyCorpseLoot => "Nearby corpse loot windows",
-        HideHudFlags.MacroButtons => "Macro button windows",
-        HideHudFlags.SkillButtons => "Skill button windows",
-        HideHudFlags.SkillsMenus => "Skills menu windows",
-        HideHudFlags.TopMenuBar => "Top menu bar",
-        HideHudFlags.DurabilityTracker => "Item durability tracker",
-        HideHudFlags.BuffBar => "Buff/debuff status bars",
-        HideHudFlags.CounterBar => "Item counter bars",
-        HideHudFlags.InfoBar => "Information bars",
-        HideHudFlags.SpellIcons => "Spell icon buttons",
-        HideHudFlags.NameOverheadGump => "Name overhead displays",
-        HideHudFlags.ScriptManagerGump => "Script manager window",
-        HideHudFlags.PlayerChar => "Player character (your avatar in the game world)",
-        HideHudFlags.Mouse => "Mouse cursor",
-        HideHudFlags.HealthBarCollector => "Health bar collector window",
-        HideHudFlags.AbilityButtons => "Ability button windows",
-        HideHudFlags.DebugGump => "Debug information window",
+        HideHudFlags.Paperdoll => "角色纸娃娃窗口",
+        HideHudFlags.WorldMap => "世界地图窗口",
+        HideHudFlags.GridContainers => "网格容器窗口",
+        HideHudFlags.Containers => "传统容器窗口",
+        HideHudFlags.Healthbars => "血条窗口",
+        HideHudFlags.StatusBar => "角色状态窗口",
+        HideHudFlags.SpellBar => "法术条窗口",
+        HideHudFlags.Journal => "日志/聊天窗口",
+        HideHudFlags.XMLGumps => "服务器发送的XML窗口",
+        HideHudFlags.NearbyCorpseLoot => "附近尸体拾取窗口",
+        HideHudFlags.MacroButtons => "宏按钮窗口",
+        HideHudFlags.SkillButtons => "技能按钮窗口",
+        HideHudFlags.SkillsMenus => "技能菜单窗口",
+        HideHudFlags.TopMenuBar => "顶部菜单栏",
+        HideHudFlags.DurabilityTracker => "物品耐久度追踪器",
+        HideHudFlags.BuffBar => "增益/减益效果状态条",
+        HideHudFlags.CounterBar => "物品计数条",
+        HideHudFlags.InfoBar => "信息栏",
+        HideHudFlags.SpellIcons => "法术图标按钮",
+        HideHudFlags.NameOverheadGump => "名称头顶显示",
+        HideHudFlags.ScriptManagerGump => "脚本管理器窗口",
+        HideHudFlags.PlayerChar => "玩家角色（您在游戏世界中的化身）",
+        HideHudFlags.Mouse => "鼠标光标",
+        HideHudFlags.HealthBarCollector => "血条收集器窗口",
+        HideHudFlags.AbilityButtons => "能力按钮窗口",
+        HideHudFlags.DebugGump => "调试信息窗口",
         _ => null
     };
 }

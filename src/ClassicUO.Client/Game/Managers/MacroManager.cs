@@ -1197,7 +1197,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        GameActions.Print(_world, "That is not a valid row.", Constants.HUE_ERROR);
+                        GameActions.Print(_world, "该行无效。", Constants.HUE_ERROR);
                     }
                     break;
 
@@ -1213,13 +1213,13 @@ namespace ClassicUO.Game.Managers
                 case MacroType.Mount:
                     if(!GameActions.Mount())
                     {
-                        GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
+                        GameActions.Print(_world, "未找到已保存的坐骑。", Constants.HUE_ERROR);
                         goto case MacroType.SetMount;
                     }
                     break;
 
                 case MacroType.SetMount:
-                    GameActions.Print(_world, "Target a mount to save it for the Mount macro.", 48);
+                    GameActions.Print(_world, "选择坐骑以保存至坐骑宏。", 48);
                     _world.TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
                     break;
 
@@ -1235,14 +1235,14 @@ namespace ClassicUO.Game.Managers
                         // Player is not mounted, try to mount
                         if(!GameActions.Mount())
                         {
-                            GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
+                            GameActions.Print(_world, "未找到已保存的坐骑。", Constants.HUE_ERROR);
                             goto case MacroType.SetMount;
                         }
                     }
                     break;
 
                 case MacroType.AddFriend:
-                    GameActions.Print(_world, "Target a player to add as a friend.", 62);
+                    GameActions.Print(_world, "选择玩家以添加为好友。", 62);
                     _world.TargetManager.SetTargeting(targeted =>
                     {
                         if (targeted != null && targeted is Mobile mobile && mobile.Serial != _world.Player.Serial)
@@ -1260,18 +1260,18 @@ namespace ClassicUO.Game.Managers
                         {
                             if (targeted is Entity entity && entity.Serial == _world.Player.Serial)
                             {
-                                GameActions.Print(_world, "You cannot add yourself as a friend", Constants.HUE_ERROR);
+                                GameActions.Print(_world, "你不能添加自己为好友。", Constants.HUE_ERROR);
                             }
                             else
                             {
-                                GameActions.Print(_world, "Invalid target - must be a player", Constants.HUE_ERROR);
+                                GameActions.Print(_world, "目标无效 - 必须是玩家。", Constants.HUE_ERROR);
                             }
                         }
                     });
                     break;
 
                 case MacroType.RemoveFriend:
-                    GameActions.Print(_world, "Target a friend to remove from your friend list.", Constants.HUE_ERROR);
+                    GameActions.Print(_world, "选择好友以从好友列表移除。", Constants.HUE_ERROR);
                     _world.TargetManager.SetTargeting(targeted =>
                     {
                         if (targeted != null && targeted is Mobile mobile)
@@ -1444,26 +1444,26 @@ namespace ClassicUO.Game.Managers
                     VoiceRecognitionManager vm = VoiceRecognitionManager.Instance;
                     if (vm.IsInitializing)
                     {
-                        GameActions.Print(_world, "[Voice] Model is still loading...");
+                        GameActions.Print(_world, "[语音]模型仍在加载中...");
                     }
                     else if (!vm.IsInitialized)
                     {
                         Configuration.Profile profile = ProfileManager.CurrentProfile;
                         if (profile != null && !string.IsNullOrEmpty(profile.VoiceModelPath))
                         {
-                            GameActions.Print(_world, "[Voice] Loading model...");
+                            GameActions.Print(_world, "[语音]正在加载模型...");
                             vm.InitializeAsync(profile.VoiceModelPath, startListeningAfter: true);
                         }
                         else
                         {
-                            GameActions.Print(_world, "[Voice] No model path set - configure in Options > Sound");
+                            GameActions.Print(_world, "[语音]未设置模型路径 - 请在选项>声音中配置");
                         }
                     }
                     else
                     {
                         vm.ToggleListening();
                         if (!vm.IsListening)
-                            GameActions.Print(_world, "[Voice] Off");
+                            GameActions.Print(_world, "[语音]关闭");
                         // "[Voice] Listening..." is printed by VoiceRecognitionManager.StatusMessage when recording actually starts
                     }
 

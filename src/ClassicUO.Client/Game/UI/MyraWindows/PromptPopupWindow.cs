@@ -14,28 +14,28 @@ public class PromptPopupWindow : MyraControl
     private readonly World _world;
     private readonly MyraInputBox _inputBox;
 
-    public PromptPopupWindow(World world) : base("Server Prompt")
+    public PromptPopupWindow(World world) : base("服务器提示")
     {
         _world = world;
 
         var layout = new VerticalStackPanel { Spacing = 8, Padding = new Thickness(8) };
 
-        layout.Widgets.Add(new MyraLabel("The server is requesting input:", MyraLabel.TextStyle.P));
+        layout.Widgets.Add(new MyraLabel("服务器请求输入:", MyraLabel.TextStyle.P));
 
-        _inputBox = new MyraInputBox { Width = 300, HintText = "Enter your response..." };
+        _inputBox = new MyraInputBox { Width = 300, HintText = "请输入您的回复..." };
         layout.Widgets.Add(_inputBox);
 
         var disableCheck = MyraCheckButton.CreateWithCallback(
             !ProfileManager.CurrentProfile.UsePromptPopup,
             isChecked => ProfileManager.CurrentProfile.UsePromptPopup = !isChecked,
-            "Disable this popup (use chat instead)",
-            "When checked, server prompts will only be handled through the chat input"
+            "禁用此弹窗（改用聊天输入）",
+            "勾选后，服务器提示将仅通过聊天输入处理"
         );
         layout.Widgets.Add(disableCheck);
 
         var btnRow = new HorizontalStackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
-        btnRow.Widgets.Add(new MyraButton("Submit", Submit));
-        btnRow.Widgets.Add(new MyraButton("Cancel", Cancel));
+        btnRow.Widgets.Add(new MyraButton("提交", Submit));
+        btnRow.Widgets.Add(new MyraButton("取消", Cancel));
         layout.Widgets.Add(btnRow);
 
         SetRootContent(layout);

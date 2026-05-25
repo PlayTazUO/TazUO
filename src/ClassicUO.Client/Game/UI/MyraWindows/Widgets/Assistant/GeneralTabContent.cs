@@ -57,7 +57,7 @@ public static class GeneralTabContent
         }, Constants.MIN_GAME_SCALE * 100, Constants.MAX_GAME_SCALE * 100, Client.Game.RenderScale * 100));
         gsSlider.Tooltip = lang.GameScaleTooltip;
 
-        leftSide.Widgets.Add(new MyraButton("Apply scale", () =>
+        leftSide.Widgets.Add(new MyraButton("应用缩放", () =>
         {
             Client.Game.SetScale(gameScale);
             _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, gameScale);

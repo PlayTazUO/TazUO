@@ -7,11 +7,13 @@
   <ItemGroup>
     <None Remove="gumpartassets\*.png" />
     <None Remove="fonts\*.ttf" />
+    <None Remove="fonts\*.ttc" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="gumpartassets\*.png" />
     <EmbeddedResource Include="fonts\*.ttf" />
+    <EmbeddedResource Include="fonts\*.ttc" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +24,10 @@
 
   <ItemGroup>
     <PackageReference Update="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\TSCharacters.txt" />
   </ItemGroup>
 
 </Project>

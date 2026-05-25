@@ -4,6 +4,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
+using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps.SpellBar;
@@ -31,7 +32,7 @@ public class SpellQuickSearch : NineSliceGump
     private void Build()
     {
         Add(searchField = new TTFTextInputField(Width - 10, 25, Width - 10){Y = 49, X = 5});
-        searchField.SetPlaceholder("Search..");
+        searchField.SetPlaceholder(ResGumps.MarkerSearch);
         searchField.SetFocus();
 
         searchField.TextChanged += SearchTextChanged;

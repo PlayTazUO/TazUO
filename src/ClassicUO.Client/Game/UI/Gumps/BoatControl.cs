@@ -141,7 +141,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             else
             {
-                GameActions.Print(World, "You need to be driving a boat to use this.");
+                GameActions.Print(World, "你需要驾驶船才能使用此功能。");
                 return false;
             }
         }

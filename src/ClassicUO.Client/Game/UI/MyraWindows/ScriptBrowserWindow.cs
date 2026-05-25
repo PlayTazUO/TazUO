@@ -35,7 +35,7 @@ public class ScriptBrowserWindow : MyraControl
     private MyraLabel _previewLoadingLabel;
     private MyraInputBox _previewContentBox;
 
-    public ScriptBrowserWindow() : base("Public Script Browser")
+    public ScriptBrowserWindow() : base("公共脚本浏览器")
     {
         _cache = new GitHubContentCache(ScriptBrowser.REPO);
         CanBeSaved = true;
@@ -64,7 +64,7 @@ public class ScriptBrowserWindow : MyraControl
         grid.AddRow();                                       // Row 1: preview (auto-height)
         grid.AddColumn(new Proportion(ProportionType.Fill));
 
-        _statusLabel = new MyraLabel("Loading repository contents...", MyraLabel.TextStyle.P);
+        _statusLabel = new MyraLabel("正在加载仓库内容...", MyraLabel.TextStyle.P);
 
         var treeContainer = new VerticalStackPanel { Spacing = 4 };
         treeContainer.Widgets.Add(_statusLabel);
@@ -81,7 +81,7 @@ public class ScriptBrowserWindow : MyraControl
         _previewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
 
         _previewTitleLabel = new MyraLabel("", MyraLabel.TextStyle.H2);
-        _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.TextStyle.P);
+        _previewLoadingLabel = new MyraLabel("加载中...", MyraLabel.TextStyle.P);
 
         _previewContentBox = new MyraInputBox
         {
@@ -93,7 +93,7 @@ public class ScriptBrowserWindow : MyraControl
 
         var previewHeader = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
         previewHeader.Widgets.Add(_previewTitleLabel);
-        previewHeader.Widgets.Add(new MyraButton("Close Preview", () => _previewPanel.Visible = false));
+        previewHeader.Widgets.Add(new MyraButton("关闭预览", () => _previewPanel.Visible = false));
 
         _previewPanel.Widgets.Add(previewHeader);
         _previewPanel.Widgets.Add(_previewLoadingLabel);
@@ -129,7 +129,7 @@ public class ScriptBrowserWindow : MyraControl
 
         if (_isInitialLoading)
         {
-            _statusLabel.Text = "Loading repository contents...";
+            _statusLabel.Text = "正在加载仓库内容...";
             _statusLabel.TextColor = Color.White;
             _statusLabel.Visible = true;
             return;
@@ -140,7 +140,7 @@ public class ScriptBrowserWindow : MyraControl
             _statusLabel.Text = _errorMessage;
             _statusLabel.TextColor = Color.OrangeRed;
             _statusLabel.Visible = true;
-            _treePanel.Widgets.Add(new MyraButton("Retry", () =>
+            _treePanel.Widgets.Add(new MyraButton("重试", () =>
             {
                 _errorMessage = "";
                 _directoryCache.Clear();
@@ -164,13 +164,13 @@ public class ScriptBrowserWindow : MyraControl
         if (!node.IsLoaded && !node.IsLoading)
         {
             LoadDirectoryAsync(path);
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "加载中...", MyraLabel.TextStyle.P));
             return;
         }
 
         if (node.IsLoading)
         {
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "加载中...", MyraLabel.TextStyle.P));
             return;
         }
 
@@ -209,9 +209,9 @@ public class ScriptBrowserWindow : MyraControl
                 row.Widgets.Add(new MyraLabel(Indent(depth + 1), MyraLabel.TextStyle.P));
 
             row.Widgets.Add(new MyraLabel(f.Name, MyraLabel.TextStyle.P));
-            row.Widgets.Add(new MyraButton("View",      () => ViewScript(f)));
-            row.Widgets.Add(new MyraButton("Download",  () => DownloadAndOpenScript(f)));
-            row.Widgets.Add(new MyraButton("Open Link", () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
+            row.Widgets.Add(new MyraButton("查看",      () => ViewScript(f)));
+            row.Widgets.Add(new MyraButton("下载",  () => DownloadAndOpenScript(f)));
+            row.Widgets.Add(new MyraButton("打开链接", () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
             _treePanel.Widgets.Add(row);
         }
     }
@@ -259,7 +259,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (string.IsNullOrEmpty(path))
                     {
                         _isInitialLoading = false;
-                        _errorMessage = $"Failed to load scripts: {ex.Message}";
+                        _errorMessage = $"加载脚本失败: {ex.Message}";
                     }
                     _rebuildPending = true;
                 });
@@ -293,7 +293,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file for preview: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                _previewContentBox.Text = $"Error loading file: {ex.Message}";
+                _previewContentBox.Text = $"加载文件出错: {ex.Message}";
                 _previewLoadingLabel.Visible = false;
                 _previewContentBox.Visible = true;
             });
@@ -319,7 +319,7 @@ public class ScriptBrowserWindow : MyraControl
                         sanitizedFileName == "." ||
                         sanitizedFileName == "..")
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters or path separators.", 32);
+                        GameActions.Print(World.Instance, $"无效的脚本文件名: {file.Name}。文件名包含无效字符或路径分隔符。", 32);
                         Console.WriteLine($"Security: Rejected invalid filename: {file.Name}");
                         return;
                     }
@@ -327,7 +327,7 @@ public class ScriptBrowserWindow : MyraControl
                     char[] invalidChars = Path.GetInvalidFileNameChars();
                     if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters.", 32);
+                        GameActions.Print(World.Instance, $"无效的脚本文件名: {file.Name}。文件名包含无效字符。", 32);
                         Console.WriteLine($"Security: Rejected filename with invalid characters: {file.Name}");
                         return;
                     }
@@ -342,7 +342,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                         !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
+                        GameActions.Print(World.Instance, $"安全错误: 脚本路径必须在脚本目录内。", 32);
                         Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.Name}, Resolved: {fullFilePath}");
                         return;
                     }
@@ -365,7 +365,7 @@ public class ScriptBrowserWindow : MyraControl
                             if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                                 !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                             {
-                                GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
+                                GameActions.Print(World.Instance, $"安全错误: 生成的路径无效。", 32);
                                 return;
                             }
 
@@ -375,7 +375,7 @@ public class ScriptBrowserWindow : MyraControl
 
                         if (counter >= 1000)
                         {
-                            GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
+                            GameActions.Print(World.Instance, $"重复文件过多，请清理您的脚本目录。", 32);
                             return;
                         }
                     }
@@ -385,14 +385,14 @@ public class ScriptBrowserWindow : MyraControl
                     var f = new ScriptFile(World.Instance, LegionScripting.LegionScripting.ScriptPath, finalFileName);
                     new ScriptEditorWindow(f);
 
-                    GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
+                    GameActions.Print(World.Instance, $"已下载脚本: {finalFileName}");
 
                     ScriptManagerWindow.Instance?.Refresh();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error creating script file: {ex.Message}");
-                    GameActions.Print(World.Instance, $"Error saving script: {file.Name} - {ex.Message}");
+                    GameActions.Print(World.Instance, $"保存脚本出错: {file.Name} - {ex.Message}");
                 }
             });
         }
@@ -401,7 +401,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                GameActions.Print(World.Instance, $"Error loading script: {file.Name}");
+                GameActions.Print(World.Instance, $"加载脚本出错: {file.Name}");
             });
         }
     });

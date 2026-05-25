@@ -38,6 +38,17 @@ namespace ClassicUO.Assets
             }
 
             Load();
+
+            if (string.Equals(lang, "CHS", StringComparison.OrdinalIgnoreCase))
+            {
+                string chtPath = FileManager.GetUOFilePath("Cliloc.cht");
+
+                if (File.Exists(chtPath))
+                {
+                    ReadCliloc(chtPath);
+                    ConvertTraditionalToSimplified();
+                }
+            }
         }
 
         public override void Load()
@@ -296,6 +307,76 @@ namespace ClassicUO.Assets
                 }
 
                 return baseCliloc;
+            }
+        }
+
+        private static Dictionary<char, char> _tradToSimp;
+
+        private static void LoadTradToSimpMapping()
+        {
+            if (_tradToSimp != null)
+                return;
+
+            _tradToSimp = new Dictionary<char, char>();
+
+            using var stream = typeof(ClilocLoader).Assembly.GetManifestResourceStream("ClassicUO.Assets.Data.TSCharacters.txt");
+            if (stream == null)
+            {
+                Log.Warn("TSCharacters.txt not found in embedded resources");
+                return;
+            }
+
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (line.Length == 0 || line[0] == '#')
+                    continue;
+
+                int tab = line.IndexOf('\t');
+                if (tab <= 0 || tab + 1 >= line.Length)
+                    continue;
+
+                char trad = line[0];
+                int space = line.IndexOf(' ', tab + 1);
+                string simpStr = space > tab ? line.Substring(tab + 1, space - tab - 1) : line.Substring(tab + 1);
+
+                if (simpStr.Length > 0 && simpStr[0] != trad)
+                    _tradToSimp[trad] = simpStr[0];
+            }
+        }
+
+        private void ConvertTraditionalToSimplified()
+        {
+            LoadTradToSimpMapping();
+
+            if (_tradToSimp == null || _tradToSimp.Count == 0)
+                return;
+
+            var keys = new List<int>(_entries.Keys);
+            foreach (int key in keys)
+            {
+                string text = _entries[key];
+                if (string.IsNullOrEmpty(text))
+                    continue;
+
+                bool changed = false;
+                var sb = new StringBuilder(text.Length);
+                foreach (char c in text)
+                {
+                    if (_tradToSimp.TryGetValue(c, out char s))
+                    {
+                        sb.Append(s);
+                        changed = true;
+                    }
+                    else
+                    {
+                        sb.Append(c);
+                    }
+                }
+
+                if (changed)
+                    _entries[key] = sb.ToString();
             }
         }
     }

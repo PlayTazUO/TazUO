@@ -353,7 +353,7 @@ public class WorldMapGump : ResizableGump
             true,
             _showPartyMembers
         );
-        _options["show_corpse"] = new ContextMenuItemEntry("Show my Corpse", () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
+        _options["show_corpse"] = new ContextMenuItemEntry("显示我的尸体", () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
 
         _options["show_mobiles"] = new ContextMenuItemEntry(ResGumps.ShowMobiles, () => { _showMobiles = !_showMobiles; SaveSettings(); }, true, _showMobiles);
 
@@ -388,9 +388,9 @@ public class WorldMapGump : ResizableGump
 
         _options["add_marker_on_player"] = new ContextMenuItemEntry(ResGumps.AddMarkerOnPlayer, () => AddMarkerOnPlayer());
 
-        _options["open_web_map"] = new ContextMenuItemEntry("Open Web Map (Browser)", GameActions.OpenWorldMapWebWindow);
+        _options["open_web_map"] = new ContextMenuItemEntry("打开网页地图（浏览器）", GameActions.OpenWorldMapWebWindow);
 
-        _options["auto_start_web_map"] = new ContextMenuItemEntry("Auto start web map", () =>
+        _options["auto_start_web_map"] = new ContextMenuItemEntry("自动启动网页地图", () =>
         {
             ProfileManager.CurrentProfile.WebMapAutoStart = !ProfileManager.CurrentProfile.WebMapAutoStart;
             if (!MapWebServerManager.Instance.IsRunning)
@@ -2032,7 +2032,7 @@ public class WorldMapGump : ResizableGump
         {
             if (batcher.ClipBegin(gX, gY, gWidth, gHeight))
             {
-                ReadOnlySpan<char> str = "Please wait, I'm making the map file...".AsSpan();
+                ReadOnlySpan<char> str = "请稍候，正在生成地图文件...".AsSpan();
                 //str = str[..(str.Length - (int)_mapLoadingTime % 3)];
 
                 //if (Time.Ticks > _mapLoadingTime)
@@ -3242,7 +3242,7 @@ public class WorldMapGump : ResizableGump
             if (x > 10 && x < 120 && y > 10 && y < 25)
             {
                 SDL.SDL_SetClipboardText($"{World.Player.X}, {World.Player.Y}, {World.Player.Z}");
-                GameActions.Print("Copied player coords to clipboard.");
+                GameActions.Print("已复制玩家坐标到剪贴板。");
             }
         }
 

@@ -139,7 +139,7 @@ namespace ClassicUO
                 Log.Trace("language is not set. Trying to get the OS language.");
                 try
                 {
-                    Settings.GlobalSettings.Language = CultureInfo.InstalledUICulture.ThreeLetterWindowsLanguageName;
+                    Settings.GlobalSettings.Language = MapOsLanguageToUoLanguage(CultureInfo.InstalledUICulture);
 
                     if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.Language))
                     {
@@ -157,6 +157,13 @@ namespace ClassicUO
                     Settings.GlobalSettings.Language = "ENU";
                 }
             }
+
+            ApplyLanguageCulture();
+            Language.Reload();
+            Log.Trace($"Language loaded: '{Language.Instance.GetModernOptionsGumpLanguage.OptionsTitle}'");
+            Log.Trace($"ResGumps.LoginToUO: '{Resources.ResGumps.LoginToUO}'");
+            Log.Trace($"ResGumps.Cancel: '{Resources.ResGumps.Cancel}'");
+            Log.Trace($"CurrentUICulture: {CultureInfo.CurrentUICulture.Name}");
 
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.UltimaOnlineDirectory))
             {
@@ -513,7 +520,7 @@ namespace ClassicUO
 
                         break;
 
-                    case "language":
+                        case "language":
 
                         switch (value?.ToUpperInvariant())
                         {
@@ -526,6 +533,7 @@ namespace ClassicUO
                             case "PTB": Settings.GlobalSettings.Language = "PTB"; break;
                             case "ITA": Settings.GlobalSettings.Language = "ITA"; break;
                             case "CHT": Settings.GlobalSettings.Language = "CHT"; break;
+                            case "CHS": Settings.GlobalSettings.Language = "CHS"; break;
                             default:
 
                                 Settings.GlobalSettings.Language = "ENU";
@@ -533,6 +541,8 @@ namespace ClassicUO
 
                         }
 
+                        ApplyLanguageCulture();
+                        Language.Reload();
                         break;
 
                     case "no_server_ping":
@@ -582,7 +592,7 @@ namespace ClassicUO
                         catch { }
                     }
                 }
-        }
+            }
 
         private static string GetPlatformFolder()
         {
@@ -595,6 +605,68 @@ namespace ClassicUO
                 return RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "osx-arm" : "osx";
 
             throw new PlatformNotSupportedException();
+        }
+
+        private static string MapOsLanguageToUoLanguage(CultureInfo culture)
+        {
+            string twoLetter = culture.TwoLetterISOLanguageName?.ToUpperInvariant() ?? "";
+            string name = culture.Name?.ToUpperInvariant() ?? "";
+
+            if (twoLetter == "ZH" || name.Contains("ZH"))
+            {
+                if (name.Contains("TW") || name.Contains("HANT") || name.Contains("HK"))
+                    return "CHT";
+                return "CHS";
+            }
+
+            switch (twoLetter)
+            {
+                case "JA": return "JPN";
+                case "KO": return "KOR";
+                case "RU": return "RUS";
+                case "FR": return "FRA";
+                case "DE": return "DEU";
+                case "ES": return "ESP";
+                case "PT": return "PTB";
+                case "IT": return "ITA";
+            }
+
+            return "ENU";
+        }
+
+        private static void ApplyLanguageCulture()
+        {
+            if (Settings.GlobalSettings == null)
+                return;
+
+            string lang = Settings.GlobalSettings.Language;
+            string culture = lang switch
+            {
+                "CHS" => "zh-Hans",
+                "CHT" => "zh-Hant",
+                "JPN" => "ja",
+                "KOR" => "ko",
+                "RUS" => "ru",
+                "FRA" => "fr",
+                "DEU" => "de",
+                "ESP" => "es",
+                "PTB" => "pt-BR",
+                "ITA" => "it",
+                _ => "en-US"
+            };
+
+            try
+            {
+                var ci = new CultureInfo(culture);
+                CultureInfo.CurrentUICulture = ci;
+                Resources.ResGumps.Culture = ci;
+                Resources.ResGeneral.Culture = ci;
+                Resources.ResErrorMessages.Culture = ci;
+            }
+            catch
+            {
+                CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
+            }
         }
 
     }

@@ -12,7 +12,7 @@ public class RunningScriptsWindow : MyraControl
 {
     private readonly VerticalStackPanel _scriptList = new() { Spacing = MyraStyle.STANDARD_SPACING };
 
-    public RunningScriptsWindow() : base("Running Scripts")
+    public RunningScriptsWindow() : base("运行中的脚本")
     {
         const int startingWidth = 240;
         const int startingHeight = 130;
@@ -68,7 +68,7 @@ public class RunningScriptsWindow : MyraControl
         if (scripts.Count == 0)
         {
             _scriptList.Widgets.Add(
-                new MyraLabel("No scripts currently running", MyraLabel.TextStyle.P) { Margin = new Thickness(4) }
+                new MyraLabel("当前没有运行中的脚本", MyraLabel.TextStyle.P) { Margin = new Thickness(4) }
             );
             return;
         }
@@ -79,7 +79,7 @@ public class RunningScriptsWindow : MyraControl
 
             var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
-            row.Widgets.Add(new MyraButton("Stop", () => LegionScripting.LegionScripting.StopScript(script)));
+            row.Widgets.Add(new MyraButton("停止", () => LegionScripting.LegionScripting.StopScript(script)));
 
             row.Widgets.Add(new MyraLabel(script.FileName ?? "Unknown", MyraLabel.TextStyle.P)
             {

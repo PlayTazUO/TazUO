@@ -497,7 +497,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "你必须选择目标/生物以设为坐骑。", 32);
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -511,16 +511,16 @@ namespace ClassicUO.Game.Managers
                             if (item != null && item.ItemData.IsContainer)
                             {
                                 ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial = serial;
-                                GameActions.Print(_world, "Favorite move bag set.");
+                                GameActions.Print(_world, "偏好移动袋已设置。");
                             }
                             else
                             {
-                                GameActions.Print(_world, "That doesn't appear to be a valid container.");
+                                GameActions.Print(_world, "这似乎不是有效的容器。");
                             }
                         }
                         else
                         {
-                            GameActions.Print(_world, "That is not a valid item.");
+                            GameActions.Print(_world, "这不是有效的物品。");
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -559,7 +559,7 @@ namespace ClassicUO.Game.Managers
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "你必须选择目标/生物以设为坐骑。", 32);
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;

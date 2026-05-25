@@ -7,13 +7,13 @@ public static class GeneralTab
     public static Widget Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab("Options", GeneralTabContent.Build);
+        tabs.AddTab("选项", GeneralTabContent.Build);
         tabs.AddTab("HUD", HudTabContent.Build);
-        tabs.AddTab("Spell Bar", SpellBarTabContent.Build);
-        tabs.AddTab("Title Bar", TitleBarTabContent.Build);
-        tabs.AddTab("Spell Indicators", SpellIndicatorTabContent.Build);
-        tabs.AddTab("Friends", FriendsListTabContent.Build);
-        tabs.AddTab("Pathfinding", PathfindingTabContent.Build);
+        tabs.AddTab("法术条", SpellBarTabContent.Build);
+        tabs.AddTab("标题栏", TitleBarTabContent.Build);
+        tabs.AddTab("法术指示器", SpellIndicatorTabContent.Build);
+        tabs.AddTab("好友", FriendsListTabContent.Build);
+        tabs.AddTab("寻路", PathfindingTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

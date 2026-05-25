@@ -23,7 +23,7 @@ public class PersistentVarsWindow : MyraControl
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
-    public PersistentVarsWindow() : base("Persistent Variables Manager")
+    public PersistentVarsWindow() : base("持久变量管理器")
     {
         CanBeSaved = true;
         Build();
@@ -49,7 +49,7 @@ public class PersistentVarsWindow : MyraControl
 
         // Scope selector
         var scopeRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
-        scopeRow.Widgets.Add(new MyraLabel("Scope:", MyraLabel.TextStyle.P));
+        scopeRow.Widgets.Add(new MyraLabel("范围:", MyraLabel.TextStyle.P));
         BuildScopeButtons();
         scopeRow.Widgets.Add(_scopeButtonRow);
         BuildScopeDesc();
@@ -72,10 +72,10 @@ public class PersistentVarsWindow : MyraControl
 
         (LegionAPI.PersistentVar scope, string label)[] scopes =
         [
-            (LegionAPI.PersistentVar.Char,    "Character"),
-            (LegionAPI.PersistentVar.Account, "Account"),
-            (LegionAPI.PersistentVar.Server,  "Server"),
-            (LegionAPI.PersistentVar.Global,  "Global"),
+            (LegionAPI.PersistentVar.Char,    "角色"),
+            (LegionAPI.PersistentVar.Account, "账号"),
+            (LegionAPI.PersistentVar.Server,  "服务器"),
+            (LegionAPI.PersistentVar.Global,  "全局"),
         ];
 
         foreach ((LegionAPI.PersistentVar scope, string label) in scopes)
@@ -108,7 +108,7 @@ public class PersistentVarsWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { Text = _filterText, HintText = "Filter variables...", Width = 200 };
+        var filterBox = new MyraInputBox { Text = _filterText, HintText = "过滤变量...", Width = 200 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -116,8 +116,8 @@ public class PersistentVarsWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Add New Variable", ShowAddDialog));
-        toolbar.Widgets.Add(new MyraButton("Refresh", () =>
+        toolbar.Widgets.Add(new MyraButton("添加新变量", ShowAddDialog));
+        toolbar.Widgets.Add(new MyraButton("刷新", () =>
         {
             PersistentVars.Load();
             BuildVarsGrid();
@@ -143,15 +143,15 @@ public class PersistentVarsWindow : MyraControl
 
         if (variables.Count == 0)
         {
-            _varsPanel.Widgets.Add(new MyraLabel("No variables found.", MyraLabel.TextStyle.P));
+            _varsPanel.Widgets.Add(new MyraLabel("未找到变量。", MyraLabel.TextStyle.P));
             return;
         }
 
         var grid = new MyraGrid();
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Key"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Actions")
+            GridColumnInfo.Auto("键"),
+            GridColumnInfo.Fill("值"),
+            GridColumnInfo.Auto("操作")
         );
 
         int dataRow = 1;
@@ -169,7 +169,7 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(editBox, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Save", () =>
+                actionRow.Widgets.Add(new MyraButton("保存", () =>
                 {
                     string savedKey = key;
                     string savedValue = _editingValue;
@@ -178,7 +178,7 @@ public class PersistentVarsWindow : MyraControl
                     PersistentVars.SaveVar(_selectedScope, savedKey, savedValue, () =>
                         MainThreadQueue.InvokeOnMainThread(BuildVarsGrid));
                 }));
-                actionRow.Widgets.Add(new MyraButton("Cancel", () =>
+                actionRow.Widgets.Add(new MyraButton("取消", () =>
                 {
                     _editingKey   = null;
                     _editingValue = "";
@@ -191,13 +191,13 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(new MyraLabel(value, MyraLabel.TextStyle.P) { Tooltip = value }, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Edit", () =>
+                actionRow.Widgets.Add(new MyraButton("编辑", () =>
                 {
                     _editingKey   = key;
                     _editingValue = value;
                     BuildVarsGrid();
                 }));
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
                     ShowDeleteDialog(key))));
                 grid.AddWidget(actionRow, dataRow, 2);
             }
@@ -210,17 +210,17 @@ public class PersistentVarsWindow : MyraControl
 
     private void ShowAddDialog()
     {
-        var keyBox   = new MyraInputBox { HintText = "Key name...", Width = 300 };
-        var valueBox = new MyraInputBox { HintText = "Value...",    Width = 300 };
+        var keyBox   = new MyraInputBox { HintText = "键名...", Width = 300 };
+        var valueBox = new MyraInputBox { HintText = "值...",    Width = 300 };
 
         var form = new VerticalStackPanel { Spacing = 4 };
-        form.Widgets.Add(new MyraLabel($"Add new variable to {_selectedScope} scope:", MyraLabel.TextStyle.P));
-        form.Widgets.Add(new MyraLabel("Key:",   MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel($"向 {_selectedScope} 范围添加新变量:", MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel("键:",   MyraLabel.TextStyle.P));
         form.Widgets.Add(keyBox);
-        form.Widgets.Add(new MyraLabel("Value:", MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel("值:", MyraLabel.TextStyle.P));
         form.Widgets.Add(valueBox);
 
-        new MyraDialog("Add Variable", form, ok =>
+        new MyraDialog("添加变量", form, ok =>
         {
             if (!ok || string.IsNullOrWhiteSpace(keyBox.Text)) return;
             PersistentVars.SaveVar(_selectedScope, keyBox.Text.Trim(), valueBox.Text ?? "", () =>
@@ -229,8 +229,8 @@ public class PersistentVarsWindow : MyraControl
     }
 
     private void ShowDeleteDialog(string key) =>
-        new MyraDialog("Confirm Delete",
-            new MyraLabel($"Delete variable '{key}'?", MyraLabel.TextStyle.P),
+        new MyraDialog("确认删除",
+            new MyraLabel($"删除变量 '{key}' ？", MyraLabel.TextStyle.P),
             ok =>
             {
                 if (!ok) return;
@@ -244,7 +244,7 @@ public class PersistentVarsWindow : MyraControl
         LegionAPI.PersistentVar.Char    => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.CharacterName}",
         LegionAPI.PersistentVar.Account => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.Username}",
         LegionAPI.PersistentVar.Server  => ProfileManager.CurrentProfile.ServerName,
-        LegionAPI.PersistentVar.Global  => "All servers and characters",
+        LegionAPI.PersistentVar.Global  => "所有服务器和角色",
         _                               => ""
     };
 }

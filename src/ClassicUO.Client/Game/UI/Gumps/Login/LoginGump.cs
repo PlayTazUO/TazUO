@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
@@ -96,32 +97,20 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     }
                 );
 
-                Add
-                (
-                    new Label(ResGumps.LoginToUO, false, HUE, font: 2)
-                    {
-                        X = 253,
-                        Y = 305
-                    }
-                );
+                var loginLabel = Label.CreateCJK(ResGumps.LoginToUO, false, HUE, font: 2);
+                loginLabel.X = 253;
+                loginLabel.Y = 305;
+                Add(loginLabel);
 
-                Add
-                (
-                    new Label(ResGumps.Account, false, HUE, font: 2)
-                    {
-                        X = 183,
-                        Y = 345
-                    }
-                );
+                var accountLabel = Label.CreateCJK(ResGumps.Account, false, HUE, font: 2);
+                accountLabel.X = 183;
+                accountLabel.Y = 345;
+                Add(accountLabel);
 
-                Add
-                (
-                    new Label(ResGumps.Password, false, HUE, font: 2)
-                    {
-                        X = 183,
-                        Y = 385
-                    }
-                );
+                var passwordLabel = Label.CreateCJK(ResGumps.Password, false, HUE, font: 2);
+                passwordLabel.X = 183;
+                passwordLabel.Y = 385;
+                Add(passwordLabel);
 
                 // Arrow Button
                 Add
@@ -351,7 +340,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     Y = offsetY,
                     Width = 190,
                     Height = 25,
-                    PlaceHolderText="Account Name"
+                    PlaceHolderText = ResGumps.Account
                 }
             );
 
@@ -383,7 +372,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 {
                     _textboxAccount.ContextMenu.Add(new ContextMenuItemEntry(acct, () => { _textboxAccount.SetText(acct); }));
                 }
-                _textboxAccount.SetTooltip("Right click to select another account.");
+                _textboxAccount.SetTooltip("右键选择其他账号。");
                 _textboxAccount.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Right)

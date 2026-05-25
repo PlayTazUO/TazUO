@@ -14,7 +14,7 @@ public static class TitleBarTabContent
         var outer = new VerticalStackPanel { Spacing = 6 };
 
         outer.Widgets.Add(new MyraLabel(
-            "Configure window title bar to show HP, Mana, and Stamina information.",
+            "配置窗口标题栏以显示生命值、法力和耐力信息。",
             MyraLabel.TextStyle.H3));
 
         // Enable
@@ -29,11 +29,11 @@ public static class TitleBarTabContent
                         string.IsNullOrEmpty(World.Instance.Player?.Name)
                             ? string.Empty
                             : World.Instance.Player.Name);
-            }, "Enable title bar stats"));
+            }, "启用标题栏状态"));
 
         // Display mode
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Display Mode", MyraLabel.TextStyle.H2));
+        outer.Widgets.Add(new MyraLabel("显示模式", MyraLabel.TextStyle.H2));
 
         var previewLabel = new MyraLabel(TitleBarStatsManager.GetPreviewText(), MyraLabel.TextStyle.P);
 
@@ -50,21 +50,21 @@ public static class TitleBarTabContent
 
         var rbText = new RadioButton
         {
-            Content = new MyraLabel("Text  (HP 85/100, MP 42/50, SP 95/100)", MyraLabel.TextStyle.P),
+            Content = new MyraLabel("文本  (HP 85/100, MP 42/50, SP 95/100)", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Text
         };
         rbText.PressedChanged += (_, _) => { if (rbText.IsPressed) SetMode(TitleBarStatsMode.Text); };
 
         var rbPercent = new RadioButton
         {
-            Content = new MyraLabel("Percent  (HP 85%, MP 84%, SP 95%)", MyraLabel.TextStyle.P),
+            Content = new MyraLabel("百分比  (HP 85%, MP 84%, SP 95%)", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Percent
         };
         rbPercent.PressedChanged += (_, _) => { if (rbPercent.IsPressed) SetMode(TitleBarStatsMode.Percent); };
 
         var rbBar = new RadioButton
         {
-            Content = new MyraLabel("Progress Bar  (HP [||||||    ] MP [||||||    ] SP [||||||    ])", MyraLabel.TextStyle.P),
+            Content = new MyraLabel("进度条  (HP [||||||    ] MP [||||||    ] SP [||||||    ])", MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.ProgressBar
         };
         rbBar.PressedChanged += (_, _) => { if (rbBar.IsPressed) SetMode(TitleBarStatsMode.ProgressBar); };
@@ -76,7 +76,7 @@ public static class TitleBarTabContent
 
         // Preview
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Preview", MyraLabel.TextStyle.H2));
+        outer.Widgets.Add(new MyraLabel("预览", MyraLabel.TextStyle.H2));
         outer.Widgets.Add(previewLabel);
 
         return outer;

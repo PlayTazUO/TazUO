@@ -45,12 +45,12 @@ public class AssistantWindow : MyraControl
     private void Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab("General", GeneralTab.Build);
-        tabs.AddTab("Agents", AgentTab.Build);
-        tabs.AddTab("Filters", FiltersTab.Build);
-        tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
-        tabs.AddTab("Macros", MacrosTabContent.Build);
-        tabs.AddTab("Skills", () => _skillsTabContent = new());
+        tabs.AddTab("常规", GeneralTab.Build);
+        tabs.AddTab("代理", AgentTab.Build);
+        tabs.AddTab("过滤器", FiltersTab.Build);
+        tabs.AddTab("物品数据库", ItemDatabaseTabContent.Build);
+        tabs.AddTab("宏", MacrosTabContent.Build);
+        tabs.AddTab("技能", () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);
     }

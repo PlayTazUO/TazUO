@@ -5,6 +5,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
+using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -79,7 +80,7 @@ namespace ClassicUO.Game.UI.Gumps
                         if (mapFacet != -1)
                         {
                             if (World.MapIndex != mapFacet)
-                                GameActions.Print(World, "You're on the wrong facet!", 32);
+                                GameActions.Print(World, "你所在的层面不对！", 32);
                             else
                                 map.GoToMarker(mapX, mapY, true);
                         }
@@ -112,7 +113,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (map != null)
                     {
                         if (mapFacet != World.MapIndex)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, "你所在的层面不对！", 32);
                         else
                             UIManager.Add(new QuestArrowGump(world, 0, mapX, mapY) { CanCloseWithRightClick = true });
                     }
@@ -125,7 +126,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (mapFacet != -1)
                     {
                         if (World.MapIndex != mapFacet)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, "你所在的层面不对！", 32);
                         else
                             World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                     }
@@ -133,7 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                         World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Close", () => { Dispose(); }));
+            menu.ContextMenu.Add(new ContextMenuItemEntry(ResGumps.Cancel, () => { Dispose(); }));
             menu.CanCloseWithRightClick = false;
 
             Add(new GumpPic(width - 20, height - 20, 0x0139D, 0));

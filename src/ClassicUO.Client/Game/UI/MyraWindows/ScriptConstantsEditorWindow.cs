@@ -54,7 +54,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { HintText = "Filter constants...", Width = 175, Text = _filterText };
+        var filterBox = new MyraInputBox { HintText = "过滤常量...", Width = 175, Text = _filterText };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -62,8 +62,8 @@ public class ScriptConstantsEditorWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Refresh", RefreshConstants));
-        toolbar.Widgets.Add(new MyraButton("Save", SaveConstants));
+        toolbar.Widgets.Add(new MyraButton("刷新", RefreshConstants));
+        toolbar.Widgets.Add(new MyraButton("保存", SaveConstants));
 
         _statusLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
         toolbar.Widgets.Add(_statusLabel);
@@ -104,20 +104,20 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (string.IsNullOrWhiteSpace(_filterText))
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants found in script.\nConstants must be top-level assignments with UPPERCASE names.\nExample:  MAX_DISTANCE = 10", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel("脚本中未找到常量。\n常量必须是大写名称的顶层赋值。\n例如:  MAX_DISTANCE = 10", MyraLabel.TextStyle.P));
             }
             else
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants match the filter.", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel("没有匹配过滤条件的常量。", MyraLabel.TextStyle.P));
             }
             return;
         }
 
         var grid = new MyraGrid();
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Constant"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Line")
+            GridColumnInfo.Auto("常量"),
+            GridColumnInfo.Fill("值"),
+            GridColumnInfo.Auto("行")
         );
 
         int row = 1;
@@ -147,11 +147,10 @@ public class ScriptConstantsEditorWindow : MyraControl
         box.TextChangedByUser += (_, _) =>
         {
             constant.EditValue = box.Text ?? "";
-            box.Tooltip = constant.OriginalValue != constant.EditValue ? $"Original: {original}" : null;
-            CheckForChanges();
-        };
-        if (constant.OriginalValue != constant.EditValue)
-            box.Tooltip = $"Original: {original}";
+                    box.Tooltip = constant.OriginalValue != constant.EditValue ? $"原始值: {original}" : null;
+                };
+                if (constant.OriginalValue != constant.EditValue)
+                    box.Tooltip = $"原始值: {original}";
         return box;
     }
 
@@ -167,12 +166,12 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (combo.SelectedIndex == null) return;
             constant.EditValue = combo.SelectedIndex == 0 ? "True" : "False";
-            combo.Tooltip = constant.OriginalValue != constant.EditValue ? $"Original: {original}" : null;
+                combo.Tooltip = constant.OriginalValue != constant.EditValue ? $"原始值: {original}" : null;
             CheckForChanges();
         };
 #pragma warning restore CS0612, CS0618
         if (constant.OriginalValue != constant.EditValue)
-            combo.Tooltip = $"Original: {original}";
+            combo.Tooltip = $"原始值: {original}";
         return combo;
     }
 
@@ -182,7 +181,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         var row = new HorizontalStackPanel { Spacing = 4 };
         var readonlyBox = new MyraInputBox { Text = constant.EditValue, Enabled = false };
         if (constant.OriginalValue != constant.EditValue)
-            readonlyBox.Tooltip = $"Original: {original}";
+            readonlyBox.Tooltip = $"原始值: {original}";
         row.Widgets.Add(readonlyBox);
         row.Widgets.Add(new MyraButton("Edit", () => ShowArrayEditor(constant)));
         return row;
@@ -210,10 +209,10 @@ public class ScriptConstantsEditorWindow : MyraControl
                 {
                     elementsCopy.RemoveAt(idx);
                     BuildElements();
-                }) { Tooltip = "Remove this element" }));
+                })                     { Tooltip = "移除此元素" }));
                 elementsPanel.Widgets.Add(eRow);
             }
-            elementsPanel.Widgets.Add(new MyraButton("Add Element", () =>
+            elementsPanel.Widgets.Add(new MyraButton("添加元素", () =>
             {
                 elementsCopy.Add("0");
                 BuildElements();
@@ -223,10 +222,10 @@ public class ScriptConstantsEditorWindow : MyraControl
         BuildElements();
 
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"Editing: {constant.Name}", MyraLabel.TextStyle.H3));
+        content.Widgets.Add(new MyraLabel($"编辑: {constant.Name}", MyraLabel.TextStyle.H3));
         content.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = elementsPanel });
 
-        new MyraDialog($"Array Editor: {constant.Name}", content, ok =>
+        new MyraDialog($"数组编辑器: {constant.Name}", content, ok =>
         {
             if (!ok) return;
             constant.EditValue = "[" + string.Join(", ", elementsCopy) + "]";
@@ -239,7 +238,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         _hasUnsavedChanges = _constants.Values.Any(c => c.OriginalValue != c.EditValue);
         if (_hasUnsavedChanges)
-            ShowStatus("• Unsaved changes", 0);
+            ShowStatus("• 未保存的更改", 0);
         else if (_statusLabel.Text == "• Unsaved changes")
             _statusLabel.Visible = false;
     }
@@ -253,7 +252,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         _hasUnsavedChanges = false;
         UpdateCountLabel();
         BuildConstantsGrid();
-        ShowStatus("Refreshed from file", 3);
+        ShowStatus("已从文件刷新", 3);
     }
 
     private void SaveConstants()
@@ -262,7 +261,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (!_hasUnsavedChanges)
             {
-                ShowStatus("No changes to save", 2);
+                ShowStatus("没有需要保存的更改", 2);
                 return;
             }
 
@@ -284,12 +283,12 @@ public class ScriptConstantsEditorWindow : MyraControl
             }
 
             _hasUnsavedChanges = false;
-            ShowStatus("Saved successfully!", 3);
+            ShowStatus("保存成功!", 3);
             BuildConstantsGrid();
         }
         catch (Exception ex)
         {
-            ShowStatus($"Error: {ex.Message}", 5);
+            ShowStatus($"错误: {ex.Message}", 5);
         }
     }
 

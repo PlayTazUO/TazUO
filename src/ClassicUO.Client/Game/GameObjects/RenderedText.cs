@@ -2,8 +2,10 @@
 
 using ClassicUO.IO;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StbTextEditSharp;
@@ -552,7 +554,18 @@ namespace ClassicUO.Game
 
         public bool Draw(UltimaBatcher2D batcher, int x, int y, float alpha = 1, ushort hue = 0)
         {
-            if (string.IsNullOrEmpty(Text) || Texture == null || IsDestroyed || Texture.IsDisposed)
+            if (string.IsNullOrEmpty(Text) || IsDestroyed)
+            {
+                return false;
+            }
+
+            if (ShouldUseCJKRendering())
+            {
+                DrawCJK(batcher, x, y, alpha);
+                return true;
+            }
+
+            if (Texture == null || Texture.IsDisposed)
             {
                 return false;
             }
@@ -729,6 +742,48 @@ namespace ClassicUO.Game
             }
 
             _pool.ReturnOne(this);
+        }
+
+        private bool ShouldUseCJKRendering()
+        {
+            if (string.IsNullOrEmpty(Text))
+                return false;
+
+            string lang = Settings.GlobalSettings?.Language;
+            if (string.IsNullOrEmpty(lang))
+                return false;
+
+            bool isCJK = string.Equals(lang, "CHS", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(lang, "CHT", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(lang, "JPN", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(lang, "KOR", StringComparison.OrdinalIgnoreCase);
+
+            if (!isCJK)
+                return false;
+
+            foreach (char c in Text)
+                if (c >= 0x4E00 && c <= 0x9FFF)
+                    return true;
+
+            return false;
+        }
+
+        private void DrawCJK(UltimaBatcher2D batcher, int x, int y, float alpha)
+        {
+            string fontName = TrueTypeLoader.Instance.Fonts.Contains("simhei")
+                ? "simhei" : TrueTypeLoader.EMBEDDED_FONT;
+
+            float fontSize = Font switch
+            {
+                1 => 14, 2 => 15, 3 => 16, 6 => 14, 9 => 12, _ => 14
+            };
+
+            var font = TrueTypeLoader.Instance.GetFont(fontName, fontSize);
+            if (font == null)
+                return;
+
+            var color = new Color(255, 255, 255, (byte)(alpha * 255));
+            font.DrawText(batcher, Text, new Vector2(x, y), color);
         }
     }
 }

@@ -10,17 +10,17 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
 public static class GraphicReplacementTabContent
 {
-    private static readonly string[] TypeNames = { "Mobile", "Land", "Static" };
+    private static readonly string[] TypeNames = { "目标", "地面", "静态" };
     private static readonly byte[] TypeValues = { 1, 2, 3 };
 
-    private static string GetTypeName(byte t) => t switch { 1 => "Mobile", 2 => "Land", _ => "Static" };
+    private static string GetTypeName(byte t) => t switch { 1 => "目标", 2 => "地面", _ => "静态" };
 
     public static Widget Build()
     {
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Replace graphics with other graphics. Mobile = animations, Land = terrain tiles, Static = items/statics.",
+            "用其他图形替换图形。目标 = 动画, 地面 = 地形瓦片, 静态 = 物品/静态对象。",
             MyraLabel.TextStyle.H3));
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
@@ -32,18 +32,18 @@ public static class GraphicReplacementTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No replacements configured.", MyraLabel.TextStyle.H3));
+                filtersPanel.Widgets.Add(new MyraLabel("没有配置替换。", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Original"),
-                GridColumnInfo.Auto("Type"),
-                GridColumnInfo.Fill("Replacement"),
-                GridColumnInfo.Fill("Preview"),
-                GridColumnInfo.Fill("New Hue"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto("原始"),
+                GridColumnInfo.Auto("类型"),
+                GridColumnInfo.Fill("替换"),
+                GridColumnInfo.Fill("预览"),
+                GridColumnInfo.Fill("新色调"),
+                GridColumnInfo.Auto("操作")
             );
 
             var filterList = filters.Values.ToList();
@@ -70,7 +70,7 @@ public static class GraphicReplacementTabContent
                             filter.ReplacementGraphic, newType,
                             filter.NewHue);
                         BuildFilterList();
-                    }) { Tooltip = "Click to cycle: Mobile / Land / Static", MinWidth = 65 };
+                    }) { Tooltip = "点击循环切换: 目标 / 地面 / 静态", MinWidth = 65 };
                     btn.Content.HorizontalAlignment = HorizontalAlignment.Center;
                     typeWrapper.Widgets.Add(btn);
                 }
@@ -123,11 +123,11 @@ public static class GraphicReplacementTabContent
                 // Delete
                 ushort capturedOrigGraphic = filter.OriginalGraphic;
                 byte capturedOrigType = filter.OriginalType;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
                 {
                     GraphicsReplacement.DeleteFilter(capturedOrigGraphic, capturedOrigType);
                     BuildFilterList();
-                }) { Tooltip = "Delete this replacement" }), dataRow, 5);
+                }) { Tooltip = "删除此替换" }), dataRow, 5);
 
                 dataRow++;
             }
@@ -137,9 +137,9 @@ public static class GraphicReplacementTabContent
 
         // Add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newOriginalBox = new MyraInputBox { HintText = "Original graphic (e.g. 0x0EED)", Width = 170 };
-        var newReplacementBox = new MyraInputBox { HintText = "Replacement graphic", Width = 170 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 120, "Hue (-1 = unchanged)");
+        var newOriginalBox = new MyraInputBox { HintText = "原始图形 (例如 0x0EED)", Width = 170 };
+        var newReplacementBox = new MyraInputBox { HintText = "替换图形", Width = 170 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 120, "色调 (-1 = 不变)");
         int[] newTypeIndex = { 2 }; // Default: Static
 
         var newTypeWrapper = new HorizontalStackPanel();
@@ -152,7 +152,7 @@ public static class GraphicReplacementTabContent
             {
                 newTypeIndex[0] = (newTypeIndex[0] + 1) % TypeNames.Length;
                 BuildNewTypeBtn();
-            }) { Tooltip = "Click to cycle: Mobile / Land / Static" });
+            }) { Tooltip = "点击循环切换: 目标 / 地面 / 静态" });
         }
         BuildNewTypeBtn();
 
@@ -170,7 +170,7 @@ public static class GraphicReplacementTabContent
             {
                 if (!string.IsNullOrEmpty(newHueBox.Text))
                 {
-                    validationLabel.Text = $"Invalid hue: '{newHueBox.Text}'. Must be 0-65535, 0x hex, or -1";
+                    validationLabel.Text = $"无效色调: '{newHueBox.Text}'。必须为 0-65535、0x 十六进制或 -1";
                     validationLabel.Visible = true;
                     return;
                 }
@@ -200,26 +200,26 @@ public static class GraphicReplacementTabContent
         }));
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow1.Widgets.Add(new MyraLabel("Original:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("原始:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newOriginalBox);
-        addFieldsRow1.Widgets.Add(new MyraLabel("Replacement:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("替换:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newReplacementBox);
 
         var addFieldsRow2 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow2.Widgets.Add(new MyraLabel("Type:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("类型:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newTypeWrapper);
-        addFieldsRow2.Widgets.Add(new MyraLabel("New Hue:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("新色调:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newHueBox);
 
-        addEntryPanel.Widgets.Add(new MyraLabel("New Entry:", MyraLabel.TextStyle.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel("新条目:", MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow1);
         addEntryPanel.Widgets.Add(addFieldsRow2);
         addEntryPanel.Widgets.Add(validationLabel);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Target Entity", () =>
+        actionRow.Widgets.Add(new MyraButton("添加条目", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton("目标实体", () =>
         {
             if (World.Instance == null) return;
             World.Instance.TargetManager.SetTargeting(targeted =>
@@ -239,8 +239,8 @@ public static class GraphicReplacementTabContent
                 GraphicsReplacement.NewFilter(graphic, entityType, graphic, entityType, hue);
                 BuildFilterList();
             });
-        }) { Tooltip = "Target an entity to add it to the replacement list" });
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        }) { Tooltip = "目标一个实体以将其添加到替换列表" });
+        actionRow.Widgets.Add(new MyraButton("导入", () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && GraphicsReplacement.ImportFromJson(json))
@@ -248,14 +248,14 @@ public static class GraphicReplacementTabContent
                 BuildFilterList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from your clipboard, must have a valid export copied." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+            GameActions.Print("您的剪贴板中没有有效的导出数据。", Constants.HUE_ERROR);
+        }) { Tooltip = "从剪贴板导入，必须有有效的导出数据。" });
+        actionRow.Widgets.Add(new MyraButton("导出", () =>
         {
             GraphicsReplacement.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported graphic filters to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your filters to your clipboard." });
-        actionRow.Widgets.Add(new MyraButton("Apply to All Entities", () =>
+            GameActions.Print("已将图形过滤器导出到剪贴板!", Constants.HUE_SUCCESS);
+        }) { Tooltip = "将过滤器导出到剪贴板。" });
+        actionRow.Widgets.Add(new MyraButton("应用到所有实体", () =>
         {
             World? world = World.Instance;
             if (world == null) return;
@@ -265,11 +265,11 @@ public static class GraphicReplacementTabContent
             foreach (Item item in world.Items.Values.ToList())
                 if (!item.IsDestroyed && item.OriginalGraphic != 0) { item.Graphic = item.OriginalGraphic; count++; }
             GameActions.Print($"Refreshed {count} entities with graphic replacements");
-        }) { Tooltip = "Reapply graphic replacements to all entities currently in the world" });
+        }) { Tooltip = "将图形替换重新应用到当前世界中的所有实体" });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addEntryPanel);
-        root.Widgets.Add(new MyraLabel("Current Graphic Replacements:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel("当前图形替换:", MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 300, Content = filtersPanel });
 

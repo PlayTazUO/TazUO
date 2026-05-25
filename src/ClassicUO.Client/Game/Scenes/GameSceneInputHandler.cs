@@ -807,7 +807,7 @@ namespace ClassicUO.Game.Scenes
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, "你必须选择目标/生物以设为坐骑。", 32);
                         }
 
                         break;

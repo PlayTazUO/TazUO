@@ -36,9 +36,9 @@ internal class VersionHistory : NineSliceGump
         _vBoxContainer = new VBoxContainer(_scrollArea.Width - _scrollArea.ScrollBarWidth());
         _scrollArea.Add(_vBoxContainer);
 
-        _vBoxContainer.Add(TextBox.GetOne("Version history can now be found on our GitHub repo CHANGELOG.md file.", TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(_scrollArea.Width - _scrollArea.ScrollBarWidth())));
-        _vBoxContainer.Add(pos.PositionExact(new HttpClickableLink("Main branch changelog", "https://github.com/PlayTazUO/TazUO/blob/main/CHANGELOG.md", Color.Orange, 15), 25, Height - 20));
-        _vBoxContainer.Add(pos.PositionExact(new HttpClickableLink("Dev branch changelog", "https://github.com/PlayTazUO/TazUO/blob/dev/CHANGELOG.md", Color.Orange, 15), 25, Height - 20));
+        _vBoxContainer.Add(TextBox.GetOne("版本记录现已转移到 GitHub 仓库的 CHANGELOG.md 文件中。", TrueTypeLoader.EMBEDDED_FONT, 15, Color.Orange, TextBox.RTLOptions.Default(_scrollArea.Width - _scrollArea.ScrollBarWidth())));
+        _vBoxContainer.Add(pos.PositionExact(new HttpClickableLink("主分支更新日志", "https://github.com/PlayTazUO/TazUO/blob/main/CHANGELOG.md", Color.Orange, 15), 25, Height - 20));
+        _vBoxContainer.Add(pos.PositionExact(new HttpClickableLink("开发分支更新日志", "https://github.com/PlayTazUO/TazUO/blob/dev/CHANGELOG.md", Color.Orange, 15), 25, Height - 20));
 
         Add(pos.Position(_scrollArea));
 

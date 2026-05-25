@@ -14,11 +14,11 @@ public static class JournalFilterTabContent
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Journal Filter hides specific messages from the journal. Messages that match exactly will be filtered out.",
+            "日志过滤器可隐藏日志中的特定消息。完全匹配的消息将被过滤掉。",
             MyraLabel.TextStyle.H3));
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newFilterBox = new MyraInputBox { HintText = "Filter text (exact match)", Width = 300 };
+        var newFilterBox = new MyraInputBox { HintText = "过滤文本（精确匹配）", Width = 300 };
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
 
@@ -29,12 +29,12 @@ public static class JournalFilterTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No filters configured.", MyraLabel.TextStyle.H3));
+                filtersPanel.Widgets.Add(new MyraLabel("没有配置过滤器。", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
-            grid.SetupWithHeaders(GridColumnInfo.Fill("Filter Text"), GridColumnInfo.Auto("Actions"));
+            grid.SetupWithHeaders(GridColumnInfo.Fill("过滤文本"), GridColumnInfo.Auto("操作"));
 
             int dataRow = 1;
             for (int i = filters.Count - 1; i >= 0; i--)
@@ -57,12 +57,12 @@ public static class JournalFilterTabContent
                 };
                 grid.AddWidget(filterBox, dataRow, 0);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
                 {
                     JournalFilterManager.Instance.RemoveFilter(current[0]);
                     JournalFilterManager.Instance.Save(false);
                     BuildFilterList();
-                }) { Tooltip = "Delete this filter" }), dataRow, 1);
+                }) { Tooltip = "删除此过滤器" }), dataRow, 1);
 
                 dataRow++;
             }
@@ -90,17 +90,17 @@ public static class JournalFilterTabContent
         }));
 
         var addFieldRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldRow.Widgets.Add(new MyraLabel("Filter Text:", MyraLabel.TextStyle.P)
-            { Tooltip = "Must match the journal entry exactly. Partial matches not supported." });
+        addFieldRow.Widgets.Add(new MyraLabel("过滤文本:", MyraLabel.TextStyle.P)
+            { Tooltip = "必须与日志条目完全匹配。不支持部分匹配。" });
         addFieldRow.Widgets.Add(newFilterBox);
 
-        addFilterPanel.Widgets.Add(new MyraLabel("Add New Filter:", MyraLabel.TextStyle.H3));
+        addFilterPanel.Widgets.Add(new MyraLabel("添加新过滤器:", MyraLabel.TextStyle.H3));
         addFilterPanel.Widgets.Add(addFieldRow);
         addFilterPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Filter Entry", () => addFilterPanel.Visible = !addFilterPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        actionRow.Widgets.Add(new MyraButton("添加过滤条目", () => addFilterPanel.Visible = !addFilterPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton("导入", () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && JournalFilterManager.Instance.ImportFromJson(json))
@@ -108,17 +108,17 @@ public static class JournalFilterTabContent
                 BuildFilterList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from your clipboard, must have a valid export copied." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+            GameActions.Print("您的剪贴板中没有有效的导出数据。", Constants.HUE_ERROR);
+        }) { Tooltip = "从剪贴板导入，必须有有效的导出数据。" });
+        actionRow.Widgets.Add(new MyraButton("导出", () =>
         {
             JournalFilterManager.Instance.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported journal filters to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your filters to your clipboard." });
+            GameActions.Print("已将日志过滤器导出到剪贴板!", Constants.HUE_SUCCESS);
+        }) { Tooltip = "将过滤器导出到剪贴板。" });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addFilterPanel);
-        root.Widgets.Add(new MyraLabel("Current Journal Filters:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel("当前日志过滤器:", MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 250, Content = filtersPanel });
 

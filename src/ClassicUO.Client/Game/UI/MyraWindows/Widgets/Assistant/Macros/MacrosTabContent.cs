@@ -45,7 +45,7 @@ public static class MacrosTabContent
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel("未加载配置文件", MyraLabel.TextStyle.P);
 
         // ── State ────────────────────────────────────────────────────────────
         Macro? selectedMacro = null;
@@ -82,7 +82,7 @@ public static class MacrosTabContent
             if (macro.WheelScroll)
                 return KeysTranslator.GetMouseWheel(macro.WheelUp, mod);
 
-            return "None";
+            return "无";
         }
 
         void CancelCapture()
@@ -142,15 +142,15 @@ public static class MacrosTabContent
 
             if (display.Count == 0)
             {
-                macroListPanel.Widgets.Add(new MyraLabel("No macros.", MyraLabel.TextStyle.P));
+                macroListPanel.Widgets.Add(new MyraLabel("没有宏。", MyraLabel.TextStyle.P));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Fill("Name"),
-                GridColumnInfo.Auto("Hotkey"),
-                GridColumnInfo.Auto("Edit")
+                GridColumnInfo.Fill("名称"),
+                GridColumnInfo.Auto("快捷键"),
+                GridColumnInfo.Auto("编辑")
             );
 
             int dataRow = 1;
@@ -160,7 +160,7 @@ public static class MacrosTabContent
 
                 grid.AddWidget(new MyraLabel(macro.Name, MyraLabel.TextStyle.P), dataRow, 0);
                 grid.AddWidget(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P), dataRow, 1);
-                grid.AddWidget(new MyraButton("Edit", () =>
+                grid.AddWidget(new MyraButton("编辑", () =>
                 {
                     selectedMacro = captured;
                     BuildMacroList();
@@ -180,7 +180,7 @@ public static class MacrosTabContent
 
             if (selectedMacro == null)
             {
-                editorPanel.Widgets.Add(new MyraLabel("Select a macro to edit.", MyraLabel.TextStyle.H3));
+                editorPanel.Widgets.Add(new MyraLabel("选择一个宏进行编辑。", MyraLabel.TextStyle.H3));
                 return;
             }
 
@@ -188,7 +188,7 @@ public static class MacrosTabContent
 
             // Name row
             var nameRow = new HorizontalStackPanel { Spacing = 2 };
-            nameRow.Widgets.Add(new MyraLabel("Macro Name:", MyraLabel.TextStyle.P));
+            nameRow.Widgets.Add(new MyraLabel("宏名称:", MyraLabel.TextStyle.P));
             var nameBox = new MyraInputBox { Text = macro.Name, Width = 200 };
             nameBox.TextChangedByUser += (_, _) =>
             {
@@ -205,7 +205,7 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
             // Create Macro Button
-            editorPanel.Widgets.Add(new MyraButton("Create Macro Button", () =>
+            editorPanel.Widgets.Add(new MyraButton("创建宏按钮", () =>
             {
                 foreach (IGui? gump in UIManager.Gumps)
                     if (gump is MacroButtonGump mbg && mbg.TheMacro == macro)
@@ -217,11 +217,11 @@ public static class MacrosTabContent
                 macroButtonGump.CenterXInViewPort();
                 macroButtonGump.CenterYInViewPort();
                 UIManager.Add(macroButtonGump);
-            }) { Tooltip = "Create a draggable macro button for this macro" });
+            }) { Tooltip = "为此宏创建可拖动的宏按钮" });
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            editorPanel.Widgets.Add(new MyraLabel("Actions:", MyraLabel.TextStyle.P));
+            editorPanel.Widgets.Add(new MyraLabel("操作:", MyraLabel.TextStyle.P));
 
             BuildActionsPanel();
             editorPanel.Widgets.Add(new ScrollViewer { MaxHeight = 250, Content = actionsPanel });
@@ -229,7 +229,7 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(new MyraSpacer(10, 1));
 
             var bottomRow = new HorizontalStackPanel { Spacing = 2 };
-            bottomRow.Widgets.Add(new MyraButton("Add Action", () =>
+            bottomRow.Widgets.Add(new MyraButton("添加操作", () =>
             {
                 MacroObject newAction = Macro.Create(MacroType.Say);
                 var scanAction = (MacroObject)macro.Items;
@@ -250,10 +250,10 @@ public static class MacrosTabContent
                 BuildActionsPanel();
             }));
 
-            bottomRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete Macro", () =>
+            bottomRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除宏", () =>
             {
-                new MyraDialog($"Delete '{macro.Name}'?",
-                    new MyraLabel($"Are you sure you want to delete '{macro.Name}'?", MyraLabel.TextStyle.P),
+                new MyraDialog($"删除 '{macro.Name}'？",
+                    new MyraLabel($"确定要删除 '{macro.Name}' 吗？", MyraLabel.TextStyle.P),
                     ok =>
                     {
                         if (!ok) return;
@@ -263,7 +263,7 @@ public static class MacrosTabContent
                         BuildMacroList();
                         BuildEditor();
                     });
-            }) { Tooltip = "Permanently delete this macro" }));
+            }) { Tooltip = "永久删除此宏" }));
 
             editorPanel.Widgets.Add(bottomRow);
         }
@@ -272,7 +272,7 @@ public static class MacrosTabContent
         void BuildHotkeyRow()
         {
             hotkeyRow.Widgets.Clear();
-            hotkeyRow.Widgets.Add(new MyraLabel("Hotkey:", MyraLabel.TextStyle.P));
+            hotkeyRow.Widgets.Add(new MyraLabel("快捷键:", MyraLabel.TextStyle.P));
 
             if (selectedMacro == null) return;
             Macro macro = selectedMacro;
@@ -281,18 +281,18 @@ public static class MacrosTabContent
             {
                 string captureDisplay = capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN
                     ? KeysTranslator.TryGetKey(capturedKey, capturedMod)
-                    : "Listening...";
+                    : "正在监听...";
                 hotkeyRow.Widgets.Add(new MyraLabel(captureDisplay, MyraLabel.TextStyle.P));
 
                 if (capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN)
-                    hotkeyRow.Widgets.Add(new MyraButton("Apply", () =>
+                    hotkeyRow.Widgets.Add(new MyraButton("应用", () =>
                     {
                         ApplyCapturedHotkey();
                         BuildHotkeyRow();
                         BuildMacroList();
                     }));
 
-                hotkeyRow.Widgets.Add(new MyraButton("Cancel", () =>
+                hotkeyRow.Widgets.Add(new MyraButton("取消", () =>
                 {
                     CancelCapture();
                     BuildHotkeyRow();
@@ -302,7 +302,7 @@ public static class MacrosTabContent
             {
                 hotkeyRow.Widgets.Add(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P));
 
-                hotkeyRow.Widgets.Add(new MyraButton("Capture", () =>
+                hotkeyRow.Widgets.Add(new MyraButton("捕获", () =>
                 {
                     isListening = true;
                     capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
@@ -341,9 +341,9 @@ public static class MacrosTabContent
 
                     Keyboard.KeyDownEvent += captureHandler;
                     BuildHotkeyRow();
-                }) { Tooltip = "Click then press a key to assign as hotkey" });
+                }) { Tooltip = "点击后按下一个键来分配快捷键" });
 
-                hotkeyRow.Widgets.Add(new MyraButton("Clear", () =>
+                hotkeyRow.Widgets.Add(new MyraButton("清除", () =>
                 {
                     macro.Key               = SDL.SDL_Keycode.SDLK_UNKNOWN;
                     macro.MouseButton       = MouseButtonType.None;
@@ -353,7 +353,7 @@ public static class MacrosTabContent
                     MarkDirty();
                     BuildHotkeyRow();
                     BuildMacroList();
-                }) { Tooltip = "Remove the hotkey from this macro" });
+                }) { Tooltip = "从此宏中移除快捷键" });
             }
         }
 
@@ -472,12 +472,12 @@ public static class MacrosTabContent
                 }
 
                 // Remove button
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("移除", () =>
                 {
                     macro.Remove(capturedAction);
                     MarkDirty();
                     BuildActionsPanel();
-                }) { Tooltip = "Remove this action" }));
+                }) { Tooltip = "移除此操作" }));
 
                 actionsPanel.Widgets.Add(actionRow);
 
@@ -486,15 +486,15 @@ public static class MacrosTabContent
             }
 
             if (actionIndex == 0)
-                actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.H3));
+                actionsPanel.Widgets.Add(new MyraLabel("没有操作。点击 '添加操作' 来添加。", MyraLabel.TextStyle.H3));
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────
         var toolbar = new HorizontalStackPanel { Spacing = 2 };
 
-        toolbar.Widgets.Add(new MyraButton("Add", () =>
+        toolbar.Widgets.Add(new MyraButton("添加", () =>
         {
-            string baseName = "New Macro";
+            string baseName = "新建宏";
             string macroName = baseName;
             int counter = 1;
             while (World.Instance?.Macros?.GetAllMacros().Any(m => m.Name == macroName) == true)
@@ -509,7 +509,7 @@ public static class MacrosTabContent
             BuildEditor();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Move Up", () =>
+        toolbar.Widgets.Add(new MyraButton("上移", () =>
         {
             if (selectedMacro == null) return;
             World.Instance?.Macros?.MoveMacroUp(selectedMacro);
@@ -517,7 +517,7 @@ public static class MacrosTabContent
             BuildMacroList();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Move Down", () =>
+        toolbar.Widgets.Add(new MyraButton("下移", () =>
         {
             if (selectedMacro == null) return;
             World.Instance?.Macros?.MoveMacroDown(selectedMacro);
@@ -525,7 +525,7 @@ public static class MacrosTabContent
             BuildMacroList();
         }));
 
-        toolbar.Widgets.Add(new MyraButton("Import", () =>
+        toolbar.Widgets.Add(new MyraButton("导入", () =>
         {
             string? xml = Utility.Clipboard.GetClipboardText();
             if (xml.NotNullNotEmpty() && World.Instance?.Macros?.ImportFromXml(xml) == true)
@@ -533,17 +533,17 @@ public static class MacrosTabContent
                 BuildMacroList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid macro export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import macros from clipboard (must have a valid export)" });
+            GameActions.Print("您的剪贴板中没有有效的宏导出数据。", Constants.HUE_ERROR);
+        }) { Tooltip = "从剪贴板导入宏（必须有有效的导出数据）" });
 
-        toolbar.Widgets.Add(new MyraButton("Export", () =>
+        toolbar.Widgets.Add(new MyraButton("导出", () =>
         {
             World.Instance?.Macros?.GetXmlExport()?.CopyToClipboard();
             int cnt = World.Instance?.Macros?.GetAllMacros().Count ?? 0;
-            GameActions.Print($"Exported {cnt} macro(s) to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export all macros to clipboard" });
+            GameActions.Print($"已将 {cnt} 个宏导出到剪贴板!", Constants.HUE_SUCCESS);
+        }) { Tooltip = "将所有宏导出到剪贴板" });
 
-        var filterBox = new MyraInputBox { HintText = "Filter...", Width = 150 };
+        var filterBox = new MyraInputBox { HintText = "过滤...", Width = 150 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             filterText = filterBox.Text ?? "";

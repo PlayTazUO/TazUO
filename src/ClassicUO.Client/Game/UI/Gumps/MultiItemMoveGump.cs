@@ -164,7 +164,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Target a container to set as your favorite.");
+                    GameActions.Print(World, "瞄准一个容器设置为收藏夹。");
                     World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                 }
             };
@@ -179,14 +179,14 @@ namespace ClassicUO.Game.UI.Gumps
                     uint fav = ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial;
                     if (fav == 0)
                     {
-                        GameActions.Print(World, "No favorite container set. Please target one.");
+                        GameActions.Print(World, "未设置收藏容器，请瞄准一个。");
                         World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                         return;
                     }
 
                     Item cont = World.Items.Get(fav);
                     if (cont != null) ProcessItemMoves(World, cont);
-                    else GameActions.Print(World, "Favorite container is not available.");
+                    else GameActions.Print(World, "收藏容器不可用。");
                 }
             };
 
@@ -208,7 +208,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Where should we move these items?");
+                    GameActions.Print(World, "要将这些物品移到哪里？");
                     World.TargetManager.SetTargeting(CursorTarget.MoveItemContainer, CursorType.Target, TargetType.Neutral);
                 }
             };
@@ -261,10 +261,10 @@ namespace ClassicUO.Game.UI.Gumps
                 Item moveToContainer = world.Items.Get(serial);
                 if (moveToContainer == null || !moveToContainer.ItemData.IsContainer)
                 {
-                    GameActions.Print(world, "That does not appear to be a container...");
+                    GameActions.Print(world, "这似乎不是一个容器...");
                     return;
                 }
-                GameActions.Print(world, "Moving items to the selected container..");
+                GameActions.Print(world, "正在将物品移动到选定的容器..");
                 ProcessItemMoves(world, moveToContainer);
             }
         }

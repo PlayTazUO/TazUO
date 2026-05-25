@@ -6,6 +6,7 @@ using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
+using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -81,13 +82,13 @@ namespace ClassicUO.Game.UI.Gumps
             });
 
             // Close button
-            Add(new NiceButton(GUMP_WIDTH - 80, 5, 75, 20, ButtonAction.Activate, "Close")
+            Add(new NiceButton(GUMP_WIDTH - 80, 5, 75, 20, ButtonAction.Activate, ResGumps.Cancel)
             {
                 ButtonParameter = 0
             });
 
             // Current path display
-            Add(new Label("Current Path:", true, 0x0386, font: 1)
+            Add(new Label("当前路径:", true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = 35
@@ -99,7 +100,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_pathTextBox);
 
             // File extension filter
-            Add(new Label("Filter:", true, 0x0386, font: 1)
+            Add(new Label("过滤器:", true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = 85
@@ -119,7 +120,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Selected file name
             Control c;
-            Add(c = new Label("File Name:", true, 0x0386, font: 1)
+            Add(c = new Label("文件名:", true, 0x0386, font: 1)
             {
                 X = 20,
                 Y = GUMP_HEIGHT - 40
@@ -131,13 +132,13 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_fileNameTextBox);
 
             // OK button
-            Add(new NiceButton(GUMP_WIDTH - 180, 477, 75, 20, ButtonAction.Activate, "OK")
+            Add(new NiceButton(GUMP_WIDTH - 180, 477, 75, 20, ButtonAction.Activate, ResGumps.Accept)
             {
                 ButtonParameter = 3
             });
 
             // Cancel button
-            Add(new NiceButton(GUMP_WIDTH - 90, 477, 75, 20, ButtonAction.Activate, "Cancel")
+            Add(new NiceButton(GUMP_WIDTH - 90, 477, 75, 20, ButtonAction.Activate, ResGumps.Cancel)
             {
                 ButtonParameter = 4
             });
@@ -201,7 +202,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (!Directory.Exists(_currentPath))
                 {
-                    _statusLabel.Text = "Invalid directory path";
+                    _statusLabel.Text = "无效的目录路径";
                     return;
                 }
 

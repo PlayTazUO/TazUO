@@ -6,7 +6,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
 public static class SeasonFilterTabContent
 {
-    private static readonly string[] SeasonNames = { "Spring", "Summer", "Fall", "Winter", "Desolation" };
+    private static readonly string[] SeasonNames = { "春", "夏", "秋", "冬", "荒芜" };
     private static readonly Season[] AllSeasons =
     {
         Season.Spring,
@@ -22,7 +22,7 @@ public static class SeasonFilterTabContent
     static SeasonFilterTabContent()
     {
         DisplayOptions = new string[AllSeasons.Length + 1];
-        DisplayOptions[0] = "None";
+        DisplayOptions[0] = "无";
         for (int j = 0; j < SeasonNames.Length; j++)
             DisplayOptions[j + 1] = SeasonNames[j];
     }
@@ -32,22 +32,22 @@ public static class SeasonFilterTabContent
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead.",
+            "覆盖服务器发送的季节。例如，如果服务器发送冬天，您可以显示秋天。",
             MyraLabel.TextStyle.H3) { MaxWidth = 500 });
 
         // Collect BuildCycleBtn delegates so Clear can refresh all wrappers
         var rebuildActions = new System.Collections.Generic.List<System.Action>();
 
-        root.Widgets.Add(new MyraButton("Clear All Filters", () =>
+        root.Widgets.Add(new MyraButton("清除所有过滤器", () =>
         {
             SeasonFilter.Instance.Clear();
             foreach (System.Action rebuild in rebuildActions) rebuild();
-        }) { Tooltip = "Remove all season filters and display seasons as sent by the server" });
+        }) { Tooltip = "移除所有季节过滤器并按服务器发送的方式显示季节" });
 
-        root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel("季节过滤器:", MyraLabel.TextStyle.H3));
 
         var grid = new MyraGrid();
-        grid.SetupWithHeaders(GridColumnInfo.Auto("When Server Sends"), GridColumnInfo.Auto("Show As"));
+        grid.SetupWithHeaders(GridColumnInfo.Auto("服务器发送"), GridColumnInfo.Auto("显示为"));
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {
@@ -62,7 +62,7 @@ public static class SeasonFilterTabContent
             {
                 cycleWrapper.Widgets.Clear();
 
-                string currentLabel = "None";
+                string currentLabel = "无";
                 int currentIdx = 0;
                 if (SeasonFilter.Instance.Filters.TryGetValue(incoming, out Season replacement))
                 {
@@ -85,7 +85,7 @@ public static class SeasonFilterTabContent
                     else
                         SeasonFilter.Instance.SetFilter(incoming, AllSeasons[nextIdx - 1]);
                     BuildCycleBtn();
-                }) { Tooltip = $"Click to cycle season override for {incomingName}" });
+                }) { Tooltip = $"点击循环切换 {incomingName} 的季节覆盖" });
             }
 
             rebuildActions.Add(BuildCycleBtn);
@@ -95,7 +95,7 @@ public static class SeasonFilterTabContent
 
         root.Widgets.Add(grid);
         root.Widgets.Add(new MyraLabel(
-            "Click the button to cycle through options. 'None' disables the filter.",
+            "点击按钮循环切换选项。'无' 将禁用过滤器。",
             MyraLabel.TextStyle.P));
 
         return root;

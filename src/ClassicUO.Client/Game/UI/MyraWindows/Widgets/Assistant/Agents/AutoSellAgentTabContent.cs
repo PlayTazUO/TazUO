@@ -14,28 +14,28 @@ public static class AutoSellAgentTabContent
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
-            return new MyraLabel("Profile not loaded", MyraLabel.TextStyle.P);
+            return new MyraLabel("未加载配置文件", MyraLabel.TextStyle.P);
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.SellAgentEnabled, b => profile.SellAgentEnabled = b, "Enable Auto Sell"));
+            profile.SellAgentEnabled, b => profile.SellAgentEnabled = b, "启用自动出售"));
 
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel("选项:", MyraLabel.TextStyle.H3));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
-            "Max total items",
+            "最大总物品数",
             out _,
             v => profile.SellAgentMaxItems = (int)v,
             0, 1000,
             profile.SellAgentMaxItems));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
-            "Max unique items",
+            "最大独特物品数",
             out _,
             v => profile.SellAgentMaxUniques = (int)v,
             0, 100,
             profile.SellAgentMaxUniques));
 
-        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel("条目:", MyraLabel.TextStyle.H3));
 
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
@@ -46,19 +46,19 @@ public static class AutoSellAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.H3));
+                entriesPanel.Widgets.Add(new MyraLabel("没有配置条目。", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Fill("Graphic"),
-                GridColumnInfo.Fill("Hue"),
-                GridColumnInfo.Fill("Max Amount"),
-                GridColumnInfo.Fill("Min on Hand"),
-                GridColumnInfo.Auto("Enabled"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto("图形"),
+                GridColumnInfo.Fill("图形ID"),
+                GridColumnInfo.Fill("色调"),
+                GridColumnInfo.Fill("最大数量"),
+                GridColumnInfo.Fill("最小库存"),
+                GridColumnInfo.Auto("启用"),
+                GridColumnInfo.Auto("操作")
             );
 
             int dataRow = 1;
@@ -89,7 +89,7 @@ public static class AutoSellAgentTabContent
                 var maxAmountBox = new MyraInputBox
                 {
                     Text = entry.MaxAmount == ushort.MaxValue ? "0" : entry.MaxAmount.ToString(),
-                    Tooltip = "Set to 0 for unlimited.",
+                    Tooltip = "设为0表示无限制。",
                 };
                 maxAmountBox.TextChangedByUser += (_, _) =>
                 {
@@ -101,7 +101,7 @@ public static class AutoSellAgentTabContent
                 var restockBox = new MyraInputBox
                 {
                     Text = entry.RestockUpTo.ToString(),
-                    Tooltip = "Minimum amount to keep on hand (0 = disabled).",
+                    Tooltip = "最少保留数量（0 = 禁用）。",
                 };
                 restockBox.TextChangedByUser += (_, _) =>
                 {
@@ -113,7 +113,7 @@ public static class AutoSellAgentTabContent
                 cb.HorizontalAlignment = HorizontalAlignment.Center;
                 grid.AddWidget(cb, dataRow, 5);
 
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
                 {
                     BuySellAgent.Instance?.DeleteConfig(entry);
                     BuildEntriesList();
@@ -129,21 +129,21 @@ public static class AutoSellAgentTabContent
 
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new MyraInputBox { HintText= "Graphic ID", Width= 80 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1=any)");
-        var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
-        var newRestockBox = new MyraInputBox { HintText = "Min on Hand (0=disabled)", Width = 130 };
+        var newGraphicBox = new MyraInputBox { HintText= "图形ID", Width= 80 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "色调 (-1=任意)");
+        var newMaxAmountBox = new MyraInputBox { HintText = "最大数量 (0=无限制)", Width = 130 };
+        var newRestockBox = new MyraInputBox { HintText = "最小库存 (0=禁用)", Width = 130 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow1.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("图形:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newGraphicBox);
-        addFieldsRow1.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel("色调:", MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newHueBox);
 
         var addFieldsRow2 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow2.Widgets.Add(new MyraLabel("Max Amount:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("最大数量:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newMaxAmountBox);
-        addFieldsRow2.Widgets.Add(new MyraLabel("Min on Hand:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel("最小库存:", MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newRestockBox);
 
         void ClearAddFields()
@@ -155,7 +155,7 @@ public static class AutoSellAgentTabContent
         }
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton("添加", () =>
         {
             if (StringHelper.TryParseInt(newGraphicBox.Text, out int graphic))
             {
@@ -178,23 +178,23 @@ public static class AutoSellAgentTabContent
                 BuildEntriesList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        addConfirmRow.Widgets.Add(new MyraButton("取消", () =>
         {
             addEntryPanel.Visible = false;
             ClearAddFields();
         }));
 
-        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.TextStyle.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel("添加新条目:", MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow1);
         addEntryPanel.Widgets.Add(addFieldsRow2);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
         // Action buttons
         var actionRow = new HorizontalStackPanel { Spacing = 6 };
-        actionRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Add from Target", () =>
+        actionRow.Widgets.Add(new MyraButton("手动添加条目", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton("从目标添加", () =>
         {
-            GameActions.Print(Client.Game.UO.World, "Target item to add");
+            GameActions.Print(Client.Game.UO.World, "目标物品以添加");
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
                 if (targeted is Entity entity && SerialHelper.IsItem(entity))
@@ -207,10 +207,10 @@ public static class AutoSellAgentTabContent
                     BuildEntriesList();
                 }
             });
-        }) { Tooltip = "Target an item to add it to the sell list." });
-        actionRow.Widgets.Add(new MyraButton("Add from Container", () =>
+        }) { Tooltip = "目标一个物品以将其添加到出售列表。" });
+        actionRow.Widgets.Add(new MyraButton("从容器添加", () =>
         {
-            GameActions.Print(Client.Game.UO.World, "Target a container to add all its items");
+            GameActions.Print(Client.Game.UO.World, "目标一个容器以添加其所有物品");
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
                 if (targeted is Item container)
@@ -228,32 +228,32 @@ public static class AutoSellAgentTabContent
                             added++;
                         }
                     }
-                    GameActions.Print(Client.Game.UO.World, $"Added {added} item(s) from container.");
+                    GameActions.Print(Client.Game.UO.World, $"已从容器添加 {added} 个物品。");
                     BuildEntriesList();
                 }
             });
-        }) { Tooltip = "Target a container to add all its items to the sell list." });
-        actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear All", () =>
+        }) { Tooltip = "目标一个容器以将其所有物品添加到出售列表。" });
+        actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("清空全部", () =>
         {
             BuySellAgent.Instance.SellConfigs?.Clear();
             BuildEntriesList();
-        }) { Tooltip = "Remove all entries from the sell list." }));
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        }) { Tooltip = "从出售列表中移除所有条目。" }));
+        actionRow.Widgets.Add(new MyraButton("导入", () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && BuySellAgent.ImportFromJson(json, AgentType.Sell))
             {
-                GameActions.Print("Imported sell list!", Constants.HUE_SUCCESS);
+                GameActions.Print("已导入出售列表!", Constants.HUE_SUCCESS);
                 BuildEntriesList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from clipboard (must have a valid export copied)." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+            GameActions.Print("您的剪贴板中没有有效的导出数据。", Constants.HUE_ERROR);
+        }) { Tooltip = "从剪贴板导入（必须有有效的导出数据）。" });
+        actionRow.Widgets.Add(new MyraButton("导出", () =>
         {
             BuySellAgent.GetJsonExport(AgentType.Sell)?.CopyToClipboard();
-            GameActions.Print("Exported sell list to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your list to clipboard." });
+            GameActions.Print("已将出售列表导出到剪贴板!", Constants.HUE_SUCCESS);
+        }) { Tooltip = "将列表导出到剪贴板。" });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addEntryPanel);

@@ -31,6 +31,7 @@
 #endregion
 
 using System;
+using System.Buffers.Binary;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
 using System.Collections.Generic;
@@ -49,6 +50,7 @@ namespace ClassicUO.Assets
         public const string NOTO_SANS_2_SYMBOLS = "NotoSansSymbols2-Regular";
         public const string ROBOTO_MONO = "Roboto-Mono";
         public const string IBM_PLEX = "ibm-plex";
+        public const string WENQUANYI_MICRO_HEI = "wqy-microhei";
     }
 
     public class TrueTypeLoader
@@ -56,6 +58,7 @@ namespace ClassicUO.Assets
         public const string EMBEDDED_FONT = EmbeddedFontNames.ROBOTO;
 
         private readonly Dictionary<string, FontSystem> _fonts = new();
+        private byte[] _cjkFontBytes;
 
         private TrueTypeLoader()
         {
@@ -80,25 +83,39 @@ namespace ClassicUO.Assets
             if (!Directory.Exists(fontPath))
                 Directory.CreateDirectory(fontPath);
 
+            // Load external fonts, collecting CJK candidate bytes for fallback
             foreach (string ttf in Directory.GetFiles(fontPath, "*.ttf"))
             {
+                byte[] fontData = File.ReadAllBytes(ttf);
                 var fontSystem = new FontSystem(settings);
-                fontSystem.AddFont(File.ReadAllBytes(ttf));
+                fontSystem.AddFont(fontData);
 
-                _fonts[Path.GetFileNameWithoutExtension(ttf)] = fontSystem;
+                string fontName = Path.GetFileNameWithoutExtension(ttf);
+                _fonts[fontName] = fontSystem;
+
+                // Use first external TTF as CJK fallback candidate
+                if (_cjkFontBytes == null && fontData.Length > 100000)
+                    _cjkFontBytes = fontData;
             }
 
             LoadEmbeddedFonts();
+
+            // Add CJK fallback to ALL font systems
+            if (_cjkFontBytes != null)
+            {
+                foreach (var kvp in _fonts)
+                {
+                    if (kvp.Key != EmbeddedFontNames.NOTO_SANS_2_SYMBOLS &&
+                        kvp.Key != "uo-unicode-1" &&
+                        kvp.Key != "wqy-microhei")
+                        kvp.Value.AddFont(_cjkFontBytes);
+                }
+            }
         }
 
         private void LoadEmbeddedFonts()
         {
             var settings = new FontSystemSettings();
-            // {
-            //     FontResolutionFactor = 2,
-            //     KernelWidth = 2,
-            //     KernelHeight = 2
-            // };
 
             System.Reflection.Assembly assembly = this.GetType().Assembly;
             string fontAssetFolder = assembly.GetName().Name + ".fonts";
@@ -107,29 +124,87 @@ namespace ClassicUO.Assets
                                         .Where(name => name.StartsWith(fontAssetFolder))
                                         .ToArray();
 
+            // First pass: extract CJK font bytes for fallback (only if not already set from external fonts)
+            if (_cjkFontBytes == null)
+            {
+
             foreach (string resourceName in resourceNames)
             {
                 Stream stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream != null)
+                if (stream == null) continue;
+
+                string[] rnameParts = resourceName.Split('.');
+                string fname = rnameParts[rnameParts.Length - 2];
+
+                if (fname == EmbeddedFontNames.WENQUANYI_MICRO_HEI)
+                {
                     using (stream)
                     {
-                        string[] rnameParts = resourceName.Split('.');
-                        string fname = rnameParts[rnameParts.Length - 2];
+                        var ms = new MemoryStream();
+                        stream.CopyTo(ms);
+                        byte[] rawBytes = ms.ToArray();
+
+                        // Handle TTC (TrueType Collection) - skip if TTC, use raw if TTF
+                        if (rawBytes.Length >= 4 &&
+                            rawBytes[0] == 't' && rawBytes[1] == 't' && rawBytes[2] == 'c' && rawBytes[3] == 'f')
+                        {
 #if DEBUG
-                        Log.Trace($"Loaded embedded font: {fname}");
+                            Log.Warn("CJK font is TTC format - skipping fallback font. Place a .ttf font in the Fonts/ folder for CJK support.");
 #endif
-                        var memoryStream = new MemoryStream();
-                        stream.CopyTo(memoryStream);
-
-                        byte[] filebytes = memoryStream.ToArray();
-
-                        if (fname == EMBEDDED_FONT) //Special case for ImGui
-                            ImGuiFont = filebytes;
-
-                        var fontSystem = new FontSystem(settings);
-                        fontSystem.AddFont(filebytes);
-                        _fonts[fname] = fontSystem;
+                            _cjkFontBytes = null;
+                        }
+                        else
+                        {
+                            _cjkFontBytes = rawBytes;
+#if DEBUG
+                            Log.Trace($"Loaded CJK fallback font: {fname}");
+#endif
+                        }
                     }
+
+                    break;
+                }
+            }
+            }
+
+            // Second pass: load all fonts, adding CJK fallback to each
+            foreach (string resourceName in resourceNames)
+            {
+                Stream stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream == null) continue;
+
+                string[] rnameParts = resourceName.Split('.');
+                string fname = rnameParts[rnameParts.Length - 2];
+#if DEBUG
+                Log.Trace($"Loaded embedded font: {fname}");
+#endif
+                using (stream)
+                {
+                    var memoryStream = new MemoryStream();
+                    stream.CopyTo(memoryStream);
+
+                    byte[] filebytes = memoryStream.ToArray();
+
+                    // Handle TTC for CJK font itself
+                    bool isCjkFont = fname == EmbeddedFontNames.WENQUANYI_MICRO_HEI;
+                    if (isCjkFont && _cjkFontBytes != null)
+                        filebytes = _cjkFontBytes;
+                    else if (isCjkFont)
+                        continue; // Skip CJK font if TTC extraction failed
+
+                    if (fname == EMBEDDED_FONT) //Special case for ImGui
+                        ImGuiFont = filebytes;
+
+                    var fontSystem = new FontSystem(settings);
+                    fontSystem.AddFont(filebytes);
+
+                    // Add CJK fallback to all font systems (except CJK itself and symbols)
+                    if (_cjkFontBytes != null && fname != EmbeddedFontNames.WENQUANYI_MICRO_HEI &&
+                        fname != EmbeddedFontNames.NOTO_SANS_2_SYMBOLS)
+                        fontSystem.AddFont(_cjkFontBytes);
+
+                    _fonts[fname] = fontSystem;
+                }
             }
         }
 

@@ -23,18 +23,18 @@ public static class OrganizerAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.ItemConfigs.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.H3));
+                itemsPanel.Widgets.Add(new MyraLabel("没有配置物品。", MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Auto("Hue"),
-                GridColumnInfo.Auto("Amount"),
-                GridColumnInfo.Fill("Destination"),
-                GridColumnInfo.Auto("Enabled"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto("图形"),
+                GridColumnInfo.Auto("色调"),
+                GridColumnInfo.Auto("数量"),
+                GridColumnInfo.Fill("目标"),
+                GridColumnInfo.Auto("启用"),
+                GridColumnInfo.Auto("操作")
             );
 
             int dataRow = 1;
@@ -66,7 +66,7 @@ public static class OrganizerAgentTabContent
                 var amountBox = new MyraInputBox
                 {
                     Text = item.Amount.ToString(),
-                    Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)",
+                    Tooltip = "要移动的数量。会考虑已在目标中的物品。\n(0 = 全部移动)",
                     Width = 80,
                 };
                 amountBox.TextChangedByUser += (_, _) =>
@@ -85,35 +85,35 @@ public static class OrganizerAgentTabContent
                     destCell.Widgets.Clear();
                     if (captured.DestContSerial != 0)
                     {
-                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = "Per-item destination" };
+                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = "每个物品的目标" };
                         StackPanel.SetProportionType(label, ProportionType.Fill);
                         destCell.Widgets.Add(label);
                         destCell.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
                         {
                             captured.DestContSerial = 0;
                             BuildDestCell();
-                        }) { Tooltip = "Clear and use config destination" }));
+                        }) { Tooltip = "清除并使用配置目标" }));
                     }
                     else
                     {
-                        var label = new MyraLabel("Config", MyraLabel.TextStyle.P) { Tooltip = "Using configuration's destination" };
+                        var label = new MyraLabel("配置", MyraLabel.TextStyle.P) { Tooltip = "使用配置的目标" };
                         StackPanel.SetProportionType(label, ProportionType.Fill);
                         destCell.Widgets.Add(label);
-                        destCell.Widgets.Add(new MyraButton("Set", () =>
+                        destCell.Widgets.Add(new MyraButton("设置", () =>
                         {
-                            GameActions.Print("Select [DESTINATION] Container for this item", 82);
+                            GameActions.Print("选择此物品的 [目标] 容器", 82);
                             World.Instance.TargetManager.SetTargeting(destination =>
                             {
                                 if (destination is Entity destEntity && SerialHelper.IsItem(destEntity))
                                 {
                                     captured.DestContSerial = destEntity.Serial;
-                                    GameActions.Print($"Per-item destination set to {destEntity.Serial:X}", Constants.HUE_SUCCESS);
+                                    GameActions.Print($"每个物品的目标已设置为 {destEntity.Serial:X}", Constants.HUE_SUCCESS);
                                     BuildDestCell();
                                 }
                                 else
-                                    GameActions.Print("Only items can be selected!");
+                                    GameActions.Print("只能选择物品!");
                             });
-                        }) { Tooltip = "Set per-item destination" });
+                        }) { Tooltip = "设置每个物品的目标" });
                     }
                 }
 
@@ -126,11 +126,11 @@ public static class OrganizerAgentTabContent
                 grid.AddWidget(cb, dataRow, 4);
 
                 // Delete
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
                 {
                     selectedConfig.DeleteItemConfig(captured);
                     BuildItemsGrid(itemsPanel);
-                }) { Tooltip = "Delete this item" }), dataRow, 5);
+                }) { Tooltip = "删除此物品" }), dataRow, 5);
 
                 dataRow++;
             }
@@ -141,14 +141,14 @@ public static class OrganizerAgentTabContent
         void BuildConfigList()
         {
             leftPanel.Widgets.Clear();
-            leftPanel.Widgets.Add(new MyraButton("Add Organizer", () =>
+            leftPanel.Widgets.Add(new MyraButton("添加整理", () =>
             {
                 OrganizerConfig newConfig = OrganizerAgent.Instance.NewOrganizerConfig();
                 selectedConfig = newConfig;
                 BuildConfigList();
                 BuildConfigDetails();
             }));
-            leftPanel.Widgets.Add(new MyraLabel("List", MyraLabel.TextStyle.H3));
+            leftPanel.Widgets.Add(new MyraLabel("列表", MyraLabel.TextStyle.H3));
 
             foreach (OrganizerConfig config in OrganizerAgent.Instance.OrganizerConfigs)
             {
@@ -168,29 +168,29 @@ public static class OrganizerAgentTabContent
             rightPanel.Widgets.Clear();
             if (selectedConfig == null)
             {
-                rightPanel.Widgets.Add(new MyraLabel("Select an organizer to view details", MyraLabel.TextStyle.P));
+                rightPanel.Widgets.Add(new MyraLabel("选择一个整理器以查看详情", MyraLabel.TextStyle.P));
                 return;
             }
 
             // Enabled + Name
             var topRow = new HorizontalStackPanel { Spacing = 8 };
             topRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
-                selectedConfig.Enabled, b => selectedConfig.Enabled = b, "Enabled"));
+                selectedConfig.Enabled, b => selectedConfig.Enabled = b, "启用"));
             var nameBox = new MyraInputBox { Text = selectedConfig.Name, Width = 150 };
             nameBox.TextChangedByUser += (_, _) =>
             {
                 if (!string.IsNullOrWhiteSpace(nameBox.Text))
                     selectedConfig.Name = nameBox.Text;
             };
-            topRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+            topRow.Widgets.Add(new MyraLabel("名称:", MyraLabel.TextStyle.P));
             topRow.Widgets.Add(nameBox);
             rightPanel.Widgets.Add(topRow);
 
             // Action buttons
             var actionRow = new HorizontalStackPanel { Spacing = 4 };
-            actionRow.Widgets.Add(new MyraButton("Run Organizer", () =>
+            actionRow.Widgets.Add(new MyraButton("运行整理", () =>
                 OrganizerAgent.Instance.RunOrganizer(selectedConfig.Name)));
-            actionRow.Widgets.Add(new MyraButton("Duplicate", () =>
+            actionRow.Widgets.Add(new MyraButton("复制", () =>
             {
                 OrganizerConfig? duped = OrganizerAgent.Instance.DupeConfig(selectedConfig);
                 if (duped != null)
@@ -200,12 +200,12 @@ public static class OrganizerAgentTabContent
                     BuildConfigDetails();
                 }
             }));
-            actionRow.Widgets.Add(new MyraButton("Create Macro", () =>
+            actionRow.Widgets.Add(new MyraButton("创建宏", () =>
             {
                 OrganizerAgent.Instance.CreateOrganizerMacroButton(selectedConfig.Name);
-                GameActions.Print($"Created Organizer Macro: {selectedConfig.Name}");
+                GameActions.Print($"已创建整理宏: {selectedConfig.Name}");
             }));
-            actionRow.Widgets.Add(new MyraButton("Import", () =>
+            actionRow.Widgets.Add(new MyraButton("导入", () =>
             {
                 string? json = Clipboard.GetClipboardText();
                 if (json.NotNullNotEmpty() && OrganizerAgent.Instance.ImportFromJson(json))
@@ -213,14 +213,14 @@ public static class OrganizerAgentTabContent
                     BuildConfigList();
                     return;
                 }
-                GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-            }) { Tooltip = "Import from clipboard (must have a valid export copied)." });
-            actionRow.Widgets.Add(new MyraButton("Export", () =>
+                GameActions.Print("您的剪贴板中没有有效的导出数据。", Constants.HUE_ERROR);
+            }) { Tooltip = "从剪贴板导入（必须有有效的导出数据）。" });
+            actionRow.Widgets.Add(new MyraButton("导出", () =>
             {
                 OrganizerAgent.Instance.GetJsonExport(selectedConfig)?.CopyToClipboard();
-                GameActions.Print("Exported organizer to your clipboard!", Constants.HUE_SUCCESS);
-            }) { Tooltip = "Export this organizer to clipboard." });
-            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                GameActions.Print("已将整理器导出到剪贴板!", Constants.HUE_SUCCESS);
+            }) { Tooltip = "将此整理器导出到剪贴板。" });
+            actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("删除", () =>
             {
                 OrganizerAgent.Instance.DeleteConfig(selectedConfig);
                 List<OrganizerConfig> configs = OrganizerAgent.Instance.OrganizerConfigs;
@@ -232,66 +232,66 @@ public static class OrganizerAgentTabContent
 
             // Container settings
             rightPanel.Widgets.Add(new MyraSpacer(5, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Container Settings:", MyraLabel.TextStyle.H2));
+            rightPanel.Widgets.Add(new MyraLabel("容器设置:", MyraLabel.TextStyle.H2));
             var contRow = new HorizontalStackPanel { Spacing = 4 };
-            contRow.Widgets.Add(new MyraButton("Set Source Container", () =>
+            contRow.Widgets.Add(new MyraButton("设置来源容器", () =>
             {
-                GameActions.Print("Select [SOURCE] Container", 82);
+                GameActions.Print("选择 [来源] 容器", 82);
                 World.Instance.TargetManager.SetTargeting(source =>
                 {
                     if (source is Entity sourceEntity && SerialHelper.IsItem(sourceEntity))
                     {
                         if (selectedConfig == null) return;
                         selectedConfig.SourceContSerial = sourceEntity.Serial;
-                        GameActions.Print($"Source container set to 0x{sourceEntity.Serial:X4} ({sourceEntity.Name})", Constants.HUE_SUCCESS);
+                        GameActions.Print($"来源容器已设置为 0x{sourceEntity.Serial:X4} ({sourceEntity.Name})", Constants.HUE_SUCCESS);
                         BuildConfigDetails();
                     }
                     else
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print("只能选择物品!");
                 });
             }));
-            contRow.Widgets.Add(new MyraButton("Set Destination Container", () =>
+            contRow.Widgets.Add(new MyraButton("设置目标容器", () =>
             {
-                GameActions.Print("Select [DESTINATION] Container", 82);
+                GameActions.Print("选择 [目标] 容器", 82);
                 World.Instance.TargetManager.SetTargeting(destination =>
                 {
                     if (destination is Entity destEntity && SerialHelper.IsItem(destEntity))
                     {
                         if (selectedConfig == null) return;
                         selectedConfig.DestContSerial = destEntity.Serial;
-                        GameActions.Print($"Destination container set to 0x{destEntity.Serial:X4} ({destEntity.Name})", Constants.HUE_SUCCESS);
+                        GameActions.Print($"目标容器已设置为 0x{destEntity.Serial:X4} ({destEntity.Name})", Constants.HUE_SUCCESS);
                         BuildConfigDetails();
                     }
                     else
-                        GameActions.Print("Only items can be selected!");
+                        GameActions.Print("只能选择物品!");
                 });
             }));
             rightPanel.Widgets.Add(contRow);
 
             var contInfoRow = new HorizontalStackPanel { Spacing = 12 };
             string sourceText = selectedConfig.SourceContSerial != 0
-                ? $"Source: (0x{selectedConfig.SourceContSerial:X4})"
-                : "Source: Your backpack";
+                ? $"来源: (0x{selectedConfig.SourceContSerial:X4})"
+                : "来源: 您的背包";
             contInfoRow.Widgets.Add(new MyraLabel(sourceText, MyraLabel.TextStyle.P));
             string destText = selectedConfig.DestContSerial != 0
-                ? $"Destination: (0x{selectedConfig.DestContSerial:X4})"
-                : "Destination: Not set";
+                ? $"目标: (0x{selectedConfig.DestContSerial:X4})"
+                : "目标: 未设置";
             contInfoRow.Widgets.Add(new MyraLabel(destText, MyraLabel.TextStyle.P));
             rightPanel.Widgets.Add(contInfoRow);
 
             // Items section
             rightPanel.Widgets.Add(new MyraSpacer(5, 1));
-            rightPanel.Widgets.Add(new MyraLabel("Items to Organize:", MyraLabel.TextStyle.H2));
+            rightPanel.Widgets.Add(new MyraLabel("要整理的物品:", MyraLabel.TextStyle.H2));
 
             var itemsPanel = new VerticalStackPanel { Spacing = 2 };
 
             // Add item buttons
             var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-            var newGraphicBox = new MyraInputBox { HintText = "Graphic (hex, e.g. 0EED)", Width = 150 };
-            var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1 = any)");
+            var newGraphicBox = new MyraInputBox { HintText = "图形（十六进制，例如 0EED）", Width = 150 };
+            var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "色调 (-1 = 任意)");
 
             var addItemRow = new HorizontalStackPanel { Spacing = 4 };
-            addItemRow.Widgets.Add(new MyraButton("Target Item to Add", () =>
+            addItemRow.Widgets.Add(new MyraButton("目标物品添加", () =>
             {
                 World.Instance.TargetManager.SetTargeting(obj =>
                 {
@@ -301,25 +301,25 @@ public static class OrganizerAgentTabContent
                         OrganizerItemConfig newItemConfig = selectedConfig.NewItemConfig();
                         newItemConfig.Graphic = objEntity.Graphic;
                         newItemConfig.Hue = objEntity.Hue;
-                        GameActions.Print($"Added item: Graphic {objEntity.Graphic:X}, Hue {objEntity.Hue:X}");
+                        GameActions.Print($"已添加物品: 图形 {objEntity.Graphic:X}, 色调 {objEntity.Hue:X}");
                         BuildItemsGrid(itemsPanel);
                     }
                     else
-                        GameActions.Print("Only items can be added!");
+                        GameActions.Print("只能添加物品!");
                 });
             }));
-            addItemRow.Widgets.Add(new MyraButton("Add Item Manually", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+            addItemRow.Widgets.Add(new MyraButton("手动添加物品", () => addEntryPanel.Visible = !addEntryPanel.Visible));
             rightPanel.Widgets.Add(addItemRow);
 
             // Manual add form
             var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
-            addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P) { Tooltip = "Hex value, e.g. 0EED." });
+            addFieldsRow.Widgets.Add(new MyraLabel("图形:", MyraLabel.TextStyle.P) { Tooltip = "十六进制值，例如 0EED。" });
             addFieldsRow.Widgets.Add(newGraphicBox);
-            addFieldsRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P) { Tooltip = "Set to -1 to match any hue." });
+            addFieldsRow.Widgets.Add(new MyraLabel("色调:", MyraLabel.TextStyle.P) { Tooltip = "设为 -1 以匹配任意色调。" });
             addFieldsRow.Widgets.Add(newHueBox);
 
             var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-            addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+            addConfirmRow.Widgets.Add(new MyraButton("添加", () =>
             {
                 if (ushort.TryParse(newGraphicBox.Text, NumberStyles.HexNumber, null, out ushort graphic))
                 {
@@ -335,14 +335,14 @@ public static class OrganizerAgentTabContent
                     BuildItemsGrid(itemsPanel);
                 }
             }));
-            addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+            addConfirmRow.Widgets.Add(new MyraButton("取消", () =>
             {
                 addEntryPanel.Visible = false;
                 newGraphicBox.Text = "";
                 newHueBox.Text = "";
             }));
 
-            addEntryPanel.Widgets.Add(new MyraLabel("Manual Entry:", MyraLabel.TextStyle.H3));
+            addEntryPanel.Widgets.Add(new MyraLabel("手动输入:", MyraLabel.TextStyle.H3));
             addEntryPanel.Widgets.Add(addFieldsRow);
             addEntryPanel.Widgets.Add(addConfirmRow);
             rightPanel.Widgets.Add(addEntryPanel);

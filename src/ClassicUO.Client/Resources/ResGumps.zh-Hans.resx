@@ -1,0 +1,1628 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="CombatSpells" xml:space="preserve">
+    <value>战斗与法术</value>
+  </data>
+  <data name="Containers" xml:space="preserve">
+    <value>容器</value>
+  </data>
+  <data name="Counters" xml:space="preserve">
+    <value>计数器</value>
+  </data>
+  <data name="Experimental" xml:space="preserve">
+    <value>实验性</value>
+  </data>
+  <data name="Fonts" xml:space="preserve">
+    <value>字体</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="InfoBar" xml:space="preserve">
+    <value>信息栏</value>
+  </data>
+  <data name="Macros" xml:space="preserve">
+    <value>宏</value>
+  </data>
+  <data name="Sound" xml:space="preserve">
+    <value>声音</value>
+  </data>
+  <data name="Speech" xml:space="preserve">
+    <value>语音</value>
+  </data>
+  <data name="Tooltip" xml:space="preserve">
+    <value>浮动提示</value>
+  </data>
+  <data name="Video" xml:space="preserve">
+    <value>视频</value>
+  </data>
+  <data name="AltCloseGumps" xml:space="preserve">
+    <value>按住ALT+右键关闭锚定窗口</value>
+  </data>
+  <data name="AltMoveGumps" xml:space="preserve">
+    <value>按住ALT键移动窗口</value>
+  </data>
+  <data name="AlwaysRun" xml:space="preserve">
+    <value>始终奔跑</value>
+  </data>
+  <data name="AlwaysRunHidden" xml:space="preserve">
+    <value>潜行时除外</value>
+  </data>
+  <data name="AutoOpenCorpses" xml:space="preserve">
+    <value>自动打开尸体</value>
+  </data>
+  <data name="AutoOpenDoors" xml:space="preserve">
+    <value>自动开门</value>
+  </data>
+  <data name="CircleTransType_Full" xml:space="preserve">
+    <value>全屏</value>
+  </data>
+  <data name="CircleTransType_Gradient" xml:space="preserve">
+    <value>渐变</value>
+  </data>
+  <data name="ClickCloseAllGumps" xml:space="preserve">
+    <value>右键点击编组时关闭所有锚定窗口</value>
+  </data>
+  <data name="CorpseOpt_Both" xml:space="preserve">
+    <value>两者</value>
+  </data>
+  <data name="CorpseOpt_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="CorpseOpt_NotHid" xml:space="preserve">
+    <value>未潜行时</value>
+  </data>
+  <data name="CorpseOpt_NotTar" xml:space="preserve">
+    <value>未选中目标时</value>
+  </data>
+  <data name="DisableMenu" xml:space="preserve">
+    <value>禁用菜单栏</value>
+  </data>
+  <data name="DragHumanoidsOnly" xml:space="preserve">
+    <value>仅选择人形</value>
+  </data>
+  <data name="EnableCircleTrans" xml:space="preserve">
+    <value>开启透明圈</value>
+  </data>
+  <data name="EnableDragHPBars" xml:space="preserve">
+    <value>开启拖拽选择打开血条</value>
+  </data>
+  <data name="EnablePathfinding" xml:space="preserve">
+    <value>开启寻路</value>
+  </data>
+  <data name="FPSInactive" xml:space="preserve">
+    <value>游戏非焦点时降低FPS</value>
+  </data>
+  <data name="GridLoot_Both" xml:space="preserve">
+    <value>两者</value>
+  </data>
+  <data name="GridLoot_GridOnly" xml:space="preserve">
+    <value>仅网格拾取</value>
+  </data>
+  <data name="GridLoot_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="HideRoofTiles" xml:space="preserve">
+    <value>隐藏屋顶</value>
+  </data>
+  <data name="HideVegetation" xml:space="preserve">
+    <value>隐藏植被</value>
+  </data>
+  <data name="HighlighState" xml:space="preserve">
+    <value>按状态高亮(中毒/黄血/麻痹)</value>
+  </data>
+  <data name="HighlightObjects" xml:space="preserve">
+    <value>高亮游戏对象</value>
+  </data>
+  <data name="HPFields_Normal" xml:space="preserve">
+    <value>普通区域</value>
+  </data>
+  <data name="HPFields_Static" xml:space="preserve">
+    <value>静态区域</value>
+  </data>
+  <data name="HPFields_Tile" xml:space="preserve">
+    <value>瓦片区域</value>
+  </data>
+  <data name="HPShow_Always" xml:space="preserve">
+    <value>始终</value>
+  </data>
+  <data name="HPShow_Less" xml:space="preserve">
+    <value>低于100%</value>
+  </data>
+  <data name="HPShow_Smart" xml:space="preserve">
+    <value>智能</value>
+  </data>
+  <data name="HPType_MobileDead" xml:space="preserve">
+    <value>目标已死亡</value>
+  </data>
+  <data name="HPType_MobileOOR" xml:space="preserve">
+    <value>目标超出范围</value>
+  </data>
+  <data name="HPType_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="HP_Both" xml:space="preserve">
+    <value>两者</value>
+  </data>
+  <data name="HP_Line" xml:space="preserve">
+    <value>线条</value>
+  </data>
+  <data name="HP_Percentage" xml:space="preserve">
+    <value>百分比</value>
+  </data>
+  <data name="InvulColor" xml:space="preserve">
+    <value>无敌颜色</value>
+  </data>
+  <data name="KeyMod_Ctrl" xml:space="preserve">
+    <value>Ctrl</value>
+  </data>
+  <data name="KeyMod_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="KeyMod_Shift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="MarkCaveTiles" xml:space="preserve">
+    <value>标记洞穴地砖</value>
+  </data>
+  <data name="ObjAlphaFading" xml:space="preserve">
+    <value>物体透明渐隐</value>
+  </data>
+  <data name="OutOfRangeColor" xml:space="preserve">
+    <value>超出范围物体无色</value>
+  </data>
+  <data name="ParalyzedColor" xml:space="preserve">
+    <value>麻痹颜色</value>
+  </data>
+  <data name="PoisonedColor" xml:space="preserve">
+    <value>中毒颜色</value>
+  </data>
+  <data name="SallosEasyGrab" xml:space="preserve">
+    <value>Sallos快捷拾取</value>
+  </data>
+  <data name="SaveHPBarsOnLogout" xml:space="preserve">
+    <value>登出时保存血条</value>
+  </data>
+  <data name="ShiftContext" xml:space="preserve">
+    <value>按住Shift打开右键菜单</value>
+  </data>
+  <data name="ShiftPathfinding" xml:space="preserve">
+    <value>使用SHIFT进行寻路</value>
+  </data>
+  <data name="ShiftStack" xml:space="preserve">
+    <value>按住Shift分割堆叠物品</value>
+  </data>
+  <data name="ShowGumpPartyInv" xml:space="preserve">
+    <value>显示队伍邀请窗口</value>
+  </data>
+  <data name="ShowHousesContent" xml:space="preserve">
+    <value>显示房屋内容</value>
+  </data>
+  <data name="ShowHP" xml:space="preserve">
+    <value>显示生命值</value>
+  </data>
+  <data name="ShowIncCorpses" xml:space="preserve">
+    <value>显示新出现的尸体</value>
+  </data>
+  <data name="ShowIncMobiles" xml:space="preserve">
+    <value>显示新出现的目标</value>
+  </data>
+  <data name="ShowTarRangeIndic" xml:space="preserve">
+    <value>显示目标距离指示</value>
+  </data>
+  <data name="SkipEmptyCorpses" xml:space="preserve">
+    <value>跳过空尸体</value>
+  </data>
+  <data name="SmoothBoat" xml:space="preserve">
+    <value>平滑船只移动</value>
+  </data>
+  <data name="SmoothDoors" xml:space="preserve">
+    <value>平滑门动画</value>
+  </data>
+  <data name="StandardSkillGump" xml:space="preserve">
+    <value>使用标准技能窗口</value>
+  </data>
+  <data name="TabCombat" xml:space="preserve">
+    <value>按住TAB键进入战斗</value>
+  </data>
+  <data name="TextAlphaFading" xml:space="preserve">
+    <value>文字透明渐隐</value>
+  </data>
+  <data name="TreesStumps" xml:space="preserve">
+    <value>树木变树桩</value>
+  </data>
+  <data name="UseBlackBackgr" xml:space="preserve">
+    <value>不透明背景</value>
+  </data>
+  <data name="UseCustomHPBars" xml:space="preserve">
+    <value>使用自定义血条窗口</value>
+  </data>
+  <data name="CircleTransType" xml:space="preserve">
+    <value>透明度类型:</value>
+  </data>
+  <data name="CloseHPGumpWhen" xml:space="preserve">
+    <value>关闭血条窗口时机:</value>
+  </data>
+  <data name="CorpseOpenOptions" xml:space="preserve">
+    <value>尸体打开选项:</value>
+  </data>
+  <data name="CorpseOpenRange" xml:space="preserve">
+    <value>尸体打开范围:</value>
+  </data>
+  <data name="DragKey" xml:space="preserve">
+    <value>拖拽选择修饰键</value>
+  </data>
+  <data name="FPS" xml:space="preserve">
+    <value>- FPS:</value>
+  </data>
+  <data name="GridLoot" xml:space="preserve">
+    <value>网格拾取</value>
+  </data>
+  <data name="HPFields" xml:space="preserve">
+    <value>区域:</value>
+  </data>
+  <data name="HP_Mode" xml:space="preserve">
+    <value>模式:</value>
+  </data>
+  <data name="ShopGumpSize" xml:space="preserve">
+    <value>商店窗口大小(60的倍数):</value>
+  </data>
+  <data name="Sounds" xml:space="preserve">
+    <value>音效</value>
+  </data>
+  <data name="Music" xml:space="preserve">
+    <value>音乐</value>
+  </data>
+  <data name="LoginMusic" xml:space="preserve">
+    <value>登录音乐</value>
+  </data>
+  <data name="PlayFootsteps" xml:space="preserve">
+    <value>播放脚步声</value>
+  </data>
+  <data name="CombatMusic" xml:space="preserve">
+    <value>战斗音乐</value>
+  </data>
+  <data name="ReproduceSoundsAndMusic" xml:space="preserve">
+    <value>UO非焦点时播放音效和音乐</value>
+  </data>
+  <data name="BorderlessWindow" xml:space="preserve">
+    <value>无边框窗口</value>
+  </data>
+  <data name="AlwaysUseFullsizeGameWindow" xml:space="preserve">
+    <value>始终使用全尺寸游戏窗口</value>
+  </data>
+  <data name="LockGameWindowMovingResizing" xml:space="preserve">
+    <value>锁定游戏窗口移动/缩放</value>
+  </data>
+  <data name="GamePlayWindowSize" xml:space="preserve">
+    <value>游戏窗口大小:</value>
+  </data>
+  <data name="GamePlayWindowPosition" xml:space="preserve">
+    <value>游戏窗口位置:</value>
+  </data>
+  <data name="DefaultZoom" xml:space="preserve">
+    <value>默认缩放:</value>
+  </data>
+  <data name="EnableMouseWheelForZoom" xml:space="preserve">
+    <value>开启鼠标滚轮缩放(Ctrl+滚轮)</value>
+  </data>
+  <data name="ReleasingCtrlRestoresScale" xml:space="preserve">
+    <value>释放Ctrl恢复缩放</value>
+  </data>
+  <data name="EnableDeathScreen" xml:space="preserve">
+    <value>开启死亡画面</value>
+  </data>
+  <data name="BlackWhiteModeForDeadPlayer" xml:space="preserve">
+    <value>死亡时黑白模式</value>
+  </data>
+  <data name="UseOldStatusGump" xml:space="preserve">
+    <value>使用旧版状态窗口</value>
+  </data>
+  <data name="Brighlight" xml:space="preserve">
+    <value>- 亮度:</value>
+  </data>
+  <data name="AlternativeLights" xml:space="preserve">
+    <value>替代光源</value>
+  </data>
+  <data name="SetsLightLevelToMax" xml:space="preserve">
+    <value>将光照设为最大但仍渲染光源</value>
+  </data>
+  <data name="LightLevel" xml:space="preserve">
+    <value>光照等级</value>
+  </data>
+  <data name="DarkNights" xml:space="preserve">
+    <value>黑暗夜晚</value>
+  </data>
+  <data name="UseColoredLights" xml:space="preserve">
+    <value>使用彩色光源</value>
+  </data>
+  <data name="Shadows" xml:space="preserve">
+    <value>阴影</value>
+  </data>
+  <data name="AuraUnderFeet" xml:space="preserve">
+    <value>脚下光环</value>
+  </data>
+  <data name="AuraType_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="AuraType_Warmode" xml:space="preserve">
+    <value>战斗状态</value>
+  </data>
+  <data name="AuraType_CtrlShift" xml:space="preserve">
+    <value>Ctrl+Shift</value>
+  </data>
+  <data name="AuraType_Always" xml:space="preserve">
+    <value>始终</value>
+  </data>
+  <data name="CustomColorAuraForPartyMembers" xml:space="preserve">
+    <value>队伍成员自定义光环颜色</value>
+  </data>
+  <data name="RunMouseInASeparateThread" xml:space="preserve">
+    <value>独立线程运行鼠标</value>
+  </data>
+  <data name="AuraOnMouseTarget" xml:space="preserve">
+    <value>鼠标目标光环</value>
+  </data>
+  <data name="AnimatedWaterEffect" xml:space="preserve">
+    <value>动态水面效果</value>
+  </data>
+  <data name="UseXBREffectBETA" xml:space="preserve">
+    <value>使用xBR效果[BETA]</value>
+  </data>
+  <data name="HideChatGradient" xml:space="preserve">
+    <value>隐藏聊天渐变</value>
+  </data>
+  <data name="NewMacro" xml:space="preserve">
+    <value>新建宏</value>
+  </data>
+  <data name="MacroName" xml:space="preserve">
+    <value>宏名称:</value>
+  </data>
+  <data name="DeleteMacro" xml:space="preserve">
+    <value>删除宏</value>
+  </data>
+  <data name="MacroDeleteConfirmation" xml:space="preserve">
+    <value>确定要删除吗?</value>
+  </data>
+  <data name="UseTooltip" xml:space="preserve">
+    <value>使用浮动提示</value>
+  </data>
+  <data name="DelayBeforeDisplay" xml:space="preserve">
+    <value>显示延迟:</value>
+  </data>
+  <data name="TooltipZoom" xml:space="preserve">
+    <value>提示缩放:</value>
+  </data>
+  <data name="TooltipBackgroundOpacity" xml:space="preserve">
+    <value>提示背景透明度:</value>
+  </data>
+  <data name="TooltipFont" xml:space="preserve">
+    <value>提示字体:</value>
+  </data>
+  <data name="TooltipFontHue" xml:space="preserve">
+    <value>提示字体色相</value>
+  </data>
+  <data name="TooltipFontSelect" xml:space="preserve">
+    <value>提示字体!</value>
+  </data>
+  <data name="OverrideGameFont" xml:space="preserve">
+    <value>覆盖游戏字体</value>
+  </data>
+  <data name="ASCII" xml:space="preserve">
+    <value>ASCII</value>
+  </data>
+  <data name="Unicode" xml:space="preserve">
+    <value>Unicode</value>
+  </data>
+  <data name="ForceUnicodeInJournal" xml:space="preserve">
+    <value>强制日志使用Unicode</value>
+  </data>
+  <data name="SpeechFont" xml:space="preserve">
+    <value>语音字体:</value>
+  </data>
+  <data name="ThatSClassicUO" xml:space="preserve">
+    <value>这就是ClassicUO!</value>
+  </data>
+  <data name="ScaleSpeechDelay" xml:space="preserve">
+    <value>调整语音延迟</value>
+  </data>
+  <data name="SaveJournalToFileInGameFolder" xml:space="preserve">
+    <value>保存日志到游戏目录</value>
+  </data>
+  <data name="ActiveChatWhenPressingEnter" xml:space="preserve">
+    <value>按回车激活聊天</value>
+  </data>
+  <data name="UseAdditionalButtonsToActivateChat" xml:space="preserve">
+    <value>使用额外按键激活聊天: ! ; : / \ , . [ | -</value>
+  </data>
+  <data name="UseShiftEnterToSendMessage" xml:space="preserve">
+    <value>使用Shift+回车发消息而不关闭聊天</value>
+  </data>
+  <data name="RandomizeSpeechHues" xml:space="preserve">
+    <value>随机语音色相</value>
+  </data>
+  <data name="SpeechColor" xml:space="preserve">
+    <value>语音颜色</value>
+  </data>
+  <data name="EmoteColor" xml:space="preserve">
+    <value>表情颜色</value>
+  </data>
+  <data name="YellColor" xml:space="preserve">
+    <value>呐喊颜色</value>
+  </data>
+  <data name="WhisperColor" xml:space="preserve">
+    <value>私语颜色</value>
+  </data>
+  <data name="PartyMessageColor" xml:space="preserve">
+    <value>队伍消息颜色</value>
+  </data>
+  <data name="GuildMessageColor" xml:space="preserve">
+    <value>公会消息颜色</value>
+  </data>
+  <data name="AllianceMessageColor" xml:space="preserve">
+    <value>联盟消息颜色</value>
+  </data>
+  <data name="ChatMessageColor" xml:space="preserve">
+    <value>聊天消息颜色</value>
+  </data>
+  <data name="QueryAttack" xml:space="preserve">
+    <value>攻击前确认</value>
+  </data>
+  <data name="QueryBeneficialActs_Tooltip" xml:space="preserve">
+    <value>对红名/灰名施放有益法术前确认</value>
+  </data>
+  <data name="QueryBeneficialActs" xml:space="preserve">
+    <value>对杀人犯/罪犯/灰名/怪物/动物施放有益法术前确认</value>
+  </data>
+  <data name="EnableOverheadSpellFormat" xml:space="preserve">
+    <value>开启头顶法术格式</value>
+  </data>
+  <data name="EnableOverheadSpellHue" xml:space="preserve">
+    <value>开启头顶法术色相</value>
+  </data>
+  <data name="UIButtonsSingleClick" xml:space="preserve">
+    <value>单击UI按钮</value>
+  </data>
+  <data name="ShowBuffDuration" xml:space="preserve">
+    <value>显示增益持续时间</value>
+  </data>
+  <data name="InnocentColor" xml:space="preserve">
+    <value>无辜者颜色</value>
+  </data>
+  <data name="FriendColor" xml:space="preserve">
+    <value>好友颜色</value>
+  </data>
+  <data name="CriminalColor" xml:space="preserve">
+    <value>罪犯颜色</value>
+  </data>
+  <data name="CanAttackColor" xml:space="preserve">
+    <value>可攻击颜色</value>
+  </data>
+  <data name="MurdererColor" xml:space="preserve">
+    <value>杀人犯颜色</value>
+  </data>
+  <data name="EnemyColor" xml:space="preserve">
+    <value>敌人颜色</value>
+  </data>
+  <data name="BeneficSpellHue" xml:space="preserve">
+    <value>有益法术色相</value>
+  </data>
+  <data name="HarmfulSpellHue" xml:space="preserve">
+    <value>有害法术色相</value>
+  </data>
+  <data name="NeutralSpellHue" xml:space="preserve">
+    <value>中性法术色相</value>
+  </data>
+  <data name="SpellOverheadFormat" xml:space="preserve">
+    <value>法术头顶格式:({power}表示威力词 - {spell}表示法术名)</value>
+  </data>
+  <data name="EnableCounters" xml:space="preserve">
+    <value>开启计数器</value>
+  </data>
+  <data name="HighlightOnUse" xml:space="preserve">
+    <value>使用时高亮</value>
+  </data>
+  <data name="EnableAbbreviatedAmountCountrs" xml:space="preserve">
+    <value>数量达到时启用缩写</value>
+  </data>
+  <data name="HighlightRedWhenBelow" xml:space="preserve">
+    <value>数量低于时红色高亮</value>
+  </data>
+  <data name="CounterLayout" xml:space="preserve">
+    <value>计数器布局:</value>
+  </data>
+  <data name="CellSize" xml:space="preserve">
+    <value>格子大小:</value>
+  </data>
+  <data name="DisableDefaultUOHotkeys" xml:space="preserve">
+    <value>禁用默认UO快捷键</value>
+  </data>
+  <data name="DisableArrowsPlayerMovement" xml:space="preserve">
+    <value>禁用方向键移动</value>
+  </data>
+  <data name="DisableTab" xml:space="preserve">
+    <value>禁用TAB(切换战斗状态)</value>
+  </data>
+  <data name="DisableMessageHistory" xml:space="preserve">
+    <value>禁用Ctrl+Q/W(消息历史)</value>
+  </data>
+  <data name="DisableClickAutomove" xml:space="preserve">
+    <value>禁用右键+左键自动移动</value>
+  </data>
+  <data name="ShowInfoBar" xml:space="preserve">
+    <value>显示信息栏</value>
+  </data>
+  <data name="DataHighlightType" xml:space="preserve">
+    <value>数据高亮类型:</value>
+  </data>
+  <data name="TextColor" xml:space="preserve">
+    <value>文字颜色</value>
+  </data>
+  <data name="ColoredBars" xml:space="preserve">
+    <value>彩色条</value>
+  </data>
+  <data name="AddItem" xml:space="preserve">
+    <value>+ 添加项目</value>
+  </data>
+  <data name="Label" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="Data" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="ContainerScale" xml:space="preserve">
+    <value>- 容器缩放:</value>
+  </data>
+  <data name="ScaleItemsInsideContainers" xml:space="preserve">
+    <value>缩放容器内物品</value>
+  </data>
+  <data name="UseLargeContainersGump" xml:space="preserve">
+    <value>使用大容器窗口</value>
+  </data>
+  <data name="DoubleClickLootContainers" xml:space="preserve">
+    <value>双击拾取容器内物品</value>
+  </data>
+  <data name="RelativeDragAndDropContainers" xml:space="preserve">
+    <value>容器内相对拖放</value>
+  </data>
+  <data name="OverrideContainerGumpLocation" xml:space="preserve">
+    <value>覆盖容器窗口位置</value>
+  </data>
+  <data name="ContLoc_NearContainerPosition" xml:space="preserve">
+    <value>容器附近</value>
+  </data>
+  <data name="ContLoc_TopRight" xml:space="preserve">
+    <value>右上角</value>
+  </data>
+  <data name="ContLoc_LastDraggedPosition" xml:space="preserve">
+    <value>上次拖放位置</value>
+  </data>
+  <data name="ContLoc_RememberEveryContainer" xml:space="preserve">
+    <value>记住每个容器</value>
+  </data>
+  <data name="RebuildContainers" xml:space="preserve">
+    <value>重建containers.txt</value>
+  </data>
+  <data name="SpellFormat_Default" xml:space="preserve">
+    <value>{power} [{spell}]</value>
+  </data>
+  <data name="PartyAuraColor" xml:space="preserve">
+    <value>队伍光环颜色</value>
+  </data>
+  <data name="Counter_Rows" xml:space="preserve">
+    <value>行:</value>
+  </data>
+  <data name="Counter_Columns" xml:space="preserve">
+    <value>列:</value>
+  </data>
+  <data name="NoCityFound" xml:space="preserve">
+    <value>未找到城市,城市数据异常。</value>
+  </data>
+  <data name="PermanentlyDelete0" xml:space="preserve">
+    <value>永久删除角色"{0}"?</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="Account" xml:space="preserve">
+    <value>账号名</value>
+  </data>
+  <data name="LoginToUO" xml:space="preserve">
+    <value>登录Ultima Online</value>
+  </data>
+  <data name="CUOVersion0" xml:space="preserve">
+    <value>ClassicUO版本{0}</value>
+  </data>
+  <data name="Autologin" xml:space="preserve">
+    <value>自动登录</value>
+  </data>
+  <data name="SaveAccount" xml:space="preserve">
+    <value>保存账号</value>
+  </data>
+  <data name="By" xml:space="preserve">
+    <value>由</value>
+  </data>
+  <data name="BookPage0TooManyLines1Lost" xml:space="preserve">
+    <value>书页{0}行数过多:{1}行,超出部分将丢失</value>
+  </data>
+  <data name="BookPage0LineTooLong1" xml:space="preserve">
+    <value>书页{0}单行过长,总长度-&gt;{1} vs 最大79字节,部分内容可能丢失</value>
+  </data>
+  <data name="TimeLeft" xml:space="preserve">
+    <value>{0}
+剩余时间: {1:00}:{2:00}:{3:00}</value>
+  </data>
+  <data name="Span0Hours" xml:space="preserve">
+    <value>+{0}小时</value>
+  </data>
+  <data name="DateTime" xml:space="preserve">
+    <value>日期/时间</value>
+  </data>
+  <data name="Author" xml:space="preserve">
+    <value>作者:</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>日期:</value>
+  </data>
+  <data name="RE" xml:space="preserve">
+    <value>回复:</value>
+  </data>
+  <data name="Index" xml:space="preserve">
+    <value>索引</value>
+  </data>
+  <data name="PrimaryAbilityIcon" xml:space="preserve">
+    <value>主技能图标</value>
+  </data>
+  <data name="SecondaryAbilityIcon" xml:space="preserve">
+    <value>副技能图标</value>
+  </data>
+  <data name="IndexOutOfbounds" xml:space="preserve">
+    <value>解析计数器栏时索引越界</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>称号:</value>
+  </data>
+  <data name="UseObject" xml:space="preserve">
+    <value>使用物品(双击)</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>移除</value>
+  </data>
+  <data name="Selected0" xml:space="preserve">
+    <value>- 已选择: {0}</value>
+  </data>
+  <data name="Static0Height1Flags2Alpha3" xml:space="preserve">
+    <value>Static (0x{0:X4})  height: {1}  flags: {2}  Alpha: {3}</value>
+  </data>
+  <data name="GameEffect" xml:space="preserve">
+    <value>游戏特效</value>
+  </data>
+  <data name="TextOverheadType0Hue1" xml:space="preserve">
+    <value>TextOverhead type: {0}  hue: 0x{1:X4}</value>
+  </data>
+  <data name="Land0Flags1" xml:space="preserve">
+    <value>Land (0x{0:X4})  flags: {1}</value>
+  </data>
+  <data name="SetLootBag" xml:space="preserve">
+    <value>设置拾取袋</value>
+  </data>
+  <data name="Prev" xml:space="preserve">
+    <value>&lt;&lt;</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>&gt;&gt;</value>
+  </data>
+  <data name="TargetContainerToGrabItemsInto" xml:space="preserve">
+    <value>选择目标容器来放置物品。</value>
+  </data>
+  <data name="CorpseIsEmpty" xml:space="preserve">
+    <value>[网格拾取]:尸体为空!</value>
+  </data>
+  <data name="Self" xml:space="preserve">
+    <value>[* 自己 *]</value>
+  </data>
+  <data name="Walls" xml:space="preserve">
+    <value>墙壁</value>
+  </data>
+  <data name="Doors" xml:space="preserve">
+    <value>门</value>
+  </data>
+  <data name="Floors" xml:space="preserve">
+    <value>地板</value>
+  </data>
+  <data name="Stairs" xml:space="preserve">
+    <value>楼梯</value>
+  </data>
+  <data name="Roofs" xml:space="preserve">
+    <value>屋顶</value>
+  </data>
+  <data name="Miscellaneous" xml:space="preserve">
+    <value>杂项</value>
+  </data>
+  <data name="SystemMenu" xml:space="preserve">
+    <value>系统菜单</value>
+  </data>
+  <data name="Cost" xml:space="preserve">
+    <value>费用</value>
+  </data>
+  <data name="Erase" xml:space="preserve">
+    <value>擦除</value>
+  </data>
+  <data name="EyedropperTool" xml:space="preserve">
+    <value>取色工具</value>
+  </data>
+  <data name="Store0Visibility" xml:space="preserve">
+    <value>层{0}可见性</value>
+  </data>
+  <data name="GoToStory0" xml:space="preserve">
+    <value>跳转到层{0}</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>下一页</value>
+  </data>
+  <data name="ToCustomHouseManagerCategory" xml:space="preserve">
+    <value>To _customHouseManager.Category</value>
+  </data>
+  <data name="WindowToggle" xml:space="preserve">
+    <value>窗口切换</value>
+  </data>
+  <data name="LowerRoofPlacementLevel" xml:space="preserve">
+    <value>降低屋顶放置层</value>
+  </data>
+  <data name="RaiseRoofPlacementLevel" xml:space="preserve">
+    <value>升高屋顶放置层</value>
+  </data>
+  <data name="Backup" xml:space="preserve">
+    <value>备份</value>
+  </data>
+  <data name="StoreDesignInProgress" xml:space="preserve">
+    <value>将当前设计存入备份缓冲,但不最终化设计。</value>
+  </data>
+  <data name="RestoreYourDesign" xml:space="preserve">
+    <value>将当前设计恢复至先前备份的设计。</value>
+  </data>
+  <data name="Restore" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="Sync" xml:space="preserve">
+    <value>同步</value>
+  </data>
+  <data name="SynchronizeDesignStateWithServer" xml:space="preserve">
+    <value>与服务器同步设计状态。</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="ClearAllChanges" xml:space="preserve">
+    <value>清空所有修改,将当前设计退回空白地基。</value>
+  </data>
+  <data name="Commit" xml:space="preserve">
+    <value>提交</value>
+  </data>
+  <data name="SaveExistingChanges" xml:space="preserve">
+    <value>保存现有修改并完成设计。</value>
+  </data>
+  <data name="Revert" xml:space="preserve">
+    <value>还原</value>
+  </data>
+  <data name="RevertYourDesign" xml:space="preserve">
+    <value>还原当前设计至与最终版本一致。</value>
+  </data>
+  <data name="ObjectInformation" xml:space="preserve">
+    <value>物品信息</value>
+  </data>
+  <data name="Dump" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="DarkMode" xml:space="preserve">
+    <value>暗黑模式</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="MobilesOnly" xml:space="preserve">
+    <value>仅目标</value>
+  </data>
+  <data name="ItemsOnly" xml:space="preserve">
+    <value>仅物品</value>
+  </data>
+  <data name="MobilesAndCorpsesOnly" xml:space="preserve">
+    <value>仅目标和尸体</value>
+  </data>
+  <data name="Tell" xml:space="preserve">
+    <value>私聊</value>
+  </data>
+  <data name="Kick" xml:space="preserve">
+    <value>踢出</value>
+  </data>
+  <data name="PartyManifest" xml:space="preserve">
+    <value>队伍名单</value>
+  </data>
+  <data name="SendThePartyAMessage" xml:space="preserve">
+    <value>发送队伍消息</value>
+  </data>
+  <data name="PartyCanLootMe" xml:space="preserve">
+    <value>队伍可搜刮我</value>
+  </data>
+  <data name="PartyCannotLootMe" xml:space="preserve">
+    <value>队伍不可搜刮我</value>
+  </data>
+  <data name="LeaveTheParty" xml:space="preserve">
+    <value>离开队伍</value>
+  </data>
+  <data name="DisbandTheParty" xml:space="preserve">
+    <value>解散队伍</value>
+  </data>
+  <data name="AddNewMember" xml:space="preserve">
+    <value>添加新成员</value>
+  </data>
+  <data name="YouAreNotInAParty" xml:space="preserve">
+    <value>你不在队伍中。</value>
+  </data>
+  <data name="ThereIsNoOneInThatPartySlot" xml:space="preserve">
+    <value>该队伍位置为空。</value>
+  </data>
+  <data name="Accept" xml:space="preserve">
+    <value>接受</value>
+  </data>
+  <data name="Decline" xml:space="preserve">
+    <value>拒绝</value>
+  </data>
+  <data name="P0HasInvitedYouToParty" xml:space="preserve">
+    <value>{0}邀请你加入队伍。</value>
+  </data>
+  <data name="NoName" xml:space="preserve">
+    <value>无名</value>
+  </data>
+  <data name="Passive" xml:space="preserve">
+    <value>被动</value>
+  </data>
+  <data name="Item0Price1" xml:space="preserve">
+    <value>{0} 每件{1}gp</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称:</value>
+  </data>
+  <data name="Real" xml:space="preserve">
+    <value>实际值</value>
+  </data>
+  <data name="Base" xml:space="preserve">
+    <value>总值</value>
+  </data>
+  <data name="Cap" xml:space="preserve">
+    <value>上限</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>总计:</value>
+  </data>
+  <data name="TithingPointsAvailable" xml:space="preserve">
+    <value>捐献点数
+可用:</value>
+  </data>
+  <data name="Abilities" xml:space="preserve">
+    <value>技能</value>
+  </data>
+  <data name="Activated" xml:space="preserve">
+    <value>已激活</value>
+  </data>
+  <data name="Reagents" xml:space="preserve">
+    <value>施法药材:</value>
+  </data>
+  <data name="Upkeep0Mana1MinSkill2" xml:space="preserve">
+    <value>维持费用: {0}
+法力消耗: {0}
+最低技能: {0}</value>
+  </data>
+  <data name="ManaCost0MinSkill1" xml:space="preserve">
+    <value>法力消耗: {0}
+最低技能: {1}</value>
+  </data>
+  <data name="ShowReal" xml:space="preserve">
+    <value> - 显示实际值</value>
+  </data>
+  <data name="ShowCaps" xml:space="preserve">
+    <value> - 显示上限</value>
+  </data>
+  <data name="NewGroup" xml:space="preserve">
+    <value>新建组</value>
+  </data>
+  <data name="Female" xml:space="preserve">
+    <value>女</value>
+  </data>
+  <data name="Male" xml:space="preserve">
+    <value>男</value>
+  </data>
+  <data name="Buffs" xml:space="preserve">
+    <value>增益效果</value>
+  </data>
+  <data name="Whisper" xml:space="preserve">
+    <value>[私语]:</value>
+  </data>
+  <data name="Emote" xml:space="preserve">
+    <value>[表情]:</value>
+  </data>
+  <data name="Yell" xml:space="preserve">
+    <value>[呐喊]:</value>
+  </data>
+  <data name="Party" xml:space="preserve">
+    <value>[队伍]:</value>
+  </data>
+  <data name="Guild" xml:space="preserve">
+    <value>[公会]:</value>
+  </data>
+  <data name="Alliance" xml:space="preserve">
+    <value>[联盟]:</value>
+  </data>
+  <data name="Command" xml:space="preserve">
+    <value>[命令]:</value>
+  </data>
+  <data name="UOAM" xml:space="preserve">
+    <value>[UOAM]:</value>
+  </data>
+  <data name="Chat" xml:space="preserve">
+    <value>聊天</value>
+  </data>
+  <data name="PartyName0Text1" xml:space="preserve">
+    <value>[队伍][{0}]:{1}</value>
+  </data>
+  <data name="GuildName0Text1" xml:space="preserve">
+    <value>[公会][{0}]:{1}</value>
+  </data>
+  <data name="AllianceName0Text1" xml:space="preserve">
+    <value>[联盟][{0}]:{1}</value>
+  </data>
+  <data name="Tell0" xml:space="preserve">
+    <value>[私聊][{0}]:</value>
+  </data>
+  <data name="TellEmpty" xml:space="preserve">
+    <value>[私聊][]:</value>
+  </data>
+  <data name="YouAreNotPartyLeader" xml:space="preserve">
+    <value>你不是队伍队长。</value>
+  </data>
+  <data name="NoOneHasInvitedYouToBeInAParty" xml:space="preserve">
+    <value>没有人邀请你加入队伍。</value>
+  </data>
+  <data name="NoteToSelf0" xml:space="preserve">
+    <value>自留备注:{0}</value>
+  </data>
+  <data name="Map" xml:space="preserve">
+    <value>地图</value>
+  </data>
+  <data name="Paperdoll" xml:space="preserve">
+    <value>角色纸娃娃</value>
+  </data>
+  <data name="Inventory" xml:space="preserve">
+    <value>主背包</value>
+  </data>
+  <data name="Journal" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="WorldMap" xml:space="preserve">
+    <value>世界地图</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="NetStats" xml:space="preserve">
+    <value>网络状态</value>
+  </data>
+  <data name="UOStore" xml:space="preserve">
+    <value>UO商店</value>
+  </data>
+  <data name="GlobalChat" xml:space="preserve">
+    <value>全球聊天</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>&lt; ? &gt;</value>
+  </data>
+  <data name="TopBarGumpAlreadyExists" xml:space="preserve">
+    <value>顶部栏已存在!!</value>
+  </data>
+  <data name="ChatButtonPushedNotImplementedYet" xml:space="preserve">
+    <value>聊天按钮已按下!功能尚未实现!</value>
+  </data>
+  <data name="GlobalChatNotImplementedYet" xml:space="preserve">
+    <value>全球聊天功能尚未实现。</value>
+  </data>
+  <data name="ChooseName" xml:space="preserve">
+    <value>你即将为UO聊天系统选择名称。此名称将是永久的且在该服务器上唯一,将适用于此账号的所有角色。请勿使用你的UO账号名作为此名称,因为你选择的名称将是公开的。在此输入你的聊天名称:</value>
+  </data>
+  <data name="Channels" xml:space="preserve">
+    <value>频道</value>
+  </data>
+  <data name="YourCurrentChannel" xml:space="preserve">
+    <value>当前频道:</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>加入</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>离开</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>创建</value>
+  </data>
+  <data name="CreateAChannel" xml:space="preserve">
+    <value>创建频道:</value>
+  </data>
+  <data name="WorldMapLoading" xml:space="preserve">
+    <value>世界地图加载中...</value>
+  </data>
+  <data name="ShowAllMarkers" xml:space="preserve">
+    <value>显示所有标记</value>
+  </data>
+  <data name="ShowMarkerNames" xml:space="preserve">
+    <value>显示标记名称</value>
+  </data>
+  <data name="ShowMarkerIcons" xml:space="preserve">
+    <value>显示标记图标</value>
+  </data>
+  <data name="FlipMap" xml:space="preserve">
+    <value>翻转地图</value>
+  </data>
+  <data name="TopMost" xml:space="preserve">
+    <value>地图置顶</value>
+  </data>
+  <data name="GotoLocation" xml:space="preserve">
+    <value>前往坐标</value>
+  </data>
+  <data name="EnterLocation" xml:space="preserve">
+    <value>输入坐标</value>
+  </data>
+  <data name="InvalidLocation" xml:space="preserve">
+    <value>输入的坐标无效: 请输入"X Y"或"0°0'N,0°0'W"</value>
+  </data>
+  <data name="FreeView" xml:space="preserve">
+    <value>自由视角</value>
+  </data>
+  <data name="ShowPartyMembers" xml:space="preserve">
+    <value>显示队伍成员</value>
+  </data>
+  <data name="ShowMobiles" xml:space="preserve">
+    <value>显示目标</value>
+  </data>
+  <data name="ShowHousesBoats" xml:space="preserve">
+    <value>显示房屋/船只</value>
+  </data>
+  <data name="ShowYourName" xml:space="preserve">
+    <value>显示你的名字</value>
+  </data>
+  <data name="ShowYourHealthbar" xml:space="preserve">
+    <value>显示你的血条</value>
+  </data>
+  <data name="ShowGroupName" xml:space="preserve">
+    <value>显示编组名称</value>
+  </data>
+  <data name="ShowGroupHealthbar" xml:space="preserve">
+    <value>显示编组血条</value>
+  </data>
+  <data name="ShowYourCoordinates" xml:space="preserve">
+    <value>显示你的坐标</value>
+  </data>
+  <data name="SaveClose" xml:space="preserve">
+    <value>保存并关闭</value>
+  </data>
+  <data name="FontStyle" xml:space="preserve">
+    <value>字体样式</value>
+  </data>
+  <data name="Style0" xml:space="preserve">
+    <value>样式{0}</value>
+  </data>
+  <data name="MapMarkerOptions" xml:space="preserve">
+    <value>地图标记选项</value>
+  </data>
+  <data name="ReloadMarkers" xml:space="preserve">
+    <value>重新加载标记</value>
+  </data>
+  <data name="ShowHide0" xml:space="preserve">
+    <value>显示/隐藏'{0}'</value>
+  </data>
+  <data name="NoMapFiles" xml:space="preserve">
+    <value>无地图文件</value>
+  </data>
+  <data name="NamesHealthbars" xml:space="preserve">
+    <value>名字和血条</value>
+  </data>
+  <data name="WorldMapLoaded" xml:space="preserve">
+    <value>世界地图已加载!</value>
+  </data>
+  <data name="LoadingWorldMapMarkers" xml:space="preserve">
+    <value>加载世界地图标记中..</value>
+  </data>
+  <data name="WorldMapMarkersLoaded0" xml:space="preserve">
+    <value>世界地图标记已载入({0})</value>
+  </data>
+  <data name="OutOfRange" xml:space="preserve">
+    <value>&lt;超出范围&gt;</value>
+  </data>
+  <data name="ResizeGameWindow" xml:space="preserve">
+    <value>调整游戏窗口</value>
+  </data>
+  <data name="KeyCombinationAlreadyExists" xml:space="preserve">
+    <value>组合键已存在。</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="CreateMacroButton" xml:space="preserve">
+    <value>+ 创建宏按钮</value>
+  </data>
+  <data name="MacroButtonEditor" xml:space="preserve">
+    <value>按钮编辑器</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="ThisKeyCombinationAlreadyExists" xml:space="preserve">
+    <value>组合键已存在,正被{0}使用</value>
+  </data>
+  <data name="ImpossibleToDefineTheClientVersion0" xml:space="preserve">
+    <value>无法确定客户端版本:'{0}'</value>
+  </data>
+  <data name="SelectWhichShardToPlayOn" xml:space="preserve">
+    <value>选择服务器:</value>
+  </data>
+  <data name="Latency" xml:space="preserve">
+    <value>延迟:</value>
+  </data>
+  <data name="PacketLoss" xml:space="preserve">
+    <value>丢包率:</value>
+  </data>
+  <data name="SortBy" xml:space="preserve">
+    <value>排序方式:</value>
+  </data>
+  <data name="Localisation" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="ChangingLanguageNeedsRestartToTakeEffect" xml:space="preserve">
+    <value>切换语言需重启生效</value>
+  </data>
+  <data name="Strength" xml:space="preserve">
+    <value>力量</value>
+  </data>
+  <data name="Dex" xml:space="preserve">
+    <value>敏捷</value>
+  </data>
+  <data name="Intelligence" xml:space="preserve">
+    <value>智力</value>
+  </data>
+  <data name="Sex" xml:space="preserve">
+    <value>性别</value>
+  </data>
+  <data name="Armor" xml:space="preserve">
+    <value>护甲</value>
+  </data>
+  <data name="Stamina" xml:space="preserve">
+    <value>耐力</value>
+  </data>
+  <data name="Gold" xml:space="preserve">
+    <value>金币</value>
+  </data>
+  <data name="HitChanceIncrease" xml:space="preserve">
+    <value>命中率增加</value>
+  </data>
+  <data name="Dexterity" xml:space="preserve">
+    <value>敏捷</value>
+  </data>
+  <data name="DefenseChanceIncrease" xml:space="preserve">
+    <value>防御率增加</value>
+  </data>
+  <data name="HitPoints" xml:space="preserve">
+    <value>生命值</value>
+  </data>
+  <data name="LowerManaCost" xml:space="preserve">
+    <value>降低法力消耗</value>
+  </data>
+  <data name="MaximumStats" xml:space="preserve">
+    <value>属性上限</value>
+  </data>
+  <data name="Luck" xml:space="preserve">
+    <value>幸运</value>
+  </data>
+  <data name="WeaponDamageIncrease" xml:space="preserve">
+    <value>武器伤害增加</value>
+  </data>
+  <data name="SwingSpeedIncrease" xml:space="preserve">
+    <value>攻击速度增加</value>
+  </data>
+  <data name="Damage" xml:space="preserve">
+    <value>伤害</value>
+  </data>
+  <data name="Followers" xml:space="preserve">
+    <value>随从</value>
+  </data>
+  <data name="LowerReagentCost" xml:space="preserve">
+    <value>降低药材消耗</value>
+  </data>
+  <data name="SpellDamageIncrease" xml:space="preserve">
+    <value>法术伤害增加</value>
+  </data>
+  <data name="FasterCasting" xml:space="preserve">
+    <value>快速施法</value>
+  </data>
+  <data name="FasterCastRecovery" xml:space="preserve">
+    <value>快速施法恢复</value>
+  </data>
+  <data name="PhysicalResistance" xml:space="preserve">
+    <value>物理抗性</value>
+  </data>
+  <data name="FireResistance" xml:space="preserve">
+    <value>火焰抗性</value>
+  </data>
+  <data name="ColdResistance" xml:space="preserve">
+    <value>寒冷抗性</value>
+  </data>
+  <data name="PoisonResistance" xml:space="preserve">
+    <value>毒素抗性</value>
+  </data>
+  <data name="EnergyResistance" xml:space="preserve">
+    <value>能量抗性</value>
+  </data>
+  <data name="MaxStats" xml:space="preserve">
+    <value>属性上限</value>
+  </data>
+  <data name="Minimize" xml:space="preserve">
+    <value>最小化</value>
+  </data>
+  <data name="HideScreenshotStoredInMessage" xml:space="preserve">
+    <value>隐藏截图保存提示</value>
+  </data>
+  <data name="AnisotropicClamp" xml:space="preserve">
+    <value>各向异性过滤</value>
+  </data>
+  <data name="FilterType" xml:space="preserve">
+    <value>滤镜类型[测试]:</value>
+  </data>
+  <data name="FilterTypeFormatON" xml:space="preserve">
+    <value>{0} [{1}]</value>
+  </data>
+  <data name="LinearClamp" xml:space="preserve">
+    <value>线性过滤</value>
+  </data>
+  <data name="OFF" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="ON" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="HighlightContainerWhenSelected" xml:space="preserve">
+    <value>鼠标悬停容器窗口时高亮对应容器</value>
+  </data>
+  <data name="YouMustHaveThreeUniqueSkillsChosen" xml:space="preserve">
+    <value>必须选择三种不同的技能!</value>
+  </data>
+  <data name="ShowSkillsChangedMessageBy" xml:space="preserve">
+    <value>技能变化通知(0.1为单位)</value>
+  </data>
+  <data name="ShowStatsChangedMessage" xml:space="preserve">
+    <value>属性变化时通知</value>
+  </data>
+  <data name="ShadowStatics" xml:space="preserve">
+    <value>显示树木和岩石阴影</value>
+  </data>
+  <data name="BackpackStyle" xml:space="preserve">
+    <value>选择角色背包样式</value>
+  </data>
+  <data name="BackpackStyle_Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="BackpackStyle_Suede" xml:space="preserve">
+    <value>绒面</value>
+  </data>
+  <data name="BackpackStyle_PolarBear" xml:space="preserve">
+    <value>北极熊</value>
+  </data>
+  <data name="BackpackStyle_GhoulSkin" xml:space="preserve">
+    <value>食尸鬼皮</value>
+  </data>
+  <data name="ResetGroups" xml:space="preserve">
+    <value>重置编组</value>
+  </data>
+  <data name="TerrainShadowsLevel" xml:space="preserve">
+    <value>地形阴影等级:</value>
+  </data>
+  <data name="IgnoreGuildMessages" xml:space="preserve">
+    <value>隐藏公会聊天</value>
+  </data>
+  <data name="IgnoreAllianceMessages" xml:space="preserve">
+    <value>隐藏联盟聊天</value>
+  </data>
+  <data name="OpenMacroSettings" xml:space="preserve">
+    <value>打开宏设置</value>
+  </data>
+  <data name="EnableFastSpellsAssign" xml:space="preserve">
+    <value>开启快速法术分配(Ctrl+Alt)</value>
+  </data>
+  <data name="HighlightInvulnerable" xml:space="preserve">
+    <value>高亮无敌</value>
+  </data>
+  <data name="HighlightParalyzed" xml:space="preserve">
+    <value>高亮麻痹</value>
+  </data>
+  <data name="HighlightPoisoned" xml:space="preserve">
+    <value>高亮中毒</value>
+  </data>
+  <data name="AddMarkerOnPlayer" xml:space="preserve">
+    <value>在玩家位置添加标记</value>
+  </data>
+  <data name="EnterMarkerName" xml:space="preserve">
+    <value>标记名称</value>
+  </data>
+  <data name="InvalidMarkerName" xml:space="preserve">
+    <value>无效标记名称。</value>
+  </data>
+  <data name="AddToIgnoreListExist" xml:space="preserve">
+    <value>角色{0}已在列表中。</value>
+  </data>
+  <data name="AddToIgnoreListNotMobile" xml:space="preserve">
+    <value>这不是玩家。</value>
+  </data>
+  <data name="AddToIgnoreListSuccess" xml:space="preserve">
+    <value>已将{0}添加到忽略列表。</value>
+  </data>
+  <data name="IgnoreListAddButton" xml:space="preserve">
+    <value>添加到忽略列表</value>
+  </data>
+  <data name="IgnoreListManager" xml:space="preserve">
+    <value>忽略列表</value>
+  </data>
+  <data name="IgnoreListName" xml:space="preserve">
+    <value>角色名称</value>
+  </data>
+  <data name="AddMarker" xml:space="preserve">
+    <value>添加标记</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="CreateMarker" xml:space="preserve">
+    <value>创建</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="EditMarker" xml:space="preserve">
+    <value>编辑标记</value>
+  </data>
+  <data name="MarkerColor" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="MarkerDefName" xml:space="preserve">
+    <value>标记名称</value>
+  </data>
+  <data name="MarkerGoTo" xml:space="preserve">
+    <value>前往</value>
+  </data>
+  <data name="MarkerIcon" xml:space="preserve">
+    <value>图标</value>
+  </data>
+  <data name="MarkerName" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="MarkerSearch" xml:space="preserve">
+    <value>搜索:</value>
+  </data>
+  <data name="MarkersManager" xml:space="preserve">
+    <value>标记管理器</value>
+  </data>
+  <data name="MarkerX" xml:space="preserve">
+    <value>X</value>
+  </data>
+  <data name="MarkerY" xml:space="preserve">
+    <value>Y</value>
+  </data>
+  <data name="DragSelectAnchoredHB" xml:space="preserve">
+    <value>锚定血条</value>
+  </data>
+  <data name="DragSelectStartingPosX" xml:space="preserve">
+    <value>血条起始X位置</value>
+  </data>
+  <data name="DragSelectStartingPosY" xml:space="preserve">
+    <value>血条起始Y位置</value>
+  </data>
+  <data name="MapZoneFileName" xml:space="preserve">
+    <value>显示/隐藏'{0}'</value>
+  </data>
+  <data name="MapZoneNone" xml:space="preserve">
+    <value>&lt;无&gt;</value>
+  </data>
+  <data name="MapZoneOptions" xml:space="preserve">
+    <value>网格和区域选项</value>
+  </data>
+  <data name="MapZoneReload" xml:space="preserve">
+    <value>重新加载地图区域</value>
+  </data>
+  <data name="MapZoneFileLoaded" xml:space="preserve">
+    <value>世界地图区域已载入'{0}'</value>
+  </data>
+  <data name="GridIfZoomed" xml:space="preserve">
+    <value>缩放时显示/隐藏8x8网格</value>
+  </data>
+  <data name="ShowMouseCoordinates" xml:space="preserve">
+    <value>显示鼠标坐标</value>
+  </data>
+  <data name="AllowPositionalTargeting" xml:space="preserve">
+    <value>允许位置瞄准</value>
+  </data>
+  <data name="LightLevelType" xml:space="preserve">
+    <value>光照等级设置类型</value>
+  </data>
+  <data name="LightLevelTypeAbsolute" xml:space="preserve">
+    <value>绝对</value>
+  </data>
+  <data name="LightLevelTypeMinimum" xml:space="preserve">
+    <value>最低</value>
+  </data>
+  <data name="HueContainerGumps" xml:space="preserve">
+    <value>按物品色相着色容器窗口</value>
+  </data>
+  <data name="ResetMapsCache" xml:space="preserve">
+    <value>重置地图缓存</value>
+  </data>
+  <data name="NewTargetSystem" xml:space="preserve">
+    <value>使用新目标系统</value>
+  </data>
+  <data name="ShowSextantCoordinates" xml:space="preserve">
+    <value>显示六分仪坐标</value>
+  </data>
+  <data name="WorldMapChangeMap0" xml:space="preserve">
+    <value>地图{0}</value>
+  </data>
+  <data name="StatusGumpBarMutuallyExclusive" xml:space="preserve">
+    <value>状态窗口和血条互斥</value>
+  </data>
+  <data name="StatusGumpOpenBar" xml:space="preserve">
+    <value>打开血条</value>
+  </data>
+  <data name="DragHostileOnly" xml:space="preserve">
+    <value>仅选择敌对</value>
+  </data>
+  <data name="ShowDPSWithDamage" xml:space="preserve">
+    <value>显示DPS和伤害数值</value>
+  </data>
+  <data name="SetAsNewDefault" xml:space="preserve">
+    <value>将当前设置保存为新用户默认</value>
+  </data>
+  <data name="UseAlternateJournal" xml:space="preserve">
+    <value>使用替代日志</value>
+  </data>
+  <data name="StayActive" xml:space="preserve">
+    <value>保持活跃</value>
+  </data>
+  <data name="OverheadPartyMessages" xml:space="preserve">
+    <value>显示头顶队伍消息</value>
+  </data>
+  <data name="GoToExampleLabel" xml:space="preserve">
+    <value>示例:
+  1639, 1532
+  100o25'S,40o04'E
+  9 14'N 91 37'W</value>
+  </data>
+</root>

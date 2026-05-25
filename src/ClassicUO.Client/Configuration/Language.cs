@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
 
 namespace ClassicUO.Configuration
@@ -29,13 +30,37 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         public static Language Instance { get; private set; } = new();
 
+        private static string LanguageFilePath
+        {
+            get
+            {
+                string lang = null;
+                try { lang = Settings.GlobalSettings?.Language; }
+                catch { }
+
+                if (string.IsNullOrWhiteSpace(lang) || string.Equals(lang, "ENU", StringComparison.OrdinalIgnoreCase))
+                    return DefaultLanguageFilePath;
+
+                return Path.Combine(CUOEnviroment.ExecutablePath, "Data", $"Language.{lang}.json");
+            }
+        }
+
+        private static string DefaultLanguageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
+
         public static void Load()
         {
-            if (File.Exists(languageFilePath))
+            string specificPath = LanguageFilePath;
+            bool isDefaultLang = specificPath == DefaultLanguageFilePath;
+
+            if (File.Exists(specificPath))
             {
-                Language f = JsonSerializer.Deserialize(File.ReadAllText(languageFilePath), LanguageJsonContext.Default.Language);
-                Instance = f;
-                Save(); //To update language file with new additions as needed
+                Instance = JsonSerializer.Deserialize(File.ReadAllText(specificPath), LanguageJsonContext.Default.Language);
+                Save();
+            }
+            else if (!isDefaultLang && File.Exists(DefaultLanguageFilePath))
+            {
+                Instance = JsonSerializer.Deserialize(File.ReadAllText(DefaultLanguageFilePath), LanguageJsonContext.Default.Language);
+                Save();
             }
             else
             {
@@ -43,21 +68,27 @@ namespace ClassicUO.Configuration
             }
         }
 
+        public static void Reload()
+        {
+            Instance = new Language();
+            Load();
+        }
+
         private static void CreateNewLanguageFile()
         {
             Directory.CreateDirectory(Path.Combine(CUOEnviroment.ExecutablePath, "Data"));
 
             string defaultLanguage = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, defaultLanguage);
+            File.WriteAllText(DefaultLanguageFilePath, defaultLanguage);
         }
 
         private static void Save()
         {
-            string language = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, language);
+            string path = LanguageFilePath;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            string languageJson = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
+            File.WriteAllText(path, languageJson);
         }
-
-        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
     }
 
     public class ModernOptionsGumpLanguage
@@ -84,6 +115,7 @@ namespace ClassicUO.Configuration
         public string ButtonGumpContext { get; set; } = "Gumps & Context";
         public string ButtonMisc { get; set; } = "Misc";
         public string ButtonTerrainStatics { get; set; } = "Terrain & Statics";
+        public string ButtonLanguage { get; set; } = "Language";
         public string ButtonGameWindow { get; set; } = "Game window";
         public string ButtonZoom { get; set; } = "Zoom";
         public string ButtonLighting { get; set; } = "Lighting";
@@ -226,6 +258,10 @@ namespace ClassicUO.Configuration
             public string MagicFieldOpt_Normal { get; set; } = "Normal";
             public string MagicFieldOpt_Static { get; set; } = "Static";
             public string MagicFieldOpt_Tile { get; set; } = "Tile";
+            #endregion
+
+            #region General->Language
+            public string LanguageSelector { get; set; } = "Language";
             #endregion
         }
 

@@ -184,7 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
                     0x098D,
                     0x098D,
                     0x098D,
-                    "More +",
+                    "更多 +",
                     1,
                     true,
                     0,
@@ -200,7 +200,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
             moreMenu.ContextMenu = new ContextMenuControl(this);
             moreMenu.MouseUp += (s, e) => { moreMenu.ContextMenu?.Show(); };
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("TazUO Chat", () => { MyraWindows.TazUOChatWindow.Show(); }));
+            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("TazUO 聊天", () => { MyraWindows.TazUOChatWindow.Show(); }));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.TopBarGump.CommandsEntry, () =>
             {
                 UIManager.Add(new CommandsGump(world));
@@ -246,14 +246,14 @@ namespace ClassicUO.Game.UI.Gumps
             }));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(cliloc.GetString(3000134, ResGumps.Help), () => { GameActions.RequestHelp(); }));
 
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Toggle nameplates", () => { World.NameOverHeadManager.ToggleOverheads(); }));
+            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("切换名称板", () => { World.NameOverHeadManager.ToggleOverheads(); }));
 
-            var submenu = new ContextMenuItemEntry("Tools");
-            submenu.Add(new ContextMenuItemEntry("Spell quick cast", () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
-            submenu.Add(new ContextMenuItemEntry("Open boat control", () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
-            submenu.Add(new ContextMenuItemEntry("Nearby loot", () => { UIManager.Add(new NearbyLootGump(World)); }));
-            submenu.Add(new ContextMenuItemEntry("Healthbar Collector", () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
-            submenu.Add(new ContextMenuItemEntry("Retrieve gumps", () =>
+            var submenu = new ContextMenuItemEntry("工具");
+            submenu.Add(new ContextMenuItemEntry("法术快速施放", () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
+            submenu.Add(new ContextMenuItemEntry("打开船只控制", () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
+            submenu.Add(new ContextMenuItemEntry("附近拾取", () => { UIManager.Add(new NearbyLootGump(World)); }));
+            submenu.Add(new ContextMenuItemEntry("血条收集器", () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
+            submenu.Add(new ContextMenuItemEntry("检索窗口", () =>
             {
                 for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
@@ -344,7 +344,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }, false, ProfileManager.CurrentProfile.AutoOpenXmlGumps.Contains(xml)));
             }
 
-            var reload = new ContextMenuItemEntry("Reload", RefreshXmlGumps);
+            var reload = new ContextMenuItemEntry("重新加载", RefreshXmlGumps);
             XmlGumps.ContextMenu.Add(reload);
         }
 

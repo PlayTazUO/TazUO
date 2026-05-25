@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
 public static class AutoLootAgentTabContent
 {
-    private static readonly string[] PriorityLabels = { "Low", "Normal", "High" };
+    private static readonly string[] PriorityLabels = { "低", "正常", "高" };
 
     public static Widget Build()
     {
@@ -26,48 +26,48 @@ public static class AutoLootAgentTabContent
         topRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableAutoLoot,
             b => profile.EnableAutoLoot = b,
-            "Enable Auto Loot",
-            "Auto Loot allows you to automatically pick up items from corpses based on configured criteria."));
-        topRow.Widgets.Add(new MyraButton("Set Grab Bag", () =>
+            "启用自动拾取",
+            "自动拾取允许您根据配置的条件自动从尸体上拾取物品。"));
+        topRow.Widgets.Add(new MyraButton("设置拾取包", () =>
         {
-            GameActions.Print(Client.Game.UO.World, "Target container to grab items into");
+            GameActions.Print(Client.Game.UO.World, "目标容器以将物品拾取到其中");
             Client.Game.UO.World.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
-        }) { Tooltip = "Choose a container to grab items into" });
+        }) { Tooltip = "选择一个容器以将物品拾取到其中" });
         root.Widgets.Add(topRow);
 
         // Options
         root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Options:", MyraLabel.TextStyle.H2));
+        root.Widgets.Add(new MyraLabel("选项:", MyraLabel.TextStyle.H2));
 
         var optRow1 = new HorizontalStackPanel { Spacing = 8 };
         optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableScavenger,
             b => profile.EnableScavenger = b,
-            "Enable Scavenger",
-            "Scavenger option allows picking objects from ground."));
+            "启用自动搜刮",
+            "自动搜刮选项允许从地面拾取物品。"));
         optRow1.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableAutoLootProgressBar,
             b => profile.EnableAutoLootProgressBar = b,
-            "Enable Progress Bar",
-            "Shows a progress bar gump."));
+            "启用进度条",
+            "显示进度条窗口。"));
         root.Widgets.Add(optRow1);
 
         var optRow2 = new HorizontalStackPanel { Spacing = 8 };
         optRow2.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.AutoLootHumanCorpses,
             b => profile.AutoLootHumanCorpses = b,
-            "Auto Loot Human Corpses",
-            "Auto loots human corpses."));
+            "自动拾取人类尸体",
+            "自动拾取人类尸体。"));
         optRow2.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.HueCorpseAfterAutoloot,
             b => profile.HueCorpseAfterAutoloot = b,
-            "Hue Corpse After Processing",
-            "Hue corpses after processing to make it easier to see if autoloot has processed them."));
+            "处理后着色尸体",
+            "处理后着色尸体以便更容易看到自动拾取是否已处理它们。"));
         root.Widgets.Add(optRow2);
 
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));
-        root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H2));
+        root.Widgets.Add(new MyraLabel("条目:", MyraLabel.TextStyle.H2));
 
         var entriesPanel = new VerticalStackPanel { Spacing = 4 };
 
@@ -78,20 +78,20 @@ public static class AutoLootAgentTabContent
 
             if (entries.Count == 0)
             {
-                entriesPanel.Widgets.Add(new MyraLabel("No entries configured.", MyraLabel.TextStyle.P));
+                entriesPanel.Widgets.Add(new MyraLabel("没有配置条目。", MyraLabel.TextStyle.P));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Auto("Graphic"),
-                GridColumnInfo.Auto("Hue"),
-                GridColumnInfo.Auto("Regex"),
-                GridColumnInfo.Auto("Priority"),
-                GridColumnInfo.Fill("Destination"),
-                GridColumnInfo.Auto("Order"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto("图形"),
+                GridColumnInfo.Auto("图形ID"),
+                GridColumnInfo.Auto("色调"),
+                GridColumnInfo.Auto("正则"),
+                GridColumnInfo.Auto("优先级"),
+                GridColumnInfo.Fill("目标"),
+                GridColumnInfo.Auto("顺序"),
+                GridColumnInfo.Auto("操作")
             );
 
             int dataRow = 1;
@@ -107,8 +107,8 @@ public static class AutoLootAgentTabContent
                     var nameBox = new MyraInputBox
                     {
                         Text = entry.Name,
-                        HintText = "Name",
-                        Tooltip = "Display name for this entry.",
+                        HintText = "名称",
+                        Tooltip = "此条目的显示名称。",
                         MinWidth = 80,
                     };
                     nameBox.TextChangedByUser += (_, _) => entry.Name = nameBox.Text;
@@ -119,7 +119,7 @@ public static class AutoLootAgentTabContent
                 var graphicBox = new MyraInputBox
                 {
                     Text = entry.Graphic == ushort.MaxValue ? "-1" : entry.Graphic.ToString(),
-                    Tooltip = "Item graphic ID. Set to -1 to match any graphic.",
+                    Tooltip = "物品图形ID。设为 -1 以匹配任何图形。",
                 };
                 graphicBox.TextChangedByUser += (_, _) =>
                 {
@@ -138,7 +138,7 @@ public static class AutoLootAgentTabContent
                 grid.AddWidget(hueBox, dataRow, 2);
 
                 // Regex edit — opens a MyraDialog (own Desktop, registered with UIManager)
-                grid.AddWidget(new MyraButton("Edit Regex", () =>
+                grid.AddWidget(new MyraButton("编辑正则", () =>
                 {
                     var regexInput = new MyraInputBox
                     {
@@ -146,9 +146,9 @@ public static class AutoLootAgentTabContent
                         Multiline = true,
                         Width = 300,
                         Height = 80,
-                        Tooltip = "Regex to match against item name and properties."
+                        Tooltip = "匹配物品名称和属性的正则表达式。"
                     };
-                    new MyraDialog("Edit Regex", regexInput, ok =>
+                    new MyraDialog("编辑正则", regexInput, ok =>
                     {
                         if (ok) entry.RegexSearch = regexInput.Text;
                     });
@@ -177,8 +177,8 @@ public static class AutoLootAgentTabContent
                 var destBox = new MyraInputBox
                 {
                     Text = entry.DestinationContainer == 0 ? "" : $"0x{entry.DestinationContainer:X}",
-                    HintText = "Serial (hex)",
-                    Tooltip = "Destination container serial (hex). Leave empty to use grab bag.",
+                    HintText = "序列号（十六进制）",
+                    Tooltip = "目标容器序列号（十六进制）。留空则使用拾取包。",
                     MinWidth = 100,
                 };
                 destBox.TextChangedByUser += (_, _) =>
@@ -190,7 +190,7 @@ public static class AutoLootAgentTabContent
                 };
                 StackPanel.SetProportionType(destBox, ProportionType.Fill);
                 destCell.Widgets.Add(destBox);
-                destCell.Widgets.Add(new MyraButton("Target", () =>
+                destCell.Widgets.Add(new MyraButton("目标", () =>
                 {
                     World.Instance.TargetManager.SetTargeting(targeted =>
                     {
@@ -200,7 +200,7 @@ public static class AutoLootAgentTabContent
                             destBox.Text = $"0x{e.Serial:X}";
                         }
                     });
-                }) { Tooltip = "Target a container to use as the destination for this entry." });
+                }) { Tooltip = "目标一个容器作为此条目的目标。" });
                 grid.AddWidget(destCell, dataRow, 5);
 
                 // Up / Down reorder buttons (col 6)
@@ -215,7 +215,7 @@ public static class AutoLootAgentTabContent
                         (entries[idx], entries[idx + 1]) = (entries[idx + 1], entries[idx]);
                         BuildEntriesList();
                     }
-                }) { Tooltip = "Move up" };
+                }) { Tooltip = "上移" };
                 var downBtn = new MyraButton(">", () =>
                 {
                     int idx = entries.IndexOf(entry);
@@ -224,14 +224,14 @@ public static class AutoLootAgentTabContent
                         (entries[idx], entries[idx - 1]) = (entries[idx - 1], entries[idx]);
                         BuildEntriesList();
                     }
-                }) { Tooltip = "Move down" };
+                }) { Tooltip = "下移" };
                 if (i == entries.Count - 1) upBtn.Enabled = false;
                 if (i == 0) downBtn.Enabled = false;
                 orderRow.Widgets.Add(upBtn);
                 orderRow.Widgets.Add(downBtn);
                 grid.AddWidget(orderRow, dataRow, 6);
 
-                var delBtn = new MyraButton("Delete", () =>
+                var delBtn = new MyraButton("删除", () =>
                 {
                     AutoLootManager.Instance.TryRemoveAutoLootEntry(entry.Uid);
                     BuildEntriesList();
@@ -249,23 +249,23 @@ public static class AutoLootAgentTabContent
 
         // Add entry inline panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newNameBox = new MyraInputBox { HintText = "Name", Width = 100 };
-        var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 100, Tooltip = "Graphic (-1 = any)" };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 100, "Hue (-1 = any)");
-        var newRegexBox = new MyraInputBox { HintText = "Regex (optional)", Width = 200 };
+        var newNameBox = new MyraInputBox { HintText = "名称", Width = 100 };
+        var newGraphicBox = new MyraInputBox { HintText = "图形ID", Width = 100, Tooltip = "图形 (-1 = 任意)" };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 100, "色调 (-1 = 任意)");
+        var newRegexBox = new MyraInputBox { HintText = "正则（可选）", Width = 200 };
 
         var addFieldsRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("名称:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newNameBox);
-        addFieldsRow.Widgets.Add(new MyraLabel("Graphic:", MyraLabel.TextStyle.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("图形:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newGraphicBox);
-        addFieldsRow.Widgets.Add(new MyraLabel("Hue:", MyraLabel.TextStyle.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("色调:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newHueBox);
-        addFieldsRow.Widgets.Add(new MyraLabel("Regex:", MyraLabel.TextStyle.P));
+        addFieldsRow.Widgets.Add(new MyraLabel("正则:", MyraLabel.TextStyle.P));
         addFieldsRow.Widgets.Add(newRegexBox);
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton("添加", () =>
         {
             if (StringHelper.TryParseInt(newGraphicBox.Text, out int graphic))
             {
@@ -289,7 +289,7 @@ public static class AutoLootAgentTabContent
                 BuildEntriesList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        addConfirmRow.Widgets.Add(new MyraButton("取消", () =>
         {
             addEntryPanel.Visible = false;
             newGraphicBox.Text = "";
@@ -297,7 +297,7 @@ public static class AutoLootAgentTabContent
             newRegexBox.Text = "";
         }));
 
-        addEntryPanel.Widgets.Add(new MyraLabel("Add New Entry:", MyraLabel.TextStyle.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel("添加新条目:", MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
@@ -311,11 +311,11 @@ public static class AutoLootAgentTabContent
 
             if (otherConfigs.Count == 0)
             {
-                importCharPanel.Widgets.Add(new MyraLabel("No other character configurations found.", MyraLabel.TextStyle.P));
+                importCharPanel.Widgets.Add(new MyraLabel("未找到其他角色配置。", MyraLabel.TextStyle.P));
             }
             else
             {
-                importCharPanel.Widgets.Add(new MyraLabel("Select a character to import from:", MyraLabel.TextStyle.H3));
+                importCharPanel.Widgets.Add(new MyraLabel("选择要导入的角色:", MyraLabel.TextStyle.H3));
                 foreach (KeyValuePair<string, List<AutoLootManager.AutoLootConfigEntry>> kv in otherConfigs.OrderBy(c => c.Key))
                 {
                     string charName = kv.Key;
@@ -329,38 +329,38 @@ public static class AutoLootAgentTabContent
                 }
             }
 
-            importCharPanel.Widgets.Add(new MyraButton("Cancel", () => importCharPanel.Visible = false));
+            importCharPanel.Widgets.Add(new MyraButton("取消", () => importCharPanel.Visible = false));
         }
 
         // Action buttons
         var actionRow = new HorizontalStackPanel { Spacing = 6 };
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        actionRow.Widgets.Add(new MyraButton("导入", () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && AutoLootManager.Instance.ImportFromJson(json))
             {
-                GameActions.Print("Imported loot list!", Constants.HUE_SUCCESS);
+                GameActions.Print("已导入拾取列表!", Constants.HUE_SUCCESS);
                 BuildEntriesList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from clipboard (must have a valid export copied)." });
+            GameActions.Print("您的剪贴板中没有有效的导出数据。", Constants.HUE_ERROR);
+        }) { Tooltip = "从剪贴板导入（必须有有效的导出数据）。" });
 
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+        actionRow.Widgets.Add(new MyraButton("导出", () =>
         {
             AutoLootManager.Instance.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported loot list to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your list to clipboard." });
+            GameActions.Print("已将拾取列表导出到剪贴板!", Constants.HUE_SUCCESS);
+        }) { Tooltip = "将列表导出到剪贴板。" });
 
-        actionRow.Widgets.Add(new MyraButton("Import from Character", () =>
+        actionRow.Widgets.Add(new MyraButton("从角色导入", () =>
         {
             BuildImportCharPanel();
             importCharPanel.Visible = !importCharPanel.Visible;
-        }) { Tooltip = "Import autoloot configuration from another character." });
+        }) { Tooltip = "从另一个角色导入自动拾取配置。" });
 
         var addRow = new HorizontalStackPanel { Spacing = 6 };
-        addRow.Widgets.Add(new MyraButton("Add Manual Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        addRow.Widgets.Add(new MyraButton("Add from Target", () =>
+        addRow.Widgets.Add(new MyraButton("手动添加条目", () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        addRow.Widgets.Add(new MyraButton("从目标添加", () =>
         {
             World.Instance.TargetManager.SetTargeting(targeted =>
             {
@@ -370,7 +370,7 @@ public static class AutoLootAgentTabContent
                     BuildEntriesList();
                 }
             });
-        }) { Tooltip = "Target an item to add it to the loot list." });
+        }) { Tooltip = "目标一个物品以将其添加到拾取列表。" });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addRow);

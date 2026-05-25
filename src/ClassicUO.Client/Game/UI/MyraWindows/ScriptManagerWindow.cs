@@ -26,7 +26,7 @@ public class ScriptManagerWindow : MyraControl
         "\n# Or documentation at" +
         "\n#   https://tazuo.org/legion/legionapi/";
 
-    private const string NOGROUPTEXT = "No group";
+    private const string NOGROUPTEXT = "无分组";
 
     public static ScriptManagerWindow Instance { get; private set; }
 
@@ -44,7 +44,7 @@ public class ScriptManagerWindow : MyraControl
 
     private MyraGrid _mainGrid;
 
-    public ScriptManagerWindow() : base("Script Manager")
+    public ScriptManagerWindow() : base("脚本管理器")
     {
         Instance = this;
         CanBeSaved = true;
@@ -124,10 +124,10 @@ public class ScriptManagerWindow : MyraControl
     private Widget BuildMenuBar()
     {
         var bar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-        bar.Widgets.Add(new MyraButton("Menu", ShowMainMenu));
-        bar.Widgets.Add(new MyraButton("Add +", ShowAddMenu));
+        bar.Widgets.Add(new MyraButton("菜单", ShowMainMenu));
+        bar.Widgets.Add(new MyraButton("添加 +", ShowAddMenu));
 
-        var searchBox = new MyraInputBox { HintText = "Search...", Width = 180 };
+        var searchBox = new MyraInputBox { HintText = "搜索...", Width = 180 };
         searchBox.TextChangedByUser += (_, _) =>
         {
             _searchFilter = searchBox.Text ?? "";
@@ -141,13 +141,13 @@ public class ScriptManagerWindow : MyraControl
     {
         bool cacheDisabled = LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache;
         ShowContextMenu(
-            ("Refresh",                    () => _pendingReload = true),
-            ("Public Script Browser",      ScriptBrowser.Show),
-            ("Script Recording",           () => UIManager.Add(new ScriptRecordingGump())),
-            ("Scripting Info",             ScriptingInfoGump.Show),
-            ("Persistent Variables",       PersistentVarsWindow.Show),
-            ("Running Scripts",            RunningScriptsWindow.Show),
-            (ContextMenuLabelToggle(cacheDisabled, "Disable module cache"), () =>
+            ("刷新",                    () => _pendingReload = true),
+            ("公共脚本浏览器",      ScriptBrowser.Show),
+            ("脚本录制",           () => UIManager.Add(new ScriptRecordingGump())),
+            ("脚本信息",             ScriptingInfoGump.Show),
+            ("持久变量",       PersistentVarsWindow.Show),
+            ("运行中的脚本",            RunningScriptsWindow.Show),
+            (ContextMenuLabelToggle(cacheDisabled, "禁用模块缓存"), () =>
                 LegionScripting.LegionScripting.LScriptSettings.DisableModuleCache = !cacheDisabled)
         );
     }
@@ -259,7 +259,7 @@ public class ScriptManagerWindow : MyraControl
         row.Widgets.Add(new MyraButton("...", () => ShowScriptContextMenu(script)));
 
         bool isPlaying = script.IsPlaying;
-        var playStopBtn = new MyraButton(isPlaying ? "Stop" : "Play", () =>
+        var playStopBtn = new MyraButton(isPlaying ? "停止" : "播放", () =>
         {
             if (script.IsPlaying)
                 LegionScripting.LegionScripting.StopScript(script);
@@ -278,7 +278,7 @@ public class ScriptManagerWindow : MyraControl
             row.Widgets.Add(new MyraLabel(hasGlobal ? "[G]" : "[C]", MyraLabel.TextStyle.P)
             {
                 TextColor = hasGlobal ? Color.Gold : new Color(0, 204, 255, 255),
-                Tooltip = hasGlobal ? "Autostart: All characters" : "Autostart: This character"
+                    Tooltip = hasGlobal ? "自动启动: 所有角色" : "自动启动: 本角色"
             });
         }
 
@@ -306,26 +306,26 @@ public class ScriptManagerWindow : MyraControl
         bool charAuto   = LegionScripting.LegionScripting.AutoLoadEnabled(script, false);
 
         ShowContextMenu(
-            ("Edit Constants",       () => new ScriptConstantsEditorWindow(script)),
-            ("Rename",               () => ShowRenameScriptDialog(script)),
-            ("Edit",                 () => new ScriptEditorWindow(script)),
-            ("Edit Externally",      () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)),
+            ("编辑常量",       () => new ScriptConstantsEditorWindow(script)),
+            ("重命名",               () => ShowRenameScriptDialog(script)),
+            ("编辑",                 () => new ScriptEditorWindow(script)),
+            ("外部编辑",      () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)),
             (Language.Instance.Scripting.OpenLocation, () =>
             {
                 if (!FileSystemHelper.OpenLocation(script.FullPath))
                     GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
             }),
-            (ContextMenuLabelToggle(globalAuto, "Autostart on all chars"), () =>
+            (ContextMenuLabelToggle(globalAuto, "所有角色自动启动"), () =>
             {
                 LegionScripting.LegionScripting.SetAutoPlay(script, true, !globalAuto);
                 RebuildScriptList();
             }),
-            (ContextMenuLabelToggle(charAuto, "Autostart for this char"), () =>
+            (ContextMenuLabelToggle(charAuto, "本角色自动启动"), () =>
             {
                 LegionScripting.LegionScripting.SetAutoPlay(script, false, !charAuto);
                 RebuildScriptList();
             }),
-            ("Create Macro Button", () =>
+            ("创建宏按钮", () =>
             {
                 var mm = MacroManager.TryGetMacroManager(World.Instance);
                 if (mm == null) return;
@@ -337,9 +337,9 @@ public class ScriptManagerWindow : MyraControl
                 bg.CenterYInViewPort();
                 UIManager.Add(bg);
             }),
-            ("Delete", () => ShowDeleteConfirm(
-                "Delete Script",
-                $"Are you sure you want to delete '{script.FileName}'?\nThis action cannot be undone.",
+            ("删除", () => ShowDeleteConfirm(
+                "删除脚本",
+                $"确定要删除 '{script.FileName}' 吗？\n此操作无法撤销。",
                 () => PerformDeleteScript(script)))
         );
     }
@@ -353,17 +353,17 @@ public class ScriptManagerWindow : MyraControl
         var items = new List<(string, Action)>();
 
         if (isRealGroup)
-            items.Add(("Rename Group", () => ShowRenameGroupDialog(groupName, parentGroup)));
+            items.Add(("重命名分组", () => ShowRenameGroupDialog(groupName, parentGroup)));
 
-        items.Add(("New Script", () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
+        items.Add(("新建脚本", () => ShowNewScriptDialog(_contextMenuGroup, _contextMenuSubGroup)));
 
         if (string.IsNullOrEmpty(parentGroup))
-            items.Add(("New Group", ShowNewGroupDialog));
+            items.Add(("新建分组", ShowNewGroupDialog));
 
         if (isRealGroup)
-            items.Add(("Delete Group", () => ShowDeleteConfirm(
-                "Delete Group",
-                $"Delete group '{groupName}'?\nThis will permanently delete the folder and ALL scripts inside it.",
+            items.Add(("删除分组", () => ShowDeleteConfirm(
+                "删除分组",
+                $"删除分组 '{groupName}' ？\n这将永久删除该文件夹及其中的所有脚本。",
                 () => PerformDeleteGroup(groupName, parentGroup))));
 
         ShowContextMenu(items.ToArray());
@@ -373,12 +373,12 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewScriptDialog(string contextGroup, string contextSubGroup)
     {
-        var nameBox = new MyraInputBox { HintText = "script_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = "脚本名称", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this script:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel("请输入脚本名称：", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Script", content, ok =>
+        new MyraDialog("新建脚本", content, ok =>
         {
             if (!ok) return;
             string name = nameBox.Text?.Trim() ?? "";
@@ -389,12 +389,12 @@ public class ScriptManagerWindow : MyraControl
 
     private void ShowNewGroupDialog()
     {
-        var nameBox = new MyraInputBox { HintText = "group_name", Width = 220 };
+        var nameBox = new MyraInputBox { HintText = "分组名称", Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel("Enter a name for this group:", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel("请输入分组名称：", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("New Group", content, ok =>
+        new MyraDialog("新建分组", content, ok =>
         {
             if (!ok) return;
             CreateGroup(nameBox.Text?.Trim() ?? "", _contextMenuGroup, _contextMenuSubGroup);
@@ -409,10 +409,10 @@ public class ScriptManagerWindow : MyraControl
 
         var nameBox = new MyraInputBox { Text = displayName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for '{displayName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel($"'{displayName}' 的新名称：", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Script", content, ok =>
+        new MyraDialog("重命名脚本", content, ok =>
         {
             if (ok) PerformRenameScript(script, nameBox.Text?.Trim() ?? "");
         });
@@ -422,10 +422,10 @@ public class ScriptManagerWindow : MyraControl
     {
         var nameBox = new MyraInputBox { Text = groupName, Width = 220 };
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"New name for group '{groupName}':", MyraLabel.TextStyle.P));
+        content.Widgets.Add(new MyraLabel($"分组 '{groupName}' 的新名称：", MyraLabel.TextStyle.P));
         content.Widgets.Add(nameBox);
 
-        new MyraDialog("Rename Group", content, ok =>
+        new MyraDialog("重命名分组", content, ok =>
         {
             if (ok) PerformRenameGroup(groupName, parentGroup, nameBox.Text?.Trim() ?? "");
         });
@@ -470,7 +470,7 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName.Contains("..") || sanitizedName is "." or "..")
         {
-            GameActions.Print(World.Instance, "Invalid script name.", 32);
+            GameActions.Print(World.Instance, "无效的脚本名称。", 32);
             return;
         }
 
@@ -493,7 +493,7 @@ public class ScriptManagerWindow : MyraControl
             if (!targetDirFull.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetDirFull.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid target directory.", 32);
+                GameActions.Print(World.Instance, "无效的目标目录。", 32);
                 return;
             }
 
@@ -503,16 +503,16 @@ public class ScriptManagerWindow : MyraControl
             {
                 File.WriteAllText(targetFileFull, SCRIPT_HEADER);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Created script '{sanitizedName}'", 66);
+                GameActions.Print(World.Instance, $"已创建脚本 '{sanitizedName}'", 66);
             }
             else
             {
-                GameActions.Print(World.Instance, $"A script named '{sanitizedName}' already exists.", 32);
+                GameActions.Print(World.Instance, $"名为 '{sanitizedName}' 的脚本已存在。", 32);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"File operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating script: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "访问被拒绝。", 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, $"文件操作失败: {ioEx.Message}", 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, $"创建脚本出错: {e.Message}", 32); Log.Error(e.ToString()); }
     }
 
     private void CreateGroup(string name, string contextGroup, string contextSubGroup)
@@ -527,7 +527,7 @@ public class ScriptManagerWindow : MyraControl
             sanitizedName.Contains('\\') || sanitizedName.Contains('/') ||
             sanitizedName is ".." or ".")
         {
-            GameActions.Print(World.Instance, "Invalid group name.", 32);
+            GameActions.Print(World.Instance, "无效的分组名称。", 32);
             return;
         }
 
@@ -547,18 +547,18 @@ public class ScriptManagerWindow : MyraControl
             if (!targetPath.StartsWith(scriptsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !targetPath.Equals(scriptsRoot, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, "Invalid group location.", 32);
+                GameActions.Print(World.Instance, "无效的分组位置。", 32);
                 return;
             }
 
             if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
             File.WriteAllText(Path.Combine(targetPath, "Example.py"), "import API");
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Created group '{sanitizedName}'", 66);
+            GameActions.Print(World.Instance, $"已创建分组 '{sanitizedName}'", 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception e) { GameActions.Print(World.Instance, $"Error creating group: {e.Message}", 32); Log.Error(e.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "访问被拒绝。", 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, $"目录操作失败: {ioEx.Message}", 32); }
+        catch (Exception e) { GameActions.Print(World.Instance, $"创建分组出错: {e.Message}", 32); Log.Error(e.ToString()); }
     }
 
     private void PerformRenameScript(ScriptFile script, string newDisplayName)
@@ -576,7 +576,7 @@ public class ScriptManagerWindow : MyraControl
 
             if (File.Exists(newPath) && !string.Equals(script.FullPath, newPath))
             {
-                GameActions.Print(World.Instance, $"A file named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, $"名为 '{newName}' 的文件已存在。", 32);
                 return;
             }
 
@@ -588,7 +588,7 @@ public class ScriptManagerWindow : MyraControl
                 _pendingReload   = true;
             }
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming script: {ex.Message}", 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, $"重命名脚本出错: {ex.Message}", 32); }
     }
 
     private void PerformRenameGroup(string groupName, string parentGroup, string newName)
@@ -610,25 +610,25 @@ public class ScriptManagerWindow : MyraControl
 
             if (Directory.Exists(newPath) && !string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
-                GameActions.Print(World.Instance, $"A group named '{newName}' already exists.", 32);
+                GameActions.Print(World.Instance, $"名为 '{newName}' 的分组已存在。", 32);
                 return;
             }
             if (!Directory.Exists(currentPath))
             {
-                GameActions.Print(World.Instance, $"Source group '{groupName}' not found.", 32);
+                GameActions.Print(World.Instance, $"未找到源分组 '{groupName}'。", 32);
                 return;
             }
             if (!string.Equals(currentPath, newPath, StringComparison.OrdinalIgnoreCase))
             {
                 Directory.Move(currentPath, newPath);
                 _pendingReload = true;
-                GameActions.Print(World.Instance, $"Renamed group '{groupName}' to '{newName}'", 66);
+                GameActions.Print(World.Instance, $"已将分组 '{groupName}' 重命名为 '{newName}'", 66);
             }
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, "Directory not found.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Directory operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "访问被拒绝。", 32); }
+        catch (DirectoryNotFoundException)  { GameActions.Print(World.Instance, "目录未找到。", 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, $"目录操作失败: {ioEx.Message}", 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, $"重命名分组出错: {ex.Message}", 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteScript(ScriptFile script)
@@ -638,9 +638,9 @@ public class ScriptManagerWindow : MyraControl
             File.Delete(script.FullPath);
             LegionScripting.LegionScripting.LoadedScripts.Remove(script);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted script '{script.FileName}'", 66);
+            GameActions.Print(World.Instance, $"已删除脚本 '{script.FileName}'", 66);
         }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting script: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (Exception ex) { GameActions.Print(World.Instance, $"删除脚本出错: {ex.Message}", 32); Log.Error(ex.ToString()); }
     }
 
     private void PerformDeleteGroup(string groupName, string parentGroup)
@@ -652,16 +652,16 @@ public class ScriptManagerWindow : MyraControl
 
             if (!Directory.Exists(gPath))
             {
-                GameActions.Print(World.Instance, $"Group '{groupName}' not found", 32);
+                GameActions.Print(World.Instance, $"未找到分组 '{groupName}'", 32);
                 return;
             }
 
             Directory.Delete(gPath, true);
             _pendingReload = true;
-            GameActions.Print(World.Instance, $"Deleted group '{groupName}' and all its contents", 66);
+            GameActions.Print(World.Instance, $"已删除分组 '{groupName}' 及其所有内容", 66);
         }
-        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "Access denied.", 32); }
-        catch (IOException ioEx) { GameActions.Print(World.Instance, $"Delete operation failed: {ioEx.Message}", 32); }
-        catch (Exception ex) { GameActions.Print(World.Instance, $"Error deleting group: {ex.Message}", 32); Log.Error(ex.ToString()); }
+        catch (UnauthorizedAccessException) { GameActions.Print(World.Instance, "访问被拒绝。", 32); }
+        catch (IOException ioEx) { GameActions.Print(World.Instance, $"删除操作失败: {ioEx.Message}", 32); }
+        catch (Exception ex) { GameActions.Print(World.Instance, $"删除分组出错: {ex.Message}", 32); Log.Error(ex.ToString()); }
     }
 }

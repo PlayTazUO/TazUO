@@ -121,7 +121,7 @@ namespace ClassicUO.Game.UI.Gumps
             get
             {
                 string status = GetEnabledDisabledText(_autoSortContainer);
-                string sortModeText = _sortMode == GridSortMode.Name ? "Name" : "Graphic + Hue";
+                string sortModeText = _sortMode == GridSortMode.Name ? "名称" : "图形+色相";
                 return $"Sort this container.<br>Left click to show sort options<br>Alt + Click to enable auto sort<br>Current sort: {sortModeText}<br>Auto sort currently {status}";
             }
         }
@@ -333,7 +333,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Width = _background.Width - 18,
                 Height = 20
             };
-            _searchBox.PlaceHolderText = "Search...";
+            _searchBox.PlaceHolderText = "搜索...";
             _searchBox.TextChanged += (sender, e) => { UpdateItems(); };
 
             _searchClearButton = new NiceButton(_borderWidth + _background.Width - 16, _borderWidth + LABEL_HEIGHT, 16, _searchBox.Height, ButtonAction.Default, "X");
@@ -345,7 +345,7 @@ namespace ClassicUO.Game.UI.Gumps
                     UIManager.SystemChat?.SetFocus();
                 }
             };
-            _searchClearButton.SetTooltip("Clear search");
+            _searchClearButton.SetTooltip("清除搜索");
 
             Texture2D regularGumpIcon = Client.Game.UO.Gumps.GetGump(5839).Texture;
             _openRegularGump = new GumpPic(_background.Width - 25 - _borderWidth, _borderWidth, regularGumpIcon == null ? (ushort)1209 : (ushort)5839, 0);
@@ -599,7 +599,7 @@ namespace ClassicUO.Game.UI.Gumps
         private ContextMenuControl GenContextMenu()
         {
             var control = new ContextMenuControl(this);
-            control.Add(new ContextMenuItemEntry("Open Original View", () =>
+            control.Add(new ContextMenuItemEntry("打开原始视图", () =>
             {
                 UseOldContainerStyle = true;
                 OpenOldContainer(LocalSerial);
@@ -614,31 +614,31 @@ namespace ClassicUO.Game.UI.Gumps
                 }, true, ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
             ));
 
-            control.Add(new ContextMenuItemEntry("Stack Similar Items in the Original View", () =>
+            control.Add(new ContextMenuItemEntry("堆叠相似物品...", () =>
             {
                 StackNonStackableItems = !StackNonStackableItems;
                 _openRegularGump.ContextMenu = GenContextMenu();
             }, true, StackNonStackableItems));
 
-            control.Add(new ContextMenuItemEntry("Open Grid View Highlight Settings", () =>
+            control.Add(new ContextMenuItemEntry("打开网格视图高亮设置", () =>
             {
                 GridHighlightMenu.Open(World);
             }));
 
             if (Container != World.Player.Backpack)
             {
-                control.Add(new ContextMenuItemEntry("Autoloot this container", () =>
+                control.Add(new ContextMenuItemEntry("自动拾取此容器", () =>
                 {
                     AutoLootManager.Instance.ForceLootContainer(LocalSerial);
                 }));
             }
 
             // Re-applies highlight rules and colors; useful if item highlights desync after SOS loot or container refresh.
-            control.Add(new ContextMenuItemEntry("Refresh item highlights", GridHighlightData.RecheckMatchStatus));
+            control.Add(new ContextMenuItemEntry("刷新物品高亮", GridHighlightData.RecheckMatchStatus));
 
-            control.Add(new ContextMenuItemEntry("Rename container", () =>
-            {
-                var input = new InputRequest(World, "Type in a custom name for this container.", "Save", "Reset", (r, s) =>
+control.Add(new ContextMenuItemEntry("重命名容器", () =>
+                {
+                    var input = new InputRequest(World, "输入自定义名称...", "保存预设", "重置", (r, s) =>
                 {
                     _gridContainerEntry?.CustomName = r == InputRequest.Result.BUTTON1 ? s : null;
 

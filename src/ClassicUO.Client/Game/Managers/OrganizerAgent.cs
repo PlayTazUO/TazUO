@@ -144,7 +144,7 @@ namespace ClassicUO.Game.Managers
         {
             if (OrganizerConfigs.Count == 0)
             {
-                GameActions.Print(World.Instance, "No organizers configured.");
+                GameActions.Print(World.Instance, "未配置整理器。");
                 return;
             }
 
@@ -163,7 +163,7 @@ namespace ClassicUO.Game.Managers
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, "找不到玩家主背包。");
                 return;
             }
 
@@ -197,7 +197,7 @@ namespace ClassicUO.Game.Managers
 
             if (totalOrganized == 0)
             {
-                GameActions.Print(World.Instance, "No items were organized.", 33);
+                GameActions.Print(World.Instance, "没有整理任何物品。", 33);
             }
         }
 
@@ -343,7 +343,7 @@ namespace ClassicUO.Game.Managers
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, "找不到玩家主背包。");
                 return;
             }
 
@@ -373,7 +373,7 @@ namespace ClassicUO.Game.Managers
             int organized = OrganizeItems(sourceCont, destCont, config);
             if (organized == 0)
             {
-                GameActions.Print(World.Instance, $"No items were organized by '{config.Name}'.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, $"配置'{config.Name}'没有整理任何物品。", Constants.HUE_ERROR);
             }
         }
 
