@@ -453,6 +453,24 @@ namespace ClassicUO.Game
             return maxZ;
         }
 
+        private bool IsHouseStairTile(int x, int y)
+        {
+            GameObject tile = _world.Map.GetTile(x, y, false);
+            if (tile == null) return false;
+            GameObject obj = tile;
+            while (obj.TPrevious != null) obj = obj.TPrevious;
+            for (; obj != null; obj = obj.TNext)
+            {
+                if (obj is Multi m)
+                {
+                    ref var data = ref Client.Game.UO.FileManager.TileData.StaticData[m.Graphic];
+                    if ((data.IsSurface || data.IsBridge) && data.Height > 0)
+                        return true;
+                }
+            }
+            return false;
+        }
+
         public bool CalculateNewZ(int x, int y, ref sbyte z, int direction)
         {
             int stepState = (int)PATH_STEP_STATE.PSS_NORMAL;
@@ -677,6 +695,13 @@ namespace ClassicUO.Game
                 GetNewXY((byte)direction, ref newX, ref newY);
             bool passed = CalculateNewZ(newX, newY, ref newZ, (byte)direction);
 
+            if (passed && ProfileManager.CurrentProfile.BlockStairsInWarMode &&
+                _world.Player != null && _world.Player.InWarMode &&
+                IsHouseStairTile(newX, newY))
+            {
+                passed = false;
+            }
+
             if ((sbyte)direction % 2 != 0)
             {
                 if (passed)
@@ -702,6 +727,12 @@ namespace ClassicUO.Game
                         newDirection = (byte)(((byte)direction + _dirOffset[i]) % 8);
                         GetNewXY(newDirection, ref newX, ref newY);
                         passed = CalculateNewZ(newX, newY, ref newZ, newDirection);
+                        if (passed && ProfileManager.CurrentProfile.BlockStairsInWarMode &&
+                            _world.Player != null && _world.Player.InWarMode &&
+                            IsHouseStairTile(newX, newY))
+                        {
+                            passed = false;
+                        }
                     }
                 }
             }

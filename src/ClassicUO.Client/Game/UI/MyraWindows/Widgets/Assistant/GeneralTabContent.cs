@@ -98,6 +98,12 @@ public static class GeneralTabContent
                 if (b) World.Instance?.Weather.Reset();
             }, lang.DisableWeather, lang.DisableWeatherTooltip));
 
+        rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.BlockStairsInWarMode,
+            b => profile.BlockStairsInWarMode = b, lang.BlockStairsInWar, lang.BlockStairsInWarTooltip));
+
+        rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.DisableGargoyleFlyingAnim,
+            b => profile.DisableGargoyleFlyingAnim = b, lang.DisableGargoyleFlying, lang.DisableGargoyleFlyingTooltip));
+
         var healLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell)?.Name ??
                                       profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };
 

@@ -706,5 +706,9 @@ namespace ClassicUO.Configuration
         public string SetQuickCureSpell { get; set; } = "Set cure spell";
         public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
         public string SingleClickLastTarg { get; set; } = "Single clicking a mobile will set it as last target.";
+        public string BlockStairsInWar { get; set; } = "Block stairs in war mode";
+        public string BlockStairsInWarTooltip { get; set; } = "Prevent walking on stairs or Z-changing tiles while in war mode.";
+        public string DisableGargoyleFlying { get; set; } = "Disable gargoyle flying animation";
+        public string DisableGargoyleFlyingTooltip { get; set; } = "Hides the wing flapping animation of flying gargoyles (client-side only).";
     }
 }

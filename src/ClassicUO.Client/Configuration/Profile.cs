@@ -322,6 +322,10 @@ namespace ClassicUO.Configuration
 
         public bool IgnoreStaminaCheck { get; set; } = false;
 
+        public bool BlockStairsInWarMode { get; set; }
+
+        public bool DisableGargoyleFlyingAnim { get; set; }
+
         public bool ShowJournalClient { get; set; } = true;
         public bool ShowJournalObjects { get; set; } = true;
         public bool ShowJournalSystem { get; set; } = true;
