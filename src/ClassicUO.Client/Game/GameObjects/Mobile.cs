@@ -518,7 +518,7 @@ namespace ClassicUO.Game.GameObjects
                         return;
                     }
 
-                    if (IsGargoyle && IsFlying)
+                    if (IsGargoyle && IsFlying && !ProfileManager.CurrentProfile.DisableGargoyleFlyingAnim)
                     {
                         if (RandomHelper.GetValue(0, 2) != 0)
                         {
@@ -990,7 +990,7 @@ namespace ClassicUO.Game.GameObjects
 
             Point p = RealScreenPosition;
 
-            if (IsGargoyle && IsFlying)
+            if (IsGargoyle && IsFlying && !ProfileManager.CurrentProfile.DisableGargoyleFlyingAnim)
             {
                 p.Y -= 22;
             }
