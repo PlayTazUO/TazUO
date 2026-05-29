@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development ( `dev` branch )
 
+
+## V5.2.0
+
 ### Features
 * Automatic loading of system fonts - [P.R 444](https://github.com/PlayTazUO/TazUO/pull/444) ([yuval-po](https://github.com/yuval-po) & [bittiez](https://github.com/bittiez))
 * Added Timer APIs to Legion - [P.R 457](https://github.com/PlayTazUO/TazUO/pull/457) ([yuval-po](https://github.com/yuval-po))
