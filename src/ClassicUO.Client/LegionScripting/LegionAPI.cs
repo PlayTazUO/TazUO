@@ -236,8 +236,12 @@ namespace ClassicUO.LegionScripting
             // Dispose of any timed callbacks
             foreach (TimedCallback callback in _timedCallbacks.Values)
             {
-                callback.Timer?.Stop();
-                callback.Timer?.Dispose();
+                lock (callback)
+                {
+                    callback.IsCancellationRequested = true;
+                    callback.Timer?.Stop();
+                    callback.Timer?.Dispose();
+                }
             }
             _timedCallbacks.Clear();
 
