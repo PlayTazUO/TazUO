@@ -324,6 +324,7 @@ namespace ClassicUO.Game.UI.Gumps
                 CanMove = true
             };
             _containerNameLabel.MouseDoubleClick += OnMinimizeToggleDoubleClick;
+            _containerNameLabel.MouseUp += OnBackgroundMouseUp;
 
             _searchBox = new StbTextBox(0xFF, 20, 0, true, FontStyle.None, 0x0481)
             {
@@ -831,12 +832,16 @@ namespace ClassicUO.Game.UI.Gumps
         /// The background panel is the one holding the container's name and is
         /// the only visible part when minimized.
         /// </summary>
-        /// <param name="_">The event's sender. Ignored</param>
+        /// <param name="sender">The event's sender. May be the background, title label, etc.</param>
         /// <param name="e">The mouse event's arguments</param>
-        private void OnBackgroundMouseUp(object _, MouseEventArgs e)
+        private void OnBackgroundMouseUp(object sender, MouseEventArgs e)
         {
             // Check whether we're trying to drop an item on the background
-            if (e.Button != MouseButtonType.Left || !_background.MouseIsOver || !Client.Game.UO.GameCursor.ItemHold.Enabled)
+            if (e.Button != MouseButtonType.Left || !Client.Game.UO.GameCursor.ItemHold.Enabled)
+                return;
+
+            // Verify the sender is actually what we expect it to be
+            if (sender is not Control { MouseIsOver: true })
                 return;
 
             // Issue a direct drop item command and let the underlying `UpdateContainerItem`
@@ -922,6 +927,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (SlotManager != null && !_skipSave && SlotManager.ItemPositions.Count > 0 && !_isCorpse)
                 _gridContainerEntry.UpdateSaveDataEntry(this);
 
+            // Dispose of the event handlers
             if (_background != null)
             {
                 _background.MouseDoubleClick -= OnMinimizeToggleDoubleClick;
@@ -930,6 +936,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (_backgroundTexture != null)
                 _backgroundTexture.MouseDoubleClick -= OnMinimizeToggleDoubleClick;
+
+            if (_containerNameLabel != null)
+                _containerNameLabel.MouseUp -= OnBackgroundMouseUp;
 
             base.Dispose();
         }
