@@ -122,21 +122,21 @@ namespace ClassicUO.Game.GameObjects
         {
             get
             {
-                Item last;
-                Item item = last = this;
-
+                Item last = null;
+                Item item = this;
                 while (SerialHelper.IsItem(item.Container))
                 {
-                    last = item;
                     item = World.Items.Get(item.Container);
-
                     if (item == null)
                     {
-                        return 0;
+                        break;
                     }
+                    
+                    last = item;
                 }
 
-                return last;
+                // Never return the item itself
+                return last?.Serial ?? 0;
             }
         }
 
