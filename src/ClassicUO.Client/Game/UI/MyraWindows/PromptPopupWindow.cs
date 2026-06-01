@@ -23,6 +23,13 @@ public class PromptPopupWindow : MyraControl
         layout.Widgets.Add(new MyraLabel("The server is requesting input:", MyraLabel.TextStyle.P));
 
         _inputBox = new MyraInputBox { Width = 300, HintText = "Enter your response..." };
+        _inputBox.KeyDown += (s, e) =>
+        {
+            if (e.Data == Microsoft.Xna.Framework.Input.Keys.Enter)
+            {
+                Submit();
+            }
+        };
         layout.Widgets.Add(_inputBox);
 
         var disableCheck = MyraCheckButton.CreateWithCallback(
@@ -42,6 +49,8 @@ public class PromptPopupWindow : MyraControl
         CenterInViewPort();
         UIManager.Add(this);
         BringOnTop();
+        UIManager.KeyboardFocusControl = this;
+        _inputBox.SetKeyboardFocus();
     }
 
     private void Submit()
