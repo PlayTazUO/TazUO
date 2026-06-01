@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 ### Features
 * Pet support for the bandage agent - [P.R 485](https://github.com/PlayTazUO/TazUO/pull/485) ([yuval-po](https://github.com/yuval-po))
 * Allow dropping of items onto minimized grid containers - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
+* Auto focus and enter to submit support added to prompt input window - [P.R 486](https://github.com/PlayTazUO/TazUO/pull/486) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Mouse wheel macros hijack scroll from shop gumps - [P.R 479](https://github.com/PlayTazUO/TazUO/pull/479) ([yuval-po](https://github.com/yuval-po))
