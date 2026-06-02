@@ -16,6 +16,7 @@ All notable changes to TazUO will be recorded here.
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
+* Add option to toggle bandage agent from macros - [P.R 491](https://github.com/PlayTazUO/TazUO/pull/491) ([bittiez](https://github.com/bittiez))
 
 ---
 
