@@ -1328,6 +1328,60 @@ namespace ClassicUO.Game.GameObjects
                                 Abilities[1] = Ability.MortalStrike;
 
                                 break;
+
+                            case 0xAEA5:
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.ArmorIgnore;
+
+                                break;
+
+                            case 0xAEB4:
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.ArmorIgnore;
+
+                                break;
+
+                            case 0xAEC3:
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.ArmorIgnore;
+
+                                break;
+
+                            case 0xAED2: // Publish 119 Paladin War Forks
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.ArmorIgnore;
+
+                                break;
+
+                            case 0xAEA4: 
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.WhirlwindAttack;
+
+                                break;
+
+                            case 0xAEB3:
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.WhirlwindAttack;
+
+                                break;
+
+                            case 0xAEC2:
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.WhirlwindAttack;
+
+                                break;
+
+                            case 0xAED1: // Publish 119 Paladin War Hammers
+                                Abilities[0] = Ability.DoubleStrike;
+                                Abilities[1] = Ability.WhirlwindAttack;
+
+                                break;
+
+                            case 0x4071:
+                                Abilities[0] = Ability.ArmorIgnore;
+                                Abilities[1] = Ability.ParalyzingBlow;
+
+                                break;
                         }
                     }
                 }
