@@ -157,6 +157,7 @@ namespace ClassicUO.Configuration
             public string AutoOpenCorpse { get; set; } = "Automatically open corpses";
             public string CorpseOpenDistance { get; set; } = "Corpse open distance";
             public string CorpseSkipEmpty { get; set; } = "Skip empty corpses";
+            public string CorpseSkipEmptyTooltip { get; set; } = "Most servers don't send corpse contents until it's opened.\nEnabling this will make this feature not work on most servers.";
             public string CorpseOpenOptions { get; set; } = "Corpse open options";
             public string CorpseOptNone { get; set; } = "None";
             public string CorpseOptNotTarg { get; set; } = "Not targeting";

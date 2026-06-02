@@ -7,7 +7,6 @@ using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -45,16 +44,8 @@ public class OptionsWindow : MyraControl
         Padding = new Thickness(3, 0, 0, 10)
     };
 
-    private readonly WrapPanel _searchPanel = new()
-    {
-        UniformSizing = false,
-        Orientation = Orientation.Vertical
-    };
-    private readonly WrapPanel _optionsStack = new()
-    {
-        UniformSizing = false,
-        Orientation = Orientation.Vertical
-    };
+    private readonly WrapPanel _searchPanel = new() { UniformSizing = false, Orientation = Orientation.Vertical };
+    private readonly WrapPanel _optionsStack = new() { UniformSizing = false, Orientation = Orientation.Vertical };
 
     private readonly MyraInputBox _searchField = new()
     {
@@ -95,15 +86,13 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
-        SetupGeneralOptions();
         SetupVideo();
         SetupSound();
         SetupGameplayTab();
         SetupMobileOptions();
         SetupInterfaceOptions();
-        SetupMiscOptions();
         SetupChatOptions();
-        SetupExperimentalOptions();
+        SetupMiscOptions();
     }
 
     private void Build()
@@ -122,9 +111,7 @@ public class OptionsWindow : MyraControl
 
         WrapPanel categoryPanel = new()
         {
-            Orientation = Orientation.Vertical,
-            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalSpacing = MyraStyle.STANDARD_SPACING
+            Orientation = Orientation.Vertical, HorizontalSpacing = MyraStyle.STANDARD_SPACING, VerticalSpacing = MyraStyle.STANDARD_SPACING
         };
 
         _mainArea.AddWidget(categoryPanel.WrapInScroll(MAX_HEIGHT), 1, 0);
@@ -215,45 +202,6 @@ public class OptionsWindow : MyraControl
             _optionsPanel.Widgets.Add(optionItem);
     }
 
-    private void SetupGeneralOptions()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        const string generalKey = "General";
-
-        if (!_options.ContainsKey(generalKey))
-            _options.Add(generalKey, []);
-
-        List<OptionItem> general = _options[generalKey];
-
-        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
-
-        general.Add(OptionsFactory.CreateCheckboxOption(genLang.HighlightObjects, new Accessor<bool>(() => profile.HighlightGameObjects)));
-
-        general.Add(OptionsFactory.CreateSpacer());
-
-        general.Add(new OptionItem(genLang.AutoOpenCorpse, () => new CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenCorpses), genLang.AutoOpenCorpse),
-            OptionsFactory.CreateSliderOption(genLang.CorpseOpenDistance, 0, 5, profile.AutoOpenCorpseRange,
-                f => profile.AutoOpenCorpseRange = (int)f).SetTags("corpse, loot"),
-            OptionsFactory.CreateCheckboxOption(genLang.CorpseSkipEmpty, new Accessor<bool>(() => profile.SkipEmptyCorpse),
-                    "Most servers don't send corpse contents until it's opened.\nEnabling this will make this feature not work on most servers."
-                )
-                .SetTags("corpse, loot"),
-            OptionsFactory.CreateComboBox(genLang.CorpseOpenOptions, profile.CorpseOpenOptions, [
-                genLang.CorpseOptNone, genLang.CorpseOptNotTarg,
-                genLang.CorpseOptNotHiding, genLang.CorpseOptBoth
-            ], i => profile.CorpseOpenOptions = i).SetTags("corpse, loot")
-        )).SetTags("corpse, loot"));
-
-        general.Add(OptionsFactory.CreateSpacer());
-
-        general.Add(OptionsFactory.CreateCheckboxOption(genLang.OutRangeColor, new Accessor<bool>(() => profile.NoColorObjectsOutOfRange)));
-        general.Add(OptionsFactory.CreateCheckboxOption(genLang.SallosEasyGrab, new Accessor<bool>(() => profile.SallosEasyGrab), genLang.SallosTooltip));
-        general.Add(OptionsFactory.CreateCheckboxOption(genLang.ShowHouseContent, new Accessor<bool>(() => profile.ShowHouseContent), genLang.ClientVersionLimitedTooltip));
-        general.Add(OptionsFactory.CreateCheckboxOption(genLang.SmoothBoat, new Accessor<bool>(() => profile.UseSmoothBoatMovement), genLang.ClientVersionLimitedTooltip));
-    }
-
     private void SetupMobileOptions()
     {
         const string mobilesKey = "Mobiles";
@@ -273,168 +221,12 @@ public class OptionsWindow : MyraControl
 
     private void SetupMiscOptions()
     {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
         const string miscKey = "Misc";
 
         if (!_options.ContainsKey(miscKey))
             _options.Add(miscKey, []);
 
-        List<OptionItem> opt = _options[miscKey];
-
-        opt.Add(
-            new OptionItem(
-                genLang.EnableCOT,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), genLang.EnableCOT),
-                    OptionsFactory.CreateSliderOption(
-                        genLang.COTDistance,
-                        Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                        Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                        profile.CircleOfTransparencyRadius,
-                        f => profile.CircleOfTransparencyRadius = (int)f
-                    ).SetTags("cot, circle of transparency"),
-                    OptionsFactory.CreateComboBox(
-                        genLang.COTType,
-                        profile.CircleOfTransparencyType,
-                        [
-                            genLang.COTTypeOptFull,
-                            genLang.COTTypeOptGrad,
-                            genLang.COTTypeOptModern
-                        ],
-                        i => profile.CircleOfTransparencyType = i
-                    ).SetTags("cot, circle of transparency")
-                )
-            ).SetTags("cot, circle of transparency")
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                genLang.HideScreenshotMessage,
-                new Accessor<bool>(() => profile.HideScreenshotStoredInMessage)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                genLang.ObjFade,
-                new Accessor<bool>(() => profile.UseObjectsFading)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                genLang.TextFade,
-                new Accessor<bool>(() => profile.TextFading)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                genLang.CursorRange,
-                new Accessor<bool>(() => profile.ShowTargetRangeIndicator)
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            new OptionItem(
-                genLang.DragSelectHP,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.EnableDragSelect), genLang.DragSelectHP),
-                    OptionsFactory.CreateComboBox(
-                        genLang.DragKeyMod,
-                        profile.DragSelectModifierKey,
-                        [
-                            genLang.SharedNone,
-                            genLang.SharedCtrl,
-                            genLang.SharedShift,
-                            genLang.SharedAlt
-                        ],
-                        i => profile.DragSelectModifierKey = i
-                    ),
-                    OptionsFactory.CreateComboBox(
-                        genLang.DragPlayersOnly,
-                        profile.DragSelect_PlayersModifier,
-                        [
-                            genLang.SharedNone,
-                            genLang.SharedCtrl,
-                            genLang.SharedShift,
-                            genLang.SharedAlt
-                        ],
-                        i => profile.DragSelect_PlayersModifier = i
-                    ),
-                    OptionsFactory.CreateComboBox(
-                        genLang.DragMobsOnly,
-                        profile.DragSelect_MonstersModifier,
-                        [
-                            genLang.SharedNone,
-                            genLang.SharedCtrl,
-                            genLang.SharedShift,
-                            genLang.SharedAlt
-                        ],
-                        i => profile.DragSelect_MonstersModifier = i
-                    ),
-                    OptionsFactory.CreateComboBox(
-                        genLang.DragNameplatesOnly,
-                        profile.DragSelect_NameplateModifier,
-                        [
-                            genLang.SharedNone,
-                            genLang.SharedCtrl,
-                            genLang.SharedShift,
-                            genLang.SharedAlt
-                        ],
-                        i => profile.DragSelect_NameplateModifier = i
-                    ),
-                    OptionsFactory.CreateInputField(
-                        genLang.DragX,
-                        profile.DragSelectStartX.ToString(),
-                        s =>
-                        {
-                            if (int.TryParse(s, out int result))
-                                profile.DragSelectStartX = result;
-                        }
-                    ),
-                    OptionsFactory.CreateInputField(
-                        genLang.DragY,
-                        profile.DragSelectStartY.ToString(),
-                        s =>
-                        {
-                            if (int.TryParse(s, out int result))
-                                profile.DragSelectStartY = result;
-                        }
-                    )
-                )
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                genLang.ShowStatsChangedMsg,
-                new Accessor<bool>(() => profile.ShowStatsChangedMessage)
-            )
-        );
-        opt.Add(
-            new OptionItem(
-                genLang.ShowSkillsChangedMsg,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(
-                        new Accessor<bool>(() => profile.ShowSkillsChangedMessage),
-                        genLang.ShowSkillsChangedMsg
-                    ),
-                    OptionsFactory.CreateSliderOption(
-                        genLang.ChangeVolume,
-                        0,
-                        100,
-                        profile.ShowSkillsChangedDeltaValue,
-                        f => profile.ShowSkillsChangedDeltaValue = (int)f
-                    )
-                )
-            )
-        );
+        _options[miscKey].Add(MiscTab.GetContent());
     }
 
     private void SetupGameplayTab()
@@ -594,48 +386,5 @@ public class OptionsWindow : MyraControl
         List<OptionItem> opt = _options[speechKey];
 
         opt.Add(ChatTab.GetContent());
-    }
-
-    private void SetupExperimentalOptions()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Experimental experimentalLang = lang.GetExperimental;
-
-        if (!_options.ContainsKey("Experimental"))
-            _options.Add("Experimental", []);
-
-        List<OptionItem> opt = _options["Experimental"];
-
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableDefaultUoHotkeys,
-                new Accessor<bool>(() => profile.DisableDefaultHotkeys)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableArrowsNumlockArrowsPlayerMovement,
-                new Accessor<bool>(() => profile.DisableArrowBtn)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableTabToggleWarmode,
-                new Accessor<bool>(() => profile.DisableTabBtn)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableCtrlQWMessageHistory,
-                new Accessor<bool>(() => profile.DisableCtrlQWBtn)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableRightLeftClickAutoMove,
-                new Accessor<bool>(() => profile.DisableAutoMove)
-            )
-        );
     }
 }

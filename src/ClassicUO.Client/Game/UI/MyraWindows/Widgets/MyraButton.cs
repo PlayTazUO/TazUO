@@ -1,5 +1,8 @@
 #nullable enable
+
 using System;
+using System.Collections.Generic;
+using FontStashSharp;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 
@@ -9,17 +12,49 @@ public class MyraButton : Button
 {
     private readonly Action? _onClick;
 
-    public string Text { get; }
+    private string _text = "";
 
-    public MyraButton(string text, Action? onClick = null, MyraLabel.TextStyle style = MyraLabel.TextStyle.P)
+    public string Text
     {
-        _onClick = onClick;
-        Text = text;
-        Margin = new Thickness(2);
-        VerticalAlignment = VerticalAlignment.Center;
-        DisabledBackground = Background;
+        get => _text;
+        set => SetField(ref _text, value);
+    }
 
-        Build(style);
+    private SpriteFontBase? _labelFont;
+
+    public SpriteFontBase? LabelFont
+    {
+        get => _labelFont;
+        set => SetField(ref _labelFont, value);
+    }
+
+    private MyraLabel.TextStyle _labelStyle;
+
+    public MyraLabel.TextStyle LabelStyle
+    {
+        get => _labelStyle;
+        set => SetField(ref _labelStyle, value);
+    }
+
+    public MyraButton(
+        string text,
+        Action? onClick = null,
+        MyraLabel.TextStyle style = MyraLabel.TextStyle.P,
+        SpriteFontBase? labelFont = null
+    )
+    {
+        if (!string.IsNullOrEmpty(text))
+            _text = text;
+
+        _labelStyle = style;
+        _labelFont = labelFont;
+
+        _onClick = onClick;
+        Margin = new Thickness(2);
+        DisabledBackground = Background;
+        VerticalAlignment = VerticalAlignment.Center;
+
+        Build();
     }
 
     public override void OnTouchDown()
@@ -30,5 +65,22 @@ public class MyraButton : Button
             _onClick?.Invoke();
     }
 
-    private void Build(MyraLabel.TextStyle style) => Content = new MyraLabel(Text, style);
+    private void Build()
+    {
+        var content = new MyraLabel(Text, LabelStyle);
+
+        if (LabelFont != null)
+            content.Font = LabelFont;
+
+        Content = content;
+    }
+
+    protected void SetField<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return;
+
+        field = value;
+        Build();
+    }
 }
