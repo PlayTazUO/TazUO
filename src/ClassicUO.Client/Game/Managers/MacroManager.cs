@@ -2433,6 +2433,12 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ToggleAutoWalk:
                     GameScene.Instance.ToggleAutoWalk(null);
                     break;
+
+                case MacroType.ToggleBandageAgent:
+                    bool newStatus = !ProfileManager.CurrentProfile.EnableBandageAgent;
+                    ProfileManager.CurrentProfile.EnableBandageAgent = newStatus;
+                    GameActions.Print($"Bandage agent {(newStatus ? "enabled" : "disabled")}.", newStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    break;
             }
 
             return result;
