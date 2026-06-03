@@ -814,6 +814,10 @@ namespace ClassicUO.Configuration
             }
         }
 
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
+        public partial uint DisabledOverheadMessageTypes { get; set; }
+
         private long lastSave;
 
         internal void AfterLoad()

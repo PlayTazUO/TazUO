@@ -4032,6 +4032,37 @@ namespace ClassicUO.Game.UI.Gumps
                 ), true, page
             );
 
+            content.RemoveIndent();
+            content.BlankLine();
+
+            content.AddToRight(TextBox.GetOne(
+                    "Disable overhead messages of these types:",
+                    ThemeSettings.FONT,
+                    ThemeSettings.STANDARD_TEXT_SIZE,
+                    ThemeSettings.TEXT_FONT_COLOR, 
+                    TextBox.RTLOptions.Default()),
+                true, page);
+
+            content.Indent();
+            foreach (MessageType mtype in Enum.GetValues<MessageType>())
+            {
+                if(mtype == MessageType.Discord || mtype == MessageType.ChatSystem || mtype == MessageType.Encoded)
+                    continue;
+
+                content.AddToRight
+                (
+                    c = new CheckboxWithLabel
+                    (
+                        Enum.GetName(mtype), 0, MessageTypeFilter.IsEnabled(profile.DisabledOverheadMessageTypes, mtype), (b) =>
+                        {
+                            profile.DisabledOverheadMessageTypes = MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mtype, b);
+                        }
+                    ), true, page
+                );
+            }
+
+            content.BlankLine();
+
             #endregion
 
             #endregion

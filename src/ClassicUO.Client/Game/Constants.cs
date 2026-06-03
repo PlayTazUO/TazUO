@@ -133,6 +133,7 @@ namespace ClassicUO.Game
             public const string IRC_AUTO_CONNECT = "irc_disable_auto_connect";
             public const string PATH_Z_LEVEL = "path_z_level";
             public const string SINGLE_CLICK_SET_LAST_TARG = "single_click_set_last_targ";
+            public const string OVERHEAD_MESSAGE_TYPES_HIDDEN = "overhead_message_types_shown";
         }
     }
 }
