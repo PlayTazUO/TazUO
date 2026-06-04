@@ -45,7 +45,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public ModernColorPicker(World world, Action<ushort> hueChanged, uint serial = 0) : base(world, 0, 0)
         {
-            _pages = Client.Game.UO.FileManager.Hues.HuesCount / (ROWS * COLUMNS);
+            _pages = (int)Math.Ceiling((double)(Client.Game.UO.FileManager.Hues.HuesCount / (ROWS * COLUMNS)));
             CanCloseWithRightClick = true;
             CanMove = true;
             AcceptMouseInput = true;
