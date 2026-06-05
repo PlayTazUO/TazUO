@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Xml;
@@ -14,7 +14,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SDL3;
 using ClassicUO.Assets;
-using System.Text.Json.Serialization;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -236,8 +235,16 @@ namespace ClassicUO.Game.UI.Gumps
             return max;
         }
 
+        protected override void OnDragBegin(int x, int y)
+        {
+            _world.DelayedObjectClickManager.Clear(LocalSerial);
+            base.OnDragBegin(x, y);
+        }
+
         protected override void OnDragEnd(int x, int y)
         {
+            _world.DelayedObjectClickManager.Clear(LocalSerial);
+
             // when dragging an healthbar with target on, we have to reset the dclick timer
             if (World.TargetManager.IsTargeting)
             {
@@ -298,15 +305,28 @@ namespace ClassicUO.Game.UI.Gumps
                 World.TargetManager.Target(LocalSerial);
                 Mouse.LastLeftButtonClickTime = 0;
             }
-            else if (_canChangeName)
+            else if (_canChangeName && _textBox != null && _textBox.Bounds.Contains(x, y))
             {
-                if (_textBox != null)
-                {
-                    _textBox.IsEditable = false;
-                }
-
+                _textBox.IsEditable = false;
                 UIManager.KeyboardFocusControl = null;
                 UIManager.SystemChat?.SetFocus();
+            }
+            else if (!_world.Player.InWarMode)
+            {
+                if (!_world.DelayedObjectClickManager.IsEnabled)
+                {
+                    _world.DelayedObjectClickManager.Set(
+                        LocalSerial,
+                        Mouse.Position.X,
+                        Mouse.Position.Y,
+                        Time.Ticks + Mouse.MOUSE_DELAY_DOUBLE_CLICK
+                    );
+                }
+
+                if (ProfileManager.CurrentProfile.SingleClickMobileSetsLastTarget)
+                {
+                    World.TargetManager.LastTargetInfo.SetEntity(LocalSerial);
+                }
             }
 
             base.OnMouseDown(x, y, button);
@@ -317,6 +337,11 @@ namespace ClassicUO.Game.UI.Gumps
             if (button != MouseButtonType.Left)
             {
                 return false;
+            }
+
+            if (_world.DelayedObjectClickManager.IsEnabled)
+            {
+                _world.DelayedObjectClickManager.Clear(LocalSerial);
             }
 
             if (_canChangeName)
