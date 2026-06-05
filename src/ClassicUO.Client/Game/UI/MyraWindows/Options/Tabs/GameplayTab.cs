@@ -16,7 +16,7 @@ public static class GameplayTab
     private static MyraTabControl GetGameplayMenuTabs()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.MovementTabLang movementTabLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTabTab;
+        ModernOptionsGumpLanguage.MovementTabLang movementTabLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTab;
 
         var tabs = new MyraTabControl();
         tabs.AddTab(lang.ButtonCombatSpells, CombatTab.GetContent);

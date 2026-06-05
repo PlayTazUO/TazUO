@@ -129,17 +129,23 @@ namespace ClassicUO.Configuration
 
         public MobilesLangTab MobilesTab { get; set; } = new();
 
-        public MovementTabLang MovementTabTab { get; set; } = new();
+        public MovementTabLang MovementTab { get; set; } = new();
 
         public MiscTabLang MiscTab { get; set; } = new();
 
         public ChatTabLang ChatTab { get; set; } = new();
+
+        public CooldownsTabLang CooldownsTab { get; set; } = new();
+
+        public GumpsTabLang GumpsTab { get; set; } = new();
 
         public class MovementTabLang
         {
             public string Movement { get; set; } = "Movement";
             public string General { get; set; } = "General";
             public string Pathfinding { get; set; } = "Pathfinding";
+            public string AutoAvoidObstacles { get; set; } = "Auto Avoid Obstacles";
+            public string UseWasdMovement { get; set; } = "Use WASD movement instead of arrow keys";
         }
 
         public class MobilesLangTab
@@ -152,6 +158,7 @@ namespace ClassicUO.Configuration
         public class MiscTabLang
         {
             public MiscTabControllerSection ControllerSection { get; set; } = new();
+            public string OpenIgnoreListButtonLabel { get; set; } = "Open Ignore List";
         }
 
         public class MiscTabControllerSection
@@ -181,6 +188,32 @@ namespace ClassicUO.Configuration
             public string JournalFont { get; set; } = "Journal";
             public string NameplateFont { get; set; } = "Nameplate";
             public string OptionsFont { get; set; } = "Options menu";
+        }
+
+        public class CooldownsTabLang
+        {
+            public string CooldownBarsLabel { get; set; } = "Cooldown Bars";
+            public string CustomCooldownBars { get; set; } = "Custom Cooldown Bars";
+            public string PositionX { get; set; } = "Position X";
+            public string PositionY { get; set; } = "Position Y";
+            public string UseLastMovedBarPosition { get; set; } = "Use last moved bar position";
+            public string Conditions { get; set; } = "Conditions";
+            public string AddCondition { get; set; } = "+ Add condition";
+        }
+
+        public class GumpsTabLang
+        {
+            public string GumpsLabel { get; set; } = "Gumps";
+            public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
+            public string BuffGumpHue { get; set; } = "Buff gump hue";
+            public string EnableAdvancedShopGump { get; set; } = "Enable advanced shop gump";
+            public string EnableGumpOpacityAdjustViaAltScroll { get; set; } = "Enable gump opacity adjust via Alt + Scroll";
+            public string AltForAnchorsGumps { get; set; } = "Require alt to close anchored gumps";
+            public string AltToMoveGumps { get; set; } = "Require alt to move gumps";
+            public string CloseEntireAnchorWithRClick { get; set; } = "Close entire group of anchored gumps with right click";
+            public string OriginalSkillsGump { get; set; } = "Use original skills gump";
+            public string OldStatusGump { get; set; } = "Use old status gump";
+            public string PartyInviteGump { get; set; } = "Show party invite gump";
         }
 
         public class General

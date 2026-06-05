@@ -32,7 +32,9 @@ public class LabeledIntegerInput : Widget
     }
 
     public int Value { get => _inputBox.Value; set => _inputBox.Value = value; }
+    public int? InputBoxMinWidth { get => _inputBox.MinWidth; set => _inputBox.MinWidth = value; }
     public int? InputBoxWidth { get => _inputBox.Width; set => _inputBox.Width = value; }
+    public int? InputBoxMaxWidth { get => _inputBox.MaxWidth; set => _inputBox.MaxWidth = value; }
     public int? MinValue { get => _inputBox.MinValue; set => _inputBox.MinValue = value; }
     public int? MaxValue { get => _inputBox.MaxValue; set => _inputBox.MaxValue = value; }
 

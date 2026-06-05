@@ -1,5 +1,7 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
@@ -219,16 +221,27 @@ public static class MiscTab
         );
     }
 
-    private static VisualContainer GetPage3()
+    private static WrapPanel GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab.ControllerSection;
+        ModernOptionsGumpLanguage.MiscTabLang mistLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = mistLang.ControllerSection;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = controllerLang.ControllerSupport, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), controllerLang.EnableController),
-                OptionsFactory.PropBoundSliderOption(controllerLang.MouseSensitivity, new Accessor<int>(() => profile.ControllerMouseSensativity), 1, 20)
+        return OptionTabCommons.StyledVerticalWrapPanel(
+            new VisualContainer(
+                new VisualContainerProps { LabelText = controllerLang.ControllerSupport, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
+                new CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), controllerLang.EnableController),
+                    OptionsFactory.PropBoundSliderOption(controllerLang.MouseSensitivity, new Accessor<int>(() => profile.ControllerMouseSensativity), 1, 20)
+                )
+            ),
+            OptionTabCommons.StyledButton(
+                mistLang.OpenIgnoreListButtonLabel,
+                () =>
+                {
+                    UIManager.GetGump<IgnoreManagerGump>()?.Dispose();
+                    UIManager.Add(new IgnoreManagerGump(World.Instance));
+                }
             )
         );
     }

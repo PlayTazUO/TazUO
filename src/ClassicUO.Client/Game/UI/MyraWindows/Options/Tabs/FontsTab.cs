@@ -1,13 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using Microsoft.Xna.Framework;
-using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -26,6 +21,7 @@ public static class FontsTab
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
 
+        // We need special styling here so no point in using the factory
         var panel = new WrapPanel
         {
             Orientation = Orientation.Horizontal,
@@ -35,7 +31,6 @@ public static class FontsTab
             VerticalAlignment = VerticalAlignment.Center
         };
 
-
         panel.AddRange(
             CreateFontSelectorSection(
                 fontsLang.InfoBarFont,
@@ -43,17 +38,37 @@ public static class FontsTab
                 new Accessor<int>(() => profile.InfoBarFontSize),
                 InfoBarGump.UpdateAllOptions
             ),
-            CreateFontSelectorSection(fontsLang.SystemChatFont, new Accessor<string>(() => profile.GameWindowSideChatFont), new Accessor<int>(() => profile.GameWindowSideChatFontSize)),
-            CreateFontSelectorSection(fontsLang.TooltipFont, new Accessor<string>(() => profile.SelectedToolTipFont), new Accessor<int>(() => profile.SelectedToolTipFontSize)),
-            CreateFontSelectorSection(fontsLang.OverheadFont, new Accessor<string>(() => profile.OverheadChatFont), new Accessor<int>(() => profile.OverheadChatFontSize)),
+            CreateFontSelectorSection(
+                fontsLang.SystemChatFont,
+                new Accessor<string>(() => profile.GameWindowSideChatFont),
+                new Accessor<int>(() => profile.GameWindowSideChatFontSize)
+            ),
+            CreateFontSelectorSection(
+                fontsLang.TooltipFont,
+                new Accessor<string>(() => profile.SelectedToolTipFont),
+                new Accessor<int>(() => profile.SelectedToolTipFontSize)
+            ),
+            CreateFontSelectorSection(
+                fontsLang.OverheadFont,
+                new Accessor<string>(() => profile.OverheadChatFont),
+                new Accessor<int>(() => profile.OverheadChatFontSize)
+            ),
             CreateFontSelectorSection(
                 fontsLang.JournalFont,
                 new Accessor<string>(() => profile.SelectedTTFJournalFont),
                 new Accessor<int>(() => profile.SelectedJournalFontSize),
                 ResizableJournal.UpdateJournalOptions
             ),
-            CreateFontSelectorSection(fontsLang.NameplateFont, new Accessor<string>(() => profile.NamePlateFont), new Accessor<int>(() => profile.NamePlateFontSize)),
-            CreateFontSelectorSection(fontsLang.OptionsFont, new Accessor<string>(() => profile.OptionsFont), new Accessor<int>(() => profile.OptionsFontSize))
+            CreateFontSelectorSection(
+                fontsLang.NameplateFont,
+                new Accessor<string>(() => profile.NamePlateFont),
+                new Accessor<int>(() => profile.NamePlateFontSize)
+            ),
+            CreateFontSelectorSection(
+                fontsLang.OptionsFont,
+                new Accessor<string>(() => profile.OptionsFont),
+                new Accessor<int>(() => profile.OptionsFontSize)
+            )
         );
 
         return OptionTabCommons.StyledStackPanel(

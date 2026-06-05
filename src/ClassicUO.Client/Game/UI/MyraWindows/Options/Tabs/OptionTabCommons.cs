@@ -6,6 +6,7 @@ using ClassicUO.Common;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -25,14 +26,12 @@ public static class OptionTabCommons
             UniformSizing = false,
             Aligned = false,
             VerticalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(MyraStyle.STANDARD_SPACING, 10, MyraStyle.STANDARD_SPACING, 10)
         };
 
         if (children?.Length > 0)
-        {
-            panel.Widgets.Add(OptionsFactory.CreateSpacer());
             panel.AddRange(children);
-        }
 
         return panel;
     }
@@ -136,4 +135,6 @@ public static class OptionTabCommons
 
         return grid;
     }
+
+    internal static MyraButton StyledButton(string label, Action onClick) => new(label, onClick);
 }

@@ -141,14 +141,25 @@ public static class OptionsFactory
     internal static OptionItem PropBoundNumericInput(
         string label,
         Accessor<int> backingProp,
-        int min = 0,
-        int max = 1_000_000,
-        string? tooltip = null
-    ) =>
-        new(label, () =>
-        {
-            return new LabeledIntegerInput(label, backingProp.Get(), backingProp.Set) { Tooltip = tooltip };
-        });
+        int? min = 0,
+        int? max = 1_000_000,
+        string? tooltip = null,
+        Action<int>? onAfterUpdate = null
+    )
+    {
+        Action<int> setter = onAfterUpdate == null
+            ? backingProp.Set
+            : newValue =>
+            {
+                backingProp.Set(newValue);
+                onAfterUpdate.Invoke(newValue);
+            };
+
+        return new OptionItem(
+            label,
+            () => new LabeledIntegerInput(label, backingProp.Get(), setter) { MinValue = min, MaxValue = max, Tooltip = tooltip, InputBoxMinWidth = 60 }
+        );
+    }
 
     internal static OptionItem CreateSpacer() => new(string.Empty, () => new MyraSpacer(1, 4), skipSearch: true);
 }
