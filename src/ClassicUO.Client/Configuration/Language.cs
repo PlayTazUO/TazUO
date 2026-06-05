@@ -159,6 +159,8 @@ namespace ClassicUO.Configuration
         {
             public MiscTabControllerSection ControllerSection { get; set; } = new();
             public string OpenIgnoreListButtonLabel { get; set; } = "Open Ignore List";
+            public string SosGumpId { get; set; } = "SOS Gump ID";
+            public string SosGumpIdLabelTooltip { get; set; } = "Responsible for determining whether a gump is an S.O.S and displaying it correctly";
         }
 
         public class MiscTabControllerSection

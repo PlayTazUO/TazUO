@@ -224,8 +224,8 @@ public static class MiscTab
     private static WrapPanel GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.MiscTabLang mistLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
-        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = mistLang.ControllerSection;
+        ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = miscLang.ControllerSection;
 
         return OptionTabCommons.StyledVerticalWrapPanel(
             new VisualContainer(
@@ -236,12 +236,17 @@ public static class MiscTab
                 )
             ),
             OptionTabCommons.StyledButton(
-                mistLang.OpenIgnoreListButtonLabel,
+                miscLang.OpenIgnoreListButtonLabel,
                 () =>
                 {
                     UIManager.GetGump<IgnoreManagerGump>()?.Dispose();
                     UIManager.Add(new IgnoreManagerGump(World.Instance));
                 }
+            ),
+            OptionsFactory.PropBoundUIntInput(
+                miscLang.SosGumpId,
+                new Accessor<uint>(() => profile.SOSGumpID),
+                tooltip: miscLang.SosGumpIdLabelTooltip
             )
         );
     }

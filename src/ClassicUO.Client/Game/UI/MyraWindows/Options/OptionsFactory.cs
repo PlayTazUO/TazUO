@@ -161,6 +161,43 @@ public static class OptionsFactory
         );
     }
 
+    internal static OptionItem PropBoundUIntInput(
+        string label,
+        Accessor<uint> backingProp,
+        uint? max = null,
+        string? tooltip = null,
+        Action<uint>? onAfterUpdate = null
+    )
+    {
+        Action<uint> setter = onAfterUpdate == null
+            ? backingProp.Set
+            : newValue =>
+            {
+                backingProp.Set(newValue);
+                onAfterUpdate.Invoke(newValue);
+            };
+
+        return new OptionItem(
+            label,
+            () => new LabeledUIntInput(label, backingProp.Get(), setter) { MaxValue = max, Tooltip = tooltip, InputBoxMinWidth = 60 }
+        );
+    }
+
     internal static OptionItem CreateSpacer() => new(string.Empty, () => new MyraSpacer(1, 4), skipSearch: true);
+
+    public static Accessor<T> ConditionalWrapAccessor<T>(Accessor<T> accessor, Action<T>? onChange = null)
+    {
+        if (onChange == null)
+            return accessor;
+
+        return new Accessor<T>(
+            accessor.Get,
+            value =>
+            {
+                accessor.Set(value);
+                onChange(value);
+            }
+        );
+    }
 }
 
