@@ -46,15 +46,21 @@ public static class OptionsFactory
     internal static OptionItem CreateCheckboxOption(string label, Accessor<bool> backingProperty, string? tooltip = null) =>
         new(label, () => MyraCheckButton.CreatePropBoundCheckButton(backingProperty, label, tooltip));
 
-    internal static OptionItem PropBoundSliderOption(string label, Accessor<float> backingProperty, float min, float max) =>
-        CreateSliderOption(label, min, max, backingProperty.Get(), backingProperty.Set);
+    internal static OptionItem PropBoundSliderOption(string label, Accessor<float> backingProperty, float min, float max, bool labelOnLeft = false) =>
+        CreateSliderOption(label, min, max, backingProperty.Get(), backingProperty.Set, labelOnLeft);
 
-    internal static OptionItem PropBoundSliderOption(string label, Accessor<int> backingProperty, int min, int max) =>
-        CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((int)value));
+    internal static OptionItem PropBoundSliderOption(string label, Accessor<int> backingProperty, int min, int max, bool labelOnLeft = false) =>
+        CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((int)value), labelOnLeft);
 
-    internal static OptionItem CreateSliderOption(string label, float min, float max, float value,
-        Action<float> onChange) =>
-        new(label, () => LabeledHorizontalSlider.SliderWithLabel(label, out _, onChange, min, max, value));
+    internal static OptionItem CreateSliderOption(
+        string label,
+        float min,
+        float max,
+        float value,
+        Action<float> onChange,
+        bool labelOnLeft = false
+    ) =>
+        new(label, () => LabeledHorizontalSlider.SliderWithLabel(label, out _, onChange, min, max, value, labelOnLeft));
 
     internal static OptionItem CreateComboBox(string label, int value, string[] options, Action<int> onChange,
         string? tooltip = null)

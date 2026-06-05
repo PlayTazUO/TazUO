@@ -14,7 +14,7 @@ public static class MiscTab
         return new OptionItem(lang.ButtonCombatSpells, GetPages);
     }
 
-    private static PageControl GetPages() => new(GetPage1(), GetPage2()) { RetainSizeWhenPaging = true };
+    private static PageControl GetPages() => new(GetPage1(), GetPage2(), GetPage3()) { RetainSizeWhenPaging = true };
 
     private static WrapPanel GetPage1()
     {
@@ -142,6 +142,14 @@ public static class MiscTab
                     profile.ShowSkillsChangedDeltaValue,
                     f => profile.ShowSkillsChangedDeltaValue = (int)f
                 )
+            ),
+            OptionsFactory.CreateCheckboxOption(
+                genLang.ShiftContext,
+                new Accessor<bool>(() => profile.HoldShiftForContext)
+            ),
+            OptionsFactory.CreateCheckboxOption(
+                genLang.ShiftSplit,
+                new Accessor<bool>(() => profile.HoldShiftToSplitStack)
             )
         );
 
@@ -207,6 +215,20 @@ public static class MiscTab
             OptionsFactory.CreateCheckboxOption(
                 experimentalLang.DisableRightLeftClickAutoMove,
                 new Accessor<bool>(() => profile.DisableAutoMove)
+            )
+        );
+    }
+
+    private static VisualContainer GetPage3()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab.ControllerSection;
+
+        return new VisualContainer(
+            new VisualContainerProps { LabelText = controllerLang.ControllerSupport, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
+            new CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), controllerLang.EnableController),
+                OptionsFactory.PropBoundSliderOption(controllerLang.MouseSensitivity, new Accessor<int>(() => profile.ControllerMouseSensativity), 1, 20)
             )
         );
     }

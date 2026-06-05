@@ -9,8 +9,8 @@ public static class MovementTab
 {
     internal static OptionItem GetContent()
     {
-        ModernOptionsGumpLanguage.MovementLang lang = Language.Instance.GetModernOptionsGumpLanguage.Movement;
-        return new OptionItem(lang.Movement, GetSection);
+        ModernOptionsGumpLanguage.MovementTabLang tabLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTabTab;
+        return new OptionItem(tabLang.Movement, GetSection);
     }
 
     private static WrapPanel GetSection()

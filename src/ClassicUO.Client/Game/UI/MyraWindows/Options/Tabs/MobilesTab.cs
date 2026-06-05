@@ -15,11 +15,11 @@ public static class MobilesTab
 
     private static MyraTabControl GetTabs()
     {
-        ModernOptionsGumpLanguage.MobilesLang mobilesLang = Language.Instance.GetModernOptionsGumpLanguage.Mobiles;
+        ModernOptionsGumpLanguage.MobilesLangTab mobilesLangTab = Language.Instance.GetModernOptionsGumpLanguage.MobilesTab;
 
         var tabs = new MyraTabControl();
-        tabs.AddTab(mobilesLang.Highlighting, GetHighlightingSection);
-        tabs.AddTab(mobilesLang.Hues, GetEntityHueSettingSection);
+        tabs.AddTab(mobilesLangTab.Highlighting, GetHighlightingSection);
+        tabs.AddTab(mobilesLangTab.Hues, GetEntityHueSettingSection);
         return tabs;
     }
 
@@ -116,10 +116,10 @@ public static class MobilesTab
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.CombatSpells spellLang = lang.GetCombatSpells;
-        ModernOptionsGumpLanguage.MobilesLang mobLang = lang.Mobiles;
+        ModernOptionsGumpLanguage.MobilesLangTab mobLangTab = lang.MobilesTab;
 
         return new VisualContainer(
-            new VisualContainerProps { LabelText = mobLang.HueMobileByNotoriety },
+            new VisualContainerProps { LabelText = mobLangTab.HueMobileByNotoriety },
             OptionsFactory.CreateHuePicker(spellLang.InnocentColor, profile.InnocentHue, b => profile.InnocentHue = b),
             OptionsFactory.CreateHuePicker(spellLang.BeneficialSpell, profile.BeneficHue, b => profile.BeneficHue = b),
             OptionsFactory.CreateHuePicker(spellLang.FriendColor, profile.FriendHue, b => profile.FriendHue = b),

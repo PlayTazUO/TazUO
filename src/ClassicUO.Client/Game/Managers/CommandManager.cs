@@ -286,6 +286,7 @@ namespace ClassicUO.Game.Managers
             Register("test", s => UIManager.Add(new OptionsWindow()));
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
+            Register("language-regenerate", _ => Language.RegenerateLanguageFile());
         }
 
         /// <summary>

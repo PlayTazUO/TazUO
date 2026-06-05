@@ -113,13 +113,28 @@ public class LabeledHorizontalSlider : Grid
         return slider;
     }
 
-    public static HorizontalStackPanel SliderWithLabel(string label, out LabeledHorizontalSlider slider, Action<float>? onChanged = null, float min = 0f,
-        float max = 100f, float value = 0f)
+    public static HorizontalStackPanel SliderWithLabel(
+        string label,
+        out LabeledHorizontalSlider slider,
+        Action<float>? onChanged = null,
+        float min = 0f,
+        float max = 100f,
+        float value = 0f,
+        bool labelOnLeft = false
+    )
     {
         HorizontalStackPanel stack = new() { VerticalAlignment = VerticalAlignment.Center };
         LabeledHorizontalSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
-        stack.Widgets.Add(s);
-        stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+        if (labelOnLeft)
+        {
+            stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+            stack.Widgets.Add(s);
+        }
+        else
+        {
+            stack.Widgets.Add(s);
+            stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+        }
 
         return stack;
     }

@@ -42,6 +42,7 @@ public class VisualContainer : Container
         Background = new SolidBrush(new Color(0, 0, 0, 25));
         Border = new SolidBrush(new Color(0, 0, 0, 75));
         BorderThickness = new Thickness(2);
+        VerticalAlignment = VerticalAlignment.Top;
 
         int spacing = props.Spacing switch
         {

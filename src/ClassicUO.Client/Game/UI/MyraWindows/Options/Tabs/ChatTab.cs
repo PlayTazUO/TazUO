@@ -11,17 +11,19 @@ public static class ChatTab
     internal static OptionItem GetContent()
     {
         ModernOptionsGumpLanguage gumpLang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(gumpLang.LabelChat, GetChatMenuTabs);
+        return new OptionItem(gumpLang.LabelChatAndText, GetChatMenuTabs);
     }
 
     private static MyraTabControl GetChatMenuTabs()
     {
         ModernOptionsGumpLanguage gumpLang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
+        ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
 
         var tabs = new MyraTabControl();
         tabs.AddTab(gumpLang.LabelSpeech, GetSpeechSubTabContent);
         tabs.AddTab(tuoLang.Journal, GetJournalSubTabContent);
+        tabs.AddTab(fontsLang.FontsLabel, FontsTab.GetContent);
         return tabs;
     }
 
@@ -146,15 +148,3 @@ public static class ChatTab
 
     #endregion
 }
-
-/*
- *  new ComboBoxWithLabel
-                  (World,
-                      lang.GetTazUO.JournalStyle, 0, ThemeSettings.COMBO_BOX_WIDTH,
-                      Enum.GetNames(typeof(ResizableJournal.BorderStyle)), profile.JournalStyle, (i, s) =>
-                      {
-                          profile.JournalStyle = i;
-                          ResizableJournal.UpdateJournalOptions();
-                      }
-                  ),
-*/

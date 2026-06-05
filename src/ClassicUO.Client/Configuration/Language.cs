@@ -26,14 +26,16 @@ namespace ClassicUO.Configuration
         public string TazUODiscord { get; set; } = "TazUO Discord";
         public string CommandGump { get; set; } = "Available Client Commands";
 
+        private static string LanguageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
+
         [JsonIgnore]
         public static Language Instance { get; private set; } = new();
 
         public static void Load()
         {
-            if (File.Exists(languageFilePath))
+            if (File.Exists(LanguageFilePath))
             {
-                Language f = JsonSerializer.Deserialize(File.ReadAllText(languageFilePath), LanguageJsonContext.Default.Language);
+                Language f = JsonSerializer.Deserialize(File.ReadAllText(LanguageFilePath), LanguageJsonContext.Default.Language);
                 Instance = f;
                 Save(); //To update language file with new additions as needed
             }
@@ -43,21 +45,26 @@ namespace ClassicUO.Configuration
             }
         }
 
+        public static void RegenerateLanguageFile()
+        {
+            if (File.Exists(LanguageFilePath))
+                File.Delete(LanguageFilePath);
+
+            Load();
+        }
+
         private static void CreateNewLanguageFile()
         {
             Directory.CreateDirectory(Path.Combine(CUOEnviroment.ExecutablePath, "Data"));
-
             string defaultLanguage = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, defaultLanguage);
+            File.WriteAllText(LanguageFilePath, defaultLanguage);
         }
 
         private static void Save()
         {
             string language = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, language);
+            File.WriteAllText(LanguageFilePath, language);
         }
-
-        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
     }
 
     public class ModernOptionsGumpLanguage
@@ -99,7 +106,7 @@ namespace ClassicUO.Configuration
         public string LabelViewport { get; set; } = "Viewport";
         public string LabelSpells { get; set; } = "Spells";
         public string LabelSpeech { get; set; } = "Speech";
-        public string LabelChat { get; set; } = "Chat";
+        public string LabelChatAndText { get; set; } = "Chat & Text";
         public string LabelHue { get; set; } = "Hue";
         public string LabelTooltips { get; set; } = "Tooltips";
         public string LabelCounters { get; set; } = "Counters";
@@ -120,22 +127,60 @@ namespace ClassicUO.Configuration
         public Cooldowns GetCooldowns { get; set; } = new();
         public TazUO GetTazUO { get; set; } = new();
 
-        public MobilesLang Mobiles { get; set; } = new();
+        public MobilesLangTab MobilesTab { get; set; } = new();
 
-        public MovementLang Movement { get; set; } = new();
+        public MovementTabLang MovementTabTab { get; set; } = new();
 
-        public class MovementLang
+        public MiscTabLang MiscTab { get; set; } = new();
+
+        public ChatTabLang ChatTab { get; set; } = new();
+
+        public class MovementTabLang
         {
             public string Movement { get; set; } = "Movement";
             public string General { get; set; } = "General";
             public string Pathfinding { get; set; } = "Pathfinding";
         }
 
-        public class MobilesLang
+        public class MobilesLangTab
         {
             public string Highlighting { get; set; } = "Highlighting";
             public string Hues { get; set; } = "Hues";
             public string HueMobileByNotoriety { get; set; } = "Hue mobiles by notoriety";
+        }
+
+        public class MiscTabLang
+        {
+            public MiscTabControllerSection ControllerSection { get; set; } = new();
+        }
+
+        public class MiscTabControllerSection
+        {
+            public string ControllerSupport { get; set; } = "Controller support";
+            public string MouseSensitivity { get; set; } = "Mouse Sensitivity";
+            public string EnableController { get; set; } = "Enable controller input";
+        }
+
+        public class ChatTabLang
+        {
+            public FontTabLang FontTab { get; set; } = new();
+        }
+
+        public class FontTabLang
+        {
+            public string FontsLabel { get; set; } = "Fonts";
+            public string FontLabel { get; set; } = "Font";
+            public string FontsWikiLabel { get; set; } = "TTF Fonts Wiki";
+            public string FontSettings { get; set; } = "Font settings";
+            public string TtfFontBorder { get; set; } = "TTF Font border";
+            public string InfoBarFont { get; set; } = "Info-Bar";
+            public string Size { get; set; } = "Size";
+            public string SystemChatFont { get; set; } = "System chat";
+            public string TooltipFont { get; set; } = "Tooltip";
+            public string OverheadFont { get; set; } = "Overhead";
+            public string JournalFont { get; set; } = "Journal";
+            public string NameplateFont { get; set; } = "Nameplate";
+            public string OptionsFont { get; set; } = "Options menu";
         }
 
         public class General

@@ -25,7 +25,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 public class OptionsWindow : MyraControl
 {
-    private const int MAX_HEIGHT = 880;
+    private const int MAX_HEIGHT = 850;
     private const int MAX_WIDTH = 1200;
 
     /// <summary>
@@ -82,15 +82,16 @@ public class OptionsWindow : MyraControl
 
         _rootWindow.Props.Resize.MaxHeight = MAX_HEIGHT;
         _rootWindow.Props.Resize.MaxWidth = MAX_WIDTH;
+        _rootWindow.MaxHeight = MAX_HEIGHT;
+        _rootWindow.MaxWidth = MAX_WIDTH;
     }
 
     private void SetupOptions()
     {
+        SetupGameplayTab();
+        SetupInterfaceOptions();
         SetupVideo();
         SetupSound();
-        SetupGameplayTab();
-        SetupMobileOptions();
-        SetupInterfaceOptions();
         SetupChatOptions();
         SetupMiscOptions();
     }
@@ -202,14 +203,6 @@ public class OptionsWindow : MyraControl
             _optionsPanel.Widgets.Add(optionItem);
     }
 
-    private void SetupMobileOptions()
-    {
-        const string mobilesKey = "Mobiles";
-        if (!_options.ContainsKey(mobilesKey)) _options.Add(mobilesKey, []);
-        List<OptionItem> mobiles = _options[mobilesKey];
-        mobiles.Add(MobilesTab.GetContent());
-    }
-
     private void SetupInterfaceOptions()
     {
         const string interfaceKey = "Interface";
@@ -232,10 +225,9 @@ public class OptionsWindow : MyraControl
     private void SetupGameplayTab()
     {
         const string gameplayKey = "Gameplay";
-        if (!_options.ContainsKey(gameplayKey)) _options.Add(gameplayKey, []);
-        List<OptionItem> opt = _options[gameplayKey];
-
-        opt.Add(GameplayTab.GetContent());
+        if (!_options.ContainsKey(gameplayKey))
+            _options.Add(gameplayKey, []);
+        _options[gameplayKey].Add(GameplayTab.GetContent());
     }
 
     private void SetupSound()
@@ -379,12 +371,11 @@ public class OptionsWindow : MyraControl
 
     private void SetupChatOptions()
     {
-        const string speechKey = "Chat";
+        string chatAndSpeechKey = Language.Instance.GetModernOptionsGumpLanguage.LabelChatAndText;
 
-        if (!_options.ContainsKey(speechKey))
-            _options.Add(speechKey, []);
-        List<OptionItem> opt = _options[speechKey];
+        if (!_options.ContainsKey(chatAndSpeechKey))
+            _options.Add(chatAndSpeechKey, []);
 
-        opt.Add(ChatTab.GetContent());
+        _options[chatAndSpeechKey].Add(ChatTab.GetContent());
     }
 }
