@@ -139,6 +139,8 @@ namespace ClassicUO.Configuration
 
         public GumpsTabLang GumpsTab { get; set; } = new();
 
+        public LayerHidingTabLang LayerHidingTab { get; set; } = new();
+
         public class MovementTabLang
         {
             public string Movement { get; set; } = "Movement";
@@ -216,6 +218,15 @@ namespace ClassicUO.Configuration
             public string OriginalSkillsGump { get; set; } = "Use original skills gump";
             public string OldStatusGump { get; set; } = "Use old status gump";
             public string PartyInviteGump { get; set; } = "Show party invite gump";
+        }
+
+        public class LayerHidingTabLang
+        {
+            public string LayerHiding { get; set; } = "Layer Hiding";
+            public string EnableLayerHiding { get; set; } = "Enable Layer Hiding";
+            public string OnlyForYourself { get; set; } = "Only for yourself";
+            public string OnlyForYourselfTooltip { get; set; } = "Hide layers only on your own character";
+            public string HideFollowingLayers { get; set; } = "Hide the following layers on in-game mobiles:";
         }
 
         public class General

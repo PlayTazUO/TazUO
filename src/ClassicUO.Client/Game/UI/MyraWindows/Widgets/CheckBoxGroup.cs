@@ -10,12 +10,14 @@ public class PropertyBinder
     public Accessor<bool> BackingProperty { get; init; }
 
     public string Label { get; init; }
+    public string LabelTooltip { get; init; }
 
-    public PropertyBinder(Accessor<bool> backingProperty, string label)
+    public PropertyBinder(Accessor<bool> backingProperty, string label, string labelTooltip = null)
     {
         ArgumentNullException.ThrowIfNull(backingProperty);
         BackingProperty = backingProperty;
         Label = label;
+        LabelTooltip = labelTooltip;
     }
 }
 
@@ -37,7 +39,8 @@ public class CheckBoxGroup : Panel
         var primaryCheckBox = MyraCheckButton.CreateWithCallback(
             _primaryControlProp.BackingProperty.Get(),
             OnPrimaryCheckBoxChanged,
-            _primaryControlProp.Label
+            _primaryControlProp.Label,
+            _primaryControlProp.LabelTooltip
         );
         primaryCheckBox.Margin = new Thickness(0, 0, 0, 8);
 
