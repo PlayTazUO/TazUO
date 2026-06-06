@@ -151,6 +151,7 @@ namespace ClassicUO.Configuration
             public string Pathfinding { get; set; } = "Pathfinding";
             public string AutoAvoidObstacles { get; set; } = "Auto Avoid Obstacles";
             public string UseWasdMovement { get; set; } = "Use WASD movement instead of arrow keys";
+            public MovementTabControllerSection ControllerSection { get; set; } = new();
         }
 
         public class MobilesLangTab
@@ -162,8 +163,7 @@ namespace ClassicUO.Configuration
 
         public class MiscTabLang
         {
-            public MiscTabControllerSection ControllerSection { get; set; } = new();
-            public string OpenIgnoreListButtonLabel { get; set; } = "Open Ignore List";
+            public string ManageIgnoreListButtonLabel { get; set; } = "Manage Entity Ignore List";
             public string SosGumpId { get; set; } = "SOS Gump ID";
             public string SosGumpIdLabelTooltip { get; set; } = "Responsible for determining whether a gump is an S.O.S and displaying it correctly";
             public string EnableAutoResyncOnHangDetection { get; set; } = "Enable Auto-Resync hang detection";
@@ -181,7 +181,7 @@ namespace ClassicUO.Configuration
             public string SkillProgressBarFormatTooltip { get; set; } = "The text format with which to display the progress bar.\nUse {0} for skill name, {1} for the current value and {2} for the cap";
         }
 
-        public class MiscTabControllerSection
+        public class MovementTabControllerSection
         {
             public string ControllerSupport { get; set; } = "Controller support";
             public string MouseSensitivity { get; set; } = "Mouse Sensitivity";

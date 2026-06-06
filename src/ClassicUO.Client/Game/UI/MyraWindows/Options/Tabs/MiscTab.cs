@@ -226,18 +226,10 @@ public static class MiscTab
         Profile profile = ProfileManager.CurrentProfile;
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
-        ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = miscLang.ControllerSection;
 
         return OptionTabCommons.StyledVerticalWrapPanel(
-            new VisualContainer(
-                new VisualContainerProps { LabelText = controllerLang.ControllerSupport, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
-                new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), controllerLang.EnableController),
-                    OptionsFactory.PropBoundSliderOption(controllerLang.MouseSensitivity, new Accessor<int>(() => profile.ControllerMouseSensativity), 1, 20)
-                )
-            ),
             OptionTabCommons.StyledButton(
-                miscLang.OpenIgnoreListButtonLabel,
+                miscLang.ManageIgnoreListButtonLabel,
                 () =>
                 {
                     UIManager.GetGump<IgnoreManagerGump>()?.Dispose();

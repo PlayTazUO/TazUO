@@ -18,6 +18,7 @@ public static class MovementTab
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.MovementTabLang moveLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTab;
+        ModernOptionsGumpLanguage.MovementTabControllerSection controllerLang = moveLang.ControllerSection;
 
         return OptionTabCommons.StyledVerticalWrapPanel(
             new CheckBoxGroup(
@@ -36,7 +37,14 @@ public static class MovementTab
             ),
             OptionsFactory.CreateSpacer(),
             OptionsFactory.CreateCheckboxOption(moveLang.AutoAvoidObstacles, new Accessor<bool>(() => profile.AutoAvoidObstacules)),
-            OptionsFactory.CreateCheckboxOption(moveLang.UseWasdMovement, new Accessor<bool>(() => profile.UseWASDInsteadArrowKeys))
+            OptionsFactory.CreateCheckboxOption(moveLang.UseWasdMovement, new Accessor<bool>(() => profile.UseWASDInsteadArrowKeys)),
+            new VisualContainer(
+                new VisualContainerProps { LabelText = controllerLang.ControllerSupport, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
+                new CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), controllerLang.EnableController),
+                    OptionsFactory.PropBoundSliderOption(controllerLang.MouseSensitivity, new Accessor<int>(() => profile.ControllerMouseSensativity), 1, 20)
+                )
+            )
         );
     }
 }
