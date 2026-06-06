@@ -37,6 +37,10 @@ public static class HealthBarsTab
                     genLang.CloseHPOptDead, genLang.CloseHPOptBoth
                 ], b => profile.CloseHealthBarType = b
             ),
+            OptionsFactory.CreateCheckboxOption(
+                tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars,
+                new Accessor<bool>(() => profile.CloseHealthBarIfAnchored)
+            ),
             OptionsFactory.CreateSpacer(),
             new CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), tuoLang.EnableHealthIndicatorBorder),

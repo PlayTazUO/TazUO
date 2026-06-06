@@ -48,7 +48,6 @@ public static class SpellsTab
     private static void OpenConfigDownloadModal()
     {
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
         ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.SpellsTab;
         UIManager.Add
         (
@@ -84,6 +83,11 @@ public static class SpellsTab
 
             if (SpellVisualRangeManager.Instance.LoadFromString(fetchResult))
                 GameActions.Print(World.Instance, tuoLang.SuccesfullyDownloadedNewSpellConfig);
+            else
+            {
+                string message = string.Format(tuoLang.FailedToDownloadTheSpellConfigExMessage, tuoLang.FailedToLoadSpellConfigMessage);
+                GameActions.Print(World.Instance, message, Constants.HUE_WARN);
+            }
         }
         catch (Exception ex)
         {

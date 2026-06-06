@@ -61,8 +61,8 @@ public class MyraInputBox : TextBox
             VerticalSpacing = 4
         };
 
-        row.Widgets.Add(new MyraLabel(labelText, MyraLabel.TextStyle.P));
-        input = new MyraInputBox {Text = text ?? "", HintText = hintText ?? "", Width = width, Tooltip = tooltip };
+        row.Widgets.Add(new MyraLabel(labelText, MyraLabel.TextStyle.P) { Tooltip = tooltip });
+        input = new MyraInputBox { Text = text ?? "", HintText = hintText ?? "", Width = width, Tooltip = tooltip };
         row.Widgets.Add(input);
         return row;
     }

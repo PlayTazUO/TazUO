@@ -1,5 +1,6 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI.WrapPanel;
 
@@ -30,8 +31,9 @@ public static class GameplayTab
 
     private static WrapPanel GetTerrainAndStaticsSubTabContent()
     {
-        ModernOptionsGumpLanguage.General generalLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.General generalLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
+        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
 
         return OptionTabCommons.StyledVerticalWrapPanel(
             OptionsFactory.CreateCheckboxOption(generalLang.HideRoof, !profile.DrawRoofs, b => profile.DrawRoofs = !b),
@@ -46,6 +48,18 @@ public static class GameplayTab
                     generalLang.MagicFieldOpt_Tile
                 ],
                 i => profile.FieldsType = i
+            ),
+            OptionsFactory.CreateCheckboxOption(
+                tuoLang.ApplyBorderCaveTiles,
+                profile.EnableCaveBorder,
+                newValue =>
+                {
+                    profile.EnableCaveBorder = newValue;
+                    // This looks buggy in the source (i.e., the old windows option).
+                    // What happens when this is reset to false? Needs a game restart?
+                    if (newValue)
+                        StaticFilters.ApplyCaveTileBorder();
+                }
             )
         );
     }

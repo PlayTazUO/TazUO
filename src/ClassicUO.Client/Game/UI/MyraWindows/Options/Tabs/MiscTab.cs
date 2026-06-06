@@ -224,6 +224,7 @@ public static class MiscTab
     private static WrapPanel GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
+        UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
         ModernOptionsGumpLanguage.MiscTabControllerSection controllerLang = miscLang.ControllerSection;
 
@@ -247,6 +248,42 @@ public static class MiscTab
                 miscLang.SosGumpId,
                 new Accessor<uint>(() => profile.SOSGumpID),
                 tooltip: miscLang.SosGumpIdLabelTooltip
+            ),
+            OptionsFactory.CreateCheckboxOption(
+                miscLang.EnableAutoResyncOnHangDetection,
+                new Accessor<bool>(() => profile.ForceResyncOnHang),
+                miscLang.EnableAutoResyncOnHangDetectionTooltip
+            ),
+            OptionsFactory.CreateCheckboxOption(
+                miscLang.UseManagedZlib,
+                new Accessor<bool>(() => profile.ForceResyncOnHang),
+                miscLang.UseManagedZlibTooltip
+            ),
+            new VisualContainer(
+                new VisualContainerProps { LabelText = miscLang.HousingTransparency, LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },
+                new CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.ForceHouseTransparency), miscLang.EnableHouseTransparency),
+                    OptionsFactory.CreateSliderOption(
+                        uiLang.Opacity,
+                        0,
+                        255,
+                        profile.ForcedHouseTransparency,
+                        newValue => { profile.ForcedHouseTransparency = (byte)newValue; }
+                    ),
+                    OptionsFactory.CreateSpacer(),
+                    OptionsFactory.PropBoundHuePicker(
+                        uiLang.Hue,
+                        new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue)
+                    )
+                )
+            ),
+            new CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
+                OptionsFactory.PropBoundInputField(
+                    uiLang.Format,
+                    new Accessor<string>(() => profile.SkillBarFormat),
+                    miscLang.SkillProgressBarFormatTooltip
+                )
             )
         );
     }

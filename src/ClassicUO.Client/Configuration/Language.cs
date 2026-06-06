@@ -50,6 +50,7 @@ namespace ClassicUO.Configuration
             if (File.Exists(LanguageFilePath))
                 File.Delete(LanguageFilePath);
 
+            CreateNewLanguageFile();
             Load();
         }
 
@@ -165,6 +166,19 @@ namespace ClassicUO.Configuration
             public string OpenIgnoreListButtonLabel { get; set; } = "Open Ignore List";
             public string SosGumpId { get; set; } = "SOS Gump ID";
             public string SosGumpIdLabelTooltip { get; set; } = "Responsible for determining whether a gump is an S.O.S and displaying it correctly";
+            public string EnableAutoResyncOnHangDetection { get; set; } = "Enable Auto-Resync hang detection";
+
+            public string EnableAutoResyncOnHangDetectionTooltip { get; set; } = "Automatically send a RESYNC packet if server did not send a PING in the last 5 seconds";
+
+            public string EnableASyncMapLoading { get; set; } = "Enable asynchronous map loading";
+            public string UseManagedZlib { get; set; } = "Use a managed zLib";
+            public string UseManagedZlibTooltip { get; set; } = "Improve UNIX/Linux compatibility at the expense of slightly lesser performance";
+
+            public string HousingTransparency { get; set; } = "House Transparency";
+            public string EnableHouseTransparency { get; set; } = "Enable house transparency";
+
+            public string DisplayProgressBarOnSkillChanges { get; set; } = "Display progress bar on skill changes";
+            public string SkillProgressBarFormatTooltip { get; set; } = "The text format with which to display the progress bar.\nUse {0} for skill name, {1} for the current value and {2} for the cap";
         }
 
         public class MiscTabControllerSection
@@ -440,6 +454,10 @@ namespace ClassicUO.Configuration
             public string MouseThread { get; set; } = "Run mouse in seperate thread";
             public string TargetAura { get; set; } = "Aura on mouse target";
             public string AnimWater { get; set; } = "Animated water effect";
+            public string Perspective { get; set; } = "Perspective";
+            public string PlayerPositionOffsetX { get; set; } = "Player Position Offset X";
+            public string PlayerPositionOffsetY { get; set; } = "Player Position Offset Y";
+
             #endregion
 
             #region Shadows
@@ -738,6 +756,7 @@ namespace ClassicUO.Configuration
             public string AttemptingToDownloadSpellConfig { get; set; } = "Attempting to download spell config..";
             public string SuccesfullyDownloadedNewSpellConfig { get; set; } = "Succesfully downloaded new spell config.";
             public string FailedToDownloadTheSpellConfigExMessage { get; set; } = "Failed to download the spell config. ({0})";
+            public string FailedToLoadSpellConfigMessage { get; set; } = "The configuration was successfully downloaded but could not be loaded";
             public string AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars { get; set; } = "Also close anchored healthbars when auto closing healthbars";
             public string EnableAutoResyncOnHangDetection { get; set; } = "Enable auto resync on hang detection";
             public string PlayerOffsetX { get; set; } = "Player Offset X";
@@ -862,6 +881,9 @@ namespace ClassicUO.Configuration
         public string ResetWindowSizeButtonTooltip { get; set; } = "Reset window size";
         public string Download { get; set; } = "Download";
         public string Cancel { get; set; } = "Cancel";
+        public string Opacity { get; set; } = "Opacity";
+        public string Hue { get; set; } = "Hue";
+        public string Format { get; set; } = "Format";
         public ProfileEditorLanguage ProfileEditor { get; set; } = new();
     }
 

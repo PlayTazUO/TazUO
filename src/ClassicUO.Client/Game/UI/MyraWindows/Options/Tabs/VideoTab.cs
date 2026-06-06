@@ -331,6 +331,25 @@ public static class VideoTab
                         GameScene.Instance?.SetPostProcessingSettings();
                     }
                 )
+            ),
+            new VisualContainer(
+                new VisualContainerProps { LabelText = videoLang.Perspective },
+                OptionsFactory.CreateSliderOption(
+                    videoLang.PlayerPositionOffsetX,
+                    -20,
+                    20,
+                    profile.PlayerOffset.X,
+                    newValue => { profile.PlayerOffset = new Point((int)newValue, profile.PlayerOffset.Y); },
+                    true
+                ),
+                OptionsFactory.CreateSliderOption(
+                    videoLang.PlayerPositionOffsetY,
+                    -20,
+                    20,
+                    profile.PlayerOffset.Y,
+                    newValue => { profile.PlayerOffset = new Point(profile.PlayerOffset.X, (int)newValue); },
+                    true
+                )
             )
         );
     }
