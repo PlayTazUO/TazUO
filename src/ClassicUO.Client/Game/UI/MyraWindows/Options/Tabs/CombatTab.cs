@@ -19,7 +19,7 @@ public static class CombatTab
 
         var tabs = new MyraTabControl();
         tabs.AddTab(lang.Combat, GetCombatSection);
-        tabs.AddTab(lang.Spells, GetSpellsSection);
+        tabs.AddTab(lang.Spells, SpellsTab.GetContent);
         return tabs;
     }
 
@@ -34,26 +34,6 @@ public static class CombatTab
             OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.QueryBeforeBeneficial, new Accessor<bool>(() => profile.EnabledBeneficialCriminalActionQuery)),
             OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.ShowBuffDurationOnOldStyleBuffBar, new Accessor<bool>(() => profile.BuffBarTime)),
             OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.EnableDPSCounter, new Accessor<bool>(() => profile.ShowDPS))
-        );
-    }
-
-    private static OptionItem GetSpellsSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        return new OptionItem(
-            lang.LabelSpells,
-            () => new VisualContainer(
-                new VisualContainerProps { LabelText = lang.LabelSpells },
-                new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.EnabledSpellFormat), lang.GetCombatSpells.EnableOverheadSpellFormat),
-                    OptionsFactory.CreateInputField(lang.GetCombatSpells.SpellOverheadFormat, profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s)
-                ),
-                OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.EnableOverheadSpellHue, new Accessor<bool>(() => profile.EnabledSpellHue)),
-                OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.SingleClickForSpellIcons, new Accessor<bool>(() => profile.CastSpellsByOneClick)),
-                OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.EnableFastSpellHotkeyAssigning, new Accessor<bool>(() => profile.FastSpellsAssign))
-            )
         );
     }
 }

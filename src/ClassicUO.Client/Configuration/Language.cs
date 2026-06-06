@@ -141,6 +141,8 @@ namespace ClassicUO.Configuration
 
         public LayerHidingTabLang LayerHidingTab { get; set; } = new();
 
+        public SpellsTabLang SpellsTab { get; set; } = new();
+
         public class MovementTabLang
         {
             public string Movement { get; set; } = "Movement";
@@ -227,6 +229,22 @@ namespace ClassicUO.Configuration
             public string OnlyForYourself { get; set; } = "Only for yourself";
             public string OnlyForYourselfTooltip { get; set; } = "Hide layers only on your own character";
             public string HideFollowingLayers { get; set; } = "Hide the following layers on in-game mobiles:";
+        }
+
+        public class SpellsTabLang
+        {
+            public string SpellIndicators { get; set; } = "Spell Indicators";
+            public string EnableSpellIndicators { get; set; } = "Enable Spell Indicators";
+            public string ImportIndicatorsFromUrl { get; set; } = "Import indicators from URL";
+            public string SpellIndicatorsDownloadPrompt { get; set; } = "Enter the URL for the spell config. \n/c[red]This will override your current config.";
+            public string EnableOverheadSpellFormat { get; set; } = "Enable overhead spell format";
+            public string EnableOverheadSpellHue { get; set; } = "Enable overhead spell hue";
+            public string SingleClickForSpellIcons { get; set; } = "Single click for spell icons";
+            public string EnableFastSpellHotkeyAssigning { get; set; } = "Enable fast spell hotkey assigning";
+            public string SpellOverheadFormat { get; set; } = "Spell overhead format";
+            public string DisplayMatchingHotkeysOnSpellIcons { get; set; } = "Display matching hotkeys on spell icons";
+            public string SpellIconScale { get; set; } = "Spell icon scale";
+            public string HotkeyTextHue { get; set; } = "Hotkey text hue";
         }
 
         public class General
@@ -842,7 +860,9 @@ namespace ClassicUO.Configuration
         public string DragToResize { get; set; } = "Drag to resize";
         public string MinMaxWindowButtonTooltip { get; set; } = "Minimize or maximize this window";
         public string ResetWindowSizeButtonTooltip { get; set; } = "Reset window size";
-        public ProfileEditorLanguage ProfileEditor { get; set; } = new ProfileEditorLanguage();
+        public string Download { get; set; } = "Download";
+        public string Cancel { get; set; } = "Cancel";
+        public ProfileEditorLanguage ProfileEditor { get; set; } = new();
     }
 
     public class ProfileEditorLanguage

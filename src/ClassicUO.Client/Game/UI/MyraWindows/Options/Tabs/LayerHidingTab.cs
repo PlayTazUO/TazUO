@@ -10,7 +10,7 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
-public class LayerHidingTab
+public static class LayerHidingTab
 {
     internal static OptionItem GetContent()
     {
