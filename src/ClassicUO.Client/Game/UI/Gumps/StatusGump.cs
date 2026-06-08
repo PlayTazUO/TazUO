@@ -155,7 +155,8 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                gump = new StatusGumpModern(world);
+                //gump = new StatusGumpModern(world);
+                gump = new StatusGumpCredzba(world);
             }
 
             gump.X = x;
@@ -1588,5 +1589,94 @@ namespace ClassicUO.Game.UI.Gumps
             NumStats
         }
         private readonly GumpPicWithWidth[] _fillBars = new GumpPicWithWidth[3];
+    }
+
+    public class StatusGumpCredzba : StatusGumpModern
+    {
+        private readonly GumpPicWithWidth[] _fillBars = new GumpPicWithWidth[3];
+
+        private enum FillStats
+        {
+            Hits,
+            Mana,
+            Stam
+        }
+
+        public StatusGumpCredzba(World world) : base(world)
+        {
+            const int SliderStart = 34;
+            Add(new GumpPic(SliderStart, 12, 0x0805, 0));
+            Add(new GumpPic(SliderStart, 25, 0x0805, 0));
+            Add(new GumpPic(SliderStart, 38, 0x0805, 0));
+
+            ushort gumpIdHp = 0x0806;
+
+            _fillBars[(int) FillStats.Hits] = new GumpPicWithWidth(SliderStart, 12, gumpIdHp, 0, 0);
+            _fillBars[(int) FillStats.Mana] = new GumpPicWithWidth(SliderStart, 25, 0x0806, 0, 0);
+            _fillBars[(int) FillStats.Stam] = new GumpPicWithWidth(SliderStart, 38, 0x0806, 0, 0);
+
+            Add(_fillBars[(int) FillStats.Hits]);
+            Add(_fillBars[(int) FillStats.Mana]);
+            Add(_fillBars[(int) FillStats.Stam]);
+
+            UpdateFillBar(FillStats.Hits, World.Player.Hits, World.Player.HitsMax);
+            UpdateFillBar(FillStats.Mana, World.Player.Mana, World.Player.ManaMax);
+            UpdateFillBar(FillStats.Stam, World.Player.Stamina, World.Player.StaminaMax);
+        }
+
+        public override void Update()
+        {
+            if (!IsDisposed && _refreshTime < Time.Ticks)
+            {
+                UpdateFillBar(FillStats.Hits, World.Player.Hits, World.Player.HitsMax);
+                UpdateFillBar(FillStats.Mana, World.Player.Mana, World.Player.ManaMax);
+                UpdateFillBar(FillStats.Stam, World.Player.Stamina, World.Player.StaminaMax);
+            }
+
+            base.Update();
+        }
+
+        private void UpdateFillBar(FillStats id, int current, int max)
+        {
+            ushort gumpId = 0x0806;
+
+            if (id == FillStats.Hits)
+            {
+                if (World.Player.IsPoisoned)
+                {
+                    gumpId = 0x0808;
+                }
+                else if (World.Player.IsYellowHits)
+                {
+                    gumpId = 0x0809;
+                }
+            }
+
+            if (max > 0)
+            {
+                _fillBars[(int) id].Graphic = gumpId;
+                _fillBars[(int) id].Percent = CalculatePercents(max, current, 109);
+            }
+        }
+
+        private static int CalculatePercents(int max, int current, int maxValue)
+        {
+            if (max > 0)
+            {
+                max = current * 100 / max;
+
+                if (max > 100)
+                {
+                    max = 100;
+                }
+
+                if (max > 1)
+                {
+                    max = maxValue * max / 100;
+                }
+            }
+
+            return max;
+        }
     }
 }
