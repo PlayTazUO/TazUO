@@ -101,6 +101,8 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("plugins")] public string[] Plugins { get; set; } = { "" };
 
+        [JsonIgnore] public bool SkipServerSelect { get; set; }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)
