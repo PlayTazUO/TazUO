@@ -453,7 +453,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
             var c = new ContextMenuControl(this);
             c.Add(new ContextMenuItemEntry("Skip Server Select? (When only 1 server is available)", () =>
             {
-                _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, !Settings.GlobalSettings.SkipServerSelect);
+                Settings.GlobalSettings.SkipServerSelect = !Settings.GlobalSettings.SkipServerSelect;
+                _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, Settings.GlobalSettings.SkipServerSelect);
             }, true, Settings.GlobalSettings.SkipServerSelect));
 
             c.Add(new ContextMenuItemEntry("TazUO Website", () =>
