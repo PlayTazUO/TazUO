@@ -110,6 +110,7 @@ search_entry("Cave Tiles", "Want to see a border around cave tiles for easier mi
 search_entry("Controller", "Have you tried playing with your controller yet?.", "controller", "support")
 search_entry("Health Bar Collector", "Easily see all nearby mobiles with the health bar collector.", "health", "bar", "collector")
 entry("Options menu fine controls", "Did you know, in the options menu if you are trying to set a slider to an exact number, you can hover over the slider and use your left/right arrow keys?.", "https://tazuo.org/")
+search_entry("Ingame Tools", "There are a few ingame tools built to make your time in UO easier.", "ingame", "tools")
 
 
 url = os.getenv("DISCORD_WEBHOOK")
