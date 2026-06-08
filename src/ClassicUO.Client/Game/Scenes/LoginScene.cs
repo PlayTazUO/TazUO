@@ -175,6 +175,7 @@ namespace ClassicUO.Game.Scenes
                     if (CanAutologin && Servers != null && Servers.Length != 0)
                     {
                         int index = GetServerIndexFromSettings();
+
                         // Loop through servers to find the one with matching Index property
                         for (int i = 0; i < Servers.Length; i++)
                         {
@@ -382,7 +383,7 @@ namespace ClassicUO.Game.Scenes
                 index = Settings.GlobalSettings.LastServerNum;
             }
 
-            if (Servers == null || index < 0 || index >= Servers.Length)
+            if (Servers == null || index < 0) //Server indexis received from the server, it does not always correlate with the server count/list
             {
                 index = 0;
             }

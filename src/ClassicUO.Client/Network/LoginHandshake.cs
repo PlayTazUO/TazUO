@@ -253,7 +253,7 @@ namespace ClassicUO.Network
 
             for (int i = 0; i < Servers.Length; i++)
                 if (Servers[i].Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                    return i;
+                    return Servers[i].Index;
 
             return -1;
         }
