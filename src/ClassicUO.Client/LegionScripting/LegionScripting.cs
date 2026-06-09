@@ -497,6 +497,8 @@ namespace ClassicUO.LegionScripting
                 MatchCollection matches = exParserRx.Matches(formattedEx);
                 var errorLocations = new List<ScriptErrorLocation>();
 
+                ScriptErrorLocation? last = null;
+
                 bool first = true;
                 foreach (Match match in matches)
                 {
@@ -515,7 +517,12 @@ namespace ClassicUO.LegionScripting
                     if (filePath.TryReadFileLines(out string[] fileLines))
                         lineContent = GetContents(fileLines, first? lineNumber - 1 : lineNumber);
 
-                    errorLocations.Add(new ScriptErrorLocation(fileName, filePath, lineNumber, lineContent));
+                    var sel = new ScriptErrorLocation(fileName, filePath, lineNumber, lineContent);
+
+                    if(last != null && !sel.Equals(last))
+                        errorLocations.Add(sel);
+                    
+                    last = sel;
 
                     first = false;
                 }

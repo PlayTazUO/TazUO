@@ -21,6 +21,7 @@ All notable changes to TazUO will be recorded here.
 * Grid container label missing updates - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
 * Fixed server index from name - ([bittiez](https://github.com/bittiez))
 * Fixed bulletin board crash - ([bittiez](https://github.com/bittiez))
+* Added maximum depth recursion to legion py scripting to prevent stack overflow - ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
