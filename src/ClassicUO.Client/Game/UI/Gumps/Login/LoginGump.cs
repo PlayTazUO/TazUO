@@ -95,9 +95,10 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     }
                 );
 
+                // Login to ultima online
                 Add
                 (
-                    new Label(ResGumps.LoginToUO, false, HUE, font: 2)
+                    new Label(Client.Game.UO.FileManager.Clilocs.GetString(3000038), false, HUE, font: 2)
                     {
                         X = 253,
                         Y = 305
