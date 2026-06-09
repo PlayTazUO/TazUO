@@ -324,7 +324,6 @@ namespace ClassicUO.Game
                     byte mapCount = p.ReadUInt8();
 
                     var defs = new (int index, int width, int height)[mapCount];
-                    int maxIndex = -1;
 
                     for (int i = 0; i < mapCount; i++)
                     {
@@ -333,19 +332,9 @@ namespace ClassicUO.Game
                         int height = p.ReadUInt16BE();
 
                         defs[i] = (index, width, height);
-
-                        if (index > maxIndex)
-                        {
-                            maxIndex = index;
-                        }
                     }
 
-                    if (maxIndex < 0)
-                    {
-                        return;
-                    }
-
-                    Client.Game.UO.FileManager.Maps.ApplyServerMapDefinitions(defs, maxIndex + 1);
+                    Client.Game.UO.FileManager.Maps.ApplyServerMapDefinitions(defs);
 
                     if (world != null && world.InGame)
                     {
@@ -932,9 +921,16 @@ namespace ClassicUO.Game
                 }
             }
 
-            public override void ApplyServerMapDefinitions((int index, int width, int height)[] defs, int count)
+            public override void ApplyServerMapDefinitions((int index, int width, int height)[] defs)
             {
-                if (defs == null || count <= 0)
+                if (defs == null)
+                {
+                    return;
+                }
+
+                int count = GetMapCount(defs);
+
+                if (count <= 0)
                 {
                     return;
                 }

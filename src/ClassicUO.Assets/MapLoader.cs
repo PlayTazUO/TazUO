@@ -251,6 +251,21 @@ namespace ClassicUO.Assets
             _filesStatics.CopyTo(_currentStaticsFiles, 0);
         }
 
+        protected static int GetMapCount((int index, int width, int height)[] defs)
+        {
+            int maxIndex = -1;
+
+            foreach (var d in defs)
+            {
+                if (d.index > maxIndex)
+                {
+                    maxIndex = d.index;
+                }
+            }
+
+            return maxIndex + 1;
+        }
+
         protected static void StoreServerMapDefinitions((int index, int width, int height)[] defs, int count)
         {
             var store = new (int width, int height)[count];
@@ -268,9 +283,16 @@ namespace ClassicUO.Assets
             ServerMapDefinitions = store;
         }
 
-        public virtual void ApplyServerMapDefinitions((int index, int width, int height)[] defs, int count)
+        public virtual void ApplyServerMapDefinitions((int index, int width, int height)[] defs)
         {
-            if (defs == null || count <= 0)
+            if (defs == null)
+            {
+                return;
+            }
+
+            int count = GetMapCount(defs);
+
+            if (count <= 0)
             {
                 return;
             }
@@ -284,10 +306,11 @@ namespace ClassicUO.Assets
 
             int existing = MapsDefaultSize.GetLength(0);
 
-            for (int i = 0; i < count && i < existing; i++)
+            for (int i = 0; i < count; i++)
             {
-                widths[i] = MapsDefaultSize[i, 0];
-                heights[i] = MapsDefaultSize[i, 1];
+                int src = i < existing ? i : 0;
+                widths[i] = MapsDefaultSize[src, 0];
+                heights[i] = MapsDefaultSize[src, 1];
             }
 
             foreach ((int index, int width, int height) in defs)
