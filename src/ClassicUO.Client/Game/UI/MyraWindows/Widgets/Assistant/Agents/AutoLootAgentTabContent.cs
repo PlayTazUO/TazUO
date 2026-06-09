@@ -81,12 +81,12 @@ public static class AutoLootAgentTabContent
             var section = new VerticalStackPanel { Spacing = 4 };
             section.Widgets.Add(new MyraLabel(sectionTitle, MyraLabel.TextStyle.H3));
 
-            var typeLabel = new MyraLabel(typeLabels[Math.Clamp(getType(), 0, 2)], MyraLabel.TextStyle.P) { MinWidth = 50 };
             var textInput = new MyraInputBox { Text = getText() ?? "", HintText = "Text/command", Width = 180, Visible = getType() == 1 };
             textInput.TextChangedByUser += (_, _) => setText(textInput.Text);
 
 #pragma warning disable CS0612, CS0618
             var macroCombo = new ComboBox { Width = 180, Visible = getType() == 2 };
+            var typeDropdown = new ComboBox { Width = 100 };
 #pragma warning restore CS0612, CS0618
 
             List<Macro> macros = Client.Game.UO.World?.Macros.GetAllMacros() ?? new();
@@ -100,25 +100,19 @@ public static class AutoLootAgentTabContent
                     setText(li.Text);
             };
 
-            void UpdateInputVisibility()
+            foreach (string label in typeLabels)
+                typeDropdown.Items.Add(new ListItem(label));
+            typeDropdown.SelectedIndex = Math.Clamp(getType(), 0, 2);
+            typeDropdown.SelectedIndexChanged += (_, _) =>
             {
-                int t = getType();
+                int t = typeDropdown.SelectedIndex ?? 0;
+                setType(t);
                 textInput.Visible = t == 1;
                 macroCombo.Visible = t == 2;
-            }
+            };
 
             var typeRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            typeRow.Widgets.Add(new MyraButton("<", () =>
-            {
-                int t = ((getType() - 1) + typeLabels.Length) % typeLabels.Length;
-                setType(t); typeLabel.Text = typeLabels[t]; UpdateInputVisibility();
-            }));
-            typeRow.Widgets.Add(typeLabel);
-            typeRow.Widgets.Add(new MyraButton(">", () =>
-            {
-                int t = (getType() + 1) % typeLabels.Length;
-                setType(t); typeLabel.Text = typeLabels[t]; UpdateInputVisibility();
-            }));
+            typeRow.Widgets.Add(typeDropdown);
             typeRow.Widgets.Add(textInput);
             typeRow.Widgets.Add(macroCombo);
             typeRow.Widgets.Add(MyraCheckButton.CreateWithCallback(

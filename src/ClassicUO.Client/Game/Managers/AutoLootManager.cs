@@ -383,7 +383,7 @@ namespace ClassicUO.Game.Managers
             if (_lootItems.Count == 0)
             {
                 _progressBarGump?.Dispose();
-                if (_loopingHasLooted)
+                if (_loopingHasLooted && _corpsesPendingTarget.Count == 0 && _corpsesPendingLoot.Count == 0)
                 {
                     _loopingHasLooted = false;
                     Profile p = ProfileManager.CurrentProfile;
@@ -550,6 +550,7 @@ namespace ClassicUO.Game.Managers
             _corpsesPendingLoot.Clear();
             _preActionTriggeredCorpses.Clear();
             _loopingHasLooted = false;
+            _lastLootedCorpseSerial = 0;
         }
 
         public void ImportFromOtherCharacter(string characterName, List<AutoLootConfigEntry> entries)
