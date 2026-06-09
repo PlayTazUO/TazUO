@@ -20,6 +20,7 @@ All notable changes to TazUO will be recorded here.
 * FindItems now properly returns the highest level container - [P.R 488](https://github.com/PlayTazUO/TazUO/pull/488) ([Jascen](https://github.com/Jascen))
 * Grid container label missing updates - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
 * Fixed server index from name - ([bittiez](https://github.com/bittiez))
+* Fixed bulletin board crash - ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
