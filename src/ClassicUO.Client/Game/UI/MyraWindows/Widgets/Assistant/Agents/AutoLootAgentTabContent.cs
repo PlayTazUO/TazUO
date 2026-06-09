@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -64,6 +65,91 @@ public static class AutoLootAgentTabContent
             "Hue Corpse After Processing",
             "Hue corpses after processing to make it easier to see if autoloot has processed them."));
         root.Widgets.Add(optRow2);
+
+        // Loot Actions section
+        root.Widgets.Add(new MyraSpacer(15, 5));
+        root.Widgets.Add(new MyraLabel("Loot Actions:", MyraLabel.TextStyle.H2));
+
+        VerticalStackPanel BuildLootActionSection(
+            string sectionTitle,
+            Func<int> getType, Action<int> setType,
+            Func<string?> getText, Action<string?> setText,
+            Func<bool> getTarget, Action<bool> setTarget,
+            Func<int>? getDelay = null, Action<int>? setDelay = null)
+        {
+            string[] typeLabels = { "None", "Say", "Macro" };
+            var section = new VerticalStackPanel { Spacing = 4 };
+            section.Widgets.Add(new MyraLabel(sectionTitle, MyraLabel.TextStyle.H3));
+
+            var typeLabel = new MyraLabel(typeLabels[Math.Clamp(getType(), 0, 2)], MyraLabel.TextStyle.P) { MinWidth = 50 };
+            var textInput = new MyraInputBox { Text = getText() ?? "", HintText = "Text/command", Width = 180, Visible = getType() == 1 };
+            textInput.TextChangedByUser += (_, _) => setText(textInput.Text);
+
+#pragma warning disable CS0612, CS0618
+            var macroCombo = new ComboBox { Width = 180, Visible = getType() == 2 };
+#pragma warning restore CS0612, CS0618
+
+            List<Macro> macros = Client.Game.UO.World?.Macros.GetAllMacros() ?? new();
+            foreach (Macro m in macros)
+                macroCombo.Items.Add(new ListItem(m.Name));
+            int selIdx = macros.FindIndex(m => m.Name == getText());
+            if (selIdx >= 0) macroCombo.SelectedIndex = selIdx;
+            macroCombo.SelectedIndexChanged += (_, _) =>
+            {
+                if (macroCombo.SelectedItem is ListItem li)
+                    setText(li.Text);
+            };
+
+            void UpdateInputVisibility()
+            {
+                int t = getType();
+                textInput.Visible = t == 1;
+                macroCombo.Visible = t == 2;
+            }
+
+            var typeRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            typeRow.Widgets.Add(new MyraButton("<", () =>
+            {
+                int t = ((getType() - 1) + typeLabels.Length) % typeLabels.Length;
+                setType(t); typeLabel.Text = typeLabels[t]; UpdateInputVisibility();
+            }));
+            typeRow.Widgets.Add(typeLabel);
+            typeRow.Widgets.Add(new MyraButton(">", () =>
+            {
+                int t = (getType() + 1) % typeLabels.Length;
+                setType(t); typeLabel.Text = typeLabels[t]; UpdateInputVisibility();
+            }));
+            typeRow.Widgets.Add(textInput);
+            typeRow.Widgets.Add(macroCombo);
+            typeRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                getTarget(), b => setTarget(b),
+                "Target Corpse", "Automatically target the corpse when the server requests a target cursor."));
+            section.Widgets.Add(typeRow);
+
+            if (getDelay != null && setDelay != null)
+            {
+                section.Widgets.Add(MyraHSlider.SliderWithLabel(
+                    "Delay (s)", out _,
+                    v => setDelay((int)(v * 1000)),
+                    0f, 30f,
+                    getDelay() / 1000f));
+            }
+
+            return section;
+        }
+
+        root.Widgets.Add(BuildLootActionSection(
+            "Pre-Loot Action:",
+            () => profile.AutoLootPreActionType, v => profile.AutoLootPreActionType = v,
+            () => profile.AutoLootPreActionText, v => profile.AutoLootPreActionText = v ?? "",
+            () => profile.AutoLootPreActionTargetCorpse, v => profile.AutoLootPreActionTargetCorpse = v,
+            () => profile.AutoLootPreActionDelayMs, v => profile.AutoLootPreActionDelayMs = v));
+
+        root.Widgets.Add(BuildLootActionSection(
+            "Post-Loot Action:",
+            () => profile.AutoLootPostActionType, v => profile.AutoLootPostActionType = v,
+            () => profile.AutoLootPostActionText, v => profile.AutoLootPostActionText = v ?? "",
+            () => profile.AutoLootPostActionTargetCorpse, v => profile.AutoLootPostActionTargetCorpse = v));
 
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));

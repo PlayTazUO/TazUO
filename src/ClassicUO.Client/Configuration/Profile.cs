@@ -818,6 +818,34 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
         public partial uint DisabledOverheadMessageTypes { get; set; }
 
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_PRE_ACTION_TYPE, 0)]
+        public partial int AutoLootPreActionType { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_PRE_ACTION_TEXT, "")]
+        public partial string AutoLootPreActionText { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_PRE_ACTION_TARGET_CORPSE, false)]
+        public partial bool AutoLootPreActionTargetCorpse { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_PRE_ACTION_DELAY_MS, 0)]
+        public partial int AutoLootPreActionDelayMs { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_POST_ACTION_TYPE, 0)]
+        public partial int AutoLootPostActionType { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_POST_ACTION_TEXT, "")]
+        public partial string AutoLootPostActionText { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_POST_ACTION_TARGET_CORPSE, false)]
+        public partial bool AutoLootPostActionTargetCorpse { get; set; }
+
         private long lastSave;
 
         internal void AfterLoad()
