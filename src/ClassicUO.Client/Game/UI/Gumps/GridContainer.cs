@@ -1178,7 +1178,12 @@ namespace ClassicUO.Game.UI.Gumps
         {
             GridContainer gridContainer = UIManager.GetGump<GridContainer>(serial);
             if (gridContainer != null)
+            {
+                if (gridContainer.IsMinimized)
+                    gridContainer.IsMinimized = false;
+                gridContainer.BringOnTop();
                 gridContainer.RequestUpdateContents();
+            }
             else
                 UIManager.Add(new GridContainer(World.Instance, serial, graphic));
         }
