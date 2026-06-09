@@ -409,7 +409,6 @@ namespace ClassicUO.Game.Scenes
 
             if (!string.IsNullOrEmpty(serverName))
             {
-                _world.ServerName = serverName;
                 LoginHandshake.Instance.SelectServer(index, serverName);
             }
         }

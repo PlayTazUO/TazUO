@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using ClassicUO.Configuration;
+using ClassicUO.Game;
 using ClassicUO.Game.Scenes;
 using ClassicUO.IO;
 using ClassicUO.Network.Encryption;
@@ -117,6 +118,7 @@ namespace ClassicUO.Network
                     }
                 }
 
+                World.Instance.ServerName = serverName;
                 LastServerNum = (ushort)(1 + ServerIndex);
                 LastServerName = Servers[ServerIndex].Name;
 
