@@ -60,6 +60,7 @@ public class ScriptManagerWindow : MyraControl
         {
             if (g is ScriptManagerWindow w)
             {
+                w.CenterInViewPort();
                 w.BringOnTop();
                 return;
             }
