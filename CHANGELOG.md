@@ -11,6 +11,7 @@ All notable changes to TazUO will be recorded here.
 * Add overhead message filter option - [P.R 494](https://github.com/PlayTazUO/TazUO/pull/494) ([bittiez](https://github.com/bittiez))
 * Color picker gump now dynamically calculates page count based on loaded hues. Updated shader slightly for supporting hues past 3k. - [P.R 496](https://github.com/PlayTazUO/TazUO/pull/496) ([bittiez](https://github.com/bittiez))
 * Add option to skip server select & reorganized login gump - [P.R 498](https://github.com/PlayTazUO/TazUO/pull/498) ([bittiez](https://github.com/bittiez))
+* Opening an already open grid container will now unminimize it if minimized and bring it to the front - [P.R 502](https://github.com/PlayTazUO/TazUO/pull/502) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Mouse wheel macros hijack scroll from shop gumps - [P.R 479](https://github.com/PlayTazUO/TazUO/pull/479) ([yuval-po](https://github.com/yuval-po))
