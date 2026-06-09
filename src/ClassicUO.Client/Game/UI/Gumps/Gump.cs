@@ -143,13 +143,13 @@ namespace ClassicUO.Game.UI.Gumps
         public void CenterXInScreen()
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            X = (windowBounds.Width - Width) / 2;
+            X = (int)(((windowBounds.Width / Client.Game.RenderScale) - (Width * Client.Game.RenderScale)) / 2);
         }
 
         public void CenterYInScreen()
         {
             Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            Y = (windowBounds.Height - Height) / 2;
+            Y = (int)(((windowBounds.Height / Client.Game.RenderScale) - (Height * Client.Game.RenderScale)) / 2);
         }
 
         public void CenterXInViewPort()

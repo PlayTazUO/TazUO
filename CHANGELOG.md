@@ -23,6 +23,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed bulletin board crash - ([bittiez](https://github.com/bittiez))
 * Added maximum depth recursion to legion py scripting to prevent stack overflow - ([bittiez](https://github.com/bittiez))
 * Fixed tooltips going outside window bounds when scaled - ([bittiez](https://github.com/bittiez))
+* Fixed logout gump not being centered when scaled - ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
