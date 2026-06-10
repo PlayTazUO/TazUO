@@ -50,12 +50,17 @@ namespace ClassicUO.Game.Managers
         private int _currentLootTotalCount = 0;
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
 
-        private readonly HashSet<uint> _preActionTriggeredCorpses = new();
-        private readonly HashSet<uint> _postActionFiredCorpses = new();
-        private readonly Dictionary<uint, long> _corpsesPendingTarget = new();
-        private readonly Dictionary<uint, long> _corpsesPendingLoot = new();
-        private readonly Dictionary<uint, int> _pendingLootByCorpse = new();   // corpse serial → items still in queue
-        private readonly Dictionary<uint, uint> _itemToCorpseSerial = new();   // item serial → corpse serial
+        // Pre/post loot action state, all keyed by corpse serial. Per-corpse lifecycle:
+        //   pre-action fires → [wait for target] → [delay] → loot items → post-action.
+        // The two "fired" sets gate one-shot actions and are cleared on the periodic
+        // cleanup (see Update) or by ClearActiveLootQueue. The pending/count maps drain
+        // themselves as corpses advance through the stages.
+        private readonly HashSet<uint> _preActionTriggeredCorpses = new();    // pre-action already fired
+        private readonly HashSet<uint> _postActionFiredCorpses = new();       // post-action already fired
+        private readonly Dictionary<uint, long> _corpsesPendingTarget = new();// corpse → tick action fired, awaiting target consumption
+        private readonly Dictionary<uint, long> _corpsesPendingLoot = new();  // corpse → tick when looting may begin
+        private readonly Dictionary<uint, int> _pendingLootByCorpse = new();  // corpse → items still queued
+        private readonly Dictionary<uint, uint> _itemToCorpseSerial = new();  // queued item → its corpse
         private const long TARGET_WAIT_TIMEOUT_MS = 5000;
 
         private readonly World _world;
@@ -382,33 +387,35 @@ namespace ClassicUO.Game.Managers
             if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                 return; //Prevent moving stuff while holding an item.
 
-            // Advance corpses from "waiting for target" → "delay countdown"
+            // Advance corpses from "waiting for target" → "delay countdown".
+            // NextAutoTarget is a single global slot, so once it clears every
+            // corpse waiting on a target advances together.
             if (_corpsesPendingTarget.Count > 0)
             {
-                List<uint> targetReady = null;
                 long now = Time.Ticks;
+                bool targetConsumed = !TargetManager.NextAutoTarget.IsSet;
+                List<uint> targetReady = null;
                 foreach (KeyValuePair<uint, long> kv in _corpsesPendingTarget)
-                {
-                    bool consumed = !TargetManager.NextAutoTarget.IsSet;
-                    bool timedOut = now - kv.Value >= TARGET_WAIT_TIMEOUT_MS;
-                    if (consumed || timedOut)
+                    if (targetConsumed || now - kv.Value >= TARGET_WAIT_TIMEOUT_MS)
                         (targetReady ??= new List<uint>()).Add(kv.Key);
-                }
+
                 if (targetReady != null)
                     foreach (uint serial in targetReady)
                     {
                         _corpsesPendingTarget.Remove(serial);
-                        _corpsesPendingLoot[serial] = Time.Ticks + ProfileManager.CurrentProfile.AutoLootPreActionDelayMs;
+                        _corpsesPendingLoot[serial] = now + ProfileManager.CurrentProfile.AutoLootPreActionDelayMs;
                     }
             }
 
             // Loot corpses whose pre-action delay has expired
             if (_corpsesPendingLoot.Count > 0)
             {
+                long now = Time.Ticks;
                 List<uint> lootReady = null;
                 foreach (KeyValuePair<uint, long> kv in _corpsesPendingLoot)
-                    if (Time.Ticks >= kv.Value)
+                    if (now >= kv.Value)
                         (lootReady ??= new List<uint>()).Add(kv.Key);
+
                 if (lootReady != null)
                     foreach (uint serial in lootReady)
                     {
