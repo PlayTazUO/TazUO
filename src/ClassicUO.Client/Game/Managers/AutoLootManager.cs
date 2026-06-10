@@ -51,6 +51,7 @@ namespace ClassicUO.Game.Managers
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
 
         private readonly HashSet<uint> _preActionTriggeredCorpses = new();
+        private readonly HashSet<uint> _postActionFiredCorpses = new();
         private readonly Dictionary<uint, long> _corpsesPendingTarget = new();
         private readonly Dictionary<uint, long> _corpsesPendingLoot = new();
         private readonly Dictionary<uint, int> _pendingLootByCorpse = new();   // corpse serial → items still in queue
@@ -221,6 +222,7 @@ namespace ClassicUO.Game.Managers
 
         private void FirePostActionForCorpse(uint corpseSerial)
         {
+            if (!_postActionFiredCorpses.Add(corpseSerial)) return;
             Profile p = ProfileManager.CurrentProfile;
             LootActionType postType = (LootActionType)p.AutoLootPostActionType;
             if (postType == LootActionType.None) return;
@@ -423,6 +425,7 @@ namespace ClassicUO.Game.Managers
                 {
                     _recentlyLooted.Clear();
                     _preActionTriggeredCorpses.Clear();
+                    _postActionFiredCorpses.Clear();
                     _nextClearRecents = Time.Ticks + 5000;
                 }
                 return;
@@ -573,6 +576,7 @@ namespace ClassicUO.Game.Managers
             _corpsesPendingTarget.Clear();
             _corpsesPendingLoot.Clear();
             _preActionTriggeredCorpses.Clear();
+            _postActionFiredCorpses.Clear();
             _pendingLootByCorpse.Clear();
             _itemToCorpseSerial.Clear();
         }
