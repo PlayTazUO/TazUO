@@ -53,8 +53,8 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _preActionTriggeredCorpses = new();
         private readonly Dictionary<uint, long> _corpsesPendingTarget = new();
         private readonly Dictionary<uint, long> _corpsesPendingLoot = new();
-        private bool _loopingHasLooted = false;
-        private uint _lastLootedCorpseSerial = 0;
+        private readonly Dictionary<uint, int> _pendingLootByCorpse = new();   // corpse serial → items still in queue
+        private readonly Dictionary<uint, uint> _itemToCorpseSerial = new();   // item serial → corpse serial
         private const long TARGET_WAIT_TIMEOUT_MS = 5000;
 
         private readonly World _world;
@@ -81,8 +81,15 @@ namespace ClassicUO.Game.Managers
                 priority = entry.Priority;
             _lootItems.Enqueue((item, entry), priority);
             _currentLootTotalCount++;
-            _loopingHasLooted = true;
             _nextClearRecents = Time.Ticks + 5000;
+
+            // Track which corpse this item belongs to (skip if it's a distance-retry re-queue)
+            if (!_itemToCorpseSerial.ContainsKey(item.Serial) && _world.Items.Get(item.RootContainer) is { IsCorpse: true } root)
+            {
+                _pendingLootByCorpse.TryGetValue(root.Serial, out int c);
+                _pendingLootByCorpse[root.Serial] = c + 1;
+                _itemToCorpseSerial[item.Serial] = root.Serial;
+            }
         }
 
         public void ForceLootContainer(uint serial)
@@ -206,6 +213,35 @@ namespace ClassicUO.Game.Managers
 
             if (ProfileManager.CurrentProfile.HueCorpseAfterAutoloot)
                 corpse.Hue = 73;
+
+            // If nothing was queued for this corpse, fire the post-action immediately
+            if (!_pendingLootByCorpse.ContainsKey(corpse.Serial))
+                FirePostActionForCorpse(corpse.Serial);
+        }
+
+        private void FirePostActionForCorpse(uint corpseSerial)
+        {
+            Profile p = ProfileManager.CurrentProfile;
+            LootActionType postType = (LootActionType)p.AutoLootPostActionType;
+            if (postType == LootActionType.None) return;
+            if (p.AutoLootPostActionTargetCorpse && corpseSerial != 0)
+                TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral);
+            ExecuteLootAction(postType, p.AutoLootPostActionText);
+        }
+
+        private void OnItemLootCompleted(uint itemSerial)
+        {
+            if (!_itemToCorpseSerial.TryGetValue(itemSerial, out uint corpseSerial)) return;
+            _itemToCorpseSerial.Remove(itemSerial);
+            if (!_pendingLootByCorpse.TryGetValue(corpseSerial, out int remaining)) return;
+            remaining--;
+            if (remaining <= 0)
+            {
+                _pendingLootByCorpse.Remove(corpseSerial);
+                FirePostActionForCorpse(corpseSerial);
+            }
+            else
+                _pendingLootByCorpse[corpseSerial] = remaining;
         }
 
         private void ExecuteLootAction(LootActionType type, string text)
@@ -383,18 +419,6 @@ namespace ClassicUO.Game.Managers
             if (_lootItems.Count == 0)
             {
                 _progressBarGump?.Dispose();
-                if (_loopingHasLooted && _corpsesPendingTarget.Count == 0 && _corpsesPendingLoot.Count == 0)
-                {
-                    _loopingHasLooted = false;
-                    Profile p = ProfileManager.CurrentProfile;
-                    LootActionType postType = (LootActionType)p.AutoLootPostActionType;
-                    if (postType != LootActionType.None)
-                    {
-                        if (p.AutoLootPostActionTargetCorpse && _lastLootedCorpseSerial != 0)
-                            TargetManager.SetAutoTarget(_lastLootedCorpseSerial, TargetType.Neutral);
-                        ExecuteLootAction(postType, p.AutoLootPostActionText);
-                    }
-                }
                 if (Time.Ticks > _nextClearRecents)
                 {
                     _recentlyLooted.Clear();
@@ -415,7 +439,10 @@ namespace ClassicUO.Game.Managers
             Item moveItem = _world.Items.Get(item);
 
             if (moveItem == null)
+            {
+                OnItemLootCompleted(item);
                 return;
+            }
 
             CreateProgressBar();
 
@@ -456,10 +483,6 @@ namespace ClassicUO.Game.Managers
 
             if (destinationSerial != 0)
             {
-                Item rootContainer = _world.Items.Get(moveItem.RootContainer);
-                if (rootContainer?.IsCorpse == true)
-                    _lastLootedCorpseSerial = rootContainer.Serial;
-
                 ActionPriority lootPriority = entry?.Priority switch
                 {
                     AutoLootPriority.High => ActionPriority.LootItemHigh,
@@ -471,6 +494,7 @@ namespace ClassicUO.Game.Managers
             else
                 GameActions.Print("Could not find a container to loot into. Try setting a grab bag.");
 
+            OnItemLootCompleted(item);
             _nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
         }
 
@@ -549,8 +573,8 @@ namespace ClassicUO.Game.Managers
             _corpsesPendingTarget.Clear();
             _corpsesPendingLoot.Clear();
             _preActionTriggeredCorpses.Clear();
-            _loopingHasLooted = false;
-            _lastLootedCorpseSerial = 0;
+            _pendingLootByCorpse.Clear();
+            _itemToCorpseSerial.Clear();
         }
 
         public void ImportFromOtherCharacter(string characterName, List<AutoLootConfigEntry> entries)
