@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -64,6 +65,26 @@ public static class AutoLootAgentTabContent
             "Hue Corpse After Processing",
             "Hue corpses after processing to make it easier to see if autoloot has processed them."));
         root.Widgets.Add(optRow2);
+
+        var optRow3 = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
+        optRow3.Widgets.Add(new MyraLabel("Corpse retry delay (ms):", MyraLabel.TextStyle.P)
+        {
+            Tooltip = "Milliseconds before a failed corpse is retried. Minimum 1000ms.",
+            VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
+        });
+        var retrySpinner = new SpinButton
+        {
+            Integer = true,
+            Value = profile.AutoLootRetryDelay,
+            Minimum = 1000,
+            Maximum = 600000,
+            MinWidth = 100,
+            Tooltip = "Milliseconds before a failed corpse is retried. Minimum 1000ms."
+        };
+        retrySpinner.ValueChangedByUser += (_, _) =>
+            profile.AutoLootRetryDelay = (int)Math.Clamp(retrySpinner.Value ?? 5000f, 1000f, 600000f);
+        optRow3.Widgets.Add(retrySpinner);
+        root.Widgets.Add(optRow3);
 
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));

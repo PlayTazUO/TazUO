@@ -780,6 +780,10 @@ namespace ClassicUO.Configuration
         public partial bool HueCorpseAfterAutoloot { get; set; }
 
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_RETRY_DELAY, 5000)]
+        public partial int AutoLootRetryDelay { get; set; }
+
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
         public partial int PathfindingZLevelDiff { get; set; }
 

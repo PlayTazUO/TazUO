@@ -45,7 +45,7 @@ namespace ClassicUO.Game.Managers
         private bool _loaded = false;
         private readonly string _savePath;
         private long _nextLootTime = Time.Ticks;
-        private long _nextClearRecents = Time.Ticks + 5000;
+        private long _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         private ProgressBarGump _progressBarGump;
         private int _currentLootTotalCount = 0;
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
@@ -74,7 +74,7 @@ namespace ClassicUO.Game.Managers
                 priority = entry.Priority;
             _lootItems.Enqueue((item, entry), priority);
             _currentLootTotalCount++;
-            _nextClearRecents = Time.Ticks + 5000;
+            _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         }
 
         public void ForceLootContainer(uint serial)
@@ -299,7 +299,7 @@ namespace ClassicUO.Game.Managers
                 if (Time.Ticks > _nextClearRecents)
                 {
                     _recentlyLooted.Clear();
-                    _nextClearRecents = Time.Ticks + 5000;
+                    _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
                 }
                 return;
             }
