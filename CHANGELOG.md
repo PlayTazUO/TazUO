@@ -14,7 +14,7 @@ All notable changes to TazUO will be recorded here.
 * Opening an already open grid container will now unminimize it if minimized and bring it to the front - [P.R 502](https://github.com/PlayTazUO/TazUO/pull/502) ([bittiez](https://github.com/bittiez))
 * Script manager and assistant windows now re-center when reopened via toolbar button instead of closing/reopening - [P.R 503](https://github.com/PlayTazUO/TazUO/pull/503) ([bittiez](https://github.com/bittiez))
 * Swapped a few hard coded texts for their cliloc equivelent - [P.R 505](https://github.com/PlayTazUO/TazUO/pull/505) ([bittiez](https://github.com/bittiez))
-* Auto loot corpse retry delay is now configurable in the Auto Loot agent UI (range 1000–600000ms, default 5000ms)
+* Auto loot corpse retry delay is now configurable in the Auto Loot agent UI (range 1000–600000ms, default 5000ms) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Mouse wheel macros hijack scroll from shop gumps - [P.R 479](https://github.com/PlayTazUO/TazUO/pull/479) ([yuval-po](https://github.com/yuval-po))
