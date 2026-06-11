@@ -138,14 +138,7 @@ public class SpellBar : Gump
         menu.ContextMenu = new ContextMenuControl(this);
         menu.ContextMenu.Add(new ContextMenuItemEntry("Save preset", () =>
         {
-            Gump g;
-            UIManager.Add(g = new InputRequest(World, "Preset name", "Save", "Cancel", (r, n) =>
-            {
-                if (r == InputRequest.Result.BUTTON1)
-                    SpellBarManager.SaveCurrentRowPreset(n);
-            }));
-            g.CenterXInViewPort();
-            g.CenterYInViewPort();
+            new PromptPopupWindow("Save Preset", "Preset name", n => SpellBarManager.SaveCurrentRowPreset(n), "Save", "Cancel");
         }));
         menu.ContextMenu.Add(import);
         menu.ContextMenu.Add(new ContextMenuItemEntry("Lock/Unlock spellbar movement", (() =>
