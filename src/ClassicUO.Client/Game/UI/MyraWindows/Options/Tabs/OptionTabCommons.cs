@@ -31,7 +31,7 @@ public static class OptionTabCommons
         };
 
         if (children?.Length > 0)
-            panel.AddRange(children);
+            panel.AddRange(children.Where(c => c != null).ToArray());
 
         return panel;
     }
@@ -46,7 +46,11 @@ public static class OptionTabCommons
 
         panel.Spacing = MyraStyle.STANDARD_SPACING;
         panel.VerticalAlignment = VerticalAlignment.Center;
-        children?.ForEach(child => panel.Widgets.Add(child));
+        children?.ForEach(child =>
+        {
+            if (child != null)
+                panel.Widgets.Add(child);
+        });
         return panel;
     }
 

@@ -168,6 +168,15 @@ namespace ClassicUO.Game.UI.Gumps
                 this.replace_if_exists = replace_if_exists;
             }
 
+            public static CoolDownConditionData[] GetAllRules()
+            {
+                var data = new CoolDownConditionData[ProfileManager.CurrentProfile.CoolDownConditionCount];
+                for (int i = 0; i < ProfileManager.CurrentProfile.CoolDownConditionCount; i++)
+                    data[i] = GetConditionData(i, false);
+
+                return data;
+            }
+
             public static CoolDownConditionData GetConditionData(int key, bool createIfNotExist)
             {
                 var data = new CoolDownConditionData();

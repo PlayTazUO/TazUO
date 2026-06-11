@@ -1,9 +1,14 @@
+using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.MyraWindows.Options.CooldownBars;
+using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.Properties;
 using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -227,6 +232,12 @@ public static class MiscTab
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
 
+        var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor()) { Title = "Countdown Trigger Rules"};
+        CoolDownBar.CoolDownConditionData.GetAllRules()
+            .Select(CooldownBarRule.FromLegacyCondition)
+            .ToArray()
+            .ForEach(rb.Rules.Add);
+
         return OptionTabCommons.StyledVerticalWrapPanel(
             OptionTabCommons.StyledButton(
                 miscLang.ManageIgnoreListButtonLabel,
@@ -276,7 +287,8 @@ public static class MiscTab
                     new Accessor<string>(() => profile.SkillBarFormat),
                     miscLang.SkillProgressBarFormatTooltip
                 )
-            )
+            ),
+            rb
         );
     }
 }
