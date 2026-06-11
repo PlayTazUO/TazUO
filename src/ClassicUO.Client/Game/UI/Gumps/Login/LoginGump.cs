@@ -481,6 +481,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
         private static void OpenEditSettings()
         {
+            OptionsWindow existing = OptionsWindow.GetExisting("Edit Settings");
+            if (existing != null)
+            {
+                existing.CenterInViewPort();
+                existing.BringOnTop();
+                return;
+            }
+
             Settings s = Settings.GlobalSettings;
 
             var w = new OptionsWindow("Edit Settings");

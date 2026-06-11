@@ -18,15 +18,34 @@ public class OptionsWindow : MyraControl
 {
     private readonly VerticalStackPanel _stack;
 
+    /// <summary>The window title, also used to match existing instances in <see cref="GetExisting"/>.</summary>
+    public string Title { get; }
+
     /// <param name="title">The window title shown in the title bar.</param>
     public OptionsWindow(string title) : base(title)
     {
+        Title = title;
         _stack = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Padding = new Thickness(8) };
 
         SetRootContent(_stack);
         CenterInViewPort();
         UIManager.Add(this);
         BringOnTop();
+    }
+
+    /// <summary>
+    /// Returns an existing, non-disposed <see cref="OptionsWindow"/> with the given <paramref name="title"/>,
+    /// or null if none is open. Useful to focus an existing window instead of opening a duplicate.
+    /// </summary>
+    public static OptionsWindow? GetExisting(string title)
+    {
+        foreach (IGui g in UIManager.Gumps)
+        {
+            if (g is OptionsWindow ow && !ow.IsDisposed && ow.Title == title)
+                return ow;
+        }
+
+        return null;
     }
 
     /// <summary>Appends a plain text label.</summary>
