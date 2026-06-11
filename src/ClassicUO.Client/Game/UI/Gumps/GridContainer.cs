@@ -36,6 +36,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -638,15 +639,15 @@ namespace ClassicUO.Game.UI.Gumps
 
             control.Add(new ContextMenuItemEntry("Rename container", () =>
             {
-                var input = new InputRequest(World, "Type in a custom name for this container.", "Save", "Reset", (r, s) =>
+                new PromptPopupWindow("Rename Container", "Type in a custom name for this container.", s =>
                 {
-                    _gridContainerEntry?.CustomName = r == InputRequest.Result.BUTTON1 ? s : null;
-
+                    _gridContainerEntry?.CustomName = s;
+                    UpdateContainerNameLabel();
+                }, "Save", "Reset", () =>
+                {
+                    _gridContainerEntry?.CustomName = null;
                     UpdateContainerNameLabel();
                 }, GetContainerName(true));
-                input.CenterXInViewPort();
-                input.CenterYInViewPort();
-                UIManager.Add(input);
             }));
 
             return control;

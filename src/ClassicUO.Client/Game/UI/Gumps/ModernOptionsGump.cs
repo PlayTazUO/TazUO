@@ -4,6 +4,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
@@ -3828,51 +3829,45 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    UIManager.Add
+                    new PromptPopupWindow
                     (
-                        new InputRequest
-                        (
-                            World, lang.GetTazUO.InputRequestUrl, lang.GetTazUO.Download, lang.GetTazUO.Cancel,
-                            (r, s) =>
+                        lang.GetTazUO.ImportFromUrl, lang.GetTazUO.InputRequestUrl,
+                        url =>
+                        {
+                            if (!string.IsNullOrEmpty(url))
                             {
-                                if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(s))
+                                if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
                                 {
-                                    if (Uri.TryCreate(s, UriKind.Absolute, out Uri uri))
-                                    {
-                                        GameActions.Print(World, lang.GetTazUO.AttemptingToDownloadSpellConfig);
+                                    GameActions.Print(World, lang.GetTazUO.AttemptingToDownloadSpellConfig);
 
-                                        Task.Factory.StartNew
-                                        (() =>
+                                    Task.Factory.StartNew
+                                    (() =>
+                                        {
+                                            try
                                             {
-                                                try
-                                                {
-                                                    using var httpClient = new HttpClient();
-                                                    string result = httpClient.GetStringAsync(uri).Result;
+                                                using var httpClient = new HttpClient();
+                                                string result = httpClient.GetStringAsync(uri).Result;
 
-                                                    if (SpellVisualRangeManager.Instance.LoadFromString(result))
-                                                    {
-                                                        GameActions.Print(World,
-                                                            lang.GetTazUO.SuccesfullyDownloadedNewSpellConfig);
-                                                    }
-                                                }
-                                                catch (Exception ex)
+                                                if (SpellVisualRangeManager.Instance.LoadFromString(result))
                                                 {
                                                     GameActions.Print(World,
-                                                        string.Format(
-                                                            lang.GetTazUO.FailedToDownloadTheSpellConfigExMessage,
-                                                            ex.Message));
+                                                        lang.GetTazUO.SuccesfullyDownloadedNewSpellConfig);
                                                 }
                                             }
-                                        );
-                                    }
+                                            catch (Exception ex)
+                                            {
+                                                GameActions.Print(World,
+                                                    string.Format(
+                                                        lang.GetTazUO.FailedToDownloadTheSpellConfigExMessage,
+                                                        ex.Message));
+                                            }
+                                        }
+                                    );
                                 }
-                            },
-                            "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
-                        )
-                        {
-                            X = (Client.Game.Window.ClientBounds.Width >> 1) - 50,
-                            Y = (Client.Game.Window.ClientBounds.Height >> 1) - 50
-                        }
+                            }
+                        },
+                        lang.GetTazUO.Download, lang.GetTazUO.Cancel, null,
+                        "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
                     );
                 }
             };
