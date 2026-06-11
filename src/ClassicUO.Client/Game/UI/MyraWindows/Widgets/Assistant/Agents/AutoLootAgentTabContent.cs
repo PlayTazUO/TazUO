@@ -76,13 +76,13 @@ public static class AutoLootAgentTabContent
         {
             Integer = true,
             Value = profile.AutoLootRetryDelay,
-            Minimum = 0,
-            Maximum = 300000,
+            Minimum = 1000,
+            Maximum = 600000,
             MinWidth = 100,
             Tooltip = "Milliseconds before a failed corpse is retried. Lower values retry sooner; 0 disables the reset."
         };
         retrySpinner.ValueChangedByUser += (_, _) =>
-            profile.AutoLootRetryDelay = (int)Math.Clamp(retrySpinner.Value ?? 5000f, 0f, 300000f);
+            profile.AutoLootRetryDelay = (int)Math.Clamp(retrySpinner.Value ?? 5000f, 1000f, 600000f);
         optRow3.Widgets.Add(retrySpinner);
         root.Widgets.Add(optRow3);
 
