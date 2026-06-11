@@ -497,7 +497,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             w.AddInput("Port:", s.Port.ToString(), v =>
             {
-                if (ushort.TryParse(v, out ushort port))
+                if (ushort.TryParse(v, out ushort port) && port >= 1)
                 {
                     s.Port = port;
                     s.Save();
@@ -512,7 +512,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             w.AddInput("Reconnect time (sec):", s.ReconnectTime.ToString(), v =>
             {
-                if (int.TryParse(v, out int time))
+                if (int.TryParse(v, out int time) && time >= 0)
                 {
                     s.ReconnectTime = time;
                     s.Save();
