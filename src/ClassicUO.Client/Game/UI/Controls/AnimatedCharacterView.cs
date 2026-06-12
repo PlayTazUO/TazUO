@@ -74,8 +74,18 @@ namespace ClassicUO.Game.UI.Controls
             CanMove = false;
         }
 
-        /// <summary>Selected characters turn to face the viewer (down).</summary>
-        public void SetSelected(bool value) => _selected = value;
+        /// <summary>Selected characters turn to face the viewer (down) and play a gentle idle loop.</summary>
+        public void SetSelected(bool value)
+        {
+            if (_selected == value)
+                return;
+
+            _selected = value;
+            _frame = 0;
+            _playingIdle = false;
+            _nextFrame = Time.Ticks + _frameDelayMs;
+            _nextIdle = Time.Ticks + RandomIdleDelay();
+        }
 
         private static uint RandomIdleDelay() => (uint)Random.Shared.Next(0, 10001); // 0-10s
 
@@ -88,15 +98,24 @@ namespace ClassicUO.Game.UI.Controls
 
             ulong now = Time.Ticks;
 
-            // Kick off an idle play occasionally; otherwise stay frozen on the stand pose.
-            if (!_playingIdle && now >= _nextIdle)
+            // Selected character continuously plays a gentle idle loop; others stand still and
+            // only fidget occasionally.
+            byte group;
+            if (_selected)
             {
-                _playingIdle = true;
-                _frame = 0;
-                _nextFrame = now + _frameDelayMs;
+                group = IDLE_GROUP;
             }
+            else
+            {
+                if (!_playingIdle && now >= _nextIdle)
+                {
+                    _playingIdle = true;
+                    _frame = 0;
+                    _nextFrame = now + _frameDelayMs;
+                }
 
-            byte group = _playingIdle ? IDLE_GROUP : STAND_GROUP;
+                group = _playingIdle ? IDLE_GROUP : STAND_GROUP;
+            }
 
             byte direction = _selected ? (byte)Direction.Down : _baseDirection;
             byte layerDir = direction;
@@ -110,9 +129,18 @@ namespace ClassicUO.Game.UI.Controls
             if (bodyFrames.Length == 0)
                 return true;
 
-            // Advance the one-shot idle, reverting to standing when it completes.
-            if (_playingIdle && now >= _nextFrame)
+            if (_selected)
             {
+                // Loop the idle continuously.
+                if (now >= _nextFrame)
+                {
+                    _nextFrame = now + _frameDelayMs;
+                    _frame = (_frame + 1) % bodyFrames.Length;
+                }
+            }
+            else if (_playingIdle && now >= _nextFrame)
+            {
+                // Advance the one-shot idle, reverting to standing when it completes.
                 _nextFrame = now + _frameDelayMs;
                 _frame++;
 
