@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
