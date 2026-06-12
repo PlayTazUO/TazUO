@@ -28,7 +28,7 @@ public class OptionsWindow : MyraControl
         _stack = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Padding = new Thickness(8) };
 
         SetRootContent(_stack);
-        CenterInViewPort();
+        CenterInScreen();
         UIManager.Add(this);
         BringOnTop();
     }

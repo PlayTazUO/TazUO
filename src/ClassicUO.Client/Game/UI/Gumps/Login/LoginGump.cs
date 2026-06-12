@@ -481,10 +481,10 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
         private static void OpenEditSettings()
         {
-            OptionsWindow existing = OptionsWindow.GetExisting("Edit Settings");
+            var existing = OptionsWindow.GetExisting("Edit Settings");
             if (existing != null)
             {
-                existing.CenterInViewPort();
+                existing.CenterInScreen();
                 existing.BringOnTop();
                 return;
             }
@@ -529,6 +529,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }, 80, "Graphics driver to force (0 = default). Change won't take effect until restart.");
 
             w.AddLabel("Note: Force driver change won't take effect until restart.");
+
+            w.CenterInScreen();
         }
 
         protected override void OnControllerButtonUp(SDL.SDL_GamepadButton button)

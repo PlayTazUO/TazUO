@@ -197,6 +197,20 @@ public class MyraControl : IGui
         return this;
     }
 
+    public MyraControl CenterInScreen()
+    {
+        Rectangle bounds = Client.Game.Window.ClientBounds;
+        X = (int)(((bounds.Width / Client.Game.RenderScale) - (Width * Client.Game.RenderScale)) / 2);
+        Y = (int)(((bounds.Height / Client.Game.RenderScale) - (Height * Client.Game.RenderScale)) / 2);
+
+        if (X < 0)
+            X = 0;
+
+        SetPosition(X, Y);
+
+        return this;
+    }
+
     public void SetPosition(int x, int y)
     {
         _rootWindow.Left = x;
