@@ -138,10 +138,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             SelectCharacter(CharOrder[i]);
         }
 
-        protected virtual void SelectCharacter(uint index)
-        {
-            _selectedCharacter = index;
-        }
+        protected virtual void SelectCharacter(uint index) => _selectedCharacter = index;
 
         protected void LoginCharacter(uint index)
         {

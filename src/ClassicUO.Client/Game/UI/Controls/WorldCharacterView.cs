@@ -74,24 +74,21 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (_mobile != null && !_mobile.IsDestroyed)
                 _mobile.Direction = value ? Direction.Down : (Direction)_baseDirection;
-        }
 
-        /// <summary>Plays the bow emote once, then reverts to idle.</summary>
-        public void PlayBow()
-        {
-            if (_mobile == null || _mobile.IsDestroyed)
-                return;
-
-            // repeatCount:1 (not 0, which loops forever) plays the emote once, then ProcessAnimation
-            // reverts to idle via SetAnimation(0xFF).
-            _mobile.SetAnimation(
-                Mobile.GetReplacedObjectAnimation(_mobile.Graphic, (ushort)PeopleAnimationGroup.EmoteBow),
-                interval: 0,
-                frameCount: 0,
-                repeatCount: 1,
-                repeat: false,
-                forward: true,
-                fromServer: true);
+            if (value)
+            {
+                _mobile.SetAnimation(
+                    Mobile.GetReplacedObjectAnimation(_mobile.Graphic, (ushort)PeopleAnimationGroup.WalkArmed),
+                    interval: 0,
+                    frameCount: 0,
+                    repeatCount: 0,
+                    repeat: false,
+                    forward: true,
+                    fromServer: true);
+            } else
+            {
+                _mobile.SetIdleAnimation();
+            }
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)

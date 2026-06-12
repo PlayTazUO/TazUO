@@ -4,11 +4,9 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
 using ClassicUO.Game.Data;
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
-using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps.Login
@@ -66,25 +64,20 @@ namespace ClassicUO.Game.UI.Gumps.Login
             float centerX = AREA_X + AREA_W / 2f;
 
             // Translucent backdrop so the title stays readable over the artwork.
-            Add(new AlphaBlendControl(0.5f) { X = (int)(centerX - 80), Y = AREA_Y + 10, Width = 160, Height = 22, AcceptMouseInput = false }, 1);
+            Add(new AlphaBlendControl(0.5f) { X = (int)(centerX - 80), 
+                    Y = AREA_Y + 10, 
+                    Width = 160, 
+                    Height = 22, 
+                    AcceptMouseInput = false,
+                    BaseColor = Color.White }, 
+                1);
 
             Add
             (
-                new Label("Character Selection", true, 0x0386, font: 1)
+                new Label("Character Selection", true, 0, font: 1)
                 {
                     X = (int)(centerX - 60),
                     Y = AREA_Y + 12
-                },
-                1
-            );
-
-            // Campfire placeholder marker, centered below the arc.
-            Add
-            (
-                new Label("~ campfire ~", true, 0x0044, font: 1)
-                {
-                    X = (int)(centerX - 40),
-                    Y = AREA_Y + (int)(AREA_H * 0.55f)
                 },
                 1
             );
@@ -115,6 +108,9 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 // Parabola peaking at the center (highest), ends dipping toward the fire.
                 float curve = 1f - 4f * (tx - 0.5f) * (tx - 0.5f);
                 int py = endTopY - (int)(curve * arcHeight);
+
+                if ((px + pw / 2) == (int)centerX) //Top center
+                    py -= 10;
 
                 // Characters left of center face right, those on the right face left.
                 // byte facing = (px + pw / 2) <= (int)centerX ? FACE_RIGHT : FACE_LEFT;
@@ -217,6 +213,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
             private readonly Action<uint> _selectedFn;
             private readonly Action<uint> _loginFn;
             private readonly WorldCharacterView _view;
+            private Label nameLabel;
+            private AlphaBlendControl nameBg;
             private bool _selected;
 
             public CampfirePortrait(uint index, string name, WorldCharacterView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
@@ -236,17 +234,21 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 }
 
                 // Translucent backdrop so the name stays readable over the artwork.
-                Add(new AlphaBlendControl(0.5f) { X = 0, Y = height, Width = Width, Height = 18, AcceptMouseInput = false });
+                Add(nameBg = new AlphaBlendControl(0.5f) { X = 0, Y = height, AcceptMouseInput = false, BaseColor = Color.White });
 
                 Add
                 (
-                    new Label(name, false, NORMAL_COLOR, Width, 5, align: TEXT_ALIGN_TYPE.TS_CENTER)
+                    nameLabel = new Label(name, true, 0, 0, 5, align: TEXT_ALIGN_TYPE.TS_CENTER)
                     {
-                        X = 0,
                         Y = height + 2,
                         AcceptMouseInput = false
                     }
                 );
+
+                nameLabel.ForceSizeUpdate();
+                nameLabel.X = nameBg.X = (view.Width - nameLabel.Width) / 2;
+                nameBg.Width = nameLabel.Width;
+                nameBg.Height = nameLabel.Height;
 
                 AcceptMouseInput = true;
             }
@@ -257,24 +259,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
             {
                 _selected = value;
                 _view?.SetSelected(value);
-            }
 
-            public override bool Draw(UltimaBatcher2D batcher, int x, int y)
-            {
-                if (_selected)
-                {
-                    batcher.DrawRectangle
-                    (
-                        SolidColorTextureCache.GetTexture(Color.Gold),
-                        x,
-                        y,
-                        Width,
-                        Height,
-                        ShaderHueTranslator.GetHueVector(0, false, 1f)
-                    );
-                }
-
-                return base.Draw(batcher, x, y);
+                nameBg.BaseColor = value ? Color.Gold : Color.White;
             }
 
             public override void OnMouseUp(int x, int y, MouseButtonType button)
@@ -282,7 +268,6 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 if (button == MouseButtonType.Left)
                 {
                     _selectedFn(CharacterIndex);
-                    _view?.PlayBow();
                 }
             }
 
