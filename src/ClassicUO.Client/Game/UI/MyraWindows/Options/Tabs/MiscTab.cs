@@ -302,7 +302,7 @@ public static class MiscTab
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
         {
             Header = "Order",
-            Proportion = new Proportion(ProportionType.Pixels, 60),
+            Proportion = new Proportion(ProportionType.Auto),
             CellFactory = rule => new MyraLabel(rule.Order.ToString(), MyraLabel.TextStyle.P),
         });
 

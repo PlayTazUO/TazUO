@@ -28,6 +28,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
     private readonly RulebaseTableView<TRule> _tableView;
 
     private readonly WrapPanel _toolbar;
+    private readonly MyraButton _addButton;
     private readonly MyraButton _editButton;
     private readonly MyraButton _deleteButton;
     private readonly MyraButton _moveTopButton;
@@ -36,7 +37,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
     private readonly MyraButton _moveBottomButton;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5);
-    private int? _selectedIndex;
+    private Desktop? _subscribedDesktop;
 
     public ObservableCollection<TRule> Rules { get; } = [];
     public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
@@ -64,10 +65,10 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
 
     public int? SelectedIndex
     {
-        get => _selectedIndex;
+        get => field;
         set
         {
-            if (SetField(ref _selectedIndex, value))
+            if (SetField(ref field, value))
             {
                 _tableView.SetSelectedIndex(value);
                 UpdateToolbarState();
@@ -80,6 +81,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         ArgumentNullException.ThrowIfNull(ruleConfigurator);
         _ruleConfigurator = ruleConfigurator;
 
+        _addButton = new MyraButton("Add", () => OpenRuleEditor(false));
         _editButton = new MyraButton("Edit", () => OpenRuleEditor(true));
         _deleteButton = new MyraButton("Delete", DeleteRule);
         _moveTopButton = new MyraButton("Top", MoveSelectedToTop);
@@ -88,7 +90,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         _moveBottomButton = new MyraButton("Bottom", MoveSelectedToBottom);
 
         _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
-                new MyraButton("Add", () => OpenRuleEditor(false)),
+            _addButton,
                 _editButton,
                 _deleteButton,
                 _moveTopButton,
@@ -98,40 +100,78 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
             );
 
         _tableView = new RulebaseTableView<TRule>(Columns, StyleOptions);
-        PlacedChanged +=
-            (_, _) =>
-            {
-                Desktop?.TouchDown +=
-                    (_, _) =>
-                    {
-                        if (Desktop?.TouchPosition == null || !_tableView.SelectedIndex.HasValue || IsInEditor)
-                            return;
-
-                        // Listen in to 'general' touch events; If one occurs outside the table
-                        // and the table currently has a selection, deselect it.
-                        if (_tableView.HitTest(Desktop.TouchPosition.Value) == null
-                            && _toolbar.HitTest(Desktop.TouchPosition.Value) == null
-                           )
-                            _tableView.SetSelectedIndex(null);
-                    };
-            };
-
-        _tableView.TouchLeft +=
-            (_, _) =>
-            {
-                int a = 0;
-            };
-
         _contentPanel = CreateContentPanel();
 
         ConfigureContainer();
-        ConfigureEvents();
+        ManageSubscriptions(true);
 
         Children.Add(CreateComponent());
         ChildrenLayout = new WrapPanelLayout();
     }
 
     public void RefreshTable() => _tableView.Refresh();
+
+    protected override void OnPlacedChanged()
+    {
+        base.OnPlacedChanged();
+        ManageSubscriptions(Desktop != null);
+    }
+
+    private void ManageSubscriptions(bool subscribe)
+    {
+        Rules.CollectionChanged -= OnRuleCollectionChanged;
+        Columns.CollectionChanged -= OnColumnsChanged;
+        _tableView.SelectedIndexChanged -= OnTableSelectedIndexChanged;
+        _ruleConfigurator.EditorClosed -= OnEditorClosed;
+        _ruleConfigurator.RuleCrud -= OnConfiguratorRuleCrud;
+
+        if (_subscribedDesktop != null)
+        {
+            _subscribedDesktop.TouchDown -= OnDesktopTouchDown;
+            _subscribedDesktop = null;
+        }
+
+        if (!subscribe)
+            return;
+
+        Rules.CollectionChanged += OnRuleCollectionChanged;
+        Columns.CollectionChanged += OnColumnsChanged;
+        _tableView.SelectedIndexChanged += OnTableSelectedIndexChanged;
+        _ruleConfigurator.EditorClosed += OnEditorClosed;
+        _ruleConfigurator.RuleCrud += OnConfiguratorRuleCrud;
+
+        if (Desktop == null)
+            return;
+
+        _subscribedDesktop = Desktop;
+        _subscribedDesktop.TouchDown += OnDesktopTouchDown;
+    }
+
+    private void OnColumnsChanged(object? sender, NotifyCollectionChangedEventArgs e) => _tableView.Refresh();
+    private void OnTableSelectedIndexChanged(object? sender, EventArgs e) => SelectedIndex = _tableView.SelectedIndex;
+    private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
+
+    private void OnDesktopTouchDown(object? sender, EventArgs e)
+    {
+        if (Desktop?.TouchPosition == null || IsInEditor)
+            return;
+
+        Point touchPos = Desktop.TouchPosition.Value;
+        int? hitRow = _tableView.GetRowIndexAt(touchPos);
+
+        if (hitRow.HasValue)
+        {
+            SelectedIndex = hitRow;
+        }
+        else
+        {
+            bool hitTable = _tableView.HitTest(touchPos) != null;
+            bool hitToolbar = _toolbar.HitTest(touchPos) != null;
+
+            if (!hitTable && !hitToolbar)
+                SelectedIndex = null;
+        }
+    }
 
     private void ConfigureContainer()
     {
@@ -142,16 +182,6 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         BorderThickness = new Thickness(2);
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Stretch;
-    }
-
-    private void ConfigureEvents()
-    {
-        Rules.CollectionChanged += OnRuleCollectionChanged;
-        Columns.CollectionChanged += (_, _) => _tableView.Refresh();
-        _tableView.SelectedIndexChanged += (_, _) => SelectedIndex = _tableView.SelectedIndex;
-
-        _ruleConfigurator.EditorClosed += (_, _) => IsInEditor = false;
-        _ruleConfigurator.RuleCrud += OnConfiguratorRuleCrud;
     }
 
     private StackPanel CreateComponent() =>
@@ -167,13 +197,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
 
     private Panel CreateContentPanel()
     {
-        var panel = new Panel
-        {
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Border = StyleOptions.OuterBorder.Brush,
-            BorderThickness = StyleOptions.OuterBorder.Thickness
-        };
-
+        var panel = new Panel { HorizontalAlignment = HorizontalAlignment.Stretch };
         panel.Widgets.Add(_tableView);
         return panel;
     }
@@ -281,6 +305,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         TRule? selectedRule = GetSelectedRule();
         bool hasSelection = selectedRule != null;
 
+        _addButton.Enabled = !IsInEditor;
         _editButton.Enabled = hasSelection && selectedRule!.CanEdit;
         _deleteButton.Enabled = hasSelection && selectedRule!.CanDelete;
         _moveTopButton.Enabled = hasSelection && SelectedIndex > 0;
@@ -304,6 +329,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
             _contentPanel.Widgets.Add(content);
         else
             _ = UiEffects.FadeReplace(_contentPanel, 0, content);
+        UpdateToolbarState();
     }
 
     private void OnRuleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
