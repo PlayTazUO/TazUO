@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -458,6 +459,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, Settings.GlobalSettings.SkipServerSelect);
             }, true, Settings.GlobalSettings.SkipServerSelect));
 
+            c.Add(new ContextMenuItemEntry("Edit settings", OpenEditSettings, true, false));
+
             c.Add(new ContextMenuItemEntry("TazUO Website", () =>
             {
                 PlatformHelper.LaunchBrowser("https://tazuo.org");
@@ -474,6 +477,60 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }, true, false));
 
             return c;
+        }
+
+        private static void OpenEditSettings()
+        {
+            var existing = OptionsWindow.GetExisting("Edit Settings");
+            if (existing != null)
+            {
+                existing.CenterInScreen();
+                existing.BringOnTop();
+                return;
+            }
+
+            Settings s = Settings.GlobalSettings;
+
+            var w = new OptionsWindow("Edit Settings");
+
+            w.AddInput("IP:", s.IP, v => { s.IP = v; s.Save(); }, 200, "Server IP address or hostname.");
+
+            w.AddInput("Port:", s.Port.ToString(), v =>
+            {
+                if (ushort.TryParse(v, out ushort port) && port >= 1)
+                {
+                    s.Port = port;
+                    s.Save();
+                }
+            }, 80, "Server port.");
+
+            w.AddCheckbox("Auto login", s.AutoLogin, v => { s.AutoLogin = v; s.Save(); },
+                "Automatically log in using the saved account.");
+
+            w.AddCheckbox("Reconnect", s.Reconnect, v => { s.Reconnect = v; s.Save(); },
+                "Automatically reconnect after a disconnect.");
+
+            w.AddInput("Reconnect time (sec):", s.ReconnectTime.ToString(), v =>
+            {
+                if (int.TryParse(v, out int time) && time >= 0)
+                {
+                    s.ReconnectTime = time;
+                    s.Save();
+                }
+            }, 80, "Seconds to wait before reconnecting.");
+
+            w.AddInput("Force driver:", s.ForceDriver.ToString(), v =>
+            {
+                if (byte.TryParse(v, out byte driver))
+                {
+                    s.ForceDriver = driver;
+                    s.Save();
+                }
+            }, 80, "Graphics driver to force (0 = default). Change won't take effect until restart.");
+
+            w.AddLabel("Note: Force driver change won't take effect until restart.");
+
+            w.CenterInScreen();
         }
 
         protected override void OnControllerButtonUp(SDL.SDL_GamepadButton button)
