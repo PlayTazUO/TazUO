@@ -57,6 +57,15 @@ namespace ClassicUO.Configuration
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private static Profile _defaultPreview;
+
+        /// <summary>
+        /// A cached default profile with safe default settings, used as a fallback when no profile
+        /// is loaded (e.g. rendering character previews on the login screen). Never touches disk
+        /// and never fires <see cref="PropertyChanged"/>.
+        /// </summary>
+        public static Profile DefaultPreviewProfile => _defaultPreview ??= new Profile();
+
         /// <summary>
         /// Raises the <see cref="PropertyChanged"/> event with the specified property name
         /// </summary>

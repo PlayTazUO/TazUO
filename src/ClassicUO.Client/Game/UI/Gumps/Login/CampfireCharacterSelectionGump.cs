@@ -113,8 +113,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 if ((px + pw / 2) == (int)centerX)
                     facing = (byte)Direction.Down;
 
-                AnimatedCharacterView view = slot.Lem.HasValue
-                    ? BuildAnimatedView(slot.Lem.Value, pw, ph, facing)
+                WorldCharacterView view = slot.Lem.HasValue
+                    ? new WorldCharacterView(World, slot.Lem.Value, facing, pw, ph, (uint)n)
                     : null;
 
                 var portrait = new CampfirePortrait(slot.Index, slot.Name, view, pw, ph, SelectCharacter, LoginCharacter)
@@ -202,27 +202,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }
         }
 
-        private static AnimatedCharacterView BuildAnimatedView(LemCharData lem, int width, int height, byte facing)
-        {
-            var equipment = new Dictionary<Layer, AnimatedCharacterView.EquipEntry>();
-
-            foreach (KeyValuePair<Layer, LemEquipmentEntry> kvp in lem.Equipment)
-            {
-                equipment[kvp.Key] = new AnimatedCharacterView.EquipEntry(
-                    kvp.Value.AnimID, kvp.Value.Hue, kvp.Value.IsPartialHue);
-            }
-
-            return new AnimatedCharacterView(lem.PlayerGraphic, lem.BodyHue, equipment, facing, width, height);
-        }
-
         private class CampfirePortrait : Control
         {
             private readonly Action<uint> _selectedFn;
             private readonly Action<uint> _loginFn;
-            private readonly AnimatedCharacterView _view;
+            private readonly WorldCharacterView _view;
             private bool _selected;
 
-            public CampfirePortrait(uint index, string name, AnimatedCharacterView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
+            public CampfirePortrait(uint index, string name, WorldCharacterView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
             {
                 CharacterIndex = index;
                 _selectedFn = selectedFn;
