@@ -45,16 +45,10 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             ResolveInitialSelection(loginScene);
 
-            // TODO: replace with the supplied campfire background art.
+            PNGLoader.Instance.TryGetEmbeddedTexture("CharSelectBG.png", out Microsoft.Xna.Framework.Graphics.Texture2D upTexture);
             Add
             (
-                new ResizePic(0x0A28)
-                {
-                    X = AREA_X,
-                    Y = AREA_Y,
-                    Width = AREA_W,
-                    Height = AREA_H
-                },
+                new EmbeddedGumpPic(AREA_X, AREA_Y, upTexture),
                 1
             );
 
@@ -109,9 +103,11 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 int py = endTopY - (int)(curve * arcHeight);
 
                 // Characters left of center face right, those on the right face left.
-                byte facing = (px + pw / 2) <= (int)centerX ? FACE_RIGHT : FACE_LEFT;
-                if ((px + pw / 2) == (int)centerX)
-                    facing = (byte)Direction.Down;
+                // byte facing = (px + pw / 2) <= (int)centerX ? FACE_RIGHT : FACE_LEFT;
+                // if ((px + pw / 2) == (int)centerX)
+                //     facing = (byte)Direction.Down;
+
+                byte facing = (byte)Direction.Down;
 
                 WorldCharacterView view = slot.Lem.HasValue
                     ? new WorldCharacterView(World, slot.Lem.Value, facing, pw, ph, (uint)n)
