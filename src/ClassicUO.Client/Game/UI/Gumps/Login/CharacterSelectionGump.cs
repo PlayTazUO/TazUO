@@ -7,6 +7,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps.Login
 {
