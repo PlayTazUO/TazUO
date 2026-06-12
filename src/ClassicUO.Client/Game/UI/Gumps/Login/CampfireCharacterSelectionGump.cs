@@ -22,8 +22,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
     public class CampfireCharacterSelectionGump : CharacterSelectionGumpBase
     {
         // Facing directions so characters look inward toward the central fire.
-        private const byte FACE_RIGHT = (byte)Direction.East; // left-side characters face right
-        private const byte FACE_LEFT = (byte)Direction.West;  // right-side characters face left
+        private const byte FACE_RIGHT = (byte)Direction.Right; // left-side characters face right
+        private const byte FACE_LEFT = (byte)Direction.Left;  // right-side characters face left
 
         // Logical working area for the arc layout. Replace/align with the real campfire art later.
         private const int AREA_X = 100;
@@ -110,6 +110,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 // Characters left of center face right, those on the right face left.
                 byte facing = (px + pw / 2) <= (int)centerX ? FACE_RIGHT : FACE_LEFT;
+                if ((px + pw / 2) == (int)centerX)
+                    facing = (byte)Direction.Down;
 
                 AnimatedCharacterView view = slot.Lem.HasValue
                     ? BuildAnimatedView(slot.Lem.Value, pw, ph, facing)

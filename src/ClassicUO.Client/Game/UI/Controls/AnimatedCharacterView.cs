@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using ClassicUO.Assets;
 using ClassicUO.Game.Data;
 using ClassicUO.Renderer;
+using ClassicUO.Utility.Logging;
+using Microsoft.Scripting.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -33,13 +35,15 @@ namespace ClassicUO.Game.UI.Controls
 
         private readonly ushort _bodyGraphic;
         private readonly ushort _bodyHue;
+        private byte _anim = 5;
         private readonly byte _direction; // logical 0-7 facing
-        private readonly byte _animGroup;
         private readonly Dictionary<Layer, EquipEntry> _equipment;
         private readonly uint _frameDelayMs;
 
         private ulong _nextFrame;
         private int _frame;
+
+        private long _nextAnimChange = (long)(Time.Ticks + Random.Shared.Random(10000));
 
         public AnimatedCharacterView(
             ushort bodyGraphic,
@@ -48,34 +52,19 @@ namespace ClassicUO.Game.UI.Controls
             byte direction,
             int width,
             int height,
-            uint frameDelayMs = 150)
+            uint frameDelayMs = 400)
         {
             _bodyGraphic = bodyGraphic;
             _bodyHue = bodyHue;
             _equipment = equipment ?? new Dictionary<Layer, EquipEntry>();
             _direction = direction;
             _frameDelayMs = frameDelayMs;
-            _animGroup = GetStandGroup(bodyGraphic);
 
             Width = width;
             Height = height;
 
             AcceptMouseInput = false;
             CanMove = false;
-        }
-
-        private static byte GetStandGroup(ushort graphic)
-        {
-            AnimationGroupsType groupType = Client.Game.UO.Animations.GetAnimType(graphic);
-
-            switch (Client.Game.UO.FileManager.Animations.GetGroupIndex(graphic, groupType))
-            {
-                case AnimationGroups.Low: return (byte)LowAnimationGroup.Stand;
-                case AnimationGroups.High: return (byte)HighAnimationGroup.Stand;
-                case AnimationGroups.People: return (byte)PeopleAnimationGroup.Stand;
-            }
-
-            return (byte)PeopleAnimationGroup.Stand;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -92,6 +81,12 @@ namespace ClassicUO.Game.UI.Controls
                 _frame++;
             }
 
+            // if (Time.Ticks > _nextAnimChange)
+            // {
+            //     _nextAnimChange = (long)(Time.Ticks + Random.Shared.Random(10000));
+            //     _anim = (byte)(_anim == 5 ? 2 : 5);
+            // }
+
             byte layerDir = _direction;
             byte dir = _direction;
             bool mirror = false;
@@ -99,7 +94,7 @@ namespace ClassicUO.Game.UI.Controls
 
             // Auto-fit scale from the body frame so the character fills the control box.
             Span<SpriteInfo> bodyFrames = Client.Game.UO.Animations.GetAnimationFrames(
-                _bodyGraphic, _animGroup, dir, out _, out _, false);
+                _bodyGraphic, _anim, dir, out _, out _, false);
 
             if (bodyFrames.Length == 0)
                 return true;
@@ -122,7 +117,7 @@ namespace ClassicUO.Game.UI.Controls
             // Equipment, in the screen-correct order for this direction.
             for (int i = 0; i < Constants.USED_LAYER_COUNT; i++)
             {
-                Layer layer = LayerOrder.UsedLayers[layerDir, i];
+                Layer layer = ClassicUO.Game.Data.LayerOrder.UsedLayers[layerDir, i];
 
                 if (!_equipment.TryGetValue(layer, out EquipEntry entry) || entry.AnimID == 0)
                     continue;
@@ -148,7 +143,7 @@ namespace ClassicUO.Game.UI.Controls
                 return;
 
             Span<SpriteInfo> frames = Client.Game.UO.Animations.GetAnimationFrames(
-                graphic, _animGroup, dir, out ushort hueFromFile, out _, isEquip);
+                graphic, _anim, dir, out ushort hueFromFile, out _, isEquip);
 
             if (frames.Length == 0)
                 return;
