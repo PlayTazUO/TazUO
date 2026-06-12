@@ -184,7 +184,7 @@ namespace ClassicUO
             }
 
             skipServerSelectTask.Wait();
-            Settings.GlobalSettings.SkipServerSelect = skipServerSelectTask.Result;
+            Settings.GlobalSettings.SkipServerSelect = skipServerSelectTask.Result || CUOEnviroment.SkipServerSelect;
 
             Log.Trace($"Client path: '{clientPath}'");
             Log.Trace($"Client version: {clientVersion}");
