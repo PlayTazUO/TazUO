@@ -12,7 +12,7 @@ public static class UiEffects
         Container parent,
         int replacedChildIndex,
         Widget newWidget,
-        int transitionTimeMs = 300
+        int transitionTimeMs = 250
     )
     {
         ArgumentNullException.ThrowIfNull(parent);
@@ -36,7 +36,7 @@ public static class UiEffects
         for (int i = 1; i < fadeoutIterations + 1; i++)
         {
             float newOpacity = Math.Max(0, originalOpacity - opacityDecrements * i);
-            MainThreadQueue.EnqueueAction(() => oldWidget.Opacity = newOpacity);
+            MainThreadQueue.InvokeOnMainThread(() => oldWidget.Opacity = newOpacity);
             if (newOpacity <= 0)
                 break;
             await Task.Delay(iterationTime);
@@ -62,7 +62,7 @@ public static class UiEffects
         for (int i = 1; i < fadeinIterations + 1; i++)
         {
             float newOpacity = Math.Clamp(opacityIncrements * i, 0, Math.Min(1, originalOpacity));
-            MainThreadQueue.EnqueueAction(() => newWidget.Opacity = newOpacity);
+            MainThreadQueue.InvokeOnMainThread(() => newWidget.Opacity = newOpacity);
             if (newOpacity >= 1)
                 break;
             await Task.Delay(iterationTime);
