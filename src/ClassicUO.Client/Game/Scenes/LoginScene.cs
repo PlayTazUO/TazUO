@@ -273,7 +273,7 @@ namespace ClassicUO.Game.Scenes
 
                     return GetLoadingScreen();
 
-                case LoginSteps.CharacterSelection: return new CharacterSelectionGump(_world);
+                case LoginSteps.CharacterSelection: return CreateCharacterSelectionGump();
 
                 case LoginSteps.ServerSelection:
                     return new ServerSelectionGump(_world);
@@ -499,13 +499,33 @@ namespace ClassicUO.Game.Scenes
 
         public CityInfo GetCity(int index) => LoginHandshake.Instance.GetCity(index);
 
-        private void UpdateCharacterList()
+        private CharacterSelectionGumpBase CreateCharacterSelectionGump()
         {
-            UIManager.GetGump<CharacterSelectionGump>()?.Dispose();
+            return Settings.GlobalSettings.UseCampfireCharacterSelect
+                ? new CampfireCharacterSelectionGump(_world)
+                : new CharacterSelectionGump(_world);
+        }
+
+        /// <summary>
+        /// Disposes the active character-selection screen and rebuilds it from the current
+        /// style setting. Used by the live style toggle so <see cref="_currentGump"/> stays consistent.
+        /// </summary>
+        public void RebuildCharacterSelection()
+        {
+            UIManager.GetGump<CharacterSelectionGumpBase>()?.Dispose();
 
             _currentGump?.Dispose();
 
-            UIManager.Add(_currentGump = new CharacterSelectionGump(_world));
+            UIManager.Add(_currentGump = CreateCharacterSelectionGump());
+        }
+
+        private void UpdateCharacterList()
+        {
+            UIManager.GetGump<CharacterSelectionGumpBase>()?.Dispose();
+
+            _currentGump?.Dispose();
+
+            UIManager.Add(_currentGump = CreateCharacterSelectionGump());
             if (!string.IsNullOrWhiteSpace(PopupMessage))
             {
                 Gump g = null;
