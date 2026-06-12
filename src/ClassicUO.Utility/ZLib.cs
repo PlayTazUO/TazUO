@@ -12,12 +12,9 @@ namespace ClassicUO.Utility
 
         private static ICompressor _compressor;
 
-        public static bool ManagedZlibForced { get; private set; } =
-#if DEBUG
-            true;
-#else
-            false;
-#endif
+        public static bool ManagedZlibForced { get; private set; } = PlatformHelper.IsLinux;
+
+        public static bool CommandLineOverride { get; private set; } = false;
 
         static ZLib()
         {
@@ -47,6 +44,12 @@ namespace ClassicUO.Utility
         {
             ManagedZlibForced = enabled;
             SetupCompressor();
+        }
+
+        public static void SetCommandLineOverride()
+        {
+            CommandLineOverride = true;
+            SetForceManagedZlib(true);
         }
 
         public static ZLibError Decompress(byte[] source, int offset, byte[] dest, int length) => _compressor.Decompress(dest, ref length, source, source.Length - offset);

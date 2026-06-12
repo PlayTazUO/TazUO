@@ -32,6 +32,7 @@ All notable changes to TazUO will be recorded here.
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
 * Add option to toggle bandage agent from macros - [P.R 491](https://github.com/PlayTazUO/TazUO/pull/491) ([bittiez](https://github.com/bittiez))
 * Refactored PromptPopupWindow into a reusable text prompt and replaced InputRequest with it - [P.R 509](https://github.com/PlayTazUO/TazUO/pull/509) ([bittiez](https://github.com/bittiez))
+* Managed zlib is now a global setting, defaults to enabled on Linux and disabled on Windows/Mac, and the `-zlib` arg now persists the setting - [P.R 514](https://github.com/PlayTazUO/TazUO/pull/514) ([bittiez](https://github.com/bittiez))
 
 ---
 

@@ -15,6 +15,7 @@ using ClassicUO.Network.Encryption;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Platforms;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -143,8 +144,17 @@ namespace ClassicUO
             base.Initialize();
         }
 
-        private void PreloadSettings() => _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, false,
-                (b) => { if (b) ZLib.SetForceManagedZlib(b); });
+        private void PreloadSettings()
+        {
+            bool platformDefault = PlatformHelper.IsLinux;
+            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, platformDefault, (b) =>
+            {
+                if (ZLib.CommandLineOverride)
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, true);
+                else
+                    ZLib.SetForceManagedZlib(b);
+            });
+        }
 
         private const int MAX_PACKETS_PER_FRAME = 25;
 
