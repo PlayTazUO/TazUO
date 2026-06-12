@@ -136,6 +136,7 @@ namespace ClassicUO.Game
             public const string AUTOLOOT_RETRY_DELAY = "autoloot_retry_delay";
             public const string OVERHEAD_MESSAGE_TYPES_HIDDEN = "overhead_message_types_shown";
             public const string SKIP_SERVER_SELECTION = "skip_server_selection";
+            public const string CAMPFIRE_CHAR_SELECT = "campfire_char_select";
         }
     }
 }
