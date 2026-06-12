@@ -64,7 +64,7 @@ namespace ClassicUO.Configuration
         /// is loaded (e.g. rendering character previews on the login screen). Never touches disk
         /// and never fires <see cref="PropertyChanged"/>.
         /// </summary>
-        public static Profile DefaultPreviewProfile => _defaultPreview ??= new Profile { ShadowsEnabled = false };
+        public static Profile DefaultPreviewProfile => _defaultPreview ??= new Profile();
 
         /// <summary>
         /// Raises the <see cref="PropertyChanged"/> event with the specified property name

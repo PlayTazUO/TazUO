@@ -52,7 +52,21 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 1
             );
 
+            // World-viewport-style border framing the scene.
+            Add
+            (
+                new BorderControl(AREA_X, AREA_Y, AREA_W, AREA_H, 4)
+                {
+                    AcceptMouseInput = false,
+                    CanMove = false
+                },
+                1
+            );
+
             float centerX = AREA_X + AREA_W / 2f;
+
+            // Translucent backdrop so the title stays readable over the artwork.
+            Add(new AlphaBlendControl(0.5f) { X = (int)(centerX - 80), Y = AREA_Y + 10, Width = 160, Height = 22, AcceptMouseInput = false }, 1);
 
             Add
             (
@@ -221,6 +235,9 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     Add(view);
                 }
 
+                // Translucent backdrop so the name stays readable over the artwork.
+                Add(new AlphaBlendControl(0.5f) { X = 0, Y = height, Width = Width, Height = 18, AcceptMouseInput = false });
+
                 Add
                 (
                     new Label(name, false, NORMAL_COLOR, Width, 5, align: TEXT_ALIGN_TYPE.TS_CENTER)
@@ -265,6 +282,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 if (button == MouseButtonType.Left)
                 {
                     _selectedFn(CharacterIndex);
+                    _view?.PlayBow();
                 }
             }
 
