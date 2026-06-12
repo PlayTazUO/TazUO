@@ -21,7 +21,12 @@ public static class MiscTab
         return new OptionItem(lang.ButtonCombatSpells, GetPages);
     }
 
-    private static PageControl GetPages() => new(GetPage1(), GetPage2(), GetPage3()) { RetainSizeWhenPaging = true };
+    private static PageControl GetPages() => new(
+        GetPage1(),
+        GetPage2(),
+        GetPage3(),
+        GetPage4()
+    ) { RetainSizeWhenPaging = true };
 
     private static WrapPanel GetPage1()
     {
@@ -232,12 +237,6 @@ public static class MiscTab
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
 
-        var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor()) { Title = "Countdown Trigger Rules"};
-        CoolDownBar.CoolDownConditionData.GetAllRules()
-            .Select(CooldownBarRule.FromLegacyCondition)
-            .ToArray()
-            .ForEach(rb.Rules.Add);
-
         return OptionTabCommons.StyledVerticalWrapPanel(
             OptionTabCommons.StyledButton(
                 miscLang.ManageIgnoreListButtonLabel,
@@ -287,8 +286,17 @@ public static class MiscTab
                     new Accessor<string>(() => profile.SkillBarFormat),
                     miscLang.SkillProgressBarFormatTooltip
                 )
-            ),
-            rb
+            )
         );
+    }
+
+    private static Rulebase<CooldownBarRule> GetPage4()
+    {
+        var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor()) { Title = "Countdown Trigger Rules"};
+        CoolDownBar.CoolDownConditionData.GetAllRules()
+            .Select(CooldownBarRule.FromLegacyCondition)
+            .ToArray()
+            .ForEach(rb.Rules.Add);
+        return rb;
     }
 }

@@ -44,16 +44,24 @@ public static class UiEffects
 
         // Fade in new
         float opacityIncrements = newWidget.Opacity / fadeinIterations;
-        newWidget.Opacity = 0;
 
         // Myra is buggy and doesn't actually handle 'Replace' events...
         parent.Widgets.RemoveAt(replacedChildIndex);
+
+        // Once we've removed the widget, we need to restore its original opacity;
+        // otherwise, next render of the same instance will be incorrect
+        oldWidget.Opacity = originalOpacity;
+
+        // Store our 'target' opacity
+        originalOpacity = newWidget.Opacity;
+
+        // Start of complete transparent
+        newWidget.Opacity = 0;
         parent.Widgets.Insert(replacedChildIndex, newWidget);
 
-        originalOpacity = newWidget.Opacity;
         for (int i = 1; i < fadeinIterations + 1; i++)
         {
-            float newOpacity = Math.Min(1, originalOpacity + opacityIncrements * i);
+            float newOpacity = Math.Clamp(opacityIncrements * i, 0, Math.Min(1, originalOpacity));
             MainThreadQueue.EnqueueAction(() => newWidget.Opacity = newOpacity);
             if (newOpacity >= 1)
                 break;
