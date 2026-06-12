@@ -9,7 +9,8 @@ public enum RuleCrudEventType
 {
     Create,
     Update,
-    Delete
+    Delete,
+    Reorder
 }
 
 public class RuleCrudEventArgs<TRule> : EventArgs where TRule : IRule

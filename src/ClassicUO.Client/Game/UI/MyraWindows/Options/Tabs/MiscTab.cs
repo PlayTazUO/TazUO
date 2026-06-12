@@ -290,13 +290,55 @@ public static class MiscTab
         );
     }
 
-    private static Rulebase<CooldownBarRule> GetPage4()
+    private static Rulebase<CooldownBarRule> GetPage4() => GetCooldownBarRulebase();
+
+    private static Rulebase<CooldownBarRule> GetCooldownBarRulebase()
     {
-        var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor()) { Title = "Countdown Trigger Rules"};
+        var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor())
+        {
+            Title = "Countdown Trigger Rules",
+        };
+
+        rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
+        {
+            Header = "Order",
+            Proportion = new Proportion(ProportionType.Pixels, 60),
+            CellFactory = rule => new MyraLabel(rule.Order.ToString(), MyraLabel.TextStyle.P),
+        });
+
+        rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
+        {
+            Header = "Name",
+            Proportion = new Proportion(ProportionType.Auto),
+            CellFactory = rule => new MyraLabel(rule.Name, MyraLabel.TextStyle.P)
+        });
+
+        rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
+        {
+            Header = "Hue",
+            Proportion = new Proportion(ProportionType.Auto),
+            CellFactory = rule => new MyraLabel(rule.Hue.ToString(), MyraLabel.TextStyle.P)
+        });
+
+        rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
+        {
+            Header = "Cooldown",
+            Proportion = new Proportion(ProportionType.Auto),
+            CellFactory = rule => new MyraLabel(rule.Cooldown.ToString(), MyraLabel.TextStyle.P)
+        });
+
+        rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
+        {
+            Header = "Trigger",
+            Proportion = new Proportion(ProportionType.Auto),
+            CellFactory = rule => new MyraLabel(rule.TriggerMessageType.ToString(), MyraLabel.TextStyle.P)
+        });
+
         CoolDownBar.CoolDownConditionData.GetAllRules()
             .Select(CooldownBarRule.FromLegacyCondition)
             .ToArray()
             .ForEach(rb.Rules.Add);
+
         return rb;
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -20,18 +21,26 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : IRule, new()
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+    public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
 
     private readonly IRuleConfigurator<TRule> _ruleConfigurator;
+    private readonly Panel _contentPanel;
+    private readonly RulebaseTableView<TRule> _tableView;
 
-    private ListView _ruleList;
-    private Panel _contentPanel;
-
-    private int? _selectedIndex;
-
+    private readonly WrapPanel _toolbar;
     private readonly MyraButton _editButton;
     private readonly MyraButton _deleteButton;
+    private readonly MyraButton _moveTopButton;
+    private readonly MyraButton _moveUpButton;
+    private readonly MyraButton _moveDownButton;
+    private readonly MyraButton _moveBottomButton;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5);
+    private int? _selectedIndex;
+
+    public ObservableCollection<TRule> Rules { get; } = [];
+    public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
+    public RulebaseStyleOptions StyleOptions { get; } = new();
 
     public string? Title
     {
@@ -39,14 +48,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         set
         {
             if (SetField(ref field, value))
-            {
-                _titleLabel.Text = value;
-                _titleLabel.Visible = !string.IsNullOrWhiteSpace(value);
-            }
+                UpdateTitle();
         }
     }
-
-    public ObservableCollection<TRule> Rules { get; } = [];
 
     public bool IsInEditor
     {
@@ -54,7 +58,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         private set
         {
             if (SetField(ref field, value) && !value)
-                SetCurrentContent(_ruleList);
+                SetCurrentContent(_tableView);
         }
     }
 
@@ -63,116 +67,145 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         get => _selectedIndex;
         set
         {
-            _ruleList.SelectedIndex = value;
             if (SetField(ref _selectedIndex, value))
             {
-                _editButton.Enabled = value.HasValue && Rules[value.Value].CanEdit;
-                _deleteButton.Enabled = value.HasValue && Rules[value.Value].CanDelete;
+                _tableView.SetSelectedIndex(value);
+                UpdateToolbarState();
             }
         }
     }
-
-    public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
 
     public Rulebase(IRuleConfigurator<TRule> ruleConfigurator)
     {
         ArgumentNullException.ThrowIfNull(ruleConfigurator);
         _ruleConfigurator = ruleConfigurator;
 
-        Point editorSize = ruleConfigurator.GetConfiguratorWidget(new TRule(), false).Measure(new Point(Bounds.X, Bounds.Y));
-        MinWidth = editorSize.X + MBPWidth;
-        MinHeight = editorSize.Y + MBPHeight;
-
-        // Satisfy the nullable constraint by stuffing this in the constructor
         _editButton = new MyraButton("Edit", () => OpenRuleEditor(true));
         _deleteButton = new MyraButton("Delete", DeleteRule);
+        _moveTopButton = new MyraButton("Top", MoveSelectedToTop);
+        _moveUpButton = new MyraButton("Up", () => MoveSelectedBy(-1));
+        _moveDownButton = new MyraButton("Down", () => MoveSelectedBy(1));
+        _moveBottomButton = new MyraButton("Bottom", MoveSelectedToBottom);
 
-        Margin = new Thickness(4);
-        Padding = new Thickness(4, 6, 4, 12);
-        Background = new SolidBrush(new Color(0, 0, 0, 25));
-        Border = new SolidBrush(new Color(0, 0, 0, 75));
-        BorderThickness = new Thickness(2);
+        _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
+                new MyraButton("Add", () => OpenRuleEditor(false)),
+                _editButton,
+                _deleteButton,
+                _moveTopButton,
+                _moveUpButton,
+                _moveDownButton,
+                _moveBottomButton
+            );
 
-        Rules.CollectionChanged += OnRuleCollectionChanged;
+        _tableView = new RulebaseTableView<TRule>(Columns, StyleOptions);
+        PlacedChanged +=
+            (_, _) =>
+            {
+                Desktop?.TouchDown +=
+                    (_, _) =>
+                    {
+                        if (Desktop?.TouchPosition == null || !_tableView.SelectedIndex.HasValue || IsInEditor)
+                            return;
 
-        _ruleConfigurator.EditorClosed += (_, _) => IsInEditor = false;
-        _ruleConfigurator.RuleCrud += (_, args) =>
-        {
-            IsInEditor = false;
-            if (args.Event == RuleCrudEventType.Create)
-                AddRule(args.Rule);
+                        // Listen in to 'general' touch events; If one occurs outside the table
+                        // and the table currently has a selection, deselect it.
+                        if (_tableView.HitTest(Desktop.TouchPosition.Value) == null
+                            && _toolbar.HitTest(Desktop.TouchPosition.Value) == null
+                           )
+                            _tableView.SetSelectedIndex(null);
+                    };
+            };
 
-            RuleCrud?.Invoke(this, args);
-        };
+        _tableView.TouchLeft +=
+            (_, _) =>
+            {
+                int a = 0;
+            };
 
-        HorizontalAlignment = HorizontalAlignment.Stretch;
-        VerticalAlignment = VerticalAlignment.Stretch;
+        _contentPanel = CreateContentPanel();
 
-        // List view is completely fucked up and uses ref comparison whilst checking index...
-        // Since we may re-create the widgets in between renders, this comparison fails...
+        ConfigureContainer();
+        ConfigureEvents();
 
         Children.Add(CreateComponent());
         ChildrenLayout = new WrapPanelLayout();
     }
 
-    private StackPanel CreateComponent()
+    public void RefreshTable() => _tableView.Refresh();
+
+    private void ConfigureContainer()
     {
-        // We build from bottom to top, basically.
+        Margin = new Thickness(4);
+        Padding = new Thickness(4, 6, 4, 12);
+        Background = new SolidBrush(new Color(0, 0, 0, 25));
+        Border = new SolidBrush(new Color(0, 0, 0, 75));
+        BorderThickness = new Thickness(2);
+        HorizontalAlignment = HorizontalAlignment.Stretch;
+        VerticalAlignment = VerticalAlignment.Stretch;
+    }
 
-        // First, the rulebase list itself goes into a 'container', the content panel
-        _ruleList = new ListView();
-        _ruleList.SelectedIndexChanged += OnRuleListSelectionChanged;
+    private void ConfigureEvents()
+    {
+        Rules.CollectionChanged += OnRuleCollectionChanged;
+        Columns.CollectionChanged += (_, _) => _tableView.Refresh();
+        _tableView.SelectedIndexChanged += (_, _) => SelectedIndex = _tableView.SelectedIndex;
 
-        _contentPanel = new Panel { Border = new SolidBrush(MyraStyle.GridBorderColor), BorderThickness = new Thickness(1) };
-        _contentPanel.Widgets.Add(_ruleList);
+        _ruleConfigurator.EditorClosed += (_, _) => IsInEditor = false;
+        _ruleConfigurator.RuleCrud += OnConfiguratorRuleCrud;
+    }
 
-        // The entire control
-        return OptionTabCommons.StyledStackPanel(
+    private StackPanel CreateComponent() =>
+        OptionTabCommons.StyledStackPanel(
             Orientation.Vertical,
-            // The rulebase's title label
             _titleLabel,
             OptionTabCommons.StyledStackPanel(
                 Orientation.Vertical,
-                // A permanently present toolbar
-                GetToolbar(),
-                // The rule base list itself
+                _toolbar,
                 _contentPanel
             )
         );
-    }
 
-    private WrapPanel GetToolbar()
+    private Panel CreateContentPanel()
     {
-        _editButton.Enabled = SelectedIndex.HasValue && Rules[SelectedIndex.Value].CanEdit;
-        _deleteButton.Enabled = SelectedIndex.HasValue && Rules[SelectedIndex.Value].CanDelete;
+        var panel = new Panel
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Border = StyleOptions.OuterBorder.Brush,
+            BorderThickness = StyleOptions.OuterBorder.Thickness
+        };
 
-        return OptionTabCommons.StyledHorizontalWrapPanel(
-            new MyraButton("Add", () => OpenRuleEditor(false)),
-            _editButton,
-            _deleteButton
-        );
+        panel.Widgets.Add(_tableView);
+        return panel;
     }
 
-    private void OnRuleListSelectionChanged(object? sender, EventArgs e) => _selectedIndex = _ruleList.SelectedIndex;
+    private void OnConfiguratorRuleCrud(object? sender, RuleCrudEventArgs<TRule> args)
+    {
+        IsInEditor = false;
+
+        if (args.Event == RuleCrudEventType.Create)
+            AddRule(args.Rule);
+        else
+            RefreshTable();
+
+        RuleCrud?.Invoke(this, args);
+    }
 
     private void AddRule(TRule rule)
     {
+        rule.Order = GetNextOrder();
         Rules.Add(rule);
+        SelectedIndex = Rules.Count - 1;
         RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Create));
     }
 
+    private uint GetNextOrder() =>
+        Rules.Count == 0 ? 1 : Rules.Max(rule => rule.Order) + 1;
+
     private void OpenRuleEditor(bool isEdit)
     {
-        TRule rule;
-        if (isEdit)
-        {
-            if (SelectedIndex.HasValue)
-                rule = Rules[SelectedIndex.Value];
-            else
-                return;
-        }
-        else
-            rule = new TRule();
+        TRule? rule = isEdit ? GetSelectedRule() : new TRule();
+        if (rule == null)
+            return;
 
         IsInEditor = true;
         SetCurrentContent(_ruleConfigurator.GetConfiguratorWidget(rule, isEdit));
@@ -180,23 +213,93 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
 
     private void DeleteRule()
     {
+        TRule? rule = GetSelectedRule();
+        if (rule == null || !rule.CanDelete)
+            return;
+
+        Rules.RemoveAt(SelectedIndex!.Value);
+        TRule.DeleteRule(rule);
+
+        RecalculateOrder();
+        SelectedIndex = null;
+        RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Delete));
+    }
+
+    private TRule? GetSelectedRule()
+    {
+        if (!SelectedIndex.HasValue)
+            return default;
+
+        int index = SelectedIndex.Value;
+        return index >= 0 && index < Rules.Count ? Rules[index] : default;
+    }
+
+    private void MoveSelectedBy(int offset)
+    {
         if (!SelectedIndex.HasValue)
             return;
 
-        TRule rule = Rules[SelectedIndex.Value];
-        if (!rule.CanDelete)
+        MoveSelectedTo(SelectedIndex.Value + offset);
+    }
+
+    private void MoveSelectedToTop() => MoveSelectedTo(0);
+
+    private void MoveSelectedToBottom() => MoveSelectedTo(Rules.Count - 1);
+
+    private void MoveSelectedTo(int newIndex)
+    {
+        if (!SelectedIndex.HasValue || newIndex < 0 || newIndex >= Rules.Count)
             return;
 
-        Rules.RemoveAt(SelectedIndex.Value);
+        int oldIndex = SelectedIndex.Value;
+        if (oldIndex == newIndex)
+            return;
 
-        SelectedIndex = null;
-        RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Delete));
+        Rules.Move(oldIndex, newIndex);
+        SelectedIndex = newIndex;
+        RecalculateOrder();
+        RaiseReorderEvent();
+    }
+
+    private void RecalculateOrder()
+    {
+        for (int i = 0; i < Rules.Count; i++)
+            Rules[i].Order = (uint)(i + 1);
+
+        RefreshTable();
+    }
+
+    private void RaiseReorderEvent()
+    {
+        TRule? selectedRule = GetSelectedRule();
+        if (selectedRule != null)
+            RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(selectedRule, RuleCrudEventType.Reorder));
+    }
+
+    private void UpdateToolbarState()
+    {
+        TRule? selectedRule = GetSelectedRule();
+        bool hasSelection = selectedRule != null;
+
+        _editButton.Enabled = hasSelection && selectedRule!.CanEdit;
+        _deleteButton.Enabled = hasSelection && selectedRule!.CanDelete;
+        _moveTopButton.Enabled = hasSelection && SelectedIndex > 0;
+        _moveUpButton.Enabled = hasSelection && SelectedIndex > 0;
+        _moveDownButton.Enabled = hasSelection && SelectedIndex < Rules.Count - 1;
+        _moveBottomButton.Enabled = hasSelection && SelectedIndex < Rules.Count - 1;
+    }
+
+    private void UpdateTitle()
+    {
+        _titleLabel.Text = Title;
+        _titleLabel.Visible = !string.IsNullOrWhiteSpace(Title);
     }
 
     private void SetCurrentContent(Widget content)
     {
         content.VerticalAlignment = VerticalAlignment.Top;
-        content.HorizontalAlignment = HorizontalAlignment.Center;
+        content.HorizontalAlignment = HorizontalAlignment.Stretch;
+
         if (_contentPanel.Widgets.Count == 0)
             _contentPanel.Widgets.Add(content);
         else
@@ -205,32 +308,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
 
     private void OnRuleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-                foreach (object? ruleItem in e.NewItems ?? Array.Empty<object?>())
-                    if (ruleItem != null)
-                        _ruleList.Widgets.Add((ruleItem as IRule)!.DisplayComponent);
-                break;
-            case NotifyCollectionChangedAction.Remove:
-                foreach (object? ruleItem in e.OldItems ?? Array.Empty<object?>())
-                    if (ruleItem != null)
-                        _ruleList.Widgets.Remove(ruleItem as Widget);
-                break;
-            case NotifyCollectionChangedAction.Move:
-                _ruleList.Widgets.RemoveAt(e.OldStartingIndex);
-                _ruleList.Widgets.Insert(e.NewStartingIndex, (e.NewItems?[0] as IRule)!.DisplayComponent);
-                break;
-
-            case NotifyCollectionChangedAction.Replace:
-                if (e.OldItems != null)
-                    _ruleList.Widgets[e.OldStartingIndex] = (e.NewItems?[0] as IRule)!.DisplayComponent;
-                break;
-
-            case NotifyCollectionChangedAction.Reset:
-                _ruleList.Widgets.Clear();
-                break;
-        }
+        _tableView.SetRules(Rules);
+        UpdateToolbarState();
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
