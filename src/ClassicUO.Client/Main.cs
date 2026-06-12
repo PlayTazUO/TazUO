@@ -442,6 +442,11 @@ namespace ClassicUO
 
                         break;
 
+                    case "skipserverselect":
+                        CUOEnviroment.SkipServerSelect = true;
+
+                        break;
+
                     case "plugins":
                         Settings.GlobalSettings.Plugins = string.IsNullOrEmpty(value) ? new string[0] : value.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 

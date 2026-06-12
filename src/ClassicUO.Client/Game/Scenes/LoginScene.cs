@@ -474,6 +474,10 @@ namespace ClassicUO.Game.Scenes
                     break;
 
                 case LoginSteps.LoginInToServer:
+                    // Stepping back here reconnects and walks the flow back to server selection.
+                    // If 'Skip Server Select' is enabled the auto-skip would bounce us straight back to
+                    // character selection, so suppress it once to let the user reach the server screen.
+                    LoginHandshake.Instance.BypassServerSelectSkipOnce = true;
                     LoginHandshake.Instance.Disconnect();
                     Connect(Account, Password);
 
