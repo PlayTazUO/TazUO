@@ -38,6 +38,9 @@ namespace ClassicUO.Game.UI.Controls
             Mobile mobile = world.GetOrCreateMobile(0x3F00_0000u + previewIndex);
             mobile.Graphic = lem.PlayerGraphic;
             mobile.Hue = lem.BodyHue;
+            // Mobiles are normally ramped to opaque by the world's ProcessAlpha; preview mobiles
+            // never run through it, so force full opacity or only their shadow would render.
+            mobile.AlphaHue = 255;
 
             if (lem.IsFemale)
                 mobile.Flags |= Flags.Female;
