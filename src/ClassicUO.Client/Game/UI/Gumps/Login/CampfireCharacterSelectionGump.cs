@@ -3,6 +3,8 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
+using ClassicUO.Game.Data;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -12,12 +14,17 @@ using Microsoft.Xna.Framework;
 namespace ClassicUO.Game.UI.Gumps.Login
 {
     /// <summary>
-    /// Diablo-style character selection: the generated character paperdolls are arranged in an
-    /// arc/semicircle around a central campfire. Click a portrait to select, double-click to log in.
+    /// Diablo-style character selection: each character is rendered as an animated in-game mobile
+    /// (playing its idle/stand animation and facing inward toward a central campfire), arranged in
+    /// an arc/semicircle. Click a character to select, double-click to log in.
     /// Background artwork is a placeholder for now (see the TODO below).
     /// </summary>
     public class CampfireCharacterSelectionGump : CharacterSelectionGumpBase
     {
+        // Facing directions so characters look inward toward the central fire.
+        private const byte FACE_RIGHT = (byte)Direction.East; // left-side characters face right
+        private const byte FACE_LEFT = (byte)Direction.West;  // right-side characters face left
+
         // Logical working area for the arc layout. Replace/align with the real campfire art later.
         private const int AREA_X = 100;
         private const int AREA_Y = 70;
@@ -101,8 +108,11 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 float curve = 1f - 4f * (tx - 0.5f) * (tx - 0.5f);
                 int py = endTopY - (int)(curve * arcHeight);
 
-                StaticPaperDollView view = slot.Lem.HasValue
-                    ? BuildPaperDoll(slot.Lem.Value, new Vector2(pw, ph), false)
+                // Characters left of center face right, those on the right face left.
+                byte facing = (px + pw / 2) <= (int)centerX ? FACE_RIGHT : FACE_LEFT;
+
+                AnimatedCharacterView view = slot.Lem.HasValue
+                    ? BuildAnimatedView(slot.Lem.Value, pw, ph, facing)
                     : null;
 
                 var portrait = new CampfirePortrait(slot.Index, slot.Name, view, pw, ph, SelectCharacter, LoginCharacter)
@@ -190,13 +200,26 @@ namespace ClassicUO.Game.UI.Gumps.Login
             }
         }
 
+        private static AnimatedCharacterView BuildAnimatedView(LemCharData lem, int width, int height, byte facing)
+        {
+            var equipment = new Dictionary<Layer, AnimatedCharacterView.EquipEntry>();
+
+            foreach (KeyValuePair<Layer, LemEquipmentEntry> kvp in lem.Equipment)
+            {
+                equipment[kvp.Key] = new AnimatedCharacterView.EquipEntry(
+                    kvp.Value.AnimID, kvp.Value.Hue, kvp.Value.IsPartialHue);
+            }
+
+            return new AnimatedCharacterView(lem.PlayerGraphic, lem.BodyHue, equipment, facing, width, height);
+        }
+
         private class CampfirePortrait : Control
         {
             private readonly Action<uint> _selectedFn;
             private readonly Action<uint> _loginFn;
             private bool _selected;
 
-            public CampfirePortrait(uint index, string name, StaticPaperDollView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
+            public CampfirePortrait(uint index, string name, AnimatedCharacterView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
             {
                 CharacterIndex = index;
                 _selectedFn = selectedFn;
@@ -207,7 +230,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 if (view != null)
                 {
-                    // background=false -> draws only the body+equipment, falls through to this wrapper.
+                    // AcceptMouseInput=false on the view -> clicks fall through to this wrapper.
                     Add(view);
                 }
 
