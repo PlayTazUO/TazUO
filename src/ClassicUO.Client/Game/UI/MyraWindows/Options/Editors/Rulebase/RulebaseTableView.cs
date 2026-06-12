@@ -75,16 +75,29 @@ public sealed class RulebaseTableView<TRule> : VerticalStackPanel where TRule : 
         grid.Background = new SolidBrush(StyleOptions.HeaderBackground);
 
         int columnIndex = 0;
-        foreach (RulebaseColumn<TRule> column in GetVisibleColumns())
-            grid.AddWidget(CreateHeaderCell(column.Header), 0, columnIndex++);
+        RulebaseColumn<TRule>[] visibleColumns = GetVisibleColumns().ToArray();
+
+        for (int i = 0; i < visibleColumns.Length; i++)
+            grid.AddWidget(
+                CreateHeaderCell(
+                    visibleColumns[i].Header,
+                    i < visibleColumns.Length - 1
+                ),
+                0,
+                columnIndex++
+            );
 
         return grid;
     }
 
-    private Widget CreateHeaderCell(string text) =>
-        new MyraLabel(text, MyraLabel.TextStyle.H5)
+    private MyraLabel CreateHeaderCell(string text, bool withRightBorder) =>
+        new(text, MyraLabel.TextStyle.H5)
         {
-            HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Center, Padding = new Thickness(6, 4)
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(6, 4),
+            Border = withRightBorder ? StyleOptions.HeaderVerticalBorder : null,
+            BorderThickness = withRightBorder ? new Thickness(0, 0, 1, 0) : new Thickness(0)
         };
 
     private void RefreshRows()

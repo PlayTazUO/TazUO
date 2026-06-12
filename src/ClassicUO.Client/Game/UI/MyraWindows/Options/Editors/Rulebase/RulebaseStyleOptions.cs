@@ -12,6 +12,7 @@ public sealed class RulebaseStyleOptions
 {
     public bool ShowHeader { get; set; } = true;
     public bool UseStripedRows { get; set; } = true;
+    public IBrush HeaderVerticalBorder { get; set; } = new SolidBrush(MyraStyle.GridBorderColor);
     public BorderStyle OuterBorder { get; set; } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(1));
     public BorderStyle ColumnBorders { get; set; } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(0, 0, 1, 0));
     public BorderStyle RowBorders { get; set; } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(0, 0, 0, 1));
