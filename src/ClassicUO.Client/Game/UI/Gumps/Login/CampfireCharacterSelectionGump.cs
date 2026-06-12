@@ -31,9 +31,9 @@ namespace ClassicUO.Game.UI.Gumps.Login
         private const int AREA_W = 540;
         private const int AREA_H = 410;
 
-        // Base (max) portrait size; scaled down automatically as the character count grows.
-        private const int PORTRAIT_W = 96;
-        private const int PORTRAIT_H = 150;
+        // Portrait box sized to roughly an actual mobile's footprint (characters render at native size).
+        private const int PORTRAIT_W = 64;
+        private const int PORTRAIT_H = 100;
 
         private const int MARGIN = 30;
 
@@ -219,6 +219,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
         {
             private readonly Action<uint> _selectedFn;
             private readonly Action<uint> _loginFn;
+            private readonly AnimatedCharacterView _view;
             private bool _selected;
 
             public CampfirePortrait(uint index, string name, AnimatedCharacterView view, int width, int height, Action<uint> selectedFn, Action<uint> loginFn)
@@ -226,6 +227,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 CharacterIndex = index;
                 _selectedFn = selectedFn;
                 _loginFn = loginFn;
+                _view = view;
 
                 Width = width;
                 Height = height + 18;
@@ -251,7 +253,11 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             public uint CharacterIndex { get; }
 
-            public void SetSelected(bool value) => _selected = value;
+            public void SetSelected(bool value)
+            {
+                _selected = value;
+                _view?.SetSelected(value);
+            }
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {
