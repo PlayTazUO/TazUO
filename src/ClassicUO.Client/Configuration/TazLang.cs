@@ -15,7 +15,18 @@ namespace ClassicUO.Configuration
         /// <paramref name="fallback"/> if the key is not found.
         /// </summary>
         public static string Get(string key, string fallback = "")
-            => _strings.TryGetValue(key, out var v) ? v : fallback;
+            => _strings.TryGetValue(key, out string v) ? v : fallback;
+
+        /// <summary>
+        /// Returns the localized string for <paramref name="key"/> with formatted values.
+        /// </summary>
+        public static string Get(string key, string[] replace)
+        {
+            if(!_strings.TryGetValue(key, out string v))
+                return string.Empty;
+            
+            return string.Format(v, replace);
+        }
 
         public static void Load(string langCode = "EN")
         {
@@ -29,6 +40,12 @@ namespace ClassicUO.Configuration
             if (!File.Exists(enPath))
                 LangIniSerializer.ExtractEmbedded(enPath);
 
+            if (!File.Exists(enPath))
+            {
+                Log.Error("Failed to load language file");
+                return;
+            }
+
             string target = Path.Combine(dataDir, $"language.{langCode}.ini");
             if (!langCode.Equals("EN", StringComparison.OrdinalIgnoreCase) && !File.Exists(target))
             {
@@ -36,7 +53,7 @@ namespace ClassicUO.Configuration
                 target = enPath;
             }
 
-            var dict = LangIniSerializer.Parse(File.ReadAllText(target));
+            Dictionary<string, string> dict = LangIniSerializer.Parse(File.ReadAllText(target));
             LangIniSerializer.MergeIfStale(target, dict);
 
             dict.Remove("_version");
@@ -49,11 +66,11 @@ namespace ClassicUO.Configuration
             if (!Directory.Exists(dataDir))
                 return new[] { "EN" };
 
-            var codes = Directory.GetFiles(dataDir, "language.*.ini")
+            string[] codes = Directory.GetFiles(dataDir, "language.*.ini")
                 .Select(f =>
                 {
-                    var name = Path.GetFileNameWithoutExtension(f);
-                    var parts = name.Split('.');
+                    string name = Path.GetFileNameWithoutExtension(f);
+                    string[] parts = name.Split('.');
                     return parts.Length == 2 ? parts[1] : null;
                 })
                 .Where(c => c != null)

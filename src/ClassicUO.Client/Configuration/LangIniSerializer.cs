@@ -8,16 +8,16 @@ namespace ClassicUO.Configuration
 {
     internal static class LangIniSerializer
     {
-        private const string EMBEDDED_RESOURCE = "ClassicUO.Configuration.language.EN.ini";
+        private const string EMBEDDED_RESOURCE = "ClassicUO.Configuration.language.ini";
 
         public static Dictionary<string, string> Parse(string text)
         {
             var dict = new Dictionary<string, string>(StringComparer.Ordinal);
 
-            foreach (var rawLine in text.Split('\n'))
+            foreach (string rawLine in text.Split('\n'))
             {
-                var line = rawLine.TrimEnd('\r');
-                var trimmed = line.TrimStart();
+                string line = rawLine.TrimEnd('\r');
+                string trimmed = line.TrimStart();
 
                 if (trimmed.Length == 0 || trimmed[0] == ';')
                     continue;
@@ -26,11 +26,11 @@ namespace ClassicUO.Configuration
                 if (eq < 1)
                     continue;
 
-                var key = line[..eq].Trim();
+                string key = line[..eq].Trim();
                 if (key.Length == 0)
                     continue;
 
-                var value = line[(eq + 1)..];
+                string value = line[(eq + 1)..];
                 dict[key] = Unescape(value);
             }
 
@@ -39,8 +39,8 @@ namespace ClassicUO.Configuration
 
         public static Dictionary<string, string> ReadEmbedded()
         {
-            var assembly = typeof(TazLang).Assembly;
-            using var stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE);
+            Assembly assembly = typeof(TazLang).Assembly;
+            using Stream stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE);
 
             if (stream == null)
                 return new Dictionary<string, string>(StringComparer.Ordinal);
@@ -51,13 +51,18 @@ namespace ClassicUO.Configuration
 
         public static void ExtractEmbedded(string destPath)
         {
-            var assembly = typeof(TazLang).Assembly;
-            using var stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE);
+            Assembly assembly = typeof(TazLang).Assembly;
+            foreach(string s in assembly.GetManifestResourceNames())
+                Console.WriteLine(s);
+                
+            using Stream stream = assembly.GetManifestResourceStream(EMBEDDED_RESOURCE);
 
             if (stream == null)
-                return;
+            {
+                throw new Exception("Failed to find language file.");
+            }
 
-            using var dest = File.Create(destPath);
+            using FileStream dest = File.Create(destPath);
             stream.CopyTo(dest);
         }
 
@@ -66,7 +71,7 @@ namespace ClassicUO.Configuration
         // Returns true if the file was modified.
         public static bool MergeIfStale(string userFilePath, Dictionary<string, string> userDict)
         {
-            var embedded = ReadEmbedded();
+            Dictionary<string, string> embedded = ReadEmbedded();
 
             int embeddedVersion = ParseVersion(embedded);
             int userVersion = ParseVersion(userDict);
@@ -75,7 +80,7 @@ namespace ClassicUO.Configuration
                 return false;
 
             bool anyAdded = false;
-            foreach (var kv in embedded)
+            foreach (KeyValuePair<string, string> kv in embedded)
             {
                 if (kv.Key == "_version")
                     continue;
@@ -93,9 +98,9 @@ namespace ClassicUO.Configuration
             var lines = new List<string>();
             if (File.Exists(userFilePath))
             {
-                foreach (var rawLine in File.ReadAllLines(userFilePath))
+                foreach (string rawLine in File.ReadAllLines(userFilePath))
                 {
-                    var trimmed = rawLine.TrimStart();
+                    string trimmed = rawLine.TrimStart();
                     if (trimmed.Length == 0 || trimmed[0] == ';')
                         lines.Add(rawLine);
                     else
@@ -106,7 +111,7 @@ namespace ClassicUO.Configuration
             lines.Add($"_version={embeddedVersion}");
             lines.Add("");
 
-            foreach (var kv in userDict)
+            foreach (KeyValuePair<string, string> kv in userDict)
             {
                 if (kv.Key == "_version")
                     continue;
@@ -119,7 +124,7 @@ namespace ClassicUO.Configuration
 
         private static int ParseVersion(Dictionary<string, string> dict)
         {
-            if (dict.TryGetValue("_version", out var v) && int.TryParse(v, out int n))
+            if (dict.TryGetValue("_version", out string v) && int.TryParse(v, out int n))
                 return n;
             return 0;
         }

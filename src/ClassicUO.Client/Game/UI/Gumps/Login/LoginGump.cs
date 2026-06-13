@@ -314,7 +314,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     Y = offsetY,
                     Width = 190,
                     Height = 25,
-                    PlaceHolderText="Account Name"
+                    PlaceHolderText=TazLang.Get("accountname")
                 }
             );
 
@@ -346,7 +346,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 {
                     _textboxAccount.ContextMenu.Add(new ContextMenuItemEntry(acct, () => { _textboxAccount.SetText(acct); }));
                 }
-                _textboxAccount.SetTooltip("Right click to select another account.");
+                _textboxAccount.SetTooltip(TazLang.Get("accountcontextmenutooltip"));
                 _textboxAccount.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Right)
@@ -367,7 +367,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             (
                 0x00D2,
                 0x00D3,
-                "Music",
+                TazLang.Get("music"),
                 font,
                 hue,
                 false
@@ -424,7 +424,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Add
             (
-                new Label($"UO Version {Settings.GlobalSettings.ClientVersion}.", false, 0x034E, font: 9)
+                new Label(TazLang.Get("uoversion", [Settings.GlobalSettings.ClientVersion]), false, 0x034E, font: 9)
                 {
                     X = 286,
                     Y = 453
@@ -433,14 +433,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Add
             (
-                new Label(string.Format("TazUO Version {0}", CUOEnviroment.Version), false, 0x034E, font: 9)
+                new Label(TazLang.Get("tazuoversion", [CUOEnviroment.Version]), false, 0x034E, font: 9)
                 {
                     X = 286,
                     Y = 465
                 }
             );
 
-            var optionsButton = new NiceButton(5, 5, 80, 30, ButtonAction.Default, "Options") { IsSelectable = false, BackgroundColor = new Color(0.7f, 0.7f, 0.7f, 0.7f) };
+            var optionsButton = new NiceButton(5, 5, 80, 30, ButtonAction.Default, TazLang.Get("options")) { IsSelectable = false, BackgroundColor = new Color(0.7f, 0.7f, 0.7f, 0.7f) };
             optionsButton.MouseDown += (s,e) =>
             {
                 ContextMenuControl c = GenOptionsContext();
@@ -453,25 +453,25 @@ namespace ClassicUO.Game.UI.Gumps.Login
         private ContextMenuControl GenOptionsContext()
         {
             var c = new ContextMenuControl(this);
-            c.Add(new ContextMenuItemEntry("Skip Server Select? (When only 1 server is available)", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("skipserverselectdesc"), () =>
             {
                 Settings.GlobalSettings.SkipServerSelect = !Settings.GlobalSettings.SkipServerSelect;
                 _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, Settings.GlobalSettings.SkipServerSelect);
             }, true, Settings.GlobalSettings.SkipServerSelect));
 
-            c.Add(new ContextMenuItemEntry("Edit settings", OpenEditSettings, true, false));
+            c.Add(new ContextMenuItemEntry(TazLang.Get("editsettings"), OpenEditSettings, true, false));
 
-            c.Add(new ContextMenuItemEntry("TazUO Website", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("tuowebsite"), () =>
             {
                 PlatformHelper.LaunchBrowser("https://tazuo.org");
             }, true, false));
 
-            c.Add(new ContextMenuItemEntry("TazUO Discord", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("tuodiscord"), () =>
             {
                 PlatformHelper.LaunchBrowser("https://discord.gg/QvqzkB95G4");
             }, true, false));
 
-            c.Add(new ContextMenuItemEntry("CUO Website", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("cuowebsite"), () =>
             {
                 PlatformHelper.LaunchBrowser("https://www.classicuo.eu");
             }, true, false));
@@ -481,7 +481,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
         private static void OpenEditSettings()
         {
-            var existing = OptionsWindow.GetExisting("Edit Settings");
+            var existing = OptionsWindow.GetExisting(TazLang.Get("editsettings"));
             if (existing != null)
             {
                 existing.CenterInScreen();
@@ -491,55 +491,55 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Settings s = Settings.GlobalSettings;
 
-            var w = new OptionsWindow("Edit Settings");
+            var w = new OptionsWindow(TazLang.Get("editsettings"));
 
-            w.AddInput("IP:", s.IP, v => { s.IP = v; s.Save(); }, 200, "Server IP address or hostname.");
+            w.AddInput(TazLang.Get("ipentry"), s.IP, v => { s.IP = v; s.Save(); }, 200, TazLang.Get("iporhostnamedesc"));
 
-            w.AddInput("Port:", s.Port.ToString(), v =>
+            w.AddInput(TazLang.Get("portentry"), s.Port.ToString(), v =>
             {
                 if (ushort.TryParse(v, out ushort port) && port >= 1)
                 {
                     s.Port = port;
                     s.Save();
                 }
-            }, 80, "Server port.");
+            }, 80, TazLang.Get("serverporttooltip"));
 
-            w.AddCheckbox("Auto login", s.AutoLogin, v => { s.AutoLogin = v; s.Save(); },
-                "Automatically log in using the saved account.");
+            w.AddCheckbox(TazLang.Get("autologin"), s.AutoLogin, v => { s.AutoLogin = v; s.Save(); },
+                TazLang.Get("autologintooltip"));
 
-            w.AddCheckbox("Reconnect", s.Reconnect, v => { s.Reconnect = v; s.Save(); },
-                "Automatically reconnect after a disconnect.");
+            w.AddCheckbox(TazLang.Get("reconnect"), s.Reconnect, v => { s.Reconnect = v; s.Save(); },
+                TazLang.Get("autoreconnecttooltip"));
 
-            w.AddInput("Reconnect time (sec):", s.ReconnectTime.ToString(), v =>
+            w.AddInput(TazLang.Get("reconnecttimeentry"), s.ReconnectTime.ToString(), v =>
             {
                 if (int.TryParse(v, out int time) && time >= 0)
                 {
                     s.ReconnectTime = time;
                     s.Save();
                 }
-            }, 80, "Seconds to wait before reconnecting.");
+            }, 80, TazLang.Get("reconnecttooltip"));
 
-            w.AddInput("Force driver:", s.ForceDriver.ToString(), v =>
+            w.AddInput(TazLang.Get("forcedriver"), s.ForceDriver.ToString(), v =>
             {
                 if (byte.TryParse(v, out byte driver))
                 {
                     s.ForceDriver = driver;
                     s.Save();
                 }
-            }, 80, "Graphics driver to force (0 = default). Change won't take effect until restart.");
+            }, 80, TazLang.Get("forcedrivertooltip"));
 
-            w.AddLabel("Note: Force driver change won't take effect until restart.");
+            w.AddLabel(TazLang.Get("forcedriverwarning"));
 
             string[] langs = TazLang.GetAvailableLanguages();
             int langIdx = System.Array.IndexOf(langs, s.UILanguage ?? "EN");
             w.AddDropdown(
-                "UI Language:",
+                TazLang.Get("uilangentry"),
                 langs,
                 langIdx >= 0 ? langIdx : 0,
                 i => { s.UILanguage = langs[i]; },
-                "TazUO UI language. Change takes effect on restart."
+                TazLang.Get("uilangtooltip")
             );
-            w.AddLabel("Note: Language change takes effect on restart.");
+            w.AddLabel(TazLang.Get("langwarning"));
 
             w.CenterInScreen();
         }
