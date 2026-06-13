@@ -138,6 +138,7 @@ namespace ClassicUO.Game
             public const string SKIP_SERVER_SELECTION = "skip_server_selection";
             public const string CAMPFIRE_CHAR_SELECT = "campfire_char_select";
             public const string UI_LANGUAGE = "ui_language";
+            public const string AUTO_STAT_LOCK = "auto_stat_lock";
         }
     }
 }
