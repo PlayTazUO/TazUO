@@ -2439,6 +2439,17 @@ namespace ClassicUO.Game.Managers
                     ProfileManager.CurrentProfile.EnableBandageAgent = newStatus;
                     GameActions.Print($"Bandage agent {(newStatus ? "enabled" : "disabled")}.", newStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
+
+                case MacroType.SetOrganizerSource:
+                    if (macro is MacroObjectString { Text: { } organizerName } && !string.IsNullOrWhiteSpace(organizerName))
+                    {
+                        OrganizerAgent.Instance.SetSourceContainerViaTarget(organizerName);
+                    }
+                    else
+                    {
+                        GameActions.Print(_world, "Set the organizer name (or index) in the macro to target a source container for it.", Constants.HUE_ERROR);
+                    }
+                    break;
             }
 
             return result;
@@ -2756,6 +2767,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
+                case MacroType.SetOrganizerSource:
                     obj = new MacroObjectString(code, MacroSubType.MSC_NONE);
 
                     break;
@@ -2942,6 +2954,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.SetSpellBarRow:
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
+                case MacroType.SetOrganizerSource:
                     SubMenuType = 2;
 
                     break;
