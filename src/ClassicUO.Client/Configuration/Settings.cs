@@ -115,6 +115,17 @@ namespace ClassicUO.Configuration
             set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, value);
         }
 
+        /// <summary>
+        /// UI language code used for TazLang strings, persisted in global SQL settings.
+        /// Defaults to <c>"EN"</c> when no value is stored.
+        /// </summary>
+        [JsonIgnore]
+        public string UILanguage
+        {
+            get => Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, "EN");
+            set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, value);
+        }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)

@@ -18,6 +18,7 @@ All notable changes to TazUO will be recorded here.
 * Added a quick settings.json editor on the login gump - [P.R 510](https://github.com/PlayTazUO/TazUO/pull/510) ([bittiez](https://github.com/bittiez))
 * Added an alternative character select screen - [P.R 513](https://github.com/PlayTazUO/TazUO/pull/513) ([bittiez](https://github.com/bittiez))
 * Added a macro to set an organizer's source container via target - [P.R 516](https://github.com/PlayTazUO/TazUO/pull/516) ([bittiez](https://github.com/bittiez))
+* Added new language system for easier futute translations - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))

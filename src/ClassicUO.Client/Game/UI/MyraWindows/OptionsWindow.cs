@@ -86,6 +86,40 @@ public class OptionsWindow : MyraControl
         return this;
     }
 
+    /// <summary>Appends a labeled dropdown that invokes <paramref name="onChange"/> when the selection changes.</summary>
+    public OptionsWindow AddDropdown(string label, string[] items, int selectedIndex, Action<int> onChange, string? tooltip = null)
+    {
+        if (items == null || items.Length == 0)
+            throw new ArgumentException("Items array cannot be null or empty.", nameof(items));
+
+        var row = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, VerticalAlignment = VerticalAlignment.Center };
+        row.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+
+#pragma warning disable CS0612, CS0618
+        var combo = new ComboBox { VerticalAlignment = VerticalAlignment.Center };
+
+        if (tooltip != null)
+            combo.Tooltip = tooltip;
+
+        foreach (var item in items)
+            combo.Items.Add(new ListItem(item));
+
+        if (selectedIndex >= 0 && selectedIndex < items.Length)
+            combo.SelectedIndex = selectedIndex;
+
+        combo.SelectedIndexChanged += (_, _) =>
+        {
+            if (combo.SelectedIndex.HasValue)
+                onChange(combo.SelectedIndex.Value);
+        };
+#pragma warning restore CS0612, CS0618
+
+        row.Widgets.Add(combo);
+        _stack.Widgets.Add(row);
+        Refresh();
+        return this;
+    }
+
     private void Refresh()
     {
         ForceSizeUpdate();
