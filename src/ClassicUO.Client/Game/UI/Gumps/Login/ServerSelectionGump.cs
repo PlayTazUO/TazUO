@@ -1,6 +1,5 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using ClassicUO.Configuration;
