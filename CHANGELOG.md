@@ -19,6 +19,7 @@ All notable changes to TazUO will be recorded here.
 * Added an alternative character select screen - [P.R 513](https://github.com/PlayTazUO/TazUO/pull/513) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fix NullReferenceException in campfire character selection when a character has no appearance data - [P.R 515](https://github.com/PlayTazUO/TazUO/pull/515) ([bittiez](https://github.com/bittiez))
 * Mouse wheel macros hijack scroll from shop gumps - [P.R 479](https://github.com/PlayTazUO/TazUO/pull/479) ([yuval-po](https://github.com/yuval-po))
 * FindItems now properly returns the highest level container - [P.R 488](https://github.com/PlayTazUO/TazUO/pull/488) ([Jascen](https://github.com/Jascen))
 * Grid container label missing updates - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
