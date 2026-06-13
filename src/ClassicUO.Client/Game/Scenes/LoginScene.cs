@@ -226,7 +226,17 @@ namespace ClassicUO.Game.Scenes
                     return;
 
                 Client.Game.UO.GameCursor.IsLoading = false;
-                UIManager.Add(_currentGump = GetGumpForStep());
+
+                Gump next = GetGumpForStep();
+
+                // Dispose any login screens left over from a previous step before showing the next one.
+                // Step changes can be dispatched from the network thread, so a racing transition may
+                // capture a stale '_currentGump' and orphan the screen an earlier deferred callback
+                // created (most visibly the server selection gump lingering behind the login screen).
+                // Only one of these interactive screens should ever be visible, so clear the rest.
+                DisposeStaleLoginScreens(next);
+
+                UIManager.Add(_currentGump = next);
                 g?.Dispose();
             });
 
@@ -240,6 +250,29 @@ namespace ClassicUO.Game.Scenes
             LoginHandshake.Instance.CheckHandshakeTimeout();
             LoginHandshake.Instance.HandleReconnect(Settings.GlobalSettings.ReconnectTime * 1000);
             LoginHandshake.Instance.SendPing();
+        }
+
+        /// <summary>
+        /// Disposes any lingering login-flow screens that aren't the one we're about to show.
+        /// These screens are mutually exclusive, so anything orphaned by a racing step change
+        /// (e.g. a server selection gump stuck behind the login screen) gets cleared here.
+        /// </summary>
+        private static void DisposeStaleLoginScreens(Gump keep)
+        {
+            DisposeStaleGumpsOfType<LoginGump>(keep);
+            DisposeStaleGumpsOfType<ServerSelectionGump>(keep);
+            DisposeStaleGumpsOfType<CharacterSelectionGumpBase>(keep);
+            DisposeStaleGumpsOfType<CharCreationGump>(keep);
+        }
+
+        private static void DisposeStaleGumpsOfType<T>(Gump keep) where T : Gump
+        {
+            // 'keep' has not been added to the UIManager yet, so GetGump never returns it; the
+            // reference check is just a safety net to avoid disposing the incoming screen.
+            for (T g = UIManager.GetGump<T>(); g != null && !ReferenceEquals(g, keep); g = UIManager.GetGump<T>())
+            {
+                g.Dispose();
+            }
         }
 
         private Gump GetGumpForStep()
