@@ -88,7 +88,7 @@ entry("Screenshots", "With TUO you can press `Ctrl + Printscreen` to take a scre
 entry("Item comparisons", "TUO allows you to compare item tooltips side-by-side by pressing `ctrl` while hovering over an item in your grid container.", "https://tazuo.org/")
 entry("Party members", "TazUO added an option to color your party members so you can more easily see who is on your team.", "https://tazuo.org/")
 entry("Auto Follow", "TazUO improved auto follow by making frozen/paralyzed status not cancel auto follow in addition to customizable follow range from the target.", "https://tazuo.org/")
-entry("Language translations", "TazUO recently starting placing client-side text in a language.json file for users to easily translate the client into their preferred language.", "https://tazuo.org/")
+search_entry("Language translations", "TazUO allows you to add additional language files.", "language", "translation")
 search_entry("Python Scripting", "TazUO added built-in python scripting to the client.", "legion+scripting")
 entry("Client commands", "TazUO added a gump to show you available client commands. This can be opened from the top menu bar -> more -> Client Commands.", "https://tazuo.org/")
 entry("Damage numbers in your journal", "You can add dmg numbers to a journal tab(Right click the tab) to see damage numbers in the journal.", "https://tazuo.org/")
@@ -111,6 +111,7 @@ search_entry("Controller", "Have you tried playing with your controller yet?.", 
 search_entry("Health Bar Collector", "Easily see all nearby mobiles with the health bar collector.", "health", "bar", "collector")
 entry("Options menu fine controls", "Did you know, in the options menu if you are trying to set a slider to an exact number, you can hover over the slider and use your left/right arrow keys?.", "https://tazuo.org/")
 search_entry("Ingame Tools", "There are a few ingame tools built to make your time in UO easier.", "ingame", "tools")
+search_entry("Auto stat lock", "Help manager your stats while building your char.", "stat", "lock")
 
 
 url = os.getenv("DISCORD_WEBHOOK")
