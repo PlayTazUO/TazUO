@@ -146,7 +146,12 @@ namespace ClassicUO.Network
         /// <param name="reconnectTime">In ms</param>
         public void HandleReconnect(int reconnectTime)
         {
-            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main) && !AsyncNetClient.Socket.IsConnected)
+            // Note: we intentionally don't gate on IsConnected here. On PopUpMessage/Main with
+            // Reconnect set we're not in a live session by definition, and Socket.Connected only
+            // reflects the last I/O so a timed-out/half-open socket can report a stale 'true' and
+            // wedge the retry loop forever. Connect() tears down and replaces the socket anyway,
+            // and _reconnectTime enforces the delay between attempts.
+            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main))
             {
                 if (_reconnectTime >= Time.Ticks)
                     return;
