@@ -233,7 +233,18 @@ namespace ClassicUO.Game.UI.Gumps.Login
                         {
                             int index = loginScene.GetServerIndexFromSettings();
 
-                            loginScene.SelectServer((byte) loginScene.Servers[index].Index);
+                            // 'index' is a server Index value (not an array position) and may not
+                            // exist in the list, so resolve it to a valid server before selecting.
+                            ServerListEntry target = null;
+                            foreach (ServerListEntry s in loginScene.Servers)
+                                if (s.Index == index)
+                                {
+                                    target = s;
+                                    break;
+                                }
+
+                            target ??= loginScene.Servers[0];
+                            loginScene.SelectServer((byte) target.Index);
                         }
 
                         break;
@@ -257,7 +268,18 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 {
                     int index = loginScene.GetServerIndexFromSettings();
 
-                    loginScene.SelectServer((byte)loginScene.Servers[index].Index);
+                    // 'index' is a server Index value (not an array position) and may not
+                    // exist in the list, so resolve it to a valid server before selecting.
+                    ServerListEntry target = null;
+                    foreach (ServerListEntry s in loginScene.Servers)
+                        if (s.Index == index)
+                        {
+                            target = s;
+                            break;
+                        }
+
+                    target ??= loginScene.Servers[0];
+                    loginScene.SelectServer((byte)target.Index);
                 }
             }
         }
