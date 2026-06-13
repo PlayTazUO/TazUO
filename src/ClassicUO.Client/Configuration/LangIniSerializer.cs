@@ -74,17 +74,13 @@ namespace ClassicUO.Configuration
             if (userVersion >= embeddedVersion)
                 return false;
 
-            bool anyAdded = false;
             foreach (var kv in embedded)
             {
                 if (kv.Key == "_version")
                     continue;
 
                 if (!userDict.ContainsKey(kv.Key))
-                {
                     userDict[kv.Key] = kv.Value;
-                    anyAdded = true;
-                }
             }
 
             userDict["_version"] = embeddedVersion.ToString();
@@ -114,7 +110,7 @@ namespace ClassicUO.Configuration
             }
 
             File.WriteAllLines(userFilePath, lines, Encoding.UTF8);
-            return anyAdded;
+            return true;
         }
 
         private static int ParseVersion(Dictionary<string, string> dict)

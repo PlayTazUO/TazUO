@@ -89,6 +89,9 @@ public class OptionsWindow : MyraControl
     /// <summary>Appends a labeled dropdown that invokes <paramref name="onChange"/> when the selection changes.</summary>
     public OptionsWindow AddDropdown(string label, string[] items, int selectedIndex, Action<int> onChange, string? tooltip = null)
     {
+        if (items == null || items.Length == 0)
+            throw new ArgumentException("Items array cannot be null or empty.", nameof(items));
+
         var row = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, VerticalAlignment = VerticalAlignment.Center };
         row.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
 

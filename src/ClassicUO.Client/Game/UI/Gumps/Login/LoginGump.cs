@@ -536,7 +536,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 "UI Language:",
                 langs,
                 langIdx >= 0 ? langIdx : 0,
-                i => { s.UILanguage = langs[i]; },
+                i => { s.UILanguage = langs[i]; s.Save(); },
                 "TazUO UI language. Change takes effect on restart."
             );
             w.AddLabel("Note: Language change takes effect on restart.");
