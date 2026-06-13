@@ -30,9 +30,16 @@ namespace ClassicUO.Network
             private set;
         }
 
+        // How long (ms) to wait on the server during a handshake stage before giving up.
+        // A reconnect that lands while the server is still starting up can complete the TCP
+        // connect but never receive a reply, leaving us pinned in VerifyingAccount with no way
+        // out. This watchdog forces a fallback so the reconnect loop can retry.
+        private const int HANDSHAKE_TIMEOUT_MS = 8000;
+
         private ushort _retries;
         private int _reconnectTryCounter = 1;
         private long _reconnectTime;
+        private long _handshakeTimeout;
         private bool _isDisposed;
         private uint _pingTime;
 
@@ -139,7 +146,12 @@ namespace ClassicUO.Network
         /// <param name="reconnectTime">In ms</param>
         public void HandleReconnect(int reconnectTime)
         {
-            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main) && !AsyncNetClient.Socket.IsConnected)
+            // Note: we intentionally don't gate on IsConnected here. On PopUpMessage/Main with
+            // Reconnect set we're not in a live session by definition, and Socket.Connected only
+            // reflects the last I/O so a timed-out/half-open socket can report a stale 'true' and
+            // wedge the retry loop forever. Connect() tears down and replaces the socket anyway,
+            // and _reconnectTime enforces the delay between attempts.
+            if (Reconnect && (CurrentLoginStep == LoginSteps.PopUpMessage || CurrentLoginStep == LoginSteps.Main))
             {
                 if (_reconnectTime >= Time.Ticks)
                     return;
@@ -319,9 +331,36 @@ namespace ClassicUO.Network
         internal void SetLoginStep(LoginSteps step)
         {
             _pingTime = Time.Ticks + 60000;
+
+            // Arm the handshake watchdog while we're waiting on the server during the initial
+            // handshake, disarm it otherwise. Each step change re-arms the timer, so a stage only
+            // times out if it stalls with no progress. Scoped to Connecting/VerifyingAccount to
+            // avoid interfering with the relay/server-selection flow which has its own retry logic.
+            if (step is LoginSteps.Connecting or LoginSteps.VerifyingAccount)
+                _handshakeTimeout = (long)Time.Ticks + HANDSHAKE_TIMEOUT_MS;
+            else
+                _handshakeTimeout = 0;
+
             Log.TraceDebug($"[HandShake] Set login step to {step}.");
             CurrentLoginStep = step;
             LoginStepChanged?.Invoke(this, step);
+        }
+
+        /// <summary>
+        /// Call in Update() of the login scene. If a handshake stage stalls (e.g. a reconnect that
+        /// connects to a server which is still restarting and never replies), force a disconnect and
+        /// fall back to the popup so the reconnect loop can retry instead of getting stuck.
+        /// </summary>
+        public void CheckHandshakeTimeout()
+        {
+            if (_handshakeTimeout == 0 || Time.Ticks < _handshakeTimeout)
+                return;
+
+            _handshakeTimeout = 0;
+            Log.Warn($"[HandShake] Handshake timed out at step {CurrentLoginStep}, aborting connection attempt.");
+
+            Disconnect();
+            HandleConnectionFailure(SocketError.TimedOut);
         }
 
         private void OnNetClientConnected(object sender, EventArgs e)
@@ -366,6 +405,11 @@ namespace ClassicUO.Network
                 return;
             }
 
+            HandleConnectionFailure(e);
+        }
+
+        private void HandleConnectionFailure(SocketError e)
+        {
             Characters = null;
             DisposeAllServerEntries();
 
