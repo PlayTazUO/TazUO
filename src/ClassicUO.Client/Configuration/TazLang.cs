@@ -28,6 +28,13 @@ namespace ClassicUO.Configuration
             return string.Format(v, replace);
         }
 
+        /// <summary>
+        /// Loads language strings from <c>Data/language.{langCode}.ini</c> into <see cref="Get"/>.
+        /// Falls back to <c>language.EN.ini</c> if the requested file does not exist.
+        /// Creates <c>Data/language.EN.ini</c> from the embedded resource on first run.
+        /// Missing keys are auto-appended from the embedded EN resource when the version is stale.
+        /// </summary>
+        /// <param name="langCode">Language code matching a <c>language.{code}.ini</c> filename (e.g. <c>"EN"</c>, <c>"DE"</c>). Defaults to <c>"EN"</c>.</param>
         public static void Load(string langCode = "EN")
         {
             if (string.IsNullOrWhiteSpace(langCode))
@@ -47,9 +54,10 @@ namespace ClassicUO.Configuration
             }
 
             string target = Path.Combine(dataDir, $"language.{langCode}.ini");
-            if (!langCode.Equals("EN", StringComparison.OrdinalIgnoreCase) && !File.Exists(target))
+            if (!File.Exists(target))
             {
-                Log.Warn($"TazLang: language file not found: '{target}', falling back to EN");
+                if (!langCode.Equals("EN", StringComparison.OrdinalIgnoreCase))
+                    Log.Warn($"TazLang: language file not found: '{target}', falling back to EN");
                 target = enPath;
             }
 
@@ -60,6 +68,11 @@ namespace ClassicUO.Configuration
             _strings = dict;
         }
 
+        /// <summary>
+        /// Returns the language codes available in the <c>Data/</c> directory,
+        /// derived from files matching <c>language.*.ini</c>.
+        /// </summary>
+        /// <returns>Sorted array of language codes (e.g. <c>["DE", "EN", "FR"]</c>). Returns <c>["EN"]</c> if no files are found.</returns>
         public static string[] GetAvailableLanguages()
         {
             string dataDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data");

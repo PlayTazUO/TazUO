@@ -536,7 +536,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 TazLang.Get("uilangentry"),
                 langs,
                 langIdx >= 0 ? langIdx : 0,
-                i => { s.UILanguage = langs[i]; },
+                i => { s.UILanguage = langs[i]; s.Save(); },
                 TazLang.Get("uilangtooltip")
             );
             w.AddLabel(TazLang.Get("langwarning"));
