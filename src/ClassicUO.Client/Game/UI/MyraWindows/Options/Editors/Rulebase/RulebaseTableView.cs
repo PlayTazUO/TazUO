@@ -26,7 +26,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     {
         Columns = columns;
         StyleOptions = styleOptions;
-        StyleOptions.PropertyChanged += (sender, args) => Refresh();
+        StyleOptions.PropertyChanged += (_, _) => Refresh();
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Top;
         Widgets.Add(_grid);
