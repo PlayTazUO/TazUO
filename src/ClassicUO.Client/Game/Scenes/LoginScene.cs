@@ -237,6 +237,7 @@ namespace ClassicUO.Game.Scenes
         {
             base.Update();
 
+            LoginHandshake.Instance.CheckHandshakeTimeout();
             LoginHandshake.Instance.HandleReconnect(Settings.GlobalSettings.ReconnectTime * 1000);
             LoginHandshake.Instance.SendPing();
         }
