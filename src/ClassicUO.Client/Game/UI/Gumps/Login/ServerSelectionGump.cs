@@ -229,23 +229,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     case Buttons.Next:
                     case Buttons.Earth:
 
-                        if (loginScene.Servers.Length != 0)
-                        {
-                            int index = loginScene.GetServerIndexFromSettings();
-
-                            // 'index' is a server Index value (not an array position) and may not
-                            // exist in the list, so resolve it to a valid server before selecting.
-                            ServerListEntry target = null;
-                            foreach (ServerListEntry s in loginScene.Servers)
-                                if (s.Index == index)
-                                {
-                                    target = s;
-                                    break;
-                                }
-
-                            target ??= loginScene.Servers[0];
-                            loginScene.SelectServer((byte) target.Index);
-                        }
+                        SelectServerFromSettings(loginScene);
 
                         break;
 
@@ -264,23 +248,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             {
                 LoginScene loginScene = Client.Game.GetScene<LoginScene>();
 
-                if (loginScene.Servers?.Any(s => s != null) ?? false)
-                {
-                    int index = loginScene.GetServerIndexFromSettings();
-
-                    // 'index' is a server Index value (not an array position) and may not
-                    // exist in the list, so resolve it to a valid server before selecting.
-                    ServerListEntry target = null;
-                    foreach (ServerListEntry s in loginScene.Servers)
-                        if (s.Index == index)
-                        {
-                            target = s;
-                            break;
-                        }
-
-                    target ??= loginScene.Servers[0];
-                    loginScene.SelectServer((byte)target.Index);
-                }
+                SelectServerFromSettings(loginScene);
             }
         }
 
@@ -290,25 +258,29 @@ namespace ClassicUO.Game.UI.Gumps.Login
             {
                 LoginScene loginScene = Client.Game.GetScene<LoginScene>();
 
-                if (loginScene.Servers?.Any(s => s != null) ?? false)
-                {
-                    int index = loginScene.GetServerIndexFromSettings();
-                    bool serverSelected = false;
-
-                    foreach (ServerListEntry s in loginScene.Servers)
-                        if (s.Index == index)
-                        {
-                            loginScene.SelectServer((byte)index);
-                            serverSelected = true;
-                            break;
-                        }
-                    
-                    if (!serverSelected)
-                    {
-                        loginScene.SelectServer((byte)loginScene.Servers[0].Index);
-                    }
-                }
+                SelectServerFromSettings(loginScene);
             }
+        }
+
+        private static void SelectServerFromSettings(LoginScene loginScene)
+        {
+            if (loginScene.Servers == null || loginScene.Servers.Length == 0)
+                return;
+
+            int index = loginScene.GetServerIndexFromSettings();
+
+            // 'index' is a server Index value (not an array position) and may not
+            // exist in the list, so resolve it to a valid server before selecting.
+            ServerListEntry target = null;
+            foreach (ServerListEntry s in loginScene.Servers)
+                if (s.Index == index)
+                {
+                    target = s;
+                    break;
+                }
+
+            target ??= loginScene.Servers[0];
+            loginScene.SelectServer((byte)target.Index);
         }
 
         private enum Buttons
