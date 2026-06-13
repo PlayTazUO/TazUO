@@ -304,13 +304,13 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     ///     Gets the profiles combo box stack panel.
     /// </summary>
     /// <returns>The profiles combo box stack panel.</returns>
-    private StackPanel GetProfilesCombo()
+    private Widget GetProfilesCombo()
     {
         ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
 
         string selectedProfileName = _selectedProfile?.Name ?? Profiles.FirstOrDefault()?.Name ?? string.Empty;
 
-        StackPanel combo = OptionTabCommons.CreateOptionsComboBox(lang.Profile,
+        Widget combo = OptionTabCommons.CreateOptionsComboBox(lang.Profile,
             selectedProfileName,
             Profiles?.Select(p => p.Name) ?? [],
             OnProfileSelected

@@ -25,12 +25,12 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
 
-    private readonly IRuleConfigurator<TRule> _ruleConfigurator;
+    private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
     private readonly Panel _contentPanel;
     private readonly RulebaseTableView<TRule> _tableView;
 
     private WrapPanel _toolbar;
-    private Widget _addButton;
+    private BasicButton _addButton;
     private Widget _editButton;
     private Widget _deleteButton;
     private Widget _moveTopButton;
@@ -73,9 +73,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         }
     }
 
-    public Rulebase(IRuleConfigurator<TRule> ruleConfigurator)
+    public Rulebase(IRuleConfigurator<TRule>? ruleConfigurator = null)
     {
-        ArgumentNullException.ThrowIfNull(ruleConfigurator);
         _ruleConfigurator = ruleConfigurator;
 
         InitializeToolbar();
@@ -132,8 +131,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Rules.CollectionChanged -= OnRuleCollectionChanged;
         Columns.CollectionChanged -= OnColumnsChanged;
         _tableView.SelectedIndexChanged -= OnTableSelectedIndexChanged;
-        _ruleConfigurator.EditorClosed -= OnEditorClosed;
-        _ruleConfigurator.RuleCrud -= OnConfiguratorRuleCrud;
+        _ruleConfigurator?.EditorClosed -= OnEditorClosed;
+        _ruleConfigurator?.RuleCrud -= OnConfiguratorRuleCrud;
 
         if (_subscribedDesktop != null)
         {
@@ -147,8 +146,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Rules.CollectionChanged += OnRuleCollectionChanged;
         Columns.CollectionChanged += OnColumnsChanged;
         _tableView.SelectedIndexChanged += OnTableSelectedIndexChanged;
-        _ruleConfigurator.EditorClosed += OnEditorClosed;
-        _ruleConfigurator.RuleCrud += OnConfiguratorRuleCrud;
+        _ruleConfigurator?.EditorClosed += OnEditorClosed;
+        _ruleConfigurator?.RuleCrud += OnConfiguratorRuleCrud;
 
         if (Desktop == null)
             return;
@@ -246,6 +245,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     private void OpenRuleEditor(bool isEdit)
     {
+        if (_ruleConfigurator == null)
+            return;
+
         TRule? rule = isEdit ? GetSelectedRule() : new TRule();
         if (rule == null)
             return;
@@ -325,7 +327,17 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         bool hasSelection = selectedRule != null;
 
         _addButton.Enabled = !IsInEditor;
+
+        // If we've no configurator, the 'Add' button simply adds a 'default' rule instance.
+        _addButton.OnClick = _ruleConfigurator != null
+            ? () => OpenRuleEditor(false)
+            : () => AddRule(new TRule());
+
         _editButton.Enabled = hasSelection && selectedRule!.CanEdit;
+        // If we've no configurator, we don't show the Edit button.
+        // The idea is consumers can provide inline editing in their cell factories to reduce the number of clicks necesary to perform configurations.
+        _editButton.Visible = _ruleConfigurator != null;
+
         _deleteButton.Enabled = hasSelection && selectedRule!.CanDelete;
         _moveTopButton.Enabled = hasSelection && SelectedIndex > 0;
         _moveUpButton.Enabled = hasSelection && SelectedIndex > 0;

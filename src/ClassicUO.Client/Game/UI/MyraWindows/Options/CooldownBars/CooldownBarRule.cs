@@ -20,6 +20,7 @@ public class CooldownBarRule : IRule
     public string Name { get; set; } = string.Empty;
     public uint Cooldown { get; set; }
     public ushort Hue { get; set; }
+    public string TriggerMessage { get; set; } = string.Empty;
     public CooldownTriggerMessageType TriggerMessageType { get; set; } = CooldownTriggerMessageType.All;
 
     public static CooldownBarRule FromLegacyCondition(CoolDownBar.CoolDownConditionData data)
@@ -35,6 +36,7 @@ public class CooldownBarRule : IRule
         return new CooldownBarRule
         {
             Name = data.label,
+            TriggerMessage = data.trigger,
             TriggerMessageType = trigger,
             Hue = data.hue,
             Cooldown = (uint)data.cooldown

@@ -82,7 +82,7 @@ public static class OptionTabCommons
         new VerticalSeparator() { Thickness = 2, Color = new Color(0, 0, 0, 75), BorderThickness = StyleConstantsDefaults.BorderThickness };
 
 
-    internal static StackPanel CreateOptionsComboBox<TValue>(
+    internal static Widget CreateOptionsComboBox<TValue>(
         string label,
         TValue value,
         IEnumerable<TValue> options,
@@ -116,6 +116,9 @@ public static class OptionTabCommons
                 onChange(indexToValue[comboView.ListView.SelectedIndex.Value]);
         };
 
+        if (string.IsNullOrWhiteSpace(label))
+            return comboView;
+
         return new MyraLabel(label, MyraLabel.TextStyle.P).PlaceBefore(comboView);
     }
 
@@ -144,7 +147,7 @@ public static class OptionTabCommons
 
     internal static MyraButton StyledButton(string label, Action onClick) => new(label, onClick);
 
-    internal static Widget StyledTextIconButton(
+    internal static BasicButton StyledTextIconButton(
         string text,
         SpriteFontBase font,
         Action onClick,

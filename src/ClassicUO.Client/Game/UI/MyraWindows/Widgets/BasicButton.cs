@@ -5,11 +5,11 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 public class BasicButton : Button
 {
-    private readonly Action _onClick;
+    public Action OnClick { get; set; }
 
     public BasicButton(Action onClick)
     {
-        _onClick = onClick;
+        OnClick = onClick;
         DisabledBackground = Background;
         VerticalAlignment = VerticalAlignment.Center;
     }
@@ -19,6 +19,6 @@ public class BasicButton : Button
         base.OnTouchDown();
 
         if (Enabled)
-            _onClick?.Invoke();
+            OnClick?.Invoke();
     }
 }

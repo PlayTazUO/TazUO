@@ -46,7 +46,7 @@ public class MyraInputBox : TextBox
     }
 
     public static WrapPanel LabeledHorizontalStackPanel(
-        string labelText,
+        string? labelText,
         out MyraInputBox input,
         int width = 150,
         string? text = null,
@@ -61,7 +61,9 @@ public class MyraInputBox : TextBox
             VerticalSpacing = 4
         };
 
-        row.Widgets.Add(new MyraLabel(labelText, MyraLabel.TextStyle.P) { Tooltip = tooltip });
+        if (!string.IsNullOrWhiteSpace(labelText))
+            row.Widgets.Add(new MyraLabel(labelText, MyraLabel.TextStyle.P) { Tooltip = tooltip });
+
         input = new MyraInputBox { Text = text ?? "", HintText = hintText ?? "", Width = width, Tooltip = tooltip };
         row.Widgets.Add(input);
         return row;

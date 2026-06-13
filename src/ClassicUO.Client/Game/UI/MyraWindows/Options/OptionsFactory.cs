@@ -93,13 +93,13 @@ public static class OptionsFactory
     }
 
     internal static OptionItem CreateComboBox<TValue>(
-        string label,
+        string? label,
         TValue value,
         IEnumerable<TValue> options,
         Action<TValue> onChange,
         string? tooltip = null
     ) where TValue : IEquatable<TValue> =>
-        new(label, () => OptionTabCommons.CreateOptionsComboBox(label, value, options, onChange, tooltip)) { VerticalAlignment = VerticalAlignment.Center };
+        new(label ?? string.Empty, () => OptionTabCommons.CreateOptionsComboBox(label, value, options, onChange, tooltip)) { VerticalAlignment = VerticalAlignment.Center };
 
     internal static OptionItem PropBoundHuePicker(string label, Accessor<ushort> backingProperty) =>
         CreateHuePicker(label, backingProperty.Get(), backingProperty.Set, 20);
@@ -128,10 +128,10 @@ public static class OptionsFactory
             return textureButton.PlaceBefore(new MyraLabel(label, MyraLabel.TextStyle.P));
         });
 
-    internal static OptionItem PropBoundInputField(string label, Accessor<string> backingProp, string? tooltip = null) =>
+    internal static OptionItem PropBoundInputField(string? label, Accessor<string> backingProp, string? tooltip = null) =>
         CreateInputField(label, backingProp.Get(), backingProp.Set, tooltip);
 
-    internal static OptionItem CreateInputField(string label, string text, Action<string> onChange, string? tooltip = null) => new(label, () =>
+    internal static OptionItem CreateInputField(string? label, string text, Action<string> onChange, string? tooltip = null) => new(label ?? string.Empty, () =>
     {
         WrapPanel wid = MyraInputBox.LabeledHorizontalStackPanel(label, out MyraInputBox inputBox, text: text, tooltip: tooltip);
         inputBox.TextChangedByUser += (_, _) => onChange(inputBox.Text);
@@ -162,7 +162,7 @@ public static class OptionsFactory
     }
 
     internal static OptionItem PropBoundUIntInput(
-        string label,
+        string? label,
         Accessor<uint> backingProp,
         uint? max = null,
         string? tooltip = null,
@@ -178,7 +178,7 @@ public static class OptionsFactory
             };
 
         return new OptionItem(
-            label,
+            label ?? string.Empty,
             () => new LabeledUIntInput(label, backingProp.Get(), setter) { MaxValue = max, Tooltip = tooltip, InputBoxMinWidth = 60 }
         );
     }

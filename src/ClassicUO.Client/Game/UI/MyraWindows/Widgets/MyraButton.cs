@@ -10,7 +10,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 public class MyraButton : Button
 {
-    private readonly Action? _onClick;
+    public Action? OnClick { get; set; }
 
     private string _text = "";
 
@@ -49,7 +49,7 @@ public class MyraButton : Button
         _labelStyle = style;
         _labelFont = labelFont;
 
-        _onClick = onClick;
+        OnClick = onClick;
         Margin = new Thickness(2);
         DisabledBackground = Background;
         VerticalAlignment = VerticalAlignment.Center;
@@ -62,7 +62,7 @@ public class MyraButton : Button
         base.OnTouchDown();
 
         if (Enabled)
-            _onClick?.Invoke();
+            OnClick?.Invoke();
     }
 
     private void Build()
