@@ -5,6 +5,8 @@ using ClassicUO.Assets;
 using ClassicUO.Common;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
+using FontStashSharp;
+using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -141,4 +143,46 @@ public static class OptionTabCommons
     }
 
     internal static MyraButton StyledButton(string label, Action onClick) => new(label, onClick);
+
+    internal static Widget StyledTextIconButton(
+        string text,
+        SpriteFontBase font,
+        Action onClick,
+        string tooltip = null,
+        int width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+        int height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
+        int? topOffset = null,
+        int? leftOffset = null
+    )
+    {
+        var label = new Label
+        {
+            Text = text,
+            Font = font,
+            Wrap = false,
+            SingleLine = true,
+            TextAlign = TextHorizontalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Width = width,
+            Height = height,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0),
+            Top = topOffset ?? 0,
+            Left = leftOffset ?? 0
+        };
+
+        var button = new BasicButton(onClick)
+        {
+            Width = width,
+            Height = height,
+            Tooltip = tooltip,
+            Content = label,
+            VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0)
+        };
+
+        return button;
+    }
 }

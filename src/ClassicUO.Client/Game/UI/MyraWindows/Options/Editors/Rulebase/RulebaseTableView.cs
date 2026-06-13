@@ -26,9 +26,9 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     {
         Columns = columns;
         StyleOptions = styleOptions;
+        StyleOptions.PropertyChanged += (sender, args) => Refresh();
         HorizontalAlignment = HorizontalAlignment.Stretch;
         VerticalAlignment = VerticalAlignment.Top;
-
         Widgets.Add(_grid);
     }
 
@@ -54,6 +54,8 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         _grid.Widgets.Clear();
         _grid.ColumnsProportions.Clear();
         _grid.RowsProportions.Clear();
+        _grid.Border = StyleOptions.OuterBorder.Brush;
+        _grid.BorderThickness = StyleOptions.OuterBorder.Thickness;
 
         RulebaseColumn<TRule>[] visibleColumns = GetVisibleColumns().ToArray();
 

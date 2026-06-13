@@ -297,6 +297,9 @@ public static class MiscTab
         var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor())
         {
             Title = "Countdown Trigger Rules",
+            TableStyleOptions =
+            {
+            }
         };
 
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>

@@ -7,8 +7,12 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using FontStashSharp;
+using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -18,7 +22,7 @@ using Container = Myra.Graphics2D.UI.Container;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
-public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : IRule, new()
+public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : class, IRule, new()
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
@@ -27,21 +31,21 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
     private readonly Panel _contentPanel;
     private readonly RulebaseTableView<TRule> _tableView;
 
-    private readonly WrapPanel _toolbar;
-    private readonly MyraButton _addButton;
-    private readonly MyraButton _editButton;
-    private readonly MyraButton _deleteButton;
-    private readonly MyraButton _moveTopButton;
-    private readonly MyraButton _moveUpButton;
-    private readonly MyraButton _moveDownButton;
-    private readonly MyraButton _moveBottomButton;
+    private WrapPanel _toolbar;
+    private Widget _addButton;
+    private Widget _editButton;
+    private Widget _deleteButton;
+    private Widget _moveTopButton;
+    private Widget _moveUpButton;
+    private Widget _moveDownButton;
+    private Widget _moveBottomButton;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5);
     private Desktop? _subscribedDesktop;
 
     public ObservableCollection<TRule> Rules { get; } = [];
     public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
-    public RulebaseStyleOptions StyleOptions { get; } = new();
+    public RulebaseStyleOptions TableStyleOptions { get; } = new();
 
     public string? Title
     {
@@ -81,25 +85,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         ArgumentNullException.ThrowIfNull(ruleConfigurator);
         _ruleConfigurator = ruleConfigurator;
 
-        _addButton = new MyraButton("Add", () => OpenRuleEditor(false));
-        _editButton = new MyraButton("Edit", () => OpenRuleEditor(true));
-        _deleteButton = new MyraButton("Delete", DeleteRule);
-        _moveTopButton = new MyraButton("Top", MoveSelectedToTop);
-        _moveUpButton = new MyraButton("Up", () => MoveSelectedBy(-1));
-        _moveDownButton = new MyraButton("Down", () => MoveSelectedBy(1));
-        _moveBottomButton = new MyraButton("Bottom", MoveSelectedToBottom);
+        InitializeToolbar();
 
-        _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
-            _addButton,
-                _editButton,
-                _deleteButton,
-                _moveTopButton,
-                _moveUpButton,
-                _moveDownButton,
-                _moveBottomButton
-            );
-
-        _tableView = new RulebaseTableView<TRule>(Columns, StyleOptions);
+        _tableView = new RulebaseTableView<TRule>(Columns, TableStyleOptions);
         _contentPanel = CreateContentPanel();
 
         ConfigureContainer();
@@ -107,6 +95,33 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
 
         Children.Add(CreateComponent());
         ChildrenLayout = new WrapPanelLayout();
+    }
+
+    private void InitializeToolbar()
+    {
+        SpriteFontBase smallNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 28);
+        SpriteFontBase largeNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 42);
+
+        _addButton = OptionTabCommons.StyledTextIconButton("+", largeNoto, () => OpenRuleEditor(false), topOffset: -4);
+        _editButton = OptionTabCommons.StyledTextIconButton("🖉", smallNoto, () => OpenRuleEditor(true), topOffset: 1);
+        _deleteButton = OptionTabCommons.StyledTextIconButton("🗙", smallNoto, DeleteRule, topOffset: -1);
+        _moveTopButton = OptionTabCommons.StyledTextIconButton("⭱", largeNoto, MoveSelectedToTop, topOffset: -4);
+        _moveUpButton = OptionTabCommons.StyledTextIconButton("⭡", largeNoto, () => MoveSelectedBy(-1), topOffset: -4);
+        _moveDownButton = OptionTabCommons.StyledTextIconButton("⭣", largeNoto, () => MoveSelectedBy(1), topOffset: -4);
+        _moveBottomButton = OptionTabCommons.StyledTextIconButton("⭳", largeNoto, MoveSelectedToBottom, topOffset: -4);
+
+        _toolbar = OptionTabCommons.StyledHorizontalWrapPanel(
+            _addButton,
+            _editButton,
+            _deleteButton,
+            _moveTopButton,
+            _moveUpButton,
+            _moveDownButton,
+            _moveBottomButton
+        );
+
+        _toolbar.HorizontalSpacing += 2;
+        _toolbar.VerticalSpacing += 2;
     }
 
     public void RefreshTable() => _tableView.Refresh();
@@ -160,9 +175,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
         int? hitRow = _tableView.GetRowIndexAt(touchPos);
 
         if (hitRow.HasValue)
-        {
             SelectedIndex = hitRow;
-        }
         else
         {
             bool hitTable = _tableView.HitTest(touchPos) != null;
@@ -238,7 +251,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
     private void DeleteRule()
     {
         TRule? rule = GetSelectedRule();
-        if (rule == null || !rule.CanDelete)
+        if (rule is not { CanDelete: true })
             return;
 
         Rules.RemoveAt(SelectedIndex!.Value);
@@ -252,10 +265,10 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : I
     private TRule? GetSelectedRule()
     {
         if (!SelectedIndex.HasValue)
-            return default;
+            return null;
 
         int index = SelectedIndex.Value;
-        return index >= 0 && index < Rules.Count ? Rules[index] : default;
+        return index >= 0 && index < Rules.Count ? Rules[index] : null;
     }
 
     private void MoveSelectedBy(int offset)
