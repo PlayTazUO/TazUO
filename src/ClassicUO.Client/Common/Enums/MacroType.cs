@@ -112,4 +112,5 @@ public enum MacroType
     SetLastTarget,
     ToggleAutoWalk,
     ToggleBandageAgent,
+    SetOrganizerSource,
 }
