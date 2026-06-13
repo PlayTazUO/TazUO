@@ -31,6 +31,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed tooltips going outside window bounds when scaled - ([bittiez](https://github.com/bittiez))
 * Fixed logout gump not being centered when scaled - ([bittiez](https://github.com/bittiez))
 * Back button now reaches the server select & username screens when 'Skip Server Select' is enabled, and added a `-skipserverselect` command-line arg - [P.R 512](https://github.com/PlayTazUO/TazUO/pull/512) ([bittiez](https://github.com/bittiez))
+* Fixed an issue with Toggle Legion Script macro not reoping it - ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
