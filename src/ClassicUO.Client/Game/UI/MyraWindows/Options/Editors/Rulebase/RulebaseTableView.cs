@@ -96,7 +96,6 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         for (int i = 0; i < _rules.Count; i++)
         {
             _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
-            int rowIndex = i;
             int gridRow = currentRow + i;
 
             var rowBackground = new Panel
@@ -104,8 +103,8 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
                 Background = new SolidBrush(GetRowColor(i)),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                Border = StyleOptions.RowBorders.Brush,
-                BorderThickness = StyleOptions.RowBorders.Thickness
+                Border = i + 1 < _rules.Count ? StyleOptions.RowBorders?.Brush : null,
+                BorderThickness = new Thickness(0, 0, 0, StyleOptions.RowBorders?.Thickness ?? 0)
             };
 
             _grid.AddWidget(rowBackground, gridRow, 0, colspan: visibleColumns.Length);
@@ -137,9 +136,9 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         content.HorizontalAlignment = HorizontalAlignment.Stretch;
         content.VerticalAlignment = VerticalAlignment.Center;
         content.Padding = new Thickness(6, 3);
-        content.Border = StyleOptions.ColumnBorders.Brush;
+        content.Border = StyleOptions.ColumnBorders?.Brush;
 
-        Thickness thickness = StyleOptions.ColumnBorders.Thickness;
+        var thickness = new Thickness(0, 0, StyleOptions.ColumnBorders?.Thickness ?? 0, 0);
 
         if (!withRightBorder)
             thickness.Right = 0;

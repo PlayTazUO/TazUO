@@ -10,6 +10,7 @@ using Myra.Graphics2D.Brushes;
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
 public record struct BorderStyle(IBrush Brush, Thickness Thickness);
+public record struct UniBorderStyle(IBrush Brush, int Thickness);
 
 public sealed class RulebaseStyleOptions : INotifyPropertyChanged
 {
@@ -37,17 +38,17 @@ public sealed class RulebaseStyleOptions : INotifyPropertyChanged
         set => SetField(ref field, value);
     } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(1));
 
-    public BorderStyle ColumnBorders
+    public UniBorderStyle? ColumnBorders
     {
         get;
         set => SetField(ref field, value);
-    } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(0, 0, 1, 0));
+    } = new UniBorderStyle(new SolidBrush(MyraStyle.GridBorderColor), 1);
 
-    public BorderStyle RowBorders
+    public UniBorderStyle? RowBorders
     {
         get;
         set => SetField(ref field, value);
-    } = new(new SolidBrush(MyraStyle.GridBorderColor), new Thickness(0, 0, 0, 1));
+    } = new UniBorderStyle(new SolidBrush(MyraStyle.GridBorderColor), 1);
 
     public bool HighlightSelectedRow
     {

@@ -17,6 +17,7 @@ public record struct VisualContainerProps()
 {
     public Orientation Orientation { get; init; } = Orientation.Vertical;
     public string LabelText { get; init; } = null;
+    public HorizontalAlignment LabelHorizontalAlightment { get; init; } = HorizontalAlignment.Left;
     public string LabelLink { get; init; } = null;
     public VisualContainerSpacing? Spacing { get; init; } = VisualContainerSpacing.Comfortable;
 }
@@ -27,10 +28,15 @@ public class VisualContainer : Container
     {
         if (!string.IsNullOrWhiteSpace(props.LabelText))
         {
+            Widget label;
             if (string.IsNullOrWhiteSpace(props.LabelLink))
-                Children.Add(new MyraLabel(props.LabelText, MyraLabel.TextStyle.P));
+                label = new MyraLabel(props.LabelText, MyraLabel.TextStyle.P);
             else
-                Children.Add(new LinkLabel(props.LabelText, props.LabelLink));
+                label = new LinkLabel(props.LabelText, props.LabelLink);
+
+            label.HorizontalAlignment = props.LabelHorizontalAlightment;
+
+            Children.Add(label);
             Children.Add(new MyraSpacer(0, 2));
         }
 

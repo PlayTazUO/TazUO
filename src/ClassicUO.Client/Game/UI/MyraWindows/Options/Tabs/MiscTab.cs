@@ -290,37 +290,35 @@ public static class MiscTab
         );
     }
 
-    private static Rulebase<CooldownBarRule> GetPage4() => GetCooldownBarRulebase();
+    private static Widget GetPage4() => GetCooldownBarRulebase();
 
-    private static Rulebase<CooldownBarRule> GetCooldownBarRulebase()
+    private static Widget GetCooldownBarRulebase()
     {
         var rb = new Rulebase<CooldownBarRule>(new CooldownBarRuleEditor())
         {
-            Title = "Countdown Trigger Rules",
-            TableStyleOptions =
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Top,
+            MinWidth = 500,
+            TitleLabel =
             {
+                Text = "Cooldown Bar Rules",
+                HorizontalAlignment = HorizontalAlignment.Center
             }
         };
 
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
         {
-            Header = "Order",
-            Proportion = new Proportion(ProportionType.Auto),
-            CellFactory = rule => new MyraLabel(rule.Order.ToString(), MyraLabel.TextStyle.P),
+            Header = "Order", Proportion = new Proportion(ProportionType.Auto), CellFactory = rule => new MyraLabel(rule.Order.ToString(), MyraLabel.TextStyle.P)
         });
 
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
         {
-            Header = "Name",
-            Proportion = new Proportion(ProportionType.Auto),
-            CellFactory = rule => new MyraLabel(rule.Name, MyraLabel.TextStyle.P)
+            Header = "Name", Proportion = new Proportion(ProportionType.Auto), CellFactory = rule => new MyraLabel(rule.Name, MyraLabel.TextStyle.P)
         });
 
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
         {
-            Header = "Hue",
-            Proportion = new Proportion(ProportionType.Auto),
-            CellFactory = rule => new MyraLabel(rule.Hue.ToString(), MyraLabel.TextStyle.P)
+            Header = "Hue", Proportion = new Proportion(ProportionType.Auto), CellFactory = rule => new MyraLabel(rule.Hue.ToString(), MyraLabel.TextStyle.P)
         });
 
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
@@ -333,7 +331,7 @@ public static class MiscTab
         rb.Columns.Add(new RulebaseColumn<CooldownBarRule>
         {
             Header = "Trigger",
-            Proportion = new Proportion(ProportionType.Auto),
+            Proportion = new Proportion(ProportionType.Fill),
             CellFactory = rule => new MyraLabel(rule.TriggerMessageType.ToString(), MyraLabel.TextStyle.P)
         });
 

@@ -8,11 +8,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using ClassicUO.Assets;
-using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using FontStashSharp;
-using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -40,22 +38,17 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private Widget _moveDownButton;
     private Widget _moveBottomButton;
 
-    private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5);
+    private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5)
+    {
+        HorizontalAlignment = HorizontalAlignment.Center
+    };
     private Desktop? _subscribedDesktop;
 
     public ObservableCollection<TRule> Rules { get; } = [];
     public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
     public RulebaseStyleOptions TableStyleOptions { get; } = new();
 
-    public string? Title
-    {
-        get => field;
-        set
-        {
-            if (SetField(ref field, value))
-                UpdateTitle();
-        }
-    }
+    public Label TitleLabel => _titleLabel;
 
     public bool IsInEditor
     {
@@ -94,7 +87,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         ManageSubscriptions(true);
 
         Children.Add(CreateComponent());
-        ChildrenLayout = new WrapPanelLayout();
+        ChildrenLayout = new StackPanelLayout(Orientation.Vertical);
     }
 
     private void InitializeToolbar()
@@ -120,6 +113,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
             _moveBottomButton
         );
 
+        _toolbar.VerticalAlignment = VerticalAlignment.Top;
+        _toolbar.HorizontalAlignment = HorizontalAlignment.Center;
         _toolbar.HorizontalSpacing += 2;
         _toolbar.VerticalSpacing += 2;
     }
@@ -197,8 +192,9 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         VerticalAlignment = VerticalAlignment.Stretch;
     }
 
-    private StackPanel CreateComponent() =>
-        OptionTabCommons.StyledStackPanel(
+    private StackPanel CreateComponent()
+    {
+        StackPanel primaryControl = OptionTabCommons.StyledStackPanel(
             Orientation.Vertical,
             _titleLabel,
             OptionTabCommons.StyledStackPanel(
@@ -207,10 +203,20 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
                 _contentPanel
             )
         );
+        primaryControl.HorizontalAlignment = HorizontalAlignment.Stretch;
+        primaryControl.VerticalAlignment = VerticalAlignment.Top;
+        return primaryControl;
+    }
 
     private Panel CreateContentPanel()
     {
-        var panel = new Panel { HorizontalAlignment = HorizontalAlignment.Stretch };
+        var panel = new Panel
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Stretch,
+            Border = new SolidBrush(MyraStyle.GridBorderColor),
+            BorderThickness = new Thickness(1),
+        };
         panel.Widgets.Add(_tableView);
         return panel;
     }
@@ -301,7 +307,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private void RecalculateOrder()
     {
         for (int i = 0; i < Rules.Count; i++)
-            Rules[i].Order = (uint)(i + 1);
+            Rules[i].Order = (uint)i;
 
         RefreshTable();
     }
@@ -325,12 +331,6 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         _moveUpButton.Enabled = hasSelection && SelectedIndex > 0;
         _moveDownButton.Enabled = hasSelection && SelectedIndex < Rules.Count - 1;
         _moveBottomButton.Enabled = hasSelection && SelectedIndex < Rules.Count - 1;
-    }
-
-    private void UpdateTitle()
-    {
-        _titleLabel.Text = Title;
-        _titleLabel.Visible = !string.IsNullOrWhiteSpace(Title);
     }
 
     private void SetCurrentContent(Widget content)
