@@ -244,7 +244,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 );
 
                 nameLabel.ForceSizeUpdate();
-                nameLabel.X = nameBg.X = (view.Width - nameLabel.Width) / 2;
+                nameLabel.X = nameBg.X = ((view?.Width ?? width) - nameLabel.Width) / 2;
                 nameBg.Width = nameLabel.Width;
                 nameBg.Height = nameLabel.Height;
 
