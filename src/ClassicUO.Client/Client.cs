@@ -106,6 +106,8 @@ namespace ClassicUO
         {
             Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
 
+            TazLang.Load(Settings.GlobalSettings.UILanguage);
+
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 

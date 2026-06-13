@@ -115,6 +115,13 @@ namespace ClassicUO.Configuration
             set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.CAMPFIRE_CHAR_SELECT, value);
         }
 
+        [JsonIgnore]
+        public string UILanguage
+        {
+            get => Client.Settings.Get(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, "EN");
+            set => Client.Settings.Set(SettingsScope.Global, Constants.SqlSettings.UI_LANGUAGE, value);
+        }
+
         public static string GetSettingsFilepath()
         {
             if (CustomSettingsFilepath != null)

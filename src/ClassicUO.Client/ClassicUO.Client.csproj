@@ -99,6 +99,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Game\Managers\DefaultSpellIndicatorConfig.json" />
+    <EmbeddedResource Include="Configuration\language.EN.ini" />
   </ItemGroup>
 
   <ItemGroup>

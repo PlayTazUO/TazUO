@@ -530,6 +530,17 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             w.AddLabel("Note: Force driver change won't take effect until restart.");
 
+            string[] langs = TazLang.GetAvailableLanguages();
+            int langIdx = System.Array.IndexOf(langs, s.UILanguage ?? "EN");
+            w.AddDropdown(
+                "UI Language:",
+                langs,
+                langIdx >= 0 ? langIdx : 0,
+                i => { s.UILanguage = langs[i]; },
+                "TazUO UI language. Change takes effect on restart."
+            );
+            w.AddLabel("Note: Language change takes effect on restart.");
+
             w.CenterInScreen();
         }
 
