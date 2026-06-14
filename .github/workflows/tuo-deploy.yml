@@ -1,4 +1,4 @@
-name: TUO-Net9-Deploy
+name: TUO-Deploy
 
 on:
   workflow_dispatch:
