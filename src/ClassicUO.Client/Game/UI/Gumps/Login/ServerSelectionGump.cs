@@ -414,17 +414,17 @@ namespace ClassicUO.Game.UI.Gumps.Login
                         case IPStatus.DestinationProtocolUnreachable:
                         case IPStatus.DestinationPortUnreachable:
                         case IPStatus.DestinationUnreachable:
-                            _server_ping.Text = "unreach.";
+                            _server_ping.Text = TazLang.Get("serverping_unreachable");
 
                             break;
 
                         case IPStatus.TimedOut:
-                            _server_ping.Text = "time out";
+                            _server_ping.Text = TazLang.Get("serverping_timeout");
 
                             break;
 
                         default:
-                            _server_ping.Text = $"unk. [{(int) _entry.PingStatus}]";
+                            _server_ping.Text = TazLang.Get("serverping_unknown", [((int) _entry.PingStatus).ToString()]);
 
                             break;
                     }

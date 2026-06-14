@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
@@ -72,7 +73,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Add
             (
-                new Label("Character Selection", true, 0, font: 1)
+                new Label(TazLang.Get("characterselection"), true, 0, font: 1)
                 {
                     X = (int)(centerX - 60),
                     Y = AREA_Y + 12
@@ -184,7 +185,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             // Live switch back to the classic list-style selection screen.
             Add
             (
-                new NiceButton((int)(centerX - 60), btnY + 2, 120, 25, ButtonAction.Activate, "Classic View")
+                new NiceButton((int)(centerX - 60), btnY + 2, 120, 25, ButtonAction.Activate, TazLang.Get("classicview"))
                 {
                     ButtonParameter = (int)Buttons.ToggleStyle,
                     IsSelectable = false,

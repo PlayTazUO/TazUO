@@ -225,7 +225,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 {
                     Add
                     (
-                        new Label("Eventine Shard Detected!", false, 0xFFFF, font: 9)
+                        new Label(TazLang.Get("eventineshard"), false, 0xFFFF, font: 9)
                         {
                             X = 242,
                             Y = 5
