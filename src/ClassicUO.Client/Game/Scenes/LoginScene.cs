@@ -553,6 +553,23 @@ namespace ClassicUO.Game.Scenes
             UIManager.Add(_currentGump = CreateCharacterSelectionGump());
         }
 
+        /// <summary>
+        /// Disposes the active login screen and rebuilds it. Used by the live UI language
+        /// switch so the freshly loaded strings show immediately and <see cref="_currentGump"/>
+        /// stays consistent.
+        /// </summary>
+        public void RebuildLoginGump()
+        {
+            if (CurrentLoginStep != LoginSteps.Main)
+                return;
+
+            UIManager.GetGump<LoginGump>()?.Dispose();
+
+            _currentGump?.Dispose();
+
+            UIManager.Add(_currentGump = new LoginGump(_world, this));
+        }
+
         private void UpdateCharacterList()
         {
             UIManager.GetGump<CharacterSelectionGumpBase>()?.Dispose();

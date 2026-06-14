@@ -479,7 +479,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             return c;
         }
 
-        private static void OpenEditSettings()
+        private void OpenEditSettings()
         {
             var existing = OptionsWindow.GetExisting(TazLang.Get("editsettings"));
             if (existing != null)
@@ -536,10 +536,18 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 TazLang.Get("uilangentry"),
                 langs,
                 langIdx >= 0 ? langIdx : 0,
-                i => { s.UILanguage = langs[i]; s.Save(); },
+                i =>
+                {
+                    s.UILanguage = langs[i];
+                    s.Save();
+
+                    // Reload the language strings and rebuild the login screen so the
+                    // selection takes effect live without requiring a restart.
+                    TazLang.Load(langs[i]);
+                    Client.Game.GetScene<LoginScene>()?.RebuildLoginGump();
+                },
                 TazLang.Get("uilangtooltip")
             );
-            w.AddLabel(TazLang.Get("langwarning"));
 
             w.CenterInScreen();
         }
