@@ -89,14 +89,6 @@ namespace ClassicUO.Game.UI.Gumps
             // TODO: buuttons
         }
 
-
-        public override void Dispose()
-        {
-            UIManager.ForEach<BulletinBoardGump>(g => g.Dispose()); //Not 100% certain closing all bulletin board gumps is intentional..
-
-            base.Dispose();
-        }
-
         public void RemoveBulletinObject(uint serial)
         {
             foreach (IGui child in _databox.Children)

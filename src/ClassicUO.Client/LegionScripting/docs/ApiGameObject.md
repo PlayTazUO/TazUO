@@ -75,10 +75,11 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 ## Methods
 ### SetOutlineColor
 `(htmlColor)`
- Set an objects outline color using html hex colors.
+ Set an object's outline color using HTML hex colors.
  Example:
  ```py
  API.Player.SetOutlineColor("#105510")
+ API.Player.SetOutlineColor(None)
  ```
 
 
@@ -86,7 +87,7 @@ description:  Base class for all Python-accessible game world objects.  Encapsul
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `htmlColor` | `string` | ❌ No |  |
+| `htmlColor` | `string` | ✅ Yes | The color to set. Pass `null` to remove the outline. |
 
 **Return Type:** `void` *(Does not return anything)*
 

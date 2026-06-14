@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
-using ClassicUO.Assets;
-using ClassicUO.Configuration;
-using ClassicUO.Game.Managers;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.GameObjects
 {

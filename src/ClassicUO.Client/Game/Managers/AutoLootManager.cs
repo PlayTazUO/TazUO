@@ -45,7 +45,7 @@ namespace ClassicUO.Game.Managers
         private bool _loaded = false;
         private readonly string _savePath;
         private long _nextLootTime = Time.Ticks;
-        private long _nextClearRecents = Time.Ticks + 5000;
+        private long _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         private ProgressBarGump _progressBarGump;
         private int _currentLootTotalCount = 0;
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
@@ -74,7 +74,7 @@ namespace ClassicUO.Game.Managers
                 priority = entry.Priority;
             _lootItems.Enqueue((item, entry), priority);
             _currentLootTotalCount++;
-            _nextClearRecents = Time.Ticks + 5000;
+            _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         }
 
         public void ForceLootContainer(uint serial)
@@ -158,7 +158,7 @@ namespace ClassicUO.Game.Managers
         {
             if (corpse is not { IsCorpse: true }) return;
 
-            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
+            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
             {
                 World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse); //Retry if the distance was too great to loot
                 return;
@@ -299,7 +299,7 @@ namespace ClassicUO.Game.Managers
                 if (Time.Ticks > _nextClearRecents)
                 {
                     _recentlyLooted.Clear();
-                    _nextClearRecents = Time.Ticks + 5000;
+                    _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
                 }
                 return;
             }
@@ -326,7 +326,7 @@ namespace ClassicUO.Game.Managers
                 Item rc = _world.Items.Get(moveItem.RootContainer);
                 if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 {
-                    if (rc.IsCorpse)
+                    if (rc.IsCorpse && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
                         World.Instance?.Player?.AutoOpenedCorpses.Remove(rc); //Allow reopening this corpse, we got too far away to finish looting..
                     _recentlyLooted.Remove(item);
                     return;

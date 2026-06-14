@@ -411,9 +411,9 @@ namespace ClassicUO
 
                     case "reconnect_time":
 
-                        if (!int.TryParse(value, out int reconnectTime) || reconnectTime < 1000)
+                        if (!int.TryParse(value, out int reconnectTime) || reconnectTime < 1)
                         {
-                            reconnectTime = 1000;
+                            reconnectTime = 1;
                         }
 
                         Settings.GlobalSettings.ReconnectTime = reconnectTime;
@@ -439,6 +439,11 @@ namespace ClassicUO
 
                     case "skiploginscreen":
                         CUOEnviroment.SkipLoginScreen = true;
+
+                        break;
+
+                    case "skipserverselect":
+                        CUOEnviroment.SkipServerSelect = true;
 
                         break;
 
@@ -542,7 +547,7 @@ namespace ClassicUO
                         break;
 
                     case "zlib":
-                        ZLib.SetForceManagedZlib(true);
+                        ZLib.SetCommandLineOverride();
 
                         break;
                 }

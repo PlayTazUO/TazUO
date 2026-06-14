@@ -11,13 +11,13 @@ public static class MainThreadQueue
     private static ConcurrentQueue<(Action Action, CancellationToken? Token)> _queuedActions { get; } = new();
 
     /// <summary>
-    /// Must be called from main thread
+    ///     Must be called from main thread
     /// </summary>
     public static void Load() => _threadId = Thread.CurrentThread.ManagedThreadId;
 
     /// <summary>
-    /// This will not wait for the action to complete.
-    /// If a cancellation token is provided, the action will be skipped at execution time if cancelled.
+    ///     This will not wait for the action to complete.
+    ///     If a cancellation token is provided, the action will be skipped at execution time if cancelled.
     /// </summary>
     public static void EnqueueAction(Action action, CancellationToken? cancellationToken = null)
         => _queuedActions.Enqueue((action, cancellationToken));
@@ -70,8 +70,20 @@ public static class MainThreadQueue
     ///     If the current thread is the main thread, the function will run immediately as-is,
     ///     otherwise, the function will be dispatched and waited for.
     ///     Any exceptions raised on the main thread's context will be captured and bubbled back.
-    ///     If a cancellation token is provided and already cancelled, returns default without executing.
+    ///     If a cancellation token is provided and already canceled, returns default without executing.
     /// </summary>
+    /// <param name="func">The function to invoke on the main-thread</param>
+    /// <param name="cancellationToken">
+    ///     <para>
+    ///         A token that can be used to cancel the task.
+    ///     </para>
+    ///     <para>
+    ///         Note that once the task has started executing, cancellation will not interrupt it but will prevent further
+    ///         waiting for the result.
+    ///     </para>
+    /// </param>
+    /// <typeparam name="T">The type of result being returned</typeparam>
+    /// <returns>The result of the given function, as returned from the main-thread</returns>
     public static T BubblingInvokeOnMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null)
     {
         if (cancellationToken?.IsCancellationRequested == true) return default;
@@ -79,8 +91,45 @@ public static class MainThreadQueue
     }
 
     /// <summary>
-    /// This will wait for the returned result.
-    /// If a cancellation token is provided and already cancelled, returns default without executing.
+    ///     Dispatches a given function for execution on the MainThread.
+    ///     If the current thread is the main thread, the function will run immediately as-is,
+    ///     otherwise, the function will be dispatched and waited for.
+    ///     Any exceptions raised on the main thread's context will be captured and bubbled back.
+    ///     If a cancellation token is provided and already canceled, returns default without executing.
+    /// </summary>
+    /// <param name="action">The action to invoke on the main-thread</param>
+    /// <param name="cancellationToken">
+    ///     <para>
+    ///         A token that can be used to cancel the task.
+    ///     </para>
+    ///     <para>
+    ///         Note that once the task has started executing, cancellation will not interrupt it but will prevent further
+    ///         waiting for the result.
+    ///     </para>
+    /// </param>
+    public static void BubblingInvokeOnMainThread(Action action, CancellationToken? cancellationToken = null)
+    {
+        if (cancellationToken?.IsCancellationRequested == true)
+            return;
+
+        if (_isMainThread)
+        {
+            action();
+            return;
+        }
+
+        // A fake return to fit the signature
+        _ = BubblingDispatchToMainThread(() =>
+            {
+                action();
+                return true;
+            }, cancellationToken
+        );
+    }
+
+    /// <summary>
+    ///     This will wait for the returned result.
+    ///     If a cancellation token is provided and already cancelled, returns default without executing.
     /// </summary>
     public static T InvokeOnMainThread<T>(Func<T> func, CancellationToken? cancellationToken = null)
     {
@@ -119,8 +168,8 @@ public static class MainThreadQueue
     }
 
     /// <summary>
-    /// This will not wait for the returned result.
-    /// If a cancellation token is provided, the action is skipped at execution time if canceled.
+    ///     This will not wait for the returned result.
+    ///     If a cancellation token is provided, the action is skipped at execution time if canceled.
     /// </summary>
     public static void InvokeOnMainThread(Action action, CancellationToken? cancellationToken = null)
     {
@@ -135,15 +184,13 @@ public static class MainThreadQueue
     }
 
     /// <summary>
-    /// Must only be called on the main thread
+    ///     Must only be called on the main thread
     /// </summary>
     public static void ProcessQueue()
     {
         while (_queuedActions.TryDequeue(out (Action Action, CancellationToken? Token) item))
-        {
             if (item.Token?.IsCancellationRequested != true)
                 item.Action();
-        }
     }
 
     public static void Reset()

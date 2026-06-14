@@ -11,7 +11,6 @@ using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
-using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.GameObjects
@@ -40,10 +39,6 @@ namespace ClassicUO.Game.GameObjects
                     SkillProgressBar.QueManager.AddSkill(world, e.Index);
                 }
             };
-
-
-            if(ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.EnableSpellIndicators)
-                UIManager.Add(new CastTimerProgressBar(world));
 
             IsPlayer = true;
         }

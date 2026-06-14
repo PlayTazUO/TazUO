@@ -35,8 +35,6 @@ namespace ClassicUO.Game.UI.Gumps
         UOAMChat,
         Prompt,
         UOChat,
-        ServUOCommand,
-        PolCommand
     }
 
     public class SystemChatControl : Control
@@ -204,18 +202,6 @@ namespace ClassicUO.Game.UI.Gumps
 
                             AppendChatModePrefix(ResGumps.Chat, ProfileManager.CurrentProfile.ChatMessageHue, TextBoxControl.Text);
 
-                            break;
-
-                        case ChatMode.ServUOCommand:
-                            DisposeChatModePrefix();
-                            AppendChatModePrefix($"[{command}", 32, null);
-                            TextBoxControl.Hue = ProfileManager.CurrentProfile.SpeechHue;
-                            break;
-
-                        case ChatMode.PolCommand:
-                            DisposeChatModePrefix();
-                            AppendChatModePrefix($".{command}", 32, null);
-                            TextBoxControl.Hue = ProfileManager.CurrentProfile.SpeechHue;
                             break;
                     }
                 }
@@ -465,22 +451,6 @@ namespace ClassicUO.Game.UI.Gumps
                             Mode = ChatMode.Yell;
 
                             break;
-
-                        case '[' when text.Length > 1 && text.Contains(" "):
-                            int bracketSpaceIndex = text.IndexOf(' ');
-                            command = text.Substring(1, bracketSpaceIndex - 1);
-                            Mode = ChatMode.ServUOCommand;
-                            // Remove the command from the textbox, keep parameters (trim leading space)
-                            TextBoxControl.SetText(text.Substring(bracketSpaceIndex).TrimStart());
-                            break;
-
-                        case '.' when text.Length > 1 && text.Contains(" "):
-                            int dotSpaceIndex = text.IndexOf(' ');
-                            command = text.Substring(1, dotSpaceIndex - 1);
-                            Mode = ChatMode.PolCommand;
-                            // Remove the command from the textbox, keep parameters (trim leading space)
-                            TextBoxControl.SetText(text.Substring(dotSpaceIndex).TrimStart());
-                            break;
                     }
                 }
             }
@@ -622,49 +592,6 @@ namespace ClassicUO.Game.UI.Gumps
                     _gump.World.MessageManager.PromptData = default;
 
                     break;
-
-                case SDL.SDL_Keycode.SDLK_TAB when _mode == ChatMode.Default:
-                    List<string> autoComplete = TextHistoryManager.GetAutocompleteSuggestions(TextBoxControl.Text, 5);
-                    if (autoComplete != null && autoComplete.Count > 0)
-                    {
-                        autoComplete.Insert(0, TextBoxControl.Text);
-                        void selected(string s)
-                        {
-                            if (TextBoxControl == null)
-                                return;
-
-                            // Pre-process commands to avoid double-prefix issue
-                            if (s.Length > 1 && s.Contains(" "))
-                            {
-                                if (s[0] == '[')
-                                {
-                                    int spaceIndex = s.IndexOf(' ');
-                                    command = s.Substring(1, spaceIndex - 1);
-                                    Mode = ChatMode.ServUOCommand;
-                                    TextBoxControl.SetText(s.Substring(spaceIndex).TrimStart());
-                                    return;
-                                }
-                                else if (s[0] == '.')
-                                {
-                                    int spaceIndex = s.IndexOf(' ');
-                                    command = s.Substring(1, spaceIndex - 1);
-                                    Mode = ChatMode.PolCommand;
-                                    TextBoxControl.SetText(s.Substring(spaceIndex).TrimStart());
-                                    return;
-                                }
-                            }
-
-                            TextBoxControl.SetText(s);
-                        }
-
-                        var listGump = new SelectableItemListGump(autoComplete, selected, selected);
-                        Microsoft.Xna.Framework.Graphics.Viewport viewport = Client.Game.GetScene<GameScene>().Camera.GetViewport();
-                        listGump.X = viewport.X + 10;
-                        listGump.Y = viewport.Height - listGump.Height + viewport.Y - 20;
-                        UIManager.Add(listGump);
-                        listGump.SetKeyboardFocus();
-                    }
-                    break;
             }
         }
 
@@ -687,12 +614,6 @@ namespace ClassicUO.Game.UI.Gumps
 
             string fullText = text;
             ChatMode modMode = sentMode;
-            if (sentMode == ChatMode.ServUOCommand || sentMode == ChatMode.PolCommand)
-            {
-                string prefix = sentMode == ChatMode.ServUOCommand ? "[" : ".";
-                fullText = $"{prefix}{command} {text}";
-                modMode = ChatMode.Default;
-            }
             if(_messageHistory.Count < 1 || (_messageHistory[_messageHistory.Count - 1].Item1 != sentMode || _messageHistory[_messageHistory.Count - 1].Item2 != fullText))
             {
                 //Add to history if last message was not the same
@@ -739,8 +660,6 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     case ChatMode.Default:
                         GameActions.Say(text, ProfileManager.CurrentProfile.SpeechHue);
-
-                        TextHistoryManager.AddToHistoryIfCommand(text);
 
                         break;
 
@@ -974,22 +893,6 @@ namespace ClassicUO.Game.UI.Gumps
 
                     case ChatMode.UOChat:
                         AsyncNetClient.Socket.Send_ChatMessageCommand(text);
-
-                        break;
-
-                    case ChatMode.ServUOCommand:
-                        if (!text.StartsWith(" "))
-                            text = " " + text;
-                        GameActions.Say($"[{command}{text}", ProfileManager.CurrentProfile.SpeechHue);
-                        TextHistoryManager.AddToHistoryIfCommand($"[{command} {text}");
-
-                        break;
-
-                    case ChatMode.PolCommand:
-                        if (!text.StartsWith(" "))
-                            text = " " + text;
-                        GameActions.Say($".{command}{text}", ProfileManager.CurrentProfile.SpeechHue);
-                        TextHistoryManager.AddToHistoryIfCommand($".{command} {text}");
 
                         break;
                 }

@@ -85,19 +85,23 @@ public class ApiGameObject
     public int Distance => MainThreadQueue.InvokeOnMainThread(() => _gameObject?.Distance ?? 0);
 
     /// <summary>
-    /// Set an objects outline color using html hex colors.
+    /// Set an object's outline color using HTML hex colors.
     /// Example:
     /// ```py
     /// API.Player.SetOutlineColor("#105510")
+    /// API.Player.SetOutlineColor(None)
     /// ```
     /// </summary>
-    /// <param name="htmlColor"></param>
-    public void SetOutlineColor(string htmlColor)
+    /// <param name="htmlColor">The color to set. Pass <c>null</c> to remove the outline.</param>
+    public void SetOutlineColor(string htmlColor = null)
     {
         if (_gameObject == null || _gameObject.IsDestroyed)
             return;
 
-        MainThreadQueue.InvokeOnMainThread(() => { _gameObject.OutlineColor = htmlColor.FromHtmlHex(); });
+        MainThreadQueue.BubblingInvokeOnMainThread(() =>
+        {
+            _gameObject.OutlineColor = string.IsNullOrWhiteSpace(htmlColor) ? null : htmlColor.FromHtmlHex();
+        });
     }
 
     /// <summary>

@@ -13,6 +13,7 @@ public static class AgentTab
         tabs.AddTab("Auto Sell", AutoSellAgentTabContent.Build);
         tabs.AddTab("Bandage", BandageAgentTabContent.Build);
         tabs.AddTab("Organizer", OrganizerAgentTabContent.Build);
+        tabs.AddTab("Stat Lock", AutoStatLockAgentTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

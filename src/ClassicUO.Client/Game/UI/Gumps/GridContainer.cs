@@ -36,6 +36,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -309,9 +310,9 @@ namespace ClassicUO.Game.UI.Gumps
                 CanMove = true
             };
             _background.MouseDoubleClick += OnMinimizeToggleDoubleClick;
+            _background.MouseUp += OnBackgroundMouseUp;
 
-            _backgroundTexture = new GumpPicTiled(0);
-            _backgroundTexture.CanMove = true;
+            _backgroundTexture = new GumpPicTiled(0) { CanMove = true };
             _backgroundTexture.MouseDoubleClick += OnMinimizeToggleDoubleClick;
             #endregion
 
@@ -324,6 +325,7 @@ namespace ClassicUO.Game.UI.Gumps
                 CanMove = true
             };
             _containerNameLabel.MouseDoubleClick += OnMinimizeToggleDoubleClick;
+            _containerNameLabel.MouseUp += OnBackgroundMouseUp;
 
             _searchBox = new StbTextBox(0xFF, 20, 0, true, FontStyle.None, 0x0481)
             {
@@ -531,7 +533,6 @@ namespace ClassicUO.Game.UI.Gumps
                 _heightBeforeMinimize = Height;
 
                 SwitchPositionState(false);
-
                 SetControlsVisibility(false);
 
                 // Resize to minimal height (just the label area + border)
@@ -638,15 +639,15 @@ namespace ClassicUO.Game.UI.Gumps
 
             control.Add(new ContextMenuItemEntry("Rename container", () =>
             {
-                var input = new InputRequest(World, "Type in a custom name for this container.", "Save", "Reset", (r, s) =>
+                new PromptPopupWindow("Rename Container", "Type in a custom name for this container.", s =>
                 {
-                    _gridContainerEntry?.CustomName = r == InputRequest.Result.BUTTON1 ? s : null;
-
+                    _gridContainerEntry?.CustomName = s;
+                    UpdateContainerNameLabel();
+                }, "Save", "Reset", () =>
+                {
+                    _gridContainerEntry?.CustomName = null;
                     UpdateContainerNameLabel();
                 }, GetContainerName(true));
-                input.CenterXInViewPort();
-                input.CenterYInViewPort();
-                UIManager.Add(input);
             }));
 
             return control;
@@ -807,8 +808,6 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            UpdateContainerNameLabel();
-
             if (_autoSortContainer)
                 overrideSort = true;
 
@@ -817,6 +816,9 @@ namespace ClassicUO.Game.UI.Gumps
                 : GridSlotManager.GetItemsInContainer(World, Container, _sortMode, overrideSort);
 
             SlotManager.RebuildContainer(sortedContents, _searchBox.Text, overrideSort);
+
+            // Update name AFTER slot manager rebuild, or we get stale data
+            UpdateContainerNameLabel();
             InvalidateContents = false;
         }
 
@@ -824,6 +826,34 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (InvalidateContents && !IsDisposed)
                 UpdateItems();
+        }
+
+        /// <summary>
+        /// Occurs when a mouse up even is issued on the background pane.
+        /// The background panel is the one holding the container's name and is
+        /// the only visible part when minimized.
+        /// </summary>
+        /// <param name="sender">The event's sender. May be the background, title label, etc.</param>
+        /// <param name="e">The mouse event's arguments</param>
+        private void OnBackgroundMouseUp(object sender, MouseEventArgs e)
+        {
+            // Check whether we're trying to drop an item on the background
+            if (e.Button != MouseButtonType.Left || !Client.Game.UO.GameCursor.ItemHold.Enabled)
+                return;
+
+            // Verify the sender is actually what we expect it to be
+            if (sender is not Control { MouseIsOver: true })
+                return;
+
+            // Issue a direct drop item command and let the underlying `UpdateContainerItem`
+            // mechanisms take care of actual placement
+            GameActions.DropItem(
+                Client.Game.UO.GameCursor.ItemHold.Serial,
+                0xFFFF,
+                0xFFFF,
+                0,
+                LocalSerial
+            );
         }
 
         protected override void OnMouseExit(int x, int y)
@@ -897,6 +927,19 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (SlotManager != null && !_skipSave && SlotManager.ItemPositions.Count > 0 && !_isCorpse)
                 _gridContainerEntry.UpdateSaveDataEntry(this);
+
+            // Dispose of the event handlers
+            if (_background != null)
+            {
+                _background.MouseDoubleClick -= OnMinimizeToggleDoubleClick;
+                _background.MouseUp -= OnBackgroundMouseUp;
+            }
+
+            if (_backgroundTexture != null)
+                _backgroundTexture.MouseDoubleClick -= OnMinimizeToggleDoubleClick;
+
+            if (_containerNameLabel != null)
+                _containerNameLabel.MouseUp -= OnBackgroundMouseUp;
 
             base.Dispose();
         }
@@ -1136,7 +1179,12 @@ namespace ClassicUO.Game.UI.Gumps
         {
             GridContainer gridContainer = UIManager.GetGump<GridContainer>(serial);
             if (gridContainer != null)
+            {
+                if (gridContainer.IsMinimized)
+                    gridContainer.IsMinimized = false;
+                gridContainer.BringOnTop();
                 gridContainer.RequestUpdateContents();
+            }
             else
                 UIManager.Add(new GridContainer(World.Instance, serial, graphic));
         }

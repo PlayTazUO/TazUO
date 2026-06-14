@@ -3,7 +3,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using ClassicUO.Game.Data;
-using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;

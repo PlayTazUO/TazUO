@@ -86,75 +86,75 @@ namespace ClassicUO.Game.UI.Gumps
             ItemSlot _;
 
             _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Earrings }) { X = 100 - 35 - CELL_SPACING, Y = TOP_SPACING + 15 };
-            itemLayerSlots.Add(_.layers, _); //Earrings
+            itemLayerSlots.Add(_.Layers, _); //Earrings
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Helmet }) { X = 100, Y = TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Head
+            itemLayerSlots.Add(_.Layers, _); //Head
 
             _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Necklace }) { X = 150 + CELL_SPACING, Y = TOP_SPACING + 15 };
-            itemLayerSlots.Add(_.layers, _); //Amulet
+            itemLayerSlots.Add(_.Layers, _); //Amulet
 
 
             _ = new ItemSlot(world, 50, 75, new Layer[] { Layer.OneHanded }) { X = 50 - CELL_SPACING, Y = 50 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //L Wep
+            itemLayerSlots.Add(_.Layers, _); //L Wep
 
             _ = new ItemSlot(world, 50, 75, new Layer[] { Layer.Torso }) { X = 100, Y = 50 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Chest
+            itemLayerSlots.Add(_.Layers, _); //Chest
 
             _ = new ItemSlot(world, 50, 75, new Layer[] { Layer.TwoHanded }) { X = 150 + CELL_SPACING, Y = 50 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //R Wep
+            itemLayerSlots.Add(_.Layers, _); //R Wep
 
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Arms }) { X = 50 - CELL_SPACING, Y = 125 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Arms
+            itemLayerSlots.Add(_.Layers, _); //Arms
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Robe }) { X = 100, Y = 125 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Robe
+            itemLayerSlots.Add(_.Layers, _); //Robe
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Cloak }) { X = 150 + CELL_SPACING, Y = 125 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Cloak
+            itemLayerSlots.Add(_.Layers, _); //Cloak
 
 
             _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Ring }) { X = 50 - CELL_SPACING, Y = 175 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Ring
+            itemLayerSlots.Add(_.Layers, _); //Ring
 
             _ = new ItemSlot(world, 80, 35, new Layer[] { Layer.Waist }) { X = 85, Y = 175 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Belt
+            itemLayerSlots.Add(_.Layers, _); //Belt
 
             _ = new ItemSlot(world, 35, 35, new Layer[] { Layer.Bracelet }) { X = 165 + CELL_SPACING, Y = 175 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Bracelet
+            itemLayerSlots.Add(_.Layers, _); //Bracelet
 
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Gloves }) { X = 50 - CELL_SPACING, Y = 210 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Gloves
+            itemLayerSlots.Add(_.Layers, _); //Gloves
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Pants }) { X = 100, Y = 210 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Legs
+            itemLayerSlots.Add(_.Layers, _); //Legs
 
             _ = new ItemSlot(world, 50, 50, new Layer[] { Layer.Shoes }) { X = 150 + CELL_SPACING, Y = 210 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Boots
+            itemLayerSlots.Add(_.Layers, _); //Boots
 
 
 
             _ = new ItemSlot(world, 33, 34, new Layer[] { Layer.Talisman }) { X = 3, Y = 225 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Talisman
+            itemLayerSlots.Add(_.Layers, _); //Talisman
 
             _ = new ItemSlot(world, 33, 34, new Layer[] { Layer.Backpack }) { X = Width - 36, Y = 225 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _); //Backpack
+            itemLayerSlots.Add(_.Layers, _); //Backpack
 
 
             _ = new ItemSlot(world, 24, 24, new Layer[] { Layer.Tunic }) { X = 8, Y = 163 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _);
+            itemLayerSlots.Add(_.Layers, _);
 
             _ = new ItemSlot(world, 24, 24, new Layer[] { Layer.Shirt }) { X = 8, Y = 193 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _);
+            itemLayerSlots.Add(_.Layers, _);
 
 
             _ = new ItemSlot(world, 24, 24, new Layer[] { Layer.Skirt }) { X = Width - 32, Y = 163 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _);
+            itemLayerSlots.Add(_.Layers, _);
 
             _ = new ItemSlot(world, 24, 24, new Layer[] { Layer.Legs }) { X = Width - 32, Y = 193 + CELL_SPACING + TOP_SPACING };
-            itemLayerSlots.Add(_.layers, _);
+            itemLayerSlots.Add(_.Layers, _);
             #endregion
 
             BuildLayerSlots();
@@ -340,100 +340,121 @@ namespace ClassicUO.Game.UI.Gumps
         private class ItemSlot : Control
         {
             public Item Item;
-            public readonly Layer[] layers;
+            public readonly Layer[] Layers;
 
-            private Area itemArea;
-            private AlphaBlendControl durablityBar;
-            private World world;
-            private readonly List<SimpleTimedTextGump> timedTexts = new();
+            private readonly Area _itemArea;
+            private readonly AlphaBlendControl _durabilityBar;
+            private readonly World _world;
+            private readonly List<SimpleTimedTextGump> _timedTexts = [];
 
             public ItemSlot(World world, int width, int height, Layer[] layers)
             {
-                #region ASSIGN FIELDS
-this.world = world;
+                _world = world;
                 AcceptMouseInput = true;
                 CanMove = true;
-                CanCloseWithRightClick = false;
-                #endregion
-                #region SET VARS
+                // Right clicks are propagated back to the paperdoll to allow right click close anywhere
+                CanCloseWithRightClick = true;
                 Width = width;
                 Height = height;
-                #endregion
 
-                Add(itemArea = new Area(false) { Width = Width, Height = Height, AcceptMouseInput = true, CanMove = true });
-                itemArea.SetTooltip(layers[0].ToString());
+                Add(_itemArea = new Area(false) { Width = Width, Height = Height, AcceptMouseInput = true, CanMove = true });
+                _itemArea.SetTooltip(layers[0].ToString());
 
-                Add(durablityBar = new AlphaBlendControl(0.75f) { Width = 7, Height = Height, Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue, IsVisible = false });
+                Add(_durabilityBar = new AlphaBlendControl(0.75f) { Width = 7, Height = Height, Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue, IsVisible = false });
 
-                this.layers = layers;
+                this.Layers = layers;
             }
 
             public void AddText(string text, ushort hue)
             {
-                var timedText = new SimpleTimedTextGump(world, text, (uint)hue, TimeSpan.FromSeconds(2), 200)
+                var timedText = new SimpleTimedTextGump(_world, text, (uint)hue, TimeSpan.FromSeconds(2), 200)
                 {
                     X = ScreenCoordinateX,
                     Y = ScreenCoordinateY
                 };
 
                 // Remove disposed timed texts
-                timedTexts.RemoveAll(tt => tt == null || tt.IsDisposed);
+                _timedTexts.RemoveAll(tt => tt == null || tt.IsDisposed);
 
                 // Adjust the Y position of existing timed texts
-                foreach (SimpleTimedTextGump tt in timedTexts)
+                foreach (SimpleTimedTextGump tt in _timedTexts)
                     tt.Y -= timedText.Height + 5;
 
-                timedTexts.Add(timedText);
+                _timedTexts.Add(timedText);
                 UIManager.Add(timedText);
             }
 
-            public void UpdateOptions() => durablityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
+            public void UpdateOptions() => _durabilityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
 
             public void AddItem(World world, Gump gump, Item item)
             {
                 Item = item;
-                itemArea.Add(new ItemGumpFixed(world, gump, item, Width, Height) { HighlightOnMouseOver = false });
+                _itemArea.Add(new ItemGumpFixed(world, gump, item, Width, Height) { HighlightOnMouseOver = false });
                 UpdateDurability(item);
             }
 
             private void UpdateDurability(Item item)
             {
-                if (IsDisposed || durablityBar.IsDisposed || item == null)
+                if (IsDisposed || _durabilityBar.IsDisposed || item == null)
                 {
-                    durablityBar.IsVisible = false;
+                    _durabilityBar.IsVisible = false;
                     return;
                 }
 
-                durablityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
+                _durabilityBar.Hue = ProfileManager.CurrentProfile.ModernPaperDollDurabilityHue;
 
-                if (world.DurabilityManager.TryGetDurability(item.Serial, out DurabiltyProp durabilty))
+                if (_world.DurabilityManager.TryGetDurability(item.Serial, out DurabiltyProp durabilty))
                 {
                     if (durabilty.Percentage > (float)ProfileManager.CurrentProfile.ModernPaperDoll_DurabilityPercent / (float)100)
                     {
-                        durablityBar.IsVisible = false;
+                        _durabilityBar.IsVisible = false;
                         return;
                     }
-                    durablityBar.Height = (int)(Height * durabilty.Percentage);
-                    durablityBar.Y = Height - durablityBar.Height;
-                    durablityBar.IsVisible = true;
+                    _durabilityBar.Height = (int)(Height * durabilty.Percentage);
+                    _durabilityBar.Y = Height - _durabilityBar.Height;
+                    _durabilityBar.IsVisible = true;
                 }
                 else
                 {
-                    durablityBar.IsVisible = false;
+                    _durabilityBar.IsVisible = false;
                 }
             }
 
             public void ClearItems()
             {
-                itemArea.Children.Clear();
+                _itemArea.Children.Clear();
                 UpdateDurability(null);
                 Item = null;
             }
 
             public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
+                ConditionalRequestContextMenuForSlot(x, y, button);
                 base.OnMouseUp(x, y, button);
                 Parent?.InvokeMouseUp(new Point(x, y), button);
+            }
+
+            /// <summary>
+            ///     Requests a context menu (popup) for the item in the clicked slot
+            /// </summary>
+            /// <param name="x">The click's X coordinate, in relation to the slot itself</param>
+            /// <param name="y">The click's Y coordinate, in relation to the slot itself</param>
+            /// <param name="button">The clicked mouse button. Context menus are requested only for left clicks</param>
+            private void ConditionalRequestContextMenuForSlot(int x, int y, MouseButtonType button)
+            {
+                if (!_world.InGame || Item == null || button != MouseButtonType.Left)
+                    return;
+
+                if (_world.DelayedObjectClickManager.IsEnabled)
+                    return;
+
+                // Dispatch a request to get the context menu for the item
+                _world.DelayedObjectClickManager.Set(
+                    Item.Serial,
+                    x,
+                    y,
+                    Time.Ticks + Mouse.MOUSE_DELAY_DOUBLE_CLICK
+                );
             }
         }
 
@@ -453,9 +474,11 @@ this.world = world;
             {
                 if ((Layer)item.ItemData.Layer == Layer.Backpack && item.Container == world.Player.Serial)
                     CanPickUp = false;
+
                 Width = w;
                 Height = h;
                 WantUpdateSize = false;
+                CanCloseWithRightClick = true;
 
                 this.item = item;
             }

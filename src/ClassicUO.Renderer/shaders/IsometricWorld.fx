@@ -53,7 +53,8 @@ float3 get_rgb(float gray, float hue)
 
     float xPos = hueStart + gray / HUE_COLUMNS;
     xPos = clamp(xPos, hueStart + halfPixelX, hueStart + hueColumnWidth - halfPixelX);
-    float yPos = (hue % HUES_PER_TEXTURE) / (HUES_PER_TEXTURE - 1);
+    //float yPos = (hue % HUES_PER_TEXTURE) / (HUES_PER_TEXTURE - 1);
+	float yPos = ((float)(hue % HUES_PER_TEXTURE)) / (float)(HUES_PER_TEXTURE - 1);
     return tex2D(HueSampler0, float2(xPos, yPos)).rgb;
 }
 

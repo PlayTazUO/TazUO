@@ -73,6 +73,49 @@ namespace ClassicUO.Game.Managers
 
         public void Save() => JsonHelper.SaveAndBackup(OrganizerConfigs, Path.Combine(GetDataPath(), "OrganizerConfig.json"), OrganizerAgentContext.Default.ListOrganizerConfig);
 
+        public OrganizerConfig FindConfig(string nameOrIndex)
+        {
+            if (string.IsNullOrWhiteSpace(nameOrIndex))
+                return null;
+
+            nameOrIndex = nameOrIndex.Trim();
+
+            if (int.TryParse(nameOrIndex, out int index))
+            {
+                if (index >= 0 && index < OrganizerConfigs.Count)
+                    return OrganizerConfigs[index];
+
+                return null;
+            }
+
+            return OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(nameOrIndex, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public void SetSourceContainerViaTarget(string nameOrIndex)
+        {
+            OrganizerConfig config = FindConfig(nameOrIndex);
+            if (config == null)
+            {
+                GameActions.Print(World.Instance, $"Organizer '{nameOrIndex}' not found.", Constants.HUE_ERROR);
+                return;
+            }
+
+            GameActions.Print(World.Instance, $"Target the source container for organizer '{config.Name}'.");
+            World.Instance.TargetManager.SetTargeting((o) =>
+            {
+                if (o is Item item && item.ItemData.IsContainer)
+                {
+                    config.SourceContSerial = item.Serial;
+                    Save();
+                    GameActions.Print(World.Instance, $"Source container for organizer '{config.Name}' set.", Constants.HUE_SUCCESS);
+                }
+                else
+                {
+                    GameActions.Print(World.Instance, "That doesn't appear to be a valid container.", Constants.HUE_ERROR);
+                }
+            });
+        }
+
         public static void Unload()
         {
             Instance?.Save();

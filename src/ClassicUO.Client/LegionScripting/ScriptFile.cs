@@ -122,7 +122,7 @@ public partial class ScriptFile : IDisposable
         if (PythonEngine != null && !LegionScripting.LScriptSettings.DisableModuleCache)
             return;
 
-        PythonEngine = Python.CreateEngine();
+        PythonEngine = Python.CreateEngine(new Dictionary<string, object>() { { "RecursionLimit", 100 } });
 
         string dir = System.IO.Path.GetDirectoryName(FullPath);
         ICollection<string> paths = PythonEngine.GetSearchPaths();

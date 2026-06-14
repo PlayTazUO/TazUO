@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
@@ -63,9 +64,9 @@ internal static class GameActions
     {
         ScriptManagerWindow window = ScriptManagerWindow.Instance;
 
-        if (window != null && window.IsVisible)
+        if (window != null && window.IsVisible && !window.IsDisposed)
         {
-            window.IsVisible = false;
+            window.Dispose();
             return true;
         }
 
@@ -1277,10 +1278,10 @@ internal static class GameActions
 
     // ===================================================
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
+    public static void UsePrimaryAbility() => UsePrimaryAbility(Client.Game.UO.World);
 
     [Obsolete("temporary workaround to not break assistants")]
-    internal static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
+    public static void UseSecondaryAbility() => UseSecondaryAbility(Client.Game.UO.World);
     // ===================================================
 
     internal static void QuestArrow(bool rightClick) => Socket.Send_ClickQuestArrow(rightClick);

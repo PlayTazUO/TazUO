@@ -1,4 +1,5 @@
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
@@ -12,14 +13,24 @@ namespace ClassicUO.Game.UI.MyraWindows;
 
 public class AssistantWindow : MyraControl
 {
-    public static void Show() => UIManager.Add(new AssistantWindow());
+    public static void Show()
+    {
+        foreach (IGui g in UIManager.Gumps)
+        {
+            if (g is AssistantWindow w)
+            {
+                w.CenterInViewPort();
+                w.BringOnTop();
+                return;
+            }
+        }
+        UIManager.Add(new AssistantWindow());
+    }
 
     private SkillsTabContent _skillsTabContent;
 
     public AssistantWindow() : base("Legion Assistant")
     {
-        UIManager.ForEach<AssistantWindow>(w => { if(w != this) w.Dispose(); });
-
         CanBeSaved = true;
         Build();
         CenterInViewPort();
@@ -49,7 +60,7 @@ public class AssistantWindow : MyraControl
         tabs.AddTab("Agents", AgentTab.Build);
         tabs.AddTab("Filters", FiltersTab.Build);
         tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
-        tabs.AddTab("Macros", MacrosTabContent.Build);
+        tabs.AddTab("Macros", () => MacrosTabContent.Build(this));
         tabs.AddTab("Skills", () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);

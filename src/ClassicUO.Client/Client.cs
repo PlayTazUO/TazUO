@@ -13,6 +13,7 @@ using SDL3;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace ClassicUO
 {
@@ -103,6 +104,10 @@ namespace ClassicUO
 
         private void LoadUOFiles()
         {
+            Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
+
+            TazLang.Load(Settings.GlobalSettings.UILanguage);
+
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 
@@ -179,6 +184,9 @@ namespace ClassicUO
             {
                 Protocol |= ClientFlags.CF_SA;
             }
+
+            skipServerSelectTask.Wait();
+            Settings.GlobalSettings.SkipServerSelect = skipServerSelectTask.Result || CUOEnviroment.SkipServerSelect;
 
             Log.Trace($"Client path: '{clientPath}'");
             Log.Trace($"Client version: {clientVersion}");

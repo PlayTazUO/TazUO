@@ -118,6 +118,7 @@ public class MyraControl : IGui
     #region Fields
     protected Rectangle _bounds = new();
     protected bool _disposeRequested = false;
+    protected readonly Queue<Action> _deferredActions = new();
     #endregion
 
     #region Properties
@@ -197,6 +198,20 @@ public class MyraControl : IGui
         return this;
     }
 
+    public MyraControl CenterInScreen()
+    {
+        Rectangle bounds = Client.Game.Window.ClientBounds;
+        X = (int)(((bounds.Width / Client.Game.RenderScale) - (Width * Client.Game.RenderScale)) / 2);
+        Y = (int)(((bounds.Height / Client.Game.RenderScale) - (Height * Client.Game.RenderScale)) / 2);
+
+        if (X < 0)
+            X = 0;
+
+        SetPosition(X, Y);
+
+        return this;
+    }
+
     public void SetPosition(int x, int y)
     {
         _rootWindow.Left = x;
@@ -210,7 +225,15 @@ public class MyraControl : IGui
             return;
 
         if (_disposeRequested)
+        {
             ExecuteDispose();
+            return;
+        }
+
+        while (_deferredActions.Count > 0)
+        {
+            _deferredActions.Dequeue()?.Invoke();
+        }
     }
 
     public virtual void PreDraw()
@@ -521,4 +544,11 @@ public class MyraControl : IGui
     /// <returns>A colored status tag followed by the label text.</returns>
     public string ContextMenuLabelToggle(bool status, string label) =>
         $"{(status ? "[/c[green]Enabled/cd]" : "[/c[red]Disabled/cd]")} {label}";
+
+    /// <summary>
+    /// Schedules an action to run on the next Update() call, after the current
+    /// UI event (e.g. a ComboBox SelectedIndexChanged) has fully finished —
+    /// safe for rebuilding widget trees without corrupting open popups.
+    /// </summary>
+    public void Defer(Action action) => _deferredActions.Enqueue(action);
 }

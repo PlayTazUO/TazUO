@@ -697,12 +697,10 @@ namespace ClassicUO.Game.UI.Controls
         MouseUp.Raise(new MouseEventArgs(x, y, button), this);
     }
 
-    public void InvokeMouseCloseGumpWithRClick()
+    public virtual void InvokeMouseCloseGumpWithRClick()
     {
         if (CanCloseWithRightClick)
-        {
             CloseWithRightClick();
-        }
     }
 
     public void InvokeMouseOver(Point position)

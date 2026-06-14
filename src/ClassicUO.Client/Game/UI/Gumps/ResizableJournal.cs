@@ -3,6 +3,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using ClassicUO.Utility.Collections;
@@ -117,15 +118,14 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    UIManager.Add(new InputRequest(World, "Enter a tab name", "Save", "Cancel", (r, entry) =>
+                    new PromptPopupWindow("New Tab", "Enter a tab name", entry =>
                     {
-                        if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(entry))
+                        if (!string.IsNullOrEmpty(entry))
                         {
                             ProfileManager.CurrentProfile.JournalTabs.Add(entry, new MessageType[] { MessageType.Regular });
                             ResizableJournal.ReloadTabs = true;
                         }
-                    })
-                    { X = X, Y = Y });
+                    }, "Save", "Cancel");
                 }
             };
 

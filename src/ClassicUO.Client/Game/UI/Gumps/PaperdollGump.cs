@@ -10,9 +10,9 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Xml;
 using ClassicUO.Game.Managers.Structs;
 
@@ -32,8 +32,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         private GumpPic _picBase;
         private GumpPic _profilePic;
-        private readonly EquipmentSlot[] _slots = new EquipmentSlot[9];
-        private readonly EquipmentSlot[] _slots_right = new EquipmentSlot[8];
+
+        private readonly List<EquipmentSlot> _slotsLeft = new(9);
+        private readonly List<EquipmentSlot> _slotsRight = new(9);
         private Label _titleLabel;
         private GumpPic _virtueMenuPic;
         private Button _warModeBtn;
@@ -126,6 +127,8 @@ namespace ClassicUO.Game.UI.Gumps
         {
             _picBase?.Dispose();
             _hitBox?.Dispose();
+            _slotsLeft?.Clear();
+            _slotsRight?.Clear();
 
             bool showPaperdollBooks =
                 LocalSerial == World.Player && World.ClientFeatures.PaperdollBooks;
@@ -299,63 +302,34 @@ namespace ClassicUO.Game.UI.Gumps
                 });
 
             // Equipment slots for hat/earrings/neck/ring/bracelet
-            Add(_slots[0] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots, Layer.Helmet, this));
-
-            Add(_slots[1] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots, Layer.Earrings, this));
-
-            Add(_slots[2] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 2, Layer.Necklace, this));
-
-            Add(_slots[3] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 3, Layer.Ring, this));
-
-            Add(_slots[4] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 4, Layer.Bracelet, this));
-
-            Add(_slots[5] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 5, Layer.Tunic, this));
-
-            Add(_slots[6] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 6, Layer.OneHanded, this));
-
-            Add(_slots[7] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 7, Layer.TwoHanded, this));
-
-            Add(_slots[8] = new EquipmentSlot(0, Settings.Position_X_LeftSlots, Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * 8, Layer.Talisman, this));
+            AddEquipSlot(EquipSlotSide.Left, Layer.Helmet);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Earrings);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Necklace);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Ring);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Bracelet);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Tunic);
+            AddEquipSlot(EquipSlotSide.Left, Layer.OneHanded);
+            AddEquipSlot(EquipSlotSide.Left, Layer.TwoHanded);
+            AddEquipSlot(EquipSlotSide.Left, Layer.Talisman);
 
             // Right side equip slots
-
-            Add(_slots_right[0] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots, Layer.Robe, this));
-
-            Add(_slots_right[1] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots, Layer.Gloves, this));
-
-            Add(_slots_right[2] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 2, Layer.Torso, this));
-
-            Add(_slots_right[3] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 3, Layer.Arms, this));
-
-            Add(_slots_right[4] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 4, Layer.Pants, this));
-
-            Add(_slots_right[5] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 5, Layer.Cloak, this));
-
-            Add(_slots_right[6] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 6, Layer.Waist, this));
-
-            Add(_slots_right[7] = new EquipmentSlot(0, Settings.Position_X_RightSlots, Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * 7, Layer.Shoes, this));
+            AddEquipSlot(EquipSlotSide.Right, Layer.Robe);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Gloves);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Torso);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Shirt);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Arms);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Pants);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Skirt);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Cloak);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Waist);
+            AddEquipSlot(EquipSlotSide.Right, Layer.Shoes);
 
             // Paperdoll control!
             _paperDollInteractable = new PaperDollInteractable(Settings.Position_X_Avatar, Settings.Position_Y_Avatar, LocalSerial, this, GumpScale);
             Add(_paperDollInteractable);
 
             if (showPaperdollBooks)
-            {
-                Add(_combatBook = new GumpPic(Settings.Position_X_CombatBook, Settings.Position_Y_CombatBook, Settings.Graphic_Button_Combat, 0));
-                _combatBook.MouseDoubleClick += (sender, e) => GameActions.OpenAbilitiesBook(World);
-
-                if (showRacialAbilitiesBook)
-                {
-                    Add(_racialAbilitiesBook = new GumpPic(Settings.Position_X_RacialAbilities, Settings.Position_Y_RacialAbilities, Settings.Graphic_Button_RacialAbilties, 0));
-                    _racialAbilitiesBook.MouseDoubleClick += (sender, e) =>
-                    {
-                        if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
-                        {
-                            UIManager.Add(new RacialAbilitiesBookGump(World, 100, 100));
-                        }
-                    };
-                }
-            }
+                AddPaperdollBooks(showRacialAbilitiesBook);
 
             Mobile mob = World.Mobiles.Get(LocalSerial);
             // Name and title
@@ -366,6 +340,68 @@ namespace ClassicUO.Game.UI.Gumps
             RequestUpdateContents();
 
             WantUpdateSize = true;
+        }
+
+        /// <summary>
+        /// Adds books (ability/racial etc.) to the paperdoll gumps
+        /// </summary>
+        /// <param name="showRacialAbilities">Indicates whether to show the racial abilities book</param>
+        private void AddPaperdollBooks(bool showRacialAbilities)
+        {
+            Add(_combatBook = new GumpPic(
+                Settings.Position_X_CombatBook,
+                Settings.Position_Y_CombatBook,
+                Settings.Graphic_Button_Combat,
+                0
+            ));
+            _combatBook.MouseDoubleClick += (_, _) => GameActions.OpenAbilitiesBook(World);
+
+            if (!showRacialAbilities)
+                return;
+
+            Add(_racialAbilitiesBook = new GumpPic(
+                Settings.Position_X_RacialAbilities,
+                Settings.Position_Y_RacialAbilities,
+                Settings.Graphic_Button_RacialAbilties,
+                0
+            ));
+
+            _racialAbilitiesBook.MouseDoubleClick += (_, _) =>
+            {
+                if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
+                    UIManager.Add(new RacialAbilitiesBookGump(World, 100, 100));
+            };
+        }
+
+        /// <summary>
+        ///     Adds an equipment slot to the paperdoll gump
+        /// </summary>
+        /// <remarks>
+        ///     Equipment slots are added to the left or right of the character in the paperdoll (the 'sidebars')
+        /// </remarks>
+        /// <param name="side">The side to add the slot to</param>
+        /// <param name="layer">The equipment slot's layer</param>
+        private void AddEquipSlot(EquipSlotSide side, Layer layer)
+        {
+            List<EquipmentSlot> slotArray;
+            int x, y;
+            if (side == EquipSlotSide.Left)
+            {
+                slotArray = _slotsLeft;
+                x = Settings.Position_X_LeftSlots;
+                y = Settings.Position_Y_LeftSlots + Settings.Size_Height_LeftSlots * slotArray.Count;
+            }
+            else
+            {
+                slotArray = _slotsRight;
+                x = Settings.Position_X_RightSlots;
+                // Right side is offset 1 slot 'up' as there's a bit more free space there
+                y = Settings.Position_Y_RightSlots + Settings.Size_Height_RightSlots * (slotArray.Count - 1);
+            }
+
+            var newSlot = new EquipmentSlot(0, x, y, layer, this);
+            slotArray.Add(newSlot);
+            Add(newSlot);
         }
 
         private void _picBase_MouseDoubleClick(object sender, MouseDoubleClickEventArgs e)
@@ -574,6 +610,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         Point off = Mouse.LDragOffset;
 
+                        // Dispatch a request to get the context menu for the item
                         World.DelayedObjectClickManager.Set(
                             item.Serial,
                             Mouse.Position.X - off.X - ScreenCoordinateX,
@@ -634,18 +671,18 @@ namespace ClassicUO.Game.UI.Gumps
             if (mobile.Title != _titleLabel.Text)
                 UpdateTitle(mobile.Title);
 
-            for (int i = 0; i < _slots.Length; i++)
+            for (int i = 0; i < _slotsLeft.Count; i++)
             {
-                int idx = (int)_slots[i].Layer;
+                int idx = (int)_slotsLeft[i].Layer;
 
-                _slots[i].LocalSerial = mobile.FindItemByLayer((Layer)idx)?.Serial ?? 0;
+                _slotsLeft[i].LocalSerial = mobile.FindItemByLayer((Layer)idx)?.Serial ?? 0;
             }
 
-            for (int i = 0; i < _slots_right.Length; i++)
+            for (int i = 0; i < _slotsRight.Count; i++)
             {
-                int idx = (int)_slots_right[i].Layer;
+                int idx = (int)_slotsRight[i].Layer;
 
-                _slots_right[i].LocalSerial = mobile.FindItemByLayer((Layer)idx)?.Serial ?? 0;
+                _slotsRight[i].LocalSerial = mobile.FindItemByLayer((Layer)idx)?.Serial ?? 0;
             }
         }
 
@@ -1083,22 +1120,22 @@ namespace ClassicUO.Game.UI.Gumps
             public static int Position_X_Virtue { get; set; } = 80;
             public static int Position_Y_Virtue { get; set; } = 4;
 
-            public static int Position_X_Durability { get; set; } = 0;
-            public static int Position_Y_Durability { get; set; } = 40;
+            public static int Position_X_Durability { get; set; } = 12;
+            public static int Position_Y_Durability { get; set; } = 33;
 
             public static int Position_X_LeftSlots { get; set; } = 2;
-            public static int Position_Y_LeftSlots { get; set; } = 75;
+            public static int Position_Y_LeftSlots { get; set; } = 67;
             public static int Size_Height_LeftSlots { get; set; } = 21;
 
             public static int Position_X_RightSlots { get; set; } = 166;
-            public static int Position_Y_RightSlots { get; set; } = 75;
+            public static int Position_Y_RightSlots { get; set; } = 67;
             public static int Size_Height_RightSlots { get; set; } = 21;
 
             public static int Position_X_Avatar { get; set; } = 8;
             public static int Position_Y_Avatar { get; set; } = 19;
 
-            public static int Position_X_CombatBook { get; set; } = 156;
-            public static int Position_Y_CombatBook { get; set; } = 200;
+            public static int Position_X_CombatBook { get; set; } = 150;
+            public static int Position_Y_CombatBook { get; set; } = 198;
 
             public static int Position_X_Title { get; set; } = 39;
             public static int Position_Y_Title { get; set; } = 262;
@@ -1107,8 +1144,15 @@ namespace ClassicUO.Game.UI.Gumps
             public static int Position_Y_MinimizeButton { get; set; } = 260;
             public static int Size_Width_MinimizeButton { get; set; } = 16;
             public static int Size_Height_MinimizeButton { get; set; } = 16;
+        }
 
-
+        /// <summary>
+        /// A paperdoll's equipment slot side
+        /// </summary>
+        private enum EquipSlotSide
+        {
+            Left,
+            Right
         }
     }
 }

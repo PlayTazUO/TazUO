@@ -15,6 +15,7 @@ using Microsoft.Xna.Framework;
 using SDL3;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Assets;
+using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Game.UI.Controls;
 
@@ -441,55 +442,70 @@ namespace ClassicUO.Game.Scenes
 
             if (_world.CustomHouseManager != null)
             {
-                _isMouseLeftDown = true;
+                HandleHouseManagerMouseDown();
+                return true;
+            }
 
-                if (
-                    _world.TargetManager.IsTargeting
-                    && _world.TargetManager.TargetingState == CursorTarget.MultiPlacement
-                    && (
-                        _world.CustomHouseManager.SelectedGraphic != 0
-                        || _world.CustomHouseManager.Erasing
-                        || _world.CustomHouseManager.SeekTile
-                    )
-                    && SelectedObject.Object is GameObject obj
-                    && (
-                        obj.X != _lastSelectedMultiPositionInHouseCustomization.X
-                        || obj.Y != _lastSelectedMultiPositionInHouseCustomization.Y
-                    )
-                )
+            SelectedObject.LastLeftDownObject = SelectedObject.Object;
+
+            if (ProfileManager.CurrentProfile.EnableDragSelect && DragSelectModifierActive())
+            {
+                if (CanDragSelectOnObject(SelectedObject.Object as GameObject))
                 {
-                    _world.CustomHouseManager.OnTargetWorld(obj);
-                    _timeToPlaceMultiInHouseCustomization = Time.Ticks + 50;
-                    _lastSelectedMultiPositionInHouseCustomization.X = obj.X;
-                    _lastSelectedMultiPositionInHouseCustomization.Y = obj.Y;
+                    _selectionStart = Mouse.Position;
+                    _isSelectionActive = true;
                 }
             }
             else
             {
-                SelectedObject.LastLeftDownObject = SelectedObject.Object;
-
-                if (ProfileManager.CurrentProfile.EnableDragSelect && DragSelectModifierActive())
-                {
-                    if (CanDragSelectOnObject(SelectedObject.Object as GameObject))
-                    {
-                        _selectionStart = Mouse.Position;
-                        _isSelectionActive = true;
-                    }
-                }
-                else
-                {
-                    _isMouseLeftDown = true;
-                    _holdMouse2secOverItemTime = Time.Ticks;
-                }
-
-                if (UIManager.TopMostControl is MyraControl)
-                    UIManager.TopMostControl = null;
-
-                if (ProfileManager.CurrentProfile.SingleClickMobileSetsLastTarget && SelectedObject.Object is Mobile m)
-                    World.Instance.TargetManager.LastTargetInfo.SetEntity(m);
+                _isMouseLeftDown = true;
+                _holdMouse2secOverItemTime = Time.Ticks;
             }
 
+            if (UIManager.TopMostControl is MyraControl)
+                UIManager.TopMostControl = null;
+
+            if (ProfileManager.CurrentProfile.SingleClickMobileSetsLastTarget && SelectedObject.Object is Mobile m)
+                World.Instance.TargetManager.LastTargetInfo.SetEntity(m);
+
             return true;
+        }
+
+        /// <summary>
+        /// Handles the mouse down event when the house customization manager is open
+        /// </summary>
+        private void HandleHouseManagerMouseDown()
+        {
+            _isMouseLeftDown = true;
+
+            // Check if this is indeed a house customization operation
+            if (!_world.TargetManager.IsTargeting || _world.TargetManager.TargetingState != CursorTarget.MultiPlacement)
+                return;
+
+            // Check if this is an operation that actually needs to be forwarded to the manager
+            if (_world.CustomHouseManager.SelectedGraphic == 0 && !_world.CustomHouseManager.Erasing &&
+                !_world.CustomHouseManager.SeekTile)
+                return;
+
+            // Null/Type guard
+            if (SelectedObject.Object is not GameObject obj)
+                return;
+
+            // Guard against multiple clicks to on the exact same entity
+            if (obj.X == _lastSelectedMultiPositionInHouseCustomization.X &&
+                obj.Y == _lastSelectedMultiPositionInHouseCustomization.Y &&
+                obj.Z == _lastSelectedMultiPositionInHouseCustomization.Z
+               )
+                return;
+
+            // Record the last position
+            _lastSelectedMultiPositionInHouseCustomization = new Point3D(obj.X, obj.Y, obj.Z);
+
+            // Dispatch the event
+            _world.CustomHouseManager.OnTargetWorld(obj);
+
+            // Add a delay to normalize placement behavior
+            _timeToPlaceMultiInHouseCustomization = Time.Ticks + 50;
         }
 
         private bool OnLeftMouseUp()
@@ -1205,7 +1221,11 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
-            if (CanExecuteMacro())
+            // There's a bit of an edge case here - if the control is 'scrollable',
+            // we may want to direct the input to it, rather than execute a macro.
+            // Since it's basically impossible to know, from this vantage point, what gump we're looking at,
+            // this check specifically targets the Shop Gump. This is the least invasive, if imperfect solution right now.
+            if (CanExecuteMacro() && UIManager.TopMostControl is not ShopGump)
             {
                 Macro macro = _world.Macros.FindMacro(up, Keyboard.Alt, Keyboard.Ctrl, Keyboard.Shift);
 

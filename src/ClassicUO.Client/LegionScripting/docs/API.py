@@ -40,12 +40,13 @@ class ApiGameObject:
     IsDestroyed: bool = None
     __class__: str = None
 
-    def SetOutlineColor(self, htmlColor: "str") -> None:
+    def SetOutlineColor(self, htmlColor: "str" = None) -> None:
         """
-         Set an objects outline color using html hex colors.
+         Set an object's outline color using HTML hex colors.
          Example:
          ```py
          API.Player.SetOutlineColor("#105510")
+         API.Player.SetOutlineColor(None)
          ```
         
         """
@@ -1616,7 +1617,7 @@ def Msg(message: "str") -> None:
      Say a message outloud.
      Example:
      ```py
-     API.Say("Hello friend!")
+     API.Msg("Hello friend!")
      ```
     
     """

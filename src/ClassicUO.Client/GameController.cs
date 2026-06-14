@@ -15,6 +15,7 @@ using ClassicUO.Network.Encryption;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Platforms;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,6 +62,8 @@ namespace ClassicUO
         }
 #endif
 
+        private static string DefaultWindowTitle => $"[TazUO - {CUOEnviroment.Version}]";
+
         public GameController(IPluginHost pluginHost)
         {
             GraphicManager = new GraphicsDeviceManager(this);
@@ -75,7 +78,7 @@ namespace ClassicUO
 
             Window.ClientSizeChanged += WindowOnClientSizeChanged;
             Window.AllowUserResizing = true;
-            Window.Title = $"TazUO - {CUOEnviroment.Version}";
+            Window.Title = DefaultWindowTitle;
             IsMouseVisible = Settings.GlobalSettings.RunMouseInASeparateThread;
 
             IsFixedTimeStep = false; // Settings.GlobalSettings.FixedTimeStep;
@@ -141,8 +144,17 @@ namespace ClassicUO
             base.Initialize();
         }
 
-        private void PreloadSettings() => _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, false,
-                (b) => { if (b) ZLib.SetForceManagedZlib(b); });
+        private void PreloadSettings()
+        {
+            bool platformDefault = PlatformHelper.IsLinux;
+            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, platformDefault, (b) =>
+            {
+                if (ZLib.CommandLineOverride)
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, true);
+                else
+                    ZLib.SetForceManagedZlib(b);
+            });
+        }
 
         private const int MAX_PACKETS_PER_FRAME = 25;
 
@@ -267,7 +279,7 @@ namespace ClassicUO
 #if DEV_BUILD
                 Window.Title = $"TazUO [dev] - {CUOEnviroment.Version}";
 #else
-                Window.Title = $"[TazUO {CUOEnviroment.Version}]";
+                Window.Title = DefaultWindowTitle;
 #endif
             }
             else
@@ -275,7 +287,7 @@ namespace ClassicUO
 #if DEV_BUILD
                 Window.Title = $"{title} - TazUO [dev] - {CUOEnviroment.Version}";
 #else
-                Window.Title = $"{title} - [TazUO {CUOEnviroment.Version}]";
+                Window.Title = $"{title} - {DefaultWindowTitle}";
 #endif
             }
         }

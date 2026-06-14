@@ -121,10 +121,17 @@ public class TrueTypeLoader
 
         foreach (string ttf in Directory.GetFiles(fontPath, "*.ttf"))
         {
-            var fontSystem = new FontSystem(_fontSysSettings);
-            fontSystem.AddFont(File.ReadAllBytes(ttf));
+            try 
+            {
+                var fontSystem = new FontSystem(_fontSysSettings);
+                fontSystem.AddFont(File.ReadAllBytes(ttf));
 
-            _fonts[Path.GetFileNameWithoutExtension(ttf)] = fontSystem;
+                _fonts[Path.GetFileNameWithoutExtension(ttf)] = fontSystem;
+            }
+            catch (Exception e)
+            {
+                Log.Warn($"Failed to load user font '{ttf}' - {e.Message}");
+            }
         }
     }
 
