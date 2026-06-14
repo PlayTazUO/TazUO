@@ -1249,20 +1249,28 @@ namespace ClassicUO.Assets
             var reader = new StackDataReader(buf);
 
             byte[] dbuf = null;
+            // dbufPooled tracks the array we actually rented from the pool. dbuf may be
+            // reassigned to a non-pooled array by BwtDecompress, so we must never return
+            // dbuf itself to the pool (that throws ArgumentException_BufferNotFromPool).
+            byte[] dbufPooled = null;
             if (index.CompressionType >= CompressionType.Zlib)
             {
-                dbuf = ArrayPool<byte>.Shared.Rent((int)index.UncompressedSize); //new byte[(int)index.UncompressedSize];
-                ZLib.ZLibError result = ZLib.Decompress(buf, dbuf);
+                dbufPooled = ArrayPool<byte>.Shared.Rent((int)index.UncompressedSize); //new byte[(int)index.UncompressedSize];
+                dbuf = dbufPooled;
+                ZLib.ZLibError result = ZLib.Decompress(buf, dbufPooled);
                 if (result != ZLib.ZLibError.Ok)
                 {
                     Log.Error($"error reading uop animation. AnimID: {animID} | Group: {animGroup} | Dir: {direction} | FileIndex: {fileIndex}");
+
+                    ArrayPool<byte>.Shared.Return(buf);
+                    ArrayPool<byte>.Shared.Return(dbufPooled);
 
                     return Span<FrameInfo>.Empty;
                 }
 
                 if (index.CompressionType == CompressionType.ZlibBwt)
                 {
-                    dbuf = BwtDecompress.Decompress(dbuf);
+                    dbuf = BwtDecompress.Decompress(dbufPooled);
                 }
 
                 reader = new StackDataReader(dbuf);
@@ -1390,8 +1398,8 @@ namespace ClassicUO.Assets
             {
                 ArrayPool<UOPFrameData>.Shared.Return(sharedBuffer);
                 ArrayPool<byte>.Shared.Return(buf);
-                if(dbuf != null)
-                    ArrayPool<byte>.Shared.Return(dbuf);
+                if(dbufPooled != null)
+                    ArrayPool<byte>.Shared.Return(dbufPooled);
             }
         }
 
