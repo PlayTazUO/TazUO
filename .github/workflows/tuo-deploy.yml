@@ -59,7 +59,11 @@ jobs:
       shell: bash
       run: |
         cd ${{ env.CUO_OUTPUT_PATH }}
-        zip -r ../${{ matrix.rid }}.zip .
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          pwsh -Command "Compress-Archive -Path * -DestinationPath ../${{ matrix.rid }}.zip -Force"
+        else
+          zip -r ../${{ matrix.rid }}.zip .
+        fi
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
