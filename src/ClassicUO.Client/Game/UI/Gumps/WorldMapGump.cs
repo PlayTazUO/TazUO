@@ -2741,6 +2741,9 @@ public class WorldMapGump : ResizableGump
 
     private void DrawMarkerString(UltimaBatcher2D batcher, WMapMarker marker, int x, int y, int width, int height)
     {
+        if (string.IsNullOrEmpty(marker.Name))
+            return;
+
         int sx = marker.X - _center.X;
         int sy = marker.Y - _center.Y;
 
