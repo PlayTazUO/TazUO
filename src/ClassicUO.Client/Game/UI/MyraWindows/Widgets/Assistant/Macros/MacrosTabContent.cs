@@ -631,7 +631,7 @@ public static class MacrosTabContent
             // Add to loop button
             loopActionsPanel.Widgets.Add(new MyraButton("+ Add Action to Loop", () =>
             {
-                MacroObject newAction = Macro.Create(MacroType.None);
+                MacroObject newAction = Macro.Create(MacroType.Say);
                 loopContainer.Items.AddLast(newAction);
                 MarkDirty();
                 BuildActionsPanel();

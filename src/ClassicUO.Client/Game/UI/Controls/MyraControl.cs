@@ -225,7 +225,10 @@ public class MyraControl : IGui
             return;
 
         if (_disposeRequested)
+        {
             ExecuteDispose();
+            return;
+        }
 
         while (_deferredActions.Count > 0)
         {
