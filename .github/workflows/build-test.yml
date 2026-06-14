@@ -1,18 +1,7 @@
 name: Build-Test
 
 on:
-  push:
-    branches: "*"
-    paths-ignore:
-      - '**/build-release.yml'
-      - 'appveyor.yml'
-      - '**/README.md'
-  pull_request:
-    branches: "*"
-    paths-ignore:
-      - '**/build-release.yml'
-      - 'appveyor.yml'
-      - '**/README.md'
+  workflow_dispatch:
 
 concurrency:
   group: deploy-${{ github.ref }}
