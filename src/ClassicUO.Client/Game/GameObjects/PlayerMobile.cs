@@ -11,7 +11,6 @@ using ClassicUO.Network;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Assets;
-using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.GameObjects

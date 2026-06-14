@@ -158,7 +158,7 @@ namespace ClassicUO.Game.Managers
         {
             if (corpse is not { IsCorpse: true }) return;
 
-            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
+            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
             {
                 World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse); //Retry if the distance was too great to loot
                 return;
@@ -326,7 +326,7 @@ namespace ClassicUO.Game.Managers
                 Item rc = _world.Items.Get(moveItem.RootContainer);
                 if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 {
-                    if (rc.IsCorpse)
+                    if (rc.IsCorpse && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
                         World.Instance?.Player?.AutoOpenedCorpses.Remove(rc); //Allow reopening this corpse, we got too far away to finish looting..
                     _recentlyLooted.Remove(item);
                     return;

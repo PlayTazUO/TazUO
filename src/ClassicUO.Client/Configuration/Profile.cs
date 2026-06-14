@@ -831,6 +831,10 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
         public partial uint DisabledOverheadMessageTypes { get; set; }
 
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_AUTOLOOT_RETRY_CORPSE, false)]
+        public partial bool DisableAutolootCorpseRetry { get; set; } = false;
+
         private long lastSave;
 
         internal void AfterLoad()

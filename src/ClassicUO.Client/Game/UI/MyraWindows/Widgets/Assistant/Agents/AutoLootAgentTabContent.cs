@@ -84,6 +84,11 @@ public static class AutoLootAgentTabContent
         retrySpinner.ValueChangedByUser += (_, _) =>
             profile.AutoLootRetryDelay = (int)Math.Clamp(retrySpinner.Value ?? 5000f, 1000f, 600000f);
         optRow3.Widgets.Add(retrySpinner);
+        optRow3.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.DisableAutolootCorpseRetry,
+            b => profile.DisableAutolootCorpseRetry = b,
+            TazLang.Get("autoloot_disableretry"),
+            TazLang.Get("autoloot_disableretry_tooltip")));
         root.Widgets.Add(optRow3);
 
         // Entries section
