@@ -113,4 +113,5 @@ public enum MacroType
     ToggleAutoWalk,
     ToggleBandageAgent,
     SetOrganizerSource,
+    LoopContainer
 }
