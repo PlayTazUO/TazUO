@@ -20,6 +20,7 @@ All notable changes to TazUO will be recorded here.
 * Added a macro to set an organizer's source container via target - [P.R 516](https://github.com/PlayTazUO/TazUO/pull/516) ([bittiez](https://github.com/bittiez))
 * Added new language system for easier futute translations - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([bittiez](https://github.com/bittiez))
 * Added an auto stat lock agent - [P.R 524](https://github.com/PlayTazUO/TazUO/pull/524) ([bittiez](https://github.com/bittiez))
+* UI language selection on the login screen now applies immediately instead of requiring a restart - [P.R 526](https://github.com/PlayTazUO/TazUO/pull/526) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
