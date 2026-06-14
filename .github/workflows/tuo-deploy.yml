@@ -2,21 +2,16 @@ name: TUO-Deploy
 
 on:
   workflow_dispatch:
-  workflow_run:
-    branches: [main]
-    workflows: [Build-Test]
-    types:
-      - completed
-
-concurrency:
-  group: maindeploy
-  cancel-in-progress: true
+    inputs:
+      branch:
+        description: 'Branch to build (default: legacy)'
+        required: true
+        default: 'legacy'
 
 env:
-  CUO_OUTPUT_PATH: "../../bin/dist"
+  CUO_OUTPUT_PATH: 'bin/dist'
   CUO_PROJECT_PATH: "src/ClassicUO.Client/ClassicUO.Client.csproj"
   CUO_ZIP_NAME: "TazUO.zip"
-  TAG_NAME: "TazUO-AutoBuild"
 
   DOTNET_NOLOGO: false
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -25,19 +20,12 @@ env:
 
 jobs:
   build:
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ${{ matrix.os }}
-    outputs:
-      release_notes: ${{ steps.release_notes.outputs.RELEASE_NOTES }}
-    strategy:
-      max-parallel: 1
-      matrix:
-        os: [windows-latest]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: "main"
+          ref: ${{ inputs.branch || github.ref }}
 
       - name: Extract Version
         shell: bash
@@ -50,13 +38,6 @@ jobs:
           git config --global url."https://".insteadOf git://
           git submodule update --init --recursive
 
-      - name: Create tag
-        continue-on-error: true
-        if: ${{ strategy.job-index == 0 }}
-        run: |
-          git tag v${{ env.VERSION }}
-          git push origin v${{ env.VERSION }}
-
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
@@ -65,7 +46,7 @@ jobs:
       - name: Build
         run: dotnet publish ${{ env.CUO_PROJECT_PATH }} -c Release -o ${{ env.CUO_OUTPUT_PATH }} -p:IS_DEV_BUILD=true
 
-      - name: Create package
+      - name: Zip build
         uses: thedoctor0/zip-release@master
         with:
           type: "zip"
@@ -73,73 +54,9 @@ jobs:
           filename: ${{ env.CUO_ZIP_NAME }}
           exclusions: "*.zip"
 
-      - name: Get last release commit
-        shell: bash
-        id: last_release
-        run: |
-          if git rev-parse --verify "${{ env.TAG_NAME }}" >/dev/null 2>&1; then
-            LAST_COMMIT=$(git rev-parse "${{ env.TAG_NAME }}")
-            echo "LAST_COMMIT=$LAST_COMMIT" >> $GITHUB_ENV
-            echo "Last release commit: $LAST_COMMIT"
-          else
-            echo "No previous release found."
-            echo "LAST_COMMIT=" >> $GITHUB_ENV
-          fi
-
-      - name: Generate release notes
-        shell: bash
-        id: release_notes
-        run: |
-          if [ -z "$LAST_COMMIT" ]; then
-            echo "No previous release found. Listing 10 latest commits."
-            RELEASE_NOTES=$(git log -10 --pretty=format:%B)
-          else
-            echo "Generating release notes from commit $LAST_COMMIT to HEAD."
-            RELEASE_NOTES=$(git log ${LAST_COMMIT}..HEAD --pretty=format:%B)
-          fi
-
-          printf "RELEASE_NOTES<<EOF\n%s\nEOF\n" "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-
-      - name: Echo release notes
-        shell: bash
-        run: echo "${{ steps.release_notes.outputs.RELEASE_NOTES }}"
-
-      - name: Discord Github Updates
-        uses: tsickert/discord-webhook@v7.0.0
-        continue-on-error: true
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
         with:
-          webhook-url: ${{ secrets.DISCORDWEBHOOK }}
-          content: |
-            # v${{ env.VERSION }} is available.
-
-            [Download here](<https://github.com/bittiez/TazUO/releases/latest>)
-            Or use the [launcher](<https://github.com/bittiez/TUO-Launcher/releases/latest>)
-
-            # Release notes
-            `These are automatically generated`
-            ${{ steps.release_notes.outputs.RELEASE_NOTES }}
-
-      - name: Remove old Release
-        uses: dev-drprasad/delete-tag-and-release@v0.2.1
-        with:
-          delete_release: true
-          tag_name: ${{ env.TAG_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "${{ env.CUO_OUTPUT_PATH }}/${{ env.CUO_ZIP_NAME }}"
-          name: "v${{ env.VERSION }}"
-          body: |
-            These are built automatically on the main branch.
-            This is version v${{ env.VERSION }}
-
-            # Release notes
-            ${{ steps.release_notes.outputs.RELEASE_NOTES }}
-          makeLatest: true
-          allowUpdates: true
-          prerelease: false
-          tag: ${{ env.TAG_NAME }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: TazUO-Legacy-win-x64
+          path: ${{ env.CUO_OUTPUT_PATH }}/${{ env.CUO_ZIP_NAME }}
+          retention-days: 30

@@ -2,22 +2,17 @@ name: TUO-Net9-Deploy
 
 on:
   workflow_dispatch:
-  # workflow_run:
-  #   branches: [merge-cuo]
-  #   workflows: [Build-Test]
-  #   types:
-  #     - completed
-      
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+    inputs:
+      branch:
+        description: 'Branch to build (default: legacy)'
+        required: true
+        default: 'legacy'
 
 env:
-  CUO_OUTPUT_PATH: '../../bin/dist'
+  CUO_OUTPUT_PATH: 'bin/dist'
   CUO_PROJECT_PATH: "src/ClassicUO.Client/ClassicUO.Client.csproj"
   BOOTSTRAP: "src/ClassicUO.Bootstrap/src/ClassicUO.Bootstrap.csproj"
-  BOOT_OUTPUT_PATH: "../../bin/bootstrap"
-  TAG_NAME: "TazUO-BleedingEdge"
+  BOOT_OUTPUT_PATH: 'bin/bootstrap'
 
   DOTNET_NOLOGO: false
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
@@ -34,15 +29,11 @@ jobs:
             rid: win-x64
           - os: ubuntu-latest
             rid: linux-x64
-          - os: macos-latest
-            rid: osx-arm64
-          - os: macos-12
-            rid: osx-x64
 
     steps:
     - uses: actions/checkout@v4
       with:
-        ref: ${{ github.ref_name }}
+        ref: ${{ inputs.branch || github.ref }}
 
     - name: Get submodules
       run: |
@@ -69,35 +60,30 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: dotnet publish ${{ env.BOOTSTRAP }} -c Release -o ${{ env.BOOT_OUTPUT_PATH }}
 
-    - name: Upload build artifact
+    - name: Zip build
+      shell: bash
+      run: |
+        cd ${{ env.CUO_OUTPUT_PATH }}
+        zip -r ../${{ matrix.rid }}.zip .
+
+    - name: Zip bootstrapper
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        cd ${{ env.BOOT_OUTPUT_PATH }}
+        zip -r ../bootstrap.zip .
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-${{ matrix.os }}
-        path: ${{ env.CUO_OUTPUT_PATH }}
+        name: tuo-legacy-net9-${{ matrix.rid }}
+        path: bin/${{ matrix.rid }}.zip
+        retention-days: 30
 
-  package:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: Download all build artifacts
-      uses: actions/download-artifact@v4
+    - name: Upload Bootstrapper
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
       with:
-        path: all-builds
-
-    - name: Zip all builds
-      run: |
-        mkdir flat
-        find all-builds -type f -exec cp {} flat/ \;
-        cd flat
-        zip -r ../TazUO-net9-all.zip .
-        cd ..
-
-    - name: Upload Release
-      uses: ncipollo/release-action@v1.16.0
-      with:
-        artifacts: TazUO-net9-all.zip
-        makeLatest: false
-        allowUpdates: true
-        prerelease: true
-        tag: ${{ env.TAG_NAME }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        name: tuo-legacy-net9-bootstrap
+        path: bin/bootstrap.zip
+        retention-days: 30
