@@ -24,6 +24,7 @@ All notable changes to TazUO will be recorded here.
 * Added loops to in-game macros - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([DavideRei](https://github.com/DavideRei))
 
 ### Fixes
+* Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
 * Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
 * Fix NullReferenceException in campfire character selection when a character has no appearance data - [P.R 515](https://github.com/PlayTazUO/TazUO/pull/515) ([bittiez](https://github.com/bittiez))
