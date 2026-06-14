@@ -99,7 +99,7 @@ internal sealed class PacketParser
 
                 if (stream.Length < packetlength)
                 {
-                    Log.Warn(
+                    Log.Trace(
                         $"Need more data ID: {packetID:X2} | off: {offset} | len: {packetlength} | stream.pos: {stream.Length}"
                     );
 

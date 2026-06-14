@@ -1,4 +1,4 @@
-﻿using ClassicUO.Utility;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
@@ -38,7 +38,8 @@ namespace ClassicUO.Network
                 output.Append(' ', off);
                 output.Append(string.Format("Time: {0:T} | {1} |  ID: {2:X2}   Length: {3}\n", DateTime.Now, (toServer ? "Client -> Server" : "Server -> Client"), message[0], message.Length));
 
-                if ((message[0] == 0x80 || message[0] == 0x91) && (!LogPacketID.Contains(0x80) || !LogPacketID.Contains(0x91))) //Avoid logging account UNLESS requested specifically
+                //if ((message[0] == 0x80 || message[0] == 0x91) && (!LogPacketID.Contains(0x80) || !LogPacketID.Contains(0x91))) //Avoid logging account UNLESS requested specifically
+                if (false)
                 {
                     output.Append(' ', off);
                     output.Append("[ACCOUNT CREDENTIALS HIDDEN]\n");
