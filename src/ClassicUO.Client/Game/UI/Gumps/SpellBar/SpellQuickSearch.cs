@@ -1,5 +1,6 @@
 using System;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -31,7 +32,7 @@ public class SpellQuickSearch : NineSliceGump
     private void Build()
     {
         Add(searchField = new TTFTextInputField(Width - 10, 25, Width - 10){Y = 49, X = 5});
-        searchField.SetPlaceholder("Search..");
+        searchField.SetPlaceholder(TazLang.Get("spellbar_search"));
         searchField.SetFocus();
 
         searchField.TextChanged += SearchTextChanged;

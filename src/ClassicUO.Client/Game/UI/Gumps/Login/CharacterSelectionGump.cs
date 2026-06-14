@@ -135,7 +135,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             // Live switch to the campfire-style selection screen.
             Add
             (
-                new NiceButton(10, 445, 120, 25, ButtonAction.Activate, "Modern View")
+                new NiceButton(10, 445, 120, 25, ButtonAction.Activate, TazLang.Get("modernview"))
                 {
                     ButtonParameter = (int)Buttons.ToggleStyle,
                     IsSelectable = false,

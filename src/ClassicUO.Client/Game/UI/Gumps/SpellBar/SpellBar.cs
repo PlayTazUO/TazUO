@@ -123,7 +123,7 @@ public class SpellBar : Gump
 
         NiceButton menu = new(Width - 15, 0, 15, Height, ButtonAction.Default, "+");
 
-        ContextMenuItemEntry import = new("Import preset");
+        ContextMenuItemEntry import = new(TazLang.Get("spellbar_importpreset"));
 
         menu.MouseUp += (sender, e) =>
         {
@@ -136,22 +136,22 @@ public class SpellBar : Gump
         };
 
         menu.ContextMenu = new ContextMenuControl(this);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Save preset", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_savepreset"), () =>
         {
-            new PromptPopupWindow("Save Preset", "Preset name", n => SpellBarManager.SaveCurrentRowPreset(n), "Save", "Cancel");
+            new PromptPopupWindow(TazLang.Get("spellbar_savepreset_title"), TazLang.Get("spellbar_savepreset_name"), n => SpellBarManager.SaveCurrentRowPreset(n), TazLang.Get("spellbar_save"), TazLang.Get("spellbar_cancel"));
         }));
         menu.ContextMenu.Add(import);
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Lock/Unlock spellbar movement", (() =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_lockmovement"), (() =>
         {
             IsLocked = !IsLocked;
         })));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Add row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_addrow"), () =>
         {
             SpellBarManager.SpellBarRows.Add(new SpellBarRow());
             SpellBarManager.CurrentRow = SpellBarManager.SpellBarRows.Count - 1;
             Build();
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Delete row", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_deleterow"), () =>
         {
             if (SpellBarManager.SpellBarRows.Count > 1)
             {
@@ -160,7 +160,7 @@ public class SpellBar : Gump
                 Build();
             }
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("Set row color", () =>
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_setrowcolor"), () =>
         {
             UIManager.Add(new ModernColorPicker(World, (h) =>
             {
@@ -168,7 +168,7 @@ public class SpellBar : Gump
                 Build();
             }));
         }));
-        menu.ContextMenu.Add(new ContextMenuItemEntry("More options", AssistantWindow.Show));
+        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_moreoptions"), AssistantWindow.Show));
 
         Add(menu);
     }
@@ -289,7 +289,7 @@ public class SpellBar : Gump
             }
             else
             {
-                SetTooltip("Right click to set spell");
+                SetTooltip(TazLang.Get("spellbar_rightclicktoset"));
                 icon.IsVisible = false;
             }
 
@@ -356,8 +356,8 @@ public class SpellBar : Gump
             BuildHotkeyLabel();
 
             ContextMenu = new(parentGump);
-            ContextMenu.Add("Set spell", GenSpellList());
-            ContextMenu.Add(new ContextMenuItemEntry("Quick set spell", () =>
+            ContextMenu.Add(TazLang.Get("spellbar_setspell"), GenSpellList());
+            ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_quicksetspell"), () =>
             {
                 UIManager.Add
                 (
@@ -370,7 +370,7 @@ public class SpellBar : Gump
                     )
                 );
             }));
-            ContextMenu.Add(new ContextMenuItemEntry("Clear", () =>
+            ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
                 SetSpell(SpellDefinition.EmptySpell, row, col);
             }));
@@ -380,7 +380,7 @@ public class SpellBar : Gump
             {
                 var list = new List<ContextMenuItemEntry>();
 
-                var entry = new ContextMenuItemEntry("Magery");
+                var entry = new ContextMenuItemEntry(TazLang.Get("spellschool_magery"));
                 foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -389,7 +389,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Necromancy");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_necromancy"));
                 foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -398,7 +398,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Chivalry");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_chivalry"));
                 foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -407,7 +407,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Bushido");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_bushido"));
                 foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -416,7 +416,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Ninjitsu");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_ninjitsu"));
                 foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -425,7 +425,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Spellweaving");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_spellweaving"));
                 foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -434,7 +434,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Mysticism");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_mysticism"));
                 foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
@@ -443,7 +443,7 @@ public class SpellBar : Gump
                 list.Add(entry);
 
 
-                entry = new ContextMenuItemEntry("Mastery");
+                entry = new ContextMenuItemEntry(TazLang.Get("spellschool_mastery"));
                 foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
