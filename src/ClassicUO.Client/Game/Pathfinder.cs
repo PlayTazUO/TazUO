@@ -251,7 +251,8 @@ namespace ClassicUO.Game
                                 {
                                     dropFlags = true;
                                 }
-                                else if (ProfileManager.CurrentProfile.SmoothDoors && item2.ItemData.IsDoor)
+                                else if (ProfileManager.CurrentProfile.SmoothDoors && item2.ItemData.IsDoor
+                                    && (ProfileManager.CurrentProfile.AutoOpenDoorsIfHidden || !_world.Player.IsHidden))
                                 {
                                     dropFlags = true;
                                 }

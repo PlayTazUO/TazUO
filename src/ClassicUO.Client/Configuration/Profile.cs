@@ -781,6 +781,10 @@ namespace ClassicUO.Configuration
         public partial bool QueueManualItemMoves { get; set; }
 
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_OPEN_DOORS_HIDDEN, true)]
+        public partial bool AutoOpenDoorsIfHidden { get; set; }
+
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.QUEUE_MANUAL_ITEM_USES, false)]
         public partial bool QueueManualItemUses { get; set; }
 

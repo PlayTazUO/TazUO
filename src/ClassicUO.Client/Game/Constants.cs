@@ -140,6 +140,7 @@ namespace ClassicUO.Game
             public const string UI_LANGUAGE = "ui_language";
             public const string AUTO_STAT_LOCK = "auto_stat_lock";
             public const string DISABLE_AUTOLOOT_RETRY_CORPSE = "disable_authloot_retry";
+            public const string AUTO_OPEN_DOORS_HIDDEN = "auto_open_doors_hidden";
         }
     }
 }
