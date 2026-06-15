@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -238,10 +239,49 @@ namespace ClassicUO.LegionScripting
                     AddScriptFromFile(file);
                     loadedScripts.Add(file);
                 }
+                else if (file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(file))
+                    HandleScriptsInZip(file, loadedScripts);
                 else if (Directory.Exists(file)) groups.Add(file);
             }
 
             return groups;
+        }
+
+        private static void HandleScriptsInZip(string zipPath, HashSet<string> loadedScripts)
+        {
+            try
+            {
+                using var archive = ZipFile.OpenRead(zipPath);
+
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue; // directory entry
+
+                    string entryName = entry.FullName.Replace('\\', '/');
+                    string ext = Path.GetExtension(entry.Name);
+
+                    if (ext != ".py" && ext != ".cs") continue;
+                    if (entry.Name == "API.py" || entry.Name.StartsWith("_")) continue;
+
+                    string[] segments = entryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    if (segments.Length == 0 || segments.Length > 3) continue;
+
+                    string group    = segments.Length >= 2 ? segments[0] : string.Empty;
+                    string subGroup = segments.Length == 3 ? segments[1] : string.Empty;
+
+                    string syntheticKey = $"{zipPath}::{entryName}";
+                    if (loadedScripts.Contains(syntheticKey)) continue;
+
+                    LoadedScripts.Add(new ZipScriptFile(_world, zipPath, entryName, group, subGroup));
+                    loadedScripts.Add(syntheticKey);
+                }
+
+                ClassicUO.Assets.PNGLoader.Instance.RegisterZipPNGs(archive);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error loading scripts from zip '{zipPath}': {ex}");
+            }
         }
 
         public static void SetAutoPlay(ScriptFile script, bool global, bool enabled)

@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
 
@@ -293,6 +294,103 @@ namespace ClassicUO.Assets
                 buffer[i] = Color.FromNonPremultiplied(buffer[i].R, buffer[i].G, buffer[i].B, buffer[i].A);
 
             texture.SetData(buffer);
+        }
+
+        public void RegisterZipPNGs(ZipArchive archive)
+        {
+            if (GraphicsDevice == null) return;
+
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                if (!entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) continue;
+
+                string normalized = entry.FullName.Replace('\\', '/');
+                string[] parts = normalized.Split('/');
+                if (parts.Length < 2) continue;
+
+                string folder = parts[parts.Length - 2];
+                string baseName = entry.Name.Substring(0, entry.Name.Length - 4);
+
+                if (folder.Equals(GUMP_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!uint.TryParse(baseName, out uint id)) continue;
+                    if (gump_textureCache.ContainsKey(id)) continue;
+
+                    byte[] bytes;
+                    using (var ms = new MemoryStream())
+                    {
+                        entry.Open().CopyTo(ms);
+                        bytes = ms.ToArray();
+                    }
+
+                    RegisterGumpFromBytes(id, bytes);
+                }
+                else if (folder.Equals(ART_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!uint.TryParse(baseName, out uint fileId)) continue;
+                    uint graphicId = fileId + 0x4000;
+                    if (art_textureCache.ContainsKey(graphicId)) continue;
+
+                    byte[] bytes;
+                    using (var ms = new MemoryStream())
+                    {
+                        entry.Open().CopyTo(ms);
+                        bytes = ms.ToArray();
+                    }
+
+                    RegisterArtFromBytes(graphicId, bytes);
+                }
+            }
+        }
+
+        private void RegisterGumpFromBytes(uint id, byte[] bytes)
+        {
+            if (GraphicsDevice == null) return;
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                if (tex == null) return;
+                FixPNGAlpha(ref tex);
+                uint[] pixels = GetPixels(tex);
+                int width = tex.Width, height = tex.Height;
+                gump_textureCache[id] = (pixels, width, height);
+                tex.Dispose();
+
+                AppendToAvailableIDs(ref gump_availableIDs, id);
+            }
+            catch (Exception ex) { Log.Error($"Error registering zip gump PNG {id}: {ex.Message}"); }
+        }
+
+        private void RegisterArtFromBytes(uint id, byte[] bytes)
+        {
+            if (GraphicsDevice == null) return;
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                if (tex == null) return;
+                FixPNGAlpha(ref tex);
+                uint[] pixels = GetPixels(tex);
+                int width = tex.Width, height = tex.Height;
+                art_textureCache[id] = (pixels, width, height);
+                tex.Dispose();
+
+                AppendToAvailableIDs(ref art_availableIDs, id);
+            }
+            catch (Exception ex) { Log.Error($"Error registering zip art PNG {id}: {ex.Message}"); }
+        }
+
+        private static void AppendToAvailableIDs(ref uint[] arr, uint id)
+        {
+            if (arr == null)
+            {
+                arr = [id];
+                return;
+            }
+            if (Array.IndexOf(arr, id) >= 0) return;
+            Array.Resize(ref arr, arr.Length + 1);
+            arr[arr.Length - 1] = id;
         }
 
         public void ClearArtPixelCache(uint graphic) => art_textureCache.Remove(graphic);
