@@ -16,7 +16,7 @@ public class ZipScriptFile : ScriptFile
     public string EntryPath;
 
     public ZipScriptFile(World world, string zipPath, string entryPath, string group, string subGroup)
-        : base(world, LegionScripting.ScriptPath, Path.GetFileName(entryPath))
+        : base(world, LegionScripting.ScriptPath, System.IO.Path.GetFileName(entryPath))
     {
         ZipPath = zipPath;
         EntryPath = entryPath;
@@ -29,8 +29,12 @@ public class ZipScriptFile : ScriptFile
     public override bool FileExists()
     {
         if (!File.Exists(ZipPath)) return false;
-        using var archive = ZipFile.OpenRead(ZipPath);
-        return archive.GetEntry(EntryPath) != null;
+        try
+        {
+            using var archive = ZipFile.OpenRead(ZipPath);
+            return archive.GetEntry(EntryPath) != null;
+        }
+        catch { return false; }
     }
 
     public override string[] ReadFromFile()
@@ -88,9 +92,10 @@ public class ZipScriptFile : ScriptFile
         PythonEngine = Python.CreateEngine(new Dictionary<string, object>() { { "RecursionLimit", 100 } });
 
         ICollection<string> paths = PythonEngine.GetSearchPaths();
-        paths.Add(Path.Combine(CUOEnviroment.ExecutablePath, "iplib"));
-        paths.Add(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts"));
-        paths.Add(Path.GetDirectoryName(ZipPath) ?? Environment.CurrentDirectory);
+        paths.Add(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "iplib"));
+        paths.Add(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts"));
+        paths.Add(ZipPath);
+        paths.Add(System.IO.Path.GetDirectoryName(ZipPath) ?? Environment.CurrentDirectory);
 
         PythonEngine.SetSearchPaths(paths);
     }

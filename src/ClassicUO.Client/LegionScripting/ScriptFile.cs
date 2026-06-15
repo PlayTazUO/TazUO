@@ -39,7 +39,7 @@ public partial class ScriptFile : IDisposable
         CSharp
     }
 
-    private World World;
+    protected World World;
     private bool _disposed;
 
     public ScriptFile(World world, string path, string fileName)

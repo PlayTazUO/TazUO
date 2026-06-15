@@ -318,8 +318,9 @@ namespace ClassicUO.Assets
 
                     byte[] bytes;
                     using (var ms = new MemoryStream())
+                    using (var es = entry.Open())
                     {
-                        entry.Open().CopyTo(ms);
+                        es.CopyTo(ms);
                         bytes = ms.ToArray();
                     }
 
@@ -333,8 +334,9 @@ namespace ClassicUO.Assets
 
                     byte[] bytes;
                     using (var ms = new MemoryStream())
+                    using (var es = entry.Open())
                     {
-                        entry.Open().CopyTo(ms);
+                        es.CopyTo(ms);
                         bytes = ms.ToArray();
                     }
 

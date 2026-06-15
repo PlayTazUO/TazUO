@@ -675,8 +675,8 @@ public class ScriptManagerWindow : MyraControl
         try
         {
             string zipPath = script.ZipPath;
-            LegionScripting.LegionScripting.LoadedScripts.RemoveAll(s => s is ZipScriptFile z && z.ZipPath == zipPath);
             File.Delete(zipPath);
+            LegionScripting.LegionScripting.LoadedScripts.RemoveAll(s => s is ZipScriptFile z && z.ZipPath == zipPath);
             _pendingReload = true;
             GameActions.Print(World.Instance, $"Deleted zip '{Path.GetFileName(zipPath)}'.", 66);
         }

@@ -260,7 +260,8 @@ namespace ClassicUO.LegionScripting
                     string entryName = entry.FullName.Replace('\\', '/');
                     string ext = Path.GetExtension(entry.Name);
 
-                    if (ext != ".py" && ext != ".cs") continue;
+                    if (!ext.Equals(".py", StringComparison.OrdinalIgnoreCase) &&
+                        !ext.Equals(".cs", StringComparison.OrdinalIgnoreCase)) continue;
                     if (entry.Name == "API.py" || entry.Name.StartsWith("_")) continue;
 
                     string[] segments = entryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
