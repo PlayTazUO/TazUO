@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
 
@@ -15,6 +16,7 @@ namespace ClassicUO.Assets
         private string exePath;
 
         private Dictionary<string, Texture2D> EmbeddedArt = new Dictionary<string, Texture2D>();
+        private Dictionary<string, Texture2D> _zipNamedTextures = new Dictionary<string, Texture2D>();
         private Texture2D _emptyTexture;
 
         private uint[] gump_availableIDs;
@@ -43,6 +45,16 @@ namespace ClassicUO.Assets
 
             texture = _emptyTexture;
             return false;
+        }
+
+        public bool TryGetNamedZipTexture(string name, out Texture2D texture)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                texture = null;
+                return false;
+            }
+            return _zipNamedTextures.TryGetValue(name, out texture);
         }
 
         public Texture2D GetImageTexture(string fullImagePath)
@@ -293,6 +305,119 @@ namespace ClassicUO.Assets
                 buffer[i] = Color.FromNonPremultiplied(buffer[i].R, buffer[i].G, buffer[i].B, buffer[i].A);
 
             texture.SetData(buffer);
+        }
+
+        public void RegisterZipPNGs(ZipArchive archive)
+        {
+            if (GraphicsDevice == null) return;
+
+            foreach (ZipArchiveEntry entry in archive.Entries)
+            {
+                if (!entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) continue;
+
+                byte[] bytes;
+                using (var ms = new MemoryStream())
+                using (var es = entry.Open())
+                {
+                    es.CopyTo(ms);
+                    bytes = ms.ToArray();
+                }
+
+                // Register as a named texture (full path and filename shortcut)
+                string entryPath = entry.FullName.Replace('\\', '/');
+                RegisterNamedZipTexture(entryPath, bytes);
+                if (!_zipNamedTextures.ContainsKey(entry.Name))
+                    RegisterNamedZipTexture(entry.Name, bytes);
+
+                // Also handle gumps/ and art/ ID-based overrides
+                string[] parts = entryPath.Split('/');
+                if (parts.Length >= 2)
+                {
+                    string folder = parts[parts.Length - 2];
+                    string baseName = entry.Name.Substring(0, entry.Name.Length - 4);
+
+                    if (folder.Equals(GUMP_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (uint.TryParse(baseName, out uint id) && !gump_textureCache.ContainsKey(id))
+                            RegisterGumpFromBytes(id, bytes);
+                    }
+                    else if (folder.Equals(ART_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (uint.TryParse(baseName, out uint fileId))
+                        {
+                            uint graphicId = fileId + 0x4000;
+                            if (!art_textureCache.ContainsKey(graphicId))
+                                RegisterArtFromBytes(graphicId, bytes);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RegisterNamedZipTexture(string name, byte[] bytes)
+        {
+            if (GraphicsDevice == null) return;
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                if (tex == null) return;
+                FixPNGAlpha(ref tex);
+                if (_zipNamedTextures.TryGetValue(name, out Texture2D existing) && existing != null && !existing.IsDisposed)
+                    existing.Dispose();
+                _zipNamedTextures[name] = tex;
+            }
+            catch (Exception ex) { Log.Error($"Error registering named zip texture '{name}': {ex.Message}"); }
+        }
+
+        private void RegisterGumpFromBytes(uint id, byte[] bytes)
+        {
+            if (GraphicsDevice == null) return;
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                if (tex == null) return;
+                FixPNGAlpha(ref tex);
+                uint[] pixels = GetPixels(tex);
+                int width = tex.Width, height = tex.Height;
+                gump_textureCache[id] = (pixels, width, height);
+                tex.Dispose();
+
+                AppendToAvailableIDs(ref gump_availableIDs, id);
+            }
+            catch (Exception ex) { Log.Error($"Error registering zip gump PNG {id}: {ex.Message}"); }
+        }
+
+        private void RegisterArtFromBytes(uint id, byte[] bytes)
+        {
+            if (GraphicsDevice == null) return;
+            try
+            {
+                using var ms = new MemoryStream(bytes);
+                var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                if (tex == null) return;
+                FixPNGAlpha(ref tex);
+                uint[] pixels = GetPixels(tex);
+                int width = tex.Width, height = tex.Height;
+                art_textureCache[id] = (pixels, width, height);
+                tex.Dispose();
+
+                AppendToAvailableIDs(ref art_availableIDs, id);
+            }
+            catch (Exception ex) { Log.Error($"Error registering zip art PNG {id}: {ex.Message}"); }
+        }
+
+        private static void AppendToAvailableIDs(ref uint[] arr, uint id)
+        {
+            if (arr == null)
+            {
+                arr = [id];
+                return;
+            }
+            if (Array.IndexOf(arr, id) >= 0) return;
+            Array.Resize(ref arr, arr.Length + 1);
+            arr[arr.Length - 1] = id;
         }
 
         public void ClearArtPixelCache(uint graphic) => art_textureCache.Remove(graphic);
