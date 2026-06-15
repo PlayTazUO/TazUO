@@ -272,6 +272,9 @@ namespace ClassicUO.LegionScripting
                         if (seg.StartsWith("_") || seg.StartsWith(".")) { hasHiddenSegment = true; break; }
                     if (hasHiddenSegment || entry.Name == "API.py") continue;
 
+                    string group    = segments.Length >= 2 ? segments[0] : string.Empty;
+                    string subGroup = segments.Length == 3 ? segments[1] : string.Empty;
+
                     string syntheticKey = $"{zipPath}::{entryName}";
                     if (loadedScripts.Contains(syntheticKey)) continue;
 
