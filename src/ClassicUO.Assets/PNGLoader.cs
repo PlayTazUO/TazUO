@@ -358,6 +358,13 @@ namespace ClassicUO.Assets
             }
         }
 
+        private static bool TryParseId(string value, out uint result)
+        {
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return uint.TryParse(value.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out result);
+            return uint.TryParse(value, out result);
+        }
+
         private static bool ShouldSkipEntry(string fullName)
         {
             string normalized = fullName.Replace('\\', '/');
@@ -435,12 +442,12 @@ namespace ClassicUO.Assets
 
                         if (folder.Equals(GUMP_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (uint.TryParse(baseName, out uint id))
+                            if (TryParseId(baseName, out uint id))
                                 RegisterGumpFromBytes(id, bytes);
                         }
                         else if (folder.Equals(ART_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (uint.TryParse(baseName, out uint fileId))
+                            if (TryParseId(baseName, out uint fileId))
                                 RegisterArtFromBytes(fileId + 0x4000, bytes);
                         }
                     }
