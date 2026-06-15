@@ -262,13 +262,15 @@ namespace ClassicUO.LegionScripting
 
                     if (!ext.Equals(".py", StringComparison.OrdinalIgnoreCase) &&
                         !ext.Equals(".cs", StringComparison.OrdinalIgnoreCase)) continue;
-                    if (entry.Name == "API.py" || entry.Name.StartsWith("_")) continue;
 
                     string[] segments = entryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
                     if (segments.Length == 0 || segments.Length > 3) continue;
 
-                    string group    = segments.Length >= 2 ? segments[0] : string.Empty;
-                    string subGroup = segments.Length == 3 ? segments[1] : string.Empty;
+                    // Skip if any path segment (dir or file) starts with _ or .
+                    bool hasHiddenSegment = false;
+                    foreach (string seg in segments)
+                        if (seg.StartsWith("_") || seg.StartsWith(".")) { hasHiddenSegment = true; break; }
+                    if (hasHiddenSegment || entry.Name == "API.py") continue;
 
                     string syntheticKey = $"{zipPath}::{entryName}";
                     if (loadedScripts.Contains(syntheticKey)) continue;
