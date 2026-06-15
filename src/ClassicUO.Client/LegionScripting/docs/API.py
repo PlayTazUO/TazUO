@@ -943,7 +943,6 @@ class ApiUiNiceButton(ApiUiBaseControl):
 
 class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
     ""
-    NineSliceGump = None
     Gump: ApiUiBaseGump = None
 
     def GetHue(self) -> "int":
@@ -988,8 +987,22 @@ class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
         """
         pass
 
+    def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
+        """
+         Set the modern gump texture and border size
+        
+        """
+        pass
+
 class ModernNineSliceGump(NineSliceGump):
     ""
+
+    def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
+        """
+         Set the modern gump texture and border size
+        
+        """
+        pass
 
     def SetResizeCallback(self, callback: "Any") -> None:
         """
