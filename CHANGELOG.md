@@ -23,6 +23,7 @@ All notable changes to TazUO will be recorded here.
 * UI language selection on the login screen now applies immediately instead of requiring a restart - [P.R 526](https://github.com/PlayTazUO/TazUO/pull/526) ([bittiez](https://github.com/bittiez))
 * Added loops to in-game macros - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([DavideRei](https://github.com/DavideRei))
 * ZIP file support for Legion Scripting - script libraries with custom PNG artwork can now be distributed and loaded as a single .zip file; scripts in gumps can display zip textures via `API.Gumps.LegionTextureControl` - [P.R 533](https://github.com/PlayTazUO/TazUO/pull/533) ([bittiez](https://github.com/bittiez))
+* Added tuoassets.zip support to override embedded TUO graphics assets; a zip in the client directory overrides embedded assets and a zip in the UO directory takes highest priority for server-specific overrides; supports named embedded asset overrides and gump/art ID overrides matching the existing PNG system - [P.R 534](https://github.com/PlayTazUO/TazUO/pull/534) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
