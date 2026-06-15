@@ -48,7 +48,14 @@ namespace ClassicUO.Assets
         }
 
         public bool TryGetNamedZipTexture(string name, out Texture2D texture)
-            => _zipNamedTextures.TryGetValue(name, out texture);
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                texture = null;
+                return false;
+            }
+            return _zipNamedTextures.TryGetValue(name, out texture);
+        }
 
         public Texture2D GetImageTexture(string fullImagePath)
         {
@@ -356,6 +363,8 @@ namespace ClassicUO.Assets
                 var tex = Texture2D.FromStream(GraphicsDevice, ms);
                 if (tex == null) return;
                 FixPNGAlpha(ref tex);
+                if (_zipNamedTextures.TryGetValue(name, out Texture2D existing) && existing != null && !existing.IsDisposed)
+                    existing.Dispose();
                 _zipNamedTextures[name] = tex;
             }
             catch (Exception ex) { Log.Error($"Error registering named zip texture '{name}': {ex.Message}"); }
