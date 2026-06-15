@@ -14,6 +14,7 @@ namespace ClassicUO.Assets
         private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art";
 
         private string exePath;
+        private string _uoDirectory;
 
         private Dictionary<string, Texture2D> EmbeddedArt = new Dictionary<string, Texture2D>();
         private Dictionary<string, Texture2D> _zipNamedTextures = new Dictionary<string, Texture2D>();
@@ -206,9 +207,10 @@ namespace ClassicUO.Assets
             return pixels;
         }
 
-        public void Load()
+        public void Load(string uoDirectory = null)
         {
             exePath = AppContext.BaseDirectory;
+            _uoDirectory = uoDirectory;
 
             string gumpPath = Path.Combine(exePath, IMAGES_FOLDER, GUMP_EXTERNAL_FOLDER);
 
@@ -294,6 +296,8 @@ namespace ClassicUO.Assets
                     }
                 }
             }
+
+            LoadTuoAssetsZips();
         }
 
         private static void FixPNGAlpha(ref Texture2D texture)
@@ -351,6 +355,107 @@ namespace ClassicUO.Assets
                         }
                     }
                 }
+            }
+        }
+
+        private static bool TryParseId(string value, out uint result)
+        {
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return uint.TryParse(value.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out result);
+            return uint.TryParse(value, out result);
+        }
+
+        private static bool ShouldSkipEntry(string fullName)
+        {
+            string normalized = fullName.Replace('\\', '/');
+            foreach (string seg in normalized.Split('/', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (seg[0] == '_' || seg[0] == '.') return true;
+            }
+            return false;
+        }
+
+        private void LoadTuoAssetsZips()
+        {
+            const string ZIP_NAME = "tuoassets.zip";
+
+            string exeZip = Path.Combine(exePath, ZIP_NAME);
+            LoadTuoAssetsZip(exeZip);
+
+            if (!string.IsNullOrEmpty(_uoDirectory))
+            {
+                string uoZip = Path.Combine(_uoDirectory, ZIP_NAME);
+                if (!string.Equals(uoZip, exeZip, StringComparison.OrdinalIgnoreCase))
+                    LoadTuoAssetsZip(uoZip);
+            }
+        }
+
+        private void LoadTuoAssetsZip(string zipPath)
+        {
+            if (GraphicsDevice == null || !File.Exists(zipPath)) return;
+
+            Log.Info($"Loading tuoassets.zip: {zipPath}");
+            try
+            {
+                using var archive = ZipFile.OpenRead(zipPath);
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue;
+                    if (!entry.Name.EndsWith(".png", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (ShouldSkipEntry(entry.FullName)) continue;
+
+                    byte[] bytes;
+                    using (var ms = new MemoryStream())
+                    using (var es = entry.Open())
+                    {
+                        es.CopyTo(ms);
+                        bytes = ms.ToArray();
+                    }
+
+                    if (EmbeddedArt.ContainsKey(entry.Name))
+                    {
+                        try
+                        {
+                            using var ms = new MemoryStream(bytes);
+                            var tex = Texture2D.FromStream(GraphicsDevice, ms);
+                            if (tex == null) continue;
+                            FixPNGAlpha(ref tex);
+                            if (EmbeddedArt.TryGetValue(entry.Name, out Texture2D old)
+                                && old != null && !old.IsDisposed)
+                                old.Dispose();
+                            EmbeddedArt[entry.Name] = tex;
+                            Log.Debug($"tuoassets.zip overrode embedded asset: {entry.Name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"tuoassets.zip: error overriding embedded asset '{entry.Name}': {ex.Message}");
+                        }
+                        continue;
+                    }
+
+                    string entryPath = entry.FullName.Replace('\\', '/');
+                    string[] parts = entryPath.Split('/');
+                    if (parts.Length >= 2)
+                    {
+                        string folder = parts[parts.Length - 2];
+                        string baseName = Path.GetFileNameWithoutExtension(entry.Name);
+
+                        if (folder.Equals(GUMP_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryParseId(baseName, out uint id))
+                                RegisterGumpFromBytes(id, bytes);
+                        }
+                        else if (folder.Equals(ART_EXTERNAL_FOLDER, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (TryParseId(baseName, out uint fileId))
+                                RegisterArtFromBytes(fileId + 0x4000, bytes);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"tuoassets.zip: error loading '{zipPath}': {ex.Message}");
             }
         }
 
