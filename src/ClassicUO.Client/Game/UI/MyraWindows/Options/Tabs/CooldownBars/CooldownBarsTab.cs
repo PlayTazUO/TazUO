@@ -1,21 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.CooldownBars;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Collections;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
 
-namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
+namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 
-public static class CooldownBarsTab
+internal static partial class CooldownBarsTab
 {
     internal static OptionItem GetContent()
     {
@@ -51,75 +48,16 @@ public static class CooldownBarsTab
 
     private static Rulebase<CooldownBarRule> GetRuleEditor()
     {
-        var rb = new Rulebase<CooldownBarRule>()
+        ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
+
+        var rb = new Rulebase<CooldownBarRule>
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Top,
-            TitleLabel = { Text = "Rules", HorizontalAlignment = HorizontalAlignment.Center }
+            TitleLabel = { Text = cdLang.Conditions, HorizontalAlignment = HorizontalAlignment.Center }
         };
 
-        rb.Columns.AddRange(
-            [
-                new RulebaseColumn<CooldownBarRule>
-                {
-                    Header = "Name",
-                    Proportion = new Proportion(ProportionType.Auto),
-                    CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.Name))
-                },
-                new RulebaseColumn<CooldownBarRule>
-                {
-                    Header = "Hue",
-                    Proportion = new Proportion(ProportionType.Auto),
-                    CellFactory = rule =>
-                    {
-                        var label = new MyraLabel(rule.Hue.ToString(), MyraLabel.TextStyle.P);
-                        return OptionTabCommons.StyledStackPanel(
-                            Orientation.Horizontal,
-                            OptionsFactory.CreateHuePicker(
-                                null,
-                                rule.Hue,
-                                newHue =>
-                                {
-                                    rule.Hue = newHue;
-                                    label.Text = newHue.ToString();
-                                }
-                            ),
-                            label
-                        );
-                    }
-                },
-                new RulebaseColumn<CooldownBarRule>
-                {
-                    Header = "Cooldown",
-                    Proportion = new Proportion(ProportionType.Auto),
-                    CellFactory = rule => OptionsFactory.PropBoundUIntInput(null, new Accessor<uint>(() => rule.Cooldown))
-                },
-                new RulebaseColumn<CooldownBarRule>
-                {
-                    Header = "Trigger Message Type",
-                    Proportion = new Proportion(ProportionType.Auto),
-                    CellFactory = rule =>
-                    {
-                        OptionItem box = OptionsFactory.CreateComboBox(
-                            null,
-                            rule.TriggerMessageType.ToString(),
-                            Enum.GetNames<CooldownTriggerMessageType>(),
-                            newValue => rule.TriggerMessageType = Enum.Parse<CooldownTriggerMessageType>(newValue)
-                        );
-                        box.Width = null;
-                        box.MinWidth = 40;
-                        return box;
-                    }
-                },
-                new RulebaseColumn<CooldownBarRule>
-                {
-                    Header = "Trigger Message",
-                    Proportion = new Proportion(ProportionType.Fill),
-                    CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.TriggerMessage))
-                }
-            ]
-        );
-
+        rb.Columns.AddRange(GetRulebaseColumns());
 
         CoolDownBar.CoolDownConditionData[] cooldownRules = CoolDownBar.CoolDownConditionData.GetAllRules();
         for (uint i = 0; i < cooldownRules.Length; i++)

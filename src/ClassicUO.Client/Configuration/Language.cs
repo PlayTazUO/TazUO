@@ -219,6 +219,11 @@ namespace ClassicUO.Configuration
             public string UseLastMovedBarPosition { get; set; } = "Use last moved bar position";
             public string Conditions { get; set; } = "Conditions";
             public string AddCondition { get; set; } = "+ Add condition";
+            public string Name { get; set; } = "Name";
+            public string Hue { get; set; } = "Hue";
+            public string Cooldown { get; set; } = "Cooldown";
+            public string TriggerMessageType { get; set; } = "Trigger Message Type";
+            public string TriggerMessage { get; set; } = "Trigger Message";
         }
 
         public class GumpsTabLang

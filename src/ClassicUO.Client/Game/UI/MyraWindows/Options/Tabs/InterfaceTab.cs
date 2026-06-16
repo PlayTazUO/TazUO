@@ -1,4 +1,5 @@
 using ClassicUO.Configuration;
+using ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
