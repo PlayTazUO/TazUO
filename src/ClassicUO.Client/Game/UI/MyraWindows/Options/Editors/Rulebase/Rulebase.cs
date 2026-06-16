@@ -20,51 +20,17 @@ using Container = Myra.Graphics2D.UI.Container;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
-public sealed class ReorderedRule<TRule>(TRule rule, int oldOrder, int newOrder) where TRule : IRule
-{
-    public TRule Rule { get; } = rule;
-    public int OldOrder { get; } = oldOrder;
-    public int NewOrder { get; } = newOrder;
-}
-
-public sealed class RuleReorderEventArgs<TRule>(ReorderedRule<TRule>[] modifiedRule, ReorderedRule<TRule>[] cascadingChanges) : EventArgs where TRule : IRule
-{
-    public ReorderedRule<TRule>[] ModifiedRule { get; } = modifiedRule;
-    public ReorderedRule<TRule>[] Rules { get; } = cascadingChanges;
-}
-
-public sealed class RulebaseOrderChangedEventArgs<TRule>(TRule rule, int oldOrder, int newOrder) where TRule : IRule
-{
-    public TRule Rule { get; } = rule;
-    public int OldOrder { get; } = oldOrder;
-    public int NewOrder { get; } = newOrder;
-}
-
 public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : class, IRule, new()
 {
+    #region Events
+
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
-
     public event EventHandler<RulebaseOrderChangedEventArgs<TRule>>? Reordered;
 
-    private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
-    private readonly Panel _contentPanel;
-    private readonly RulebaseTableView<TRule> _tableView;
+    #endregion
 
-    private WrapPanel _toolbar;
-    private BasicButton _addButton;
-    private Widget _editButton;
-    private Widget _deleteButton;
-    private Widget _moveTopButton;
-    private Widget _moveUpButton;
-    private Widget _moveDownButton;
-    private Widget _moveBottomButton;
-
-    private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5)
-    {
-        HorizontalAlignment = HorizontalAlignment.Center
-    };
-    private Desktop? _subscribedDesktop;
+    #region Accessors
 
     public ObservableCollection<TRule> Rules { get; } = [];
     public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
@@ -95,6 +61,28 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         }
     }
 
+    #endregion
+
+    #region Members
+
+    private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
+    private readonly Panel _contentPanel;
+    private readonly RulebaseTableView<TRule> _tableView;
+
+    private WrapPanel _toolbar;
+    private BasicButton _addButton;
+    private Widget _editButton;
+    private Widget _deleteButton;
+    private Widget _moveTopButton;
+    private Widget _moveUpButton;
+    private Widget _moveDownButton;
+    private Widget _moveBottomButton;
+
+    private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5) { HorizontalAlignment = HorizontalAlignment.Center };
+    private Desktop? _subscribedDesktop;
+
+    #endregion
+
     public Rulebase(IRuleConfigurator<TRule>? ruleConfigurator = null)
     {
         _ruleConfigurator = ruleConfigurator;
@@ -110,6 +98,41 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Children.Add(CreateComponent());
         ChildrenLayout = new StackPanelLayout(Orientation.Vertical);
     }
+
+    #region Public Methods
+
+    public void RefreshTable(bool force = false) => _tableView.Refresh(force);
+
+    #endregion
+
+    #region Protected Methods
+
+    #region Overrides
+
+    protected override void OnPlacedChanged()
+    {
+        base.OnPlacedChanged();
+        ManageSubscriptions(Desktop != null);
+    }
+
+    #endregion
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return false;
+
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
+    #endregion
+
+    #region Private Methos
 
     private void InitializeToolbar()
     {
@@ -143,14 +166,6 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         UpdateToolbarState();
     }
 
-    public void RefreshTable(bool force = false) => _tableView.Refresh(force);
-
-    protected override void OnPlacedChanged()
-    {
-        base.OnPlacedChanged();
-        ManageSubscriptions(Desktop != null);
-    }
-
     private void ManageSubscriptions(bool subscribe)
     {
         Rules.CollectionChanged -= OnRuleCollectionChanged;
@@ -179,30 +194,6 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
         _subscribedDesktop = Desktop;
         _subscribedDesktop.TouchDown += OnDesktopTouchDown;
-    }
-
-    private void OnColumnsChanged(object? sender, NotifyCollectionChangedEventArgs e) => _tableView.Refresh();
-    private void OnTableSelectedIndexChanged(object? sender, EventArgs e) => SelectedIndex = _tableView.SelectedIndex;
-    private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
-
-    private void OnDesktopTouchDown(object? sender, EventArgs e)
-    {
-        if (Desktop?.TouchPosition == null || IsInEditor)
-            return;
-
-        Point touchPos = Desktop.TouchPosition.Value;
-        int? hitRow = _tableView.GetRowIndexAt(touchPos);
-
-        if (hitRow.HasValue)
-            SelectedIndex = hitRow;
-        else
-        {
-            bool hitTable = _tableView.HitTest(touchPos) != null;
-            bool hitToolbar = _toolbar.HitTest(touchPos) != null;
-
-            if (!hitTable && !hitToolbar && !IsTouchDownInChildContextMenu(touchPos))
-                SelectedIndex = null;
-        }
     }
 
     private bool IsTouchDownInChildContextMenu(Point touchPos)
@@ -234,7 +225,6 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
             );
 
             return comboContextChild != null;
-
         }) != null;
 
 
@@ -275,22 +265,10 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
             Border = new SolidBrush(MyraStyle.GridBorderColor),
-            BorderThickness = new Thickness(1),
+            BorderThickness = new Thickness(1)
         };
         panel.Widgets.Add(_tableView);
         return panel;
-    }
-
-    private void OnConfiguratorCrud(object? sender, RuleCrudEventArgs<TRule> args)
-    {
-        IsInEditor = false;
-
-        if (args.Event == RuleCrudEventType.Create)
-            AddRule(args.Rule);
-        else
-            RefreshTable();
-
-        RuleCrud?.Invoke(this, args);
     }
 
     private void AddRule(TRule rule)
@@ -417,22 +395,53 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         UpdateToolbarState();
     }
 
+    #region Event Handlers
+
     private void OnRuleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         _tableView.SetRules(Rules);
         UpdateToolbarState();
     }
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
-    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    private void OnConfiguratorCrud(object? sender, RuleCrudEventArgs<TRule> args)
     {
-        if (EqualityComparer<T>.Default.Equals(field, value))
-            return false;
+        IsInEditor = false;
 
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
+        if (args.Event == RuleCrudEventType.Create)
+            AddRule(args.Rule);
+        else
+            RefreshTable();
+
+        RuleCrud?.Invoke(this, args);
     }
+
+    private void OnColumnsChanged(object? sender, NotifyCollectionChangedEventArgs e) => _tableView.Refresh();
+
+    private void OnTableSelectedIndexChanged(object? sender, EventArgs e) => SelectedIndex = _tableView.SelectedIndex;
+
+    private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
+
+    private void OnDesktopTouchDown(object? sender, EventArgs e)
+    {
+        if (Desktop?.TouchPosition == null || IsInEditor)
+            return;
+
+        Point touchPos = Desktop.TouchPosition.Value;
+        int? hitRow = _tableView.GetRowIndexAt(touchPos);
+
+        if (hitRow.HasValue)
+            SelectedIndex = hitRow;
+        else
+        {
+            bool hitTable = _tableView.HitTest(touchPos) != null;
+            bool hitToolbar = _toolbar.HitTest(touchPos) != null;
+
+            if (!hitTable && !hitToolbar && !IsTouchDownInChildContextMenu(touchPos))
+                SelectedIndex = null;
+        }
+    }
+
+    #endregion
+
+    #endregion
 }
