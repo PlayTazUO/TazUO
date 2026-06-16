@@ -100,7 +100,7 @@ namespace ClassicUO.Game.Managers
             // When journal window is open, suppress all on-screen visual output
             // (overhead entity text, container gump text, etc.) but still fire
             // the event so the journal window and scripts get the message.
-            if (UIManager.GetGump<JournalGump>() != null)
+            if (UIManager.GetGump<JournalGump>() != null || UIManager.GetGump<ResizableJournal>() != null)
             {
                 EventSink.InvokeMessageReceived(parent, new MessageEventArgs
                 (
@@ -211,7 +211,7 @@ namespace ClassicUO.Game.Managers
                             {
                                 ((GridContainer)gump.Value).HandleObjectMessage(parent, text, hue);
                             }
-                            if(gump.Value is ModernPaperdoll && !gump.Value.IsDisposed)
+                            if (gump.Value is ModernPaperdoll && !gump.Value.IsDisposed)
                             {
                                 ((ModernPaperdoll)gump.Value).HandleObjectMessage(parent, text, hue);
                             }
@@ -283,8 +283,8 @@ namespace ClassicUO.Game.Managers
                             }
                         }
 
-                        if (parent is Mobile && MessageTypeFilter.IsEnabled(currentProfile.DisabledOverheadMessageTypes, type))                        
-                            break;                        
+                        if (parent is Mobile && MessageTypeFilter.IsEnabled(currentProfile.DisabledOverheadMessageTypes, type))
+                            break;
 
                         parent.AddMessage(msg);
 
