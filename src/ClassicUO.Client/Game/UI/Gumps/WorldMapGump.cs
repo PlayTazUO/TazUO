@@ -1214,35 +1214,42 @@ public class WorldMapGump : ResizableGump
 
         _mapLoading = 1;
 
-        lock (Map.Map.GetMapPngLock())
+        // Generate the PNG on the background thread (CPU work).
+        // The lock is released before dispatching to the main thread to avoid deadlock:
+        // holding the lock while blocking on BubblingInvokeOnMainThread could deadlock
+        // if the main thread also tries to acquire the same lock.
+        string fileMapPath = null;
+        try
         {
-            try
+            lock (Map.Map.GetMapPngLock())
+            {
+                fileMapPath = Map.Map.GenerateMapPng(mapIndex, map, world);
+            }
+        }
+        catch (ThreadInterruptedException)
+        {
+            _mapLoading = 0;
+            return;
+        }
+        finally
+        {
+            _mapLoading = 0;
+        }
+
+        // GPU operations (Dispose + FromStream) must run on the main/render thread.
+        if (!string.IsNullOrEmpty(fileMapPath) && File.Exists(fileMapPath))
+        {
+            MainThreadQueue.BubblingInvokeOnMainThread(() =>
             {
                 _mapTexture?.Dispose();
-
-                // Use Map.GenerateMapPng to generate the PNG file
-                string fileMapPath = Map.Map.GenerateMapPng(mapIndex, map, world);
-
-                // Load the texture from the generated PNG
-                if (!string.IsNullOrEmpty(fileMapPath) && File.Exists(fileMapPath))
-                {
-                    using FileStream stream = File.OpenRead(fileMapPath);
-                    _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
-                    GameActions.Print(ResGumps.WorldMapLoaded, 0x48);
-                }
-                else
-                {
-                    Log.Error($"Failed to generate map PNG for map {mapIndex}");
-                }
-            }
-            catch (ThreadInterruptedException)
-            {
-                _mapLoading = 0;
-            }
-            finally
-            {
-                _mapLoading = 0;
-            }
+                using FileStream stream = File.OpenRead(fileMapPath);
+                _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
+                GameActions.Print(ResGumps.WorldMapLoaded, 0x48);
+            });
+        }
+        else
+        {
+            Log.Error($"Failed to generate map PNG for map {mapIndex}");
         }
     }
 
