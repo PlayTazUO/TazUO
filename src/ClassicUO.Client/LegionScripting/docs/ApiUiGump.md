@@ -181,6 +181,31 @@ description: ApiUiGump class documentation
 
 ---
 
+### LegionTextureControl
+`(textureName, width, height)`
+ Create an image control that displays a named PNG texture loaded from a ZIP archive.
+ Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
+ Example:
+ ```py
+ # In your zip: icons/sword.png
+ img = API.Gumps.LegionTextureControl("icons/sword.png")
+ img.SetPos(10, 10)
+ g.Add(img)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `textureName` | `string` | ❌ No | The PNG path within the ZIP, e.g. "icons/sword.png" or just "sword.png" if at the root |
+| `width` | `int` | ✅ Yes | Display width in pixels; 0 uses the image's natural width |
+| `height` | `int` | ✅ Yes | Display height in pixels; 0 uses the image's natural height |
+
+**Return Type:** `ApiUiLegionTexture`
+
+---
+
 ### CreateGumpButton
 `(text, hue, normal, pressed, hover)`
  Create a button for gumps.

@@ -246,8 +246,8 @@ public class ScriptConstantsEditorWindow : MyraControl
 
     private void RefreshConstants()
     {
-        if (!File.Exists(_script.FullPath)) return;
-        _script.FileContents = File.ReadAllLines(_script.FullPath);
+        if (!_script.FileExists()) return;
+        _script.FileContents = _script.ReadFromFile();
         _script.FileContentsJoined = string.Join("\n", _script.FileContents);
         ParseConstants();
         _hasUnsavedChanges = false;
@@ -272,7 +272,7 @@ public class ScriptConstantsEditorWindow : MyraControl
             foreach (ConstantEntry c in _constants.Values.Where(c => c.OriginalValue != c.EditValue))
                 updatedLines[c.LineNumber] = $"{c.Name} = {c.EditValue}";
 
-            File.WriteAllLines(_script.FullPath, updatedLines);
+            _script.OverrideFileContents(string.Join("\n", updatedLines));
 
             _script.FileContents = updatedLines;
             _script.FileContentsJoined = string.Join("\n", updatedLines);

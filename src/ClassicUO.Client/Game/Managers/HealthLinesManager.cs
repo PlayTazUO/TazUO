@@ -29,47 +29,17 @@ namespace ClassicUO.Game.Managers
         {
             Camera camera = Client.Game.Scene.Camera;
 
-            // if (SerialHelper.IsMobile(_world.TargetManager.LastTargetInfo.Serial))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.LastTargetInfo.Serial,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.LastTargetInfo.Serial);
-            // }
+            bool showTargetIndicator = ProfileManager.CurrentProfile?.ShowTargetIndicator ?? false;
+            bool hasNewTarget = SerialHelper.IsMobile(_world.TargetManager.NewTargetSystemSerial);
 
-            // if (SerialHelper.IsMobile(_world.TargetManager.SelectedTarget))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.SelectedTarget,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.SelectedTarget);
-            // }
-
-            // if (SerialHelper.IsMobile(_world.TargetManager.LastAttack))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.LastAttack,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.LastAttack);
-            // }
-
-            if (!IsEnabled)
+            if (!IsEnabled && !(showTargetIndicator && hasNewTarget))
             {
                 return;
             }
 
             int mode = ProfileManager.CurrentProfile.MobileHPType;
 
-            if (mode < 0)
+            if (mode < 0 && !showTargetIndicator)
             {
                 return;
             }
@@ -95,9 +65,14 @@ namespace ClassicUO.Game.Managers
                     _world.TargetManager.SelectedTarget == mobile ||
                     _world.TargetManager.NewTargetSystemSerial == mobile)
                 {
-                    newTargSystem = useNewTargetSystem && _world.TargetManager.NewTargetSystemSerial == mobile;
+                    newTargSystem = (useNewTargetSystem || showTargetIndicator) && _world.TargetManager.NewTargetSystemSerial == mobile;
                     passive = false;
                     forceDraw = true;
+                }
+
+                if (!isEnabled && !newTargSystem)
+                {
+                    continue;
                 }
 
                 int current = mobile.Hits;
@@ -403,6 +378,10 @@ namespace ClassicUO.Game.Managers
                     );
             }
 
+            if (newTargetSystem && ProfileManager.CurrentProfile != null && !ProfileManager.CurrentProfile.ShowMobilesHP)
+            {
+                return;
+            }
 
             ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(BACKGROUND_GRAPHIC);
             Rectangle bounds = gumpInfo.UV;

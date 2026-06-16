@@ -22,8 +22,11 @@ All notable changes to TazUO will be recorded here.
 * Added an auto stat lock agent - [P.R 524](https://github.com/PlayTazUO/TazUO/pull/524) ([bittiez](https://github.com/bittiez))
 * UI language selection on the login screen now applies immediately instead of requiring a restart - [P.R 526](https://github.com/PlayTazUO/TazUO/pull/526) ([bittiez](https://github.com/bittiez))
 * Added loops to in-game macros - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([DavideRei](https://github.com/DavideRei))
+* ZIP file support for Legion Scripting - script libraries with custom PNG artwork can now be distributed and loaded as a single .zip file; scripts in gumps can display zip textures via `API.Gumps.LegionTextureControl` - [P.R 533](https://github.com/PlayTazUO/TazUO/pull/533) ([bittiez](https://github.com/bittiez))
+* Added tuoassets.zip support to override embedded TUO graphics assets; a zip in the client directory overrides embedded assets and a zip in the UO directory takes highest priority for server-specific overrides; supports named embedded asset overrides and gump/art ID overrides matching the existing PNG system - [P.R 534](https://github.com/PlayTazUO/TazUO/pull/534) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
 * Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
 * Fix NullReferenceException in campfire character selection when a character has no appearance data - [P.R 515](https://github.com/PlayTazUO/TazUO/pull/515) ([bittiez](https://github.com/bittiez))
@@ -40,6 +43,10 @@ All notable changes to TazUO will be recorded here.
 * Fixed IndexOutOfRangeException when pressing the arrow button on the server selection screen - [P.R 520](https://github.com/PlayTazUO/TazUO/pull/520) ([bittiez](https://github.com/bittiez))
 * Fixed server selection gump lingering behind the login screen when stepping back - [P.R 521](https://github.com/PlayTazUO/TazUO/pull/521) ([bittiez](https://github.com/bittiez))
 * Setting reconnect time via launch args would not allow less than 1000(Reconnect time is in seconds, it should be 1) - ([bittiez](https://github.com/bittiez))
+
+### Legion
+* Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
+* Fixed a legion bug where control/gump `.IsDisposed` was not reported correctly. - ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))

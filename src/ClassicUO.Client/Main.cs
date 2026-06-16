@@ -54,37 +54,30 @@ namespace ClassicUO
             AppDomain.CurrentDomain.UnhandledException += (s, e) =>
             {
                 var sb = new StringBuilder();
-                sb.AppendLine("######################## [START LOG] ########################");
-
 #if DEV_BUILD || DEBUG
-                sb.AppendLine($"TazUO [DEV_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}");
+                sb.Append($"[TazUO - DEV (DEBUG: {CUOEnviroment.Debug}) - {CUOEnviroment.Version} - {DateTime.Now}]");
 #else
-                sb.AppendLine($"TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}");
+                sb.Append($"[TazUO [STANDARD_BUILD] - {CUOEnviroment.Version} - {DateTime.Now}]");
 #endif
-                sb.AppendLine($"Framework: {RuntimeInformation.FrameworkDescription}");
+                sb.Append($" [{RuntimeInformation.FrameworkDescription}] [{RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})]");
 
-                sb.AppendLine($"OS: {RuntimeInformation.OSDescription} ({RuntimeInformation.OSArchitecture})");
+                sb.Append($" [{Thread.CurrentThread.Name}]");
 
-                sb.AppendLine($"Thread: {Thread.CurrentThread.Name}");
-                sb.AppendLine();
 
                 if (Settings.GlobalSettings != null)
-                {
-                    sb.AppendLine($"Shard: {Settings.GlobalSettings.IP}");
-                    sb.AppendLine($"ClientVersion: {Settings.GlobalSettings.ClientVersion}");
-                    sb.AppendLine();
-                }
+                    sb.Append($"[{Settings.GlobalSettings.ClientVersion}]");
 
-                string suggestedFix = GetSuggestedFix(e.ExceptionObject);
-                if (suggestedFix != null)
-                    sb.AppendLine(suggestedFix);
+                sb.AppendLine();
 
                 sb.AppendFormat("Exception:\n{0}\n", e.ExceptionObject);
-                sb.AppendLine("######################## [END LOG] ########################");
-                sb.AppendLine();
                 sb.AppendLine();
 
-                HtmlCrashLogGen.Generate(sb.ToString());
+                string suggestedFix = GetSuggestedFix(e.ExceptionObject);
+
+                HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
+
+                if (suggestedFix != null)
+                    sb.AppendLine(suggestedFix);
 
                 Log.Panic(e.ExceptionObject.ToString());
                 string path = Path.Combine(CUOEnviroment.ExecutablePath, "Logs");
