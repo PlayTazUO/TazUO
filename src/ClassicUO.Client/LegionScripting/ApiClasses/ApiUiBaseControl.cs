@@ -42,7 +42,7 @@ public class ApiUiBaseControl(Control control)
     /// <summary>
     /// Check if this control has been disposed(delete/removed/etc)
     /// </summary>
-    public bool IsDisposed => VerifyIntegrity() && control.IsDisposed;
+    public bool IsDisposed => !VerifyIntegrity(); //Verify returns false if null or disposed
 
     /// <summary>
     /// Adds a child control to this control. Works with gumps too (gump.Add(control)).

@@ -8,6 +8,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.Gumps.CharCreation;
 using ClassicUO.Game.UI.Gumps.Login;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Network;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
@@ -90,24 +91,20 @@ namespace ClassicUO.Game.Scenes
 
             if (string.IsNullOrEmpty(Settings.GlobalSettings.IP))
             {
-                UIManager.Add(new InputRequest(_world, "Please enter a server IP to connect to", "Save", "Cancel", (result, input) =>
+                new PromptPopupWindow("Server IP", "Please enter a server IP to connect to", input =>
                 {
-                    if (result == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(input))
+                    if (!string.IsNullOrEmpty(input))
                     {
                         if (Settings.GlobalSettings.Port <= 0)
                         {
-                            UIManager.Add(new InputRequest(_world, "Please enter the port for this server", "Save", "Cancel", (result, input) =>
+                            new PromptPopupWindow("Server Port", "Please enter the port for this server", portInput =>
                             {
-                                if (result == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(input))
+                                if (!string.IsNullOrEmpty(portInput) && ushort.TryParse(portInput, out ushort p))
                                 {
-                                    if (ushort.TryParse(input, out ushort p))
-                                    {
-                                        Settings.GlobalSettings.Port = p;
-                                    }
+                                    Settings.GlobalSettings.Port = p;
                                 }
                                 UIManager.Add(_currentGump = new LoginGump(_world, this));
-                            })
-                            { X = 130, Y = 150 });
+                            }, "Save", "Cancel", () => UIManager.Add(_currentGump = new LoginGump(_world, this)));
                         }
                         else //Port is > 0, possibly valid
                         {
@@ -119,8 +116,7 @@ namespace ClassicUO.Game.Scenes
                     {
                         UIManager.Add(_currentGump = new LoginGump(_world, this));
                     }
-                })
-                { X = 130, Y = 150 });
+                }, "Save", "Cancel", () => UIManager.Add(_currentGump = new LoginGump(_world, this)));
             }
             else
             {
@@ -175,6 +171,7 @@ namespace ClassicUO.Game.Scenes
                     if (CanAutologin && Servers != null && Servers.Length != 0)
                     {
                         int index = GetServerIndexFromSettings();
+
                         // Loop through servers to find the one with matching Index property
                         for (int i = 0; i < Servers.Length; i++)
                         {
@@ -229,7 +226,17 @@ namespace ClassicUO.Game.Scenes
                     return;
 
                 Client.Game.UO.GameCursor.IsLoading = false;
-                UIManager.Add(_currentGump = GetGumpForStep());
+
+                Gump next = GetGumpForStep();
+
+                // Dispose any login screens left over from a previous step before showing the next one.
+                // Step changes can be dispatched from the network thread, so a racing transition may
+                // capture a stale '_currentGump' and orphan the screen an earlier deferred callback
+                // created (most visibly the server selection gump lingering behind the login screen).
+                // Only one of these interactive screens should ever be visible, so clear the rest.
+                DisposeStaleLoginScreens(next);
+
+                UIManager.Add(_currentGump = next);
                 g?.Dispose();
             });
 
@@ -240,8 +247,32 @@ namespace ClassicUO.Game.Scenes
         {
             base.Update();
 
+            LoginHandshake.Instance.CheckHandshakeTimeout();
             LoginHandshake.Instance.HandleReconnect(Settings.GlobalSettings.ReconnectTime * 1000);
             LoginHandshake.Instance.SendPing();
+        }
+
+        /// <summary>
+        /// Disposes any lingering login-flow screens that aren't the one we're about to show.
+        /// These screens are mutually exclusive, so anything orphaned by a racing step change
+        /// (e.g. a server selection gump stuck behind the login screen) gets cleared here.
+        /// </summary>
+        private static void DisposeStaleLoginScreens(Gump keep)
+        {
+            DisposeStaleGumpsOfType<LoginGump>(keep);
+            DisposeStaleGumpsOfType<ServerSelectionGump>(keep);
+            DisposeStaleGumpsOfType<CharacterSelectionGumpBase>(keep);
+            DisposeStaleGumpsOfType<CharCreationGump>(keep);
+        }
+
+        private static void DisposeStaleGumpsOfType<T>(Gump keep) where T : Gump
+        {
+            // 'keep' has not been added to the UIManager yet, so GetGump never returns it; the
+            // reference check is just a safety net to avoid disposing the incoming screen.
+            for (T g = UIManager.GetGump<T>(); g != null && !ReferenceEquals(g, keep); g = UIManager.GetGump<T>())
+            {
+                g.Dispose();
+            }
         }
 
         private Gump GetGumpForStep()
@@ -276,7 +307,7 @@ namespace ClassicUO.Game.Scenes
 
                     return GetLoadingScreen();
 
-                case LoginSteps.CharacterSelection: return new CharacterSelectionGump(_world);
+                case LoginSteps.CharacterSelection: return CreateCharacterSelectionGump();
 
                 case LoginSteps.ServerSelection:
                     return new ServerSelectionGump(_world);
@@ -382,7 +413,7 @@ namespace ClassicUO.Game.Scenes
                 index = Settings.GlobalSettings.LastServerNum;
             }
 
-            if (Servers == null || index < 0 || index >= Servers.Length)
+            if (Servers == null || index < 0) //Server indexis received from the server, it does not always correlate with the server count/list
             {
                 index = 0;
             }
@@ -408,7 +439,6 @@ namespace ClassicUO.Game.Scenes
 
             if (!string.IsNullOrEmpty(serverName))
             {
-                _world.ServerName = serverName;
                 LoginHandshake.Instance.SelectServer(index, serverName);
             }
         }
@@ -478,6 +508,10 @@ namespace ClassicUO.Game.Scenes
                     break;
 
                 case LoginSteps.LoginInToServer:
+                    // Stepping back here reconnects and walks the flow back to server selection.
+                    // If 'Skip Server Select' is enabled the auto-skip would bounce us straight back to
+                    // character selection, so suppress it once to let the user reach the server screen.
+                    LoginHandshake.Instance.BypassServerSelectSkipOnce = true;
                     LoginHandshake.Instance.Disconnect();
                     Connect(Account, Password);
 
@@ -499,13 +533,50 @@ namespace ClassicUO.Game.Scenes
 
         public CityInfo GetCity(int index) => LoginHandshake.Instance.GetCity(index);
 
-        private void UpdateCharacterList()
+        private CharacterSelectionGumpBase CreateCharacterSelectionGump()
         {
-            UIManager.GetGump<CharacterSelectionGump>()?.Dispose();
+            return Settings.GlobalSettings.UseCampfireCharacterSelect
+                ? new CampfireCharacterSelectionGump(_world)
+                : new CharacterSelectionGump(_world);
+        }
+
+        /// <summary>
+        /// Disposes the active character-selection screen and rebuilds it from the current
+        /// style setting. Used by the live style toggle so <see cref="_currentGump"/> stays consistent.
+        /// </summary>
+        public void RebuildCharacterSelection()
+        {
+            UIManager.GetGump<CharacterSelectionGumpBase>()?.Dispose();
 
             _currentGump?.Dispose();
 
-            UIManager.Add(_currentGump = new CharacterSelectionGump(_world));
+            UIManager.Add(_currentGump = CreateCharacterSelectionGump());
+        }
+
+        /// <summary>
+        /// Disposes the active login screen and rebuilds it. Used by the live UI language
+        /// switch so the freshly loaded strings show immediately and <see cref="_currentGump"/>
+        /// stays consistent.
+        /// </summary>
+        public void RebuildLoginGump()
+        {
+            if (CurrentLoginStep != LoginSteps.Main)
+                return;
+
+            UIManager.GetGump<LoginGump>()?.Dispose();
+
+            _currentGump?.Dispose();
+
+            UIManager.Add(_currentGump = new LoginGump(_world, this));
+        }
+
+        private void UpdateCharacterList()
+        {
+            UIManager.GetGump<CharacterSelectionGumpBase>()?.Dispose();
+
+            _currentGump?.Dispose();
+
+            UIManager.Add(_currentGump = CreateCharacterSelectionGump());
             if (!string.IsNullOrWhiteSpace(PopupMessage))
             {
                 Gump g = null;

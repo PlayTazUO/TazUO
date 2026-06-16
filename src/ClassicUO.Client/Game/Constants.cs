@@ -133,6 +133,13 @@ namespace ClassicUO.Game
             public const string IRC_AUTO_CONNECT = "irc_disable_auto_connect";
             public const string PATH_Z_LEVEL = "path_z_level";
             public const string SINGLE_CLICK_SET_LAST_TARG = "single_click_set_last_targ";
+            public const string AUTOLOOT_RETRY_DELAY = "autoloot_retry_delay";
+            public const string OVERHEAD_MESSAGE_TYPES_HIDDEN = "overhead_message_types_shown";
+            public const string SKIP_SERVER_SELECTION = "skip_server_selection";
+            public const string CAMPFIRE_CHAR_SELECT = "campfire_char_select";
+            public const string UI_LANGUAGE = "ui_language";
+            public const string AUTO_STAT_LOCK = "auto_stat_lock";
+            public const string DISABLE_AUTOLOOT_RETRY_CORPSE = "disable_authloot_retry";
         }
     }
 }

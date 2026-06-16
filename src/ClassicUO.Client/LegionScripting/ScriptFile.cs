@@ -39,7 +39,7 @@ public partial class ScriptFile : IDisposable
         CSharp
     }
 
-    private World World;
+    protected World World;
     private bool _disposed;
 
     public ScriptFile(World world, string path, string fileName)
@@ -71,7 +71,7 @@ public partial class ScriptFile : IDisposable
             Type = ScriptType.Python;
     }
 
-    public void OverrideFileContents(string contents)
+    public virtual void OverrideFileContents(string contents)
     {
         string temp = System.IO.Path.GetTempFileName();
 
@@ -88,7 +88,7 @@ public partial class ScriptFile : IDisposable
         }
     }
 
-    public string[] ReadFromFile()
+    public virtual string[] ReadFromFile()
     {
         try
         {
@@ -115,14 +115,14 @@ public partial class ScriptFile : IDisposable
         }
     }
 
-    public bool FileExists() => File.Exists(FullPath);
+    public virtual bool FileExists() => File.Exists(FullPath);
 
-    public void SetupPythonEngine()
+    public virtual void SetupPythonEngine()
     {
         if (PythonEngine != null && !LegionScripting.LScriptSettings.DisableModuleCache)
             return;
 
-        PythonEngine = Python.CreateEngine();
+        PythonEngine = Python.CreateEngine(new Dictionary<string, object>() { { "RecursionLimit", 100 } });
 
         string dir = System.IO.Path.GetDirectoryName(FullPath);
         ICollection<string> paths = PythonEngine.GetSearchPaths();

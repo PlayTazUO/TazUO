@@ -1085,7 +1085,7 @@ namespace ClassicUO.Game.Managers
             int y = place.Y - foundationItem.Y + item.Y;
             IEnumerable<Multi> multiAtTarget = house.GetMultiAt(place.X + item.X, place.Y + item.Y);
 
-            if (!multiAtTarget.Any() && type != CUSTOM_HOUSE_BUILD_TYPE.CHBT_STAIR)
+            if (multiAtTarget?.Any() != true && type != CUSTOM_HOUSE_BUILD_TYPE.CHBT_STAIR)
                 return;
 
             if (!CombinedStair)

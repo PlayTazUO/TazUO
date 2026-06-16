@@ -20,6 +20,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private const int ROWS = 20;
         private const int COLUMNS = 10;
+        private int _pages = 14;
         private readonly Action<ushort> hueChanged;
         private readonly uint serial;
         private int _cPage = 0;
@@ -30,10 +31,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (value < 0)
                 {
-                    _cPage = 14;
+                    _cPage = _pages;
                     return;
                 }
-                if (value > 14)
+                if (value > _pages)
                 {
                     _cPage = 0;
                     return;
@@ -50,6 +51,7 @@ namespace ClassicUO.Game.UI.Gumps
             bool isClickable = false
             ) : base(world, 0, 0)
         {
+            _pages = (int)Math.Ceiling((double)(Client.Game.UO.FileManager.Hues.HuesCount / (ROWS * COLUMNS)));
             CanCloseWithRightClick = true;
             CanMove = true;
             AcceptMouseInput = true;

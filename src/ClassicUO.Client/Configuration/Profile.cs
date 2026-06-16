@@ -57,6 +57,15 @@ namespace ClassicUO.Configuration
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
+        private static Profile _defaultPreview;
+
+        /// <summary>
+        /// A cached default profile with safe default settings, used as a fallback when no profile
+        /// is loaded (e.g. rendering character previews on the login screen). Never touches disk
+        /// and never fires <see cref="PropertyChanged"/>.
+        /// </summary>
+        public static Profile DefaultPreviewProfile => _defaultPreview ??= new Profile();
+
         /// <summary>
         /// Raises the <see cref="PropertyChanged"/> event with the specified property name
         /// </summary>
@@ -179,6 +188,7 @@ namespace ClassicUO.Configuration
         public bool BandageAgentCheckInvul { get; set => SetProperty(ref field, value); } = true;
         public bool BandageAgentBandageFriends { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentBandageAllies { get; set => SetProperty(ref field, value); } = false;
+        public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
 
@@ -779,6 +789,10 @@ namespace ClassicUO.Configuration
         public partial bool HueCorpseAfterAutoloot { get; set; }
 
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_RETRY_DELAY, 5000)]
+        public partial int AutoLootRetryDelay { get; set; }
+
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
         public partial int PathfindingZLevelDiff { get; set; }
 
@@ -812,6 +826,14 @@ namespace ClassicUO.Configuration
                 //     TazUOChatManager.Instance.Init();
             }
         }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
+        public partial uint DisabledOverheadMessageTypes { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_AUTOLOOT_RETRY_CORPSE, false)]
+        public partial bool DisableAutolootCorpseRetry { get; set; } = false;
 
         private long lastSave;
 

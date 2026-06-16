@@ -147,25 +147,25 @@ namespace ClassicUO.Game.UI
                 return false;
             }
 
-            int z_width = _textBox.Width + 8;
-            int z_height = _textBox.Height + 8;
+            int z_width = (int)((_textBox.Width + 8) * Client.Game.RenderScale);
+            int z_height = (int)((_textBox.Height + 8) * Client.Game.RenderScale);
 
             if (x < 0)
             {
                 x = 0;
             }
-            else if (x > Client.Game.Window.ClientBounds.Width - z_width)
+            else if (x > (Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale)- z_width)
             {
-                x = Client.Game.Window.ClientBounds.Width - z_width;
+                x = (int)((Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale) - z_width);
             }
 
             if (y < 0)
             {
                 y = 0;
             }
-            else if (y > Client.Game.Window.ClientBounds.Height - z_height)
+            else if (y > (Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale) - z_height)
             {
-                y = Client.Game.Window.ClientBounds.Height - z_height;
+                y = (int)((Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale) - z_height);
             }
 
             X = x - 4;

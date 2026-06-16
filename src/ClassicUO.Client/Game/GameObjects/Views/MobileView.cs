@@ -34,7 +34,7 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
-            Profile profile = _profile;
+            Profile profile = _profile ?? Profile.DefaultPreviewProfile;
             Managers.AuraManager auraManager = World.AuraManager;
             int clientViewRange = World.ClientViewRange;
 
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.GameObjects
                 overridenHue = Constants.OUT_RANGE_COLOR;
                 hueVec.Y = 1;
             }
-            else if (World.Player.IsDead && profile.EnableBlackWhiteEffect)
+            else if (World.Player != null && World.Player.IsDead && profile.EnableBlackWhiteEffect)
             {
                 overridenHue = Constants.DEAD_RANGE_COLOR;
                 hueVec.Y = 1;
@@ -695,7 +695,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (frames.Length == 0)
             {
-                if (entity != null && entity.ItemData.IsLight) GameScene.Instance.AddLight(owner, owner, x, y);
+                if (entity != null && entity.ItemData.IsLight) GameScene.Instance?.AddLight(owner, entity, x, y);
                 return;
             }
 

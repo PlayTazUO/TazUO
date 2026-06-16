@@ -4,6 +4,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
@@ -24,7 +25,7 @@ namespace ClassicUO.Game.UI.Gumps
 {
     public class ModernOptionsGump : BaseOptionsGump
     {
-        private List<SettingsOption> options = new List<SettingsOption>();
+        private List<SettingsOption> _options = new List<SettingsOption>();
         private Profile profile;
         private ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
 
@@ -89,7 +90,7 @@ namespace ClassicUO.Game.UI.Gumps
             BuildCooldowns();
             BuildTazUO();
 
-            foreach (SettingsOption option in options)
+            foreach (SettingsOption option in _options)
             {
                 MainContent.AddToRight(option.FullControl, false, (int)option.OptionsPage);
             }
@@ -755,7 +756,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             #endregion
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.General));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.General));
         }
 
         private void BuildSound()
@@ -764,7 +765,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.Reset();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 ("",
@@ -775,7 +776,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -791,7 +792,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 ("",
@@ -802,7 +803,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -818,7 +819,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -832,7 +833,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -851,7 +852,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -866,7 +867,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -881,7 +882,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -909,7 +910,7 @@ namespace ClassicUO.Game.UI.Gumps
             // Section header
             var header = TextBox.GetOne(voiceLang.VoiceRecognition, ThemeSettings.FONT,
                 ThemeSettings.STANDARD_TEXT_SIZE + 2, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
-            options.Add(s = new SettingsOption("", header, MainContent.RightWidth, (int)PAGE.Sound));
+            _options.Add(s = new SettingsOption("", header, MainContent.RightWidth, (int)PAGE.Sound));
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
@@ -925,7 +926,7 @@ namespace ClassicUO.Game.UI.Gumps
                 macroManager.PushToBack(macro);
                 UIManager.Add(new MacroButtonGump(World, macro, Mouse.Position.X, Mouse.Position.Y));
             };
-            options.Add(s = new SettingsOption("", createMacroBtn, MainContent.RightWidth, (int)PAGE.Sound));
+            _options.Add(s = new SettingsOption("", createMacroBtn, MainContent.RightWidth, (int)PAGE.Sound));
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
@@ -936,7 +937,7 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.VoiceModelPath = ((InputField.StbTextBox)sender).Text;
                 });
             modelPathInput.SetTooltip(voiceLang.VoiceModelPathTooltip);
-            options.Add(s = new SettingsOption("", modelPathInput, MainContent.RightWidth, (int)PAGE.Sound));
+            _options.Add(s = new SettingsOption("", modelPathInput, MainContent.RightWidth, (int)PAGE.Sound));
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
@@ -947,7 +948,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 voiceManager.Reinitialize();
             };
-            options.Add(s = new SettingsOption("", applyBtn, MainContent.RightWidth, (int)PAGE.Sound));
+            _options.Add(s = new SettingsOption("", applyBtn, MainContent.RightWidth, (int)PAGE.Sound));
             PositionHelper.PositionControl(s.FullControl);
         }
 
@@ -1346,7 +1347,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             #endregion
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.Video));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.Video));
         }
 
         private void BuildMacros()
@@ -1567,7 +1568,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             #endregion
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.Macros));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.Macros));
         }
 
         private void RebuildMacroButtons(LeftSideMenuRightSideContent content, ref int bParam)
@@ -1833,7 +1834,7 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.InfoBar));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.InfoBar));
         }
 
         private void BuildTooltips()
@@ -1841,7 +1842,7 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s;
             PositionHelper.Reset();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1854,7 +1855,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1869,7 +1870,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1883,7 +1884,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1902,7 +1903,7 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s, ss;
             PositionHelper.Reset();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1916,7 +1917,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1934,7 +1935,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1951,7 +1952,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1965,7 +1966,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1978,7 +1979,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -1996,7 +1997,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2013,7 +2014,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2030,7 +2031,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2047,7 +2048,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 ("",
@@ -2058,7 +2059,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             ss = s;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 ("",
@@ -2068,7 +2069,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionExact(s.FullControl, 200, ss.FullControl.Y);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2082,7 +2083,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             ss = s;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2095,7 +2096,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionExact(s.FullControl, 200, ss.FullControl.Y);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 ("",
@@ -2106,7 +2107,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             ss = s;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2119,7 +2120,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionExact(s.FullControl, 200, ss.FullControl.Y);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2133,7 +2134,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             ss = s;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2153,7 +2154,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.Reset();
 
             var scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height);
-            options.Add(new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.CombatSpells));
+            _options.Add(new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.CombatSpells));
 
             Control c;
             scroll.Add(c = new CheckboxWithLabel(lang.GetCombatSpells.HoldTabForCombat, 0, profile.HoldDownKeyTab,
@@ -2278,7 +2279,7 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s;
             PositionHelper.Reset();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2318,7 +2319,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2331,7 +2332,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2346,7 +2347,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2368,7 +2369,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
             PositionHelper.RemoveIndent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2383,7 +2384,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2408,13 +2409,13 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
             PositionHelper.BlankLine();
 
-            options.Add(s = new SettingsOption(lang.GetCounters.CounterLayout, new Area(false), MainContent.RightWidth,
+            _options.Add(s = new SettingsOption(lang.GetCounters.CounterLayout, new Area(false), MainContent.RightWidth,
                 (int)PAGE.Counters));
             PositionHelper.PositionControl(s.FullControl);
 
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2433,7 +2434,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2456,7 +2457,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
             SettingsOption ss = s;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2484,7 +2485,7 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s;
             PositionHelper.Reset();
 
-            options.Add(s = new SettingsOption(lang.GetContainers.Description, new Area(false), MainContent.RightWidth,
+            _options.Add(s = new SettingsOption(lang.GetContainers.Description, new Area(false), MainContent.RightWidth,
                 (int)PAGE.Containers));
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
@@ -2493,7 +2494,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Client.Game.UO.Version >= ClientVersion.CV_705301)
             {
-                options.Add
+                _options.Add
                 (
                     s = new SettingsOption
                     (
@@ -2515,7 +2516,7 @@ namespace ClassicUO.Game.UI.Gumps
                 PositionHelper.BlankLine();
             }
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2537,7 +2538,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2554,7 +2555,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (Client.Game.UO.Version >= ClientVersion.CV_706000)
             {
-                options.Add
+                _options.Add
                 (
                     s = new SettingsOption
                     (
@@ -2569,7 +2570,7 @@ namespace ClassicUO.Game.UI.Gumps
                 PositionHelper.BlankLine();
             }
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2586,7 +2587,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2602,7 +2603,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2620,7 +2621,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
 
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2634,7 +2635,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2649,7 +2650,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2673,7 +2674,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             ModernButton rebuildContainers;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2694,7 +2695,7 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s;
             PositionHelper.Reset();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2708,7 +2709,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2722,7 +2723,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2736,7 +2737,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2750,7 +2751,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2893,7 +2894,7 @@ namespace ClassicUO.Game.UI.Gumps
                 content.ActivePage = nb.ButtonParameter;
             }
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.NameplateOptions));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.NameplateOptions));
         }
 
         private void BuildCooldowns()
@@ -2901,12 +2902,12 @@ namespace ClassicUO.Game.UI.Gumps
             SettingsOption s;
             PositionHelper.Reset();
 
-            options.Add(s = new SettingsOption(lang.GetCooldowns.CustomCooldownBars, new Area(false),
+            _options.Add(s = new SettingsOption(lang.GetCooldowns.CustomCooldownBars, new Area(false),
                 MainContent.RightWidth, (int)PAGE.TUOCooldowns));
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2926,7 +2927,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2946,7 +2947,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.BlankLine();
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -2963,7 +2964,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.BlankLine();
             PositionHelper.BlankLine();
 
-            options.Add(s = new SettingsOption(lang.GetCooldowns.Conditions, new Area(false), MainContent.RightWidth,
+            _options.Add(s = new SettingsOption(lang.GetCooldowns.Conditions, new Area(false), MainContent.RightWidth,
                 (int)PAGE.TUOCooldowns));
             PositionHelper.PositionControl(s.FullControl);
 
@@ -2971,7 +2972,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             ModernButton addcond;
 
-            options.Add
+            _options.Add
             (
                 s = new SettingsOption
                 (
@@ -3019,7 +3020,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             scroll.Add(conditionsDataBox);
 
-            options.Add(s = new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.TUOCooldowns));
+            _options.Add(s = new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.TUOCooldowns));
             PositionHelper.PositionControl(s.FullControl);
         }
 
@@ -3828,51 +3829,45 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    UIManager.Add
+                    new PromptPopupWindow
                     (
-                        new InputRequest
-                        (
-                            World, lang.GetTazUO.InputRequestUrl, lang.GetTazUO.Download, lang.GetTazUO.Cancel,
-                            (r, s) =>
+                        lang.GetTazUO.ImportFromUrl, lang.GetTazUO.InputRequestUrl,
+                        url =>
+                        {
+                            if (!string.IsNullOrEmpty(url))
                             {
-                                if (r == InputRequest.Result.BUTTON1 && !string.IsNullOrEmpty(s))
+                                if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
                                 {
-                                    if (Uri.TryCreate(s, UriKind.Absolute, out Uri uri))
-                                    {
-                                        GameActions.Print(World, lang.GetTazUO.AttemptingToDownloadSpellConfig);
+                                    GameActions.Print(World, lang.GetTazUO.AttemptingToDownloadSpellConfig);
 
-                                        Task.Factory.StartNew
-                                        (() =>
+                                    Task.Factory.StartNew
+                                    (() =>
+                                        {
+                                            try
                                             {
-                                                try
-                                                {
-                                                    using var httpClient = new HttpClient();
-                                                    string result = httpClient.GetStringAsync(uri).Result;
+                                                using var httpClient = new HttpClient();
+                                                string result = httpClient.GetStringAsync(uri).Result;
 
-                                                    if (SpellVisualRangeManager.Instance.LoadFromString(result))
-                                                    {
-                                                        GameActions.Print(World,
-                                                            lang.GetTazUO.SuccesfullyDownloadedNewSpellConfig);
-                                                    }
-                                                }
-                                                catch (Exception ex)
+                                                if (SpellVisualRangeManager.Instance.LoadFromString(result))
                                                 {
                                                     GameActions.Print(World,
-                                                        string.Format(
-                                                            lang.GetTazUO.FailedToDownloadTheSpellConfigExMessage,
-                                                            ex.Message));
+                                                        lang.GetTazUO.SuccesfullyDownloadedNewSpellConfig);
                                                 }
                                             }
-                                        );
-                                    }
+                                            catch (Exception ex)
+                                            {
+                                                GameActions.Print(World,
+                                                    string.Format(
+                                                        lang.GetTazUO.FailedToDownloadTheSpellConfigExMessage,
+                                                        ex.Message));
+                                            }
+                                        }
+                                    );
                                 }
-                            },
-                            "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
-                        )
-                        {
-                            X = (Client.Game.Window.ClientBounds.Width >> 1) - 50,
-                            Y = (Client.Game.Window.ClientBounds.Height >> 1) - 50
-                        }
+                            }
+                        },
+                        lang.GetTazUO.Download, lang.GetTazUO.Cancel, null,
+                        "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
                     );
                 }
             };
@@ -4031,6 +4026,37 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 ), true, page
             );
+
+            content.RemoveIndent();
+            content.BlankLine();
+
+            content.AddToRight(TextBox.GetOne(
+                    "Disable overhead messages of these types:",
+                    ThemeSettings.FONT,
+                    ThemeSettings.STANDARD_TEXT_SIZE,
+                    ThemeSettings.TEXT_FONT_COLOR, 
+                    TextBox.RTLOptions.Default()),
+                true, page);
+
+            content.Indent();
+            foreach (MessageType mtype in Enum.GetValues<MessageType>())
+            {
+                if(mtype == MessageType.Discord || mtype == MessageType.ChatSystem || mtype == MessageType.Encoded)
+                    continue;
+
+                content.AddToRight
+                (
+                    c = new CheckboxWithLabel
+                    (
+                        Enum.GetName(mtype), 0, MessageTypeFilter.IsEnabled(profile.DisabledOverheadMessageTypes, mtype), (b) =>
+                        {
+                            profile.DisabledOverheadMessageTypes = MessageTypeFilter.SetEnabled(profile.DisabledOverheadMessageTypes, mtype, b);
+                        }
+                    ), true, page
+                );
+            }
+
+            content.BlankLine();
 
             #endregion
 
@@ -4485,7 +4511,6 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    SetProfileAsDefault(CurrentProfile);
                     World.Macros.Save(Path.Combine(RootPath, "macros.xml"));
                     GameActions.Print(World, lang.GetTazUO.SetMacrosAsDefaultSuccess, Constants.HUE_SUCCESS, Data.MessageType.System);
                 }
@@ -4734,7 +4759,7 @@ namespace ClassicUO.Game.UI.Gumps
             #endregion
 
 
-            options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.TUOOptions));
+            _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.TUOOptions));
         }
 
         public override void Dispose()
@@ -4762,23 +4787,37 @@ namespace ClassicUO.Game.UI.Gumps
             string label,
             string selectedFont = "",
             Action<int, string> onSelect = null
-            )
+        )
         {
+            const int comboBoxMaxWidth = 300;
+
+            // Fallback to embedded fonts if we've gotten nothing here, for some reason.
+            string[] options;
+            int comboBoxWidth;
+            if (fontNames?.Length > 0)
+            {
+                options = fontNames;
+                // Guesstimate the combo's width based on the longest font name, otherwise we get bad wrapping/truncations.
+                // Definitely not a "pretty" solution but works well enough until we overhaul the settings pages.
+                comboBoxWidth = Math.Min(maxFontNameLength * 8, comboBoxMaxWidth);
+            }
+            else
+            {
+                options = EmbeddedFontNames.Names.ToArray();
+                comboBoxWidth = comboBoxMaxWidth;
+            }
+
             // Make sure the index is never out-of-bounds;
             // This can technically happen if a profile is moved to a machine that lacks the currently selected font.
             // Ideally, we'd want some 'warning' marker in the UI, but that's for a later time.
-            int selectedFontInd = Math.Clamp(Array.IndexOf(fontNames, selectedFont), 0, fontNames.Length - 1);
-
-            // Guesstimate the combo's width based on the longest font name, otherwise we get bad wrapping/truncations.
-            // Definitely not a "pretty" solution but works well enough until we overhaul the settings pages.
-            int comboBoxWidth = Math.Min(maxFontNameLength * 8, 300);
+            int selectedFontInd = Math.Clamp(Array.IndexOf(options, selectedFont), 0, options.Length - 1);
 
             return new ComboBoxWithLabel(
                 World,
                 label,
                 0,
                 comboBoxWidth,
-                fontNames,
+                options,
                 selectedFontInd,
                 onSelect,
                 false

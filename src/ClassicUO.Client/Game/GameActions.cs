@@ -64,9 +64,9 @@ internal static class GameActions
     {
         ScriptManagerWindow window = ScriptManagerWindow.Instance;
 
-        if (window != null && window.IsVisible)
+        if (window != null && window.IsVisible && !window.IsDisposed)
         {
-            window.IsVisible = false;
+            window.Dispose();
             return true;
         }
 

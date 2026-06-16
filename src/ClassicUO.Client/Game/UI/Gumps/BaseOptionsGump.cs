@@ -2262,7 +2262,11 @@ public class BaseOptionsGump : Gump
                 // Find the display index for the selected original index
                 int displayIndex = selected > -1 ? Array.IndexOf(_originalIndices, selected) : -1;
 
-                string initialText = displayIndex > -1 ? _sortedItems[displayIndex] : _sortedItems[_originalIndices[0]];
+                string initialText;
+                if (_sortedItems?.Length > 0)
+                    initialText = displayIndex > -1 ? _sortedItems[displayIndex] : _sortedItems[0];
+                else
+                    initialText = "";
 
                 Add(new ColorBox(Width, Height, ThemeSettings.SEARCH_BACKGROUND));
 

@@ -236,8 +236,12 @@ namespace ClassicUO.LegionScripting
             // Dispose of any timed callbacks
             foreach (TimedCallback callback in _timedCallbacks.Values)
             {
-                callback.Timer?.Stop();
-                callback.Timer?.Dispose();
+                lock (callback)
+                {
+                    callback.IsCancellationRequested = true;
+                    callback.Timer?.Stop();
+                    callback.Timer?.Dispose();
+                }
             }
             _timedCallbacks.Clear();
 
@@ -434,9 +438,9 @@ namespace ClassicUO.LegionScripting
         /// </param>
         /// <param name="callback">The callback to invoke</param>
         /// <param name="timesToRepeat">
-        /// The number of times the callback the callback should be repeated after the initial invocation.
+        /// The number of times the callback should be repeated after the initial invocation.
         /// Repeated invocations respect the requested delay.
-        /// A negative number means "forever", 0 means "do not repeat" (i.e., invoke once) and positive numbers mean "repeat N times".
+        /// A negative number means "forever", 0 means "do not repeat" (i.e., invoke once), and positive numbers mean "repeat N times".
         /// A repeat of '9', for example, will result in 10 total invocations (1 initial + 9 repeats).
         /// </param>
         /// <returns>
@@ -450,19 +454,32 @@ namespace ClassicUO.LegionScripting
 
             uint id = Interlocked.Increment(ref _timedCallbackCurrentId);
             var timer = new Timer(clampedDelay) { AutoReset = false };
-            var callbackData = new TimedCallback(timer, timesToRepeat);
+            var callbackData = new TimedCallback(callback, timer, timesToRepeat);
             timer.Elapsed += (_, _) =>
             {
-                if (_disposed || !_timedCallbacks.ContainsKey(id))
+                if (_disposed || !_timedCallbacks.TryGetValue(id, out TimedCallback freshCallbackData))
                     return;
 
-                ScheduleCallbackActions([WrapScriptCallback(callback)]);
+                lock (freshCallbackData)
+                {
+                    ScheduleCallbackActions([
+                        WrapScriptCallback(() =>
+                        {
+                            // Notice this is a boolean check, not a CTS.
+                            // Must be done under the lock to remain safe.
+                            if (freshCallbackData.IsCancellationRequested)
+                                return;
 
-                callbackData.TimesInvoked++;
-                if (callbackData.TimesToRepeat < 0 || callbackData.TimesInvoked <= (ulong)callbackData.TimesToRepeat)
-                    timer.Start();
-                else
-                    RemoveTimedCallback(id);
+                            freshCallbackData.Callback();
+                        })
+                    ]);
+
+                    callbackData.TimesInvoked++;
+                    if (callbackData.TimesToRepeat < 0 || callbackData.TimesInvoked <= (ulong)callbackData.TimesToRepeat)
+                        timer.Start();
+                    else
+                        RemoveTimedCallback(id);
+                }
             };
 
             _timedCallbacks[id] = callbackData;
@@ -480,8 +497,15 @@ namespace ClassicUO.LegionScripting
             if (!_timedCallbacks.TryRemove(id, out TimedCallback callback))
                 return;
 
-            callback.Timer?.Stop();
-            callback.Timer?.Dispose();
+            lock (callback)
+            {
+                // Mark for cancellation - this is relevant only if the task has already been dispatched to the callback queue.
+                // The reason we can't use a CTS here is that lifecycle control is split between multiple threads.
+                // Notice this is set under lock.
+                callback.IsCancellationRequested = true;
+                callback.Timer?.Stop();
+                callback.Timer?.Dispose();
+            }
         }
 
         /// <summary>

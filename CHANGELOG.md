@@ -2,7 +2,63 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development ( `dev` branch )
+## In Development
+
+### Features
+* Pet support for the bandage agent - [P.R 485](https://github.com/PlayTazUO/TazUO/pull/485) ([yuval-po](https://github.com/yuval-po))
+* Allow dropping of items onto minimized grid containers - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
+* Auto focus and enter to submit support added to prompt input window - [P.R 486](https://github.com/PlayTazUO/TazUO/pull/486) ([bittiez](https://github.com/bittiez))
+* Add overhead message filter option - [P.R 494](https://github.com/PlayTazUO/TazUO/pull/494) ([bittiez](https://github.com/bittiez))
+* Color picker gump now dynamically calculates page count based on loaded hues. Updated shader slightly for supporting hues past 3k. - [P.R 496](https://github.com/PlayTazUO/TazUO/pull/496) ([bittiez](https://github.com/bittiez))
+* Add option to skip server select & reorganized login gump - [P.R 498](https://github.com/PlayTazUO/TazUO/pull/498) ([bittiez](https://github.com/bittiez))
+* Opening an already open grid container will now unminimize it if minimized and bring it to the front - [P.R 502](https://github.com/PlayTazUO/TazUO/pull/502) ([bittiez](https://github.com/bittiez))
+* Script manager and assistant windows now re-center when reopened via toolbar button instead of closing/reopening - [P.R 503](https://github.com/PlayTazUO/TazUO/pull/503) ([bittiez](https://github.com/bittiez))
+* Swapped a few hard coded texts for their cliloc equivelent - [P.R 505](https://github.com/PlayTazUO/TazUO/pull/505) ([bittiez](https://github.com/bittiez))
+* Auto loot corpse retry delay is now configurable in the Auto Loot agent UI (range 1000–600000ms, default 5000ms) - [P.R 508](https://github.com/PlayTazUO/TazUO/pull/508) ([bittiez](https://github.com/bittiez))
+* Added a quick settings.json editor on the login gump - [P.R 510](https://github.com/PlayTazUO/TazUO/pull/510) ([bittiez](https://github.com/bittiez))
+* Added an alternative character select screen - [P.R 513](https://github.com/PlayTazUO/TazUO/pull/513) ([bittiez](https://github.com/bittiez))
+* Added a macro to set an organizer's source container via target - [P.R 516](https://github.com/PlayTazUO/TazUO/pull/516) ([bittiez](https://github.com/bittiez))
+* Added new language system for easier futute translations - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([bittiez](https://github.com/bittiez))
+* Added an auto stat lock agent - [P.R 524](https://github.com/PlayTazUO/TazUO/pull/524) ([bittiez](https://github.com/bittiez))
+* UI language selection on the login screen now applies immediately instead of requiring a restart - [P.R 526](https://github.com/PlayTazUO/TazUO/pull/526) ([bittiez](https://github.com/bittiez))
+* Added loops to in-game macros - [P.R 519](https://github.com/PlayTazUO/TazUO/pull/519) ([DavideRei](https://github.com/DavideRei))
+* ZIP file support for Legion Scripting - script libraries with custom PNG artwork can now be distributed and loaded as a single .zip file; scripts in gumps can display zip textures via `API.Gumps.LegionTextureControl` - [P.R 533](https://github.com/PlayTazUO/TazUO/pull/533) ([bittiez](https://github.com/bittiez))
+* Added tuoassets.zip support to override embedded TUO graphics assets; a zip in the client directory overrides embedded assets and a zip in the UO directory takes highest priority for server-specific overrides; supports named embedded asset overrides and gump/art ID overrides matching the existing PNG system - [P.R 534](https://github.com/PlayTazUO/TazUO/pull/534) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
+* Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
+* Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
+* Fix NullReferenceException in campfire character selection when a character has no appearance data - [P.R 515](https://github.com/PlayTazUO/TazUO/pull/515) ([bittiez](https://github.com/bittiez))
+* Mouse wheel macros hijack scroll from shop gumps - [P.R 479](https://github.com/PlayTazUO/TazUO/pull/479) ([yuval-po](https://github.com/yuval-po))
+* FindItems now properly returns the highest level container - [P.R 488](https://github.com/PlayTazUO/TazUO/pull/488) ([Jascen](https://github.com/Jascen))
+* Grid container label missing updates - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
+* Fixed server index from name - ([bittiez](https://github.com/bittiez))
+* Fixed bulletin board crash - ([bittiez](https://github.com/bittiez))
+* Added maximum depth recursion to legion py scripting to prevent stack overflow - ([bittiez](https://github.com/bittiez))
+* Fixed tooltips going outside window bounds when scaled - ([bittiez](https://github.com/bittiez))
+* Fixed logout gump not being centered when scaled - ([bittiez](https://github.com/bittiez))
+* Back button now reaches the server select & username screens when 'Skip Server Select' is enabled, and added a `-skipserverselect` command-line arg - [P.R 512](https://github.com/PlayTazUO/TazUO/pull/512) ([bittiez](https://github.com/bittiez))
+* Fixed an issue with Toggle Legion Script macro not reoping it - ([bittiez](https://github.com/bittiez))
+* Fixed IndexOutOfRangeException when pressing the arrow button on the server selection screen - [P.R 520](https://github.com/PlayTazUO/TazUO/pull/520) ([bittiez](https://github.com/bittiez))
+* Fixed server selection gump lingering behind the login screen when stepping back - [P.R 521](https://github.com/PlayTazUO/TazUO/pull/521) ([bittiez](https://github.com/bittiez))
+* Setting reconnect time via launch args would not allow less than 1000(Reconnect time is in seconds, it should be 1) - ([bittiez](https://github.com/bittiez))
+
+### Legion
+* Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
+* Fixed a legion bug where control/gump `.IsDisposed` was not reported correctly. - ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
+* Add option to toggle bandage agent from macros - [P.R 491](https://github.com/PlayTazUO/TazUO/pull/491) ([bittiez](https://github.com/bittiez))
+* Refactored PromptPopupWindow into a reusable text prompt and replaced InputRequest with it - [P.R 509](https://github.com/PlayTazUO/TazUO/pull/509) ([bittiez](https://github.com/bittiez))
+* Managed zlib is now a global setting, defaults to enabled on Linux and disabled on Windows/Mac, and the `-zlib` arg now persists the setting - [P.R 514](https://github.com/PlayTazUO/TazUO/pull/514) ([bittiez](https://github.com/bittiez))
+* Add option to disable corpse retry in autoloot - [P.R 525](https://github.com/PlayTazUO/TazUO/pull/525) ([bittiez](https://github.com/bittiez))
+
+
+---
+
+## V5.2.0
 
 ### Features
 * Automatic loading of system fonts - [P.R 444](https://github.com/PlayTazUO/TazUO/pull/444) ([yuval-po](https://github.com/yuval-po) & [bittiez](https://github.com/bittiez))
@@ -42,6 +98,8 @@ All notable changes to TazUO will be recorded here.
 * Two Modern Paperdoll issues (closure and context menus) - [P.R 468](https://github.com/PlayTazUO/TazUO/pull/468) ([yuval-po](https://github.com/yuval-po))
 * Allow resetting of outline color via the SetOutlineColor API - [P.R 471](https://github.com/PlayTazUO/TazUO/pull/471) ([yuval-po](https://github.com/yuval-po))
 
+---
+
 ## V5.1.0
 
 ### Assistant
@@ -50,6 +108,8 @@ All notable changes to TazUO will be recorded here.
 
 ### Fixes
 * Fix accidentally broken game viewport - ([bittiez](https://github.com/bittiez))
+
+---
 
 ## V5.0.0
 

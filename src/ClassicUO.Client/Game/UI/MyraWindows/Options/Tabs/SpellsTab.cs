@@ -51,26 +51,27 @@ public static class SpellsTab
         ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.SpellsTab;
         UIManager.Add
         (
-            new InputRequest
+            new PromptPopupWindow
             (
-                World.Instance,
+                lang.ImportIndicatorsFromUrl,
                 lang.SpellIndicatorsDownloadPrompt,
+                url => _ = OnDownloadConfirmed(url),
                 uiLang.Download,
                 uiLang.Cancel,
-                (result, input) => _ = OnDownloadGumpClosed(result, input),
+                null,
                 "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
             ) { X = (Client.Game.Window.ClientBounds.Width >> 1) - 50, Y = (Client.Game.Window.ClientBounds.Height >> 1) - 50 }
         );
     }
 
-    private static async Task OnDownloadGumpClosed(InputRequest.Result result, string input)
+    private static async Task OnDownloadConfirmed(string url)
     {
         ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
 
-        if (result != InputRequest.Result.BUTTON1 || string.IsNullOrEmpty(input))
+        if (string.IsNullOrWhiteSpace(url))
             return;
 
-        if (!Uri.TryCreate(input, UriKind.Absolute, out Uri uri))
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
             return;
 
         GameActions.Print(World.Instance, tuoLang.AttemptingToDownloadSpellConfig);

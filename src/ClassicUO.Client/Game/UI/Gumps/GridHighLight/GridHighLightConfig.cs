@@ -25,18 +25,18 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             Add(new AlphaBlendControl(0.85f) { Width = Width, Height = HEIGHT });
 
             Label label;
-            Add(label = new Label("Properties configuration (separated by a new line)", true, 0xffff) { X = 0, Y = lastYitem });
+            Add(label = new Label(TazLang.Get("gridhighlight_config_title"), true, 0xffff) { X = 0, Y = lastYitem });
 
             lastYitem += 20;
 
             List<(string Label, HashSet<string> Set)> categories = new()
                 {
-                    ("Properties", GridHighlightRules.Properties),
-                    ("Super slayers", GridHighlightRules.SuperSlayerProperties),
-                    ("Slayers", GridHighlightRules.SlayerProperties),
-                    ("Resistances", GridHighlightRules.Resistances),
-                    ("Negatives", GridHighlightRules.NegativeProperties),
-                    ("Rarity", GridHighlightRules.RarityProperties)
+                    (TazLang.Get("gridhighlight_cat_properties"), GridHighlightRules.Properties),
+                    (TazLang.Get("gridhighlight_cat_superslayers"), GridHighlightRules.SuperSlayerProperties),
+                    (TazLang.Get("gridhighlight_cat_slayers"), GridHighlightRules.SlayerProperties),
+                    (TazLang.Get("gridhighlight_cat_resistances"), GridHighlightRules.Resistances),
+                    (TazLang.Get("gridhighlight_cat_negatives"), GridHighlightRules.NegativeProperties),
+                    (TazLang.Get("gridhighlight_cat_rarity"), GridHighlightRules.RarityProperties)
                 };
             foreach ((string labelText, HashSet<string> propSet) in categories)
             {
@@ -70,7 +70,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                             ProfileManager.CurrentProfile.ConfigurableProperties = parsed;
                             GridHighlightRules.SaveGridHighlightConfiguration();
-                            propertiesPropInput.Add(new FadingLabel(10, "Saved", true, 0xff) { X = 0, Y = 0 });
+                            propertiesPropInput.Add(new FadingLabel(10, TazLang.Get("gridhighlight_saved"), true, 0xff) { X = 0, Y = 0 });
                         }
                     }
                     catch (TaskCanceledException) { }

@@ -1221,7 +1221,11 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
-            if (CanExecuteMacro())
+            // There's a bit of an edge case here - if the control is 'scrollable',
+            // we may want to direct the input to it, rather than execute a macro.
+            // Since it's basically impossible to know, from this vantage point, what gump we're looking at,
+            // this check specifically targets the Shop Gump. This is the least invasive, if imperfect solution right now.
+            if (CanExecuteMacro() && UIManager.TopMostControl is not ShopGump)
             {
                 Macro macro = _world.Macros.FindMacro(up, Keyboard.Alt, Keyboard.Ctrl, Keyboard.Shift);
 

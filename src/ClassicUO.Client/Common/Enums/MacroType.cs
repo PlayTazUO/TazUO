@@ -110,5 +110,8 @@ public enum MacroType
     ToggleAutoLoot,
     ToggleVoiceRecognition,
     SetLastTarget,
-    ToggleAutoWalk
+    ToggleAutoWalk,
+    ToggleBandageAgent,
+    SetOrganizerSource,
+    LoopContainer
 }

@@ -209,7 +209,7 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                         -1,
                         200,
                         false,
-                        "Click here"
+                        TazLang.Get("charcreate_skillclickhere")
                     )
                 );
 

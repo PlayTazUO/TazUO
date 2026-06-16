@@ -87,6 +87,16 @@ public class NineSliceGump : Gump
         WantUpdateSize = false;
     }
 
+    public void ReplaceTexture(Texture2D texture, int borderSize)
+    {
+        if (texture == null) return;
+
+        _customTexture = texture;
+        _borderSize = borderSize;
+
+        CalculateSlices();
+    }
+
     private void CalculateSlices()
     {
         if (_customTexture == null) return;

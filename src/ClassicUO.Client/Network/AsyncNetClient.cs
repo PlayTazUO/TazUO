@@ -107,10 +107,11 @@ namespace ClassicUO.Network
             {
                 while (!cancellationToken.IsCancellationRequested && IsConnected)
                 {
-                    int toRead = Math.Min(buffer.Length, _socket.Client.Available);
-                    int bytesRead = -1;
-                    if(toRead > 0)
-                        bytesRead = await _stream.ReadAsync(buffer, 0, toRead, cancellationToken);
+                    // Read directly instead of gating on Available. A blocking ReadAsync returns 0
+                    // when the remote closes the connection (FIN); gating on Available > 0 meant a
+                    // graceful/half-open close was never detected, leaving the socket "connected"
+                    // forever. ReadAsync also yields naturally, so no busy-wait delay is needed.
+                    int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
 
                     if (bytesRead == 0)
                     {
@@ -120,15 +121,13 @@ namespace ClassicUO.Network
                         break;
                     }
 
-                    if (bytesRead > 0 && !cancellationToken.IsCancellationRequested)
+                    if (!cancellationToken.IsCancellationRequested)
                     {
                         byte[] data = new byte[bytesRead];
                         Array.Copy(buffer, data, bytesRead);
                         _client.OnDataReceived(data);
                         //OnDataReceived?.Invoke(this, data);
                     }
-
-                    await Task.Delay(1, cancellationToken);
                 }
             }
             catch (IOException ioEx) when (ioEx.InnerException is SocketException socketEx)

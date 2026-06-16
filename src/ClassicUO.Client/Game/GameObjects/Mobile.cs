@@ -581,7 +581,7 @@ namespace ClassicUO.Game.GameObjects
         private void ProcessFootstepsSound()
         {
             if (
-                ProfileManager.CurrentProfile.EnableFootstepsSound
+                (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.EnableFootstepsSound)
                 && IsHuman
                 && !IsHidden
                 && !IsDead

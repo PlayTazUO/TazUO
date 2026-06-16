@@ -1,16 +1,18 @@
+using System;
 using System.Timers;
+using ClassicUO.Assets;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
 {
-    private readonly NineSliceGump _nineSliceGump;
+    private readonly ModernNineSliceGump _nineSliceGump;
     private readonly LegionAPI _api;
     private object _onResizedCallback;
-    public NineSliceGump NineSliceGump => _nineSliceGump;
 
     /// <summary>
     /// Creates a modern nine-slice gump using ModernUIConstants
@@ -26,7 +28,7 @@ public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
     public ApiUiNineSliceGump(LegionAPI api, int x, int y, int width, int height, bool resizable = true, int minWidth = 50, int minHeight = 50, object onResized = null)
         : base(CreateNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight))
     {
-        _nineSliceGump = (NineSliceGump)Control;
+        _nineSliceGump = (ModernNineSliceGump)Control;
         _api = api;
         _onResizedCallback = onResized;
 
@@ -37,7 +39,7 @@ public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
         }
     }
 
-    private static NineSliceGump CreateNineSliceGump(LegionAPI api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight) => new ModernNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight);
+    private static ModernNineSliceGump CreateNineSliceGump(LegionAPI api, int x, int y, int width, int height, bool resizable, int minWidth, int minHeight) => new ModernNineSliceGump(api, x, y, width, height, resizable, minWidth, minHeight);
 
     private void SetupResizeCallback()
     {
@@ -110,6 +112,17 @@ public class ApiUiNineSliceGump : ApiUiBaseControl, IApiGump
             MainThreadQueue.EnqueueAction(() => _nineSliceGump.BorderSize = borderSize);
     }
 
+    /// <summary>
+    /// Set the modern gump texture and border size
+    /// </summary>
+    /// <param name="texture"></param>
+    /// <param name="borderSize"></param>
+    public void SetLegionTexture(string texture, int borderSize)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(() => _nineSliceGump.SetLegionTexture(texture, borderSize));
+    }
+
     public Gump Gump => _nineSliceGump;
 }
 
@@ -130,6 +143,22 @@ internal class ModernNineSliceGump : NineSliceGump
         : base(Game.World.Instance, x, y, width, height, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, resizable, minWidth, minHeight)
     {
         _api = api;
+    }
+
+    /// <summary>
+    /// Set the modern gump texture and border size
+    /// </summary>
+    /// <param name="texture"></param>
+    /// <param name="borderSize"></param>
+    public void SetLegionTexture(string texture, int borderSize)
+    {
+        if (PNGLoader.Instance.TryGetNamedZipTexture(texture, out Texture2D tex) && tex != null && !tex.IsDisposed)
+        {
+            borderSize = Math.Clamp(borderSize, 1, tex.Width);
+            borderSize = Math.Clamp(borderSize, 1, tex.Height);
+
+            ReplaceTexture(tex, borderSize);
+        }
     }
 
     /// <summary>
