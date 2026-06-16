@@ -69,14 +69,15 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     private readonly Panel _contentPanel;
     private readonly RulebaseTableView<TRule> _tableView;
 
-    private WrapPanel _toolbar;
-    private BasicButton _addButton;
-    private Widget _editButton;
-    private Widget _deleteButton;
-    private Widget _moveTopButton;
-    private Widget _moveUpButton;
-    private Widget _moveDownButton;
-    private Widget _moveBottomButton;
+    // These are initialized in the InitializeToolbar method
+    private WrapPanel _toolbar = null!;
+    private BasicButton _addButton = null!;
+    private Widget _editButton = null!;
+    private Widget _deleteButton = null!;
+    private Widget _moveTopButton = null!;
+    private Widget _moveUpButton = null!;
+    private Widget _moveDownButton = null!;
+    private Widget _moveBottomButton = null!;
 
     private readonly MyraLabel _titleLabel = new(null, MyraLabel.TextStyle.H5) { HorizontalAlignment = HorizontalAlignment.Center };
     private Desktop? _subscribedDesktop;

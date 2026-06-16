@@ -1,7 +1,6 @@
 using System;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
-using ClassicUO.Game.UI.MyraWindows.Options.CooldownBars;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI;

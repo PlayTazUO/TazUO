@@ -102,7 +102,7 @@ public class OptionsWindow : MyraControl
         if (tooltip != null)
             combo.Tooltip = tooltip;
 
-        foreach (var item in items)
+        foreach (string item in items)
             combo.Items.Add(new ListItem(item));
 
         if (selectedIndex >= 0 && selectedIndex < items.Length)

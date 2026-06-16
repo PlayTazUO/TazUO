@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
-namespace ClassicUO.Game.UI.MyraWindows.Options.CooldownBars;
+namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 
 public enum CooldownTriggerMessageType
 {
