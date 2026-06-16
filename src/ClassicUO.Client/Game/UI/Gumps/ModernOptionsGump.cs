@@ -168,6 +168,10 @@ namespace ClassicUO.Game.UI.Gumps
             (new CheckboxWithLabel(lang.GetGeneral.AutoOpenPathfinding, isChecked: profile.SmoothDoors, valueChanged: (b) => { profile.SmoothDoors = b; }),
                 true, page);
 
+            content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("auto_open_doors_hidden"), isChecked: profile.AutoOpenDoorsIfHidden, valueChanged: (b) => { profile.AutoOpenDoorsIfHidden = b; }),
+                true, page);
+
             content.RemoveIndent();
 
             content.BlankLine();

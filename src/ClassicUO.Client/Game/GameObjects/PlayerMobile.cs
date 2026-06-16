@@ -417,7 +417,8 @@ namespace ClassicUO.Game.GameObjects
 
         private void TryOpenDoors()
         {
-            if (!World.Player.IsDead && ProfileManager.CurrentProfile.AutoOpenDoors)
+            if (!World.Player.IsDead && ProfileManager.CurrentProfile.AutoOpenDoors
+                && (ProfileManager.CurrentProfile.AutoOpenDoorsIfHidden || !IsHidden))
             {
                 int x = X, y = Y, z = Z;
                 Pathfinder.GetNewXY((byte)Direction, ref x, ref y);
