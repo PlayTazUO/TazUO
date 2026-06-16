@@ -1,6 +1,5 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Controls;
-using static System.Net.Mime.MediaTypeNames;
-using System.Drawing;
 using ClassicUO.Game.Managers;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -70,7 +69,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Reg",
+                TazLang.Get("boatcontrol_reg", "Reg"),
                 0xff,
                 0xffff
             )
@@ -85,7 +84,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "Slow",
+                TazLang.Get("boatcontrol_slow", "Slow"),
                 0xff,
                 0xffff
             )
@@ -100,7 +99,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                "One",
+                TazLang.Get("boatcontrol_one", "One"),
                 0xff,
                 0xffff
             )
@@ -141,7 +140,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return true;
             else
             {
-                GameActions.Print(World, "You need to be driving a boat to use this.");
+                GameActions.Print(World, TazLang.Get("boatcontrol_notdriving", "You need to be driving a boat to use this."));
                 return false;
             }
         }
