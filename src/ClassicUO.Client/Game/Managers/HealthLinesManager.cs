@@ -29,18 +29,17 @@ namespace ClassicUO.Game.Managers
         {
             Camera camera = Client.Game.Scene.Camera;
 
-            DrawTargetIndicator(batcher, _world.TargetManager.LastTargetInfo.Serial);
-            DrawTargetIndicator(batcher, _world.TargetManager.SelectedTarget);
-            DrawTargetIndicator(batcher, _world.TargetManager.LastAttack);
+            bool showTargetIndicator = ProfileManager.CurrentProfile?.ShowTargetIndicator ?? false;
+            bool hasNewTarget = SerialHelper.IsMobile(_world.TargetManager.NewTargetSystemSerial);
 
-            if (!IsEnabled)
+            if (!IsEnabled && !(showTargetIndicator && hasNewTarget))
             {
                 return;
             }
 
             int mode = ProfileManager.CurrentProfile.MobileHPType;
 
-            if (mode < 0)
+            if (mode < 0 && !showTargetIndicator)
             {
                 return;
             }
@@ -66,9 +65,14 @@ namespace ClassicUO.Game.Managers
                     _world.TargetManager.SelectedTarget == mobile ||
                     _world.TargetManager.NewTargetSystemSerial == mobile)
                 {
-                    newTargSystem = useNewTargetSystem && _world.TargetManager.NewTargetSystemSerial == mobile;
+                    newTargSystem = (useNewTargetSystem || showTargetIndicator) && _world.TargetManager.NewTargetSystemSerial == mobile;
                     passive = false;
                     forceDraw = true;
+                }
+
+                if (!isEnabled && !newTargSystem)
+                {
+                    continue;
                 }
 
                 int current = mobile.Hits;
@@ -374,6 +378,10 @@ namespace ClassicUO.Game.Managers
                     );
             }
 
+            if (newTargetSystem && ProfileManager.CurrentProfile != null && !ProfileManager.CurrentProfile.ShowMobilesHP)
+            {
+                return;
+            }
 
             ref readonly SpriteInfo gumpInfo = ref Client.Game.UO.Gumps.GetGump(BACKGROUND_GRAPHIC);
             Rectangle bounds = gumpInfo.UV;
