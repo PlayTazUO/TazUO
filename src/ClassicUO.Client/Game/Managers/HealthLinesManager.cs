@@ -29,38 +29,9 @@ namespace ClassicUO.Game.Managers
         {
             Camera camera = Client.Game.Scene.Camera;
 
-            // if (SerialHelper.IsMobile(_world.TargetManager.LastTargetInfo.Serial))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.LastTargetInfo.Serial,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.LastTargetInfo.Serial);
-            // }
-
-            // if (SerialHelper.IsMobile(_world.TargetManager.SelectedTarget))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.SelectedTarget,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.SelectedTarget);
-            // }
-
-            // if (SerialHelper.IsMobile(_world.TargetManager.LastAttack))
-            // {
-            //     DrawHealthLineWithMath(
-            //         batcher,
-            //         _world.TargetManager.LastAttack,
-            //         camera.Bounds.Width,
-            //         camera.Bounds.Height
-            //     );
-            //     DrawTargetIndicator(batcher, _world.TargetManager.LastAttack);
-            // }
+            DrawTargetIndicator(batcher, _world.TargetManager.LastTargetInfo.Serial);
+            DrawTargetIndicator(batcher, _world.TargetManager.SelectedTarget);
+            DrawTargetIndicator(batcher, _world.TargetManager.LastAttack);
 
             if (!IsEnabled)
             {
