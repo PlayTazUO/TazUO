@@ -98,16 +98,12 @@ namespace ClassicUO.Game.Managers
             }
 
             // When journal window is open, suppress all on-screen visual output
-            // (overhead entity text, container gump text, etc.) but still fire
-            // the event so the journal window and scripts get the message.
-            if (UIManager.GetGump<JournalGump>() != null || UIManager.GetGump<ResizableJournal>() != null)
-            {
-                EventSink.InvokeMessageReceived(parent, new MessageEventArgs
-                (
-                    parent, text, name, hue, type, font, textType, unicode, lang
-                ));
-                return;
-            }
+            // but still fire the event so the journal window gets the message.
+            EventSink.InvokeMessageReceived(parent, new MessageEventArgs
+            (
+                parent, text, name, hue, type, font, textType, unicode, lang
+            ));
+            return;
 
             switch (type)
             {
