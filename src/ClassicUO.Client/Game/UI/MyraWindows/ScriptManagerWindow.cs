@@ -324,6 +324,15 @@ public class ScriptManagerWindow : MyraControl
                     GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
             }));
         }
+        else
+        {
+            items.Add((Language.Instance.Scripting.OpenLocation, () =>
+            {
+                var zipScript = (ZipScriptFile)script;
+                if (!FileSystemHelper.OpenLocation(zipScript.ZipPath))
+                    GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, zipScript.ZipPath));
+            }));
+        }
 
         items.Add((ContextMenuLabelToggle(globalAuto, "Autostart on all chars"), () =>
         {
