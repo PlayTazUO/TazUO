@@ -200,6 +200,9 @@ namespace ClassicUO.LegionScripting
 
             foreach (string file in subgroups)
                 HandleScriptsInDirectory(file); //No third level supported, ignore directories
+
+            foreach (ScriptFile sf in LoadedScripts)
+                sf.ReadFromFile();
         }
 
         private static void AddScriptFromFile(string path)
