@@ -1314,13 +1314,17 @@ public class WorldMapGump : ResizableGump
                 return Map.Map.GenerateMapPng(mapIndex, map, World.Instance);
             });
 
-            // Now load the texture from the generated PNG on the main thread
+            // Now load the texture from the generated PNG on the main thread.
+            // After Task.Run above, we're on a thread pool thread, so dispatch back.
             if (!string.IsNullOrEmpty(generatedMapPath) && File.Exists(generatedMapPath))
             {
-                _mapTexture?.Dispose();
-                using FileStream stream = File.OpenRead(generatedMapPath);
-                _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
-                Utility.Logging.Log.Info($"Map texture loaded successfully for map {mapIndex}");
+                MainThreadQueue.BubblingInvokeOnMainThread(() =>
+                {
+                    _mapTexture?.Dispose();
+                    using FileStream stream = File.OpenRead(generatedMapPath);
+                    _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
+                    Utility.Logging.Log.Info($"Map texture loaded successfully for map {mapIndex}");
+                });
             }
             else
             {

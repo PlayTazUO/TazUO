@@ -92,15 +92,19 @@ namespace ClassicUO.Game.Managers
                 Log.Info($"Converting map texture to PNG for map {mapIndex} ({mapTexture.Width}x{mapTexture.Height})...");
                 var startTime = System.Diagnostics.Stopwatch.StartNew();
 
-                // Extract texture data on the main thread (graphics operations must be on main thread)
+                // Extract texture data on the main thread (graphics operations must be on main thread).
+                // After awaiting above, we may be on a thread pool thread, so we must dispatch back.
                 int width = mapTexture.Width;
                 int height = mapTexture.Height;
                 byte[] textureData = new byte[width * height * 4]; // RGBA
 
-                lock (Map.Map.GetMapPngLock())
+                MainThreadQueue.BubblingInvokeOnMainThread(() =>
                 {
-                    mapTexture.GetData(textureData);
-                }
+                    lock (Map.Map.GetMapPngLock())
+                    {
+                        mapTexture.GetData(textureData);
+                    }
+                });
 
                 // Offload the PNG encoding to a background thread
                 byte[] pngData = await Task.Run(() =>
