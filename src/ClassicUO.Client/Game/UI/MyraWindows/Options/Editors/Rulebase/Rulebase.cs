@@ -20,10 +20,32 @@ using Container = Myra.Graphics2D.UI.Container;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
+public sealed class ReorderedRule<TRule>(TRule rule, int oldOrder, int newOrder) where TRule : IRule
+{
+    public TRule Rule { get; } = rule;
+    public int OldOrder { get; } = oldOrder;
+    public int NewOrder { get; } = newOrder;
+}
+
+public sealed class RuleReorderEventArgs<TRule>(ReorderedRule<TRule>[] modifiedRule, ReorderedRule<TRule>[] cascadingChanges) : EventArgs where TRule : IRule
+{
+    public ReorderedRule<TRule>[] ModifiedRule { get; } = modifiedRule;
+    public ReorderedRule<TRule>[] Rules { get; } = cascadingChanges;
+}
+
+public sealed class RulebaseOrderChangedEventArgs<TRule>(TRule rule, int oldOrder, int newOrder) where TRule : IRule
+{
+    public TRule Rule { get; } = rule;
+    public int OldOrder { get; } = oldOrder;
+    public int NewOrder { get; } = newOrder;
+}
+
 public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : class, IRule, new()
 {
     public event PropertyChangedEventHandler? PropertyChanged;
     public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
+
+    public event EventHandler<RulebaseOrderChangedEventArgs<TRule>>? Reordered;
 
     private readonly IRuleConfigurator<TRule>? _ruleConfigurator;
     private readonly Panel _contentPanel;
@@ -116,9 +138,12 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         _toolbar.HorizontalAlignment = HorizontalAlignment.Center;
         _toolbar.HorizontalSpacing += 2;
         _toolbar.VerticalSpacing += 2;
+
+        // A bit hacky - we create the toolbar first and give it a one-pass update
+        UpdateToolbarState();
     }
 
-    public void RefreshTable() => _tableView.Refresh();
+    public void RefreshTable(bool force = false) => _tableView.Refresh(force);
 
     protected override void OnPlacedChanged()
     {
@@ -132,7 +157,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Columns.CollectionChanged -= OnColumnsChanged;
         _tableView.SelectedIndexChanged -= OnTableSelectedIndexChanged;
         _ruleConfigurator?.EditorClosed -= OnEditorClosed;
-        _ruleConfigurator?.RuleCrud -= OnConfiguratorRuleCrud;
+        _ruleConfigurator?.Crud -= OnConfiguratorCrud;
 
         if (_subscribedDesktop != null)
         {
@@ -147,7 +172,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Columns.CollectionChanged += OnColumnsChanged;
         _tableView.SelectedIndexChanged += OnTableSelectedIndexChanged;
         _ruleConfigurator?.EditorClosed += OnEditorClosed;
-        _ruleConfigurator?.RuleCrud += OnConfiguratorRuleCrud;
+        _ruleConfigurator?.Crud += OnConfiguratorCrud;
 
         if (Desktop == null)
             return;
@@ -175,9 +200,45 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
             bool hitTable = _tableView.HitTest(touchPos) != null;
             bool hitToolbar = _toolbar.HitTest(touchPos) != null;
 
-            if (!hitTable && !hitToolbar)
+            if (!hitTable && !hitToolbar && !IsTouchDownInChildContextMenu(touchPos))
                 SelectedIndex = null;
         }
+    }
+
+    private bool IsTouchDownInChildContextMenu(Point touchPos)
+    {
+        if (Desktop?.ContextMenu == null)
+            return false;
+
+        // Combo boxes are... special, in that their items (held by a ListView) are completely external to the normal component chain.
+        // Basically, in terms of the component tree, the ListView lives as an orphan - it's not a child of anything, and nothing has it as one of its children.
+        // The only 'anchor' we have is the ComboView itself, whose 'Widgets' property actually returns the ListView's items;
+        // Those items do have the ListView as the parent, and that's currently the only way we can determine if a click was done on a context menu that's somewhere in our component tree.
+        Widget? comboContextChild = null;
+
+        // First, check if we've a context menu open.
+        // If so, the table view holds the 'consumer' UI and is our 'visual root'.
+        _ = _tableView.FindChild(w =>
+        {
+            // A quick ref check in case other components handle context menus more gracefully
+            if (ReferenceEquals(w, Desktop.ContextMenu))
+                return true;
+
+            if (w is not ComboView combo)
+                return false;
+
+            // Now we handle the 'ComboView' case - since the Widgets are the internal ListView's, we can use them to get to the ListView itself and compare it to the context menu.
+            // If they're equal, it means the context menu is logically a child of out _tableView.
+            comboContextChild = combo.Widgets?.FirstOrDefault(comboChild =>
+                Desktop.ContextMenu.FindChild(ctxMenuChild => ReferenceEquals(comboChild, ctxMenuChild)) != null
+            );
+
+            return comboContextChild != null;
+
+        }) != null;
+
+
+        return comboContextChild != null && Desktop!.ContextMenu.HitTest(touchPos) != null;
     }
 
     private void ConfigureContainer()
@@ -220,7 +281,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return panel;
     }
 
-    private void OnConfiguratorRuleCrud(object? sender, RuleCrudEventArgs<TRule> args)
+    private void OnConfiguratorCrud(object? sender, RuleCrudEventArgs<TRule> args)
     {
         IsInEditor = false;
 
@@ -241,7 +302,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
     }
 
     private uint GetNextOrder() =>
-        Rules.Count == 0 ? 1 : Rules.Max(rule => rule.Order) + 1;
+        Rules.Count == 0 ? 0 : Rules.Max(rule => rule.Order) + 1;
 
     private void OpenRuleEditor(bool isEdit)
     {
@@ -303,22 +364,21 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Rules.Move(oldIndex, newIndex);
         SelectedIndex = newIndex;
         RecalculateOrder();
-        RaiseReorderEvent();
+
+        Reordered?.Invoke(this, new RulebaseOrderChangedEventArgs<TRule>(Rules[newIndex], oldIndex, newIndex));
     }
 
     private void RecalculateOrder()
     {
         for (int i = 0; i < Rules.Count; i++)
+        {
+            if (i == Rules[i].Order)
+                continue;
+
             Rules[i].Order = (uint)i;
+        }
 
-        RefreshTable();
-    }
-
-    private void RaiseReorderEvent()
-    {
-        TRule? selectedRule = GetSelectedRule();
-        if (selectedRule != null)
-            RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(selectedRule, RuleCrudEventType.Reorder));
+        RefreshTable(true);
     }
 
     private void UpdateToolbarState()

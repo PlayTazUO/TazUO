@@ -15,6 +15,12 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
 {
     private readonly MyraGrid _grid = new() { RowSpacing = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
     private readonly List<TRule> _rules = [];
+    private readonly List<Panel> _rowBackgrounds = [];
+    private readonly Dictionary<TRule, Dictionary<RulebaseColumn<TRule>, Widget>> _cellCache = [];
+    private RulebaseColumn<TRule>[] _lastVisibleColumns = [];
+    private Panel? _headerBackground;
+    private readonly List<MyraLabel> _headerLabels = [];
+    private bool _lastShowHeader;
 
     public event EventHandler? SelectedIndexChanged;
 
@@ -46,79 +52,170 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     {
         _rules.Clear();
         _rules.AddRange(rules);
+
+        var currentRules = new HashSet<TRule>(_rules);
+        var rulesToRemove = _cellCache.Keys.Where(r => !currentRules.Contains(r)).ToList();
+
+        foreach (TRule r in rulesToRemove)
+            _cellCache.Remove(r);
+
         Refresh();
     }
 
-    public void Refresh()
+    public void Refresh(bool force = false)
     {
-        _grid.Widgets.Clear();
-        _grid.ColumnsProportions.Clear();
-        _grid.RowsProportions.Clear();
         _grid.Border = StyleOptions.OuterBorder.Brush;
         _grid.BorderThickness = StyleOptions.OuterBorder.Thickness;
 
         RulebaseColumn<TRule>[] visibleColumns = GetVisibleColumns().ToArray();
 
+        // Short circuit the logic with 'force' to avoid comparing the sequences in case force re-render is issued
+        bool columnsChanged = force || !visibleColumns.SequenceEqual(_lastVisibleColumns);
+        bool headerVisibilityChanged = force || _lastShowHeader != StyleOptions.ShowHeader;
+
+        if (columnsChanged || headerVisibilityChanged)
+        {
+            _grid.Widgets.Clear();
+            _grid.ColumnsProportions.Clear();
+            _grid.RowsProportions.Clear();
+            _rowBackgrounds.Clear();
+            _headerLabels.Clear();
+            _headerBackground = null;
+
+            _lastVisibleColumns = visibleColumns;
+            _lastShowHeader = StyleOptions.ShowHeader;
+
+            foreach (RulebaseColumn<TRule> column in visibleColumns)
+                _grid.ColumnsProportions.Add(column.Proportion);
+        }
+
         if (visibleColumns.Length == 0)
             return;
 
-        foreach (RulebaseColumn<TRule> column in visibleColumns)
-            _grid.ColumnsProportions.Add(column.Proportion);
-
+        HashSet<Widget> activeWidgets = [];
         int currentRow = 0;
 
         if (StyleOptions.ShowHeader)
         {
-            _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+            if (_grid.RowsProportions.Count == 0)
+                _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-            var headerBackground = new Panel
+            _headerBackground ??= new Panel
             {
-                Background = new SolidBrush(StyleOptions.HeaderBackground),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch
             };
+            _headerBackground.Background = new SolidBrush(StyleOptions.HeaderBackground);
 
-            _grid.AddWidget(headerBackground, currentRow, 0, colspan: visibleColumns.Length);
+            if (!_grid.Widgets.Contains(_headerBackground))
+                _grid.AddWidget(_headerBackground, currentRow, 0, colspan: visibleColumns.Length);
+            else
+            {
+                Grid.SetRow(_headerBackground, currentRow);
+                Grid.SetColumnSpan(_headerBackground, visibleColumns.Length);
+            }
+
+            activeWidgets.Add(_headerBackground);
 
             for (int i = 0; i < visibleColumns.Length; i++)
-                _grid.AddWidget(
-                    CreateHeaderCell(
-                        visibleColumns[i].Header,
-                        i < visibleColumns.Length - 1
-                    ),
-                    currentRow,
-                    i
-                );
+            {
+                if (i >= _headerLabels.Count)
+                {
+                    _headerLabels.Add(
+                        CreateHeaderCell(visibleColumns[i].Header, i < visibleColumns.Length - 1)
+                    );
+                }
+
+                MyraLabel headerLabel = _headerLabels[i];
+                headerLabel.Text = visibleColumns[i].Header;
+                headerLabel.Border = i < visibleColumns.Length - 1 ? StyleOptions.HeaderVerticalBorder : null;
+                headerLabel.BorderThickness = i < visibleColumns.Length - 1 ? new Thickness(0, 0, 1, 0) : new Thickness(0);
+
+                if (!_grid.Widgets.Contains(headerLabel))
+                    _grid.AddWidget(headerLabel, currentRow, i);
+                else
+                {
+                    Grid.SetRow(headerLabel, currentRow);
+                    Grid.SetColumn(headerLabel, i);
+                }
+
+                activeWidgets.Add(headerLabel);
+            }
 
             currentRow++;
         }
 
+        while (_grid.RowsProportions.Count < currentRow + _rules.Count)
+            _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+
+        while (_grid.RowsProportions.Count > currentRow + _rules.Count)
+            _grid.RowsProportions.RemoveAt(_grid.RowsProportions.Count - 1);
+
         for (int i = 0; i < _rules.Count; i++)
         {
-            _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
             int gridRow = currentRow + i;
+            TRule rule = _rules[i];
 
-            var rowBackground = new Panel
+            if (i >= _rowBackgrounds.Count)
             {
-                Background = new SolidBrush(GetRowColor(i)),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                Border = i + 1 < _rules.Count ? StyleOptions.RowBorders?.Brush : null,
-                BorderThickness = new Thickness(0, 0, 0, StyleOptions.RowBorders?.Thickness ?? 0)
-            };
+                _rowBackgrounds.Add(
+                    new Panel
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                        VerticalAlignment = VerticalAlignment.Stretch
+                    }
+                );
+            }
 
-            _grid.AddWidget(rowBackground, gridRow, 0, colspan: visibleColumns.Length);
+            Panel bg = _rowBackgrounds[i];
+            bg.Background = new SolidBrush(GetRowColor(i));
+            bg.Border = i + 1 < _rules.Count ? StyleOptions.RowBorders?.Brush : null;
+            bg.BorderThickness = new Thickness(0, 0, 0, StyleOptions.RowBorders?.Thickness ?? 0);
+
+            if (!_grid.Widgets.Contains(bg))
+                _grid.AddWidget(bg, gridRow, 0, colspan: visibleColumns.Length);
+            else
+            {
+                Grid.SetRow(bg, gridRow);
+                Grid.SetColumnSpan(bg, visibleColumns.Length);
+            }
+
+            activeWidgets.Add(bg);
+
+            if (!_cellCache.TryGetValue(rule, out Dictionary<RulebaseColumn<TRule>, Widget>? ruleCells))
+            {
+                ruleCells = [];
+                _cellCache[rule] = ruleCells;
+            }
 
             for (int j = 0; j < visibleColumns.Length; j++)
             {
-                Widget cell = CreateCell(
-                    visibleColumns[j].CellFactory(_rules[i]),
-                    j < visibleColumns.Length - 1
-                );
+                RulebaseColumn<TRule> col = visibleColumns[j];
 
-                _grid.AddWidget(cell, gridRow, j);
+                if (!ruleCells.TryGetValue(col, out Widget? cell))
+                {
+                    cell = col.CellFactory(rule);
+                    ruleCells[col] = cell;
+                }
+
+                UpdateCell(cell, j < visibleColumns.Length - 1);
+
+                if (!_grid.Widgets.Contains(cell))
+                    _grid.AddWidget(cell, gridRow, j);
+                else
+                {
+                    Grid.SetRow(cell, gridRow);
+                    Grid.SetColumn(cell, j);
+                }
+
+                activeWidgets.Add(cell);
             }
         }
+
+        List<Widget> toRemove = _grid.Widgets.Where(w => !activeWidgets.Contains(w)).ToList();
+
+        foreach (Widget w in toRemove)
+            _grid.Widgets.Remove(w);
     }
 
     private MyraLabel CreateHeaderCell(string text, bool withRightBorder) =>
@@ -131,7 +228,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             BorderThickness = withRightBorder ? new Thickness(0, 0, 1, 0) : new Thickness(0)
         };
 
-    private Widget CreateCell(Widget content, bool withRightBorder)
+    private void UpdateCell(Widget content, bool withRightBorder)
     {
         content.HorizontalAlignment = HorizontalAlignment.Stretch;
         content.VerticalAlignment = VerticalAlignment.Center;
@@ -144,8 +241,6 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             thickness.Right = 0;
 
         content.BorderThickness = thickness;
-
-        return content;
     }
 
     private Color GetRowColor(int rowIndex)

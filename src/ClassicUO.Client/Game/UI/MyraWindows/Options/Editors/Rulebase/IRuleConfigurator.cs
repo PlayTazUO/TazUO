@@ -9,8 +9,7 @@ public enum RuleCrudEventType
 {
     Create,
     Update,
-    Delete,
-    Reorder
+    Delete
 }
 
 public class RuleCrudEventArgs<TRule> : EventArgs where TRule : IRule
@@ -28,7 +27,7 @@ public class RuleCrudEventArgs<TRule> : EventArgs where TRule : IRule
 
 public interface IRuleConfigurator<TRule> where TRule : IRule
 {
-    event EventHandler<RuleCrudEventArgs<TRule>> RuleCrud;
+    event EventHandler<RuleCrudEventArgs<TRule>> Crud;
     event EventHandler EditorClosed;
     Widget GetConfiguratorWidget(TRule rule, bool isEdit);
 }

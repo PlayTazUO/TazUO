@@ -101,11 +101,11 @@ public static class OptionsFactory
     ) where TValue : IEquatable<TValue> =>
         new(label ?? string.Empty, () => OptionTabCommons.CreateOptionsComboBox(label, value, options, onChange, tooltip)) { VerticalAlignment = VerticalAlignment.Center };
 
-    internal static OptionItem PropBoundHuePicker(string label, Accessor<ushort> backingProperty) =>
+    internal static OptionItem PropBoundHuePicker(string? label, Accessor<ushort> backingProperty) =>
         CreateHuePicker(label, backingProperty.Get(), backingProperty.Set, 20);
 
-    internal static OptionItem CreateHuePicker(string label, ushort hue, Action<ushort> onChange, int maxSize = 36) =>
-        new(label, () =>
+    internal static OptionItem CreateHuePicker(string? label, ushort hue, Action<ushort> onChange, int maxSize = 36) =>
+        new(label ?? string.Empty, () =>
         {
             var textureButton = new MyraArtTexture(0x0FAB, hue, maxSize) { Tooltip = $"Current hue: {hue}" };
             textureButton.TouchUp += (_, _) =>
@@ -124,6 +124,9 @@ public static class OptionsFactory
                     isClickable: true
                 ));
             };
+
+            if (string.IsNullOrWhiteSpace(label))
+                return textureButton;
 
             return textureButton.PlaceBefore(new MyraLabel(label, MyraLabel.TextStyle.P));
         });

@@ -11,7 +11,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.CooldownBars;
 
 public class CooldownBarRuleEditor : IRuleConfigurator<CooldownBarRule>
 {
-    public event EventHandler<RuleCrudEventArgs<CooldownBarRule>>? RuleCrud;
+    public event EventHandler<RuleCrudEventArgs<CooldownBarRule>>? Crud;
     public event EventHandler? EditorClosed;
 
     public Widget GetConfiguratorWidget(CooldownBarRule rule, bool isEdit) =>
@@ -21,7 +21,7 @@ public class CooldownBarRuleEditor : IRuleConfigurator<CooldownBarRule>
             OptionsFactory.PropBoundHuePicker("Hue", new Accessor<ushort>(() => rule.Hue)),
             OptionsFactory.PropBoundUIntInput("Cooldown", new Accessor<uint>(() => rule.Cooldown)),
             new MyraButton("Accept",
-                () => RuleCrud?.Invoke(
+                () => Crud?.Invoke(
                     this,
                     new RuleCrudEventArgs<CooldownBarRule>(rule, isEdit ? RuleCrudEventType.Update : RuleCrudEventType.Create)
                 )

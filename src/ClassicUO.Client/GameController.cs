@@ -196,6 +196,7 @@ namespace ClassicUO
             MyraEnvironment.Game = this;
             MyraEnvironment.SetMouseCursorFromWidget = false;
             MyraEnvironment.MouseInfoGetter = Mouse.GetMyraMouseInfo;
+            MyraEnvironment.DefaultDebugFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.ROBOTO, 16);
             MyraStyle.SetDefault(); //Must occur after png loading
 
             Audio.Initialize();

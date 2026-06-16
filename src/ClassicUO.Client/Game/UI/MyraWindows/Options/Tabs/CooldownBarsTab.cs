@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
@@ -68,7 +70,23 @@ public static class CooldownBarsTab
                 {
                     Header = "Hue",
                     Proportion = new Proportion(ProportionType.Auto),
-                    CellFactory = rule => OptionsFactory.PropBoundHuePicker(rule.Hue.ToString(), new Accessor<ushort>(() => rule.Hue))
+                    CellFactory = rule =>
+                    {
+                        var label = new MyraLabel(rule.Hue.ToString(), MyraLabel.TextStyle.P);
+                        return OptionTabCommons.StyledStackPanel(
+                            Orientation.Horizontal,
+                            OptionsFactory.CreateHuePicker(
+                                null,
+                                rule.Hue,
+                                newHue =>
+                                {
+                                    rule.Hue = newHue;
+                                    label.Text = newHue.ToString();
+                                }
+                            ),
+                            label
+                        );
+                    }
                 },
                 new RulebaseColumn<CooldownBarRule>
                 {
@@ -101,11 +119,65 @@ public static class CooldownBarsTab
                 }
             ]
         );
-        CoolDownBar.CoolDownConditionData.GetAllRules()
-            .Select(CooldownBarRule.FromLegacyCondition)
-            .ToArray()
-            .ForEach(rb.Rules.Add);
 
+
+        CoolDownBar.CoolDownConditionData[] cooldownRules = CoolDownBar.CoolDownConditionData.GetAllRules();
+        for (uint i = 0; i < cooldownRules.Length; i++)
+        {
+            var rule = CooldownBarRule.FromLegacyCondition(i, cooldownRules[i]);
+            rb.Rules.Add(rule);
+            rule.PropertyChanged += OnCooldownRuleChanged;
+        }
+
+        rb.RuleCrud += OnCooldownRuleCrud;
+
+        // Note - we don't need to explicitly attach a 'Reordered' handler - when the rulebase reorders, it updates the 'Order' property which triggers a PropertyChanged event
+        // that saves the changes.
+        // Do keep in mind, however, that due to the backing nature of the store (index-based), the store is effectively 'overwritten' with these changes as the order change
+        // basically causes an UPDATE to the item in the new order's slot; I.e., when moving item 1 up, the save occurs on index 0 so item 0 is overwritten and is basically
+        // 'recovered' by the subsequent Order PropertyChanged event for ex-rule 0 (now rule #1)
         return rb;
+    }
+
+    private static void OnCooldownRuleCrud(object sender, RuleCrudEventArgs<CooldownBarRule> ruleCrudEventArgs)
+    {
+        switch (ruleCrudEventArgs.Event)
+        {
+            case RuleCrudEventType.Create:
+                UpsertCooldownRule(ruleCrudEventArgs.Rule, true);
+                break;
+            case RuleCrudEventType.Update:
+                UpsertCooldownRule(ruleCrudEventArgs.Rule, false);
+                break;
+            case RuleCrudEventType.Delete:
+                ruleCrudEventArgs.Rule.PropertyChanged -= OnCooldownRuleChanged;
+                CoolDownBar.CoolDownConditionData.RemoveCondition((int)ruleCrudEventArgs.Rule.Order);
+                break;
+        }
+    }
+
+    private static void OnCooldownRuleChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not CooldownBarRule rule)
+            return;
+
+        UpsertCooldownRule(rule, false);
+    }
+
+    private static void UpsertCooldownRule(CooldownBarRule rule, bool isNew)
+    {
+        if (isNew)
+            rule.PropertyChanged += OnCooldownRuleChanged;
+
+        CoolDownBar.CoolDownConditionData.SaveCondition(
+            (int)rule.Order,
+            rule.Hue,
+            rule.Name,
+            rule.TriggerMessage,
+            (int)rule.Cooldown,
+            isNew,
+            (int)rule.TriggerMessageType,
+            !isNew
+        );
     }
 }

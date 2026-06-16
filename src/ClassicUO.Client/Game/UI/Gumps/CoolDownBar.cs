@@ -4,6 +4,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -253,6 +254,36 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.Condition_Type.RemoveAt(key);
                     ProfileManager.CurrentProfile.Condition_ReplaceIfExists.RemoveAt(key);
                 }
+            }
+
+            public static void ReorderCondition(int oldOrder, int newOrder)
+            {
+                Profile profile = ProfileManager.CurrentProfile;
+                int count = profile.CoolDownConditionCount;
+
+                if (oldOrder == newOrder)
+                    return;
+
+                if (oldOrder < 0 || oldOrder >= count || newOrder < 0 || newOrder >= count)
+                    return;
+
+                MoveListItem(profile.Condition_Hue, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Label, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Trigger, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Duration, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Type, oldOrder, newOrder);
+
+                while (profile.Condition_ReplaceIfExists.Count < count)
+                    profile.Condition_ReplaceIfExists.Add(false);
+
+                MoveListItem(profile.Condition_ReplaceIfExists, oldOrder, newOrder);
+            }
+
+            private static void MoveListItem<T>(IList<T> list, int oldIndex, int newIndex)
+            {
+                T item = list[oldIndex];
+                list.RemoveAt(oldIndex);
+                list.Insert(newIndex, item);
             }
 
             public enum MESSAGE_TYPE
