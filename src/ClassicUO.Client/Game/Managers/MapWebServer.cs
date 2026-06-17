@@ -200,7 +200,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(World.Instance.MapIndex);
+            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
             var data = new
             {
