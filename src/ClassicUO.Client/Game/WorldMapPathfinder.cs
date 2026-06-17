@@ -101,6 +101,9 @@ namespace ClassicUO.Game
             public bool IsDestroyed;
         }
 
+        /// <summary>Cancels any in-flight background search without starting a new one.</summary>
+        public static void Cancel() => Interlocked.Increment(ref _searchVersion);
+
         /// <summary>Returns <c>true</c> when a background pathfinding search is currently active.</summary>
         public static bool IsRunning => Volatile.Read(ref _running) != 0;
 

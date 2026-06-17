@@ -625,8 +625,7 @@ namespace ClassicUO.Game.GameObjects
         public bool Walk(Direction direction, bool run)
         {
             if (!ProfileManager.CurrentProfile.AutoAvoidObstacules
-                || Pathfinder.AutoWalking
-                || (World.Instance.Player.Pathfinder.UseLongDistancePathfinding && !WalkableManager.Instance.IsMapGenerationComplete(World.Instance?.MapIndex ?? 0)))
+                || Pathfinder.AutoWalking)
             {
                 return WalkNotAvoid(direction, run);
             }

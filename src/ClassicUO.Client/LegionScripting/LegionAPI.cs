@@ -1783,24 +1783,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
                     return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
 
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
@@ -1846,23 +1838,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });                    return false;
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+                    return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
@@ -1881,7 +1866,7 @@ namespace ClassicUO.LegionScripting
                 if (World == null || World.Player == null)
                     return false;
 
-                return World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding();
+                return World.Player.Pathfinder.AutoWalking || WorldMapPathfinder.IsRunning;
             }
         );
 
@@ -1896,7 +1881,7 @@ namespace ClassicUO.LegionScripting
         public void CancelPathfinding() => OnMain(() =>
         {
             World?.Player?.Pathfinder?.StopAutoWalk();
-            LongDistancePathfinder.StopPathfinding();
+            WorldMapPathfinder.Cancel();
         });
 
         /// <summary>

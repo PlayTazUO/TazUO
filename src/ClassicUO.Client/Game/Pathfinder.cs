@@ -66,8 +66,6 @@ namespace ClassicUO.Game
 
         private World _world;
 
-        public bool UseLongDistancePathfinding;
-
         /// <summary>
         /// Fired when a step of a path from <see cref="StartComputedPath"/> is rejected at
         /// the client or server — typically a dynamic item (lamp post, rock, placed door) that
@@ -81,7 +79,6 @@ namespace ClassicUO.Game
         public Pathfinder(World world)
         {
             _world = world;
-            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, false, (b) => UseLongDistancePathfinding = b);
         }
 
         public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
@@ -1076,13 +1073,7 @@ namespace ClassicUO.Game
                 AutoWalking = false;
             }
 
-            bool status = _path.Count != 0;
-
-            if(UseLongDistancePathfinding && !status)
-                if (LongDistancePathfinder.WalkLongDistance(x, y))
-                    return true;
-
-            return status;
+            return _path.Count != 0;
         }
 
         public void ProcessAutoWalk()
