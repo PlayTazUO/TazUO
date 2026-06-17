@@ -54,6 +54,7 @@ public class WorldMapGump : ResizableGump
     private static readonly Color _semiTransparentWhiteForGrid = new Color(255, 255, 255, 56);
     private static Point _last_position = new Point(100, 100);
     private static Texture2D _mapTexture;
+    private static string _mapPngFilePath;
     private Map.Map _map = null;
 
     private Point _center, _lastScroll, _mouseCenter, _scroll;
@@ -1239,6 +1240,7 @@ public class WorldMapGump : ResizableGump
         // GPU operations (Dispose + FromStream) must run on the main/render thread.
         if (!string.IsNullOrEmpty(fileMapPath) && File.Exists(fileMapPath))
         {
+            _mapPngFilePath = fileMapPath;
             MainThreadQueue.BubblingInvokeOnMainThread(() =>
             {
                 _mapTexture?.Dispose();
@@ -1296,6 +1298,8 @@ public class WorldMapGump : ResizableGump
 
     public static Texture2D GetMapTextureForMap(int mapIndex) => _mapTexture;
 
+    public static string GetMapPngPath(int mapIndex) => _mapPngFilePath;
+
     public static async Task LoadMapTextureForMap(int mapIndex)
     {
         if (mapIndex < 0 || mapIndex > MapLoader.MAPS_COUNT)
@@ -1325,6 +1329,7 @@ public class WorldMapGump : ResizableGump
             // After Task.Run above, we're on a thread pool thread, so dispatch back.
             if (!string.IsNullOrEmpty(generatedMapPath) && File.Exists(generatedMapPath))
             {
+                _mapPngFilePath = generatedMapPath;
                 MainThreadQueue.BubblingInvokeOnMainThread(() =>
                 {
                     _mapTexture?.Dispose();
