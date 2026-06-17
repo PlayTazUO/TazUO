@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Assets;
+using ClassicUO.Game.Managers;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game
