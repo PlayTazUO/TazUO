@@ -277,7 +277,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (ProfileManager.CurrentProfile.DisableSystemChat)
                 return;
 
-            if (UIManager.GetGump<JournalGump>() != null)
+            if (UIManager.GetGump<JournalGump>() != null || UIManager.GetGump<ResizableJournal>() != null)
                 return;
 
             switch (e.Type)
