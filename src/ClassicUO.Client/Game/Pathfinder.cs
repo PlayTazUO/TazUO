@@ -24,6 +24,13 @@ namespace ClassicUO.Game
         private static readonly PriorityQueue _openSet = new();
         private static readonly Dictionary<(int x, int y, int z), PathNode> _closedSet = new();
         private static readonly List<PathNode> _path = new();
+
+        // True when _path holds pooled PathNodes that are NOT tracked in _openSet/_closedSet
+        // (i.e. populated by StartComputedPath). In that case CleanupPathfinding must return
+        // them to the pool itself. For normal A* paths the nodes are also in _closedSet and
+        // get returned there, so this stays false to avoid a double-return.
+        private static bool _ownsPathNodes;
+
         private static int _pointIndex;
         private static bool _run;
         private static readonly int[] _offsetX =
@@ -59,12 +66,19 @@ namespace ClassicUO.Game
 
         private World _world;
 
-        public bool UseLongDistancePathfinding;
+        /// <summary>
+        /// Fired when a step of a path from <see cref="StartComputedPath"/> is rejected at
+        /// the client or server — typically a dynamic item (lamp post, rock, placed door) that
+        /// isn't in statics.mul. Hooked by WorldMapPathfinder to mark the tile and replan.
+        /// Arguments: (blocked tile X, blocked tile Y).
+        /// </summary>
+        public event Action<int, int> OnComputedPathStepFailed;
+
+        private bool _computedPathActive;
 
         public Pathfinder(World world)
         {
             _world = world;
-            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.USE_LONG_DISTANCE_PATHING, false, (b) => UseLongDistancePathfinding = b);
         }
 
         public static bool ObjectBlocksLOS(GameObject obj, int losMinZ, int losMaxZ)
@@ -898,11 +912,6 @@ namespace ClassicUO.Game
                 if (_goalNode is not null)
                 {
                     ReconstructPath(_goalNode);
-
-#if DEBUG
-                    foreach (PathNode step in _path) World.Instance.Map.GetTile(step.X, step.Y).Hue = 32;
-#endif
-
                     return true;
                 }
 
@@ -944,6 +953,60 @@ namespace ClassicUO.Game
             while (pathStack.Count > 0)
             {
                 _path.Add(pathStack.Pop());
+            }
+        }
+
+        /// <summary>
+        /// Loads a pre-computed path (from WorldMapPathfinder) into the walker and starts walking.
+        /// Must be called on the main thread.
+        /// Each point is (x, y, z, direction) for a single step.
+        /// </summary>
+        public void StartComputedPath(IReadOnlyList<(int X, int Y, int Z, int Direction)> points, bool run = true)
+        {
+            if (_world.Player == null || _world.Player.IsParalyzed || points == null || points.Count == 0)
+                return;
+
+            CleanupPathfinding();
+            _pointIndex = 0;
+            _goalNode = null;
+            _run = run;
+            _startPoint.X = _world.Player.X;
+            _startPoint.Y = _world.Player.Y;
+
+            // Prepend player's current tile as _path[0] so _path[1] is the first real step —
+            // matching the convention used by WalkTo where _pointIndex starts at 1.
+            var startNode = PathNode.Get();
+            startNode.X = _world.Player.X;
+            startNode.Y = _world.Player.Y;
+            startNode.Z = _world.Player.Z;
+            startNode.Direction = (int)_world.Player.Direction;
+            startNode.IsValid = true;
+            _path.Add(startNode);
+
+            foreach (var p in points)
+            {
+                var node = PathNode.Get();
+                node.X = p.X;
+                node.Y = p.Y;
+                node.Z = p.Z;
+                node.Direction = p.Direction;
+                node.IsValid = true;
+                _path.Add(node);
+            }
+
+            // These nodes never enter the open/closed sets, so CleanupPathfinding
+            // would otherwise leak them. Mark _path as owning pooled nodes.
+            _ownsPathNodes = true;
+
+            if (_path.Count > 1)
+            {
+                _endPoint.X = _path[_path.Count - 1].X;
+                _endPoint.Y = _path[_path.Count - 1].Y;
+                _endPointZ = _path[_path.Count - 1].Z;
+                _pointIndex = 1;
+                AutoWalking = true;
+                _computedPathActive = true;
+                ProcessAutoWalk();
             }
         }
 
@@ -1010,13 +1073,7 @@ namespace ClassicUO.Game
                 AutoWalking = false;
             }
 
-            bool status = _path.Count != 0;
-
-            if(UseLongDistancePathfinding && !status)
-                if (LongDistancePathfinder.WalkLongDistance(x, y))
-                    return true;
-
-            return status;
+            return _path.Count != 0;
         }
 
         public void ProcessAutoWalk()
@@ -1036,7 +1093,21 @@ namespace ClassicUO.Game
 
                     if (!_world.Player.Walk((Direction)p.Direction, _run))
                     {
-                        StopAutoWalk();
+                        // For computed paths (WorldMap nav), give the pathfinder a chance to replan
+                        // around the blocked tile — likely a dynamic item not in statics.mul.
+                        // Tear down first so the hook can safely issue a new StartComputedPath.
+                        if (_computedPathActive && OnComputedPathStepFailed != null)
+                        {
+                            var hook = OnComputedPathStepFailed;
+                            int blockedX = p.X;
+                            int blockedY = p.Y;
+                            StopAutoWalk();
+                            hook.Invoke(blockedX, blockedY);
+                        }
+                        else
+                        {
+                            StopAutoWalk();
+                        }
                     }
                 }
                 else
@@ -1050,6 +1121,7 @@ namespace ClassicUO.Game
         {
             AutoWalking = false;
             _run = false;
+            _computedPathActive = false;
             CleanupPathfinding();
         }
 
@@ -1071,6 +1143,19 @@ namespace ClassicUO.Game
             }
 
             _closedSet.Clear();
+
+            // Computed paths (StartComputedPath) own their pooled nodes directly because
+            // they never pass through the closed set. Return them here. Normal A* paths
+            // share their nodes with _closedSet (already returned above), so skip them.
+            if (_ownsPathNodes)
+            {
+                foreach (PathNode node in _path)
+                {
+                    node?.Return();
+                }
+
+                _ownsPathNodes = false;
+            }
 
             _path.Clear();
             _goalNode = null;
