@@ -1295,7 +1295,7 @@ public class WorldMapGump : ResizableGump
 
     public static void ClearMapCache() => Map.Map.ClearMapPngCache();
 
-    public static Texture2D GetMapTextureForMap(int mapIndex) => _mapTexture;
+    public static Texture2D GetMapTextureForMap() => _mapTexture;
 
     public static string GetMapPngPath() => _mapPngFilePath;
 

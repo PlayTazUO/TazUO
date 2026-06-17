@@ -26,12 +26,12 @@ namespace ClassicUO.Game.Managers
         {
             // Check if map texture exists first
             int mapIndex = World.Instance?.MapIndex ?? 0;
-            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
             if (mapTexture == null || mapTexture.IsDisposed)
             {
                 await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+                mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
