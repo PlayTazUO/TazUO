@@ -1215,43 +1215,42 @@ public class WorldMapGump : ResizableGump
 
         _mapLoading = 1;
 
-        // Generate the PNG on the background thread (CPU work).
-        // The lock is released before dispatching to the main thread to avoid deadlock:
-        // holding the lock while blocking on BubblingInvokeOnMainThread could deadlock
-        // if the main thread also tries to acquire the same lock.
-        string fileMapPath = null;
+        // The PNG lock only guards the CPU-side generation. GPU operations
+        // (Dispose + FromStream) are dispatched to the main/render thread AFTER the
+        // lock is released, to avoid deadlock: holding the lock while blocking on
+        // BubblingInvokeOnMainThread could deadlock if the main thread also tries to
+        // acquire the same lock. _mapLoading stays 1 until the texture is recreated so
+        // UpdateWorldMapChunk does not write into a texture that is being disposed.
         try
         {
+            string fileMapPath;
             lock (Map.Map.GetMapPngLock())
             {
                 fileMapPath = Map.Map.GenerateMapPng(mapIndex, map, world);
             }
+
+            if (!string.IsNullOrEmpty(fileMapPath) && File.Exists(fileMapPath))
+            {
+                _mapPngFilePath = fileMapPath;
+                MainThreadQueue.BubblingInvokeOnMainThread(() =>
+                {
+                    _mapTexture?.Dispose();
+                    using FileStream stream = File.OpenRead(fileMapPath);
+                    _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
+                    GameActions.Print(ResGumps.WorldMapLoaded, 0x48);
+                });
+            }
+            else
+            {
+                Log.Error($"Failed to generate map PNG for map {mapIndex}");
+            }
         }
         catch (ThreadInterruptedException)
         {
-            _mapLoading = 0;
-            return;
         }
         finally
         {
             _mapLoading = 0;
-        }
-
-        // GPU operations (Dispose + FromStream) must run on the main/render thread.
-        if (!string.IsNullOrEmpty(fileMapPath) && File.Exists(fileMapPath))
-        {
-            _mapPngFilePath = fileMapPath;
-            MainThreadQueue.BubblingInvokeOnMainThread(() =>
-            {
-                _mapTexture?.Dispose();
-                using FileStream stream = File.OpenRead(fileMapPath);
-                _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
-                GameActions.Print(ResGumps.WorldMapLoaded, 0x48);
-            });
-        }
-        else
-        {
-            Log.Error($"Failed to generate map PNG for map {mapIndex}");
         }
     }
 
