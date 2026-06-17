@@ -816,6 +816,16 @@ public class WorldMapGump : ResizableGump
 
         Client.Game.UO.GameCursor.IsDraggingCursorForced = false;
 
+        // Stop any in-progress WorldMap navigation so the step-fail hook can't fire
+        // against this gump after it's been disposed.
+        if (_world?.Player?.Pathfinder != null)
+        {
+            _world.Player.Pathfinder.OnComputedPathStepFailed = null;
+            _world.Player.Pathfinder.StopAutoWalk();
+        }
+        _navDest = null;
+        _navPath = null;
+
         base.Dispose();
     }
 
@@ -2834,7 +2844,7 @@ public class WorldMapGump : ResizableGump
         if (!_navDest.HasValue || _world.Player == null)
             return;
 
-        long elapsed = Time.Ticks - _navDestSetTime;
+        long elapsed = Environment.TickCount64 - _navDestSetTime;
 
         // Auto-clear: player arrived within 3 tiles, after a 2-second grace period.
         if (elapsed > 2000)
@@ -3337,7 +3347,7 @@ public class WorldMapGump : ResizableGump
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
                 _navDest = new Point(wX, wY);
-                _navDestSetTime = Time.Ticks;
+                _navDestSetTime = Environment.TickCount64;
                 _navPath = null;
                 ClearGoToMarker();
 

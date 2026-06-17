@@ -140,7 +140,9 @@ namespace ClassicUO.Game
 
                     if (canSearch)
                     {
-                        long deadline = Time.Ticks + MAX_SEARCH_MS;
+                        // Environment.TickCount64 is a monotonic clock safe to read from any thread.
+                        // Time.Ticks is a uint game-loop counter — not volatile and wraps at ~49 days.
+                        long deadline = Environment.TickCount64 + MAX_SEARCH_MS;
                         result = FindPath(mapIndex, startX, startY, startZ, targetX, targetY, chunkCache, myVersion, deadline);
                     }
                 }
@@ -150,7 +152,7 @@ namespace ClassicUO.Game
                 }
                 finally
                 {
-                    _houseBlocks = null;
+                    Volatile.Write(ref _houseBlocks, null);
                     Volatile.Write(ref _running, 0);
                 }
 
@@ -294,13 +296,6 @@ namespace ClassicUO.Game
 
             while (openQueue.Count > 0 && nodeCount < MAX_NODES)
             {
-                // Check cancellation / timeout every 4096 nodes.
-                if ((nodeCount & 0xFFF) == 0)
-                {
-                    if (Volatile.Read(ref _searchVersion) != myVersion) return result;
-                    if (Time.Ticks >= deadlineTicks) return result;
-                }
-
                 Node current = openQueue.Dequeue();
                 long key = PackKey(current.X, current.Y);
 
@@ -315,6 +310,13 @@ namespace ClassicUO.Game
                 }
 
                 nodeCount++;
+
+                // Check cancellation / timeout every 4096 real expansions (not stale-node drains).
+                if ((nodeCount & 0xFFF) == 0)
+                {
+                    if (Volatile.Read(ref _searchVersion) != myVersion) return result;
+                    if (Environment.TickCount64 >= deadlineTicks) return result;
+                }
 
                 for (int d = 0; d < 8; d++)
                 {
