@@ -193,7 +193,6 @@ namespace ClassicUO.Game.Scenes
             _healthLinesManager = new HealthLinesManager(_world);
 
             _world.CommandManager.Initialize();
-            WalkableManager.Instance.Initialize();
             ItemDatabaseManager.Instance.Initialize();
 
             var viewport = new WorldViewportGump(_world, this);
@@ -363,9 +362,6 @@ namespace ClassicUO.Game.Scenes
             Instance = null;
 
             TazUOChatManager.Instance.Dispose();
-
-            LongDistancePathfinder.Dispose();
-            WalkableManager.Instance.Shutdown();
 
             GridContainerSaveData.Instance.Save();
             GridContainerSaveData.Reset();
@@ -890,12 +886,6 @@ namespace ClassicUO.Game.Scenes
             //     _world.Map?.ClearUnusedBlocks();
             //     _time_cleanup = Time.Ticks + 500;
             // }
-
-            // Update WalkableManager for chunk generation
-            WalkableManager.Instance.Update();
-
-            // Update LongDistancePathfinder
-            LongDistancePathfinder.Update();
 
             SharedStore.SendMegaCliLocRequests(_world);
 
