@@ -24,6 +24,13 @@ namespace ClassicUO.Game
         private static readonly PriorityQueue _openSet = new();
         private static readonly Dictionary<(int x, int y, int z), PathNode> _closedSet = new();
         private static readonly List<PathNode> _path = new();
+
+        // True when _path holds pooled PathNodes that are NOT tracked in _openSet/_closedSet
+        // (i.e. populated by StartComputedPath). In that case CleanupPathfinding must return
+        // them to the pool itself. For normal A* paths the nodes are also in _closedSet and
+        // get returned there, so this stays false to avoid a double-return.
+        private static bool _ownsPathNodes;
+
         private static int _pointIndex;
         private static bool _run;
         private static readonly int[] _offsetX =
@@ -990,6 +997,10 @@ namespace ClassicUO.Game
                 _path.Add(node);
             }
 
+            // These nodes never enter the open/closed sets, so CleanupPathfinding
+            // would otherwise leak them. Mark _path as owning pooled nodes.
+            _ownsPathNodes = true;
+
             if (_path.Count > 1)
             {
                 _endPoint.X = _path[_path.Count - 1].X;
@@ -1141,6 +1152,19 @@ namespace ClassicUO.Game
             }
 
             _closedSet.Clear();
+
+            // Computed paths (StartComputedPath) own their pooled nodes directly because
+            // they never pass through the closed set. Return them here. Normal A* paths
+            // share their nodes with _closedSet (already returned above), so skip them.
+            if (_ownsPathNodes)
+            {
+                foreach (PathNode node in _path)
+                {
+                    node?.Return();
+                }
+
+                _ownsPathNodes = false;
+            }
 
             _path.Clear();
             _goalNode = null;
