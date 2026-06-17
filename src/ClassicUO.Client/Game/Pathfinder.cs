@@ -67,7 +67,7 @@ namespace ClassicUO.Game
         /// isn't in statics.mul. Hooked by WorldMapPathfinder to mark the tile and replan.
         /// Arguments: (blocked tile X, blocked tile Y).
         /// </summary>
-        public Action<int, int> OnComputedPathStepFailed;
+        public event Action<int, int> OnComputedPathStepFailed;
 
         private bool _computedPathActive;
 

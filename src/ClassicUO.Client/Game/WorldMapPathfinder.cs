@@ -51,6 +51,7 @@ namespace ClassicUO.Game
         /// </summary>
         private static readonly ConcurrentDictionary<long, byte> _dynamicBlocks = new();
 
+        /// <summary>Clears all dynamically-discovered blocked tiles accumulated during the current navigation session.</summary>
         public static void ClearDynamicBlocks() => _dynamicBlocks.Clear();
 
         /// <summary>Add a tile to the dynamic-block set so the next search routes around it.</summary>
@@ -70,6 +71,12 @@ namespace ClassicUO.Game
 
         private static int _running;
 
+        /// <summary>
+        /// A single step in a computed path.
+        /// <see cref="X"/> and <see cref="Y"/> are world tile coordinates;
+        /// <see cref="Z"/> is elevation; <see cref="Direction"/> is an index into
+        /// <c>ClassicUO.Game.Data.Direction</c> (0=N, 1=NE, … 7=NW).
+        /// </summary>
         public struct PathPoint
         {
             public int X;
@@ -94,6 +101,7 @@ namespace ClassicUO.Game
             public bool IsDestroyed;
         }
 
+        /// <summary>Returns <c>true</c> when a background pathfinding search is currently active.</summary>
         public static bool IsRunning => Volatile.Read(ref _running) != 0;
 
         /// <summary>
@@ -200,7 +208,7 @@ namespace ClassicUO.Game
                     if (im.IsValid())
                     {
                         MapCellsArray cells = im.MapFile.ReadAt<MapBlock>((long)im.MapAddress).Cells;
-                        landZ = cells[((m.Y & 7) << 3) + (m.X & 7)].Z;
+                        landZ = cells[ChunkCellIndex(m.X, m.Y)].Z;
                     }
                 }
                 catch { }
@@ -374,6 +382,14 @@ namespace ClassicUO.Game
 
         private static long PackKey(int x, int y) => ((long)(uint)x << 32) | (uint)y;
 
+        /// <summary>
+        /// Returns the flat index (0–63) into an 8×8 chunk's cell array for world
+        /// coordinates <paramref name="x"/> and <paramref name="y"/>.
+        /// Within-chunk offsets are <c>x &amp; 7</c> / <c>y &amp; 7</c>; the row stride is 8
+        /// (implemented as a left-shift by 3 bits).
+        /// </summary>
+        private static int ChunkCellIndex(int x, int y) => ((y & 7) << 3) + (x & 7);
+
         // -----------------------------------------------------------------
         // Raw-file walkability
         // -----------------------------------------------------------------
@@ -422,7 +438,7 @@ namespace ClassicUO.Game
                 return false;
             }
 
-            int idx = ((y & 7) << 3) + (x & 7);
+            int idx = ChunkCellIndex(x, y);
             surfaceZ = data.SurfaceZ[idx];
             return data.Walkable[idx];
         }
@@ -477,7 +493,7 @@ namespace ClassicUO.Game
 
                         foreach (ref StaticsBlock sb in span)
                         {
-                            int idx = ((sb.Y & 7) << 3) + (sb.X & 7);
+                            int idx = ChunkCellIndex(sb.X, sb.Y);
                             if ((uint)idx >= 64) continue;
 
                             ushort staticId = sb.Color;

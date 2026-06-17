@@ -99,6 +99,7 @@ public class WorldMapGump : ResizableGump
     private Point? _navDest;
     private long _navDestSetTime;
     private List<Point> _navPath;
+    private Action<int, int> _navStepFailedHandler;
 
     private const int MAX_NAV_REPLANS = 3;
     private int _navReplansLeft;
@@ -820,9 +821,11 @@ public class WorldMapGump : ResizableGump
         // against this gump after it's been disposed.
         if (_world?.Player?.Pathfinder != null)
         {
-            _world.Player.Pathfinder.OnComputedPathStepFailed = null;
+            if (_navStepFailedHandler != null)
+                _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
             _world.Player.Pathfinder.StopAutoWalk();
         }
+        _navStepFailedHandler = null;
         _navDest = null;
         _navPath = null;
 
@@ -3357,7 +3360,9 @@ public class WorldMapGump : ResizableGump
                 WorldMapPathfinder.ClearDynamicBlocks();
                 if (_world.Player?.Pathfinder != null)
                 {
-                    _world.Player.Pathfinder.OnComputedPathStepFailed = null;
+                    if (_navStepFailedHandler != null)
+                        _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
+                    _navStepFailedHandler = null;
                     _world.Player.Pathfinder.StopAutoWalk();
                 }
                 _navReplansLeft = MAX_NAV_REPLANS;
@@ -3422,7 +3427,11 @@ public class WorldMapGump : ResizableGump
             }
             _navPath = navRender;
 
-            _world.Player.Pathfinder.OnComputedPathStepFailed = (blockX, blockY) =>
+            // Unsubscribe any stale handler from a previous plan before registering the new one.
+            if (_navStepFailedHandler != null)
+                _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
+
+            _navStepFailedHandler = (blockX, blockY) =>
             {
                 if (_navReplansLeft <= 0 || !_navDest.HasValue)
                 {
@@ -3438,6 +3447,7 @@ public class WorldMapGump : ResizableGump
                 StartNavPath(_world.Map.Index, _world.Player.X, _world.Player.Y, _world.Player.Z,
                              dest.X, dest.Y, firstAttempt: false);
             };
+            _world.Player.Pathfinder.OnComputedPathStepFailed += _navStepFailedHandler;
 
             _world.Player.Pathfinder.StartComputedPath(pathPoints, run: true);
         }, houseMultis);
