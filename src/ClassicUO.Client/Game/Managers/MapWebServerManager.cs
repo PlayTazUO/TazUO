@@ -66,7 +66,7 @@ namespace ClassicUO.Game.Managers
 
                 // Ensure the map PNG file is generated on disk
                 await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                string pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath(mapIndex);
+                string pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath();
 
                 // Retry if the PNG file isn't ready yet (may happen during map change)
                 int retries = 0;
@@ -81,7 +81,7 @@ namespace ClassicUO.Game.Managers
                     Log.Warn($"Map PNG not ready yet, retrying in 1000ms... (attempt {retries + 1})");
                     await Task.Delay(1000);
                     await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                    pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath(mapIndex);
+                    pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath();
                     retries++;
                 }
 

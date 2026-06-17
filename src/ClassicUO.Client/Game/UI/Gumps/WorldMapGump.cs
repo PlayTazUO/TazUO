@@ -1297,7 +1297,7 @@ public class WorldMapGump : ResizableGump
 
     public static Texture2D GetMapTextureForMap(int mapIndex) => _mapTexture;
 
-    public static string GetMapPngPath(int mapIndex) => _mapPngFilePath;
+    public static string GetMapPngPath() => _mapPngFilePath;
 
     public static async Task LoadMapTextureForMap(int mapIndex)
     {
