@@ -15,6 +15,7 @@ namespace ClassicUO.Assets
     {
         private string _cliloc;
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
+        private readonly Dictionary<int, string> _englishEntries = new Dictionary<int, string>();
 
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
         {
@@ -59,13 +60,20 @@ namespace ClassicUO.Assets
             {
                 string enupath = FileManager.GetUOFilePath("Cliloc.enu");
                 ReadCliloc(enupath);
+                ReadCliloc(enupath, _englishEntries);
+            }
+            else
+            {
+                ReadCliloc(path, _englishEntries);
             }
 
             ReadCliloc(path);
         }
 
-        void ReadCliloc(string path)
+        void ReadCliloc(string path, Dictionary<int, string> target = null)
         {
+            target ??= _entries;
+
             using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
             int bytesRead;
@@ -87,11 +95,15 @@ namespace ClassicUO.Assets
                 short length = reader.ReadInt16LE();
                 string text = string.Intern(reader.ReadUTF8(length));
 
-                _entries[number] = text;
+                target[number] = text;
             }
         }
 
-        public override void ClearResources() => _entries.Clear();
+        public override void ClearResources()
+        {
+            _entries.Clear();
+            _englishEntries.Clear();
+        }
 
         public string GetString(int number)
         {
@@ -100,7 +112,11 @@ namespace ClassicUO.Assets
             return text;
         }
 
-        public string GetEnglishString(int number) => GetString(number);
+        public string GetEnglishString(int number)
+        {
+            _englishEntries.TryGetValue(number, out string text);
+            return text;
+        }
 
         public string GetString(int number, string replace)
         {
