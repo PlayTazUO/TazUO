@@ -183,12 +183,12 @@ public class SpellBarManager
                 Directory.CreateDirectory(presetPath);
 
             File.WriteAllText(path, JsonSerializer.Serialize(SpellBarRows[CurrentRow], SpellBarRowsContext.Default.SpellBarRow));
-            GameActions.Print(Client.Game.UO.World, $"Saved the current row as {name}");
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_savedrow", new[] { name }));
         }
         catch (Exception e)
         {
             Log.Error(e.ToString());
-            GameActions.Print(Client.Game.UO.World, $"Error saving the current row as {name}.json..", 32);
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_savedrow_error", new[] { name }), 32);
         }
     }
 
@@ -209,12 +209,12 @@ public class SpellBarManager
             SpellBarRow row = JsonSerializer.Deserialize(File.ReadAllText(path), SpellBarRowsContext.Default.SpellBarRow);
             SpellBarRows.Add(row);
             Unload(); //Save
-            GameActions.Print(Client.Game.UO.World, $"Imported {name} preset");
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_importedpreset", new[] { name }));
         }
         catch(Exception e)
         {
             Log.Error(e.ToString());
-            GameActions.Print(Client.Game.UO.World, $"Error importing {name}.json..", 32);
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_importpreset_error", new[] { name }), 32);
         }
 
     }
