@@ -1489,6 +1489,7 @@ namespace ClassicUO.Game.Scenes
             if (CanExecuteMacro())
             {
                 SpellBarManager.KeyPress(key, e.mod);
+                SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
 
                 Macro macro = _world.Macros.FindMacro(
                     key,
