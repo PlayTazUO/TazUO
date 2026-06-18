@@ -175,6 +175,28 @@ namespace ClassicUO.Game.UI.Gumps
             };
             startX += largeWidth + 1;
 
+            RighClickableButton developerMenu;
+            Add(developerMenu = new(998877,
+                0x098D,
+                0x098D,
+                0x098D,
+                "Developer",
+                1,
+                true,
+                0,
+                0x0036
+            )
+            {
+                ButtonAction = ButtonAction.Activate,
+                X = startX,
+                Y = 1,
+                FontCenter = true
+            }, 1);
+            developerMenu.ContextMenu = new ContextMenuControl(this);
+            developerMenu.MouseUp += (s, e) => { developerMenu.ContextMenu?.Show(); };
+            developerMenu.ContextMenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+            startX += largeWidth + 1;
+
             RighClickableButton moreMenu;
             Add
             (moreMenu =
@@ -201,7 +223,6 @@ namespace ClassicUO.Game.UI.Gumps
             moreMenu.ContextMenu = new ContextMenuControl(this);
             moreMenu.MouseUp += (s, e) => { moreMenu.ContextMenu?.Show(); };
             //moreMenu.ContextMenu.Add(new ContextMenuItemEntry("TazUO Chat", () => { MyraWindows.TazUOChatWindow.Show(); }));
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(Language.Instance.TopBarGump.CommandsEntry, () =>
             {
                 UIManager.Add(new CommandsGump(world));
