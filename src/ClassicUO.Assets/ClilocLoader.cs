@@ -100,6 +100,8 @@ namespace ClassicUO.Assets
             return text;
         }
 
+        public string GetEnglishString(int number) => GetString(number);
+
         public string GetString(int number, string replace)
         {
             string s = GetString(number);
