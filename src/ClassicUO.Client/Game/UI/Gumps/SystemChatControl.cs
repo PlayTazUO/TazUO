@@ -234,6 +234,9 @@ namespace ClassicUO.Game.UI.Gumps
             if (ProfileManager.CurrentProfile.DisableSystemChat)
                 return;
 
+            if (ProfileManager.CurrentProfile.DisableSystemChatWhileJournalOpen && UIManager.GetGump<ResizableJournal>() != null)
+                return;
+
             switch (e.Type)
             {
                 case MessageType.Regular when e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial):
