@@ -26,6 +26,7 @@ All notable changes to TazUO will be recorded here.
 * Added tuoassets.zip support to override embedded TUO graphics assets; a zip in the client directory overrides embedded assets and a zip in the UO directory takes highest priority for server-specific overrides; supports named embedded asset overrides and gump/art ID overrides matching the existing PNG system - [P.R 534](https://github.com/PlayTazUO/TazUO/pull/534) ([bittiez](https://github.com/bittiez))
 * Add option to disable door opening while player is hidden - [P.R 535](https://github.com/PlayTazUO/TazUO/pull/535) ([bittiez](https://github.com/bittiez))
 * Add option to disable system chat while the Resizable Journal is open - [P.R 541](https://github.com/PlayTazUO/TazUO/pull/541) ([bittiez](https://github.com/bittiez))
+* Expanded the spell bar so slots can hold macros and weapon abilities in addition to spells - [P.R 543](https://github.com/PlayTazUO/TazUO/pull/543) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
