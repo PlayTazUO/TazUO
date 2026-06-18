@@ -8,6 +8,7 @@ using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Skills;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Tinkerer;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -62,6 +63,7 @@ public class AssistantWindow : MyraControl
         tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
         tabs.AddTab("Macros", () => MacrosTabContent.Build(this));
         tabs.AddTab("Skills", () => _skillsTabContent = new());
+        tabs.AddTab("Tinkerer", TinkererTab.Build);
         tabs.SelectFirst();
         SetRootContent(tabs);
     }
