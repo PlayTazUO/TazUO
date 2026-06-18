@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.LegionScripting;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -31,9 +32,16 @@ namespace ClassicUO.Game.Managers
         private readonly List<ClientState> _activeClients = new List<ClientState>();
         private byte[] _cachedMapPng = null;
         private readonly object _cacheLock = new object();
+        private string _mcpAuthToken;
 
         public bool IsRunning => _isRunning;
         public int Port => _port;
+        public bool IsMcpBridgeEnabled => !string.IsNullOrWhiteSpace(_mcpAuthToken);
+
+        public void SetMcpBridgeAuthToken(string authToken)
+        {
+            _mcpAuthToken = string.IsNullOrWhiteSpace(authToken) ? null : authToken.Trim();
+        }
 
         public void SetCachedMapPng(byte[] pngData, int mapIndex)
         {
@@ -140,6 +148,9 @@ namespace ClassicUO.Game.Managers
                     case "/api/command":
                         HandleCommand(context.Request, context.Response);
                         break;
+                    case "/api/mcp":
+                        HandleMcpRequest(context.Request, context.Response);
+                        break;
                     case "/api/journalsize":
                         if (context.Request.HttpMethod == "GET")
                             GetJournalSize(context.Response);
@@ -178,6 +189,166 @@ namespace ClassicUO.Game.Managers
                 }
                 catch { }
             }
+        }
+
+        private void HandleMcpRequest(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                if (request.HttpMethod == "GET")
+                {
+                    response.StatusCode = 405;
+                    response.Close();
+                    return;
+                }
+
+            if (request.HttpMethod != "POST")
+            {
+                response.StatusCode = 405;
+                response.Close();
+                return;
+            }
+
+            if (!TryAuthorizeMcpRequest(request, out int authStatusCode, out string authError))
+            {
+                WriteMcpBridgeError(response, authStatusCode, authError);
+                return;
+            }
+
+            string payload;
+            using (var reader = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8))
+                payload = reader.ReadToEnd();
+
+                string endpoint = $"http://localhost:{_port}/api/mcp";
+                string resultJson = LegionMcpBridgeServer.Instance.HandleRequestJson(payload, _isRunning, _port, endpoint);
+
+                if (string.IsNullOrWhiteSpace(resultJson))
+                {
+                    // JSON-RPC notifications/responses return no body by design.
+                    response.StatusCode = 202;
+                    response.Close();
+                    return;
+                }
+
+                byte[] buffer = Encoding.UTF8.GetBytes(resultJson);
+                string protocolVersion = request.Headers["MCP-Protocol-Version"] ?? request.Headers["Mcp-Protocol-Version"];
+                if (string.IsNullOrWhiteSpace(protocolVersion))
+                    protocolVersion = "2025-03-26";
+
+                response.ContentType = "application/json; charset=utf-8";
+                response.Headers["MCP-Protocol-Version"] = protocolVersion;
+                response.ContentLength64 = buffer.Length;
+                response.OutputStream.Write(buffer, 0, buffer.Length);
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error handling MCP bridge request: {ex.Message}");
+                try
+                {
+                    response.StatusCode = 500;
+                    response.Close();
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+        }
+
+        private bool TryAuthorizeMcpRequest(HttpListenerRequest request, out int statusCode, out string error)
+        {
+            if (!IsMcpBridgeEnabled)
+            {
+                statusCode = 403;
+                error = "MCP bridge is disabled.";
+                return false;
+            }
+
+            if (!IsAllowedMcpOrigin(request))
+            {
+                statusCode = 403;
+                error = "Cross-origin MCP requests are not allowed.";
+                return false;
+            }
+
+            string suppliedToken = GetMcpAuthToken(request);
+            if (string.IsNullOrEmpty(suppliedToken) || !FixedTimeEquals(_mcpAuthToken, suppliedToken))
+            {
+                statusCode = 401;
+                error = "Missing or invalid MCP token.";
+                return false;
+            }
+
+            statusCode = 200;
+            error = null;
+            return true;
+        }
+
+        private bool IsAllowedMcpOrigin(HttpListenerRequest request)
+        {
+            string origin = request.Headers["Origin"];
+            if (string.IsNullOrWhiteSpace(origin))
+                return true;
+
+            if (!Uri.TryCreate(origin, UriKind.Absolute, out Uri originUri))
+                return false;
+
+            if (!string.Equals(originUri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (originUri.Port != _port)
+                return false;
+
+            return string.Equals(originUri.Host, "localhost", StringComparison.OrdinalIgnoreCase)
+                   || IPAddress.TryParse(originUri.Host, out IPAddress address) && IPAddress.IsLoopback(address);
+        }
+
+        private static string GetMcpAuthToken(HttpListenerRequest request)
+        {
+            string authorization = request.Headers["Authorization"];
+            const string bearerPrefix = "Bearer ";
+
+            if (!string.IsNullOrWhiteSpace(authorization) &&
+                authorization.StartsWith(bearerPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return authorization.Substring(bearerPrefix.Length).Trim();
+            }
+
+            return request.Headers["X-Tazuo-MCP-Token"]?.Trim()
+                   ?? request.Headers["X-MCP-Token"]?.Trim();
+        }
+
+        private static bool FixedTimeEquals(string expected, string actual)
+        {
+            if (expected == null || actual == null)
+                return false;
+
+            int diff = expected.Length ^ actual.Length;
+            int length = Math.Max(expected.Length, actual.Length);
+
+            for (int i = 0; i < length; i++)
+            {
+                char expectedChar = i < expected.Length ? expected[i] : '\0';
+                char actualChar = i < actual.Length ? actual[i] : '\0';
+                diff |= expectedChar ^ actualChar;
+            }
+
+            return diff == 0;
+        }
+
+        private static void WriteMcpBridgeError(HttpListenerResponse response, int statusCode, string error)
+        {
+            response.StatusCode = statusCode;
+
+            if (statusCode == 401)
+                response.Headers["WWW-Authenticate"] = "Bearer realm=\"TazUO MCP\"";
+
+            byte[] buffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { error }));
+            response.ContentType = "application/json; charset=utf-8";
+            response.ContentLength64 = buffer.Length;
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+            response.Close();
         }
 
         private void ServeHtmlPage(HttpListenerResponse response)

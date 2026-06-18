@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1206,9 +1207,562 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Captures a screenshot of the full game render surface and saves it to disk.
+        /// </summary>
+        /// <param name="path">Optional file path. If relative, it is resolved under Data/Client/Screenshots.</param>
+        /// <returns>Screenshot metadata including path, dimensions, and error details if capture fails.</returns>
+        public ApiScreenshotResult TakeScreenshot(string path = null) => OnMain(() =>
+        {
+            if (Client.Game == null)
+            {
+                return new ApiScreenshotResult
+                {
+                    Success = false,
+                    Mode = "full",
+                    Error = "Game controller is not available."
+                };
+            }
+
+            var result = Client.Game.CaptureScreenshot(path: path, notify: false);
+            return ApiScreenshotResult.FromCaptureResult(result, "full");
+        });
+
+        /// <summary>
+        /// Captures a screenshot of a specific region in screen coordinates.
+        /// </summary>
+        /// <param name="x">Region X position in screen coordinates.</param>
+        /// <param name="y">Region Y position in screen coordinates.</param>
+        /// <param name="width">Region width in pixels.</param>
+        /// <param name="height">Region height in pixels.</param>
+        /// <param name="path">Optional file path. If relative, it is resolved under Data/Client/Screenshots.</param>
+        /// <returns>Screenshot metadata including path, dimensions, and error details if capture fails.</returns>
+        public ApiScreenshotResult TakeScreenshotRegion(int x, int y, int width, int height, string path = null) => OnMain(() =>
+        {
+            if (Client.Game == null)
+            {
+                return new ApiScreenshotResult
+                {
+                    Success = false,
+                    Mode = "region",
+                    Error = "Game controller is not available."
+                };
+            }
+
+            if (width <= 0 || height <= 0)
+            {
+                return new ApiScreenshotResult
+                {
+                    Success = false,
+                    Mode = "region",
+                    Error = "Width and height must be greater than zero."
+                };
+            }
+
+            var region = new Rectangle(x, y, width, height);
+            var result = Client.Game.CaptureScreenshot(region, path, notify: false);
+            return ApiScreenshotResult.FromCaptureResult(result, "region");
+        });
+
+        private static Rectangle GetVisibleGumpBounds(Gump gump)
+        {
+            if (gump == null || gump.IsDisposed)
+                return Rectangle.Empty;
+
+            int minX = int.MaxValue;
+            int minY = int.MaxValue;
+            int maxX = int.MinValue;
+            int maxY = int.MinValue;
+            bool hasBounds = false;
+
+            static void IncludeBounds(Control control, ref int minX, ref int minY, ref int maxX, ref int maxY, ref bool hasBounds)
+            {
+                if (control.Width <= 0 || control.Height <= 0)
+                    return;
+
+                int x = control.ScreenCoordinateX;
+                int y = control.ScreenCoordinateY;
+                int right = x + control.Width;
+                int bottom = y + control.Height;
+
+                if (!hasBounds)
+                {
+                    minX = x;
+                    minY = y;
+                    maxX = right;
+                    maxY = bottom;
+                    hasBounds = true;
+                    return;
+                }
+
+                minX = Math.Min(minX, x);
+                minY = Math.Min(minY, y);
+                maxX = Math.Max(maxX, right);
+                maxY = Math.Max(maxY, bottom);
+            }
+
+            static void CollectVisibleBounds(Control control, ref int minX, ref int minY, ref int maxX, ref int maxY, ref bool hasBounds)
+            {
+                if (control == null || control.IsDisposed || !control.IsVisible)
+                    return;
+
+                IncludeBounds(control, ref minX, ref minY, ref maxX, ref maxY, ref hasBounds);
+
+                if (control.Children == null || control.Children.Count == 0)
+                    return;
+
+                for (int i = 0; i < control.Children.Count; i++)
+                {
+                    if (i >= control.Children.Count)
+                        break;
+
+                    if (control.Children[i] is not Control child || child.IsDisposed)
+                        continue;
+
+                    if (child.Page != 0 && child.Page != control.ActivePage)
+                        continue;
+
+                    CollectVisibleBounds(child, ref minX, ref minY, ref maxX, ref maxY, ref hasBounds);
+                }
+            }
+
+            CollectVisibleBounds(gump, ref minX, ref minY, ref maxX, ref maxY, ref hasBounds);
+
+            if (!hasBounds)
+            {
+                int width = Math.Max(1, gump.Width);
+                int height = Math.Max(1, gump.Height);
+
+                return new Rectangle(gump.ScreenCoordinateX, gump.ScreenCoordinateY, width, height);
+            }
+
+            return new Rectangle(minX, minY, Math.Max(1, maxX - minX), Math.Max(1, maxY - minY));
+        }
+
+        /// <summary>
+        /// Captures a screenshot of an open gump by server serial (or local serial fallback).
+        /// Leave gumpId blank to target the latest server gump.
+        /// </summary>
+        /// <param name="gumpId">Server serial to capture. Falls back to local serial lookup when not found as a server gump.</param>
+        /// <param name="path">Optional file path. If relative, it is resolved under Data/Client/Screenshots.</param>
+        /// <param name="padding">Optional padding in pixels around the gump bounds.</param>
+        /// <returns>Screenshot metadata including path, dimensions, and error details if capture fails.</returns>
+        public ApiScreenshotResult TakeScreenshotGump(uint gumpId = uint.MaxValue, string path = null, int padding = 0) => OnMain(() =>
+        {
+            if (Client.Game == null)
+            {
+                return new ApiScreenshotResult
+                {
+                    Success = false,
+                    Mode = "gump",
+                    Error = "Game controller is not available."
+                };
+            }
+
+            Gump gump = null;
+            uint resolvedId = gumpId;
+
+            if (resolvedId == uint.MaxValue && World.Player != null)
+                resolvedId = World.Player.LastGumpID;
+
+            if (resolvedId != uint.MaxValue && resolvedId != 0)
+            {
+                gump = UIManager.GetGumpServer(resolvedId);
+                gump ??= UIManager.GetGump(resolvedId);
+            }
+
+            if (gump == null || gump.IsDisposed)
+            {
+                return new ApiScreenshotResult
+                {
+                    Success = false,
+                    Mode = "gump",
+                    GumpId = resolvedId == uint.MaxValue ? 0 : resolvedId,
+                    Error = "Gump was not found."
+                };
+            }
+
+            int safePadding = Math.Max(0, padding);
+            Rectangle gumpBounds = GetVisibleGumpBounds(gump);
+            Rectangle region = new Rectangle(
+                gumpBounds.X - safePadding,
+                gumpBounds.Y - safePadding,
+                gumpBounds.Width + (safePadding * 2),
+                gumpBounds.Height + (safePadding * 2)
+            );
+
+            var result = Client.Game.CaptureScreenshot(region, path, notify: false);
+            return ApiScreenshotResult.FromCaptureResult(result, "gump", gump.ServerSerial != 0 ? gump.ServerSerial : gump.LocalSerial);
+        });
+
+        /// <summary>
+        /// Gets metadata for all currently open gumps.
+        /// </summary>
+        /// <returns>Array of visible gump descriptors including server/local serial and bounds.</returns>
+        public ApiOpenGumpInfo[] GetOpenGumpInfo() => OnMain(() =>
+        {
+            return UIManager.Gumps
+                .OfType<Gump>()
+                .Where(g => g != null && !g.IsDisposed && g.IsVisible)
+                .Select(g =>
+                {
+                    Rectangle bounds = GetVisibleGumpBounds(g);
+
+                    return new ApiOpenGumpInfo
+                    {
+                        ServerSerial = g.ServerSerial,
+                        LocalSerial = g.LocalSerial,
+                        X = bounds.X,
+                        Y = bounds.Y,
+                        Width = bounds.Width,
+                        Height = bounds.Height,
+                        Name = g.GetType().Name
+                    };
+                }).ToArray();
+        });
+
+        /// <summary>
         /// Executes a client command as if typed in the game console
         /// </summary>
         /// <param name="command">The command to execute (including any arguments)</param>
+        /// <summary>
+        /// Clicks a gump button through the normal server reply path or through LegionScript UI controls.
+        /// </summary>
+        /// <param name="button">Button ID for server gumps, or ButtonID/ButtonParameter for LegionScript UI buttons.</param>
+        /// <param name="gump">Server or local gump serial. Defaults to latest server gump for server clicks.</param>
+        /// <param name="kind">auto, server, or legion/script/api/ui.</param>
+        /// <param name="controlType">any, button, or niceButton for LegionScript UI clicks.</param>
+        /// <param name="controlIndex">Zero-based index when multiple matching LegionScript controls exist.</param>
+        /// <param name="text">Optional button text filter for LegionScript NiceButton controls.</param>
+        /// <param name="switches">Optional server gump switch values.</param>
+        /// <param name="entries">Optional server gump text entries as (index, text) pairs.</param>
+        public ApiGumpButtonClickResult ClickGumpButton(
+            int button,
+            uint gump = uint.MaxValue,
+            string kind = "auto",
+            string controlType = "any",
+            int controlIndex = 0,
+            string text = null,
+            IEnumerable<int> switches = null,
+            IEnumerable<object> entries = null) => OnMain(() =>
+        {
+            string normalizedKind = NormalizeGumpClickKind(kind);
+
+            if (normalizedKind == null)
+                return BuildGumpButtonClickError(button, gump, "Unknown click kind. Use auto, server, or legion.");
+
+            if (controlIndex < 0)
+                return BuildGumpButtonClickError(button, gump, "controlIndex must be zero or greater.");
+
+            if (normalizedKind == "server")
+                return ReplyGumpButton(button, gump, switches, entries);
+
+            if (normalizedKind == "legion")
+                return ClickLegionGumpButton(button, gump, controlType, controlIndex, text);
+
+            Gump serverGump = ResolveGumpForClick(gump, defaultToLastServerGump: true);
+
+            if (serverGump != null && serverGump.ServerSerial != 0)
+                return ReplyGumpButton(button, gump, switches, entries, serverGump);
+
+            ApiGumpButtonClickResult legionResult = ClickLegionGumpButton(button, gump, controlType, controlIndex, text);
+
+            if (legionResult.Success || gump != uint.MaxValue)
+                return legionResult;
+
+            return BuildGumpButtonClickError(button, gump, "No matching server or LegionScript gump button was found.");
+        });
+
+        private ApiGumpButtonClickResult ReplyGumpButton(
+            int button,
+            uint gumpId,
+            IEnumerable<int> switches,
+            IEnumerable<object> entries,
+            Gump resolvedGump = null)
+        {
+            if (World.Player == null)
+                return BuildGumpButtonClickError(button, gumpId, "Player was not found.");
+
+            Gump gump = resolvedGump ?? ResolveGumpForClick(gumpId, defaultToLastServerGump: true);
+
+            if (gump == null || gump.ServerSerial == 0)
+                return BuildGumpButtonClickError(button, gumpId, "Server gump was not found.");
+
+            Tuple<ushort, string>[] entryArray = BuildGumpEntryArray(entries);
+
+            GameActions.ReplyGump(
+                World,
+                gump.LocalSerial,
+                gump.ServerSerial,
+                button,
+                switches == null ? [] : switches.ToUint().ToArray(),
+                entryArray
+            );
+
+            ApiGumpButtonClickResult result = BuildGumpButtonClickResult(button, gumpId, gump, "server");
+            result.Success = true;
+            result.Action = "replyGump";
+
+            gump.Dispose();
+
+            return result;
+        }
+
+        private ApiGumpButtonClickResult ClickLegionGumpButton(
+            int button,
+            uint gumpId,
+            string controlType,
+            int controlIndex,
+            string text)
+        {
+            string normalizedControlType = NormalizeGumpButtonControlType(controlType);
+
+            if (normalizedControlType == null)
+                return BuildGumpButtonClickError(button, gumpId, "Unknown controlType. Use any, button, or niceButton.");
+
+            List<GumpButtonControlMatch> matches = FindLegionGumpButtonMatches(button, gumpId, normalizedControlType, text);
+
+            if (matches.Count == 0)
+                return BuildGumpButtonClickError(button, gumpId, "LegionScript gump button was not found.");
+
+            if (controlIndex >= matches.Count)
+            {
+                ApiGumpButtonClickResult error = BuildGumpButtonClickError(button, gumpId, $"controlIndex {controlIndex} was outside the {matches.Count} matching controls.");
+                error.MatchCount = matches.Count;
+                return error;
+            }
+
+            GumpButtonControlMatch match = matches[controlIndex];
+            Point clickPoint = new(match.Control.ScreenCoordinateX + Math.Max(1, match.Control.Width) / 2, match.Control.ScreenCoordinateY + Math.Max(1, match.Control.Height) / 2);
+            string action = InvokeLegionButtonClick(match.Control, clickPoint);
+
+            ApiGumpButtonClickResult result = BuildGumpButtonClickResult(button, gumpId, match.Gump, "legion");
+            result.Success = true;
+            result.ControlType = match.ControlType;
+            result.ControlIndex = controlIndex;
+            result.MatchCount = matches.Count;
+            result.Text = match.Text;
+            result.Action = action;
+
+            return result;
+        }
+
+        private List<GumpButtonControlMatch> FindLegionGumpButtonMatches(int button, uint gumpId, string controlType, string text)
+        {
+            bool hasTextFilter = !string.IsNullOrWhiteSpace(text);
+            List<GumpButtonControlMatch> matches = new();
+
+            foreach (Gump gump in GetLegionGumpClickTargets(gumpId))
+            {
+                foreach (Control control in EnumerateVisibleControls(gump))
+                {
+                    if (controlType != "niceButton" && control is Button buttonControl && buttonControl.ButtonID == button)
+                    {
+                        string caption = GetButtonCaption(buttonControl);
+
+                        if (!hasTextFilter || string.Equals(caption, text, StringComparison.OrdinalIgnoreCase))
+                        {
+                            matches.Add(new GumpButtonControlMatch
+                            {
+                                Gump = gump,
+                                Control = buttonControl,
+                                ControlType = nameof(Button),
+                                Text = caption
+                            });
+                        }
+                    }
+                    else if (controlType != "button" && control is NiceButton niceButton && niceButton.ButtonParameter == button)
+                    {
+                        string label = niceButton.TextLabel?.Text ?? string.Empty;
+
+                        if (!hasTextFilter || string.Equals(label, text, StringComparison.OrdinalIgnoreCase))
+                        {
+                            matches.Add(new GumpButtonControlMatch
+                            {
+                                Gump = gump,
+                                Control = niceButton,
+                                ControlType = nameof(NiceButton),
+                                Text = label
+                            });
+                        }
+                    }
+                }
+            }
+
+            return matches;
+        }
+
+        private IEnumerable<Gump> GetLegionGumpClickTargets(uint gumpId)
+        {
+            if (gumpId != uint.MaxValue)
+            {
+                Gump gump = ResolveGumpForClick(gumpId, defaultToLastServerGump: false);
+
+                if (gump != null && !gump.IsDisposed && gump.IsVisible)
+                    yield return gump;
+
+                yield break;
+            }
+
+            foreach (Gump gump in UIManager.Gumps.OfType<Gump>())
+            {
+                if (gump == null || gump.IsDisposed || !gump.IsVisible)
+                    continue;
+
+                if (IsScriptGumpLocalSerial(gump.LocalSerial))
+                    yield return gump;
+            }
+        }
+
+        private Gump ResolveGumpForClick(uint gumpId, bool defaultToLastServerGump)
+        {
+            uint resolvedId = gumpId;
+
+            if (resolvedId == uint.MaxValue && defaultToLastServerGump && World.Player != null)
+                resolvedId = World.Player.LastGumpID;
+
+            if (resolvedId == uint.MaxValue || resolvedId == 0)
+                return null;
+
+            Gump gump = UIManager.GetGumpServer(resolvedId);
+            gump ??= UIManager.GetGump(resolvedId);
+
+            return gump == null || gump.IsDisposed ? null : gump;
+        }
+
+        private static IEnumerable<Control> EnumerateVisibleControls(Control root)
+        {
+            if (root == null || root.IsDisposed || !root.IsVisible)
+                yield break;
+
+            for (int i = 0; i < root.Children.Count; i++)
+            {
+                if (i >= root.Children.Count)
+                    yield break;
+
+                if (root.Children[i] is not Control child || child.IsDisposed || !child.IsVisible)
+                    continue;
+
+                if (child.Page != 0 && child.Page != root.ActivePage)
+                    continue;
+
+                yield return child;
+
+                foreach (Control nested in EnumerateVisibleControls(child))
+                    yield return nested;
+            }
+        }
+
+        private static string InvokeLegionButtonClick(Control control, Point clickPoint)
+        {
+            if (control is Button button)
+            {
+                bool wasMouseOver = button.MouseIsOver;
+
+                button.InvokeMouseDown(clickPoint, ClassicUO.Input.MouseButtonType.Left);
+                button.InvokeMouseUp(clickPoint, ClassicUO.Input.MouseButtonType.Left);
+
+                if (!wasMouseOver && !button.IsDisposed)
+                {
+                    switch (button.ButtonAction)
+                    {
+                        case ButtonAction.SwitchPage:
+                            button.ChangePage(button.ToPage);
+                            return "buttonSwitchPage";
+                        case ButtonAction.Activate:
+                            button.OnButtonClick(button.ButtonID);
+                            return "buttonActivate";
+                    }
+                }
+
+                return "buttonMouseUp";
+            }
+
+            control.InvokeMouseDown(clickPoint, ClassicUO.Input.MouseButtonType.Left);
+            control.InvokeMouseUp(clickPoint, ClassicUO.Input.MouseButtonType.Left);
+
+            return control is NiceButton ? "niceButtonMouseUp" : "controlMouseUp";
+        }
+
+        private static Tuple<ushort, string>[] BuildGumpEntryArray(IEnumerable<object> entries)
+        {
+            if (entries == null)
+                return [];
+
+            var entryList = new List<Tuple<ushort, string>>();
+
+            foreach (object entry in entries)
+            {
+                if (entry is IList entryPair && entryPair.Count >= 2)
+                {
+                    ushort index = Convert.ToUInt16(entryPair[0]);
+                    string text = entryPair[1]?.ToString() ?? string.Empty;
+                    entryList.Add(Tuple.Create(index, text));
+                }
+            }
+
+            return entryList.ToArray();
+        }
+
+        private static ApiGumpButtonClickResult BuildGumpButtonClickResult(int button, uint requestedGumpId, Gump gump, string kind) => new()
+        {
+            Kind = kind,
+            RequestedGumpId = requestedGumpId == uint.MaxValue ? 0 : requestedGumpId,
+            ServerSerial = gump?.ServerSerial ?? 0,
+            LocalSerial = gump?.LocalSerial ?? 0,
+            GumpName = gump?.GetType().Name ?? string.Empty,
+            Button = button
+        };
+
+        private static ApiGumpButtonClickResult BuildGumpButtonClickError(int button, uint requestedGumpId, string error) => new()
+        {
+            Success = false,
+            RequestedGumpId = requestedGumpId == uint.MaxValue ? 0 : requestedGumpId,
+            Button = button,
+            Error = error
+        };
+
+        private static string NormalizeGumpClickKind(string kind)
+        {
+            string normalized = string.IsNullOrWhiteSpace(kind) ? "auto" : kind.Trim().ToLowerInvariant();
+
+            return normalized switch
+            {
+                "auto" => "auto",
+                "server" or "ingame" or "in-game" or "game" => "server",
+                "legion" or "script" or "api" or "ui" or "legionscript" or "legion-script" => "legion",
+                _ => null
+            };
+        }
+
+        private static string NormalizeGumpButtonControlType(string controlType)
+        {
+            string normalized = string.IsNullOrWhiteSpace(controlType) ? "any" : controlType.Trim().ToLowerInvariant();
+
+            return normalized switch
+            {
+                "any" or "all" => "any",
+                "button" or "gumpbutton" or "gump-button" => "button",
+                "nicebutton" or "nice-button" or "simple" or "simplebutton" or "simple-button" => "niceButton",
+                _ => null
+            };
+        }
+
+        private static bool IsScriptGumpLocalSerial(uint serial) => serial is >= 0x7F000000 and <= 0x7FFFFFFE;
+
+        private static string GetButtonCaption(Button button)
+        {
+            System.Reflection.FieldInfo field = typeof(Button).GetField("_caption", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            return field?.GetValue(button) as string ?? string.Empty;
+        }
+
+        private sealed class GumpButtonControlMatch
+        {
+            public Gump Gump { get; init; }
+            public Control Control { get; init; }
+            public string ControlType { get; init; } = string.Empty;
+            public string Text { get; init; } = string.Empty;
+        }
+
         public void ClientCommand(string command)
         {
             if (string.IsNullOrEmpty(command))
@@ -3484,7 +4038,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns>A GameObject of that location.</returns>
-        public ApiGameObject GetTile(int x, int y) => OnMain(() => { return new ApiGameObject(World.Map.GetTile(x, y)); });
+        public ApiGameObject GetTile(int x, int y) => OnMain(() => WrapGameObject(World.Map.GetTile(x, y)));
 
         /// <summary>
         /// Gets all static objects at a specific position (x, y coordinates).
@@ -3605,7 +4159,7 @@ namespace ClassicUO.LegionScripting
                     IEnumerable<Multi> houseMultis = house.GetMultiAt(x, y);
                     foreach (Multi houseMulti in houseMultis)
                     {
-                        multis.Add(new ApiMulti(houseMulti));
+                        multis.Add(new ApiMulti(houseMulti, house.Serial));
                     }
                 }
             }
@@ -3653,7 +4207,7 @@ namespace ClassicUO.LegionScripting
                             IEnumerable<Multi> houseMultis = house.GetMultiAt(x, y);
                             foreach (Multi houseMulti in houseMultis)
                             {
-                                multis.Add(new ApiMulti(houseMulti));
+                                multis.Add(new ApiMulti(houseMulti, house.Serial));
                             }
                         }
                     }
@@ -3662,6 +4216,956 @@ namespace ClassicUO.LegionScripting
 
             return multis;
         });
+
+    /// <summary>
+    /// Get detailed land/static/multi/region metadata for one map tile.
+    /// </summary>
+    public ApiTileInfo GetTileInfo(int x, int y) => OnMain(() => BuildTileInfo(x, y));
+
+    /// <summary>
+    /// Get region metadata available to the client for one map tile.
+    /// </summary>
+    public ApiRegionInfo GetRegionInfo(int x, int y) => OnMain(() => BuildTileInfo(x, y).Region);
+
+    /// <summary>
+    /// Get detailed tile metadata for a rectangular area.
+    /// </summary>
+    public List<ApiTileInfo> GetTilesInArea(int x1, int y1, int x2, int y2, int maxTiles = 4096) => OnMain(() =>
+    {
+        var tiles = new List<ApiTileInfo>();
+
+        int minX = Math.Min(x1, x2);
+        int maxX = Math.Max(x1, x2);
+        int minY = Math.Min(y1, y2);
+        int maxY = Math.Max(y1, y2);
+        int limit = Math.Max(1, maxTiles);
+
+        for (int x = minX; x <= maxX && tiles.Count < limit; x++)
+        {
+            for (int y = minY; y <= maxY && tiles.Count < limit; y++)
+            {
+                tiles.Add(BuildTileInfo(x, y));
+            }
+        }
+
+        return tiles;
+    });
+
+    /// <summary>
+    /// Get known house/multi group data intersecting a rectangular area.
+    /// </summary>
+    public List<ApiHouseInfo> GetHousesInArea(int x1, int y1, int x2, int y2, int clearance = 0) => OnMain(() =>
+    {
+        return BuildHouseInfosInArea(x1, y1, x2, y2, clearance);
+    });
+
+    /// <summary>
+    /// Estimate whether a rectangular house footprint can be placed using Atlantic-style official clearance rules.
+    /// The result is still a client-side estimate; account ownership, cooldown, and unavailable server region data are reported as unchecked rules.
+    /// </summary>
+    public ApiHousePlacementResult CanPlaceHouse(
+        int x,
+        int y,
+        int width,
+        int depth,
+        string direction = "south",
+        int frontClearance = 6,
+        int backClearance = 5,
+        int sideClearance = 1,
+        int maxZDelta = 0,
+        bool allowSmallPlants = true,
+        bool includeSteps = true) => OnMain(() =>
+    {
+        int safeFrontClearance = Math.Max(0, frontClearance);
+        int safeBackClearance = Math.Max(0, backClearance);
+        int safeSideClearance = Math.Max(0, sideClearance);
+        int safeMaxZDelta = Math.Max(0, maxZDelta);
+        string normalizedDirection = NormalizeHouseDirection(direction);
+
+        var result = new ApiHousePlacementResult
+        {
+            X = x,
+            Y = y,
+            Width = width,
+            Depth = depth,
+            Direction = normalizedDirection,
+            FrontClearance = safeFrontClearance,
+            BackClearance = safeBackClearance,
+            SideClearance = safeSideClearance,
+            MaxZDelta = safeMaxZDelta,
+            IncludeSteps = includeSteps,
+            AllowSmallPlants = allowSmallPlants,
+            Map = World?.Map?.Index ?? -1,
+            ClientEstimate = true,
+            Validator = "client-official-house-placement-estimate"
+        };
+
+        AddOfficialPlacementUncheckedRules(result);
+
+        if (World?.Map == null)
+        {
+            AddPlacementBlocker(result, new ApiHousePlacementBlocker { Kind = "map", Reason = "Map is not available." });
+            return FinalizePlacementResult(result);
+        }
+
+        if (width <= 0 || depth <= 0)
+        {
+            AddPlacementBlocker(result, new ApiHousePlacementBlocker { Kind = "input", Reason = "House width and depth must be positive." });
+            return FinalizePlacementResult(result);
+        }
+
+        int minX = x;
+        int minY = y;
+        int maxX = x + width - 1;
+        int maxY = y + depth - 1;
+        int minZ = int.MaxValue;
+        int maxZ = int.MinValue;
+        var footprint = new HousePlacementArea("footprint", minX, minY, maxX, maxY, false, true);
+        IReadOnlyList<HousePlacementArea> clearanceAreas = BuildOfficialHousePlacementAreas(
+            x,
+            y,
+            width,
+            depth,
+            normalizedDirection,
+            safeFrontClearance,
+            safeBackClearance,
+            safeSideClearance,
+            includeSteps);
+
+        CheckHousePlacementAreaTiles(result, footprint, allowSmallPlants, ref minZ, ref maxZ);
+
+        foreach (HousePlacementArea area in clearanceAreas)
+            CheckHousePlacementAreaTiles(result, area, allowSmallPlants, ref minZ, ref maxZ);
+
+        if (minZ != int.MaxValue)
+        {
+            result.MinZ = minZ;
+            result.MaxZ = maxZ;
+
+            if (maxZ - minZ > safeMaxZDelta)
+            {
+                AddPlacementBlocker(result, new ApiHousePlacementBlocker
+                {
+                    Kind = "terrain",
+                    Reason = $"Footprint z range {maxZ - minZ} exceeds maxZDelta {safeMaxZDelta}.",
+                    X = minX,
+                    Y = minY,
+                    Z = minZ,
+                    InsideFootprint = true,
+                    ClearanceArea = "footprint"
+                });
+            }
+        }
+
+        AddDirectionalMultiPlacementBlockers(result, footprint, clearanceAreas);
+        HousePlacementArea union = BuildAreaUnion(footprint, clearanceAreas);
+        result.BlockingHouses = BuildBlockingHouseInfos(result, union.MinX, union.MinY, union.MaxX, union.MaxY, 0);
+
+        return FinalizePlacementResult(result);
+    });
+
+    private ApiGameObject WrapGameObject(GameObject obj)
+    {
+        return obj switch
+        {
+            null => null,
+            Mobile mobile => new ApiMobile(mobile),
+            Item item => new ApiItem(item),
+            Static staticObj => new ApiStatic(staticObj),
+            Multi multi => new ApiMulti(multi, FindHouseSerialForMulti(multi)),
+            Land land => new ApiLand(land),
+            _ => new ApiGameObject(obj)
+        };
+    }
+
+    private uint FindHouseSerialForMulti(Multi multi)
+    {
+        if (multi == null || World?.HouseManager == null)
+            return 0;
+
+        foreach (House house in World.HouseManager.Houses)
+        {
+            foreach (Multi component in house.Components)
+            {
+                if (ReferenceEquals(component, multi))
+                    return house.Serial;
+            }
+        }
+
+        return 0;
+    }
+
+    internal readonly struct HousePlacementArea
+    {
+        public HousePlacementArea(string name, int minX, int minY, int maxX, int maxY, bool isClearance, bool requiresBuildableLand)
+        {
+            Name = name ?? string.Empty;
+            MinX = Math.Min(minX, maxX);
+            MinY = Math.Min(minY, maxY);
+            MaxX = Math.Max(minX, maxX);
+            MaxY = Math.Max(minY, maxY);
+            IsClearance = isClearance;
+            RequiresBuildableLand = requiresBuildableLand;
+        }
+
+        public string Name { get; }
+        public int MinX { get; }
+        public int MinY { get; }
+        public int MaxX { get; }
+        public int MaxY { get; }
+        public bool IsClearance { get; }
+        public bool RequiresBuildableLand { get; }
+    }
+
+    internal static IReadOnlyList<HousePlacementArea> BuildOfficialHousePlacementAreas(
+        int x,
+        int y,
+        int width,
+        int depth,
+        string direction,
+        int frontClearance,
+        int backClearance,
+        int sideClearance,
+        bool includeSteps)
+    {
+        var areas = new List<HousePlacementArea>();
+
+        if (width <= 0 || depth <= 0)
+            return areas;
+
+        int minX = x;
+        int minY = y;
+        int maxX = x + width - 1;
+        int maxY = y + depth - 1;
+        int safeFrontClearance = Math.Max(0, frontClearance);
+        int safeBackClearance = Math.Max(0, backClearance);
+        int safeSideClearance = Math.Max(0, sideClearance);
+        (int frontDx, int frontDy) = GetDirectionVector(direction);
+        int backDx = -frontDx;
+        int backDy = -frontDy;
+        int leftDx = frontDy;
+        int leftDy = -frontDx;
+        int rightDx = -frontDy;
+        int rightDy = frontDx;
+
+        if (includeSteps && safeFrontClearance > 0)
+        {
+            areas.Add(BuildProjectedArea("step", minX, minY, maxX, maxY, frontDx, frontDy, 1, 1, true, true));
+
+            if (safeFrontClearance > 1)
+                areas.Add(BuildProjectedArea("front", minX, minY, maxX, maxY, frontDx, frontDy, 2, safeFrontClearance - 1, true, false));
+        }
+        else if (safeFrontClearance > 0)
+        {
+            areas.Add(BuildProjectedArea("front", minX, minY, maxX, maxY, frontDx, frontDy, 1, safeFrontClearance, true, false));
+        }
+
+        if (safeBackClearance > 0)
+            areas.Add(BuildProjectedArea("back", minX, minY, maxX, maxY, backDx, backDy, 1, safeBackClearance, true, false));
+
+        if (safeSideClearance > 0)
+        {
+            areas.Add(BuildProjectedArea("left", minX, minY, maxX, maxY, leftDx, leftDy, 1, safeSideClearance, true, false));
+            areas.Add(BuildProjectedArea("right", minX, minY, maxX, maxY, rightDx, rightDy, 1, safeSideClearance, true, false));
+        }
+
+        return areas;
+    }
+
+    private static HousePlacementArea BuildProjectedArea(
+        string name,
+        int minX,
+        int minY,
+        int maxX,
+        int maxY,
+        int dx,
+        int dy,
+        int startOffset,
+        int length,
+        bool isClearance,
+        bool requiresBuildableLand)
+    {
+        if (dx > 0)
+            return new HousePlacementArea(name, maxX + startOffset, minY, maxX + startOffset + length - 1, maxY, isClearance, requiresBuildableLand);
+
+        if (dx < 0)
+            return new HousePlacementArea(name, minX - startOffset - length + 1, minY, minX - startOffset, maxY, isClearance, requiresBuildableLand);
+
+        if (dy > 0)
+            return new HousePlacementArea(name, minX, maxY + startOffset, maxX, maxY + startOffset + length - 1, isClearance, requiresBuildableLand);
+
+        return new HousePlacementArea(name, minX, minY - startOffset - length + 1, maxX, minY - startOffset, isClearance, requiresBuildableLand);
+    }
+
+    private static (int dx, int dy) GetDirectionVector(string direction)
+    {
+        return NormalizeHouseDirection(direction) switch
+        {
+            "north" => (0, -1),
+            "east" => (1, 0),
+            "west" => (-1, 0),
+            _ => (0, 1)
+        };
+    }
+
+    private static HousePlacementArea BuildAreaUnion(HousePlacementArea footprint, IReadOnlyList<HousePlacementArea> areas)
+    {
+        int minX = footprint.MinX;
+        int minY = footprint.MinY;
+        int maxX = footprint.MaxX;
+        int maxY = footprint.MaxY;
+
+        foreach (HousePlacementArea area in areas)
+        {
+            minX = Math.Min(minX, area.MinX);
+            minY = Math.Min(minY, area.MinY);
+            maxX = Math.Max(maxX, area.MaxX);
+            maxY = Math.Max(maxY, area.MaxY);
+        }
+
+        return new HousePlacementArea("union", minX, minY, maxX, maxY, false, false);
+    }
+
+    private void CheckHousePlacementAreaTiles(ApiHousePlacementResult result, HousePlacementArea area, bool allowSmallPlants, ref int minZ, ref int maxZ)
+    {
+        for (int tx = area.MinX; tx <= area.MaxX; tx++)
+        {
+            for (int ty = area.MinY; ty <= area.MaxY; ty++)
+            {
+                if (area.IsClearance)
+                    result.CheckedClearanceTiles++;
+                else
+                    result.CheckedTiles++;
+
+                if (!IsInCurrentMapBounds(tx, ty))
+                {
+                    AddPlacementBlocker(result, new ApiHousePlacementBlocker
+                    {
+                        Kind = "map",
+                        Reason = area.IsClearance ? "House clearance extends outside map bounds." : "House footprint extends outside map bounds.",
+                        X = tx,
+                        Y = ty,
+                        InsideFootprint = !area.IsClearance,
+                        InClearance = area.IsClearance,
+                        ClearanceArea = area.Name
+                    });
+
+                    continue;
+                }
+
+                Land land = World.Map.GetTile(tx, ty, true) as Land;
+
+                if (land == null)
+                {
+                    AddPlacementBlocker(result, new ApiHousePlacementBlocker
+                    {
+                        Kind = "land",
+                        Reason = area.IsClearance ? "Clearance land tile is not loaded or missing." : "Land tile is not loaded or missing.",
+                        X = tx,
+                        Y = ty,
+                        InsideFootprint = !area.IsClearance,
+                        InClearance = area.IsClearance,
+                        ClearanceArea = area.Name
+                    });
+
+                    continue;
+                }
+
+                if (!area.IsClearance)
+                {
+                    minZ = Math.Min(minZ, land.Z);
+                    maxZ = Math.Max(maxZ, land.Z);
+                }
+
+                if (area.RequiresBuildableLand)
+                    AddLandPlacementBlockers(result, area, land, checkRoads: true);
+
+                foreach (Static staticObj in EnumerateStaticsAt(tx, ty, true))
+                {
+                    if (!IsStaticBlockingHousePlacement(staticObj, allowSmallPlants, out string staticReason))
+                        continue;
+
+                    AddPlacementBlocker(result, BuildPlacementBlocker(
+                        "static",
+                        staticReason,
+                        staticObj.X,
+                        staticObj.Y,
+                        staticObj.Z,
+                        staticObj.OriginalGraphic,
+                        staticObj.Name,
+                        !area.IsClearance,
+                        area.IsClearance,
+                        area.Name));
+                }
+            }
+        }
+    }
+
+    private void AddLandPlacementBlockers(ApiHousePlacementResult result, HousePlacementArea area, Land land, bool checkRoads)
+    {
+        TileFlag landFlags = land.TileData.Flags;
+        bool insideFootprint = !area.IsClearance;
+        bool inClearance = area.IsClearance;
+
+        if ((landFlags & TileFlag.NoHouse) != 0)
+            AddPlacementBlocker(result, BuildPlacementBlocker("land", "Land tile has NoHouse flag.", land.X, land.Y, land.Z, land.OriginalGraphic, land.TileData.Name, insideFootprint, inClearance, area.Name));
+
+        if ((landFlags & TileFlag.Impassable) != 0)
+            AddPlacementBlocker(result, BuildPlacementBlocker("land", "Land tile is impassable.", land.X, land.Y, land.Z, land.OriginalGraphic, land.TileData.Name, insideFootprint, inClearance, area.Name));
+
+        if ((landFlags & TileFlag.Wet) != 0)
+            AddPlacementBlocker(result, BuildPlacementBlocker("land", "Land tile is wet.", land.X, land.Y, land.Z, land.OriginalGraphic, land.TileData.Name, insideFootprint, inClearance, area.Name));
+
+        if (checkRoads && IsRoadCandidate(land.OriginalGraphic, land.TileData.Name, landFlags))
+            AddPlacementBlocker(result, BuildPlacementBlocker("land", "Land tile appears to be a road.", land.X, land.Y, land.Z, land.OriginalGraphic, land.TileData.Name, insideFootprint, inClearance, area.Name));
+    }
+
+    private ApiTileInfo BuildTileInfo(int x, int y)
+    {
+        var info = new ApiTileInfo
+        {
+            X = x,
+            Y = y,
+            Map = World?.Map?.Index ?? -1,
+            InMapBounds = World?.Map != null && IsInCurrentMapBounds(x, y)
+        };
+
+        if (World?.Map == null || !info.InMapBounds)
+        {
+            info.Region = BuildRegionInfo(info);
+            return info;
+        }
+
+        if (World.Map.GetTile(x, y, true) is Land land)
+        {
+            info.HasLand = true;
+            info.Land = BuildLandTileInfo(land);
+            info.HasNoHouseFlag |= info.Land.Flags.IsNoHouse;
+            info.IsRoadCandidate |= info.Land.IsRoadCandidate;
+            info.HasImpassable |= info.Land.Flags.IsImpassable;
+            info.HasWet |= info.Land.Flags.IsWet;
+        }
+
+        foreach (Static staticObj in EnumerateStaticsAt(x, y, true))
+        {
+            ApiStaticTileInfo staticInfo = BuildStaticTileInfo(staticObj);
+            info.Statics.Add(staticInfo);
+            info.HasNoHouseFlag |= staticInfo.Flags.IsNoHouse;
+            info.HasImpassable |= staticInfo.Flags.IsImpassable;
+            info.HasWet |= staticInfo.Flags.IsWet;
+            info.HasSurfaceStatic |= staticInfo.Flags.IsSurface;
+            info.HasBridgeStatic |= staticInfo.Flags.IsBridge;
+            info.HasWallOrDoor |= staticInfo.Flags.IsWall || staticInfo.Flags.IsDoor;
+        }
+
+        if (World.HouseManager != null)
+        {
+            foreach (House house in World.HouseManager.Houses)
+            {
+                foreach (Multi multi in house.GetMultiAt(x, y))
+                {
+                    info.Multis.Add(BuildMultiComponentInfo(multi, house.Serial));
+                }
+            }
+        }
+
+        info.Region = BuildRegionInfo(info);
+        return info;
+    }
+
+    private ApiLandTileInfo BuildLandTileInfo(Land land)
+    {
+        return new ApiLandTileInfo
+        {
+            X = land.X,
+            Y = land.Y,
+            Z = land.Z,
+            Graphic = land.OriginalGraphic,
+            GraphicHex = $"0x{land.OriginalGraphic:X4}",
+            Name = land.TileData.Name,
+            IsRoadCandidate = IsRoadCandidate(land.OriginalGraphic, land.TileData.Name, land.TileData.Flags),
+            Flags = BuildFlagInfo(land.TileData.Flags)
+        };
+    }
+
+    private ApiStaticTileInfo BuildStaticTileInfo(Static staticObj)
+    {
+        return new ApiStaticTileInfo
+        {
+            X = staticObj.X,
+            Y = staticObj.Y,
+            Z = staticObj.Z,
+            Graphic = staticObj.OriginalGraphic,
+            GraphicHex = $"0x{staticObj.OriginalGraphic:X4}",
+            Hue = staticObj.Hue,
+            HueHex = $"0x{staticObj.Hue:X4}",
+            Height = staticObj.ItemData.Height,
+            Name = staticObj.Name,
+            IsTree = StaticFilters.IsTree(staticObj.OriginalGraphic, out _),
+            IsVegetation = staticObj.IsVegetation,
+            IsCave = StaticFilters.IsCave(staticObj.OriginalGraphic),
+            Flags = BuildFlagInfo(staticObj.ItemData.Flags)
+        };
+    }
+
+    private ApiMultiComponentInfo BuildMultiComponentInfo(Multi multi, uint houseSerial)
+    {
+        return new ApiMultiComponentInfo
+        {
+            HouseSerial = houseSerial,
+            HouseSerialHex = $"0x{houseSerial:X8}",
+            MultiID = multi.OriginalGraphic,
+            MultiIDHex = $"0x{multi.OriginalGraphic:X4}",
+            X = multi.X,
+            Y = multi.Y,
+            Z = multi.Z,
+            Graphic = multi.OriginalGraphic,
+            GraphicHex = $"0x{multi.OriginalGraphic:X4}",
+            Hue = multi.Hue,
+            HueHex = $"0x{multi.Hue:X4}",
+            Height = multi.ItemData.Height,
+            Name = multi.Name,
+            MultiOffsetX = multi.MultiOffsetX,
+            MultiOffsetY = multi.MultiOffsetY,
+            MultiOffsetZ = multi.MultiOffsetZ,
+            IsCustom = multi.IsCustom,
+            IsMovable = multi.IsMovable,
+            Flags = BuildFlagInfo(multi.ItemData.Flags)
+        };
+    }
+
+    private static ApiTileFlagInfo BuildFlagInfo(TileFlag flags)
+    {
+        return new ApiTileFlagInfo
+        {
+            Value = (ulong)flags,
+            Names = flags.ToString(),
+            IsSurface = (flags & TileFlag.Surface) != 0,
+            IsBridge = (flags & TileFlag.Bridge) != 0,
+            IsWet = (flags & TileFlag.Wet) != 0,
+            IsFoliage = (flags & TileFlag.Foliage) != 0,
+            IsWall = (flags & TileFlag.Wall) != 0,
+            IsDoor = (flags & TileFlag.Door) != 0,
+            IsImpassable = (flags & TileFlag.Impassable) != 0,
+            IsNoHouse = (flags & TileFlag.NoHouse) != 0,
+            IsNoDiagonal = (flags & TileFlag.NoDiagonal) != 0,
+            IsRoof = (flags & TileFlag.Roof) != 0,
+            IsBackground = (flags & TileFlag.Background) != 0
+        };
+    }
+
+    private IEnumerable<Static> EnumerateStaticsAt(int x, int y, bool load)
+    {
+        if (World?.Map == null || !IsInCurrentMapBounds(x, y))
+            yield break;
+
+        Game.Map.Chunk chunk = World.Map.GetChunk(x, y, load);
+
+        if (chunk == null)
+            yield break;
+
+        GameObject obj = chunk.GetHeadObject(x % 8, y % 8);
+
+        while (obj != null)
+        {
+            if (obj is Static staticObj)
+                yield return staticObj;
+
+            obj = obj.TNext;
+        }
+    }
+
+    private ApiRegionInfo BuildRegionInfo(ApiTileInfo tileInfo)
+    {
+        return new ApiRegionInfo
+        {
+            RegionDataAvailable = false,
+            RegionName = string.Empty,
+            IsGuardZone = false,
+            NoHousing = tileInfo.HasNoHouseFlag,
+            IsTown = false,
+            IsDungeon = false,
+            Source = tileInfo.HasNoHouseFlag ? "tiledata-nohouse" : "not-available"
+        };
+    }
+
+    private List<ApiHouseInfo> BuildHouseInfosInArea(int x1, int y1, int x2, int y2, int clearance)
+    {
+        var houses = new List<ApiHouseInfo>();
+
+        if (World?.HouseManager == null)
+            return houses;
+
+        int minX = Math.Min(x1, x2) - Math.Max(0, clearance);
+        int maxX = Math.Max(x1, x2) + Math.Max(0, clearance);
+        int minY = Math.Min(y1, y2) - Math.Max(0, clearance);
+        int maxY = Math.Max(y1, y2) + Math.Max(0, clearance);
+
+        foreach (House house in World.HouseManager.Houses)
+        {
+            if (!HouseIntersectsArea(house, minX, minY, maxX, maxY))
+                continue;
+
+            houses.Add(BuildHouseInfo(house));
+        }
+
+        return houses;
+    }
+
+    private List<ApiHouseInfo> BuildBlockingHouseInfos(ApiHousePlacementResult result, int x1, int y1, int x2, int y2, int clearance)
+    {
+        HashSet<uint> blockingSerials = result.Blockers
+            .Where(b => b.HouseSerial != 0)
+            .Select(b => b.HouseSerial)
+            .ToHashSet();
+
+        if (blockingSerials.Count == 0)
+            return new List<ApiHouseInfo>();
+
+        return BuildHouseInfosInArea(x1, y1, x2, y2, clearance)
+            .Where(h => blockingSerials.Contains(h.Serial))
+            .ToList();
+    }
+
+    private ApiHouseInfo BuildHouseInfo(House house)
+    {
+        Item foundation = World?.Items?.Get(house.Serial);
+
+        var info = new ApiHouseInfo
+        {
+            Serial = house.Serial,
+            SerialHex = $"0x{house.Serial:X8}",
+            MultiID = foundation?.OriginalGraphic ?? 0,
+            MultiIDHex = foundation == null ? string.Empty : $"0x{foundation.OriginalGraphic:X4}",
+            IsCustom = house.IsCustom,
+            Revision = house.Revision,
+            RawMinX = house.Bounds.X,
+            RawMinY = house.Bounds.Y,
+            RawMaxX = house.Bounds.Width,
+            RawMaxY = house.Bounds.Height,
+            OriginX = foundation?.X ?? 0,
+            OriginY = foundation?.Y ?? 0,
+            OriginZ = foundation?.Z ?? 0,
+            MinX = int.MaxValue,
+            MinY = int.MaxValue,
+            MinZ = int.MaxValue,
+            MaxX = int.MinValue,
+            MaxY = int.MinValue,
+            MaxZ = int.MinValue
+        };
+
+        foreach (Multi component in house.Components)
+        {
+            if (component == null || component.IsDestroyed)
+                continue;
+
+            info.Components.Add(BuildMultiComponentInfo(component, house.Serial));
+            info.MinX = Math.Min(info.MinX, component.X);
+            info.MinY = Math.Min(info.MinY, component.Y);
+            info.MinZ = Math.Min(info.MinZ, component.Z);
+            info.MaxX = Math.Max(info.MaxX, component.X);
+            info.MaxY = Math.Max(info.MaxY, component.Y);
+            info.MaxZ = Math.Max(info.MaxZ, component.Z);
+        }
+
+        info.ComponentCount = info.Components.Count;
+        info.BoundsFromComponents = info.ComponentCount > 0;
+
+        if (info.ComponentCount == 0)
+        {
+            if (foundation != null)
+            {
+                info.MinX = foundation.X + info.RawMinX;
+                info.MinY = foundation.Y + info.RawMinY;
+                info.MaxX = foundation.X + info.RawMaxX;
+                info.MaxY = foundation.Y + info.RawMaxY;
+                info.MinZ = foundation.Z;
+                info.MaxZ = foundation.Z;
+            }
+            else
+            {
+                info.MinX = info.RawMinX;
+                info.MinY = info.RawMinY;
+                info.MaxX = info.RawMaxX;
+                info.MaxY = info.RawMaxY;
+                info.MinZ = 0;
+                info.MaxZ = 0;
+            }
+        }
+
+        info.Width = info.MaxX >= info.MinX ? info.MaxX - info.MinX + 1 : 0;
+        info.Depth = info.MaxY >= info.MinY ? info.MaxY - info.MinY + 1 : 0;
+
+        return info;
+    }
+
+    private bool HouseIntersectsArea(House house, int minX, int minY, int maxX, int maxY)
+    {
+        foreach (Multi component in house.Components)
+        {
+            if (component == null || component.IsDestroyed)
+                continue;
+
+            if (component.X >= minX && component.X <= maxX && component.Y >= minY && component.Y <= maxY)
+                return true;
+        }
+
+        ApiHouseInfo info = BuildHouseInfo(house);
+        return RectsIntersect(info.MinX, info.MinY, info.MaxX, info.MaxY, minX, minY, maxX, maxY);
+    }
+
+    private void AddDirectionalMultiPlacementBlockers(ApiHousePlacementResult result, HousePlacementArea footprint, IReadOnlyList<HousePlacementArea> clearanceAreas)
+    {
+        if (World?.HouseManager == null)
+            return;
+
+        foreach (House house in World.HouseManager.Houses)
+        {
+            foreach (Multi component in house.Components)
+            {
+                if (component == null || component.IsDestroyed)
+                    continue;
+
+                if (PointInArea(component.X, component.Y, footprint))
+                {
+                    ApiHousePlacementBlocker componentBlocker = BuildPlacementBlocker(
+                        "multi",
+                        "Existing multi component inside footprint.",
+                        component.X,
+                        component.Y,
+                        component.Z,
+                        component.OriginalGraphic,
+                        component.Name,
+                        true,
+                        false,
+                        "footprint");
+
+                    componentBlocker.HouseSerial = house.Serial;
+                    componentBlocker.HouseSerialHex = $"0x{house.Serial:X8}";
+                    AddPlacementBlocker(result, componentBlocker);
+                    continue;
+                }
+
+                foreach (HousePlacementArea area in clearanceAreas)
+                {
+                    if (!PointInArea(component.X, component.Y, area))
+                        continue;
+
+                    ApiHousePlacementBlocker componentBlocker = BuildPlacementBlocker(
+                        "multi",
+                        $"Existing multi component inside {area.Name} clearance.",
+                        component.X,
+                        component.Y,
+                        component.Z,
+                        component.OriginalGraphic,
+                        component.Name,
+                        false,
+                        true,
+                        area.Name);
+
+                    componentBlocker.HouseSerial = house.Serial;
+                    componentBlocker.HouseSerialHex = $"0x{house.Serial:X8}";
+                    AddPlacementBlocker(result, componentBlocker);
+                    break;
+                }
+            }
+
+            ApiHouseInfo info = BuildHouseInfo(house);
+
+            if (RectsIntersect(info.MinX, info.MinY, info.MaxX, info.MaxY, footprint.MinX, footprint.MinY, footprint.MaxX, footprint.MaxY))
+            {
+                AddHouseBoundsPlacementBlocker(result, house.Serial, info, "Existing house bounds intersect footprint.", true, false, "footprint");
+                continue;
+            }
+
+            foreach (HousePlacementArea area in clearanceAreas)
+            {
+                if (!RectsIntersect(info.MinX, info.MinY, info.MaxX, info.MaxY, area.MinX, area.MinY, area.MaxX, area.MaxY))
+                    continue;
+
+                AddHouseBoundsPlacementBlocker(result, house.Serial, info, $"Existing house bounds intersect {area.Name} clearance.", false, true, area.Name);
+                break;
+            }
+        }
+    }
+
+    private static bool PointInArea(int x, int y, HousePlacementArea area) =>
+        x >= area.MinX && x <= area.MaxX && y >= area.MinY && y <= area.MaxY;
+
+    private static void AddHouseBoundsPlacementBlocker(
+        ApiHousePlacementResult result,
+        uint houseSerial,
+        ApiHouseInfo info,
+        string reason,
+        bool insideFootprint,
+        bool inClearance,
+        string clearanceArea)
+    {
+        var blocker = new ApiHousePlacementBlocker
+        {
+            Kind = "multi",
+            Reason = reason,
+            X = info.MinX,
+            Y = info.MinY,
+            Z = info.MinZ,
+            Graphic = info.MultiID > ushort.MaxValue ? ushort.MaxValue : (ushort)info.MultiID,
+            GraphicHex = info.MultiIDHex,
+            Name = "Known house bounds",
+            HouseSerial = houseSerial,
+            HouseSerialHex = $"0x{houseSerial:X8}",
+            InsideFootprint = insideFootprint,
+            InClearance = inClearance,
+            ClearanceArea = clearanceArea
+        };
+
+        AddPlacementBlocker(result, blocker);
+    }
+
+    private static bool RectsIntersect(int minX1, int minY1, int maxX1, int maxY1, int minX2, int minY2, int maxX2, int maxY2) =>
+        minX1 <= maxX2 && maxX1 >= minX2 && minY1 <= maxY2 && maxY1 >= minY2;
+
+    private static bool IsStaticBlockingHousePlacement(Static staticObj, bool allowSmallPlants, out string reason)
+    {
+        reason = string.Empty;
+        TileFlag flags = staticObj.ItemData.Flags;
+        bool isSmallPlant = (flags & TileFlag.Foliage) != 0 ||
+                            (flags & TileFlag.Background) != 0 ||
+                            staticObj.IsVegetation;
+
+            bool hasHardBlocker = true;
+
+            if ((flags & TileFlag.NoHouse) != 0)
+                reason = "Static tile has NoHouse flag.";
+            else if ((flags & TileFlag.Impassable) != 0)
+                reason = "Static tile is impassable.";
+        else if ((flags & TileFlag.Wall) != 0)
+            reason = "Static tile is a wall.";
+        else if ((flags & TileFlag.Door) != 0)
+            reason = "Static tile is a door.";
+        else if ((flags & TileFlag.Bridge) != 0)
+            reason = "Static tile is a bridge.";
+        else if ((flags & TileFlag.Wet) != 0)
+            reason = "Static tile is wet.";
+        else if (StaticFilters.IsCave(staticObj.OriginalGraphic))
+            reason = "Static tile is cave terrain.";
+            else if (StaticFilters.IsTree(staticObj.OriginalGraphic, out _))
+                reason = "Static tile is a tree.";
+            else
+                hasHardBlocker = false;
+
+            if (hasHardBlocker)
+                return true;
+
+            if (isSmallPlant && allowSmallPlants)
+                return false;
+
+            if (isSmallPlant)
+                reason = "Static tile is vegetation.";
+            else if (staticObj.ItemData.Height > 0 && (flags & TileFlag.Background) == 0 && (flags & TileFlag.Foliage) == 0)
+                reason = "Static tile has blocking height.";
+
+        return !string.IsNullOrEmpty(reason);
+    }
+
+    internal static bool IsRoadCandidate(ushort graphic, string name, TileFlag flags)
+    {
+        string normalizedName = (name ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(normalizedName))
+            return false;
+
+        return normalizedName.Contains("road", StringComparison.Ordinal) ||
+               normalizedName.Contains("paved", StringComparison.Ordinal) ||
+               normalizedName.Contains("pavement", StringComparison.Ordinal) ||
+               normalizedName.Contains("cobble", StringComparison.Ordinal) ||
+               normalizedName.Contains("flagstone", StringComparison.Ordinal) ||
+               normalizedName.Contains("flag stone", StringComparison.Ordinal);
+    }
+
+    private static void AddOfficialPlacementUncheckedRules(ApiHousePlacementResult result)
+    {
+        result.UncheckedServerSideRules.Add("Account ownership and seven-day housing cooldown are not available from client tile data.");
+        result.UncheckedServerSideRules.Add("Guard zone, town, dungeon, and no-housing region data is limited to tile NoHouse flags unless the server exposes region data.");
+        result.UncheckedServerSideRules.Add("The shard server performs the final placement validation and may reject a client-side estimate.");
+    }
+
+    private static ApiHousePlacementBlocker BuildPlacementBlocker(
+        string kind,
+        string reason,
+        int x,
+        int y,
+        int z,
+        ushort graphic,
+        string name,
+        bool insideFootprint,
+        bool inClearance = false,
+        string clearanceArea = "")
+    {
+        return new ApiHousePlacementBlocker
+        {
+            Kind = kind,
+            Reason = reason,
+            X = x,
+            Y = y,
+            Z = z,
+            Graphic = graphic,
+            GraphicHex = $"0x{graphic:X4}",
+            Name = name ?? string.Empty,
+            InsideFootprint = insideFootprint,
+            InClearance = inClearance,
+            ClearanceArea = clearanceArea
+        };
+    }
+
+    private static void AddPlacementBlocker(ApiHousePlacementResult result, ApiHousePlacementBlocker blocker)
+    {
+        result.Blockers.Add(blocker);
+
+        if (!result.Reasons.Contains(blocker.Reason))
+            result.Reasons.Add(blocker.Reason);
+    }
+
+    private static ApiHousePlacementResult FinalizePlacementResult(ApiHousePlacementResult result)
+    {
+        result.Ok = result.Blockers.Count == 0;
+        result.Reason = result.Ok ? "OK" : string.Join("; ", result.Reasons);
+        return result;
+    }
+
+    private bool IsInCurrentMapBounds(int x, int y)
+    {
+        if (World?.Map == null)
+            return false;
+
+        try
+        {
+            int mapIndex = World.Map.Index;
+            int width = Client.Game.UO.FileManager.Maps.MapBlocksSize[mapIndex, 0] * 8;
+            int height = Client.Game.UO.FileManager.Maps.MapBlocksSize[mapIndex, 1] * 8;
+            return x >= 0 && y >= 0 && x < width && y < height;
+        }
+        catch
+        {
+            return x >= 0 && y >= 0;
+        }
+    }
+
+    private static string NormalizeHouseDirection(string direction)
+    {
+        if (string.IsNullOrWhiteSpace(direction))
+            return "south";
+
+        string normalized = direction.Trim().ToLowerInvariant();
+
+        return normalized switch
+        {
+            "n" or "north" => "north",
+            "e" or "east" => "east",
+            "s" or "south" => "south",
+            "w" or "west" => "west",
+            _ => normalized
+        };
+    }
 
         #region Friends List
 
@@ -3751,7 +5255,7 @@ namespace ClassicUO.LegionScripting
         /// <summary>
         /// Use API.Gumps.CreateGump instead
         /// </summary>
-        public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false) => Gumps.CreateGump(acceptMouseInput, canMove, keepOpen);
+        public ApiUiBaseGump CreateGump(bool acceptMouseInput = true, bool canMove = true, bool keepOpen = false, uint gumpId = 0) => Gumps.CreateGump(acceptMouseInput, canMove, keepOpen, gumpId);
         /// <summary>
         /// Use API.Gumps.AddGump instead
         /// </summary>
@@ -4117,11 +5621,70 @@ namespace ClassicUO.LegionScripting
         /// <param name="map">Defaults to current map</param>
         public void MarkTile(int x, int y, ushort hue, int map = -1) => OnMain(() =>
         {
+            if (World?.Map == null)
+                return;
+
             if (map < 0)
                 map = World.Map.Index;
 
             TileMarkerManager.Instance.AddTile(x, y, map, hue);
         });
+
+        /// <summary>
+        /// Mark a tile with a true RGBA color instead of a UO hue ID.
+        /// Accepts "#RRGGBB", "#RRGGBBAA", "RRGGBB", or "RRGGBBAA".
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="htmlColor">HTML color string.</param>
+        /// <param name="map">Defaults to current map</param>
+        public bool MarkTileColor(int x, int y, string htmlColor, int map = -1) => OnMain(() =>
+        {
+            if (World?.Map == null || !TryParseMarkerColor(htmlColor, out Color color))
+                return false;
+
+            if (map < 0)
+                map = World.Map.Index;
+
+            TileMarkerManager.Instance.AddTileColor(x, y, map, color);
+            return true;
+        });
+
+        private static bool TryParseMarkerColor(string htmlColor, out Color color)
+        {
+            color = Color.White;
+
+            if (string.IsNullOrWhiteSpace(htmlColor))
+                return false;
+
+            string hex = htmlColor.Trim();
+
+            if (hex.StartsWith("#", StringComparison.Ordinal))
+                hex = hex.Substring(1);
+            else if (hex.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                hex = hex.Substring(2);
+
+            if (hex.Length != 6 && hex.Length != 8)
+                return false;
+
+            if (!byte.TryParse(hex.Substring(0, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte r) ||
+                !byte.TryParse(hex.Substring(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte g) ||
+                !byte.TryParse(hex.Substring(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte b))
+            {
+                return false;
+            }
+
+            byte a = 255;
+
+            if (hex.Length == 8 &&
+                !byte.TryParse(hex.Substring(6, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a))
+            {
+                return false;
+            }
+
+            color = new Color(r, g, b, a);
+            return true;
+        }
 
         /// <summary>
         /// Remove a marked tile. See MarkTile for more info.

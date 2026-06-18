@@ -40,6 +40,21 @@ description:  Python API wrapper for Gump (game window) objects in TazUO.  Provi
 
 **Type:** `UILayer`
 
+### `LocalSerial`
+
+**Type:** `uint`
+
+ Gets or sets this gump's local client serial.
+ Used by the MCP screenshot tool to target script-created gumps.
+
+
+### `ServerSerial`
+
+**Type:** `uint`
+
+ Gets or sets this gump's server serial.
+
+
 ### `Gump`
 
 **Type:** `Gump`

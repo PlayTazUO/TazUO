@@ -61,6 +61,7 @@ namespace ClassicUO.LegionScripting
             AutoPlayGlobal();
             AutoPlayChar();
             _enabled = true;
+            StartMcpBridgeFromEnvironment();
 
             world.CommandManager.Register
             (
@@ -155,6 +156,143 @@ namespace ClassicUO.LegionScripting
                     GameActions.Print(world, $"Stopped {count} running script(s).");
                 }
             );
+
+            world.CommandManager.Register
+            (
+                "mcp", a =>
+                {
+                    MapWebServerManager mapServer = MapWebServerManager.Instance;
+
+                    if (a.Length == 1 || string.Equals(a[1], "status", StringComparison.OrdinalIgnoreCase))
+                    {
+                        bool running = mapServer.IsRunning;
+                        string endpoint = $"http://localhost:{mapServer.Port}/api/mcp";
+                        string status = running
+                            ? mapServer.IsMcpBridgeEnabled
+                                ? $"MCP endpoint is running at {endpoint}"
+                                : "MCP endpoint is disabled; web server is running."
+                            : "MCP endpoint is stopped.";
+                        GameActions.Print(world, status, running && mapServer.IsMcpBridgeEnabled ? Constants.HUE_SUCCESS : Constants.HUE_WARN);
+                        return;
+                    }
+
+                    if (string.Equals(a[1], "start", StringComparison.OrdinalIgnoreCase))
+                    {
+                        int? port = null;
+                        string token = GetMcpBridgeTokenFromEnvironment();
+
+                        if (a.Length > 2)
+                        {
+                            if (int.TryParse(a[2], out int requestedPort))
+                            {
+                                port = requestedPort;
+
+                                if (a.Length > 3)
+                                    token = a[3];
+                            }
+                            else
+                            {
+                                token = a[2];
+                            }
+                        }
+
+                        if (string.IsNullOrWhiteSpace(token))
+                        {
+                            GameActions.Print(world, "Usage: -mcp start [port] <token> or set TAZUO_MCP_TOKEN.", Constants.HUE_WARN);
+                            return;
+                        }
+
+                        bool started = StartMcpBridge(port, token);
+                        if (started)
+                            GameActions.Print(world, $"MCP endpoint available at http://localhost:{mapServer.Port}/api/mcp", Constants.HUE_SUCCESS);
+                        else
+                            GameActions.Print(world, "Failed to start MCP endpoint. Check logs for details.", Constants.HUE_ERROR);
+
+                        return;
+                    }
+
+                    if (string.Equals(a[1], "stop", StringComparison.OrdinalIgnoreCase))
+                    {
+                        mapServer.DisableMcpBridge();
+                        mapServer.Stop();
+                        GameActions.Print(world, "MCP endpoint stopped.", Constants.HUE_SUCCESS);
+                        return;
+                    }
+
+                    GameActions.Print(world, "Usage: -mcp [status|start [port] <token>|stop]", Constants.HUE_WARN);
+                }
+            );
+        }
+
+        private static void StartMcpBridgeFromEnvironment()
+        {
+            if (!IsMcpBridgeAutoStartEnabled())
+                return;
+
+            string token = GetMcpBridgeTokenFromEnvironment();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Log.Warn("MCP bridge auto-start skipped because TAZUO_MCP_TOKEN is not set.");
+                return;
+            }
+
+            if (!StartMcpBridge(GetMcpBridgePortFromEnvironment(), token))
+                Log.Warn("MCP bridge auto-start failed. Check map web server logs for details.");
+        }
+
+        private static bool StartMcpBridge(int? port, string authToken)
+        {
+            if (string.IsNullOrWhiteSpace(authToken))
+                return false;
+
+            MapWebServerManager mapServer = MapWebServerManager.Instance;
+            mapServer.SetMcpBridgeAuthToken(authToken);
+
+            if (mapServer.IsRunning)
+                return true;
+
+            return mapServer.Start(port, authToken).GetAwaiter().GetResult();
+        }
+
+        private static int? GetMcpBridgePortFromEnvironment()
+        {
+            string envPort = Environment.GetEnvironmentVariable("TAZUO_MCP_PORT");
+            if (string.IsNullOrWhiteSpace(envPort))
+                envPort = Environment.GetEnvironmentVariable("TAZUO_MCP_BRIDGE_PORT"); // backward compatibility
+
+            if (int.TryParse(envPort, out int requestedPort) && requestedPort > 0)
+                return requestedPort;
+
+            return null;
+        }
+
+        private static string GetMcpBridgeTokenFromEnvironment()
+        {
+            string token = Environment.GetEnvironmentVariable("TAZUO_MCP_TOKEN");
+            if (string.IsNullOrWhiteSpace(token))
+                token = Environment.GetEnvironmentVariable("TAZUO_MCP_BRIDGE_TOKEN"); // backward compatibility
+
+            return token?.Trim();
+        }
+
+        private static bool IsMcpBridgeAutoStartEnabled()
+        {
+            string enabled = Environment.GetEnvironmentVariable("TAZUO_MCP_ENABLE");
+            if (string.IsNullOrWhiteSpace(enabled))
+                enabled = Environment.GetEnvironmentVariable("TAZUO_MCP_BRIDGE_ENABLE"); // backward compatibility
+
+            return IsTruthy(enabled);
+        }
+
+        private static bool IsTruthy(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            return value.Equals("1", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("yes", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("on", StringComparison.OrdinalIgnoreCase);
         }
 
         private static void EventSink_JournalEntryAdded(object sender, JournalEntry e)
@@ -436,6 +574,7 @@ namespace ClassicUO.LegionScripting
             PyThreads.Clear();
 
             SaveScriptSettings();
+            MapWebServerManager.Instance.Stop();
 
             _enabled = false;
         }

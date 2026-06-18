@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/17/26`.*
+*This was generated on `6-18-26`.*
 
 ## Properties
 ### `Events`
@@ -904,8 +904,69 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
-### ClientCommand
-`(command)`
+### TakeScreenshot
+`(path)`
+ Captures a screenshot of the full game render surface and saves it to disk.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `path` | `string` | ✅ Yes | Optional file path. If relative, it is resolved under Data/Client/Screenshots. |
+
+**Return Type:** `ApiScreenshotResult`
+
+---
+
+### TakeScreenshotRegion
+`(x, y, width, height, path)`
+ Captures a screenshot of a specific region in screen coordinates.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No | Region X position in screen coordinates. |
+| `y` | `int` | ❌ No | Region Y position in screen coordinates. |
+| `width` | `int` | ❌ No | Region width in pixels. |
+| `height` | `int` | ❌ No | Region height in pixels. |
+| `path` | `string` | ✅ Yes | Optional file path. If relative, it is resolved under Data/Client/Screenshots. |
+
+**Return Type:** `ApiScreenshotResult`
+
+---
+
+### TakeScreenshotGump
+`(gumpId, path, padding)`
+ Captures a screenshot of an open gump by server serial (or local serial fallback).
+ Leave gumpId blank to target the latest server gump.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `gumpId` | `uint` | ✅ Yes | Server serial to capture. Falls back to local serial lookup when not found as a server gump. |
+| `path` | `string` | ✅ Yes | Optional file path. If relative, it is resolved under Data/Client/Screenshots. |
+| `padding` | `int` | ✅ Yes | Optional padding in pixels around the gump bounds. |
+
+**Return Type:** `ApiScreenshotResult`
+
+---
+
+### GetOpenGumpInfo
+
+ Gets metadata for all currently open gumps.
+
+
+**Return Type:** `ApiOpenGumpInfo[]`
+
+---
+
+### ClickGumpButton
+`(button, gump, kind, controlType, controlIndex, text, switches, entries)`
  Executes a client command as if typed in the game console
 
 
@@ -913,7 +974,26 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `command` | `string` | ❌ No | The command to execute (including any arguments) |
+| `button` | `int` | ❌ No | Button ID for server gumps, or ButtonID/ButtonParameter for LegionScript UI buttons. |
+| `gump` | `uint` | ✅ Yes | Server or local gump serial. Defaults to latest server gump for server clicks. |
+| `kind` | `string` | ✅ Yes | auto, server, or legion/script/api/ui. |
+| `controlType` | `string` | ✅ Yes | any, button, or niceButton for LegionScript UI clicks. |
+| `controlIndex` | `int` | ✅ Yes | Zero-based index when multiple matching LegionScript controls exist. |
+| `text` | `string` | ✅ Yes | Optional button text filter for LegionScript NiceButton controls. |
+| `switches` | `IEnumerable<int>` | ✅ Yes | Optional server gump switch values. |
+| `entries` | `IEnumerable<object>` | ✅ Yes | Optional server gump text entries as (index, text) pairs. |
+
+**Return Type:** `ApiGumpButtonClickResult`
+
+---
+
+### ClientCommand
+`(command)`
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `command` | `string` | ❌ No |  |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -2844,6 +2924,102 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### GetTileInfo
+`(x, y)`
+ Get detailed land/static/multi/region metadata for one map tile.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No |  |
+| `y` | `int` | ❌ No |  |
+
+**Return Type:** `ApiTileInfo`
+
+---
+
+### GetRegionInfo
+`(x, y)`
+ Get region metadata available to the client for one map tile.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No |  |
+| `y` | `int` | ❌ No |  |
+
+**Return Type:** `ApiRegionInfo`
+
+---
+
+### GetTilesInArea
+`(x1, y1, x2, y2, maxTiles)`
+ Get detailed tile metadata for a rectangular area.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x1` | `int` | ❌ No |  |
+| `y1` | `int` | ❌ No |  |
+| `x2` | `int` | ❌ No |  |
+| `y2` | `int` | ❌ No |  |
+| `maxTiles` | `int` | ✅ Yes |  |
+
+**Return Type:** `List<ApiTileInfo>`
+
+---
+
+### GetHousesInArea
+`(x1, y1, x2, y2, clearance)`
+ Get known house/multi group data intersecting a rectangular area.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x1` | `int` | ❌ No |  |
+| `y1` | `int` | ❌ No |  |
+| `x2` | `int` | ❌ No |  |
+| `y2` | `int` | ❌ No |  |
+| `clearance` | `int` | ✅ Yes |  |
+
+**Return Type:** `List<ApiHouseInfo>`
+
+---
+
+### CanPlaceHouse
+`(x, y, width, depth, direction, frontClearance, backClearance, sideClearance, maxZDelta, allowSmallPlants, includeSteps)`
+ Estimate whether a rectangular house footprint can be placed using Atlantic-style official clearance rules.
+ The result is still a client-side estimate; account ownership, cooldown, and unavailable server region data are reported as unchecked rules.
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No |  |
+| `y` | `int` | ❌ No |  |
+| `width` | `int` | ❌ No |  |
+| `depth` | `int` | ❌ No |  |
+| `direction` | `string` | ✅ Yes |  |
+| `frontClearance` | `int` | ✅ Yes |  |
+| `backClearance` | `int` | ✅ Yes |  |
+| `sideClearance` | `int` | ✅ Yes |  |
+| `maxZDelta` | `int` | ✅ Yes |  |
+| `allowSmallPlants` | `bool` | ✅ Yes |  |
+| `includeSteps` | `bool` | ✅ Yes |  |
+
+**Return Type:** `ApiHousePlacementResult`
+
+---
+
 ### IsFriend
 `(serial)`
  Check if a mobile is in the friends list.
@@ -2940,7 +3116,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 ---
 
 ### CreateGump
-`(acceptMouseInput, canMove, keepOpen)`
+`(acceptMouseInput, canMove, keepOpen, gumpId)`
  Use API.Gumps.CreateGump instead
 
 
@@ -2951,6 +3127,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `acceptMouseInput` | `bool` | ✅ Yes |  |
 | `canMove` | `bool` | ✅ Yes |  |
 | `keepOpen` | `bool` | ✅ Yes |  |
+| `gumpId` | `uint` | ✅ Yes |  |
 
 **Return Type:** `ApiUiBaseGump`
 
@@ -3519,6 +3696,25 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### MarkTileColor
+`(x, y, htmlColor, map)`
+ Mark a tile with a true RGBA color instead of a UO hue ID.
+ Accepts "#RRGGBB", "#RRGGBBAA", "RRGGBB", or "RRGGBBAA".
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `x` | `int` | ❌ No |  |
+| `y` | `int` | ❌ No |  |
+| `htmlColor` | `string` | ❌ No | HTML color string. |
+| `map` | `int` | ✅ Yes | Defaults to current map |
+
+**Return Type:** `bool`
+
+---
+
 ### RemoveMarkedTile
 `(x, y, map)`
  Remove a marked tile. See MarkTile for more info.
@@ -3556,4 +3752,3 @@ You can now type `-updateapi` in game to download the latest API.py file.
 **Return Type:** `void` *(Does not return anything)*
 
 ---
-

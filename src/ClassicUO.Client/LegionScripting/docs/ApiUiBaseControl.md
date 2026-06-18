@@ -22,6 +22,13 @@ description: ApiUiBaseControl class documentation
  Check if this control has been disposed(delete/removed/etc)
 
 
+### `MouseIsOver`
+
+**Type:** `bool`
+
+ True when the mouse is currently over this control.
+
+
 
 *No fields found.*
 

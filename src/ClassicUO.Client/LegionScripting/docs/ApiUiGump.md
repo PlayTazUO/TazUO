@@ -6,14 +6,13 @@ description: ApiUiGump class documentation
 ## Properties
 *No properties found.*
 
-*No fields found.*
 
 ## Enums
 *No enums found.*
 
 ## Methods
 ### CreateGump
-`(acceptMouseInput, canMove, keepOpen)`
+`(acceptMouseInput, canMove, keepOpen, gumpId)`
  Get a blank gump.
  Example:
  ```py
@@ -31,6 +30,7 @@ description: ApiUiGump class documentation
 | `acceptMouseInput` | `bool` | ✅ Yes | Allow clicking the gump |
 | `canMove` | `bool` | ✅ Yes | Allow the player to move this gump |
 | `keepOpen` | `bool` | ✅ Yes | If true, the gump won't be closed if the script stops. Otherwise, it will be closed when the script is stopped. Defaults to false. |
+| `gumpId` | `uint` | ✅ Yes | Optional local serial to assign to the gump. If zero, a unique script gump local serial is generated. |
 
 **Return Type:** `ApiUiBaseGump`
 

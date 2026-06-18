@@ -84,6 +84,49 @@ public class ApiUiBaseGump(Gump gump) : ApiUiBaseControl(gump), IApiGump
     }
 
     /// <summary>
+    /// Gets or sets this gump's local client serial.
+    /// Used by the MCP screenshot tool to target script-created gumps.
+    /// </summary>
+    public uint LocalSerial
+    {
+        get
+        {
+            if (!VerifyIntegrity())
+                return 0;
+
+            return MainThreadQueue.InvokeOnMainThread(() => Gump.LocalSerial);
+        }
+        set
+        {
+            if (!VerifyIntegrity())
+                return;
+
+            MainThreadQueue.InvokeOnMainThread(() => Gump.LocalSerial = value);
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets this gump's server serial.
+    /// </summary>
+    public uint ServerSerial
+    {
+        get
+        {
+            if (!VerifyIntegrity())
+                return 0;
+
+            return MainThreadQueue.InvokeOnMainThread(() => Gump.ServerSerial);
+        }
+        set
+        {
+            if (!VerifyIntegrity())
+                return;
+
+            MainThreadQueue.InvokeOnMainThread(() => Gump.ServerSerial = value);
+        }
+    }
+
+    /// <summary>
     /// Gets the underlying Gump instance that this wrapper represents.
     /// Used internally by the scripting system to access the actual game object.
     /// </summary>

@@ -45,6 +45,17 @@ public class ApiUiBaseControl(Control control)
     public bool IsDisposed => !VerifyIntegrity(); //Verify returns false if null or disposed
 
     /// <summary>
+    /// True when the mouse is currently over this control.
+    /// </summary>
+    public bool MouseIsOver
+    {
+        get
+        {
+            return VerifyIntegrity() && MainThreadQueue.InvokeOnMainThread(() => control.MouseIsOver);
+        }
+    }
+
+    /// <summary>
     /// Adds a child control to this control. Works with gumps too (gump.Add(control)).
     /// Used in python API
     /// </summary>

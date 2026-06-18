@@ -41,6 +41,7 @@ namespace ClassicUO.Game.GameObjects
         public ObjectHandlesStatus ObjectHandlesStatus;
         public Rectangle FrameInfo;
         public Color? OutlineColor = null;
+        public Color? MarkerColor = null;
         protected bool IsFlipped;
 
         public abstract bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth);

@@ -21,9 +21,23 @@ namespace ClassicUO.Game.Managers
 
         public bool IsRunning => _server?.IsRunning ?? false;
         public int Port => _server?.Port ?? 8088;
+        public bool IsMcpBridgeEnabled => _server?.IsMcpBridgeEnabled ?? false;
 
-        public async Task<bool> Start(int? port = null)
+        public void SetMcpBridgeAuthToken(string authToken)
         {
+            _server?.SetMcpBridgeAuthToken(authToken);
+        }
+
+        public void DisableMcpBridge()
+        {
+            _server?.SetMcpBridgeAuthToken(null);
+        }
+
+        public async Task<bool> Start(int? port = null, string mcpAuthToken = null)
+        {
+            if (!string.IsNullOrWhiteSpace(mcpAuthToken))
+                _server?.SetMcpBridgeAuthToken(mcpAuthToken);
+
             // Check if map texture exists first
             int mapIndex = World.Instance?.MapIndex ?? 0;
             Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
@@ -35,8 +49,12 @@ namespace ClassicUO.Game.Managers
 
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
-                    Log.Error("Map texture not available - please open the world map first");
-                    GameActions.Print(World.Instance, "Please open the world map first", 0x21);
+                    Log.Error("Map texture not available - please open world map first");
+                    GameActions.Print(World.Instance, "Please open world map first", 0x21);
+
+                    if (!string.IsNullOrWhiteSpace(mcpAuthToken))
+                        _server?.SetMcpBridgeAuthToken(null);
+
                     return false;
                 }
             }
@@ -46,14 +64,17 @@ namespace ClassicUO.Game.Managers
 
             // Start server first
             bool started = _server?.Start(serverPort) ?? false;
+            bool running = started || IsRunning;
+            if (!running && !string.IsNullOrWhiteSpace(mcpAuthToken))
+                _server?.SetMcpBridgeAuthToken(null);
 
-            if (started)
+            if (running)
             {
-                // Generate PNG asynchronously to avoid blocking
+                // Generate PNG asynchronously to avoid blocking server startup.
                 _ = GenerateMapPngAsync();
             }
 
-            return started;
+            return running;
         }
 
         private async Task GenerateMapPngAsync()

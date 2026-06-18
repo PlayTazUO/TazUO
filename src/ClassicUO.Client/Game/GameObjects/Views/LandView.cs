@@ -24,6 +24,7 @@ namespace ClassicUO.Game.GameObjects
                 return false;
             }
 
+            int markerY = posY;
             ushort hue = Hue;
             bool isSelected = SelectedObject.Object == this;
 
@@ -80,6 +81,7 @@ namespace ClassicUO.Game.GameObjects
             if (IsStretched)
             {
                 posY += Z * Z_TO_PIXEL_MULTIPLIER;
+                markerY = posY;
 
                 ref readonly SpriteInfo texmapInfo = ref Client.Game.UO.Texmaps.GetTexmap(
                     Client.Game.UO.FileManager.TileData.LandData[Graphic].TexID
@@ -165,7 +167,25 @@ namespace ClassicUO.Game.GameObjects
                 }
             }
 
+            if (MarkerColor.HasValue)
+                DrawMarkerColor(batcher, posX, markerY, MarkerColor.Value);
+
             return true;
+        }
+
+        private static void DrawMarkerColor(UltimaBatcher2D batcher, int x, int y, Color color)
+        {
+            var hue = ShaderHueTranslator.GetHueVector(0);
+            var texture = SolidColorTextureCache.GetTexture(color);
+            var top = new Vector2(x + 22, y);
+            var right = new Vector2(x + 44, y + 22);
+            var bottom = new Vector2(x + 22, y + 44);
+            var left = new Vector2(x, y + 22);
+
+            batcher.DrawLine(texture, top, right, hue, 2f);
+            batcher.DrawLine(texture, right, bottom, hue, 2f);
+            batcher.DrawLine(texture, bottom, left, hue, 2f);
+            batcher.DrawLine(texture, left, top, hue, 2f);
         }
 
         public override bool CheckMouseSelection()

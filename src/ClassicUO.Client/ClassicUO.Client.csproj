@@ -153,9 +153,10 @@
   <PropertyGroup>
     <!-- Create a string of quoted paths -->
     <DocFileArgs>@(DocSourceFiles->'"%(FullPath)"', ' ')</DocFileArgs>
+    <RunGenerateDocs Condition="'$(RunGenerateDocs)' == ''">true</RunGenerateDocs>
   </PropertyGroup>
 
-  <Target Name="GenerateDocs" AfterTargets="Build">
+  <Target Name="GenerateDocs" AfterTargets="Build" Condition="'$(RunGenerateDocs)' == 'true'">
     <Message Text="Running: dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj $(DocFileArgs)" />
     <Exec Command='dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj "$(ProjectDir)/LegionScripting/docs" $(DocFileArgs)' />
   </Target>

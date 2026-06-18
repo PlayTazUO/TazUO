@@ -47,6 +47,8 @@ public class ApiUiGumpTests
             gump.AcceptMouseInput.Should().BeTrue();
             gump.CanMove.Should().BeTrue();
             gump.WantUpdateSize.Should().BeTrue();
+            gump.LocalSerial.Should().NotBe(0);
+            result.LocalSerial.Should().Be(gump.LocalSerial);
         }
 
         [Fact]
@@ -168,6 +170,46 @@ public class ApiUiGumpTests
             Gump gump1 = ((IApiGump)result1).Gump;
             Gump gump2 = ((IApiGump)result2).Gump;
             gump1.Should().NotBeSameAs(gump2);
+            gump1.LocalSerial.Should().NotBe(0);
+            gump2.LocalSerial.Should().NotBe(0);
+            gump1.LocalSerial.Should().NotBe(gump2.LocalSerial);
+        }
+
+        [Fact]
+        public void LocalSerial_WhenSetOnWrapper_UpdatesUnderlyingGump()
+        {
+            Client.UnitTestingActive = true;
+
+            // Arrange
+            ScriptEngine engine = Python.CreateEngine();
+            var api = new LegionAPI(new PythonCallbackChannel(engine), null);
+            ApiUiBaseGump result = api.Gumps.CreateGump();
+
+            // Act
+            result.LocalSerial = 0x7F001234;
+
+            // Assert
+            Gump gump = ((IApiGump)result).Gump;
+            result.LocalSerial.Should().Be(0x7F001234);
+            gump.LocalSerial.Should().Be(0x7F001234);
+        }
+
+        [Fact]
+        public void CreateGump_WithGumpId_UsesRequestedLocalSerial()
+        {
+            Client.UnitTestingActive = true;
+
+            // Arrange
+            ScriptEngine engine = Python.CreateEngine();
+            var api = new LegionAPI(new PythonCallbackChannel(engine), null);
+
+            // Act
+            ApiUiBaseGump result = api.Gumps.CreateGump(gumpId: 0x7F00ABCD);
+
+            // Assert
+            Gump gump = ((IApiGump)result).Gump;
+            result.LocalSerial.Should().Be(0x7F00ABCD);
+            gump.LocalSerial.Should().Be(0x7F00ABCD);
         }
     }
 }

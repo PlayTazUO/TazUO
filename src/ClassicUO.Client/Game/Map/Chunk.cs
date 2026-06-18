@@ -10,6 +10,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.Map
 {
@@ -102,8 +103,13 @@ namespace ClassicUO.Game.Map
                         land.Z = z;
                         land.UpdateScreenPosition();
 
-                        if (TileMarkerManager.Instance.IsTileMarked(land.X, land.Y, map.Index, out ushort hue))
-                            land.Hue = hue;
+                        if (TileMarkerManager.Instance.TryGetTileMarker(land.X, land.Y, map.Index, out TileMarkerEntry marker))
+                        {
+                            if (marker.UsesColor)
+                                land.MarkerColor = new Color { PackedValue = marker.ColorPackedValue };
+                            else
+                                land.Hue = marker.Hue;
+                        }
 
                         AddGameObject(land, x, y);
 
@@ -142,8 +148,13 @@ namespace ClassicUO.Game.Map
                             staticObject.Z = sb.Z;
                             staticObject.UpdateScreenPosition();
 
-                            if (TileMarkerManager.Instance.IsTileMarked(staticObject.X, staticObject.Y, map.Index, out ushort hue))
-                                staticObject.Hue = hue;
+                            if (TileMarkerManager.Instance.TryGetTileMarker(staticObject.X, staticObject.Y, map.Index, out TileMarkerEntry marker))
+                            {
+                                if (marker.UsesColor)
+                                    staticObject.MarkerColor = new Color { PackedValue = marker.ColorPackedValue };
+                                else
+                                    staticObject.Hue = marker.Hue;
+                            }
 
                             AddGameObject(staticObject, sb.X, sb.Y);
 

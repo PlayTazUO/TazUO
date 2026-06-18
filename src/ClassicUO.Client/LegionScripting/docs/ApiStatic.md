@@ -1,15 +1,67 @@
 ---
 title: ApiStatic
-description:  Represents a Python-accessible static object (non-interactive scenery) in the game world.  Inherits spatial and visual data from <see cref="ApiGameObject"/> . 
+description:  Represents Python-accessible static object (non-interactive scenery) in game world.  Inherits spatial visual data from <see cref="ApiGameObject"/> . 
 ---
 
 ## Class Description
- Represents a Python-accessible static object (non-interactive scenery) in the game world.
- Inherits spatial and visual data from <see cref="ApiGameObject"/> .
+ Represents Python-accessible static object (non-interactive scenery) in game world.
+ Inherits spatial visual data from <see cref="ApiGameObject"/> .
 
 
 ## Properties
+### `Flags`
+
+**Type:** `TileFlag`
+
+### `FlagsValue`
+
+**Type:** `ulong`
+
+### `Height`
+
+**Type:** `int`
+
 ### `IsImpassible`
+
+**Type:** `bool`
+
+### `IsImpassable`
+
+**Type:** `bool`
+
+### `IsSurface`
+
+**Type:** `bool`
+
+### `IsBridge`
+
+**Type:** `bool`
+
+### `IsWet`
+
+**Type:** `bool`
+
+### `IsFoliage`
+
+**Type:** `bool`
+
+### `IsWall`
+
+**Type:** `bool`
+
+### `IsDoor`
+
+**Type:** `bool`
+
+### `IsNoHouse`
+
+**Type:** `bool`
+
+### `IsRoof`
+
+**Type:** `bool`
+
+### `IsBackground`
 
 **Type:** `bool`
 
@@ -33,8 +85,8 @@ description:  Represents a Python-accessible static object (non-interactive scen
 
 **Type:** `string`
 
- The Python-visible class name of this object.
- Accessible in Python as `obj.__class__` .
+ Python-visible class name object.
+ Accessible in Python `obj.__class__` .
 
 
 

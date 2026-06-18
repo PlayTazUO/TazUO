@@ -127,7 +127,7 @@ namespace ClassicUO.Game.GameObjects
                     && (isTree || ItemData.IsFoliage || StaticFilters.IsRock(graphic)),
                 depth,
                 _profile.AnimatedWaterEffect && ItemData.IsWet,
-                OutlineColor
+                OutlineColor ?? MarkerColor
             );
 
             if (_isLight && GameScene.Instance != null)

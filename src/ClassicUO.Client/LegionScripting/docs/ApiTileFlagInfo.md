@@ -1,29 +1,20 @@
 ---
-title: ApiLand
-description:  Represents Python-accessible land tile in game world.  Inherits spatial visual data from <see cref="ApiGameObject"/> . 
+title: ApiTileFlagInfo
+description:  Tile flag metadata exposed to Legion scripts and MCP clients. 
 ---
 
 ## Class Description
- Represents Python-accessible land tile in game world.
- Inherits spatial visual data from <see cref="ApiGameObject"/> .
+ Tile flag metadata exposed to Legion scripts and MCP clients.
 
 
 ## Properties
-### `Flags`
-
-**Type:** `TileFlag`
-
-### `FlagsValue`
+### `Value`
 
 **Type:** `ulong`
 
-### `Name`
+### `Names`
 
 **Type:** `string`
-
-### `Height`
-
-**Type:** `int`
 
 ### `IsSurface`
 
@@ -53,11 +44,11 @@ description:  Represents Python-accessible land tile in game world.  Inherits sp
 
 **Type:** `bool`
 
-### `IsNoDiagonal`
+### `IsNoHouse`
 
 **Type:** `bool`
 
-### `IsNoHouse`
+### `IsNoDiagonal`
 
 **Type:** `bool`
 
@@ -68,14 +59,6 @@ description:  Represents Python-accessible land tile in game world.  Inherits sp
 ### `IsBackground`
 
 **Type:** `bool`
-
-### `__class__`
-
-**Type:** `string`
-
- Python-visible class name object.
- Accessible in Python `obj.__class__` .
-
 
 
 *No fields found.*

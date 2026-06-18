@@ -1125,7 +1125,88 @@ namespace ClassicUO
             base.OnExiting(sender, args);
         }
 
+        internal readonly struct ScreenshotCaptureResult
+        {
+            public ScreenshotCaptureResult(bool success, string path, int width, int height, Rectangle region, string error = null)
+            {
+                Success = success;
+                Path = path ?? string.Empty;
+                Width = width;
+                Height = height;
+                Region = region;
+                Error = error ?? string.Empty;
+            }
+
+            public bool Success { get; }
+            public string Path { get; }
+            public int Width { get; }
+            public int Height { get; }
+            public Rectangle Region { get; }
+            public string Error { get; }
+        }
+
         private void TakeScreenshot()
+        {
+            ScreenshotCaptureResult result = CaptureScreenshot();
+            if (!result.Success)
+                GameActions.Print(UO.World, $"Screenshot failed: {result.Error}", Constants.HUE_ERROR, MessageType.System);
+        }
+
+        internal ScreenshotCaptureResult CaptureScreenshot(Rectangle? requestedRegion = null, string path = null, bool notify = true)
+        {
+            try
+            {
+                bool useRenderTarget = _useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed;
+                int sourceWidth = useRenderTarget ? _screenRenderTarget.Width : GraphicManager.PreferredBackBufferWidth;
+                int sourceHeight = useRenderTarget ? _screenRenderTarget.Height : GraphicManager.PreferredBackBufferHeight;
+
+                Rectangle surfaceRegion = new Rectangle(0, 0, sourceWidth, sourceHeight);
+                Rectangle captureRegion = requestedRegion.HasValue
+                    ? Rectangle.Intersect(surfaceRegion, requestedRegion.Value)
+                    : surfaceRegion;
+
+                if (captureRegion.Width <= 0 || captureRegion.Height <= 0)
+                    return new ScreenshotCaptureResult(
+                        false,
+                        string.Empty,
+                        0,
+                        0,
+                        Rectangle.Empty,
+                        "Requested capture region is outside the visible render surface."
+                    );
+
+                string screenshotPath = ResolveScreenshotPath(path);
+                Color[] colors = new Color[captureRegion.Width * captureRegion.Height];
+
+                if (useRenderTarget)
+                {
+                    _screenRenderTarget.GetData(0, captureRegion, colors, 0, colors.Length);
+                }
+                else
+                {
+                    GraphicsDevice.GetBackBufferData(captureRegion, colors, 0, colors.Length);
+                }
+
+                using (var texture = new Texture2D(GraphicsDevice, captureRegion.Width, captureRegion.Height, false, SurfaceFormat.Color))
+                using (FileStream fileStream = File.Create(screenshotPath))
+                {
+                    texture.SetData(colors);
+                    texture.SaveAsPng(fileStream, texture.Width, texture.Height);
+                }
+
+                if (notify)
+                    PrintScreenshotMessage(screenshotPath);
+
+                return new ScreenshotCaptureResult(true, screenshotPath, captureRegion.Width, captureRegion.Height, captureRegion);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"CaptureScreenshot failed: {ex}");
+                return new ScreenshotCaptureResult(false, string.Empty, 0, 0, Rectangle.Empty, ex.Message);
+            }
+        }
+
+        private string ResolveScreenshotPath(string requestedPath)
         {
             string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
                 CUOEnviroment.ExecutablePath,
@@ -1134,110 +1215,46 @@ namespace ClassicUO
                 "Screenshots"
             );
 
-            string path = Path.Combine(
-                screenshotsFolder,
-                $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
-            );
-
-            Color[] colors;
-            int width, height;
-
-            // Use render target if available and in use, otherwise use back buffer
-            if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
+            if (string.IsNullOrWhiteSpace(requestedPath))
             {
-                width = _screenRenderTarget.Width;
-                height = _screenRenderTarget.Height;
-                colors = new Color[width * height];
-                _screenRenderTarget.GetData(colors);
+                return Path.Combine(screenshotsFolder, $"screenshot_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png");
+            }
+
+            string resolved = Path.IsPathRooted(requestedPath)
+                ? requestedPath
+                : Path.Combine(screenshotsFolder, requestedPath);
+
+            if (string.IsNullOrWhiteSpace(Path.GetExtension(resolved)))
+                resolved += ".png";
+
+            string directory = Path.GetDirectoryName(resolved);
+            if (string.IsNullOrWhiteSpace(directory))
+                directory = screenshotsFolder;
+
+            Directory.CreateDirectory(directory);
+            return resolved;
+        }
+
+        private void PrintScreenshotMessage(string path)
+        {
+            string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
+
+            if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
+            {
+                Log.Info(message);
             }
             else
             {
-                width = GraphicManager.PreferredBackBufferWidth;
-                height = GraphicManager.PreferredBackBufferHeight;
-                colors = new Color[width * height];
-                GraphicsDevice.GetBackBufferData(colors);
-            }
-
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    width,
-                    height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
-            using (FileStream fileStream = File.Create(path))
-            {
-                texture.SetData(colors);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
-
-                if (
-                    ProfileManager.CurrentProfile == null
-                    || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage
-                )
-                {
-                    Log.Info(message);
-                }
-                else
-                {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
-                }
+                GameActions.Print(UO.World, message, 0x44, MessageType.System);
             }
         }
 
         public void ClipboardScreenshot(Rectangle position, GraphicsDevice graphicDevice)
         {
-            var colors = new Color[position.Width * position.Height];
-
-            // Use render target if available and in use, otherwise use back buffer
-            if (_useScreenRenderTarget && _screenRenderTarget != null && !_screenRenderTarget.IsDisposed)
-            {
-                _screenRenderTarget.GetData(0, position, colors, 0, colors.Length);
-            }
-            else
-            {
-                graphicDevice.GetBackBufferData(position, colors, 0, colors.Length);
-            }
-
-            using (
-                var texture = new Texture2D(
-                    GraphicsDevice,
-                    position.Width,
-                    position.Height,
-                    false,
-                    SurfaceFormat.Color
-                )
-            )
-            {
-                texture.SetData(colors);
-
-                string screenshotsFolder = FileSystemHelper.CreateFolderIfNotExists(
-                    CUOEnviroment.ExecutablePath,
-                    "Data",
-                    "Client",
-                    "Screenshots"
-                );
-
-                string path = Path.Combine(
-                    screenshotsFolder,
-                    $"screenshot_{DateTime.Now:yyyy-MM-dd_hh-mm-ss}.png"
-                );
-
-                using FileStream fileStream = File.Create(path);
-                texture.SaveAsPng(fileStream, texture.Width, texture.Height);
-                string message = string.Format(ResGeneral.ScreenshotStoredIn0, path);
-
-                if (ProfileManager.CurrentProfile == null || ProfileManager.CurrentProfile.HideScreenshotStoredInMessage)
-                {
-                    Log.Info(message);
-                }
-                else
-                {
-                    GameActions.Print(UO.World, message, 0x44, MessageType.System);
-                }
-            }
+            _ = graphicDevice;
+            ScreenshotCaptureResult result = CaptureScreenshot(position);
+            if (!result.Success)
+                GameActions.Print(UO.World, $"Screenshot failed: {result.Error}", Constants.HUE_ERROR, MessageType.System);
         }
 
         private static void FnaLogInfo(string message)=> Log.Info(message);
