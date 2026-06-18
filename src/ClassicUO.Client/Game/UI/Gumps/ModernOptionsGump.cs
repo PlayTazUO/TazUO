@@ -3705,6 +3705,11 @@ namespace ClassicUO.Game.UI.Gumps
                     (b) => { profile.DisableSystemChat = b; }), true, page);
             content.BlankLine();
 
+            content.AddToRight(
+                new CheckboxWithLabel(lang.GetTazUO.DisableSystemChatWhileJournalOpen, 0, profile.DisableSystemChatWhileJournalOpen,
+                    (b) => { profile.DisableSystemChatWhileJournalOpen = b; }), true, page);
+            content.BlankLine();
+
             content.AddToRight
             (
                 new CheckboxWithLabel(lang.GetGeneral.AutoAvoidObstacules, isChecked: profile.AutoAvoidObstacules,
