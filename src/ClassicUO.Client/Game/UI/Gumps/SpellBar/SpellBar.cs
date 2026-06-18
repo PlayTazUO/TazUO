@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -253,6 +254,7 @@ public class SpellBar : Gump
         private World World;
         private Gump parentGump;
         private TextBox hotkeyLabel;
+        private TextBox macroLabel;
         private ContextMenuItemEntry macroMenu;
         private Microsoft.Xna.Framework.Graphics.Texture2D castingTexture = SolidColorTextureCache.GetTexture(Color.Black);
         private DateTime savedStateTime;
@@ -280,6 +282,7 @@ public class SpellBar : Gump
             SpellBarManager.SpellBarRows[row].Slots[col] = this.slot;
 
             icon.Hue = 0; // Draw() re-applies the active highlight for ability slots
+            SetMacroLabel();
 
             if (!this.slot.IsEmpty)
             {
@@ -308,6 +311,44 @@ public class SpellBar : Gump
             SetHotkeyText(col);
 
             return this;
+        }
+
+        /// <summary>Shows an abbreviation (capital letters) of the macro name inside the slot for macro slots, hidden otherwise.</summary>
+        private void SetMacroLabel()
+        {
+            if (macroLabel == null)
+                return;
+
+            if (slot != null && slot.Type == SpellBarSlotType.Macro)
+            {
+                macroLabel.SetText(AbbreviateMacroName(slot.MacroName));
+                macroLabel.Y = (Height - macroLabel.Height) >> 1;
+                macroLabel.IsVisible = true;
+            }
+            else
+            {
+                macroLabel.SetText(string.Empty);
+                macroLabel.IsVisible = false;
+            }
+        }
+
+        /// <summary>Builds a short label from a macro name using its capital letters (e.g. "Last Object Macro" -> "LOM").</summary>
+        private static string AbbreviateMacroName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            var sb = new StringBuilder();
+            foreach (char c in name)
+                if (char.IsUpper(c))
+                    sb.Append(c);
+
+            // Fall back to the first letter of each word when the name has no capitals.
+            if (sb.Length == 0)
+                foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
+                    sb.Append(char.ToUpperInvariant(part[0]));
+
+            return sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
         }
 
         private void SetHotkeyText(int slotIndex)
@@ -369,6 +410,9 @@ public class SpellBar : Gump
         {
             Add(background = new AlphaBlendControl() { Width = 44, Height = 44, X = 1, Y = 1 });
             Add(icon = new GumpPic(1, 1, 0x5000, 0) { IsVisible = false, AcceptMouseInput = false });
+            Add(macroLabel = TextBox.GetOne(string.Empty, "uo-unicode-1", 18, Color.White, TextBox.RTLOptions.DefaultCenterStroked(44)));
+            macroLabel.AcceptMouseInput = false;
+            macroLabel.IsVisible = false;
             BuildHotkeyLabel();
 
             ContextMenu = new(parentGump);
