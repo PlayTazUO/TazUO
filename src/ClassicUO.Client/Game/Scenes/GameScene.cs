@@ -227,6 +227,7 @@ namespace ClassicUO.Game.Scenes
             OrganizerAgent.Load();
             GraphicsReplacement.Load();
             SpellBarManager.Load();
+            SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
                 StaticFilters.ApplyCaveTileBorder();
 
@@ -368,6 +369,7 @@ namespace ClassicUO.Game.Scenes
             JournalFilterManager.Instance.Save();
 
             SpellBarManager.Unload();
+            SelfHealManager.Unload();
             _autoUnequipActionManager?.Dispose();
             ObjectActionQueue.Instance.Clear();
 
@@ -826,6 +828,7 @@ namespace ClassicUO.Game.Scenes
             SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
 
             base.Update();
+            SelfHealManager.Update();
 
             // Check if we're waiting for window resize to complete
             if (_waitingForWindowResize)

@@ -14,6 +14,7 @@ public static class GeneralTab
         tabs.AddTab("Spell Indicators", SpellIndicatorTabContent.Build);
         tabs.AddTab("Friends", FriendsListTabContent.Build);
         tabs.AddTab("Pathfinding", PathfindingTabContent.Build);
+        tabs.AddTab("Self Heal", SelfHealTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }

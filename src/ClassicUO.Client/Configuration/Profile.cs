@@ -222,6 +222,11 @@ namespace ClassicUO.Configuration
         public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
+        public bool SelfHeal_Enabled { get; set => SetProperty(ref field, value); } = false;
+        public int SelfHeal_Key { get; set => SetProperty(ref field, value); } = 0;   // (int)SDL.SDL_Keycode, 0 = unbound
+        public int SelfHeal_Mod { get; set => SetProperty(ref field, value); } = 0;   // (int)SDL.SDL_Keymod
+        public int SelfHeal_CureVerifyMs { get; set => SetProperty(ref field, value); } = 600; // wait for poison to clear before recasting Cure
+        public int SelfHeal_InterruptRetryMs { get; set => SetProperty(ref field, value); } = 100; // delay before recasting after an interrupted cast
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
