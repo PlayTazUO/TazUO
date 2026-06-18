@@ -128,6 +128,27 @@ public static class BandageAgentTabContent
             bandLang.SkipIfYellowHits
         ));
 
+        root.Widgets.Add(new MyraSpacer(15, 1));
+        root.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BandageAgentUseJournalTrigger,
+            b => profile.BandageAgentUseJournalTrigger = b,
+            bandLang.UseJournalTriggerCheckbox,
+            bandLang.UseJournalTriggerTooltip
+        ));
+
+        var journalMessageBox = new MyraInputBox
+        {
+            Text = profile.BandageAgentJournalMessages,
+            Tooltip = bandLang.JournalMessagesTooltip,
+            Width = 300,
+        };
+        journalMessageBox.TextChangedByUser += (_, _) =>
+        {
+            profile.BandageAgentJournalMessages = journalMessageBox.Text ?? "";
+        };
+        root.Widgets.Add(new MyraLabel(bandLang.JournalMessagesLabel, MyraLabel.TextStyle.P));
+        root.Widgets.Add(journalMessageBox);
+
         // Bandage graphic
         var graphicBox = new MyraInputBox
         {

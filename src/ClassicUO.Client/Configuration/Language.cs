@@ -753,5 +753,10 @@ namespace ClassicUO.Configuration
         public string SkipIfYellowHits { get; set; } = "Skip bandage if yellow hits";
         public string BandageGraphicIdTooltip { get; set; } = "Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)";
         public string BandageGraphicIdLabel { get; set; } = "Bandage graphic ID:";
+
+        public string UseJournalTriggerCheckbox { get; set; } = "Use journal trigger";
+        public string UseJournalTriggerTooltip { get; set; } = "Re-apply bandage when a matching journal message is received";
+        public string JournalMessagesLabel { get; set; } = "Journal message triggers (separate multiple with ;):";
+        public string JournalMessagesTooltip { get; set; } = "Journal message text that triggers re-bandaging. Separate multiple messages with ;. Matching is case-insensitive and checks if the message contains the trigger text.";
     }
 }
