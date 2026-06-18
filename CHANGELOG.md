@@ -47,6 +47,7 @@ All notable changes to TazUO will be recorded here.
 * Setting reconnect time via launch args would not allow less than 1000(Reconnect time is in seconds, it should be 1) - ([bittiez](https://github.com/bittiez))
 * Better long distance pathfinding - [P.R 454](https://github.com/PlayTazUO/TazUO/pull/454) [P.R 539](https://github.com/PlayTazUO/TazUO/pull/539) ([eddo87](https://github.com/eddo87))
 * Fixed SDL GPU assertion ("Command buffer already submitted!") on macOS caused by unnecessary GPU texture readback in the web map server - [P.R 538](https://github.com/PlayTazUO/TazUO/pull/538) ([bittiez](https://github.com/bittiez))
+* A few minor ui fixes where focus gained was not needed - ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

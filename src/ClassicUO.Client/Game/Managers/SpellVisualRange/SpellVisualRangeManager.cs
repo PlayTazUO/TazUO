@@ -153,7 +153,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
                 return;
 
             _castTimerBar = new CastTimerProgressBar(World);
-            UIManager.Add(_castTimerBar);
+            UIManager.Add(_castTimerBar, false);
         }
 
         public bool IsTargetingAfterCasting()
