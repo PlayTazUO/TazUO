@@ -139,6 +139,8 @@ public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string AUTO_STAT_LOCK = "auto_stat_lock";
             public const string DISABLE_AUTOLOOT_RETRY_CORPSE = "disable_authloot_retry";
             public const string AUTO_OPEN_DOORS_HIDDEN = "auto_open_doors_hidden";
+            public const string BANDAGE_JOURNAL_TRIGGER = "bandage_journal_trigger";
+            public const string BANDAGE_JOURNAL_MESSAGES = "bandage_journal_messages";
         }
     }
 }
