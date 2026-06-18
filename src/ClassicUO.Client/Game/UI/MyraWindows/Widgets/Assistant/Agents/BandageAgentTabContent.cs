@@ -132,21 +132,21 @@ public static class BandageAgentTabContent
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.BandageAgentUseJournalTrigger,
             b => profile.BandageAgentUseJournalTrigger = b,
-            bandLang.UseJournalTriggerCheckbox,
-            bandLang.UseJournalTriggerTooltip
+            TazLang.Get("bandageagent_journaltrigger"),
+            TazLang.Get("bandageagent_journaltrigger_tooltip")
         ));
 
         var journalMessageBox = new MyraInputBox
         {
             Text = profile.BandageAgentJournalMessages,
-            Tooltip = bandLang.JournalMessagesTooltip,
+            Tooltip = TazLang.Get("bandageagent_journalmessages_tooltip"),
             Width = 300,
         };
         journalMessageBox.TextChangedByUser += (_, _) =>
         {
             profile.BandageAgentJournalMessages = journalMessageBox.Text ?? "";
         };
-        root.Widgets.Add(new MyraLabel(bandLang.JournalMessagesLabel, MyraLabel.TextStyle.P));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("bandageagent_journalmessages_label"), MyraLabel.TextStyle.P));
         root.Widgets.Add(journalMessageBox);
 
         // Bandage graphic
