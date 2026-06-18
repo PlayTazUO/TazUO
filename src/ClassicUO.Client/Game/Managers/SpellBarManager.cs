@@ -24,15 +24,15 @@ public class SpellBarManager
     private const string SAVE_FILE = "SpellBar.json";
     private static SpellBarSettings spellBarSettings;
 
-    public static SpellDefinition GetSpell(int row, int col)
+    public static SpellBarSlot GetSlot(int row, int col)
     {
         if (!enabled)
-            return SpellDefinition.EmptySpell;
+            return SpellBarSlot.Empty();
 
-        if(SpellBarRows.Count <= row || row < 0) return SpellDefinition.EmptySpell;
-        if(SpellBarRows[row].SpellSlot.Length <= col || col < 0) return SpellDefinition.EmptySpell;
+        if(SpellBarRows.Count <= row || row < 0) return SpellBarSlot.Empty();
+        if(SpellBarRows[row].Slots.Length <= col || col < 0) return SpellBarSlot.Empty();
 
-        return SpellBarRows[row].SpellSlot[col];
+        return SpellBarRows[row].Slots[col] ?? SpellBarSlot.Empty();
     }
 
     public static string GetControllerButtonsName(int slot)
@@ -121,12 +121,12 @@ public class SpellBarManager
         if (!enabled || !spellBarSettings.Enabled)
             return;
 
-        SpellDefinition spell = GetSpell(row, col);
+        SpellBarSlot slot = GetSlot(row, col);
 
-        if (spell == null || spell == SpellDefinition.EmptySpell)
+        if (slot == null || slot.IsEmpty)
             return;
 
-        GameActions.CastSpell(spell.ID);
+        slot.Activate(Client.Game.UO.World);
     }
 
     public static SDL.SDL_GamepadButton[][] GetControllerButtons()
@@ -287,43 +287,204 @@ public class SpellBarManager
         }
     }
 
-    private static void SetDefaults() => SpellBarRows = [new SpellBarRow().SetSpell(0, SpellDefinition.FullIndexGetSpell(29)).SetSpell(1, SpellDefinition.FullIndexGetSpell(11)).SetSpell(2, SpellDefinition.FullIndexGetSpell(22))];
+    private static void SetDefaults() => SpellBarRows = [new SpellBarRow()
+        .SetSlot(0, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(29)))
+        .SetSlot(1, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(11)))
+        .SetSlot(2, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(22)))];
+}
+
+public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3 }
+
+public class SpellBarSlot
+{
+    public SpellBarSlotType Type { get; set; } = SpellBarSlotType.Empty;
+
+    public int SpellId { get; set; } = -2;          // Type == Spell
+
+    public string MacroName { get; set; }           // Type == Macro
+
+    public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
+
+    [JsonIgnore]
+    public bool IsEmpty => Type == SpellBarSlotType.Empty;
+
+    [JsonIgnore]
+    public SpellDefinition Spell => Type == SpellBarSlotType.Spell ? SpellDefinition.FullIndexGetSpell(SpellId) : SpellDefinition.EmptySpell;
+
+    [JsonIgnore]
+    public int CurrentSpellID => Type == SpellBarSlotType.Spell ? SpellId : -1;
+
+    public static SpellBarSlot Empty() => new SpellBarSlot();
+
+    public static SpellBarSlot FromSpell(SpellDefinition spell)
+    {
+        if (spell == null || spell == SpellDefinition.EmptySpell)
+            return Empty();
+
+        return new SpellBarSlot { Type = SpellBarSlotType.Spell, SpellId = spell.ID };
+    }
+
+    public static SpellBarSlot FromMacro(Macro macro)
+    {
+        if (macro == null)
+            return Empty();
+
+        return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = macro.Name };
+    }
+
+    public static SpellBarSlot FromAbility(bool primary) => new SpellBarSlot { Type = SpellBarSlotType.Ability, AbilityPrimary = primary };
+
+    public void Activate(World world)
+    {
+        switch (Type)
+        {
+            case SpellBarSlotType.Spell:
+                if (Spell != null && Spell != SpellDefinition.EmptySpell)
+                    GameActions.CastSpell(SpellId);
+                break;
+
+            case SpellBarSlotType.Macro:
+                Macro macro = world?.Macros?.FindMacro(MacroName);
+                if (macro != null)
+                {
+                    world.Macros.SetMacroToExecute(macro.Items as MacroObject);
+                    world.Macros.WaitForTargetTimer = 0;
+                    world.Macros.Update();
+                }
+                break;
+
+            case SpellBarSlotType.Ability:
+                if (AbilityPrimary)
+                    GameActions.UsePrimaryAbility(world);
+                else
+                    GameActions.UseSecondaryAbility(world);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Resolves the player's current primary/secondary ability index (1-based), or 0 when none.
+    /// </summary>
+    public int GetAbilityIndex(World world)
+    {
+        if (Type != SpellBarSlotType.Ability || world?.Player == null)
+            return 0;
+
+        return (byte)world.Player.Abilities[AbilityPrimary ? 0 : 1] & 0x7F;
+    }
+
+    public ushort GetIconGraphic(World world)
+    {
+        switch (Type)
+        {
+            case SpellBarSlotType.Spell:
+                return (ushort)Spell.GumpIconSmallID;
+
+            case SpellBarSlotType.Macro:
+                return world?.Macros?.FindMacro(MacroName)?.Graphic ?? 0;
+
+            case SpellBarSlotType.Ability:
+                int idx = GetAbilityIndex(world);
+                if (idx >= 1 && idx <= AbilityData.Abilities.Length)
+                    return AbilityData.Abilities[idx - 1].Icon;
+                return 0;
+        }
+
+        return 0;
+    }
+
+    public bool TryGetTooltip(World world, out string text)
+    {
+        switch (Type)
+        {
+            case SpellBarSlotType.Spell:
+                int cliloc = GetSpellTooltip(SpellId);
+                text = cliloc != 0 ? Client.Game.UO.FileManager.Clilocs.GetString(cliloc) : string.Empty;
+                return cliloc != 0;
+
+            case SpellBarSlotType.Macro:
+                text = MacroName ?? string.Empty;
+                return !string.IsNullOrEmpty(text);
+
+            case SpellBarSlotType.Ability:
+                int idx = GetAbilityIndex(world);
+                if (idx >= 1 && idx <= AbilityData.Abilities.Length)
+                {
+                    text = Client.Game.UO.FileManager.Clilocs.GetString(1028838 + (idx - 1));
+                    return true;
+                }
+                break;
+        }
+
+        text = string.Empty;
+        return false;
+    }
+
+    private static int GetSpellTooltip(int id)
+    {
+        if (id >= 1 && id <= 64) // Magery
+            return 3002011 + (id - 1);
+
+        if (id >= 101 && id <= 117) // necro
+            return 1060509 + (id - 101);
+
+        if (id >= 201 && id <= 210) return 1060585 + (id - 201);
+
+        if (id >= 401 && id <= 406) return 1060595 + (id - 401);
+
+        if (id >= 501 && id <= 508) return 1060610 + (id - 501);
+
+        if (id >= 601 && id <= 616) return 1071026 + (id - 601);
+
+        if (id >= 678 && id <= 693) return 1031678 + (id - 678);
+
+        if (id >= 701 && id <= 745)
+        {
+            if (id <= 706) return 1115612 + (id - 701);
+
+            if (id <= 745) return 1155896 + (id - 707);
+        }
+
+        return 0;
+    }
 }
 
 public class SpellBarRow()
 {
-    [JsonIgnore]
-    public SpellDefinition[] SpellSlot = new SpellDefinition[10];
+    public SpellBarSlot[] Slots { get; set; } = CreateEmptySlots();
 
-    public int[] SpellSlotIds {
-        get
-        {
-            var ids = new List<int>();
-            foreach (SpellDefinition spell in SpellSlot)
-            {
-                if (spell == null)
-                    ids.Add(-2);
-                else
-                    ids.Add(spell.ID);
-            }
-            return ids.ToArray();
-        }
+    // Legacy migration: older SpellBar.json/preset files only stored spell ids here.
+    // Deserialize-only; never written to new files (getter returns null).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int[] SpellSlotIds
+    {
+        get => null;
         set
         {
-            for (int i = 0; i < 10; i++)
-            {
-                SpellSlot[i] = SpellDefinition.FullIndexGetSpell(value[i]);
-            }
+            if (value == null)
+                return;
+
+            Slots = CreateEmptySlots();
+            for (int i = 0; i < Slots.Length && i < value.Length; i++)
+                Slots[i] = SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(value[i]));
         }
     }
 
     public ushort RowHue { get; set; }
 
-    public SpellBarRow SetSpell(int slot, SpellDefinition spell)
+    public SpellBarRow SetSlot(int slot, SpellBarSlot value)
     {
-        SpellSlot[slot] = spell;
+        Slots[slot] = value ?? SpellBarSlot.Empty();
 
         return this;
+    }
+
+    private static SpellBarSlot[] CreateEmptySlots()
+    {
+        var slots = new SpellBarSlot[10];
+        for (int i = 0; i < slots.Length; i++)
+            slots[i] = SpellBarSlot.Empty();
+        return slots;
     }
 }
 
@@ -343,6 +504,8 @@ public class SpellBarSettings
 
 [JsonSerializable(typeof(List<SpellBarRow>), GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(SpellBarRow), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(SpellBarSlot), GenerationMode = JsonSourceGenerationMode.Metadata)]
+[JsonSerializable(typeof(SpellBarSlot[]), GenerationMode = JsonSourceGenerationMode.Metadata)]
 public partial class SpellBarRowsContext : JsonSerializerContext { }
 
 [JsonSerializable(typeof(SpellBarSettings))]
