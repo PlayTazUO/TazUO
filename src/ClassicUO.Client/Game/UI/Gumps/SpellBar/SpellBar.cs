@@ -242,6 +242,7 @@ public class SpellBar : Gump
 
     public class SpellEntry : Control
     {
+        /// <summary>Spell id of this entry's slot for spell slots, or -1 for empty/macro/ability slots.</summary>
         public int CurrentSpellID => slot?.CurrentSpellID ?? -1;
 
         private GumpPic icon;
@@ -269,6 +270,7 @@ public class SpellBar : Gump
             Build();
         }
 
+        /// <summary>Assigns the given slot to this entry at the given row/column and refreshes its icon, tooltip, and hotkey label.</summary>
         public SpellEntry SetSlot(SpellBarSlot slot, int row, int col)
         {
             this.slot = slot ?? SpellBarSlot.Empty();
@@ -334,6 +336,7 @@ public class SpellBar : Gump
             trackCasting = true;
         }
 
+        /// <summary>Triggers this entry's slot action (cast spell, run macro, or use ability) when it is not empty.</summary>
         public void Activate()
         {
             if (slot != null && !slot.IsEmpty) slot.Activate(World);
@@ -502,12 +505,18 @@ public class SpellBar : Gump
         {
             if (slot != null && slot.Type == SpellBarSlotType.Ability)
             {
-                // The active primary/secondary ability follows the equipped weapon, so keep icon/hue in sync.
+                // The active primary/secondary ability follows the equipped weapon, so keep icon/hue/tooltip in sync.
                 ushort graphic = slot.GetIconGraphic(World);
                 if (graphic != 0)
                 {
                     if (icon.Graphic != graphic)
+                    {
                         icon.Graphic = graphic;
+                        if (slot.TryGetTooltip(World, out string tip))
+                            SetTooltip(tip, 80);
+                        else
+                            SetTooltip(string.Empty);
+                    }
                     icon.IsVisible = true;
 
                     bool active = ((byte)World.Player.Abilities[slot.AbilityPrimary ? 0 : 1] & 0x80) != 0;
@@ -518,6 +527,7 @@ public class SpellBar : Gump
                 else if (icon.IsVisible)
                 {
                     icon.IsVisible = false;
+                    SetTooltip(string.Empty);
                 }
             }
 

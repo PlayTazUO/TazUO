@@ -293,29 +293,43 @@ public class SpellBarManager
         .SetSlot(2, SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(22)))];
 }
 
+/// <summary>The kind of action stored in a single spell bar slot.</summary>
 public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3 }
 
+/// <summary>
+/// A single spell bar slot. Holds one of: nothing, a spell, a macro, or a weapon
+/// (primary/secondary) ability, and centralizes activation, icon, and tooltip resolution.
+/// </summary>
 public class SpellBarSlot
 {
+    /// <summary>What this slot holds (spell, macro, ability, or empty).</summary>
     public SpellBarSlotType Type { get; set; } = SpellBarSlotType.Empty;
 
+    /// <summary>Full spell index when <see cref="Type"/> is <see cref="SpellBarSlotType.Spell"/>.</summary>
     public int SpellId { get; set; } = -2;          // Type == Spell
 
+    /// <summary>Macro name when <see cref="Type"/> is <see cref="SpellBarSlotType.Macro"/>.</summary>
     public string MacroName { get; set; }           // Type == Macro
 
+    /// <summary>True for the primary ability, false for the secondary, when <see cref="Type"/> is <see cref="SpellBarSlotType.Ability"/>.</summary>
     public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
 
+    /// <summary>True when the slot holds nothing.</summary>
     [JsonIgnore]
     public bool IsEmpty => Type == SpellBarSlotType.Empty;
 
+    /// <summary>The resolved spell for spell slots, otherwise <see cref="SpellDefinition.EmptySpell"/>.</summary>
     [JsonIgnore]
     public SpellDefinition Spell => Type == SpellBarSlotType.Spell ? SpellDefinition.FullIndexGetSpell(SpellId) : SpellDefinition.EmptySpell;
 
+    /// <summary>The spell id for spell slots, or -1 for any other type (used to match cast events).</summary>
     [JsonIgnore]
     public int CurrentSpellID => Type == SpellBarSlotType.Spell ? SpellId : -1;
 
+    /// <summary>Creates an empty slot.</summary>
     public static SpellBarSlot Empty() => new SpellBarSlot();
 
+    /// <summary>Creates a spell slot, or an empty slot when <paramref name="spell"/> is null/empty.</summary>
     public static SpellBarSlot FromSpell(SpellDefinition spell)
     {
         if (spell == null || spell == SpellDefinition.EmptySpell)
@@ -324,6 +338,7 @@ public class SpellBarSlot
         return new SpellBarSlot { Type = SpellBarSlotType.Spell, SpellId = spell.ID };
     }
 
+    /// <summary>Creates a macro slot, or an empty slot when <paramref name="macro"/> is null.</summary>
     public static SpellBarSlot FromMacro(Macro macro)
     {
         if (macro == null)
@@ -332,8 +347,10 @@ public class SpellBarSlot
         return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = macro.Name };
     }
 
+    /// <summary>Creates an ability slot for the primary (<paramref name="primary"/> true) or secondary ability.</summary>
     public static SpellBarSlot FromAbility(bool primary) => new SpellBarSlot { Type = SpellBarSlotType.Ability, AbilityPrimary = primary };
 
+    /// <summary>Performs the slot's action: casts the spell, runs the macro, or triggers the ability.</summary>
     public void Activate(World world)
     {
         switch (Type)
@@ -373,6 +390,7 @@ public class SpellBarSlot
         return (byte)world.Player.Abilities[AbilityPrimary ? 0 : 1] & 0x7F;
     }
 
+    /// <summary>Resolves the gump graphic to draw for this slot, or 0 when there is none.</summary>
     public ushort GetIconGraphic(World world)
     {
         switch (Type)
@@ -393,6 +411,7 @@ public class SpellBarSlot
         return 0;
     }
 
+    /// <summary>Gets the tooltip text for this slot. Returns false (and empty text) when none applies.</summary>
     public bool TryGetTooltip(World world, out string text)
     {
         switch (Type)
@@ -451,7 +470,15 @@ public class SpellBarSlot
 
 public class SpellBarRow()
 {
-    public SpellBarSlot[] Slots { get; set; } = CreateEmptySlots();
+    private SpellBarSlot[] _slots = CreateEmptySlots();
+
+    // Always a 10-element array with no null entries, even when deserialized from a
+    // malformed file (null, short, or containing nulls), since the array is indexed directly.
+    public SpellBarSlot[] Slots
+    {
+        get => _slots;
+        set => _slots = NormalizeSlots(value);
+    }
 
     // Legacy migration: older SpellBar.json/preset files only stored spell ids here.
     // Deserialize-only; never written to new files (getter returns null).
@@ -465,8 +492,8 @@ public class SpellBarRow()
                 return;
 
             Slots = CreateEmptySlots();
-            for (int i = 0; i < Slots.Length && i < value.Length; i++)
-                Slots[i] = SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(value[i]));
+            for (int i = 0; i < _slots.Length && i < value.Length; i++)
+                _slots[i] = SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(value[i]));
         }
     }
 
@@ -474,9 +501,25 @@ public class SpellBarRow()
 
     public SpellBarRow SetSlot(int slot, SpellBarSlot value)
     {
-        Slots[slot] = value ?? SpellBarSlot.Empty();
+        if ((uint)slot >= (uint)_slots.Length)
+            return this;
+
+        _slots[slot] = value ?? SpellBarSlot.Empty();
 
         return this;
+    }
+
+    private static SpellBarSlot[] NormalizeSlots(SpellBarSlot[] value)
+    {
+        var slots = CreateEmptySlots();
+
+        if (value == null)
+            return slots;
+
+        for (int i = 0; i < slots.Length && i < value.Length; i++)
+            slots[i] = value[i] ?? SpellBarSlot.Empty();
+
+        return slots;
     }
 
     private static SpellBarSlot[] CreateEmptySlots()
