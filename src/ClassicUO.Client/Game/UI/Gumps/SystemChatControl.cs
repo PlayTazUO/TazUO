@@ -234,14 +234,17 @@ namespace ClassicUO.Game.UI.Gumps
             if (ProfileManager.CurrentProfile.DisableSystemChat)
                 return;
 
-            if (ProfileManager.CurrentProfile.DisableSystemChatWhileJournalOpen && UIManager.GetGump<ResizableJournal>() != null)
-                return;
+            bool suppressSystemChat = ProfileManager.CurrentProfile.DisableSystemChatWhileJournalOpen
+                && UIManager.GetGump<ResizableJournal>() != null;
 
             switch (e.Type)
             {
                 case MessageType.Regular when e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial):
                 case MessageType.Discord:
                 case MessageType.System:
+                    if (suppressSystemChat)
+                        break;
+
                     if (!string.IsNullOrEmpty(e.Name) && !e.Name.Equals("system", StringComparison.InvariantCultureIgnoreCase))
                     {
                         AddLine($"{e.Name}: {e.Text}", e.Font, e.Hue, e.IsUnicode);
@@ -277,7 +280,7 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
                 default:
 
-                    if (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial))
+                    if (!suppressSystemChat && (e.Parent == null || !SerialHelper.IsValid(e.Parent.Serial)))
                     {
                         if (string.IsNullOrEmpty(e.Name) || e.Name.Equals("system", StringComparison.InvariantCultureIgnoreCase))
                         {
