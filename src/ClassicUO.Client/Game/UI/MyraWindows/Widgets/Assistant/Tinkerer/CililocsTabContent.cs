@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Tinkerer;
