@@ -76,6 +76,7 @@ namespace ClassicUO.Game.Managers
         private void OnJournalEntryAdded(object sender, JournalEntry e)
         {
             if (!IsEnabled || !UseJournalTrigger || e == null) return;
+            if (string.IsNullOrEmpty(e.Text)) return;
 
             string messages = JournalMessages;
             if (string.IsNullOrWhiteSpace(messages)) return;
