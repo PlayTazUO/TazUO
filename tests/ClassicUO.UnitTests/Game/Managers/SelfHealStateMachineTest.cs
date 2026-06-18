@@ -14,6 +14,8 @@ namespace ClassicUO.UnitTests.Game.Managers
             public bool IsPoisoned { get; set; }
             public bool IsTargetingAfterCast { get; set; }
             public bool IsCasting { get; set; }
+            public long RecastDelayMs { get; set; } = SelfHealStateMachine.DefaultRecastDelayMs;
+            public long CastStartGraceMs { get; set; } = SelfHealStateMachine.DefaultCastStartGraceMs;
             public long CureVerifyMs { get; set; } = SelfHealStateMachine.DefaultCureVerifyMs;
             public long InterruptRetryMs { get; set; } = SelfHealStateMachine.DefaultInterruptRetryMs;
             public List<int> Casts { get; } = new();
@@ -66,26 +68,11 @@ namespace ClassicUO.UnitTests.Game.Managers
             sm.Tick(env, held: true);
             env.IsTargetingAfterCast = true;
             sm.Tick(env, held: false);
-            env.Now += SelfHealStateMachine.SettleMs + 1;
+            env.Now += env.RecastDelayMs + 1;
             sm.Tick(env, held: false);
             sm.Tick(env, held: false);
 
             env.Casts.Should().HaveCount(1);
-        }
-
-        [Fact]
-        public void Timeout_NoCursor_RetriesWhileHeld()
-        {
-            var env = new FakeEnv();
-            var sm = new SelfHealStateMachine();
-
-            sm.Tick(env, held: true);
-            env.IsTargetingAfterCast = false;
-            env.Now += SelfHealStateMachine.CastWaitMs + 1;
-            sm.Tick(env, held: true);                 // past deadline -> back to Idle (no new cast yet)
-            env.Casts.Should().HaveCount(1);
-            sm.Tick(env, held: true);                 // Idle + held -> cast #2
-            env.Casts.Should().HaveCount(2);
         }
 
         [Fact]
@@ -165,7 +152,7 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
-        public void CastInterrupted_RetriesAfterShortDelayNotFullTimeout()
+        public void CastInterrupted_AfterStarting_RetriesFast()
         {
             var env = new FakeEnv();
             var sm = new SelfHealStateMachine();
@@ -177,12 +164,31 @@ namespace ClassicUO.UnitTests.Game.Managers
             sm.Tick(env, held: true);            // detects interruption -> InterruptRetry
             env.Casts.Should().HaveCount(1);     // not recast yet
 
-            env.Now += env.InterruptRetryMs + 1; // only the short delay, well under CastWaitMs
+            env.Now += env.InterruptRetryMs + 1; // only the short retry delay
             sm.Tick(env, held: true);            // InterruptRetry -> Idle
             sm.Tick(env, held: true);            // Idle + held -> recast
 
             env.Casts.Should().HaveCount(2);
-            env.Now.Should().BeLessThan(SelfHealStateMachine.CastWaitMs); // retried fast, not after the timeout
+            env.Now.Should().BeLessThan(SelfHealStateMachine.DefaultCastStartGraceMs); // fast, not a long stall
+        }
+
+        [Fact]
+        public void CastNeverRegisters_RetriesAfterGraceNotLongStall()
+        {
+            var env = new FakeEnv();
+            var sm = new SelfHealStateMachine();
+
+            sm.Tick(env, held: true);            // cast, WaitingForCursor; IsCasting never goes true
+            sm.Tick(env, held: true);            // within grace -> keep waiting (no premature recast)
+            env.Casts.Should().HaveCount(1);
+
+            env.Now += env.CastStartGraceMs + 1; // grace elapsed with no cursor and no casting
+            sm.Tick(env, held: true);            // -> InterruptRetry
+            env.Now += env.InterruptRetryMs + 1;
+            sm.Tick(env, held: true);            // InterruptRetry -> Idle
+            sm.Tick(env, held: true);            // recast
+
+            env.Casts.Should().HaveCount(2);
         }
 
         [Fact]
@@ -192,7 +198,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             var sm = new SelfHealStateMachine();
 
             sm.Tick(env, held: true);            // cast, WaitingForCursor; IsCasting still false (not registered yet)
-            sm.Tick(env, held: true);            // must NOT treat the not-yet-started cast as interrupted
+            sm.Tick(env, held: true);            // within grace, no cursor -> must NOT recast
             sm.Tick(env, held: true);
 
             env.Casts.Should().HaveCount(1);     // still waiting, no premature recast

@@ -127,6 +127,12 @@ namespace ClassicUO.Game.Managers
 
             public bool IsPoisoned => Client.Game?.UO?.World?.Player?.IsPoisoned ?? false;
 
+            public long RecastDelayMs =>
+                ProfileManager.CurrentProfile?.SelfHeal_RecastDelayMs ?? SelfHealStateMachine.DefaultRecastDelayMs;
+
+            public long CastStartGraceMs =>
+                ProfileManager.CurrentProfile?.SelfHeal_CastStartGraceMs ?? SelfHealStateMachine.DefaultCastStartGraceMs;
+
             public long CureVerifyMs =>
                 ProfileManager.CurrentProfile?.SelfHeal_CureVerifyMs ?? SelfHealStateMachine.DefaultCureVerifyMs;
 

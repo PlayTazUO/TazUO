@@ -93,6 +93,22 @@ public static class SelfHealTabContent
         root.Widgets.Add(normalPanel);
         root.Widgets.Add(editPanel);
 
+        // Recast delay ("recuperation"): pad after a successful heal before the next cast.
+        root.Widgets.Add(new MyraLabel("Recast delay / recuperation (ms):", MyraLabel.TextStyle.P));
+        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+            "ms pad after a heal before recasting (lower = faster)",
+            out _,
+            v => profile.SelfHeal_RecastDelayMs = (int)v,
+            min: 0, max: 1000, value: profile.SelfHeal_RecastDelayMs));
+
+        // Cast start grace: how long a cast may take to register before treating it as failed.
+        root.Widgets.Add(new MyraLabel("Cast start grace (ms):", MyraLabel.TextStyle.P));
+        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+            "ms to wait for a cast to register before retrying (bounds the post-interrupt stall)",
+            out _,
+            v => profile.SelfHeal_CastStartGraceMs = (int)v,
+            min: 200, max: 3000, value: profile.SelfHeal_CastStartGraceMs));
+
         // Cure recheck delay: how long to wait for poison to clear before recasting Cure.
         root.Widgets.Add(new MyraLabel("Cure recheck delay (ms):", MyraLabel.TextStyle.P));
         root.Widgets.Add(MyraHSlider.SliderWithLabel(
