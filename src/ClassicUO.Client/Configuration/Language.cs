@@ -514,7 +514,6 @@ namespace ClassicUO.Configuration
             #region Misc
             public string Misc { get; set; } = "Misc";
             public string DisableSystemChat { get; set; } = "Disable system chat";
-            public string DisableSystemChatWhileJournalOpen { get; set; } = "Disable system chat while Resizable Journal is open";
             public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
             public string BuffGumpHue { get; set; } = "Buff gump hue";
             public string MainGameWindowBackground { get; set; } = "Main game window background";

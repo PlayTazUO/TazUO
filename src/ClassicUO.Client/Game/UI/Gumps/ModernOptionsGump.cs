@@ -3706,7 +3706,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight(
-                new CheckboxWithLabel(lang.GetTazUO.DisableSystemChatWhileJournalOpen, 0, profile.DisableSystemChatWhileJournalOpen,
+                new CheckboxWithLabel(TazLang.Get("disablesystemchat_journalopen", "Disable system chat while Resizable Journal is open"), 0, profile.DisableSystemChatWhileJournalOpen,
                     (b) => { profile.DisableSystemChatWhileJournalOpen = b; }), true, page);
             content.BlankLine();
 
