@@ -74,7 +74,7 @@ public static class CililocsTabContent
                     gridRow, 0);
 
                 var textLabel = new MyraLabel(text, MyraLabel.TextStyle.P)
-                    { Tooltip = $"#{id}: {text}" };
+                    { MaxWidth = 600, Tooltip = $"#{id}: {text}" };
                 grid.AddWidget(textLabel, gridRow, 1);
             }
 

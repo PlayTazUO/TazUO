@@ -175,28 +175,6 @@ namespace ClassicUO.Game.UI.Gumps
             };
             startX += largeWidth + 1;
 
-            RighClickableButton developerMenu;
-            Add(developerMenu = new(998877,
-                0x098D,
-                0x098D,
-                0x098D,
-                "Developer",
-                1,
-                true,
-                0,
-                0x0036
-            )
-            {
-                ButtonAction = ButtonAction.Activate,
-                X = startX,
-                Y = 1,
-                FontCenter = true
-            }, 1);
-            developerMenu.ContextMenu = new ContextMenuControl(this);
-            developerMenu.MouseUp += (s, e) => { developerMenu.ContextMenu?.Show(); };
-            developerMenu.ContextMenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
-            startX += largeWidth + 1;
-
             RighClickableButton moreMenu;
             Add
             (moreMenu =
@@ -288,6 +266,10 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }));
             moreMenu.ContextMenu.Add(submenu);
+
+            var devSubmenu = new ContextMenuItemEntry("Developer");
+            devSubmenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+            moreMenu.ContextMenu.Add(devSubmenu);
 
             startX += largeWidth + 1;
 
