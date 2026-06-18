@@ -4176,12 +4176,11 @@ namespace ClassicUO.LegionScripting
         /// <param name="cliloc">The cliloc number</param>
         /// <param name="englishOnly">True to always return the English string, ignoring the client language setting</param>
         /// <returns>The cliloc string, or null if not found</returns>
-        public string GetClilocString(int cliloc, bool englishOnly = false)
-        {
-            return englishOnly
+        public string GetClilocString(int cliloc, bool englishOnly = false) => OnMain(() =>
+            englishOnly
                 ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
-                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc);
-        }
+                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc)
+        );
 
         #endregion
     }
