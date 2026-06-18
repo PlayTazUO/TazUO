@@ -69,9 +69,11 @@ public class SpellBarManager
         if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.DisableHotkeys)
             return;
 
-        // Remove NUM lock from modifier checks
+        // Remove lock keys from modifier checks (these shouldn't affect hotkey matching)
         mod &= ~SDL.SDL_Keymod.SDL_KMOD_NUM;
         mod &= ~SDL.SDL_Keymod.SDL_KMOD_CAPS;
+        mod &= ~SDL.SDL_Keymod.SDL_KMOD_SCROLL;
+        mod &= ~SDL.SDL_Keymod.SDL_KMOD_MODE;
 
         // Normalize left/right modifiers to generic modifiers
         if ((mod & (SDL.SDL_Keymod.SDL_KMOD_LCTRL | SDL.SDL_Keymod.SDL_KMOD_RCTRL)) != 0)
