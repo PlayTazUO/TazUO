@@ -332,10 +332,19 @@ namespace ClassicUO.LegionScripting
         /// The index of the last spell cast by the player.
         /// Example:
         /// ```py
-        /// API.SysMsg("Last spell index: " + str(API.LastSpell))
+        /// API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
         /// ```
         /// </summary>
-        public int LastSpell => GameActions.LastSpellIndex;
+        public int LastSpellIndex => GameActions.LastSpellIndex;
+
+        /// <summary>
+        /// The name of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell: " + API.LastSpellName)
+        /// ```
+        /// </summary>
+        public string LastSpellName => Game.Data.SpellDefinition.FullIndexGetSpell(GameActions.LastSpellIndex).Name;
 
         /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
