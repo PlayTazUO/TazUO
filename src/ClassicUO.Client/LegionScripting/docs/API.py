@@ -3163,6 +3163,22 @@ def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
     """
     pass
 
+def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
+    """
+     Get the string for a cliloc number.
+     Example:
+     ```py
+     text = API.GetClilocString(1020000)
+     if text:
+       API.SysMsg(text)
+    
+     # Force English regardless of client language setting
+     text = API.GetClilocString(1020000, englishOnly=True)
+     ```
+    
+    """
+    pass
+
 class EventSinkApiDeclaration:
     ""
 
