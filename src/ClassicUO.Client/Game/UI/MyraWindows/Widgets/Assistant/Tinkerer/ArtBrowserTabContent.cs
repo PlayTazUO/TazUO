@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -33,7 +34,7 @@ public static class ArtBrowserTabContent
     public static Widget Build()
     {
         if (Client.Game?.UO?.Arts == null)
-            return new MyraLabel("Art data not available", MyraLabel.TextStyle.P);
+            return new MyraLabel(TazLang.Get("tinkerer_art_nodata", "Art data not available"), MyraLabel.TextStyle.P);
 
         // Upper bound on browsable item graphics. Static art is indexed by item
         // graphic id; cap to the available TileData / 0x10000 range.
@@ -63,7 +64,9 @@ public static class ArtBrowserTabContent
 
             if (selectedGraphic < 0)
             {
-                detailPanel.Widgets.Add(new MyraLabel("Select an art graphic to view details.", MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(
+                    TazLang.Get("tinkerer_art_selectprompt", "Select an art graphic to view details."),
+                    MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -94,23 +97,23 @@ public static class ArtBrowserTabContent
             }
             else
             {
-                detailPanel.Widgets.Add(new MyraLabel("(No art at this graphic)", MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_noart", "(No art at this graphic)"), MyraLabel.TextStyle.P));
             }
 
             // Zoom controls
             var zoomRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            zoomRow.Widgets.Add(new MyraButton("-", () =>
+            zoomRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_zoomout", "-"), () =>
             {
                 zoomSize = Math.Max(ZOOM_MIN, zoomSize - ZOOM_STEP);
                 BuildDetail();
             }));
-            zoomRow.Widgets.Add(new MyraLabel($"{zoomSize}px", MyraLabel.TextStyle.P));
-            zoomRow.Widgets.Add(new MyraButton("+", () =>
+            zoomRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_zoomlevel", new[] { zoomSize.ToString() }), MyraLabel.TextStyle.P));
+            zoomRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_zoomin", "+"), () =>
             {
                 zoomSize = Math.Min(ZOOM_MAX, zoomSize + ZOOM_STEP);
                 BuildDetail();
             }));
-            zoomRow.Widgets.Add(new MyraButton("Reset", () =>
+            zoomRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_reset", "Reset"), () =>
             {
                 zoomSize = ZOOM_DEFAULT;
                 BuildDetail();
@@ -118,31 +121,35 @@ public static class ArtBrowserTabContent
             detailPanel.Widgets.Add(zoomRow);
 
             // Info
-            detailPanel.Widgets.Add(new MyraLabel($"Graphic ID: {id} (0x{id:X4})", MyraLabel.TextStyle.P));
             detailPanel.Widgets.Add(new MyraLabel(
-                hasArt ? $"Dimensions: {art.UV.Width} x {art.UV.Height}" : "Dimensions: No art",
+                TazLang.Get("tinkerer_art_graphicid", new[] { id.ToString(), $"0x{id:X4}" }), MyraLabel.TextStyle.P));
+            detailPanel.Widgets.Add(new MyraLabel(
+                hasArt
+                    ? TazLang.Get("tinkerer_art_dimensions", new[] { art.UV.Width.ToString(), art.UV.Height.ToString() })
+                    : TazLang.Get("tinkerer_art_dimensions_noart", "Dimensions: No art"),
                 MyraLabel.TextStyle.P));
 
             var sd = Client.Game.UO.FileManager?.TileData?.StaticData;
             if (sd != null && id < sd.Length)
             {
                 StaticTiles st = sd[id];
-                string name = string.IsNullOrEmpty(st.Name) ? "(unnamed)" : st.Name;
-                detailPanel.Widgets.Add(new MyraLabel($"Name: {name}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"Flags: {st.Flags}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"Weight: {st.Weight}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"Height: {st.Height}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"Layer: {st.Layer}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"AnimID: {st.AnimID} (0x{st.AnimID:X4})", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"Hue: {st.Hue}", MyraLabel.TextStyle.P));
-                detailPanel.Widgets.Add(new MyraLabel($"LightIndex: {st.LightIndex}", MyraLabel.TextStyle.P));
+                string name = string.IsNullOrEmpty(st.Name) ? TazLang.Get("tinkerer_art_unnamed", "(unnamed)") : st.Name;
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_name", new[] { name }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_flags", new[] { st.Flags.ToString() }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_weight", new[] { st.Weight.ToString() }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_height", new[] { st.Height.ToString() }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_layer", new[] { st.Layer.ToString() }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(
+                    TazLang.Get("tinkerer_art_animid", new[] { st.AnimID.ToString(), $"0x{st.AnimID:X4}" }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_hue", new[] { st.Hue.ToString() }), MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_lightindex", new[] { st.LightIndex.ToString() }), MyraLabel.TextStyle.P));
             }
             else
             {
-                detailPanel.Widgets.Add(new MyraLabel("TileData: No data", MyraLabel.TextStyle.P));
+                detailPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_tiledata_nodata", "TileData: No data"), MyraLabel.TextStyle.P));
             }
 
-            detailPanel.Widgets.Add(new MyraButton("Copy ID", () => SDL.SDL_SetClipboardText(id.ToString())));
+            detailPanel.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_copyid", "Copy ID"), () => SDL.SDL_SetClipboardText(id.ToString())));
         }
 
         void BuildPage()
@@ -151,7 +158,7 @@ public static class ArtBrowserTabContent
             if (currentPage >= totalPages) currentPage = totalPages - 1;
 
             gridPanel.Widgets.Clear();
-            pageLabel.Text = $"Page {currentPage + 1} of {totalPages}";
+            pageLabel.Text = TazLang.Get("tinkerer_art_page", new[] { (currentPage + 1).ToString(), totalPages.ToString() });
             prevBtn.Enabled = currentPage > 0;
             nextBtn.Enabled = currentPage < totalPages - 1;
 
@@ -193,21 +200,26 @@ public static class ArtBrowserTabContent
 
         // Jump-to-graphic row
         var jumpRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-        var jumpBox = new MyraInputBox { HintText = "Graphic # or 0x..", Width = 120, InputFilter = MyraInputBox.HueInputFilter };
+        var jumpBox = new MyraInputBox
+        {
+            HintText = TazLang.Get("tinkerer_art_jumphint", "Graphic # or 0x.."),
+            Width = 120,
+            InputFilter = MyraInputBox.HueInputFilter
+        };
         void DoJump()
         {
             if (TryParseGraphic(jumpBox.Text, out int gfx))
                 JumpTo(gfx);
         }
         jumpBox.TextChangedByUser += (_, _) => DoJump();
-        jumpRow.Widgets.Add(new MyraLabel("Go to:", MyraLabel.TextStyle.P));
+        jumpRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_art_goto", "Go to:"), MyraLabel.TextStyle.P));
         jumpRow.Widgets.Add(jumpBox);
-        jumpRow.Widgets.Add(new MyraButton("Jump", DoJump));
+        jumpRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_art_jump", "Jump"), DoJump));
         leftColumn.Widgets.Add(jumpRow);
 
         // Pagination controls
-        prevBtn = new MyraButton("< Prev", () => { currentPage--; BuildPage(); }) { Enabled = false };
-        nextBtn = new MyraButton("Next >", () => { currentPage++; BuildPage(); }) { Enabled = false };
+        prevBtn = new MyraButton(TazLang.Get("tinkerer_art_prev", "< Prev"), () => { currentPage--; BuildPage(); }) { Enabled = false };
+        nextBtn = new MyraButton(TazLang.Get("tinkerer_art_next", "Next >"), () => { currentPage++; BuildPage(); }) { Enabled = false };
         var pageRow = new HorizontalStackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
         pageRow.Widgets.Add(prevBtn);
         pageRow.Widgets.Add(pageLabel);
@@ -253,8 +265,8 @@ public static class ArtBrowserTabContent
     {
         var sd = Client.Game.UO.FileManager?.TileData?.StaticData;
         if (sd != null && id < sd.Length && !string.IsNullOrEmpty(sd[id].Name))
-            return $"{id} (0x{id:X4}) — {sd[id].Name}";
-        return $"{id} (0x{id:X4})";
+            return TazLang.Get("tinkerer_art_tooltip_named", new[] { id.ToString(), $"0x{id:X4}", sd[id].Name });
+        return TazLang.Get("tinkerer_art_tooltip", new[] { id.ToString(), $"0x{id:X4}" });
     }
 
     private static bool TryParseGraphic(string? text, out int graphic)
