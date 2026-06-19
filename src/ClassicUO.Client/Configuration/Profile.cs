@@ -27,6 +27,37 @@ using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Configuration
 {
+    public enum NamePlateBackgroundMode
+    {
+        FixedColor,
+        NotorietyColor
+    }
+
+    public enum NamePlateHealthBarMode
+    {
+        StatusColor,
+        Green,
+        Blue,
+        Red,
+        Cyan,
+        Yellow,
+        Orange,
+        Purple,
+        White,
+        Gray,
+        Black
+    }
+
+    public enum NamePlatePreset
+    {
+        Custom,
+        Orion,
+        WorldOfWarcraftBlockyBars,
+        WorldOfWarcraftCleanHealth,
+        WorldOfWarcraftBlockyCast,
+        WorldOfWarcraftRedName
+    }
+
     //[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified)]
     [JsonSerializable(typeof(Profile), GenerationMode = JsonSourceGenerationMode.Metadata)]
     sealed partial class ProfileJsonContext : JsonSerializerContext
@@ -433,6 +464,20 @@ namespace ClassicUO.Configuration
         public bool NamePlateHideAtFullHealthInWarmode { get; set => SetProperty(ref field, value); }
         public byte NamePlateBorderOpacity { get; set => SetProperty(ref field, value); } = 50;
         public bool NamePlateAvoidOverlap { get; set => SetProperty(ref field, value); }
+        public bool NamePlateUseFixedWidth { get; set => SetProperty(ref field, value); }
+        public int NamePlateFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
+        public bool NamePlateUseFixedHealthBarWidth { get; set => SetProperty(ref field, value); }
+        public int NamePlateHealthBarFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
+        public bool NamePlateShowWordOfDeathIcon { get; set => SetProperty(ref field, value); }
+        public int NamePlateHeight { get; set => SetProperty(ref field, Math.Clamp(value, 0, 80)); }
+        public bool NamePlateSplitHealthBar { get; set => SetProperty(ref field, value); }
+        public int NamePlateCornerRadius { get; set => SetProperty(ref field, Math.Clamp(value, 0, 40)); } = 0;
+        public NamePlateHealthBarMode NamePlateHealthBarMode { get; set => SetProperty(ref field, value); } = NamePlateHealthBarMode.StatusColor;
+        public NamePlateBackgroundMode NamePlateBackgroundMode { get; set => SetProperty(ref field, value); } = NamePlateBackgroundMode.FixedColor;
+        public byte NamePlateBackgroundR { get; set => SetProperty(ref field, value); }
+        public byte NamePlateBackgroundG { get; set => SetProperty(ref field, value); }
+        public byte NamePlateBackgroundB { get; set => SetProperty(ref field, value); }
+        public NamePlatePreset NamePlatePreset { get; set => SetProperty(ref field, value); } = NamePlatePreset.Custom;
 
         public bool LeftAlignToolTips { get; set => SetProperty(ref field, value); }
         public bool ForceCenterAlignTooltipMobiles { get; set => SetProperty(ref field, value); } = true;
