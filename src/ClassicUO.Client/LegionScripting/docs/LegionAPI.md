@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/17/26`.*
+*This was generated on `6/18/26`.*
 
 ## Properties
 ### `Events`
@@ -3554,6 +3554,31 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `identifier` | `uint` | ✅ Yes | An identified number if you want multiple arrows. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### GetClilocString
+`(cliloc, englishOnly)`
+ Get the string for a cliloc number.
+ Example:
+ ```py
+ text = API.GetClilocString(1020000)
+ if text:
+   API.SysMsg(text)
+
+ # Force English regardless of client language setting
+ text = API.GetClilocString(1020000, englishOnly=True)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `cliloc` | `int` | ❌ No | The cliloc number |
+| `englishOnly` | `bool` | ✅ Yes | True to always return the English string, ignoring the client language setting |
+
+**Return Type:** `string`
 
 ---
 

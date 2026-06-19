@@ -182,8 +182,8 @@ namespace ClassicUO.Configuration
         public bool BandageAgentCheckForBuff { get; set => SetProperty(ref field, value); } = false;
         public ushort BandageAgentGraphic { get; set => SetProperty(ref field, value); } = 0x0E21;
         public bool BandageAgentUseNewPacket { get; set => SetProperty(ref field, value); } = true;
-        public bool BandageAgentCheckHidden { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentCheckPoisoned { get; set => SetProperty(ref field, value); } = false;
+        public bool BandageAgentCheckHidden { get; set => SetProperty(ref field, value); } = true;
+        public bool BandageAgentCheckPoisoned { get; set => SetProperty(ref field, value); } = true;
         public int BandageAgentHPPercentage { get; set => SetProperty(ref field, value); } = 80;
         public bool BandageAgentCheckInvul { get; set => SetProperty(ref field, value); } = true;
         public bool BandageAgentBandageFriends { get; set => SetProperty(ref field, value); } = false;
@@ -191,6 +191,14 @@ namespace ClassicUO.Configuration
         public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
+        public partial bool BandageAgentUseJournalTrigger { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
+        public partial string BandageAgentJournalMessages { get; set; }
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;

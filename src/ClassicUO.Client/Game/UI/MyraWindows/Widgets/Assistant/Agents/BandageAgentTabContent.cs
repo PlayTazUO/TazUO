@@ -60,7 +60,7 @@ public static class BandageAgentTabContent
 
         root.Widgets.Add(enableRow);
 
-        // Delay
+        // Delay + HP threshold on the same row
         var delayBox = new MyraInputBox
         {
             Text = profile.BandageAgentDelay.ToString(),
@@ -78,30 +78,52 @@ public static class BandageAgentTabContent
         var delayRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
         delayRow.Widgets.Add(delayBox);
         delayRow.Widgets.Add(new MyraLabel(bandLang.BandageDelayMsLabel, MyraLabel.TextStyle.P));
-        root.Widgets.Add(new MyraSpacer(15, 1));
-        root.Widgets.Add(delayRow);
-
-        root.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.BandageAgentUseDexFormula,
-            b => profile.BandageAgentUseDexFormula = b,
-            bandLang.UseDexFormulaCheckbox,
-            bandLang.UseDexFormulaTooltip
-        ));
-
-        root.Widgets.Add(MyraCheckButton.CreateWithCallback(
-            profile.BandageAgentCheckForBuff,
-            b => profile.BandageAgentCheckForBuff = b,
-            bandLang.UseBandageBuffCheckbox,
-            bandLang.UseBandageBuffTooltip
-        ));
-
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        delayRow.Widgets.Add(new MyraSpacer(15, 1));
+        delayRow.Widgets.Add(MyraHSlider.SliderWithLabel(
             bandLang.HealthThresholdSliderLabel,
             out _,
             v => profile.BandageAgentHPPercentage = (int)v,
             1, 99,
             profile.BandageAgentHPPercentage
         ));
+        root.Widgets.Add(new MyraSpacer(15, 1));
+        root.Widgets.Add(delayRow);
+
+        // Journal messages below delay/HP
+        root.Widgets.Add(new MyraLabel(TazLang.Get("bandageagent_journalmessages_label"), MyraLabel.TextStyle.P));
+        var journalMessageBox = new MyraInputBox
+        {
+            Text = profile.BandageAgentJournalMessages,
+            Tooltip = TazLang.Get("bandageagent_journalmessages_tooltip"),
+            Width = 300,
+        };
+        journalMessageBox.TextChangedByUser += (_, _) =>
+        {
+            profile.BandageAgentJournalMessages = journalMessageBox.Text ?? "";
+        };
+        root.Widgets.Add(journalMessageBox);
+
+        // Timing mode checkboxes in one row
+        var timingRow = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+        timingRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BandageAgentUseDexFormula,
+            b => profile.BandageAgentUseDexFormula = b,
+            bandLang.UseDexFormulaCheckbox,
+            bandLang.UseDexFormulaTooltip
+        ));
+        timingRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BandageAgentCheckForBuff,
+            b => profile.BandageAgentCheckForBuff = b,
+            bandLang.UseBandageBuffCheckbox,
+            bandLang.UseBandageBuffTooltip
+        ));
+        timingRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.BandageAgentUseJournalTrigger,
+            b => profile.BandageAgentUseJournalTrigger = b,
+            TazLang.Get("bandageagent_journaltrigger"),
+            TazLang.Get("bandageagent_journaltrigger_tooltip")
+        ));
+        root.Widgets.Add(timingRow);
 
         root.Widgets.Add(new MyraSpacer(15, 1));
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
