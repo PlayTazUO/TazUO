@@ -48,11 +48,14 @@ namespace ClassicUO.Game.Managers
         private bool HasBandagingBuff { get; set; } = false;
         private bool UseDexFormula => ProfileManager.CurrentProfile?.BandageAgentUseDexFormula ?? false;
         private bool DisableSelfHeal => ProfileManager.CurrentProfile?.BandageAgentDisableSelfHeal ?? false;
+        private bool UseJournalTrigger => ProfileManager.CurrentProfile?.BandageAgentUseJournalTrigger ?? false;
+        private string JournalMessages => ProfileManager.CurrentProfile?.BandageAgentJournalMessages ?? "";
 
         private BandageManager()
         {
             EventSink.OnBuffAddedInternal += OnBuffAdded;
             EventSink.OnBuffRemovedInternal += OnBuffRemoved;
+            EventSink.JournalEntryAdded += OnJournalEntryAdded;
         }
 
         public void SetPoisoned(uint serial, bool status)
@@ -68,6 +71,27 @@ namespace ClassicUO.Game.Managers
         {
             if (e.Buff.Type == BuffIconType.Healing) HasBandagingBuff = true;
             if (e.Buff.Type == BuffIconType.Veterinary) HasBandagingBuff = true;
+        }
+
+        private void OnJournalEntryAdded(object sender, JournalEntry e)
+        {
+            if (!IsEnabled || !UseJournalTrigger || e == null) return;
+            if (string.IsNullOrEmpty(e.Text)) return;
+
+            string messages = JournalMessages;
+            if (string.IsNullOrWhiteSpace(messages)) return;
+
+            string[] triggers = messages.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            foreach (string trigger in triggers)
+            {
+                if (!string.IsNullOrEmpty(trigger) && e.Text.Contains(trigger, StringComparison.OrdinalIgnoreCase))
+                {
+                    _nextBandageTime = 0;
+                    HasBandagingBuff = false;
+                    VerifyTimer();
+                    return;
+                }
+            }
         }
 
         private void OnBuffRemoved(object sender, BuffEventArgs e)
@@ -353,6 +377,7 @@ namespace ClassicUO.Game.Managers
             ClearAllPendingHeals();
             EventSink.OnBuffAddedInternal -= OnBuffAdded;
             EventSink.OnBuffRemovedInternal -= OnBuffRemoved;
+            EventSink.JournalEntryAdded -= OnJournalEntryAdded;
             Instance = null;
         }
     }
