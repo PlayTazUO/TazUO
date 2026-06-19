@@ -810,6 +810,26 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
         public partial int PathfindingZLevelDiff { get; set; }
 
+        // Maximum number of A* nodes the local (in-game) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
+        public partial int PathfindingMaxNodes { get; set; }
+
+        // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_NODES, 1000000)]
+        public partial int WorldMapPathfindingMaxNodes { get; set; }
+
+        // How many times world map navigation will replan around a blocked tile before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_RETRIES, 3)]
+        public partial int WorldMapPathfindingMaxRetries { get; set; }
+
+        // Wall-clock cap (milliseconds) on a single world map pathfinding search.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_TIMEOUT, 5000)]
+        public partial int WorldMapPathfindingTimeout { get; set; }
+
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.SINGLE_CLICK_SET_LAST_TARG, true)]
         public partial bool SingleClickMobileSetsLastTarget { get; set; }

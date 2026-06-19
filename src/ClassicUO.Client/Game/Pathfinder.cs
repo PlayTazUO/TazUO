@@ -19,6 +19,12 @@ namespace ClassicUO.Game
     public sealed class Pathfinder
     {
         private const int PATHFINDER_MAX_NODES = 150000;
+
+        // Node budget for the A* search. User-configurable; falls back to the default
+        // when no profile is loaded (e.g. during early startup).
+        private static int MaxNodes => ProfileManager.CurrentProfile?.PathfindingMaxNodes > 0
+            ? ProfileManager.CurrentProfile.PathfindingMaxNodes
+            : PATHFINDER_MAX_NODES;
         private static PathNode _goalNode;
         private static int _pathfindDistance;
         private static readonly PriorityQueue _openSet = new();
@@ -1025,7 +1031,7 @@ namespace ClassicUO.Game
             _endPointZ = z;
             _pathfindDistance = distance;
 
-            if (!FindPath(PATHFINDER_MAX_NODES, ignoreAutowalkState: true))
+            if (!FindPath(MaxNodes, ignoreAutowalkState: true))
             {
                 return null;
             }
@@ -1063,7 +1069,7 @@ namespace ClassicUO.Game
             _pathfindDistance = distance;
             AutoWalking = true;
 
-            if (FindPath(PATHFINDER_MAX_NODES, ignoreAutowalkState: false))
+            if (FindPath(MaxNodes, ignoreAutowalkState: false))
             {
                 _pointIndex = 1;
                 ProcessAutoWalk();

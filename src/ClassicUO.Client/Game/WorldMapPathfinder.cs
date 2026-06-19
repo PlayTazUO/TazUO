@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility.Logging;
 
@@ -22,11 +23,11 @@ namespace ClassicUO.Game
     /// </summary>
     public static class WorldMapPathfinder
     {
-        /// <summary>Hard cap on A* nodes. 1M ≈ 100MB peak; reached only for truly impossible destinations.</summary>
+        /// <summary>Default hard cap on A* nodes. 1M ≈ 100MB peak; reached only for truly impossible destinations.</summary>
         private const int MAX_NODES = 1_000_000;
 
         /// <summary>
-        /// Wall-clock cap on a single search. Prevents a hopeless query (unreachable island,
+        /// Default wall-clock cap on a single search. Prevents a hopeless query (unreachable island,
         /// wrong map, etc.) from locking out new clicks.
         /// </summary>
         private const int MAX_SEARCH_MS = 5000;
@@ -128,6 +129,12 @@ namespace ClassicUO.Game
 
             int myVersion = Interlocked.Increment(ref _searchVersion);
 
+            // Read user-configurable limits on the main thread (the background worker must not
+            // touch ProfileManager). Fall back to the defaults when no profile is loaded.
+            var profile = ProfileManager.CurrentProfile;
+            int maxNodes = profile?.WorldMapPathfindingMaxNodes > 0 ? profile.WorldMapPathfindingMaxNodes : MAX_NODES;
+            int maxSearchMs = profile?.WorldMapPathfindingTimeout > 0 ? profile.WorldMapPathfindingTimeout : MAX_SEARCH_MS;
+
             Task.Run(() =>
             {
                 var result = new List<PathPoint>();
@@ -154,8 +161,8 @@ namespace ClassicUO.Game
                     {
                         // Environment.TickCount64 is a monotonic clock safe to read from any thread.
                         // Time.Ticks is a uint game-loop counter — not volatile and wraps at ~49 days.
-                        long deadline = Environment.TickCount64 + MAX_SEARCH_MS;
-                        result = FindPath(mapIndex, startX, startY, startZ, targetX, targetY, chunkCache, myVersion, deadline);
+                        long deadline = Environment.TickCount64 + maxSearchMs;
+                        result = FindPath(mapIndex, startX, startY, startZ, targetX, targetY, chunkCache, myVersion, deadline, maxNodes);
                     }
                 }
                 catch (Exception ex)
@@ -288,7 +295,7 @@ namespace ClassicUO.Game
 
         private static List<PathPoint> FindPath(int mapIndex, int startX, int startY, sbyte startZ,
                                                  int destX, int destY, Dictionary<long, ChunkWalkData> chunkCache,
-                                                 int myVersion, long deadlineTicks)
+                                                 int myVersion, long deadlineTicks, int maxNodes)
         {
             var result = new List<PathPoint>();
             var openQueue = new System.Collections.Generic.PriorityQueue<Node, int>();
@@ -306,7 +313,7 @@ namespace ClassicUO.Game
 
             Node goal = null;
 
-            while (openQueue.Count > 0 && nodeCount < MAX_NODES)
+            while (openQueue.Count > 0 && nodeCount < maxNodes)
             {
                 Node current = openQueue.Dequeue();
                 long key = PackKey(current.X, current.Y);
