@@ -72,6 +72,7 @@ namespace ClassicUO.Configuration
     {
         public string OptionsTitle { get; set; } = "Options";
         public string Search { get; set; } = "Search";
+        public string SearchEllipses { get; set; } = "Search...";
         public string Apply { get; set; } = "Apply";
         public string ButtonGeneral { get; set; } = "General";
         public string ButtonSound { get; set; } = "Sound";
@@ -261,6 +262,7 @@ namespace ClassicUO.Configuration
             public string Fade { get; set; } = "Fade";
             public string Field { get; set; } = "Field";
             public string Font { get; set; } = "Font";
+            public string Footstep { get; set; } = "Footstep";
             public string Force { get; set; } = "Force";
             public string Format { get; set; } = "Format";
             public string Friend { get; set; } = "Friend";
@@ -316,6 +318,7 @@ namespace ClassicUO.Configuration
             public string Location { get; set; } = "Location";
             public string Lock { get; set; } = "Lock";
             public string Log { get; set; } = "Log";
+            public string Login { get; set; } = "Login";
             public string Loot { get; set; } = "Loot";
             public string Low { get; set; } = "Low";
             public string Magic { get; set; } = "Magic";
@@ -326,6 +329,7 @@ namespace ClassicUO.Configuration
             public string Miscellaneous { get; set; } = "Miscellaneous";
             public string Mobile { get; set; } = "Mobile";
             public string Mode { get; set; } = "Mode";
+            public string Model { get; set; } = "Model";
             public string Modern { get; set; } = "Modern";
             public string Modifier { get; set; } = "Modifier";
             public string Monster { get; set; } = "Monster";
@@ -432,6 +436,7 @@ namespace ClassicUO.Configuration
             public string Video { get; set; } = "Video";
             public string View { get; set; } = "View";
             public string Viewport { get; set; } = "Viewport";
+            public string Voice { get; set; } = "Voice";
             public string Volume { get; set; } = "Volume";
             public string WASD { get; set; } = "WASD";
             public string War { get; set; } = "War";

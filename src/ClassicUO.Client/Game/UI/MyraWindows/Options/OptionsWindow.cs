@@ -2,16 +2,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using ClassicUO.Common;
-using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
-using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Input;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Myra.Events;
@@ -27,11 +22,6 @@ public class OptionsWindow : MyraControl
 {
     private const int MAX_HEIGHT = 850;
     private const int MAX_WIDTH = 1200;
-
-    /// <summary>
-    ///     Category, (subcategory? widget)
-    /// </summary>
-    private readonly Dictionary<string, List<OptionItem>> _options = new();
 
     private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
     private readonly Dictionary<string, List<OptionEntry>> _searchIndex = new();
@@ -91,12 +81,12 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
-        SetupGameplayTab();
-        SetupInterfaceOptions();
-        SetupVideo();
-        SetupSound();
-        SetupChatOptions();
-        SetupMiscOptions();
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.Kw.Interface, InterfaceTab.GetContent());
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.MiscTab.Label, MiscTab.GetContent());
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.GameplayTab.GameplayLabel, GameplayTab.GetContent());
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.SoundTab.Label, SoundsTab.GetContent());
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.VideoTab.Label, VideoTab.GetContent());
+        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.LabelChatAndText, ChatTab.GetContent());
     }
 
     private void AddOptionSource(string category, IOptionSource source)
@@ -128,7 +118,7 @@ public class OptionsWindow : MyraControl
         _mainArea.AddRow(Proportion.Auto);
         _mainArea.AddRow(Proportion.Fill);
 
-        _searchField.HintText = "Search...";
+        _searchField.HintText = Language.Instance.GetModernOptionsGumpLanguage.SearchEllipses;
         _searchField.TextChangedByUser += SearchFieldOnTextChangedByUser;
         _mainArea.AddWidget(_searchField, 0, 0, null, 2);
 
@@ -142,7 +132,7 @@ public class OptionsWindow : MyraControl
         _optionsStack.Widgets.Add(_optionsPanel);
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
-        foreach (string category in _options.Keys.Concat(_optionSources.Keys).Distinct())
+        foreach (string category in _optionSources.Keys)
             categoryPanel.Widgets.Add(GetCategoryButton(category));
 
         SetRootContent(_mainArea);
@@ -179,20 +169,11 @@ public class OptionsWindow : MyraControl
 
         _searchPanel.Widgets.Clear();
 
+        // This gets collapsed by IDE; Need to construct a proper search results page anyways
         foreach ((string _, List<OptionEntry> entries) in _searchIndex)
-        {
-            foreach (OptionEntry entry in entries)
-            {
-                foreach (OptionEntry match in entry.Match(new SearchMetadata(searchText)))
-                    _searchPanel.Widgets.Add(match.Render());
-            }
-        }
-
-        foreach ((string _, List<OptionItem> items) in _options)
-        {
-            foreach (OptionItem item in items.Where(item => item.MatchesSearch(searchText)))
-                _searchPanel.Widgets.Add(item);
-        }
+        foreach (OptionEntry entry in entries)
+        foreach (OptionEntry match in entry.Match(new SearchMetadata(searchText)))
+            _searchPanel.Widgets.Add(match.Render());
 
         _optionsStack.Widgets.Clear();
         _optionsStack.Widgets.Add(_searchPanel);
@@ -233,126 +214,9 @@ public class OptionsWindow : MyraControl
 
         _lastCategory = category;
 
-        if (_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
-        {
-            foreach (IOptionSource source in sources)
-                _optionsPanel.Widgets.Add(source.Render());
-
+        if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
             return;
-        }
-
-        if (_options.TryGetValue(category, out List<OptionItem>? legacyItems))
-        {
-            foreach (OptionItem optionItem in legacyItems)
-                _optionsPanel.Widgets.Add(optionItem);
-        }
-    }
-
-    private void SetupInterfaceOptions()
-    {
-        const string interfaceKey = "Interface";
-        AddOptionSource(interfaceKey, InterfaceTab.GetContent());
-    }
-
-    private void SetupMiscOptions()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        AddOptionSource(lang.MiscTab.Label, MiscTab.GetContent());
-    }
-
-    private void SetupGameplayTab()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        AddOptionSource(lang.GameplayTab.GameplayLabel, GameplayTab.GetContent());
-    }
-
-    private void SetupSound()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.SoundTabLang soundLang = lang.SoundTab;
-        ModernOptionsGumpLanguage.Sound soundSubLang = lang.GetSound;
-
-        AddOptionSource(
-            soundLang.Label,
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    soundSubLang.EnableSound,
-                    new Accessor<bool>(() => profile.EnableSound),
-                    search: new SearchMetadata(soundSubLang.EnableSound, Keywords: ["Sound"])
-                ),
-                Option.Slider(
-                    soundSubLang.SharedVolume,
-                    0,
-                    100,
-                    new Accessor<float>(() => profile.SoundVolume, f => profile.SoundVolume = (int)f),
-                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Volume"])
-                ),
-                Option.Spacer(),
-                Option.Checkbox(
-                    soundSubLang.EnableMusic,
-                    new Accessor<bool>(() => profile.EnableMusic),
-                    search: new SearchMetadata(soundSubLang.EnableMusic, Keywords: ["Music"])
-                ),
-                Option.Slider(
-                    soundSubLang.SharedVolume,
-                    0,
-                    100,
-                    new Accessor<float>(() => profile.MusicVolume, f => profile.MusicVolume = (int)f),
-                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Music", "Volume"])
-                ),
-                Option.Spacer(),
-                Option.Checkbox(
-                    soundSubLang.LoginMusic,
-                    new Accessor<bool>(() => Settings.GlobalSettings.LoginMusic),
-                    search: new SearchMetadata(soundSubLang.LoginMusic, Keywords: ["Login", "Music"])
-                ),
-                Option.Slider(
-                    soundSubLang.SharedVolume,
-                    0,
-                    100,
-                    new Accessor<float>(() => Settings.GlobalSettings.LoginMusicVolume, f => Settings.GlobalSettings.LoginMusicVolume = (int)f),
-                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Login", "Volume"])
-                ),
-                Option.Spacer(),
-                Option.Checkbox(soundSubLang.PlayFootsteps, new Accessor<bool>(() => profile.EnableFootstepsSound), search: new SearchMetadata(soundSubLang.PlayFootsteps, Keywords: ["Footstep"])),
-                Option.Checkbox(soundSubLang.CombatMusic, new Accessor<bool>(() => profile.EnableCombatMusic), search: new SearchMetadata(soundSubLang.CombatMusic, Keywords: ["Combat", "Music"])),
-                Option.Checkbox(soundSubLang.BackgroundMusic, new Accessor<bool>(() => profile.ReproduceSoundsInBackground), search: new SearchMetadata(soundSubLang.BackgroundMusic, Keywords: ["Background", "Music"])),
-                Option.Spacer(),
-                OptionsUi.VisualContainer(
-                    new VisualContainerProps { LabelText = soundLang.VoiceToText },
-                    Option.Button(
-                        soundLang.CreateVoiceButton,
-                        () =>
-                        {
-                            var macroManager = MacroManager.TryGetMacroManager(World.Instance);
-                            if (macroManager == null) return;
-                            var macro = Macro.CreateFastMacro("Toggle Voice", MacroType.ToggleVoiceRecognition, MacroSubType.MSC_NONE);
-                            macroManager.PushToBack(macro);
-                            UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
-                        },
-                        search: new SearchMetadata(soundLang.CreateVoiceButton, Keywords: ["Voice"])
-                    ),
-                    Option.InputField(
-                        lang.GetTazUO.VoiceModelPath,
-                        new Accessor<string>(() => profile.VoiceModelPath, s => profile.VoiceModelPath = s),
-                        lang.GetTazUO.VoiceModelPathTooltip,
-                        search: new SearchMetadata(lang.GetTazUO.VoiceModelPath, Keywords: ["Voice", "Model"])
-                    )
-                )
-            ).WithSearch(new SearchMetadata(soundLang.Label, Keywords: [soundLang.Keywords], Tags: [soundLang.Tags]))
-        );
-    }
-
-    private void SetupVideo()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        AddOptionSource(lang.VideoTab.Label, VideoTab.GetContent());
-    }
-
-    private void SetupChatOptions()
-    {
-        string chatAndSpeechKey = Language.Instance.GetModernOptionsGumpLanguage.LabelChatAndText;
-        AddOptionSource(chatAndSpeechKey, ChatTab.GetContent());
+        foreach (IOptionSource source in sources)
+            _optionsPanel.Widgets.Add(source.Render());
     }
 }

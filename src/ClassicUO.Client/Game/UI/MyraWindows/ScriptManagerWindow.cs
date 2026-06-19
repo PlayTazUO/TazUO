@@ -657,20 +657,18 @@ public class ScriptManagerWindow : MyraControl
         catch (Exception ex) { GameActions.Print(World.Instance, $"Error renaming group: {ex.Message}", 32); Log.Error(ex.ToString()); }
     }
 
-    private void ShowZipDeleteConfirm(ZipScriptFile script)
-    {
+    private void ShowZipDeleteConfirm(ZipScriptFile script) =>
         new ZipDeleteDialog(
             script.FileName,
             Path.GetFileName(script.ZipPath),
             onDeleteScript: () => PerformDeleteZipScript(script),
             onDeleteZip:    () => PerformDeleteEntireZip(script));
-    }
 
     private void PerformDeleteZipScript(ZipScriptFile script)
     {
         try
         {
-            using var archive = ZipFile.Open(script.ZipPath, ZipArchiveMode.Update);
+            using ZipArchive archive = ZipFile.Open(script.ZipPath, ZipArchiveMode.Update);
             archive.GetEntry(script.EntryPath)?.Delete();
             LegionScripting.LegionScripting.LoadedScripts.Remove(script);
             _pendingReload = true;

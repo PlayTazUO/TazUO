@@ -3,7 +3,6 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 

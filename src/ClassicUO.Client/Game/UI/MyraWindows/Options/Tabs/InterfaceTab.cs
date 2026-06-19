@@ -1,7 +1,5 @@
-using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
-using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
