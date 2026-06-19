@@ -54,7 +54,6 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private static readonly HashSet<uint> _huedCorpses = new();
         private static readonly Queue<uint> _huedCorpseOrder = new();
-        private static readonly object _huedCorpsesLock = new();
 
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
@@ -203,15 +202,12 @@ namespace ClassicUO.Game.Managers
         {
             if (serial == 0) return;
 
-            lock (_huedCorpsesLock)
-            {
-                if (!_huedCorpses.Add(serial)) return;
+            if (!_huedCorpses.Add(serial)) return;
 
-                _huedCorpseOrder.Enqueue(serial);
+            _huedCorpseOrder.Enqueue(serial);
 
-                while (_huedCorpseOrder.Count > MaxLootedCorpseHistory && _huedCorpseOrder.TryDequeue(out uint oldest))
-                    _huedCorpses.Remove(oldest);
-            }
+            while (_huedCorpseOrder.Count > MaxLootedCorpseHistory && _huedCorpseOrder.TryDequeue(out uint oldest))
+                _huedCorpses.Remove(oldest);
         }
 
         /// <summary>
@@ -220,12 +216,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public static void ApplyLootedHueIfNeeded(Item corpse)
         {
-            if (corpse == null) return;
-
-            lock (_huedCorpsesLock)
-            {
-                if (!_huedCorpses.Contains(corpse.Serial)) return;
-            }
+            if (corpse == null || !_huedCorpses.Contains(corpse.Serial)) return;
 
             corpse.Hue = LootedCorpseHue;
         }
