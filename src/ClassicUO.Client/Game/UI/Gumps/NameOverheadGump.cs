@@ -39,6 +39,7 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _useSplitLayout;
         private static int currentHeight = 22;
         private static readonly int COLLISION_SPACING = 8;
+        private static readonly Dictionary<long, int[]> RoundedRectangleInsetCache = new();
         private const int MIN_NAMEPLATE_WIDTH = 60;
         private const int NAMEPLATE_HORIZONTAL_PADDING = 4;
         private const int NAMEPLATE_VERTICAL_PADDING = 4;
@@ -1357,21 +1358,11 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
+            int[] insets = GetRoundedRectangleInsets(bounds.Height, radius);
+
             for (int row = 0; row < bounds.Height; row++)
             {
-                int inset = 0;
-
-                if (row < radius)
-                {
-                    double dy = radius - row - 0.5d;
-                    inset = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
-                }
-                else if (row >= bounds.Height - radius)
-                {
-                    double dy = row - (bounds.Height - radius) + 0.5d;
-                    inset = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
-                }
-
+                int inset = insets[row];
                 int width = bounds.Width - inset * 2;
 
                 if (width > 0)
@@ -1389,23 +1380,20 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             radius = Math.Clamp(radius, 0, Math.Min(bounds.Width, bounds.Height) >> 1);
-            int clipRight = bounds.X + Math.Min(bounds.Width, clipWidth);
+            int clippedWidth = Math.Min(bounds.Width, clipWidth);
+
+            if (radius <= 0)
+            {
+                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Y, clippedWidth, bounds.Height), hueVector);
+                return;
+            }
+
+            int clipRight = bounds.X + clippedWidth;
+            int[] insets = GetRoundedRectangleInsets(bounds.Height, radius);
 
             for (int row = 0; row < bounds.Height; row++)
             {
-                int inset = 0;
-
-                if (radius > 0 && row < radius)
-                {
-                    double dy = radius - row - 0.5d;
-                    inset = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
-                }
-                else if (radius > 0 && row >= bounds.Height - radius)
-                {
-                    double dy = row - (bounds.Height - radius) + 0.5d;
-                    inset = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
-                }
-
+                int inset = insets[row];
                 int rowLeft = bounds.X + inset;
                 int rowRight = Math.Min(bounds.Right - inset, clipRight);
                 int width = rowRight - rowLeft;
@@ -1415,6 +1403,35 @@ namespace ClassicUO.Game.UI.Gumps
                     batcher.Draw(texture, new Rectangle(rowLeft, bounds.Y + row, width, 1), hueVector);
                 }
             }
+        }
+
+        private static int[] GetRoundedRectangleInsets(int height, int radius)
+        {
+            long cacheKey = ((long)height << 32) | (uint)radius;
+
+            if (RoundedRectangleInsetCache.TryGetValue(cacheKey, out int[] insets))
+            {
+                return insets;
+            }
+
+            insets = new int[height];
+
+            for (int row = 0; row < height; row++)
+            {
+                if (row < radius)
+                {
+                    double dy = radius - row - 0.5d;
+                    insets[row] = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
+                }
+                else if (row >= height - radius)
+                {
+                    double dy = row - (height - radius) + 0.5d;
+                    insets[row] = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
+                }
+            }
+
+            RoundedRectangleInsetCache[cacheKey] = insets;
+            return insets;
         }
 
         public override void Dispose()
