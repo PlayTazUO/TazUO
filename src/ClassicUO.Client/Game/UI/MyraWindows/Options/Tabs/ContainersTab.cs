@@ -284,12 +284,15 @@ public static class ContainersTab
             ),
             Option.HuePicker(
                 tuoLang.BackgroundColor,
-                new Accessor<ushort>(() => profile.AltGridContainerBackgroundHue, h =>
-                {
-                    profile.AltGridContainerBackgroundHue = h;
-                    GridContainer.UpdateAllGridContainers();
-                }),
-                search: new SearchMetadata(tuoLang.BackgroundColor, Keywords: [kw.Background, kw.Color])
+                new Accessor<ushort>(
+                    () => profile.AltGridContainerBackgroundHue,
+                    h =>
+                    {
+                        profile.AltGridContainerBackgroundHue = h;
+                        GridContainer.UpdateAllGridContainers();
+                    }
+                ),
+                new SearchMetadata(tuoLang.BackgroundColor, Keywords: [kw.Background, kw.Color])
             ),
             Option.Checkbox(
                 tuoLang.UseContainersHue,
@@ -319,14 +322,14 @@ public static class ContainersTab
                 tuoLang.DefaultGridRows,
                 1,
                 20,
-                new Accessor<float>(() => profile.Grid_DefaultRows, f => profile.Grid_DefaultRows = (int)f),
+                new Accessor<int>(() => profile.Grid_DefaultRows),
                 search: new SearchMetadata(tuoLang.DefaultGridRows, Keywords: [kw.Row])
             ),
             Option.Slider(
                 tuoLang.DefaultGridColumns,
                 1,
                 20,
-                new Accessor<float>(() => profile.Grid_DefaultColumns, f => profile.Grid_DefaultColumns = (int)f),
+                new Accessor<int>(() => profile.Grid_DefaultColumns),
                 search: new SearchMetadata(tuoLang.DefaultGridColumns, Keywords: [kw.Column])
             )
         );
@@ -350,7 +353,7 @@ public static class ContainersTab
                 tuoLang.GridHighlightSize,
                 1,
                 5,
-                new Accessor<float>(() => profile.GridHighlightSize, f => profile.GridHighlightSize = (int)f),
+                new Accessor<int>(() => profile.GridHighlightSize),
                 search: new SearchMetadata(tuoLang.GridHighlightSize, Keywords: [kw.Highlight, kw.Size])
             ),
             Option.Checkbox(

@@ -39,6 +39,10 @@ internal static class Option
     public static OptionEntry ComboBox(string label, int value, string[] options, Action<int> onChange, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => OptionsFactory.CreateComboBox(label, value, options, onChange, tooltip), search ?? new SearchMetadata(label));
 
+    public static OptionEntry ComboBox<TValue>(string label, Accessor<TValue> backingProp, TValue[] options, string? tooltip = null, SearchMetadata? search = null)
+        where TValue : IEquatable<TValue> =>
+        new(() => OptionsFactory.CreateComboBox(label, backingProp.Get(), options, backingProp.Set, tooltip), search ?? new SearchMetadata(label));
+
     public static OptionEntry InputField(string label, Accessor<string> backingProperty, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => OptionsFactory.PropBoundInputField(label, backingProperty, tooltip), search ?? new SearchMetadata(label));
 

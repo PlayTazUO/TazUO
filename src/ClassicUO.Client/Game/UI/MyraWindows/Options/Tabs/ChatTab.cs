@@ -51,12 +51,21 @@ public static class ChatTab
                     new Accessor<bool>(() => profile.HideChatGradient),
                     search: new SearchMetadata(speechLang.ChatGradient)
                 ),
-                Option.Checkbox(speechLang.HideGuildChat, new Accessor<bool>(() => profile.IgnoreGuildMessages),
-                    search: new SearchMetadata(speechLang.HideGuildChat)),
-                Option.Checkbox(speechLang.HideAllianceChat, new Accessor<bool>(() => profile.IgnoreAllianceMessages),
-                    search: new SearchMetadata(speechLang.HideAllianceChat)),
-                Option.Checkbox(speechLang.DisableSystemChat, new Accessor<bool>(() => profile.DisableSystemChat),
-                    search: new SearchMetadata(speechLang.DisableSystemChat))
+                Option.Checkbox(
+                    speechLang.HideGuildChat,
+                    new Accessor<bool>(() => profile.IgnoreGuildMessages),
+                    search: new SearchMetadata(speechLang.HideGuildChat)
+                ),
+                Option.Checkbox(
+                    speechLang.HideAllianceChat,
+                    new Accessor<bool>(() => profile.IgnoreAllianceMessages),
+                    search: new SearchMetadata(speechLang.HideAllianceChat)
+                ),
+                Option.Checkbox(
+                    speechLang.DisableSystemChat,
+                    new Accessor<bool>(() => profile.DisableSystemChat),
+                    search: new SearchMetadata(speechLang.DisableSystemChat)
+                )
             ),
             GetActivationSection(),
             GetColorSection()
@@ -70,10 +79,18 @@ public static class ChatTab
         ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.Vertical(
-            Option.Checkbox(speechLang.ScaleSpeechDelay, new Accessor<bool>(() => profile.ScaleSpeechDelay),
-                search: new SearchMetadata(speechLang.ScaleSpeechDelay)),
-            Option.Slider(speechLang.SpeechDelay, 0, 1000, new Accessor<float>(() => profile.SpeechDelay, f => profile.SpeechDelay = (int)f),
-                search: new SearchMetadata(speechLang.SpeechDelay))
+            Option.Checkbox(
+                speechLang.ScaleSpeechDelay,
+                new Accessor<bool>(() => profile.ScaleSpeechDelay),
+                search: new SearchMetadata(speechLang.ScaleSpeechDelay)
+            ),
+            Option.Slider(
+                speechLang.SpeechDelay,
+                0,
+                1000,
+                new Accessor<int>(() => profile.SpeechDelay),
+                search: new SearchMetadata(speechLang.SpeechDelay)
+            )
         );
     }
 
@@ -84,12 +101,21 @@ public static class ChatTab
         ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.Vertical(
-            Option.Checkbox(speechLang.ChatEnterActivation, new Accessor<bool>(() => profile.ActivateChatAfterEnter),
-                search: new SearchMetadata(speechLang.ChatEnterActivation)),
-            Option.Checkbox(speechLang.ChatEnterSpecial, new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
-                search: new SearchMetadata(speechLang.ChatEnterSpecial)),
-            Option.Checkbox(speechLang.ShiftEnterChat, new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
-                search: new SearchMetadata(speechLang.ShiftEnterChat))
+            Option.Checkbox(
+                speechLang.ChatEnterActivation,
+                new Accessor<bool>(() => profile.ActivateChatAfterEnter),
+                search: new SearchMetadata(speechLang.ChatEnterActivation)
+            ),
+            Option.Checkbox(
+                speechLang.ChatEnterSpecial,
+                new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
+                search: new SearchMetadata(speechLang.ChatEnterSpecial)
+            ),
+            Option.Checkbox(
+                speechLang.ShiftEnterChat,
+                new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
+                search: new SearchMetadata(speechLang.ShiftEnterChat)
+            )
         );
     }
 
@@ -108,18 +134,12 @@ public static class ChatTab
                 new Accessor<ushort>(() => profile.YellHue, h => profile.YellHue = h),
                 new SearchMetadata(speechLang.YellColor)
             ),
-            Option.HuePicker(speechLang.PartyColor, new Accessor<ushort>(() => profile.PartyMessageHue, h => profile.PartyMessageHue = h),
-                new SearchMetadata(speechLang.PartyColor)),
-            Option.HuePicker(speechLang.AllianceColor, new Accessor<ushort>(() => profile.AllyMessageHue, h => profile.AllyMessageHue = h),
-                new SearchMetadata(speechLang.AllianceColor)),
-            Option.HuePicker(speechLang.EmoteColor, new Accessor<ushort>(() => profile.EmoteHue, h => profile.EmoteHue = h),
-                new SearchMetadata(speechLang.EmoteColor)),
-            Option.HuePicker(speechLang.WhisperColor, new Accessor<ushort>(() => profile.WhisperHue, h => profile.WhisperHue = h),
-                new SearchMetadata(speechLang.WhisperColor)),
-            Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue, h => profile.GuildMessageHue = h),
-                new SearchMetadata(speechLang.GuildColor)),
-            Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue, h => profile.ChatMessageHue = h),
-                new SearchMetadata(speechLang.CharColor))
+            Option.HuePicker(speechLang.PartyColor, new Accessor<ushort>(() => profile.PartyMessageHue), new SearchMetadata(speechLang.PartyColor)),
+            Option.HuePicker(speechLang.AllianceColor, new Accessor<ushort>(() => profile.AllyMessageHue), new SearchMetadata(speechLang.AllianceColor)),
+            Option.HuePicker(speechLang.EmoteColor, new Accessor<ushort>(() => profile.EmoteHue), new SearchMetadata(speechLang.EmoteColor)),
+            Option.HuePicker(speechLang.WhisperColor, new Accessor<ushort>(() => profile.WhisperHue), new SearchMetadata(speechLang.WhisperColor)),
+            Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue), new SearchMetadata(speechLang.GuildColor)),
+            Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue), new SearchMetadata(speechLang.CharColor))
         );
     }
 
@@ -132,6 +152,7 @@ public static class ChatTab
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.ChatTabLang.JournalSection journalLang = lang.ChatTab.Journal;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+
         return OptionsUi.Vertical(
             GetJournalSubTabContent()
         ).WithSearch(new SearchMetadata(journalLang.Label, [kw.Journal, kw.Log]));
@@ -179,16 +200,31 @@ public static class ChatTab
                 }),
                 new SearchMetadata(journalLang.JournalBackgroundColor)
             ),
-            Option.Checkbox(journalLang.JournalHideBorders, new Accessor<bool>(() => profile.HideJournalBorder),
-                search: new SearchMetadata(journalLang.JournalHideBorders)),
-            Option.Checkbox(journalLang.HideTimestamp, new Accessor<bool>(() => profile.HideJournalTimestamp),
-                search: new SearchMetadata(journalLang.HideTimestamp)),
-            Option.Checkbox(journalLang.JournalHideSystemPrefix, new Accessor<bool>(() => profile.HideJournalSystemPrefix),
-                search: new SearchMetadata(journalLang.JournalHideSystemPrefix)),
-            Option.Checkbox(journalLang.MakeAnchorable, new Accessor<bool>(() => profile.JournalAnchorEnabled),
-                search: new SearchMetadata(journalLang.MakeAnchorable)),
-            Option.Checkbox(journalLang.SaveJournalToFile, new Accessor<bool>(() => profile.SaveJournalToFile),
-                search: new SearchMetadata(journalLang.SaveJournalToFile))
+            Option.Checkbox(
+                journalLang.JournalHideBorders,
+                new Accessor<bool>(() => profile.HideJournalBorder),
+                search: new SearchMetadata(journalLang.JournalHideBorders)
+            ),
+            Option.Checkbox(
+                journalLang.HideTimestamp,
+                new Accessor<bool>(() => profile.HideJournalTimestamp),
+                search: new SearchMetadata(journalLang.HideTimestamp)
+            ),
+            Option.Checkbox(
+                journalLang.JournalHideSystemPrefix,
+                new Accessor<bool>(() => profile.HideJournalSystemPrefix),
+                search: new SearchMetadata(journalLang.JournalHideSystemPrefix)
+            ),
+            Option.Checkbox(
+                journalLang.MakeAnchorable,
+                new Accessor<bool>(() => profile.JournalAnchorEnabled),
+                search: new SearchMetadata(journalLang.MakeAnchorable)
+            ),
+            Option.Checkbox(
+                journalLang.SaveJournalToFile,
+                new Accessor<bool>(() => profile.SaveJournalToFile),
+                search: new SearchMetadata(journalLang.SaveJournalToFile)
+            )
         );
     }
 
