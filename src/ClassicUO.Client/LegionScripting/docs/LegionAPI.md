@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/18/26`.*
+*This was generated on `6/19/26`.*
 
 ## Properties
 ### `Events`
@@ -103,6 +103,28 @@ You can now type `-updateapi` in game to download the latest API.py file.
 **Type:** `ushort`
 
  The graphic of the last targeting object
+
+
+### `LastSpellIndex`
+
+**Type:** `int`
+
+ The index of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
+ ```
+
+
+### `LastSpellName`
+
+**Type:** `string`
+
+ The name of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell: " + API.LastSpellName)
+ ```
 
 
 ### `Found`
@@ -2421,6 +2443,25 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `seconds` | `double` | ❌ No |  |
 
 **Return Type:** `IList<ApiSoundEntry>`
+
+---
+
+### PlaySound
+`(index)`
+ Play a sound effect locally (only audible to you).
+ Example:
+ ```py
+ API.PlaySound(0x13E)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `index` | `int` | ❌ No | The sound effect ID to play |
+
+**Return Type:** `void` *(Does not return anything)*
 
 ---
 

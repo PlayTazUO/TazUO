@@ -54,11 +54,13 @@ All notable changes to TazUO will be recorded here.
 * A few minor ui fixes where focus gained was not needed - ([bittiez](https://github.com/bittiez))
 * Fix: spell bar hotkeys not firing when Scroll Lock is on - [P.R 548](https://github.com/PlayTazUO/TazUO/pull/549) ([eddo87](https://github.com/eddo87))
 * Fixed UltimaLive block reloads leaving the reloaded map chunk untracked, so it could never be garbage collected and stayed loaded until relog - [P.R 556](https://github.com/PlayTazUO/TazUO/pull/556) ([bittiez](https://github.com/bittiez))
+* Fix IsFlying flag reference and add missing CantWalkOrRun speed mode - [P.R 560](https://github.com/PlayTazUO/TazUO/pull/560) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
 * Fixed a legion bug where control/gump `.IsDisposed` was not reported correctly. - ([bittiez](https://github.com/bittiez))
 * Added `API.GetClilocString(cliloc, englishOnly=False)` to retrieve cliloc strings from scripts - [P.R 546](https://github.com/PlayTazUO/TazUO/pull/546) ([bittiez](https://github.com/bittiez))
+* Added `API.PlaySound(index)` to play a sound effect locally, `API.LastSpellIndex` to get the index of the last spell cast, and `API.LastSpellName` to get the name of the last spell cast - [P.R 561](https://github.com/PlayTazUO/TazUO/pull/561) ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
@@ -66,7 +68,7 @@ All notable changes to TazUO will be recorded here.
 * Refactored PromptPopupWindow into a reusable text prompt and replaced InputRequest with it - [P.R 509](https://github.com/PlayTazUO/TazUO/pull/509) ([bittiez](https://github.com/bittiez))
 * Managed zlib is now a global setting, defaults to enabled on Linux and disabled on Windows/Mac, and the `-zlib` arg now persists the setting - [P.R 514](https://github.com/PlayTazUO/TazUO/pull/514) ([bittiez](https://github.com/bittiez))
 * Add option to disable corpse retry in autoloot - [P.R 525](https://github.com/PlayTazUO/TazUO/pull/525) ([bittiez](https://github.com/bittiez))
-
+* Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 557](https://github.com/PlayTazUO/TazUO/pull/557) ([bittiez](https://github.com/bittiez))
 
 ---
 

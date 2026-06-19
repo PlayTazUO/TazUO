@@ -268,6 +268,9 @@ namespace ClassicUO.Game
                 {
                     _corpses.Add(item);
                 }
+
+                // Reapply the looted hue if this corpse was previously looted and hued.
+                AutoLootManager.ApplyLootedHueIfNeeded(item);
             }
         }
 
