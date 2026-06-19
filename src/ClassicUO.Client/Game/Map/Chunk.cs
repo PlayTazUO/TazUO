@@ -542,6 +542,51 @@ namespace ClassicUO.Game.Map
             IsDestroyed = true;
         }
 
+        /// <summary>
+        /// Clears the chunk's tile objects for an in-place reload (UltimaLive block
+        /// update) WITHOUT destroying or unlinking the chunk itself. The chunk stays
+        /// owned by the map: its <see cref="Map.Map._terrainChunks"/> slot and
+        /// <see cref="Node"/> are left intact and <see cref="IsDestroyed"/> stays false.
+        /// Using <see cref="Clear"/>/<see cref="Destroy"/> here would remove
+        /// <see cref="Node"/> from the map's used-indices list while the slot still
+        /// references this chunk; the reloaded chunk would then no longer be tracked
+        /// for cleanup (it could never be garbage collected by ClearUnusedBlocks and
+        /// would stay loaded until relog).
+        /// </summary>
+        public void ClearForReload()
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    GameObject obj = Tiles[i, j];
+
+                    if (obj == null)
+                    {
+                        continue;
+                    }
+
+                    GameObject first = GetHeadObject(i, j);
+
+                    while (first != null)
+                    {
+                        GameObject next = first.TNext;
+
+                        if (!ReferenceEquals(first, _world.Player))
+                        {
+                            first.Destroy();
+                        }
+
+                        first.TPrevious = null;
+                        first.TNext = null;
+                        first = next;
+                    }
+
+                    Tiles[i, j] = null;
+                }
+            }
+        }
+
         public bool HasNoExternalData()
         {
             for (int i = 0; i < 8; i++)
