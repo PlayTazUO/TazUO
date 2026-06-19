@@ -8,7 +8,7 @@ public static class TinkererTab
     {
         var tabs = new MyraTabControl();
         tabs.AddTab("Clilocs", CililocsTabContent.Build);
-        tabs.AddTab("Hue View", HueViewTabContent.Build);
+        tabs.AddTab("Hues", HueViewTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }
