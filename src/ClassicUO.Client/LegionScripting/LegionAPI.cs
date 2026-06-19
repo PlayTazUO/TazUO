@@ -329,6 +329,15 @@ namespace ClassicUO.LegionScripting
         public ushort LastTargetGraphic => OnMain(() => World.TargetManager.LastTargetInfo.Graphic);
 
         /// <summary>
+        /// The index of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell index: " + str(API.LastSpell))
+        /// ```
+        /// </summary>
+        public int LastSpell => GameActions.LastSpellIndex;
+
+        /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
         /// </summary>
         public uint Found { get; set; }
@@ -3076,6 +3085,16 @@ namespace ClassicUO.LegionScripting
 
             return entries;
         }
+
+        /// <summary>
+        /// Play a sound effect locally (only audible to you).
+        /// Example:
+        /// ```py
+        /// API.PlaySound(0x13E)
+        /// ```
+        /// </summary>
+        /// <param name="index">The sound effect ID to play</param>
+        public void PlaySound(int index) => OnMain(() => Client.Game.Audio.PlaySound(index));
 
         /// <summary>
         /// Check if the journal contains *any* of the strings in this list.
