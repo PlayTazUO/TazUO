@@ -33,6 +33,9 @@ public class OptionsWindow : MyraControl
     /// </summary>
     private readonly Dictionary<string, List<OptionItem>> _options = new();
 
+    private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
+    private readonly Dictionary<string, List<OptionEntry>> _searchIndex = new();
+
     private readonly MyraGrid _mainArea = new();
 
     private readonly WrapPanel _optionsPanel = new()
@@ -96,6 +99,25 @@ public class OptionsWindow : MyraControl
         SetupMiscOptions();
     }
 
+    private void AddOptionSource(string category, IOptionSource source)
+    {
+        if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
+        {
+            sources = [];
+            _optionSources.Add(category, sources);
+        }
+
+        sources.Add(source);
+
+        if (!_searchIndex.TryGetValue(category, out List<OptionEntry>? entries))
+        {
+            entries = [];
+            _searchIndex.Add(category, entries);
+        }
+
+        entries.AddRange(source.GetOptions(new SearchMetadata(Tags: [category])));
+    }
+
     private void Build()
     {
         _mainArea.MinWidth = 400;
@@ -120,7 +142,7 @@ public class OptionsWindow : MyraControl
         _optionsStack.Widgets.Add(_optionsPanel);
         _mainArea.AddWidget(_optionsStack, 1, 1);
 
-        foreach (string category in _options.Keys)
+        foreach (string category in _options.Keys.Concat(_optionSources.Keys).Distinct())
             categoryPanel.Widgets.Add(GetCategoryButton(category));
 
         SetRootContent(_mainArea);
@@ -142,26 +164,38 @@ public class OptionsWindow : MyraControl
 
     private void SearchFieldOnTextChangedByUser(object? sender, ValueChangedEventArgs<string> e)
     {
-        string search = e.NewValue?.Trim() ?? string.Empty;
+        string searchText = e.NewValue?.Trim() ?? string.Empty;
 
-        if (string.IsNullOrEmpty(search))
+        if (string.IsNullOrEmpty(searchText))
         {
             _optionsStack.Widgets.Clear();
             _optionsStack.Widgets.Add(_optionsPanel);
 
             if (_lastCategory.NotNullNotEmpty())
                 ShowPage(_lastCategory);
-        }
-        else
-        {
-            _searchPanel.Widgets.Clear();
-            foreach ((string _, List<OptionItem> items) in _options)
-            foreach (OptionItem item in items.Where(item => item.MatchesSearch(search)))
-                _searchPanel.Widgets.Add(item);
 
-            _optionsStack.Widgets.Clear();
-            _optionsStack.Widgets.Add(_searchPanel);
+            return;
         }
+
+        _searchPanel.Widgets.Clear();
+
+        foreach ((string _, List<OptionEntry> entries) in _searchIndex)
+        {
+            foreach (OptionEntry entry in entries)
+            {
+                foreach (OptionEntry match in entry.Match(new SearchMetadata(searchText)))
+                    _searchPanel.Widgets.Add(match.Render());
+            }
+        }
+
+        foreach ((string _, List<OptionItem> items) in _options)
+        {
+            foreach (OptionItem item in items.Where(item => item.MatchesSearch(searchText)))
+                _searchPanel.Widgets.Add(item);
+        }
+
+        _optionsStack.Widgets.Clear();
+        _optionsStack.Widgets.Add(_searchPanel);
     }
 
     private static ButtonStyle _lastUsedButtonStylesheet = null!;
@@ -199,17 +233,25 @@ public class OptionsWindow : MyraControl
 
         _lastCategory = category;
 
-        foreach (OptionItem optionItem in _options[category])
-            _optionsPanel.Widgets.Add(optionItem);
+        if (_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
+        {
+            foreach (IOptionSource source in sources)
+                _optionsPanel.Widgets.Add(source.Render());
+
+            return;
+        }
+
+        if (_options.TryGetValue(category, out List<OptionItem>? legacyItems))
+        {
+            foreach (OptionItem optionItem in legacyItems)
+                _optionsPanel.Widgets.Add(optionItem);
+        }
     }
 
     private void SetupInterfaceOptions()
     {
         const string interfaceKey = "Interface";
-        if (!_options.ContainsKey(interfaceKey)) _options.Add(interfaceKey, []);
-        List<OptionItem> opt = _options[interfaceKey];
-
-        opt.Add(InterfaceTab.GetContent());
+        AddOptionSource(interfaceKey, InterfaceTab.GetContent());
     }
 
     private void SetupMiscOptions()
