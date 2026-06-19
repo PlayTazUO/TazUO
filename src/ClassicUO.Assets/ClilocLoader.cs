@@ -19,7 +19,7 @@ namespace ClassicUO.Assets
 
         public IReadOnlyDictionary<int, string> Entries => _entries;
 
-        public static Dictionary<int, string> LoadFromFile(string path)
+        public static Dictionary<int, string> LoadFromFile(string path, bool skipEmpty = true)
         {
             var result = new Dictionary<int, string>();
             if (!File.Exists(path)) return result;
@@ -45,6 +45,10 @@ namespace ClassicUO.Assets
                 reader.ReadUInt8();
                 short length = reader.ReadInt16LE();
                 string text = reader.ReadUTF8(length);
+
+                if(!text.NotNullNotEmpty() && skipEmpty)
+                    continue;
+
                 result[number] = text;
             }
 
