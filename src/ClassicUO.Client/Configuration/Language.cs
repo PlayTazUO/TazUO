@@ -13,12 +13,7 @@ namespace ClassicUO.Configuration
     public class Language
     {
         public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
-        public ErrorsLanguage ErrorsLanguage { get; set; } = new();
-        public MapLanguage MapLanguage { get; set; } = new();
-        public TopBarGumpLanguage TopBarGump { get; set; } = new();
-        public ScriptingLanguage Scripting { get; set; } = new();
         public AssistantLanguage Assistant { get; set; } = new();
-        public UiCommonsLanguage UiCommons { get; set; } = new();
 
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
@@ -635,35 +630,6 @@ namespace ClassicUO.Configuration
             public string HiddenLayersEnabled { get; set; } = "Enable visible layer system";
             #endregion
         }
-    }
-
-    public class ScriptingLanguage
-    {
-        public string OpenLocation { get; set; } = "Open Location";
-        public string OpenLocationFailed { get; set; } = "Failed to open location '{0}'";
-    }
-
-    public class UiCommonsLanguage
-    {
-        public string DragToResize { get; set; } = "Drag to resize";
-        public string MinMaxWindowButtonTooltip { get; set; } = "Minimize or maximize this window";
-        public string ResetWindowSizeButtonTooltip { get; set; } = "Reset window size";
-    }
-
-    public class ErrorsLanguage
-    {
-        public string CommandNotFound { get; set; } = "Command was not found: {0}";
-    }
-
-    public class MapLanguage
-    {
-        public string Follow { get; set; } = "Follow";
-        public string Yourself { get; set; } = "Yourself";
-    }
-
-    public class TopBarGumpLanguage
-    {
-        public string CommandsEntry { get; set; } = "Client Commands";
     }
 
     public class AssistantLanguage

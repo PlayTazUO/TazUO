@@ -517,8 +517,8 @@ public class WorldMapGump : ResizableGump
         ContextMenu?.Dispose();
         ContextMenu = new ContextMenuControl(this);
 
-        var follow = new ContextMenuItemEntry(Language.Instance.MapLanguage.Follow);
-        follow.Add(new ContextMenuItemEntry(Language.Instance.MapLanguage.Yourself, () => { following = World.Player; }, true));
+        var follow = new ContextMenuItemEntry(TazLang.Get("map_follow"));
+        follow.Add(new ContextMenuItemEntry(TazLang.Get("map_yourself"), () => { following = World.Player; }, true));
         if (World.Party != null && World.Party.Leader != 0)
         {
             foreach (PartyMember e in World.Party.Members)
