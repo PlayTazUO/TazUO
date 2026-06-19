@@ -335,7 +335,7 @@ namespace ClassicUO.LegionScripting
         /// API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
         /// ```
         /// </summary>
-        public int LastSpellIndex => GameActions.LastSpellIndex;
+        public int LastSpellIndex => OnMain(() => GameActions.LastSpellIndex);
 
         /// <summary>
         /// The name of the last spell cast by the player.
@@ -344,7 +344,7 @@ namespace ClassicUO.LegionScripting
         /// API.SysMsg("Last spell: " + API.LastSpellName)
         /// ```
         /// </summary>
-        public string LastSpellName => Game.Data.SpellDefinition.FullIndexGetSpell(GameActions.LastSpellIndex).Name;
+        public string LastSpellName => OnMain(() => Game.Data.SpellDefinition.FullIndexGetSpell(GameActions.LastSpellIndex).Name);
 
         /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
