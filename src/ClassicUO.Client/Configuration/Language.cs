@@ -611,15 +611,6 @@ namespace ClassicUO.Configuration
             public string AutoLootProgessBarEnable { get; set; } = "Show progress bar while looting";
             public string AutoLootHumanCorpses { get; set; } = "Loot human corpses? (Potentially player corpses)";
 
-            public string AutoSellMenu { get; set; } = "Auto Sell";
-            public string AutoSellEnable { get; set; } = "Enable auto sell feature";
-            public string AutoSellMaxUniques { get; set; } = "Maximum unique items per transaction";
-            public string AutoSellMaxUniquesTooltip { get; set; } = "This is the maximum number of unique items that will be sold at once. A value of 0 means unlimited. A stack of items counts as one towards this limit. Some servers block transactions that sell too many unique items.";
-            public string AutoSellMaxItems { get; set; } = "Maximum total items per transaction";
-            public string AutoSellMaxItemsTooltip { get; set; } = "This is the maximum number of items that will be sold at once. A value of 0 means unlimited. Some servers block transactions that sell too many items.";
-
-            public string AutoBuyMenu { get; set; } = "Auto Buy";
-            public string AutoBuyEnable { get; set; } = "Enable auto buy feature";
             public string GraphicChangeFilter { get; set; } = "Graphic Filter";
             public string Hotkeys { get; set; } = "Hotkeys";
 
@@ -709,49 +700,5 @@ namespace ClassicUO.Configuration
         public string SetQuickCureSpell { get; set; } = "Set cure spell";
         public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
         public string SingleClickLastTarg { get; set; } = "Single clicking a mobile will set it as last target.";
-
-        public AgentsLanguage Agents { get; set; } = new();
-    }
-
-    public class AgentsLanguage
-    {
-        public BandageAgentLanguage Bandage { get; set; } = new();
-    }
-
-    public class BandageAgentLanguage
-    {
-        public string ProfileNotLoaded { get; set; } = "Profile not loaded";
-        public string AutoHealWhenHpBelowThreshold { get; set; } = "Automatically use bandages to heal when HP drops below threshold.";
-        public string EnableBandageAgent { get; set; } = "Enable bandage agent";
-
-        public string BandageFriendsCheckbox { get; set; } = "Bandage friends";
-        public string BandageFriendsTooltip { get; set; } = "Bandage mobiles in Friends list";
-
-        public string BandageAlliesCheckbox { get; set; } = "Bandage allies";
-        public string BandageAlliesTooltip { get; set; } = "Bandage nearby guild/alliance members (notoriety: ally)";
-
-        public string BandagePetsCheckbox { get; set; } = "Bandage pets";
-        public string BandagePetsTooltip { get; set; } = "Bandage nearby owned pets";
-
-        public string DisableSelfHealCheckbox { get; set; } = "Disable self heal";
-        public string DisableSelfHealTooltip { get; set; } = "When enabled, bandage agent will only heal friends and not yourself";
-
-        public string BandageDelayTooltip { get; set; } = "Delay between bandage attempts in milliseconds (50-30000)";
-
-        public string BandageDelayMsLabel { get; set; } = "Delay (ms)";
-
-        public string UseDexFormulaCheckbox { get; set; } = "Use dex formula";
-        public string UseDexFormulaTooltip { get; set; } = "Use the dex formula instead of a set delay";
-
-        public string UseBandageBuffCheckbox { get; set; } = "Use bandaging buff";
-        public string UseBandageBuffTooltip { get; set; } = "Use bandaging buff instead of delay";
-
-        public string HealthThresholdSliderLabel { get; set; } = "HP percentage threshold";
-        public string UseNewPacketCheckbox { get; set; } = "Use new bandage packet";
-        public string BandageIfPoisonedCheckbox { get; set; } = "Bandage if poisoned";
-        public string SkipIfHidden { get; set; } = "Skip bandage if hidden";
-        public string SkipIfYellowHits { get; set; } = "Skip bandage if yellow hits";
-        public string BandageGraphicIdTooltip { get; set; } = "Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)";
-        public string BandageGraphicIdLabel { get; set; } = "Bandage graphic ID:";
     }
 }
