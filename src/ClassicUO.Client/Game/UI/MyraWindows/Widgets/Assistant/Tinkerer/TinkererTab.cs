@@ -11,6 +11,7 @@ public static class TinkererTab
         tabs.AddTab(TazLang.Get("tinkerer_tab_clilocs", "Clilocs"), CililocsTabContent.Build);
         tabs.AddTab(TazLang.Get("tinkerer_tab_hues", "Hues"), HueViewTabContent.Build);
         tabs.AddTab(TazLang.Get("tinkerer_tab_art", "Art"), ArtBrowserTabContent.Build);
+        tabs.AddTab(TazLang.Get("tinkerer_tab_land", "Land"), LandBrowserTabContent.Build);
         tabs.SelectFirst();
         return tabs;
     }
