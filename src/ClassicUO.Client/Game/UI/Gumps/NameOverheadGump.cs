@@ -932,27 +932,6 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                if (!string.IsNullOrEmpty(NameOverHeadManager.Search))
-                {
-                    string sText = NameOverHeadManager.Search.ToLower();
-                    if (item.Name == null || !item.Name.ToLower().Contains(sText))// && (!item.ItemData.Name?.ToLower().Contains(sText)))
-                    {
-                        if (World.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
-                        {
-                            if ((data != null && !data.ToLower().Contains(sText)) && (name != null && !name.ToLower().Contains(sText)))
-                            {
-                                IsVisible = false;
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            IsVisible = false;
-                            return true;
-                        }
-                    }
-                }
-
                 Rectangle bounds = Client.Game.UO.Arts.GetRealArtBounds(item.Graphic);
 
                 x = item.RealScreenPosition.X + (int)item.Offset.X + 22 + 5;

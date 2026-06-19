@@ -31,33 +31,33 @@ namespace ClassicUO.Game.UI.Gumps
 
         private string[] GetNamePlatePresetOptions() => new[]
         {
-            lang.GetTazUO.NamePlatePresetCustom,
-            lang.GetTazUO.NamePlatePresetOrion,
-            lang.GetTazUO.NamePlatePresetWowBlockyBars,
-            lang.GetTazUO.NamePlatePresetWowCleanHealth,
-            lang.GetTazUO.NamePlatePresetWowBlockyCast,
-            lang.GetTazUO.NamePlatePresetWowRedName
+            TazLang.Get("nameplate_preset_custom", "Custom"),
+            TazLang.Get("nameplate_preset_orion", "Orion"),
+            TazLang.Get("nameplate_preset_wow_blockybars", "WoW - Blocky Bars"),
+            TazLang.Get("nameplate_preset_wow_cleanhealth", "WoW - Clean Health"),
+            TazLang.Get("nameplate_preset_wow_blockycast", "WoW - Blocky Cast"),
+            TazLang.Get("nameplate_preset_wow_redname", "WoW - Red Name")
         };
 
         private string[] GetNamePlateBackgroundModeOptions() => new[]
         {
-            lang.GetTazUO.NamePlateBackgroundFixedColor,
-            lang.GetTazUO.NamePlateBackgroundNotorietyColor
+            TazLang.Get("nameplate_background_fixedcolor", "Fixed color"),
+            TazLang.Get("nameplate_background_notorietycolor", "Notoriety color")
         };
 
         private string[] GetNamePlateHealthBarModeOptions() => new[]
         {
-            lang.GetTazUO.NamePlateHealthStatusColor,
-            lang.GetTazUO.NamePlateHealthGreen,
-            lang.GetTazUO.NamePlateHealthBlue,
-            lang.GetTazUO.NamePlateHealthRed,
-            lang.GetTazUO.NamePlateHealthCyan,
-            lang.GetTazUO.NamePlateHealthYellow,
-            lang.GetTazUO.NamePlateHealthOrange,
-            lang.GetTazUO.NamePlateHealthPurple,
-            lang.GetTazUO.NamePlateHealthWhite,
-            lang.GetTazUO.NamePlateHealthGray,
-            lang.GetTazUO.NamePlateHealthBlack
+            TazLang.Get("nameplate_health_statuscolor", "Status color"),
+            TazLang.Get("nameplate_health_green", "Green"),
+            TazLang.Get("nameplate_health_blue", "Blue"),
+            TazLang.Get("nameplate_health_red", "Red"),
+            TazLang.Get("nameplate_health_cyan", "Cyan"),
+            TazLang.Get("nameplate_health_yellow", "Yellow"),
+            TazLang.Get("nameplate_health_orange", "Orange"),
+            TazLang.Get("nameplate_health_purple", "Purple"),
+            TazLang.Get("nameplate_health_white", "White"),
+            TazLang.Get("nameplate_health_gray", "Gray"),
+            TazLang.Get("nameplate_health_black", "Black")
         };
 
         public ModernOptionsGump(World world) : base(world, 900, 700,
@@ -3095,6 +3095,8 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.NamePlateAvoidOverlap = true;
                     profile.NamePlateHideAtFullHealth = false;
                     profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateShowWordOfDeathIcon = false;
+                    profile.NamePlateFont = "avadonian";
                     profile.NamePlateFontSize = 16;
                     break;
 
@@ -3118,6 +3120,8 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.NamePlateAvoidOverlap = true;
                     profile.NamePlateHideAtFullHealth = false;
                     profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateShowWordOfDeathIcon = false;
+                    profile.NamePlateFont = "avadonian";
                     profile.NamePlateFontSize = 17;
                     break;
 
@@ -3141,6 +3145,8 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.NamePlateAvoidOverlap = true;
                     profile.NamePlateHideAtFullHealth = false;
                     profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateShowWordOfDeathIcon = false;
+                    profile.NamePlateFont = "avadonian";
                     profile.NamePlateFontSize = 18;
                     break;
 
@@ -3164,6 +3170,8 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.NamePlateAvoidOverlap = true;
                     profile.NamePlateHideAtFullHealth = false;
                     profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateShowWordOfDeathIcon = false;
+                    profile.NamePlateFont = "avadonian";
                     profile.NamePlateFontSize = 17;
                     break;
 
@@ -3187,6 +3195,8 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.NamePlateAvoidOverlap = true;
                     profile.NamePlateHideAtFullHealth = false;
                     profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateShowWordOfDeathIcon = false;
+                    profile.NamePlateFont = "avadonian";
                     profile.NamePlateFontSize = 18;
                     break;
 
@@ -3622,7 +3632,7 @@ namespace ClassicUO.Game.UI.Gumps
             #region Nameplates
 
             page = ((int)PAGE.TUOOptions + 1003);
-            content.AddToLeft(SubCategoryButton(lang.GetTazUO.Nameplates, page, content.LeftWidth));
+            content.AddToLeft(SubCategoryButton(TazLang.Get("nameplate_title", "Nameplates"), page, content.LeftWidth));
             content.ResetRightSide();
 
             content.AddToRight
@@ -3636,7 +3646,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new ComboBoxWithLabel
                 (
                     World,
-                    lang.GetTazUO.Preset,
+                    TazLang.Get("nameplate_preset", "Preset"),
                     0,
                     ThemeSettings.COMBO_BOX_WIDTH,
                     GetNamePlatePresetOptions(),
@@ -3649,7 +3659,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(lang.GetTazUO.NameplatesAlsoActAsHealthBars, 0, profile.NamePlateHealthBar, (b) => { profile.NamePlateHealthBar = b; SetNamePlatePresetCustom(); }),
+            (new CheckboxWithLabel(TazLang.Get("nameplate_healthbars", "Nameplates also act as health bars"), 0, profile.NamePlateHealthBar, (b) => { profile.NamePlateHealthBar = b; SetNamePlatePresetCustom(); }),
                 true, page);
 
             content.Indent();
@@ -3657,20 +3667,20 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new SliderWithLabel
-                (lang.GetTazUO.HpOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateHealthBarOpacity,
+                (TazLang.Get("nameplate_hpopacity", "HP opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateHealthBarOpacity,
                     (i) => { profile.NamePlateHealthBarOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.ShowWordOfDeathIcon, 0, profile.NamePlateShowWordOfDeathIcon,
+                new CheckboxWithLabel(TazLang.Get("nameplate_showwordofdeathicon", "Show Word of Death icon at 30% health"), 0, profile.NamePlateShowWordOfDeathIcon,
                     (b) => { profile.NamePlateShowWordOfDeathIcon = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.HideNameplatesIfFullHealth, 0, profile.NamePlateHideAtFullHealth,
+                new CheckboxWithLabel(TazLang.Get("nameplate_hidefullhealth", "Hide nameplates if full health"), 0, profile.NamePlateHideAtFullHealth,
                     (b) => { profile.NamePlateHideAtFullHealth = b; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3678,7 +3688,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.OnlyInWarmode, 0, profile.NamePlateHideAtFullHealthInWarmode,
+                new CheckboxWithLabel(TazLang.Get("nameplate_onlywarmode", "Only in warmode"), 0, profile.NamePlateHideAtFullHealthInWarmode,
                     (b) => { profile.NamePlateHideAtFullHealthInWarmode = b; SetNamePlatePresetCustom(); }), true,
                 page
             );
@@ -3689,7 +3699,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.FixedWidth, 0, profile.NamePlateUseFixedWidth,
+                new CheckboxWithLabel(TazLang.Get("nameplate_fixedwidth", "Fixed width"), 0, profile.NamePlateUseFixedWidth,
                     (b) => { profile.NamePlateUseFixedWidth = b; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3697,13 +3707,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.Width, 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateFixedWidth,
+                new SliderWithLabel(TazLang.Get("nameplate_width", "Name width"), 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateFixedWidth,
                     (i) => { profile.NamePlateFixedWidth = i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.SeparateHealthBarWidth, 0, profile.NamePlateUseFixedHealthBarWidth,
+                new CheckboxWithLabel(TazLang.Get("nameplate_separatehealthbarwidth", "Separate health bar width"), 0, profile.NamePlateUseFixedHealthBarWidth,
                     (b) => { profile.NamePlateUseFixedHealthBarWidth = b; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3711,7 +3721,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.HealthBarWidth, 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateHealthBarFixedWidth,
+                new SliderWithLabel(TazLang.Get("nameplate_healthbarwidth", "Health bar width"), 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateHealthBarFixedWidth,
                     (i) => { profile.NamePlateHealthBarFixedWidth = i; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3719,7 +3729,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.Height, 0, ThemeSettings.SLIDER_WIDTH, 0, 80, profile.NamePlateHeight,
+                new SliderWithLabel(TazLang.Get("nameplate_height", "Height"), 0, ThemeSettings.SLIDER_WIDTH, 0, 80, profile.NamePlateHeight,
                     (i) => { profile.NamePlateHeight = i; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3727,13 +3737,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.SplitHealthBar, 0, profile.NamePlateSplitHealthBar,
+                new CheckboxWithLabel(TazLang.Get("nameplate_splithealthbar", "Split health bar"), 0, profile.NamePlateSplitHealthBar,
                     (b) => { profile.NamePlateSplitHealthBar = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.CornerRadius, 0, ThemeSettings.SLIDER_WIDTH, 0, 40, profile.NamePlateCornerRadius,
+                new SliderWithLabel(TazLang.Get("nameplate_cornerradius", "Corner radius"), 0, ThemeSettings.SLIDER_WIDTH, 0, 40, profile.NamePlateCornerRadius,
                     (i) => { profile.NamePlateCornerRadius = i; SetNamePlatePresetCustom(); }), true, page
             );
 
@@ -3742,7 +3752,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new ComboBoxWithLabel
                 (
                     World,
-                    lang.GetTazUO.HealthFill,
+                    TazLang.Get("nameplate_healthfill", "Health fill"),
                     0,
                     ThemeSettings.COMBO_BOX_WIDTH,
                     GetNamePlateHealthBarModeOptions(),
@@ -3757,7 +3767,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new ComboBoxWithLabel
                 (
                     World,
-                    lang.GetTazUO.BackgroundMode,
+                    TazLang.Get("nameplate_backgroundmode", "Background mode"),
                     0,
                     ThemeSettings.COMBO_BOX_WIDTH,
                     GetNamePlateBackgroundModeOptions(),
@@ -3770,7 +3780,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new SliderWithLabel
-                (lang.GetTazUO.BorderOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateBorderOpacity,
+                (TazLang.Get("nameplate_borderopacity", "Border opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateBorderOpacity,
                     (i) => { profile.NamePlateBorderOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
@@ -3778,31 +3788,31 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new SliderWithLabel
-                (lang.GetTazUO.BackgroundOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateOpacity,
+                (TazLang.Get("nameplate_backgroundopacity", "Background opacity"), 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateOpacity,
                     (i) => { profile.NamePlateOpacity = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.BackgroundRed, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundR,
+                new SliderWithLabel(TazLang.Get("nameplate_backgroundred", "Background red"), 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundR,
                     (i) => { profile.NamePlateBackgroundR = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.BackgroundGreen, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundG,
+                new SliderWithLabel(TazLang.Get("nameplate_backgroundgreen", "Background green"), 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundG,
                     (i) => { profile.NamePlateBackgroundG = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new SliderWithLabel(lang.GetTazUO.BackgroundBlue, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundB,
+                new SliderWithLabel(TazLang.Get("nameplate_backgroundblue", "Background blue"), 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundB,
                     (i) => { profile.NamePlateBackgroundB = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new CheckboxWithLabel(lang.GetTazUO.AvoidOverlap, 0, profile.NamePlateAvoidOverlap,
+                new CheckboxWithLabel(TazLang.Get("nameplate_avoidoverlap", "Avoid overlap"), 0, profile.NamePlateAvoidOverlap,
                     (b) => { profile.NamePlateAvoidOverlap = b; SetNamePlatePresetCustom(); }), true, page
             );
 
