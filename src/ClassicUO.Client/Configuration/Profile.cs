@@ -456,6 +456,8 @@ namespace ClassicUO.Configuration
         public ushort GridBorderHue { get; set => SetProperty(ref field, value); } = 0;
         public byte GridContainersScale { get; set => SetProperty(ref field, value); } = 100;
         public bool GridContainerScaleItems { get; set => SetProperty(ref field, value); } = true;
+        public bool GridHighlightLowContrastItems { get; set => SetProperty(ref field, value); } = false;
+        public int GridHighlightLowContrastItemsStyle { get; set => SetProperty(ref field, value); } = 0;
         public bool GridEnableContPreview { get; set => SetProperty(ref field, value); } = true;
         public int Grid_BorderStyle { get; set => SetProperty(ref field, value); } = 0;
         public int Grid_DefaultColumns { get; set => SetProperty(ref field, value); } = 5;
