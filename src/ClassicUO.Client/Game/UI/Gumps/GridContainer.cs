@@ -1589,6 +1589,9 @@ namespace ClassicUO.Game.UI.Gumps
             private const ushort PARTIAL_HUE_FLAG = 0x8000;
             private const ushort SPECTRAL_HUE_FLAG = 0x4000;
             private const int LOW_CONTRAST_OUTLINE_PADDING = 1;
+            private const double LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD = 1.45d;
+            private const double LOW_CONTRAST_PIXEL_RATIO_THRESHOLD = 1.35d;
+            private const double LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD = 0.75d;
 
             private readonly record struct LowContrastCacheKey(
                 ushort Graphic,
@@ -1597,6 +1600,11 @@ namespace ClassicUO.Game.UI.Gumps
                 bool SpectralHue,
                 ushort BackgroundHue,
                 byte BackgroundAlpha
+            );
+
+            private readonly record struct LowContrastSample(
+                double AverageLuminance,
+                double LowContrastPixelFraction
             );
 
             /// <summary>
@@ -1719,20 +1727,20 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (!_lowContrastCache.TryGetValue(key, out bool result))
                 {
-                    double itemLuminance = GetItemAverageLuminance(
+                    double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
+                    LowContrastSample sample = GetItemContrastSample(
                         _texture,
                         new Rectangle(_bounds.X + _rect.X, _bounds.Y + _rect.Y, _rect.Width, _rect.Height),
                         key.Hue,
                         key.PartialHue,
-                        key.SpectralHue
+                        key.SpectralHue,
+                        backgroundLuminance
                     );
 
-                    double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
-                    double lighter = Math.Max(itemLuminance, backgroundLuminance);
-                    double darker = Math.Min(itemLuminance, backgroundLuminance);
-                    double contrastRatio = (lighter + 0.05d) / (darker + 0.05d);
+                    double contrastRatio = GetContrastRatio(sample.AverageLuminance, backgroundLuminance);
 
-                    result = contrastRatio < 2.0d;
+                    result = contrastRatio < LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD
+                        && sample.LowContrastPixelFraction >= LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD;
                     _lowContrastCache[key] = result;
                 }
 
@@ -1743,16 +1751,24 @@ namespace ClassicUO.Game.UI.Gumps
                 return result;
             }
 
-            private static double GetItemAverageLuminance(Texture2D texture, Rectangle sourceRectangle, ushort hue, bool partialHue, bool spectralHue)
+            private static LowContrastSample GetItemContrastSample(
+                Texture2D texture,
+                Rectangle sourceRectangle,
+                ushort hue,
+                bool partialHue,
+                bool spectralHue,
+                double backgroundLuminance
+            )
             {
                 if (sourceRectangle.Width <= 0 || sourceRectangle.Height <= 0)
-                    return 1d;
+                    return new LowContrastSample(1d, 0d);
 
                 Color[] pixels = new Color[sourceRectangle.Width * sourceRectangle.Height];
                 texture.GetData(0, sourceRectangle, pixels, 0, pixels.Length);
 
                 double total = 0d;
                 int count = 0;
+                int lowContrastPixels = 0;
 
                 foreach (Color pixel in pixels)
                 {
@@ -1760,11 +1776,18 @@ namespace ClassicUO.Game.UI.Gumps
                         continue;
 
                     Color rendered = ApplyItemHue(pixel, hue, partialHue, spectralHue);
-                    total += GetRelativeLuminance(rendered.R, rendered.G, rendered.B);
+                    double luminance = GetRelativeLuminance(rendered.R, rendered.G, rendered.B);
+
+                    total += luminance;
+                    if (GetContrastRatio(luminance, backgroundLuminance) < LOW_CONTRAST_PIXEL_RATIO_THRESHOLD)
+                        lowContrastPixels++;
+
                     count++;
                 }
 
-                return count == 0 ? 1d : total / count;
+                return count == 0
+                    ? new LowContrastSample(1d, 0d)
+                    : new LowContrastSample(total / count, lowContrastPixels / (double)count);
             }
 
             private static Color ApplyItemHue(Color color, ushort hue, bool partialHue, bool spectralHue)
@@ -1805,6 +1828,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             private static double GetRelativeLuminance(byte r, byte g, byte b) =>
                 0.2126d * ToLinear(r) + 0.7152d * ToLinear(g) + 0.0722d * ToLinear(b);
+
+            private static double GetContrastRatio(double luminanceA, double luminanceB)
+            {
+                double lighter = Math.Max(luminanceA, luminanceB);
+                double darker = Math.Min(luminanceA, luminanceB);
+
+                return (lighter + 0.05d) / (darker + 0.05d);
+            }
 
             private static double ToLinear(byte value)
             {
