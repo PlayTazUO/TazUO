@@ -30,6 +30,7 @@ All notable changes to TazUO will be recorded here.
 * Bandage agent now supports journal message triggers — configure messages (separated by `;`) that immediately allow re-bandaging when matched - [P.R 550](https://github.com/PlayTazUO/TazUO/pull/550) ([bittiez](https://github.com/bittiez))
 * Create Tinkerer window with cliloc viewer - [P.R 549](https://github.com/PlayTazUO/TazUO/pull/549) ([bittiez](https://github.com/bittiez))
 * Made pathfinding limits user-configurable (max nodes, search timeout, and retry attempts) in the Pathfinding options tab - [P.R 551](https://github.com/PlayTazUO/TazUO/pull/551) ([bittiez](https://github.com/bittiez))
+* LegionAPI: added `API.PlaySound(index)` to play a sound effect locally, `API.LastSpellIndex` to get the index of the last spell cast, and `API.LastSpellName` to get the name of the last spell cast - [P.R 561](https://github.com/PlayTazUO/TazUO/pull/561) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
