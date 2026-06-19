@@ -53,6 +53,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed SDL GPU assertion ("Command buffer already submitted!") on macOS caused by unnecessary GPU texture readback in the web map server - [P.R 538](https://github.com/PlayTazUO/TazUO/pull/538) ([bittiez](https://github.com/bittiez))
 * A few minor ui fixes where focus gained was not needed - ([bittiez](https://github.com/bittiez))
 * Fix: spell bar hotkeys not firing when Scroll Lock is on - [P.R 548](https://github.com/PlayTazUO/TazUO/pull/549) ([eddo87](https://github.com/eddo87))
+* Fixed UltimaLive block reloads leaving the reloaded map chunk untracked, so it could never be garbage collected and stayed loaded until relog - [P.R 556](https://github.com/PlayTazUO/TazUO/pull/556) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
