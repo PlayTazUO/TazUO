@@ -29,6 +29,37 @@ namespace ClassicUO.Game.UI.Gumps
         private Profile profile;
         private ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
 
+        private string[] GetNamePlatePresetOptions() => new[]
+        {
+            lang.GetTazUO.NamePlatePresetCustom,
+            lang.GetTazUO.NamePlatePresetOrion,
+            lang.GetTazUO.NamePlatePresetWowBlockyBars,
+            lang.GetTazUO.NamePlatePresetWowCleanHealth,
+            lang.GetTazUO.NamePlatePresetWowBlockyCast,
+            lang.GetTazUO.NamePlatePresetWowRedName
+        };
+
+        private string[] GetNamePlateBackgroundModeOptions() => new[]
+        {
+            lang.GetTazUO.NamePlateBackgroundFixedColor,
+            lang.GetTazUO.NamePlateBackgroundNotorietyColor
+        };
+
+        private string[] GetNamePlateHealthBarModeOptions() => new[]
+        {
+            lang.GetTazUO.NamePlateHealthStatusColor,
+            lang.GetTazUO.NamePlateHealthGreen,
+            lang.GetTazUO.NamePlateHealthBlue,
+            lang.GetTazUO.NamePlateHealthRed,
+            lang.GetTazUO.NamePlateHealthCyan,
+            lang.GetTazUO.NamePlateHealthYellow,
+            lang.GetTazUO.NamePlateHealthOrange,
+            lang.GetTazUO.NamePlateHealthPurple,
+            lang.GetTazUO.NamePlateHealthWhite,
+            lang.GetTazUO.NamePlateHealthGray,
+            lang.GetTazUO.NamePlateHealthBlack
+        };
+
         public ModernOptionsGump(World world) : base(world, 900, 700,
             Language.Instance.GetModernOptionsGumpLanguage.OptionsTitle)
         {
@@ -3028,6 +3059,144 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
         }
 
+        private void SetNamePlatePresetCustom()
+        {
+            if (profile.NamePlatePreset != NamePlatePreset.Custom)
+            {
+                profile.NamePlatePreset = NamePlatePreset.Custom;
+            }
+
+            NameOverheadGump.InvalidateAllLayouts();
+        }
+
+        private void ApplyNamePlatePreset(NamePlatePreset preset)
+        {
+            profile.NamePlatePreset = preset;
+
+            switch (preset)
+            {
+                case NamePlatePreset.Orion:
+                    profile.NamePlateUseFixedWidth = true;
+                    profile.NamePlateFixedWidth = 160;
+                    profile.NamePlateUseFixedHealthBarWidth = false;
+                    profile.NamePlateHealthBarFixedWidth = 160;
+                    profile.NamePlateHeight = 0;
+                    profile.NamePlateSplitHealthBar = false;
+                    profile.NamePlateCornerRadius = 18;
+                    profile.NamePlateHealthBarMode = NamePlateHealthBarMode.StatusColor;
+                    profile.NamePlateBackgroundMode = NamePlateBackgroundMode.NotorietyColor;
+                    profile.NamePlateBackgroundR = 0;
+                    profile.NamePlateBackgroundG = 0;
+                    profile.NamePlateBackgroundB = 0;
+                    profile.NamePlateHealthBar = true;
+                    profile.NamePlateHealthBarOpacity = 75;
+                    profile.NamePlateOpacity = 70;
+                    profile.NamePlateBorderOpacity = 80;
+                    profile.NamePlateAvoidOverlap = true;
+                    profile.NamePlateHideAtFullHealth = false;
+                    profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateFontSize = 16;
+                    break;
+
+                case NamePlatePreset.WorldOfWarcraftBlockyBars:
+                    profile.NamePlateUseFixedWidth = true;
+                    profile.NamePlateFixedWidth = 220;
+                    profile.NamePlateUseFixedHealthBarWidth = false;
+                    profile.NamePlateHealthBarFixedWidth = 220;
+                    profile.NamePlateHeight = 44;
+                    profile.NamePlateSplitHealthBar = true;
+                    profile.NamePlateCornerRadius = 2;
+                    profile.NamePlateHealthBarMode = NamePlateHealthBarMode.Green;
+                    profile.NamePlateBackgroundMode = NamePlateBackgroundMode.FixedColor;
+                    profile.NamePlateBackgroundR = 18;
+                    profile.NamePlateBackgroundG = 14;
+                    profile.NamePlateBackgroundB = 14;
+                    profile.NamePlateHealthBar = true;
+                    profile.NamePlateHealthBarOpacity = 100;
+                    profile.NamePlateOpacity = 85;
+                    profile.NamePlateBorderOpacity = 85;
+                    profile.NamePlateAvoidOverlap = true;
+                    profile.NamePlateHideAtFullHealth = false;
+                    profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateFontSize = 17;
+                    break;
+
+                case NamePlatePreset.WorldOfWarcraftCleanHealth:
+                    profile.NamePlateUseFixedWidth = true;
+                    profile.NamePlateFixedWidth = 220;
+                    profile.NamePlateUseFixedHealthBarWidth = false;
+                    profile.NamePlateHealthBarFixedWidth = 220;
+                    profile.NamePlateHeight = 54;
+                    profile.NamePlateSplitHealthBar = true;
+                    profile.NamePlateCornerRadius = 3;
+                    profile.NamePlateHealthBarMode = NamePlateHealthBarMode.Green;
+                    profile.NamePlateBackgroundMode = NamePlateBackgroundMode.FixedColor;
+                    profile.NamePlateBackgroundR = 20;
+                    profile.NamePlateBackgroundG = 18;
+                    profile.NamePlateBackgroundB = 18;
+                    profile.NamePlateHealthBar = true;
+                    profile.NamePlateHealthBarOpacity = 100;
+                    profile.NamePlateOpacity = 85;
+                    profile.NamePlateBorderOpacity = 90;
+                    profile.NamePlateAvoidOverlap = true;
+                    profile.NamePlateHideAtFullHealth = false;
+                    profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateFontSize = 18;
+                    break;
+
+                case NamePlatePreset.WorldOfWarcraftBlockyCast:
+                    profile.NamePlateUseFixedWidth = true;
+                    profile.NamePlateFixedWidth = 220;
+                    profile.NamePlateUseFixedHealthBarWidth = false;
+                    profile.NamePlateHealthBarFixedWidth = 220;
+                    profile.NamePlateHeight = 36;
+                    profile.NamePlateSplitHealthBar = true;
+                    profile.NamePlateCornerRadius = 1;
+                    profile.NamePlateHealthBarMode = NamePlateHealthBarMode.Green;
+                    profile.NamePlateBackgroundMode = NamePlateBackgroundMode.FixedColor;
+                    profile.NamePlateBackgroundR = 24;
+                    profile.NamePlateBackgroundG = 18;
+                    profile.NamePlateBackgroundB = 18;
+                    profile.NamePlateHealthBar = true;
+                    profile.NamePlateHealthBarOpacity = 100;
+                    profile.NamePlateOpacity = 82;
+                    profile.NamePlateBorderOpacity = 90;
+                    profile.NamePlateAvoidOverlap = true;
+                    profile.NamePlateHideAtFullHealth = false;
+                    profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateFontSize = 17;
+                    break;
+
+                case NamePlatePreset.WorldOfWarcraftRedName:
+                    profile.NamePlateUseFixedWidth = true;
+                    profile.NamePlateFixedWidth = 220;
+                    profile.NamePlateUseFixedHealthBarWidth = false;
+                    profile.NamePlateHealthBarFixedWidth = 220;
+                    profile.NamePlateHeight = 38;
+                    profile.NamePlateSplitHealthBar = true;
+                    profile.NamePlateCornerRadius = 1;
+                    profile.NamePlateHealthBarMode = NamePlateHealthBarMode.Green;
+                    profile.NamePlateBackgroundMode = NamePlateBackgroundMode.FixedColor;
+                    profile.NamePlateBackgroundR = 28;
+                    profile.NamePlateBackgroundG = 12;
+                    profile.NamePlateBackgroundB = 12;
+                    profile.NamePlateHealthBar = true;
+                    profile.NamePlateHealthBarOpacity = 100;
+                    profile.NamePlateOpacity = 85;
+                    profile.NamePlateBorderOpacity = 90;
+                    profile.NamePlateAvoidOverlap = true;
+                    profile.NamePlateHideAtFullHealth = false;
+                    profile.NamePlateHideAtFullHealthInWarmode = false;
+                    profile.NamePlateFontSize = 18;
+                    break;
+
+                default:
+                    break;
+            }
+
+            NameOverheadGump.InvalidateAllLayouts();
+        }
+
         private void BuildTazUO()
         {
             var content = new LeftSideMenuRightSideContent(MainContent.RightWidth, MainContent.Height,
@@ -3463,7 +3632,24 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(lang.GetTazUO.NameplatesAlsoActAsHealthBars, 0, profile.NamePlateHealthBar, (b) => { profile.NamePlateHealthBar = b; }),
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    lang.GetTazUO.Preset,
+                    0,
+                    ThemeSettings.COMBO_BOX_WIDTH,
+                    GetNamePlatePresetOptions(),
+                    (int)profile.NamePlatePreset,
+                    (i, s) => { ApplyNamePlatePreset((NamePlatePreset)i); },
+                    false
+                ), true, page
+            );
+
+            content.BlankLine();
+
+            content.AddToRight
+            (new CheckboxWithLabel(lang.GetTazUO.NameplatesAlsoActAsHealthBars, 0, profile.NamePlateHealthBar, (b) => { profile.NamePlateHealthBar = b; SetNamePlatePresetCustom(); }),
                 true, page);
 
             content.Indent();
@@ -3472,14 +3658,20 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (lang.GetTazUO.HpOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateHealthBarOpacity,
-                    (i) => { profile.NamePlateHealthBarOpacity = (byte)i; }),
+                    (i) => { profile.NamePlateHealthBarOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
 
             content.AddToRight
             (
+                new CheckboxWithLabel(lang.GetTazUO.ShowWordOfDeathIcon, 0, profile.NamePlateShowWordOfDeathIcon,
+                    (b) => { profile.NamePlateShowWordOfDeathIcon = b; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
                 new CheckboxWithLabel(lang.GetTazUO.HideNameplatesIfFullHealth, 0, profile.NamePlateHideAtFullHealth,
-                    (b) => { profile.NamePlateHideAtFullHealth = b; }), true, page
+                    (b) => { profile.NamePlateHideAtFullHealth = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.Indent();
@@ -3487,7 +3679,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new CheckboxWithLabel(lang.GetTazUO.OnlyInWarmode, 0, profile.NamePlateHideAtFullHealthInWarmode,
-                    (b) => { profile.NamePlateHideAtFullHealthInWarmode = b; }), true,
+                    (b) => { profile.NamePlateHideAtFullHealthInWarmode = b; SetNamePlatePresetCustom(); }), true,
                 page
             );
 
@@ -3497,9 +3689,89 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
+                new CheckboxWithLabel(lang.GetTazUO.FixedWidth, 0, profile.NamePlateUseFixedWidth,
+                    (b) => { profile.NamePlateUseFixedWidth = b; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.Indent();
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.Width, 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateFixedWidth,
+                    (i) => { profile.NamePlateFixedWidth = i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new CheckboxWithLabel(lang.GetTazUO.SeparateHealthBarWidth, 0, profile.NamePlateUseFixedHealthBarWidth,
+                    (b) => { profile.NamePlateUseFixedHealthBarWidth = b; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.Indent();
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.HealthBarWidth, 0, ThemeSettings.SLIDER_WIDTH, 60, 300, profile.NamePlateHealthBarFixedWidth,
+                    (i) => { profile.NamePlateHealthBarFixedWidth = i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.RemoveIndent();
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.Height, 0, ThemeSettings.SLIDER_WIDTH, 0, 80, profile.NamePlateHeight,
+                    (i) => { profile.NamePlateHeight = i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.RemoveIndent();
+
+            content.AddToRight
+            (
+                new CheckboxWithLabel(lang.GetTazUO.SplitHealthBar, 0, profile.NamePlateSplitHealthBar,
+                    (b) => { profile.NamePlateSplitHealthBar = b; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.CornerRadius, 0, ThemeSettings.SLIDER_WIDTH, 0, 40, profile.NamePlateCornerRadius,
+                    (i) => { profile.NamePlateCornerRadius = i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    lang.GetTazUO.HealthFill,
+                    0,
+                    ThemeSettings.COMBO_BOX_WIDTH,
+                    GetNamePlateHealthBarModeOptions(),
+                    (int)profile.NamePlateHealthBarMode,
+                    (i, s) => { profile.NamePlateHealthBarMode = (NamePlateHealthBarMode)i; SetNamePlatePresetCustom(); },
+                    false
+                ), true, page
+            );
+
+            content.AddToRight
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    lang.GetTazUO.BackgroundMode,
+                    0,
+                    ThemeSettings.COMBO_BOX_WIDTH,
+                    GetNamePlateBackgroundModeOptions(),
+                    (int)profile.NamePlateBackgroundMode,
+                    (i, s) => { profile.NamePlateBackgroundMode = (NamePlateBackgroundMode)i; SetNamePlatePresetCustom(); },
+                    false
+                ), true, page
+            );
+
+            content.AddToRight
+            (
                 new SliderWithLabel
                 (lang.GetTazUO.BorderOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateBorderOpacity,
-                    (i) => { profile.NamePlateBorderOpacity = (byte)i; }),
+                    (i) => { profile.NamePlateBorderOpacity = (byte)i; SetNamePlatePresetCustom(); }),
                 true, page
             );
 
@@ -3507,13 +3779,31 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (lang.GetTazUO.BackgroundOpacity, 0, ThemeSettings.SLIDER_WIDTH, 0, 100, profile.NamePlateOpacity,
-                    (i) => { profile.NamePlateOpacity = (byte)i; }), true, page
+                    (i) => { profile.NamePlateOpacity = (byte)i; SetNamePlatePresetCustom(); }), true, page
             );
 
             content.AddToRight
             (
-                new CheckboxWithLabel("Avoid overlap", 0, profile.NamePlateAvoidOverlap,
-                    (b) => { profile.NamePlateAvoidOverlap = b; }), true, page
+                new SliderWithLabel(lang.GetTazUO.BackgroundRed, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundR,
+                    (i) => { profile.NamePlateBackgroundR = (byte)i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.BackgroundGreen, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundG,
+                    (i) => { profile.NamePlateBackgroundG = (byte)i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel(lang.GetTazUO.BackgroundBlue, 0, ThemeSettings.SLIDER_WIDTH, 0, 255, profile.NamePlateBackgroundB,
+                    (i) => { profile.NamePlateBackgroundB = (byte)i; SetNamePlatePresetCustom(); }), true, page
+            );
+
+            content.AddToRight
+            (
+                new CheckboxWithLabel(lang.GetTazUO.AvoidOverlap, 0, profile.NamePlateAvoidOverlap,
+                    (b) => { profile.NamePlateAvoidOverlap = b; SetNamePlatePresetCustom(); }), true, page
             );
 
             #endregion
@@ -4305,7 +4595,7 @@ namespace ClassicUO.Game.UI.Gumps
                     maxFontNameLength,
                     lang.GetTazUO.NameplateFont,
                     CurrentProfile.NamePlateFont,
-                    (i, s) => { CurrentProfile.NamePlateFont = s; }
+                    (i, s) => { CurrentProfile.NamePlateFont = s; SetNamePlatePresetCustom(); }
                 ),
                 true, page
             );
@@ -4315,7 +4605,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (
                 new SliderWithLabel(lang.GetTazUO.SharedSize, 0, ThemeSettings.SLIDER_WIDTH, minFontSize, maxFontSize,
-                    profile.NamePlateFontSize, (i) => { profile.NamePlateFontSize = i; }), true,
+                    profile.NamePlateFontSize, (i) => { profile.NamePlateFontSize = i; SetNamePlatePresetCustom(); }), true,
                 page
             );
 

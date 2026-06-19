@@ -480,6 +480,40 @@ namespace ClassicUO.Configuration
             public string OnlyInWarmode { get; set; } = "Only in warmode";
             public string BorderOpacity { get; set; } = "Border opacity";
             public string BackgroundOpacity { get; set; } = "Background opacity";
+            public string Preset { get; set; } = "Preset";
+            public string FixedWidth { get; set; } = "Fixed width";
+            public string Width { get; set; } = "Name width";
+            public string SeparateHealthBarWidth { get; set; } = "Separate health bar width";
+            public string HealthBarWidth { get; set; } = "Health bar width";
+            public string ShowWordOfDeathIcon { get; set; } = "Show Word of Death icon at 30% health";
+            public string Height { get; set; } = "Height";
+            public string SplitHealthBar { get; set; } = "Split health bar";
+            public string CornerRadius { get; set; } = "Corner radius";
+            public string HealthFill { get; set; } = "Health fill";
+            public string BackgroundMode { get; set; } = "Background mode";
+            public string BackgroundRed { get; set; } = "Background red";
+            public string BackgroundGreen { get; set; } = "Background green";
+            public string BackgroundBlue { get; set; } = "Background blue";
+            public string AvoidOverlap { get; set; } = "Avoid overlap";
+            public string NamePlatePresetCustom { get; set; } = "Custom";
+            public string NamePlatePresetOrion { get; set; } = "Orion";
+            public string NamePlatePresetWowBlockyBars { get; set; } = "WoW - Blocky Bars";
+            public string NamePlatePresetWowCleanHealth { get; set; } = "WoW - Clean Health";
+            public string NamePlatePresetWowBlockyCast { get; set; } = "WoW - Blocky Cast";
+            public string NamePlatePresetWowRedName { get; set; } = "WoW - Red Name";
+            public string NamePlateBackgroundFixedColor { get; set; } = "Fixed color";
+            public string NamePlateBackgroundNotorietyColor { get; set; } = "Notoriety color";
+            public string NamePlateHealthStatusColor { get; set; } = "Status color";
+            public string NamePlateHealthGreen { get; set; } = "Green";
+            public string NamePlateHealthBlue { get; set; } = "Blue";
+            public string NamePlateHealthRed { get; set; } = "Red";
+            public string NamePlateHealthCyan { get; set; } = "Cyan";
+            public string NamePlateHealthYellow { get; set; } = "Yellow";
+            public string NamePlateHealthOrange { get; set; } = "Orange";
+            public string NamePlateHealthPurple { get; set; } = "Purple";
+            public string NamePlateHealthWhite { get; set; } = "White";
+            public string NamePlateHealthGray { get; set; } = "Gray";
+            public string NamePlateHealthBlack { get; set; } = "Black";
             #endregion
 
             #region Mobile
