@@ -267,6 +267,10 @@ namespace ClassicUO.Game.UI.Gumps
             }));
             moreMenu.ContextMenu.Add(submenu);
 
+            var devSubmenu = new ContextMenuItemEntry("Developer");
+            devSubmenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+            moreMenu.ContextMenu.Add(devSubmenu);
+
             startX += largeWidth + 1;
 
             string[] xmls = XmlGumpHandler.GetAllXmlGumps();

@@ -17,6 +17,44 @@ namespace ClassicUO.Assets
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
         private readonly Dictionary<int, string> _englishEntries = new Dictionary<int, string>();
 
+        public IReadOnlyDictionary<int, string> Entries => _entries;
+
+        public static Dictionary<int, string> LoadFromFile(string path, bool skipEmpty = true)
+        {
+            var result = new Dictionary<int, string>();
+            if (!File.Exists(path)) return result;
+
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            byte[] buf = new byte[fs.Length];
+            int read = 0;
+            while (read < buf.Length)
+            {
+                int n = fs.Read(buf, read, buf.Length - read);
+                if (n == 0) break;
+                read += n;
+            }
+
+            byte[] output = buf.Length > 3 && buf[3] == 0x8E ? BwtDecompress.Decompress(buf) : buf;
+            var reader = new StackDataReader(output);
+            reader.ReadInt32LE();
+            reader.ReadInt16LE();
+
+            while (reader.Remaining > 0)
+            {
+                int number = reader.ReadInt32LE();
+                reader.ReadUInt8();
+                short length = reader.ReadInt16LE();
+                string text = reader.ReadUTF8(length);
+
+                if(!text.NotNullNotEmpty() && skipEmpty)
+                    continue;
+
+                result[number] = text;
+            }
+
+            return result;
+        }
+
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
         {
         }
