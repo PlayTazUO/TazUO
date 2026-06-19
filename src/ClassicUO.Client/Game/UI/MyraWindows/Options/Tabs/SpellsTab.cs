@@ -12,36 +12,72 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class SpellsTab
 {
-    internal static OptionItem GetContent()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonCombatSpells, GetSection);
-    }
+    internal static IOptionSource GetContent() => GetSection();
 
-    private static WrapPanel GetSection()
+    private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.SpellsTab;
+        ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab.Spells;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnabledSpellFormat), lang.EnableOverheadSpellFormat),
-                OptionsFactory.CreateInputField(lang.SpellOverheadFormat, profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s)
+        return OptionsUi.Vertical(
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    lang.EnableOverheadSpellFormat,
+                    new Accessor<bool>(() => profile.EnabledSpellFormat),
+                    search: new SearchMetadata(lang.EnableOverheadSpellFormat, Keywords: [kw.Format])
+                ),
+                Option.InputField(
+                    lang.SpellOverheadFormat,
+                    new Accessor<string>(() => profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s),
+                    search: new SearchMetadata(lang.SpellOverheadFormat, Keywords: [kw.Format])
+                )
             ),
-            OptionsFactory.CreateCheckboxOption(lang.EnableOverheadSpellHue, new Accessor<bool>(() => profile.EnabledSpellHue)),
-            OptionsFactory.CreateCheckboxOption(lang.SingleClickForSpellIcons, new Accessor<bool>(() => profile.CastSpellsByOneClick)),
-            OptionsFactory.CreateCheckboxOption(lang.EnableFastSpellHotkeyAssigning, new Accessor<bool>(() => profile.FastSpellsAssign)),
-            OptionsFactory.PropBoundSliderOption(lang.SpellIconScale, new Accessor<int>(() => profile.SpellIconScale), 50, 300),
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey), lang.DisplayMatchingHotkeysOnSpellIcons),
-                OptionsFactory.PropBoundHuePicker(lang.HotkeyTextHue, new Accessor<ushort>(() => profile.SpellIcon_HotkeyHue))
+            Option.Checkbox(
+                lang.EnableOverheadSpellHue,
+                new Accessor<bool>(() => profile.EnabledSpellHue),
+                search: new SearchMetadata(lang.EnableOverheadSpellHue, Keywords: [kw.Hue, kw.Color])
             ),
-            new VisualContainer(
+            Option.Checkbox(
+                lang.SingleClickForSpellIcons,
+                new Accessor<bool>(() => profile.CastSpellsByOneClick),
+                search: new SearchMetadata(lang.SingleClickForSpellIcons, Keywords: [kw.Click, kw.Cast])
+            ),
+            Option.Checkbox(
+                lang.EnableFastSpellHotkeyAssigning,
+                new Accessor<bool>(() => profile.FastSpellsAssign),
+                search: new SearchMetadata(lang.EnableFastSpellHotkeyAssigning, Keywords: [kw.Hotkey, kw.Assign])
+            ),
+            Option.Slider(
+                lang.SpellIconScale, 50, 300, new Accessor<float>(() => profile.SpellIconScale, f => profile.SpellIconScale = (int)f),
+                search: new SearchMetadata(lang.SpellIconScale, Keywords: [kw.Scale, kw.Size])
+            ),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    lang.DisplayMatchingHotkeysOnSpellIcons,
+                    new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey),
+                    search: new SearchMetadata(lang.DisplayMatchingHotkeysOnSpellIcons, Keywords: [kw.Hotkey])
+                ),
+                Option.HuePicker(
+                    lang.HotkeyTextHue,
+                    new Accessor<ushort>(() => profile.SpellIcon_HotkeyHue, h => profile.SpellIcon_HotkeyHue = h),
+                    search: new SearchMetadata(lang.HotkeyTextHue, Keywords: [kw.Color, kw.Hue])
+                )
+            ),
+            OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = lang.SpellIndicators },
-                OptionsFactory.CreateCheckboxOption(lang.EnableSpellIndicators, new Accessor<bool>(() => profile.EnableSpellIndicators)),
-                new MyraButton(lang.ImportIndicatorsFromUrl, OpenConfigDownloadModal)
+                Option.Checkbox(
+                    lang.EnableSpellIndicators,
+                    new Accessor<bool>(() => profile.EnableSpellIndicators),
+                    search: new SearchMetadata(lang.EnableSpellIndicators)
+                ),
+                Option.Button(
+                    lang.ImportIndicatorsFromUrl,
+                    OpenConfigDownloadModal,
+                    search: new SearchMetadata(lang.ImportIndicatorsFromUrl, Keywords: [kw.Import, kw.Download])
+                )
             )
-        );
+        ).WithSearch(new SearchMetadata(lang.SpellLabel, Keywords: [kw.Spell, kw.Magic, kw.Cast], Tags: [kw.Spell, kw.Magic]));
     }
 
     private static void OpenConfigDownloadModal()

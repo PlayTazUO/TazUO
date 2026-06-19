@@ -1,39 +1,57 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
-using ClassicUO.Game.UI.MyraWindows.Widgets;
-using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class CombatTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent() => GetTabs();
+
+    private static OptionTabGroup GetTabs()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonCombatSpells, GetTabs);
+        ModernOptionsGumpLanguage.CombatTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        return new OptionTabGroup()
+            .AddTab(lang.Combat.Label,
+                GetCombatSection,
+                new SearchMetadata(lang.Combat.Label, Keywords: [kw.Combat, kw.Attack, kw.Battle])
+            )
+            .AddTab(lang.Spells.SpellLabel,
+                SpellsTab.GetContent,
+                new SearchMetadata(lang.Spells.SpellLabel, Keywords: [kw.Spell, kw.Magic, kw.Cast])
+            );
     }
 
-    private static MyraTabControl GetTabs()
-    {
-        ModernOptionsGumpLanguage.CombatSpells lang = Language.Instance.GetModernOptionsGumpLanguage.GetCombatSpells;
-
-        var tabs = new MyraTabControl();
-        tabs.AddTab(lang.Combat, GetCombatSection);
-        tabs.AddTab(lang.Spells, SpellsTab.GetContent);
-        return tabs;
-    }
-
-    private static WrapPanel GetCombatSection()
+    private static IOptionSource GetCombatSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.CombatTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.HoldTabForCombat, new Accessor<bool>(() => profile.HoldDownKeyTab)),
-            OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.QueryBeforeAttack, new Accessor<bool>(() => profile.EnabledCriminalActionQuery)),
-            OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.QueryBeforeBeneficial, new Accessor<bool>(() => profile.EnabledBeneficialCriminalActionQuery)),
-            OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.ShowBuffDurationOnOldStyleBuffBar, new Accessor<bool>(() => profile.BuffBarTime)),
-            OptionsFactory.CreateCheckboxOption(lang.GetCombatSpells.EnableDPSCounter, new Accessor<bool>(() => profile.ShowDPS))
-        );
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                lang.Combat.HoldTabForCombat,
+                new Accessor<bool>(() => profile.HoldDownKeyTab),
+                search: new SearchMetadata(lang.Combat.HoldTabForCombat, Keywords: [kw.Tab])
+            ),
+            Option.Checkbox(lang.Combat.QueryBeforeAttack,
+                new Accessor<bool>(() => profile.EnabledCriminalActionQuery),
+                search: new SearchMetadata(lang.Combat.QueryBeforeAttack, Keywords: [kw.Criminal, kw.Query])
+            ),
+            Option.Checkbox(lang.Combat.QueryBeforeBeneficial,
+                new Accessor<bool>(() => profile.EnabledBeneficialCriminalActionQuery),
+                search: new SearchMetadata(lang.Combat.QueryBeforeBeneficial, Keywords: [kw.Beneficial, kw.Criminal, kw.Query])
+            ),
+            Option.Checkbox(lang.Combat.ShowBuffDurationOnOldStyleBuffBar,
+                new Accessor<bool>(() => profile.BuffBarTime),
+                search: new SearchMetadata(lang.Combat.ShowBuffDurationOnOldStyleBuffBar, Keywords: [kw.Buff, kw.Duration, kw.Time])
+            ),
+            Option.Checkbox(lang.Combat.EnableDPSCounter,
+                new Accessor<bool>(() => profile.ShowDPS),
+                search: new SearchMetadata(lang.Combat.EnableDPSCounter, Keywords: [kw.DPS, kw.Damage])
+            )
+        ).WithSearch(new SearchMetadata(lang.Combat.Label,
+            [kw.Combat, kw.Battle]));
     }
 }

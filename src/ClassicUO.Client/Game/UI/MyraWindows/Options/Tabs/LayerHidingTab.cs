@@ -12,31 +12,38 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class LayerHidingTab
 {
-    internal static OptionItem GetContent()
-    {
-        ModernOptionsGumpLanguage.LayerHidingTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.LayerHidingTab;
-        return new OptionItem(lang.LayerHiding, GetSection);
-    }
+    internal static IOptionSource GetContent() => GetSection();
 
-    private static WrapPanel GetSection()
+    private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.LayerHidingTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.LayerHidingTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.HiddenLayersEnabled), lang.EnableLayerHiding),
-                OptionsFactory.CreateCheckboxOption(lang.OnlyForYourself, new Accessor<bool>(() => profile.HideLayersForSelf), lang.OnlyForYourselfTooltip),
-                OptionsFactory.CreateSpacer(),
-                new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P),
-                GetLayerBoxes()
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                lang.EnableLayerHiding,
+                new Accessor<bool>(() => profile.HiddenLayersEnabled),
+                search: new SearchMetadata(lang.EnableLayerHiding, Keywords: [kw.Enable])
+            ),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    lang.OnlyForYourself,
+                    new Accessor<bool>(() => profile.HideLayersForSelf),
+                    lang.OnlyForYourselfTooltip,
+                    search: new SearchMetadata(lang.OnlyForYourself, Keywords: [kw.Self])
+                ),
+                Option.Spacer(),
+                Option.Custom(() => new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P), new SearchMetadata(lang.HideFollowingLayers)),
+                GetLayerBoxesFragment()
             )
-        );
+        ).WithSearch(new SearchMetadata(lang.Label, Keywords: [kw.Layer, kw.Hide, kw.Equipment, kw.Clothing], Tags: [kw.Layer, kw.Hide]));
     }
 
-    private static WrapPanel GetLayerBoxes()
+    private static OptionFragment GetLayerBoxesFragment()
     {
         Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         Layer[] ignoredLayers =
         [
@@ -47,32 +54,46 @@ public static class LayerHidingTab
 
         Layer[] relevantLayers = Enum.GetValues<Layer>().Where(layer => !ignoredLayers.Contains(layer)).ToArray();
 
-        var panel = new WrapPanel
-        {
-            Orientation = Orientation.Vertical,
-            Aligned = true,
-            UniformSizing = true,
-            VerticalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(MyraStyle.STANDARD_SPACING, 10, MyraStyle.STANDARD_SPACING, 10),
-            MaxHeight = 300
-        };
+        return new OptionFragment(
+            () =>
+            {
+                var panel = new WrapPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Aligned = true,
+                    UniformSizing = true,
+                    VerticalSpacing = MyraStyle.STANDARD_SPACING,
+                    VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(MyraStyle.STANDARD_SPACING, 10, MyraStyle.STANDARD_SPACING, 10),
+                    MaxHeight = 300
+                };
 
-        foreach (Layer layer in relevantLayers)
-            panel.Widgets.Add(
-                OptionsFactory.CreateCheckboxOption(
-                    layer.ToString(), // Consider localizing at some point
-                    profile.HiddenLayers.Contains((int)layer),
-                    enabled =>
-                    {
-                        if (enabled)
-                            profile.HiddenLayers.Add((int)layer);
-                        else
-                            profile.HiddenLayers.Remove((int)layer);
-                    }
-                )
-            );
+                foreach (Layer layer in relevantLayers)
+                {
+                    panel.Widgets.Add(
+                        MyraCheckButton.CreatePropBoundCheckButton(
+                            new Accessor<bool>(
+                                () => profile.HiddenLayers.Contains((int)layer),
+                                enabled =>
+                                {
+                                    if (enabled)
+                                        profile.HiddenLayers.Add((int)layer);
+                                    else
+                                        profile.HiddenLayers.Remove((int)layer);
+                                }
+                            ),
+                            layer.ToString()
+                        )
+                    );
+                }
 
-        return panel;
+                return panel;
+            },
+            relevantLayers.Select(layer => (OptionContent)Option.Checkbox(layer.ToString(), profile.HiddenLayers.Contains((int)layer), b =>
+            {
+                if (b) profile.HiddenLayers.Add((int)layer);
+                else profile.HiddenLayers.Remove((int)layer);
+            }, search: new SearchMetadata(layer.ToString(), Keywords: [kw.Layer])))
+        );
     }
 }

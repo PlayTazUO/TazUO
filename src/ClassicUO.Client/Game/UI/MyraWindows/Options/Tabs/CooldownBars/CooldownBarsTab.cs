@@ -12,35 +12,43 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 
 internal static partial class CooldownBarsTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
-        return new OptionItem(cdLang.CooldownBarsLabel, GetSection);
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+        return OptionsUi.Vertical(
+            GetSection()
+        ).WithSearch(new SearchMetadata(cdLang.CooldownBarsLabel, Tags: [kw.Cooldown, kw.Timer]));
     }
 
-    private static WrapPanel GetSection()
+    private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            new VisualContainer(
-                new VisualContainerProps { LabelText = cdLang.CustomCooldownBars },
-                OptionsFactory.PropBoundNumericInput(
-                    cdLang.PositionX,
-                    new Accessor<int>(() => profile.CoolDownX),
-                    0,
-                    8192
-                ),
-                OptionsFactory.PropBoundNumericInput(
-                    cdLang.PositionY,
-                    new Accessor<int>(() => profile.CoolDownY),
-                    0,
-                    8192
-                ),
-                OptionsFactory.CreateCheckboxOption(cdLang.UseLastMovedBarPosition, new Accessor<bool>(() => profile.UseLastMovedCooldownPosition)),
-                GetRuleEditor()
-            )
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = cdLang.CustomCooldownBars },
+            Option.NumericInput(
+                cdLang.PositionX,
+                new Accessor<int>(() => profile.CoolDownX),
+                0,
+                8192,
+                search: new SearchMetadata(cdLang.PositionX, Keywords: [kw.Position, kw.X])
+            ),
+            Option.NumericInput(
+                cdLang.PositionY,
+                new Accessor<int>(() => profile.CoolDownY),
+                0,
+                8192,
+                search: new SearchMetadata(cdLang.PositionY, Keywords: [kw.Position, kw.Y])
+            ),
+            Option.Checkbox(
+                cdLang.UseLastMovedBarPosition,
+                new Accessor<bool>(() => profile.UseLastMovedCooldownPosition),
+                search: new SearchMetadata(cdLang.UseLastMovedBarPosition, Keywords: [kw.Last, kw.Moved, kw.Position])
+            ),
+            Option.Custom(GetRuleEditor, new SearchMetadata(cdLang.Conditions, Keywords: [kw.Condition, kw.Rule]))
         );
     }
 

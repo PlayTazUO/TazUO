@@ -21,24 +21,21 @@ internal readonly struct OptionContent
         _content switch
         {
             Widget widget => widget,
-            OptionEntry entry => entry.Render(),
-            OptionFragment fragment => fragment.Render(),
+            IOptionSource source => source.Render(),
             _ => throw new InvalidOperationException("Invalid content type")
         };
 
     public IEnumerable<OptionEntry> Match(SearchMetadata search) =>
         _content switch
         {
-            OptionEntry entry => entry.Match(SearchMetadata.Merge(Search, search)),
-            OptionFragment fragment => fragment.Match(SearchMetadata.Merge(Search, search)),
+            IOptionSource source => source.Match(SearchMetadata.Merge(Search, search)),
             _ => []
         };
 
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null) =>
         _content switch
         {
-            OptionEntry entry => entry.GetOptions(SearchMetadata.Merge(Search, inheritedSearch)),
-            OptionFragment fragment => fragment.GetOptions(SearchMetadata.Merge(Search, inheritedSearch)),
+            IOptionSource source => source.GetOptions(SearchMetadata.Merge(Search, inheritedSearch)),
             _ => []
         };
 
@@ -55,6 +52,11 @@ internal readonly struct OptionContent
     public static implicit operator OptionContent(OptionFragment fragment)
     {
         return new OptionContent(fragment);
+    }
+
+    public static implicit operator OptionContent(OptionTabGroup group)
+    {
+        return new OptionContent(group);
     }
 
     public OptionContent WithSearch(SearchMetadata search) => this with { Search = search };

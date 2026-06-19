@@ -7,121 +7,155 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class HealthBarsTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(
-            lang.ButtonGameplay,
-            () => OptionTabCommons.StyledVerticalWrapPanel(
-                GetMainSection(),
-                OptionsFactory.CreateSpacer(),
-                GetDragSection()
-            ));
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        return OptionsUi.Vertical(
+            GetMainSection(),
+            GetDragSection()
+        ).WithSearch(new SearchMetadata(lang.ButtonHealthBars, Tags: [kw.HealthBar, kw.HP]));
     }
 
-    private static WrapPanel GetMainSection()
+    private static OptionFragment GetMainSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.CustomBarsToggled), genLang.ModernHealthBars),
-                OptionsFactory.CreateCheckboxOption(genLang.ModernHPBlackBG, new Accessor<bool>(() => profile.CBBlackBGToggled))
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                genLang.ModernHealthBars,
+                new Accessor<bool>(() => profile.CustomBarsToggled),
+                search: new SearchMetadata(genLang.ModernHealthBars, Keywords: [kw.Modern])
             ),
-            OptionsFactory.CreateCheckboxOption(genLang.SaveHPBars, new Accessor<bool>(() => profile.SaveHealthbars)),
-            OptionsFactory.CreateComboBox(genLang.CloseHPGumpsWhen, profile.CloseHealthBarType, [
+            Option.Checkbox(
+                genLang.ModernHPBlackBG,
+                new Accessor<bool>(() => profile.CBBlackBGToggled),
+                search: new SearchMetadata(genLang.ModernHPBlackBG, Keywords: [kw.Black, kw.Background])
+            ),
+            Option.Checkbox(
+                genLang.SaveHPBars,
+                new Accessor<bool>(() => profile.SaveHealthbars),
+                search: new SearchMetadata(genLang.SaveHPBars, Keywords: [kw.Save])
+            ),
+            Option.ComboBox(genLang.CloseHPGumpsWhen, profile.CloseHealthBarType, [
                     genLang.CloseHPOptDisable, genLang.CloseHPOptOOR,
                     genLang.CloseHPOptDead, genLang.CloseHPOptBoth
-                ], b => profile.CloseHealthBarType = b
+                ], b => profile.CloseHealthBarType = b,
+                search: new SearchMetadata(genLang.CloseHPGumpsWhen, Keywords: [kw.Close])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars,
-                new Accessor<bool>(() => profile.CloseHealthBarIfAnchored)
+                new Accessor<bool>(() => profile.CloseHealthBarIfAnchored),
+                search: new SearchMetadata(tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars, Keywords: [kw.Close, kw.Anchor])
             ),
-            OptionsFactory.CreateSpacer(),
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), tuoLang.EnableHealthIndicatorBorder),
-                OptionsFactory.PropBoundSliderOption(tuoLang.OnlyShowBelowHp, new Accessor<float>(() => profile.ShowHealthIndicatorBelow), 0, 100),
-                OptionsFactory.PropBoundSliderOption(tuoLang.Size, new Accessor<int>(() => profile.HealthIndicatorWidth), 1, 25)
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = tuoLang.EnableHealthIndicatorBorder },
+                Option.Checkbox(
+                    tuoLang.EnableHealthIndicatorBorder,
+                    new Accessor<bool>(() => profile.EnableHealthIndicator),
+                    search: new SearchMetadata(tuoLang.EnableHealthIndicatorBorder, Keywords: [kw.Indicator, kw.Border])
+                ),
+                Option.Slider(
+                    tuoLang.OnlyShowBelowHp,
+                    0,
+                    100,
+                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow, f => profile.ShowHealthIndicatorBelow = f),
+                    search: new SearchMetadata(tuoLang.OnlyShowBelowHp, Keywords: [kw.HP])
+                ),
+                Option.Slider(
+                    tuoLang.Size,
+                    1,
+                    25,
+                    new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
+                    search: new SearchMetadata(tuoLang.Size, Keywords: [kw.Size])
+                )
             )
         );
     }
 
-    private static VisualContainer GetDragSection()
+    private static OptionFragment GetDragSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = "Dragging" },
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableDragSelect), genLang.DragSelectHP),
-                OptionsFactory.CreateComboBox(
-                    genLang.DragKeyMod,
-                    profile.DragSelectModifierKey,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelectModifierKey = i
-                ),
-                OptionsFactory.CreateComboBox(
-                    genLang.DragPlayersOnly,
-                    profile.DragSelect_PlayersModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_PlayersModifier = i
-                ),
-                OptionsFactory.CreateComboBox(
-                    genLang.DragMobsOnly,
-                    profile.DragSelect_MonstersModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_MonstersModifier = i
-                ),
-                OptionsFactory.CreateComboBox(
-                    genLang.DragNameplatesOnly,
-                    profile.DragSelect_NameplateModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_NameplateModifier = i
-                ),
-                OptionsFactory.CreateInputField(
-                    genLang.DragX,
-                    profile.DragSelectStartX.ToString(),
-                    s =>
-                    {
-                        if (int.TryParse(s, out int result))
-                            profile.DragSelectStartX = result;
-                    }
-                ),
-                OptionsFactory.CreateInputField(
-                    genLang.DragY,
-                    profile.DragSelectStartY.ToString(),
-                    s =>
-                    {
-                        if (int.TryParse(s, out int result))
-                            profile.DragSelectStartY = result;
-                    }
-                )
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = genLang.DraggingSectionLabel },
+            Option.Checkbox(
+                genLang.DragSelectHP,
+                new Accessor<bool>(() => profile.EnableDragSelect),
+                search: new SearchMetadata(genLang.DragSelectHP, Keywords: [kw.Drag, kw.Select])
+            ),
+            Option.ComboBox(
+                genLang.DragKeyMod,
+                profile.DragSelectModifierKey,
+                [
+                    genLang.SharedNone,
+                    genLang.SharedCtrl,
+                    genLang.SharedShift,
+                    genLang.SharedAlt
+                ],
+                i => profile.DragSelectModifierKey = i,
+                search: new SearchMetadata(genLang.DragKeyMod, Keywords: [kw.Drag, kw.Modifier])
+            ),
+            Option.ComboBox(
+                genLang.DragPlayersOnly,
+                profile.DragSelect_PlayersModifier,
+                [
+                    genLang.SharedNone,
+                    genLang.SharedCtrl,
+                    genLang.SharedShift,
+                    genLang.SharedAlt
+                ],
+                i => profile.DragSelect_PlayersModifier = i,
+                search: new SearchMetadata(genLang.DragPlayersOnly, Keywords: [kw.Drag, kw.Player])
+            ),
+            Option.ComboBox(
+                genLang.DragMobsOnly,
+                profile.DragSelect_MonstersModifier,
+                [
+                    genLang.SharedNone,
+                    genLang.SharedCtrl,
+                    genLang.SharedShift,
+                    genLang.SharedAlt
+                ],
+                i => profile.DragSelect_MonstersModifier = i,
+                search: new SearchMetadata(genLang.DragMobsOnly, Keywords: [kw.Drag, kw.Monster])
+            ),
+            Option.ComboBox(
+                genLang.DragNameplatesOnly,
+                profile.DragSelect_NameplateModifier,
+                [
+                    genLang.SharedNone,
+                    genLang.SharedCtrl,
+                    genLang.SharedShift,
+                    genLang.SharedAlt
+                ],
+                i => profile.DragSelect_NameplateModifier = i,
+                search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Nameplate])
+            ),
+            Option.InputField(
+                genLang.DragX,
+                new Accessor<string>(() => profile.DragSelectStartX.ToString(), s =>
+                {
+                    if (int.TryParse(s, out int result))
+                        profile.DragSelectStartX = result;
+                }),
+                search: new SearchMetadata(genLang.DragX, Keywords: [kw.Drag, kw.X])
+            ),
+            Option.InputField(
+                genLang.DragY,
+                new Accessor<string>(() => profile.DragSelectStartY.ToString(), s =>
+                {
+                    if (int.TryParse(s, out int result))
+                        profile.DragSelectStartY = result;
+                }),
+                search: new SearchMetadata(genLang.DragY, Keywords: [kw.Drag, kw.Y])
             )
         );
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
@@ -12,49 +13,54 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class ContainersTab
 {
-    internal static OptionItem GetContent()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.LabelContainers, GetContainerMenuTabs);
-    }
+    internal static IOptionSource GetContent() => GetContainerMenuTabs();
 
-    private static MyraTabControl GetContainerMenuTabs()
+    private static OptionTabGroup GetContainerMenuTabs()
     {
         ModernOptionsGumpLanguage.Containers containerLang = Language.Instance.GetModernOptionsGumpLanguage.GetContainers;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        var tabs = new MyraTabControl();
-        tabs.AddTab(containerLang.LabelOriginalContainers, GetStandardContainerSection);
-        tabs.AddTab(containerLang.LabelGridContainers, GetGridContainerSection);
-        return tabs;
+        return new OptionTabGroup()
+            .AddTab(
+                containerLang.LabelOriginalContainers,
+                GetStandardContainerSection,
+                new SearchMetadata(containerLang.LabelOriginalContainers, Keywords: [kw.Original, kw.Standard])
+            )
+            .AddTab(
+                containerLang.LabelGridContainers,
+                GetGridContainerSection,
+                new SearchMetadata(containerLang.LabelGridContainers, Keywords: [kw.Grid])
+            );
     }
 
-    private static VisualContainer GetStandardContainerSection()
+    private static IOptionSource GetStandardContainerSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        var container = new VisualContainer(
-            new VisualContainerProps { LabelText = containerLang.LabelOriginalContainers },
+        var content = new List<OptionContent>
+        {
             GetNormalContainerCheckboxesSection(),
             GetNormalContainersScalingSection(),
-            new MyraButton(
+            Option.Button(
                 containerLang.RebuildContainersTxt,
                 () => World.Instance.ContainerManager.BuildContainerFile(true)
             )
-        );
+        };
 
         if (Client.Game.UO.Version >= ClientVersion.CV_706000)
-            container.Add(
-                OptionsFactory.CreateCheckboxOption(
+            content.Add(
+                Option.Checkbox(
                     containerLang.UseLargeContainerGumps,
                     new Accessor<bool>(() => profile.UseLargeContainerGumps)
                 )
             );
 
         if (Client.Game.UO.Version >= ClientVersion.CV_705301)
-            container.Add(
-                OptionsFactory.CreateComboBox(
+            content.Add(
+                Option.ComboBox(
                     containerLang.CharacterBackpackStyle,
                     profile.BackpackStyle,
                     [
@@ -67,142 +73,163 @@ public static class ContainersTab
                 )
             );
 
-        return container;
+        return OptionsUi.Vertical([.. content])
+            .WithSearch(new SearchMetadata(containerLang.LabelOriginalContainers, Tags: [kw.Container, kw.Original]));
     }
 
-    private static WrapPanel GetNormalContainerCheckboxesSection()
+    private static OptionFragment GetNormalContainerCheckboxesSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateCheckboxOption(
+        return OptionsUi.Vertical(
+            Option.Checkbox(
                 containerLang.DoubleClickToLootItemsInsideContainers,
-                new Accessor<bool>(() => profile.DoubleClickToLootInsideContainers)
+                new Accessor<bool>(() => profile.DoubleClickToLootInsideContainers),
+                search: new SearchMetadata(containerLang.DoubleClickToLootItemsInsideContainers, Keywords: [kw.Double, kw.Click, kw.Loot])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 containerLang.RelativeDragAndDropItemsInContainers,
-                new Accessor<bool>(() => profile.RelativeDragAndDropItems)
+                new Accessor<bool>(() => profile.RelativeDragAndDropItems),
+                search: new SearchMetadata(containerLang.RelativeDragAndDropItemsInContainers, Keywords: [kw.Relative, kw.Drag, kw.Drop])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 containerLang.HighlightContainerOnGroundWhenMouseIsOverAContainerGump,
-                new Accessor<bool>(() => profile.HighlightContainerWhenSelected)
-            ),
-            OptionsFactory.CreateCheckboxOption(
-                containerLang.RecolorContainerGumpByWithContainerHue,
-                new Accessor<bool>(() => profile.HueContainerGumps)
-            ),
-            new CheckBoxGroup(
-                new PropertyBinder(
-                    new Accessor<bool>(() => profile.OverrideContainerLocation),
-                    containerLang.OverrideContainerGumpLocations
-                ),
-                OptionsFactory.CreateComboBox(
-                    containerLang.OverridePosition,
-                    profile.OverrideContainerLocationSetting,
-                    [
-                        containerLang.PositionOpt_NearContainer,
-                        containerLang.PositionOpt_TopRight,
-                        containerLang.PositionOpt_LastDraggedPosition,
-                        containerLang.RememberEachContainer
-                    ],
-                    i => profile.OverrideContainerLocationSetting = i
+                new Accessor<bool>(() => profile.HighlightContainerWhenSelected),
+                search: new SearchMetadata(
+                    containerLang.HighlightContainerOnGroundWhenMouseIsOverAContainerGump,
+                    Keywords: [kw.Highlight, kw.Ground, kw.Mouse, kw.Over]
                 )
+            ),
+            Option.Checkbox(
+                containerLang.RecolorContainerGumpByWithContainerHue,
+                new Accessor<bool>(() => profile.HueContainerGumps),
+                search: new SearchMetadata(containerLang.RecolorContainerGumpByWithContainerHue, Keywords: [kw.Recolor, kw.Hue])
+            ),
+            Option.Checkbox(
+                containerLang.OverrideContainerGumpLocations,
+                new Accessor<bool>(() => profile.OverrideContainerLocation),
+                search: new SearchMetadata(containerLang.OverrideContainerGumpLocations, Keywords: [kw.Override, kw.Location])
+            ),
+            Option.ComboBox(
+                containerLang.OverridePosition,
+                profile.OverrideContainerLocationSetting,
+                [
+                    containerLang.PositionOpt_NearContainer,
+                    containerLang.PositionOpt_TopRight,
+                    containerLang.PositionOpt_LastDraggedPosition,
+                    containerLang.RememberEachContainer
+                ],
+                i => profile.OverrideContainerLocationSetting = i,
+                search: new SearchMetadata(containerLang.OverridePosition, Keywords: [kw.Position])
             )
         );
     }
 
-    private static VisualContainer GetNormalContainersScalingSection()
+    private static OptionFragment GetNormalContainersScalingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
+        return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = containerLang.ContainerScale },
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 containerLang.ContainerScale,
                 Constants.MIN_CONTAINER_SIZE_PERC,
                 Constants.MAX_CONTAINER_SIZE_PERC,
-                profile.ContainersScale,
-                i =>
+                new Accessor<float>(() => profile.ContainersScale, f =>
                 {
-                    profile.ContainersScale = (byte)i;
-                    UIManager.ContainerScale = (byte)i / 100f;
+                    profile.ContainersScale = (byte)f;
+                    UIManager.ContainerScale = (byte)f / 100f;
                     UIManager.ForEach<ContainerGump>(c => c.RequestUpdateContents());
-                }
+                }),
+                search: new SearchMetadata(containerLang.ContainerScale, Keywords: [kw.Scale, kw.Size])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 containerLang.AlsoScaleItems,
-                new Accessor<bool>(() => profile.ScaleItemsInsideContainers)
+                new Accessor<bool>(() => profile.ScaleItemsInsideContainers),
+                search: new SearchMetadata(containerLang.AlsoScaleItems, Keywords: [kw.Scale, kw.Item])
             )
         );
     }
 
-    private static VisualContainer GetGridContainerSection()
+    private static IOptionSource GetGridContainerSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = containerLang.LabelGridContainers, LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/" },
-            OptionTabCommons.StyledVerticalWrapPanel(
-                new CheckBoxGroup(
-                    new PropertyBinder(
-                        new Accessor<bool>(() => profile.UseGridLayoutContainerGumps),
-                        tuoLang.EnableGridContainers
+        return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps
+                {
+                    LabelText = containerLang.LabelGridContainers,
+                    LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/"
+                },
+                Option.Checkbox(
+                    tuoLang.EnableGridContainers,
+                    new Accessor<bool>(() => profile.UseGridLayoutContainerGumps),
+                    search: new SearchMetadata(tuoLang.EnableGridContainers, Keywords: [kw.Enable])
+                ),
+                Option.Checkbox(
+                    tuoLang.GridContainersDefaultToOldStyleView,
+                    new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
+                    search: new SearchMetadata(tuoLang.GridContainersDefaultToOldStyleView, Keywords: [kw.Old, kw.Style, kw.View])
+                ),
+                Option.ComboBox(
+                    tuoLang.SearchStyle,
+                    profile.GridContainerSearchMode,
+                    [tuoLang.OnlyShow, tuoLang.Highlight],
+                    i => profile.GridContainerSearchMode = i,
+                    search: new SearchMetadata(tuoLang.SearchStyle, Keywords: [kw.Search, kw.Style])
+                ),
+                Option.Checkbox(
+                    tuoLang.EnableContainerPreview,
+                    new Accessor<bool>(() => profile.GridEnableContPreview),
+                    tuoLang.TooltipPreview,
+                    search: new SearchMetadata(tuoLang.EnableContainerPreview, Keywords: [kw.Preview])
+                ),
+                Option.Checkbox(
+                    tuoLang.MakeAnchorable,
+                    new Accessor<bool>(
+                        () => profile.EnableGridContainerAnchor,
+                        b =>
+                        {
+                            profile.EnableGridContainerAnchor = b;
+                            GridContainer.UpdateAllGridContainers();
+                        }
                     ),
-                    OptionsFactory.CreateCheckboxOption(
-                        tuoLang.GridContainersDefaultToOldStyleView,
-                        new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView)
-                    ),
-                    OptionsFactory.CreateComboBox(
-                        tuoLang.SearchStyle,
-                        profile.GridContainerSearchMode,
-                        [tuoLang.OnlyShow, tuoLang.Highlight],
-                        i => profile.GridContainerSearchMode = i
-                    ),
-                    OptionsFactory.CreateCheckboxOption(
-                        tuoLang.EnableContainerPreview,
-                        new Accessor<bool>(() => profile.GridEnableContPreview),
-                        tuoLang.TooltipPreview
-                    ),
-                    OptionsFactory.CreateCheckboxOption(
-                        tuoLang.MakeAnchorable,
-                        new Accessor<bool>(
-                            () => profile.EnableGridContainerAnchor,
-                            b =>
-                            {
-                                profile.EnableGridContainerAnchor = b;
-                                GridContainer.UpdateAllGridContainers();
-                            }
-                        ),
-                        tuoLang.TooltipGridAnchor
-                    ),
-                    OptionsFactory.CreateCheckboxOption(
-                        tuoLang.GridDisableTargeting,
-                        new Accessor<bool>(() => profile.DisableTargetingGridContainers)
-                    ),
-                    GetGridContainerStylingSection(),
-                    GetGridContainerHighlightingSection()
-                )
+                    tuoLang.TooltipGridAnchor,
+                    search: new SearchMetadata(tuoLang.MakeAnchorable, Keywords: [kw.Anchor])
+                ),
+                Option.Checkbox(
+                    tuoLang.GridDisableTargeting,
+                    new Accessor<bool>(() => profile.DisableTargetingGridContainers),
+                    search: new SearchMetadata(tuoLang.GridDisableTargeting, Keywords: [kw.Targeting, kw.Disable])
+                ),
+                GetGridContainerStylingSection(),
+                GetGridContainerHighlightingSection()
             )
-        );
+        ).WithSearch(new SearchMetadata(containerLang.LabelGridContainers, Tags: [kw.Container, kw.Grid]));
     }
 
-    private static VisualContainer GetGridContainerStylingSection()
+    private static OptionFragment GetGridContainerStylingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
+        return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = containerLang.LabelGridContainerStyling },
-            OptionsFactory.CreateComboBox(
+            Option.ComboBox(
                 tuoLang.ContainerStyle,
                 profile.Grid_BorderStyle,
                 Enum.GetNames<GridContainer.BorderStyle>(),
@@ -210,60 +237,62 @@ public static class ContainersTab
                 {
                     profile.Grid_BorderStyle = i;
                     GridContainer.UpdateAllGridContainers();
-                }
+                },
+                search: new SearchMetadata(tuoLang.ContainerStyle, Keywords: [kw.Style, kw.Border])
             ),
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 tuoLang.GridContainerScale,
                 50,
                 200,
-                profile.GridContainersScale,
-                i => profile.GridContainersScale = (byte)i
+                new Accessor<float>(() => profile.GridContainersScale, f => profile.GridContainersScale = (byte)f),
+                search: new SearchMetadata(tuoLang.GridContainerScale, Keywords: [kw.Scale, kw.Size])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.AlsoScaleItems,
-                new Accessor<bool>(() => profile.GridContainerScaleItems)
+                new Accessor<bool>(() => profile.GridContainerScaleItems),
+                search: new SearchMetadata(tuoLang.AlsoScaleItems, Keywords: [kw.Scale, kw.Item])
             ),
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 tuoLang.GridItemBorderOpacity,
                 0,
                 100,
-                profile.GridBorderAlpha,
-                i =>
+                new Accessor<float>(() => profile.GridBorderAlpha, f =>
                 {
-                    profile.GridBorderAlpha = (byte)i;
+                    profile.GridBorderAlpha = (byte)f;
                     GridContainer.GridItem.StaticGridContainerSettingUpdated();
-                }
+                }),
+                search: new SearchMetadata(tuoLang.GridItemBorderOpacity, Keywords: [kw.Border, kw.Opacity])
             ),
-            OptionsFactory.CreateHuePicker(
+            Option.HuePicker(
                 tuoLang.BorderColor,
-                profile.GridBorderHue,
-                h =>
+                new Accessor<ushort>(() => profile.GridBorderHue, h =>
                 {
                     profile.GridBorderHue = h;
                     GridContainer.GridItem.StaticGridContainerSettingUpdated();
-                }
+                }),
+                search: new SearchMetadata(tuoLang.BorderColor, Keywords: [kw.Border, kw.Color])
             ),
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 tuoLang.ContainerOpacity,
                 0,
                 100,
-                profile.ContainerOpacity,
-                i =>
+                new Accessor<float>(() => profile.ContainerOpacity, f =>
                 {
-                    profile.ContainerOpacity = (byte)i;
+                    profile.ContainerOpacity = (byte)f;
                     GridContainer.UpdateAllGridContainers();
-                }
+                }),
+                search: new SearchMetadata(tuoLang.ContainerOpacity, Keywords: [kw.Opacity])
             ),
-            OptionsFactory.CreateHuePicker(
+            Option.HuePicker(
                 tuoLang.BackgroundColor,
-                profile.AltGridContainerBackgroundHue,
-                h =>
+                new Accessor<ushort>(() => profile.AltGridContainerBackgroundHue, h =>
                 {
                     profile.AltGridContainerBackgroundHue = h;
                     GridContainer.UpdateAllGridContainers();
-                }
+                }),
+                search: new SearchMetadata(tuoLang.BackgroundColor, Keywords: [kw.Background, kw.Color])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.UseContainersHue,
                 new Accessor<bool>(
                     () => profile.Grid_UseContainerHue,
@@ -272,9 +301,10 @@ public static class ContainersTab
                         profile.Grid_UseContainerHue = b;
                         GridContainer.UpdateAllGridContainers();
                     }
-                )
+                ),
+                search: new SearchMetadata(tuoLang.UseContainersHue, Keywords: [kw.Hue])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.HideBorders,
                 new Accessor<bool>(
                     () => profile.Grid_HideBorder,
@@ -283,50 +313,62 @@ public static class ContainersTab
                         profile.Grid_HideBorder = b;
                         GridContainer.UpdateAllGridContainers();
                     }
-                )
+                ),
+                search: new SearchMetadata(tuoLang.HideBorders, Keywords: [kw.Hide, kw.Border])
             ),
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 tuoLang.DefaultGridRows,
                 1,
                 20,
-                profile.Grid_DefaultRows,
-                i => profile.Grid_DefaultRows = (int)i
+                new Accessor<float>(() => profile.Grid_DefaultRows, f => profile.Grid_DefaultRows = (int)f),
+                search: new SearchMetadata(tuoLang.DefaultGridRows, Keywords: [kw.Row])
             ),
-            OptionsFactory.CreateSliderOption(
+            Option.Slider(
                 tuoLang.DefaultGridColumns,
                 1,
                 20,
-                profile.Grid_DefaultColumns,
-                i => profile.Grid_DefaultColumns = (int)i
+                new Accessor<float>(() => profile.Grid_DefaultColumns, f => profile.Grid_DefaultColumns = (int)f),
+                search: new SearchMetadata(tuoLang.DefaultGridColumns, Keywords: [kw.Column])
             )
         );
     }
 
-    private static VisualContainer GetGridContainerHighlightingSection()
+    private static OptionFragment GetGridContainerHighlightingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Containers containerLang = lang.GetContainers;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = containerLang.LabelGridContainerHighlighting, LabelLink = "https://tazuo.org/wiki/grid-highlighting/" },
-            OptionsFactory.CreateSliderOption(
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps
+            {
+                LabelText = containerLang.LabelGridContainerHighlighting,
+                LabelLink = "https://tazuo.org/wiki/grid-highlighting/"
+            },
+            Option.Slider(
                 tuoLang.GridHighlightSize,
                 1,
                 5,
-                profile.GridHighlightSize,
-                i => profile.GridHighlightSize = (int)i
+                new Accessor<float>(() => profile.GridHighlightSize, f => profile.GridHighlightSize = (int)f),
+                search: new SearchMetadata(tuoLang.GridHighlightSize, Keywords: [kw.Highlight, kw.Size])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.GridHighlightProperties,
-                new Accessor<bool>(() => profile.GridHighlightProperties)
+                new Accessor<bool>(() => profile.GridHighlightProperties),
+                search: new SearchMetadata(tuoLang.GridHighlightProperties, Keywords: [kw.Highlight, kw.Property])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 tuoLang.GridHighlightShowRuleName,
-                new Accessor<bool>(() => profile.GridHighlightShowRuleName)
+                new Accessor<bool>(() => profile.GridHighlightShowRuleName),
+                search: new SearchMetadata(tuoLang.GridHighlightShowRuleName, Keywords: [kw.Highlight, kw.Rule, kw.Name])
             ),
-            new MyraButton(tuoLang.GridHighlightSettings, () => GridHighlightMenu.Open(World.Instance))
+            Option.Button(
+                tuoLang.GridHighlightSettings,
+                () => GridHighlightMenu.Open(World.Instance),
+                search: new SearchMetadata(tuoLang.GridHighlightSettings, Keywords: [kw.Highlight, kw.Setting])
+            )
         );
     }
 }

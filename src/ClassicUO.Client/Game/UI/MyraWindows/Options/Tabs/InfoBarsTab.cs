@@ -12,7 +12,16 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class InfoBarsTab
 {
-    public static Widget GetContent()
+    internal static IOptionSource GetContent()
+    {
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        return OptionsUi.Vertical(
+            Option.Custom(GetContentWidget, new SearchMetadata(lang.ButtonInfoBar, Keywords: [kw.InfoBarSpaced, kw.InfoBar, kw.Stat]))
+        ).WithSearch(new SearchMetadata(lang.ButtonInfoBar, Tags: [kw.InfoBarSpaced, kw.InfoBar, kw.Stat]));
+    }
+
+    private static Widget GetContentWidget()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.InfoBars ibLang = Language.Instance.GetModernOptionsGumpLanguage.GetInfoBars;
@@ -79,7 +88,7 @@ public static class InfoBarsTab
         // Add item button
         root.Widgets.Add(new MyraButton(ibLang.AddItem, () =>
         {
-            var ibi = new InfoBarItem("HP", InfoBarVars.HP, 0x3B9);
+            var ibi = new InfoBarItem(ibLang.Hp, InfoBarVars.HP, 0x3B9);
             World.Instance.InfoBars?.AddItem(ibi);
             UIManager.GetGump<InfoBarGump>()?.ResetItems();
             itemsPanel.Widgets.Add(BuildItemRow(ibi, itemsPanel));
@@ -109,7 +118,8 @@ public static class InfoBarsTab
         row.Widgets.Add(labelInput);
 
         // Hue picker button
-        var hueBtn = new MyraButton("Color", () =>
+        ModernOptionsGumpLanguage.InfoBars ibLang = Language.Instance.GetModernOptionsGumpLanguage.GetInfoBars;
+        var hueBtn = new MyraButton(ibLang.Color, () =>
         {
             UIManager.GetGump<ModernColorPicker>()?.Dispose();
             UIManager.Add(new ModernColorPicker(World.Instance, h =>
@@ -121,7 +131,7 @@ public static class InfoBarsTab
         {
             Width = 60,
             MinWidth = 60,
-            Tooltip = $"Hue: 0x{item.hue:X}"
+            Tooltip = string.Format(ibLang.HueTooltipFormat, item.hue)
         };
         row.Widgets.Add(hueBtn);
 
@@ -141,7 +151,7 @@ public static class InfoBarsTab
         row.Widgets.Add(varCombo);
 
         // Delete button
-        var deleteBtn = new MyraButton("X", () =>
+        var deleteBtn = new MyraButton(ibLang.DeleteButtonLabel, () =>
         {
             World.Instance.InfoBars?.RemoveItem(item);
             UIManager.GetGump<InfoBarGump>()?.ResetItems();

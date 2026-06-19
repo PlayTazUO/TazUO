@@ -6,6 +6,8 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 public record SearchMetadata(string? SearchText = null, string[]? Tags = null, string[]? Keywords = null)
 {
+    private string[]? NormalizedTags => Tags?.SelectMany(t => t.Split(',').Select(s => s.Trim())).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+    private string[]? NormalizedKeywords => Keywords?.SelectMany(k => k.Split(',').Select(s => s.Trim())).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
     public bool Matches(SearchMetadata search)
     {
@@ -14,18 +16,18 @@ public record SearchMetadata(string? SearchText = null, string[]? Tags = null, s
             if (SearchText?.Contains(search.SearchText, StringComparison.InvariantCultureIgnoreCase) == true)
                 return true;
 
-            if (Tags?.Any(tag => search.SearchText.Contains(tag, StringComparison.InvariantCultureIgnoreCase)) == true)
+            if (NormalizedTags?.Any(tag => search.SearchText.Contains(tag, StringComparison.InvariantCultureIgnoreCase)) == true)
                 return true;
 
-            if (Keywords?.Any(keyword => search.SearchText.Contains(keyword, StringComparison.InvariantCultureIgnoreCase)) == true)
+            if (NormalizedKeywords?.Any(keyword => search.SearchText.Contains(keyword, StringComparison.InvariantCultureIgnoreCase)) == true)
                 return true;
         }
 
-        if (Tags?.Length > 0 && search.Tags?.Length > 0)
-            return search.Tags.ContainsAny(Tags);
+        if (NormalizedTags?.Length > 0 && search.Tags?.Length > 0)
+            return search.Tags.ContainsAny(NormalizedTags);
 
-        if (Keywords?.Length > 0 && search.Keywords?.Length > 0)
-            return search.Keywords.ContainsAny(Keywords);
+        if (NormalizedKeywords?.Length > 0 && search.Keywords?.Length > 0)
+            return search.Keywords.ContainsAny(NormalizedKeywords);
 
         return false;
     }

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
@@ -10,76 +12,77 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class FontsTab
 {
-    internal static OptionItem GetContent()
-    {
-        ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
-        return new OptionItem(fontsLang.FontsLabel, GetSection);
-    }
-
-    private static StackPanel GetSection()
+    internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        // We need special styling here so no point in using the factory
-        var panel = new WrapPanel
-        {
-            Orientation = Orientation.Horizontal,
-            UniformSizing = true,
-            Aligned = false,
-            VerticalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        panel.AddRange(
-            CreateFontSelectorSection(
-                fontsLang.InfoBarFont,
-                new Accessor<string>(() => profile.InfoBarFont),
-                new Accessor<int>(() => profile.InfoBarFontSize),
-                InfoBarGump.UpdateAllOptions
+        return OptionsUi.Vertical(
+            Option.Spacer(),
+            Option.Custom(
+                () => new LinkLabel(fontsLang.FontsWikiLabel, "https://tazuo.org/wiki/tazuottf-fonts/")
+                {
+                    HorizontalAlignment = HorizontalAlignment.Stretch
+                },
+                new SearchMetadata(fontsLang.FontsWikiLabel, Keywords: [kw.Wiki, kw.Help])
             ),
-            CreateFontSelectorSection(
-                fontsLang.SystemChatFont,
-                new Accessor<string>(() => profile.GameWindowSideChatFont),
-                new Accessor<int>(() => profile.GameWindowSideChatFontSize)
-            ),
-            CreateFontSelectorSection(
-                fontsLang.TooltipFont,
-                new Accessor<string>(() => profile.SelectedToolTipFont),
-                new Accessor<int>(() => profile.SelectedToolTipFontSize)
-            ),
-            CreateFontSelectorSection(
-                fontsLang.OverheadFont,
-                new Accessor<string>(() => profile.OverheadChatFont),
-                new Accessor<int>(() => profile.OverheadChatFontSize)
-            ),
-            CreateFontSelectorSection(
-                fontsLang.JournalFont,
-                new Accessor<string>(() => profile.SelectedTTFJournalFont),
-                new Accessor<int>(() => profile.SelectedJournalFontSize),
-                ResizableJournal.UpdateJournalOptions
-            ),
-            CreateFontSelectorSection(
-                fontsLang.NameplateFont,
-                new Accessor<string>(() => profile.NamePlateFont),
-                new Accessor<int>(() => profile.NamePlateFontSize)
-            ),
-            CreateFontSelectorSection(
-                fontsLang.OptionsFont,
-                new Accessor<string>(() => profile.OptionsFont),
-                new Accessor<int>(() => profile.OptionsFontSize)
+            UniformHorizontal(
+                CreateFontSelectorFragment(
+                    fontsLang.InfoBarFont,
+                    new Accessor<string>(() => profile.InfoBarFont),
+                    new Accessor<int>(() => profile.InfoBarFontSize),
+                    InfoBarGump.UpdateAllOptions
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.SystemChatFont,
+                    new Accessor<string>(() => profile.GameWindowSideChatFont),
+                    new Accessor<int>(() => profile.GameWindowSideChatFontSize)
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.TooltipFont,
+                    new Accessor<string>(() => profile.SelectedToolTipFont),
+                    new Accessor<int>(() => profile.SelectedToolTipFontSize)
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.OverheadFont,
+                    new Accessor<string>(() => profile.OverheadChatFont),
+                    new Accessor<int>(() => profile.OverheadChatFontSize)
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.JournalFont,
+                    new Accessor<string>(() => profile.SelectedTTFJournalFont),
+                    new Accessor<int>(() => profile.SelectedJournalFontSize),
+                    ResizableJournal.UpdateJournalOptions
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.NameplateFont,
+                    new Accessor<string>(() => profile.NamePlateFont),
+                    new Accessor<int>(() => profile.NamePlateFontSize)
+                ),
+                CreateFontSelectorFragment(
+                    fontsLang.OptionsFont,
+                    new Accessor<string>(() => profile.OptionsFont),
+                    new Accessor<int>(() => profile.OptionsFontSize)
+                )
             )
-        );
-
-        return OptionTabCommons.StyledStackPanel(
-            Orientation.Vertical,
-            OptionsFactory.CreateSpacer(),
-            new LinkLabel(fontsLang.FontsWikiLabel, "https://tazuo.org/wiki/tazuottf-fonts/") { HorizontalAlignment = HorizontalAlignment.Stretch },
-            panel
-        );
+        ).WithSearch(new SearchMetadata(fontsLang.FontsLabel, Keywords: [kw.Font, kw.Text, kw.Style], Tags: [kw.Font, kw.Style]));
     }
 
-    private static VisualContainer CreateFontSelectorSection(
+    private static OptionFragment UniformHorizontal(params OptionContent[] children) =>
+        new(
+            () =>
+            {
+                Widget[] widgets = children.Select(c => c.Render()).ToArray();
+                WrapPanel panel = OptionTabCommons.StyledHorizontalWrapPanel(widgets);
+                panel.UniformSizing = true;
+                panel.VerticalAlignment = VerticalAlignment.Center;
+                return panel;
+            },
+            children
+        );
+
+    private static OptionFragment CreateFontSelectorFragment(
         string label,
         Accessor<string> fontProp,
         Accessor<int> fontSizeProp,
@@ -87,6 +90,7 @@ public static class FontsTab
     )
     {
         ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         Accessor<string> fontPropToUse;
         Accessor<int> fontSizePropToUse;
@@ -116,12 +120,16 @@ public static class FontsTab
             fontSizePropToUse = fontSizeProp;
         }
 
-        OptionItem sizeSlider = OptionsFactory.PropBoundSliderOption(fontsLang.Size, fontSizePropToUse, 5, 50, true);
-
-        return new VisualContainer(
+        return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = label },
-            OptionTabCommons.StyledFontSelector(fontsLang.FontLabel, fontPropToUse),
-            sizeSlider
+            Option.FontSelector(fontsLang.FontLabel, fontPropToUse, search: new SearchMetadata(label, Keywords: [kw.Font])),
+            Option.Slider(
+                fontsLang.Size,
+                5,
+                50,
+                new Accessor<float>(() => fontSizePropToUse.Get(), f => fontSizePropToUse.Set((int)f)),
+                search: new SearchMetadata(label, Keywords: [kw.Size])
+            )
         );
     }
 }

@@ -8,59 +8,85 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class GameplayTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent() => GetGameplayMenuTabs();
+
+    private static OptionTabGroup GetGameplayMenuTabs()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonGameplay, GetGameplayMenuTabs);
+        ModernOptionsGumpLanguage.GameplayTabLang gameplayLang = lang.GameplayTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+
+        return new OptionTabGroup()
+            .AddTab(
+                lang.CombatTab.Combat.Label,
+                CombatTab.GetContent,
+                new SearchMetadata(lang.CombatTab.Combat.Label, Keywords: [kw.Combat, kw.Attack, kw.Battle])
+            )
+            .AddTab(
+                lang.MobilesTab.Label,
+                MobilesTab.GetContent,
+                new SearchMetadata(lang.MobilesTab.Label, Keywords: [kw.Mobile, kw.Humanoid, kw.Monster, kw.HP, kw.Health])
+            )
+            .AddTab(
+                lang.MovementTab.Label,
+                MovementTab.GetContent,
+                new SearchMetadata(lang.MovementTab.Label, Keywords: [kw.Movement, kw.Pathfinding, kw.WASD, kw.Move])
+            )
+            .AddTab(
+                gameplayLang.Terrain.Label,
+                GetTerrainAndStaticsSubTabContent,
+                new SearchMetadata(gameplayLang.Terrain.Label, Keywords: [kw.Terrain, kw.Static, kw.Tree, kw.Roof, kw.Vegetation])
+            )
+            .AddTab(
+                lang.LayerHidingTab.Label,
+                LayerHidingTab.GetContent,
+                new SearchMetadata(lang.LayerHidingTab.Label, Keywords: [kw.Layer, kw.Hide, kw.Equipment, kw.Clothing])
+            );
     }
 
-    private static MyraTabControl GetGameplayMenuTabs()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.MovementTabLang movementTabLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTab;
-        ModernOptionsGumpLanguage.LayerHidingTabLang layerHidingLang = Language.Instance.GetModernOptionsGumpLanguage.LayerHidingTab;
-
-        var tabs = new MyraTabControl();
-        tabs.AddTab(lang.ButtonCombatSpells, CombatTab.GetContent);
-        tabs.AddTab(lang.ButtonMobiles, MobilesTab.GetContent);
-        tabs.AddTab(movementTabLang.Movement, MovementTab.GetContent);
-        tabs.AddTab(lang.ButtonTerrainStatics, GetTerrainAndStaticsSubTabContent);
-        tabs.AddTab(layerHidingLang.LayerHiding, LayerHidingTab.GetContent);
-        return tabs;
-    }
-
-    private static WrapPanel GetTerrainAndStaticsSubTabContent()
+    private static IOptionSource GetTerrainAndStaticsSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.General generalLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
+        ModernOptionsGumpLanguage.GameplayTabLang gameplayLang = lang.GameplayTab;
+        ModernOptionsGumpLanguage.GameplayTabLang.TerrainSection terrainLang = gameplayLang.Terrain;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateCheckboxOption(generalLang.HideRoof, !profile.DrawRoofs, b => profile.DrawRoofs = !b),
-            OptionsFactory.CreateCheckboxOption(generalLang.TreesToStump, new Accessor<bool>(() => profile.TreeToStumps)),
-            OptionsFactory.CreateCheckboxOption(generalLang.HideVegetation, new Accessor<bool>(() => profile.HideVegetation)),
-            OptionsFactory.CreateComboBox(
-                generalLang.MagicFieldType,
-                profile.FieldsType,
-                [
-                    generalLang.MagicFieldOpt_Normal,
-                    generalLang.MagicFieldOpt_Static,
-                    generalLang.MagicFieldOpt_Tile
-                ],
-                i => profile.FieldsType = i
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                terrainLang.HideRoof,
+                !profile.DrawRoofs,
+                b => profile.DrawRoofs = !b,
+                search: new SearchMetadata(terrainLang.HideRoof, Keywords: [kw.Roof])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                tuoLang.ApplyBorderCaveTiles,
-                profile.EnableCaveBorder,
-                newValue =>
+            Option.Checkbox(
+                terrainLang.TreesToStump,
+                new Accessor<bool>(() => profile.TreeToStumps),
+                search: new SearchMetadata(terrainLang.TreesToStump, Keywords: [kw.Tree, kw.Stump])
+            ),
+            Option.Checkbox(
+                terrainLang.HideVegetation,
+                new Accessor<bool>(() => profile.HideVegetation),
+                search: new SearchMetadata(terrainLang.HideVegetation, Keywords: [kw.Vegetation])
+            ),
+            Option.ComboBox(
+                terrainLang.MagicFieldType,
+                profile.FieldsType,
+                [genLang.MagicFieldOpt_Normal, genLang.MagicFieldOpt_Static, genLang.MagicFieldOpt_Tile],
+                i => profile.FieldsType = i,
+                search: new SearchMetadata(terrainLang.MagicFieldType, Keywords: [kw.Magic, kw.Field])
+            ),
+            Option.Checkbox(
+                terrainLang.ApplyBorderCaveTiles,
+                new Accessor<bool>(() => profile.EnableCaveBorder, newValue =>
                 {
                     profile.EnableCaveBorder = newValue;
-                    // This looks buggy in the source (i.e., the old windows option).
-                    // What happens when this is reset to false? Needs a game restart?
                     if (newValue)
                         StaticFilters.ApplyCaveTileBorder();
-                }
+                }),
+                search: new SearchMetadata(terrainLang.ApplyBorderCaveTiles, Keywords: [kw.Cave, kw.Border])
             )
-        );
+        ).WithSearch(new SearchMetadata(terrainLang.Label, Tags: [kw.Terrain, kw.Static]));
     }
 }

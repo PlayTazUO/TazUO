@@ -256,168 +256,103 @@ public class OptionsWindow : MyraControl
 
     private void SetupMiscOptions()
     {
-        const string miscKey = "Misc";
-
-        if (!_options.ContainsKey(miscKey))
-            _options.Add(miscKey, []);
-
-        _options[miscKey].Add(MiscTab.GetContent());
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        AddOptionSource(lang.MiscTab.Label, MiscTab.GetContent());
     }
 
     private void SetupGameplayTab()
     {
-        const string gameplayKey = "Gameplay";
-        if (!_options.ContainsKey(gameplayKey))
-            _options.Add(gameplayKey, []);
-        _options[gameplayKey].Add(GameplayTab.GetContent());
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        AddOptionSource(lang.GameplayTab.GameplayLabel, GameplayTab.GetContent());
     }
 
     private void SetupSound()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Sound soundLang = lang.GetSound;
+        ModernOptionsGumpLanguage.SoundTabLang soundLang = lang.SoundTab;
+        ModernOptionsGumpLanguage.Sound soundSubLang = lang.GetSound;
 
-        if (!_options.ContainsKey("Sound"))
-            _options.Add("Sound", []);
-
-        List<OptionItem> opt = _options["Sound"];
-
-        opt.Add(
-            new OptionItem(
-                soundLang.EnableSound,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.EnableSound), soundLang.EnableSound),
-                    OptionsFactory.CreateSliderOption(
-                        soundLang.SharedVolume,
-                        0,
-                        100,
-                        profile.SoundVolume,
-                        f => profile.SoundVolume = (int)f
-                    )
-                )
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            new OptionItem(
-                soundLang.EnableMusic,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.EnableMusic), soundLang.EnableMusic),
-                    OptionsFactory.CreateSliderOption(
-                        soundLang.SharedVolume,
-                        0,
-                        100,
-                        profile.MusicVolume,
-                        f => profile.MusicVolume = (int)f
-                    )
-                )
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            new OptionItem(
-                soundLang.LoginMusic,
-                () => new CheckBoxGroup(
-                    new PropertyBinder(
-                        new Accessor<bool>(() => Settings.GlobalSettings.LoginMusic),
-                        soundLang.LoginMusic
+        AddOptionSource(
+            soundLang.Label,
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    soundSubLang.EnableSound,
+                    new Accessor<bool>(() => profile.EnableSound),
+                    search: new SearchMetadata(soundSubLang.EnableSound, Keywords: ["Sound"])
+                ),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<float>(() => profile.SoundVolume, f => profile.SoundVolume = (int)f),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Volume"])
+                ),
+                Option.Spacer(),
+                Option.Checkbox(
+                    soundSubLang.EnableMusic,
+                    new Accessor<bool>(() => profile.EnableMusic),
+                    search: new SearchMetadata(soundSubLang.EnableMusic, Keywords: ["Music"])
+                ),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<float>(() => profile.MusicVolume, f => profile.MusicVolume = (int)f),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Music", "Volume"])
+                ),
+                Option.Spacer(),
+                Option.Checkbox(
+                    soundSubLang.LoginMusic,
+                    new Accessor<bool>(() => Settings.GlobalSettings.LoginMusic),
+                    search: new SearchMetadata(soundSubLang.LoginMusic, Keywords: ["Login", "Music"])
+                ),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<float>(() => Settings.GlobalSettings.LoginMusicVolume, f => Settings.GlobalSettings.LoginMusicVolume = (int)f),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: ["Login", "Volume"])
+                ),
+                Option.Spacer(),
+                Option.Checkbox(soundSubLang.PlayFootsteps, new Accessor<bool>(() => profile.EnableFootstepsSound), search: new SearchMetadata(soundSubLang.PlayFootsteps, Keywords: ["Footstep"])),
+                Option.Checkbox(soundSubLang.CombatMusic, new Accessor<bool>(() => profile.EnableCombatMusic), search: new SearchMetadata(soundSubLang.CombatMusic, Keywords: ["Combat", "Music"])),
+                Option.Checkbox(soundSubLang.BackgroundMusic, new Accessor<bool>(() => profile.ReproduceSoundsInBackground), search: new SearchMetadata(soundSubLang.BackgroundMusic, Keywords: ["Background", "Music"])),
+                Option.Spacer(),
+                OptionsUi.VisualContainer(
+                    new VisualContainerProps { LabelText = soundLang.VoiceToText },
+                    Option.Button(
+                        soundLang.CreateVoiceButton,
+                        () =>
+                        {
+                            var macroManager = MacroManager.TryGetMacroManager(World.Instance);
+                            if (macroManager == null) return;
+                            var macro = Macro.CreateFastMacro("Toggle Voice", MacroType.ToggleVoiceRecognition, MacroSubType.MSC_NONE);
+                            macroManager.PushToBack(macro);
+                            UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
+                        },
+                        search: new SearchMetadata(soundLang.CreateVoiceButton, Keywords: ["Voice"])
                     ),
-                    OptionsFactory.CreateSliderOption(
-                        soundLang.SharedVolume,
-                        0,
-                        100,
-                        Settings.GlobalSettings.LoginMusicVolume,
-                        f => Settings.GlobalSettings.LoginMusicVolume = (int)f
+                    Option.InputField(
+                        lang.GetTazUO.VoiceModelPath,
+                        new Accessor<string>(() => profile.VoiceModelPath, s => profile.VoiceModelPath = s),
+                        lang.GetTazUO.VoiceModelPathTooltip,
+                        search: new SearchMetadata(lang.GetTazUO.VoiceModelPath, Keywords: ["Voice", "Model"])
                     )
                 )
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                soundLang.PlayFootsteps,
-                new Accessor<bool>(() => profile.EnableFootstepsSound)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                soundLang.CombatMusic,
-                new Accessor<bool>(() => profile.EnableCombatMusic)
-            )
-        );
-        opt.Add(
-            OptionsFactory.CreateCheckboxOption(
-                soundLang.BackgroundMusic,
-                new Accessor<bool>(() => profile.ReproduceSoundsInBackground)
-            )
-        );
-
-        opt.Add(OptionsFactory.CreateSpacer());
-
-        opt.Add(
-            new OptionItem(
-                "Voice to text",
-                () => new MyraButton(
-                    "Create voice toggle button",
-                    () =>
-                    {
-                        var macroManager = MacroManager.TryGetMacroManager(World.Instance);
-                        if (macroManager == null)
-                            return;
-                        var macro = Macro.CreateFastMacro(
-                            "Toggle Voice",
-                            MacroType.ToggleVoiceRecognition,
-                            MacroSubType.MSC_NONE
-                        );
-                        macroManager.PushToBack(macro);
-                        UIManager.Add(
-                            new MacroButtonGump(
-                                World.Instance,
-                                macro,
-                                Mouse.Position.X,
-                                Mouse.Position.Y
-                            )
-                        );
-                    }
-                )
-            )
-        );
-        ModernOptionsGumpLanguage.TazUO voiceLang = lang.GetTazUO;
-        opt.Add(
-            OptionsFactory.CreateInputField(
-                voiceLang.VoiceModelPath,
-                profile.VoiceModelPath,
-                s => profile.VoiceModelPath = s,
-                voiceLang.VoiceModelPathTooltip
-            )
+            ).WithSearch(new SearchMetadata(soundLang.Label, Keywords: [soundLang.Keywords], Tags: [soundLang.Tags]))
         );
     }
 
     private void SetupVideo()
     {
-        const string videoKey = "Video";
-
-        if (!_options.ContainsKey(videoKey))
-            _options.Add(videoKey, []);
-
-        List<OptionItem> optionsList = _options[videoKey];
-        optionsList.Add(VideoTab.GetContent());
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        AddOptionSource(lang.VideoTab.Label, VideoTab.GetContent());
     }
 
     private void SetupChatOptions()
     {
         string chatAndSpeechKey = Language.Instance.GetModernOptionsGumpLanguage.LabelChatAndText;
-
-        if (!_options.ContainsKey(chatAndSpeechKey))
-            _options.Add(chatAndSpeechKey, []);
-
-        _options[chatAndSpeechKey].Add(ChatTab.GetContent());
+        AddOptionSource(chatAndSpeechKey, ChatTab.GetContent());
     }
 }

@@ -41,7 +41,8 @@ public class MyraCheckButton : CheckButton
     /// <param name="text"></param>
     /// <param name="tooltip"></param>
     /// <returns></returns>
-    public static MyraCheckButton CreateWithCallback(bool isChecked,
+    public static MyraCheckButton CreateWithCallback(
+        bool isChecked,
         Action<bool> onChange,
         string? text = null,
         string? tooltip = null)

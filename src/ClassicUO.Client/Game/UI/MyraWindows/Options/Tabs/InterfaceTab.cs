@@ -10,52 +10,53 @@ public static class InterfaceTab
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new OptionTabGroup()
+        return new OptionTabGroup(search: new SearchMetadata(Tags: [kw.Interface, kw.Container]))
             .AddTab(
                 lang.ButtonContainers,
                 ContainersTab.GetContent,
-                new SearchMetadata(lang.ButtonContainers, ["Container", "Containers"])
+                new SearchMetadata(lang.ButtonContainers)
             )
             .AddTab(
                 lang.ButtonNameplates,
                 NameplatesTab.GetContent,
-                new SearchMetadata(lang.ButtonNameplates, ["Nameplate", "Nameplates", "Names"])
+                new SearchMetadata(lang.ButtonNameplates, [kw.Nameplate, kw.Name])
             )
             .AddTab(
                 lang.LabelTooltips,
                 TooltipsTab.GetContent,
-                new SearchMetadata(lang.LabelTooltips, ["Tooltip", "Tooltips", "Hover"])
+                new SearchMetadata(lang.LabelTooltips, [kw.Tooltip, kw.Hover])
             )
             .AddTab(
                 lang.ButtonInfoBar,
-                (Func<Widget>)InfoBarsTab.GetContent,
-                new SearchMetadata(lang.ButtonInfoBar, ["Info Bar", "InfoBar", "Stats"])
+                InfoBarsTab.GetContent,
+                new SearchMetadata(lang.ButtonInfoBar, [kw.InfoBarSpaced, kw.InfoBar, kw.Stat])
             )
             .AddTab(
                 lang.ButtonHealthBars,
                 HealthBarsTab.GetContent,
-                new SearchMetadata(lang.ButtonHealthBars, ["Health Bar", "Health Bars", "HP"])
+                new SearchMetadata(lang.ButtonHealthBars, [kw.HealthBar, kw.HP])
             )
             .AddTab(
                 lang.ButtonGumps,
                 GumpsTab.GetContent,
-                new SearchMetadata(lang.ButtonGumps, ["Gump", "Gumps", "Window", "Windows"])
+                new SearchMetadata(lang.ButtonGumps, [kw.Gump, kw.Window])
             )
             .AddTab(
                 lang.ButtonCounters,
                 CountersTab.GetContent,
-                new SearchMetadata(lang.ButtonCounters, ["Counter", "Counters", "Items", "Reagents"])
+                new SearchMetadata(lang.ButtonCounters, [kw.Counter, kw.Item, kw.Reagent])
             )
             .AddTab(
                 lang.ButtonPaperdoll,
                 PaperdollTab.GetContent,
-                new SearchMetadata(lang.ButtonPaperdoll, ["Paperdoll", "Paper Doll", "Character", "Equipment"])
+                new SearchMetadata(lang.ButtonPaperdoll, [kw.Paperdoll, kw.Character, kw.Equipment])
             )
             .AddTab(
                 lang.CooldownsTab.CooldownBarsLabel,
                 CooldownBarsTab.GetContent,
-                new SearchMetadata(lang.CooldownsTab.CooldownBarsLabel, ["Cooldown", "Cooldowns", "Cooldown Bars", "Timers"])
+                new SearchMetadata(lang.CooldownsTab.CooldownBarsLabel, [kw.Cooldown, kw.Timer])
             );
     }
 }

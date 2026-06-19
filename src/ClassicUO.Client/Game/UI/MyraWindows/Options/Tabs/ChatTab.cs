@@ -8,141 +8,187 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class ChatTab
 {
-    internal static OptionItem GetContent()
-    {
-        ModernOptionsGumpLanguage gumpLang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(gumpLang.LabelChatAndText, GetChatMenuTabs);
-    }
+    internal static IOptionSource GetContent() => GetChatMenuTabs();
 
-    private static MyraTabControl GetChatMenuTabs()
+    private static OptionTabGroup GetChatMenuTabs()
     {
-        ModernOptionsGumpLanguage gumpLang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
-        ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang chatLang = lang.ChatTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        var tabs = new MyraTabControl();
-        tabs.AddTab(gumpLang.LabelSpeech, GetSpeechSubTabContent);
-        tabs.AddTab(tuoLang.Journal, GetJournalSubTabContent);
-        tabs.AddTab(fontsLang.FontsLabel, FontsTab.GetContent);
-        return tabs;
+        return new OptionTabGroup()
+            .AddTab(
+                chatLang.Speech.Label,
+                GetSpeechSubTabContent,
+                new SearchMetadata(chatLang.Speech.Label, Keywords: [kw.Speech, kw.Talk])
+            )
+            .AddTab(
+                chatLang.Journal.Label,
+                GetJournalSubTabContentSource,
+                new SearchMetadata(chatLang.Journal.Label, Keywords: [kw.Journal, kw.Log, kw.History])
+            )
+            .AddTab(
+                chatLang.FontTab.FontsLabel,
+                FontsTab.GetContent,
+                new SearchMetadata(chatLang.FontTab.FontsLabel, Keywords: [kw.Font, kw.Text, kw.Style])
+            );
     }
 
     #region Speech
 
-    private static OptionItem GetSpeechSubTabContent()
+    private static IOptionSource GetSpeechSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
+        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new OptionItem(
-            lang.LabelSpeech,
-            () => OptionTabCommons.StyledVerticalWrapPanel(
-                GetDelaySection(),
-                OptionsFactory.CreateSpacer(),
-                GetActivationSection(),
-                OptionsFactory.CreateSpacer(),
-                OptionsFactory.CreateCheckboxOption(lang.GetSpeech.ChatGradient, new Accessor<bool>(() => profile.HideChatGradient)),
-                OptionsFactory.CreateCheckboxOption(lang.GetSpeech.HideGuildChat, new Accessor<bool>(() => profile.IgnoreGuildMessages)),
-                OptionsFactory.CreateCheckboxOption(lang.GetSpeech.HideAllianceChat, new Accessor<bool>(() => profile.IgnoreAllianceMessages)),
-                OptionsFactory.CreateCheckboxOption(tuoLang.DisableSystemChat, new Accessor<bool>(() => profile.DisableSystemChat)),
-                OptionsFactory.CreateSpacer(),
-                GetColorSection()
-            )
+        return OptionsUi.Vertical(
+            GetDelaySection(),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    speechLang.ChatGradient,
+                    new Accessor<bool>(() => profile.HideChatGradient),
+                    search: new SearchMetadata(speechLang.ChatGradient)
+                ),
+                Option.Checkbox(speechLang.HideGuildChat, new Accessor<bool>(() => profile.IgnoreGuildMessages),
+                    search: new SearchMetadata(speechLang.HideGuildChat)),
+                Option.Checkbox(speechLang.HideAllianceChat, new Accessor<bool>(() => profile.IgnoreAllianceMessages),
+                    search: new SearchMetadata(speechLang.HideAllianceChat)),
+                Option.Checkbox(speechLang.DisableSystemChat, new Accessor<bool>(() => profile.DisableSystemChat),
+                    search: new SearchMetadata(speechLang.DisableSystemChat))
+            ),
+            GetActivationSection(),
+            GetColorSection()
+        ).WithSearch(new SearchMetadata(speechLang.Label, [kw.Speech, kw.Chat, kw.Text]));
+    }
+
+    private static OptionFragment GetDelaySection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
+
+        return OptionsUi.Vertical(
+            Option.Checkbox(speechLang.ScaleSpeechDelay, new Accessor<bool>(() => profile.ScaleSpeechDelay),
+                search: new SearchMetadata(speechLang.ScaleSpeechDelay)),
+            Option.Slider(speechLang.SpeechDelay, 0, 1000, new Accessor<float>(() => profile.SpeechDelay, f => profile.SpeechDelay = (int)f),
+                search: new SearchMetadata(speechLang.SpeechDelay))
         );
     }
 
-    private static CheckBoxGroup GetDelaySection()
+    private static OptionFragment GetActivationSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
-        return new CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ScaleSpeechDelay), lang.GetSpeech.ScaleSpeechDelay),
-            OptionsFactory.CreateSliderOption(lang.GetSpeech.SpeechDelay, 0, 1000, profile.SpeechDelay, f => profile.SpeechDelay = (int)f)
+        return OptionsUi.Vertical(
+            Option.Checkbox(speechLang.ChatEnterActivation, new Accessor<bool>(() => profile.ActivateChatAfterEnter),
+                search: new SearchMetadata(speechLang.ChatEnterActivation)),
+            Option.Checkbox(speechLang.ChatEnterSpecial, new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
+                search: new SearchMetadata(speechLang.ChatEnterSpecial)),
+            Option.Checkbox(speechLang.ShiftEnterChat, new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
+                search: new SearchMetadata(speechLang.ShiftEnterChat))
         );
     }
 
-    private static CheckBoxGroup GetActivationSection()
+    private static OptionFragment GetColorSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
-        return new CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ActivateChatAfterEnter), lang.GetSpeech.ChatEnterActivation),
-            OptionsFactory.CreateCheckboxOption(lang.GetSpeech.ChatEnterSpecial, new Accessor<bool>(() => profile.ActivateChatAdditionalButtons)),
-            OptionsFactory.CreateCheckboxOption(lang.GetSpeech.ShiftEnterChat, new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport))
-        );
-    }
-
-    private static VisualContainer GetColorSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = lang.LabelSpeech },
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.SpeechColor, profile.SpeechHue, b => profile.SpeechHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.YellColor, profile.YellHue, b => profile.YellHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.PartyColor, profile.PartyMessageHue, b => profile.PartyMessageHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.AllianceColor, profile.AllyMessageHue, b => profile.AllyMessageHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.EmoteColor, profile.EmoteHue, b => profile.EmoteHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.WhisperColor, profile.WhisperHue, b => profile.WhisperHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.GuildColor, profile.GuildMessageHue, b => profile.GuildMessageHue = b),
-            OptionsFactory.CreateHuePicker(lang.GetSpeech.CharColor, profile.ChatMessageHue, b => profile.ChatMessageHue = b)
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = speechLang.ColorsSection },
+            Option.HuePicker(speechLang.SpeechColor, new Accessor<ushort>(() => profile.SpeechHue, h => profile.SpeechHue = h),
+                new SearchMetadata(speechLang.SpeechColor)),
+            Option.HuePicker(
+                speechLang.YellColor,
+                new Accessor<ushort>(() => profile.YellHue, h => profile.YellHue = h),
+                new SearchMetadata(speechLang.YellColor)
+            ),
+            Option.HuePicker(speechLang.PartyColor, new Accessor<ushort>(() => profile.PartyMessageHue, h => profile.PartyMessageHue = h),
+                new SearchMetadata(speechLang.PartyColor)),
+            Option.HuePicker(speechLang.AllianceColor, new Accessor<ushort>(() => profile.AllyMessageHue, h => profile.AllyMessageHue = h),
+                new SearchMetadata(speechLang.AllianceColor)),
+            Option.HuePicker(speechLang.EmoteColor, new Accessor<ushort>(() => profile.EmoteHue, h => profile.EmoteHue = h),
+                new SearchMetadata(speechLang.EmoteColor)),
+            Option.HuePicker(speechLang.WhisperColor, new Accessor<ushort>(() => profile.WhisperHue, h => profile.WhisperHue = h),
+                new SearchMetadata(speechLang.WhisperColor)),
+            Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue, h => profile.GuildMessageHue = h),
+                new SearchMetadata(speechLang.GuildColor)),
+            Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue, h => profile.ChatMessageHue = h),
+                new SearchMetadata(speechLang.CharColor))
         );
     }
 
     #endregion
 
-    #region Jouranl
+    #region Journal
 
-    private static VisualContainer GetJournalSubTabContent()
+    private static IOptionSource GetJournalSubTabContentSource()
+    {
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.JournalSection journalLang = lang.ChatTab.Journal;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        return OptionsUi.Vertical(
+            GetJournalSubTabContent()
+        ).WithSearch(new SearchMetadata(journalLang.Label, [kw.Journal, kw.Log]));
+    }
+
+    private static OptionFragment GetJournalSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
-        ModernOptionsGumpLanguage.Speech speechLang = Language.Instance.GetModernOptionsGumpLanguage.GetSpeech;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.JournalSection journalLang = lang.ChatTab.Journal;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = tuoLang.Journal, LabelLink = "https://tazuo.org/wiki/tazuojournal/" },
-            OptionsFactory.CreateSliderOption(
-                tuoLang.MaxJournalEntries,
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = journalLang.Label, LabelLink = "https://tazuo.org/wiki/tazuojournal/" },
+            Option.Slider(
+                journalLang.MaxJournalEntries,
                 100,
                 2000,
-                profile.MaxJournalEntries,
-                newValue => profile.MaxJournalEntries = (int)newValue
+                new Accessor<float>(() => profile.MaxJournalEntries, newValue => profile.MaxJournalEntries = (int)newValue),
+                search: new SearchMetadata(journalLang.MaxJournalEntries)
             ),
-            OptionsFactory.CreateSliderOption(
-                tuoLang.JournalOpacity,
+            Option.Slider(
+                journalLang.JournalOpacity,
                 0,
                 100,
-                profile.JournalOpacity,
-                newValue =>
+                new Accessor<float>(() => profile.JournalOpacity, newValue =>
                 {
                     profile.JournalOpacity = (byte)newValue;
                     ResizableJournal.UpdateJournalOptions();
-                }
+                }),
+                search: new SearchMetadata(journalLang.JournalOpacity)
             ),
-            OptionsFactory.CreateComboBox(
-                tuoLang.JournalStyle,
+            Option.ComboBox(
+                journalLang.JournalStyle,
                 profile.JournalStyle,
                 Enum.GetNames<ResizableJournal.BorderStyle>(),
-                newValue => profile.JournalStyle = newValue
+                newValue => profile.JournalStyle = newValue,
+                search: new SearchMetadata(journalLang.JournalStyle)
             ),
-            OptionsFactory.CreateHuePicker(
-                tuoLang.JournalBackgroundColor,
-                profile.AltJournalBackgroundHue,
-                h =>
+            Option.HuePicker(
+                journalLang.JournalBackgroundColor,
+                new Accessor<ushort>(() => profile.AltJournalBackgroundHue, h =>
                 {
                     profile.AltJournalBackgroundHue = h;
                     ResizableJournal.UpdateJournalOptions();
-                }
+                }),
+                new SearchMetadata(journalLang.JournalBackgroundColor)
             ),
-            OptionsFactory.CreateCheckboxOption(tuoLang.JournalHideBorders, new Accessor<bool>(() => profile.HideJournalBorder)),
-            OptionsFactory.CreateCheckboxOption(tuoLang.HideTimestamp, new Accessor<bool>(() => profile.HideJournalTimestamp)),
-            OptionsFactory.CreateCheckboxOption(tuoLang.JournalHideSystemPrefix, new Accessor<bool>(() => profile.HideJournalSystemPrefix)),
-            OptionsFactory.CreateCheckboxOption(tuoLang.MakeAnchorable, new Accessor<bool>(() => profile.JournalAnchorEnabled)),
-            OptionsFactory.CreateCheckboxOption(speechLang.SaveJournalE, new Accessor<bool>(() => profile.SaveJournalToFile))
+            Option.Checkbox(journalLang.JournalHideBorders, new Accessor<bool>(() => profile.HideJournalBorder),
+                search: new SearchMetadata(journalLang.JournalHideBorders)),
+            Option.Checkbox(journalLang.HideTimestamp, new Accessor<bool>(() => profile.HideJournalTimestamp),
+                search: new SearchMetadata(journalLang.HideTimestamp)),
+            Option.Checkbox(journalLang.JournalHideSystemPrefix, new Accessor<bool>(() => profile.HideJournalSystemPrefix),
+                search: new SearchMetadata(journalLang.JournalHideSystemPrefix)),
+            Option.Checkbox(journalLang.MakeAnchorable, new Accessor<bool>(() => profile.JournalAnchorEnabled),
+                search: new SearchMetadata(journalLang.MakeAnchorable)),
+            Option.Checkbox(journalLang.SaveJournalToFile, new Accessor<bool>(() => profile.SaveJournalToFile),
+                search: new SearchMetadata(journalLang.SaveJournalToFile))
         );
     }
 

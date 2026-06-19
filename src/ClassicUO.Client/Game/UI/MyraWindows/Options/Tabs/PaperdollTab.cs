@@ -7,51 +7,62 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public class PaperdollTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonPaperdoll, GetModernPaperdollSection);
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        return OptionsUi.Vertical(
+            GetModernPaperdollSection()
+        ).WithSearch(new SearchMetadata(lang.ButtonPaperdoll, Tags: [kw.Paperdoll, kw.Character, kw.Equipment]));
     }
 
-    private static VisualContainer GetModernPaperdollSection()
+    private static OptionFragment GetModernPaperdollSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
+        return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = tuoLang.ModernPaperdoll, LabelLink = "https://tazuo.org/wiki/alternate-paperdoll/" },
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseModernPaperdoll), tuoLang.EnableModernPaperdoll),
-                OptionsFactory.CreateHuePicker(
-                    tuoLang.PaperdollHue,
-                    profile.ModernPaperDollHue,
-                    newHue =>
-                    {
-                        profile.ModernPaperDollHue = newHue;
-                        ModernPaperdoll.UpdateAllOptions();
-                    }
-                ),
-                OptionsFactory.CreateHuePicker(
-                    tuoLang.DurabilityBarHue,
-                    profile.ModernPaperDollDurabilityHue,
-                    newHue =>
-                    {
-                        profile.ModernPaperDollDurabilityHue = newHue;
-                        ModernPaperdoll.UpdateAllOptions();
-                    }
-                ),
-                OptionsFactory.CreateSpacer(),
-                OptionsFactory.PropBoundSliderOption(tuoLang.ShowDurabilityBarBelow, new Accessor<int>(() => profile.ModernPaperDoll_DurabilityPercent), 1, 100),
-                OptionsFactory.CreateCheckboxOption(
-                    tuoLang.PaperdollAnchor,
-                    profile.ModernPaperdollAnchorEnabled,
-                    newValue =>
-                    {
-                        profile.ModernPaperdollAnchorEnabled = newValue;
-                        ModernPaperdoll.UpdateAllOptions();
-                    }
-                )
+            Option.Checkbox(
+                tuoLang.EnableModernPaperdoll,
+                new Accessor<bool>(() => profile.UseModernPaperdoll),
+                search: new SearchMetadata(tuoLang.EnableModernPaperdoll, Keywords: [kw.Enable])
+            ),
+            Option.HuePicker(
+                tuoLang.PaperdollHue,
+                new Accessor<ushort>(() => profile.ModernPaperDollHue, newHue =>
+                {
+                    profile.ModernPaperDollHue = newHue;
+                    ModernPaperdoll.UpdateAllOptions();
+                }),
+                search: new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
+            ),
+            Option.HuePicker(
+                tuoLang.DurabilityBarHue,
+                new Accessor<ushort>(() => profile.ModernPaperDollDurabilityHue, newHue =>
+                {
+                    profile.ModernPaperDollDurabilityHue = newHue;
+                    ModernPaperdoll.UpdateAllOptions();
+                }),
+                search: new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
+            ),
+            Option.Slider(
+                tuoLang.ShowDurabilityBarBelow,
+                1,
+                100,
+                new Accessor<float>(() => profile.ModernPaperDoll_DurabilityPercent, f => profile.ModernPaperDoll_DurabilityPercent = (int)f),
+                search: new SearchMetadata(tuoLang.ShowDurabilityBarBelow, Keywords: [kw.Durability, kw.Bar, kw.Below])
+            ),
+            Option.Checkbox(
+                tuoLang.PaperdollAnchor,
+                new Accessor<bool>(() => profile.ModernPaperdollAnchorEnabled, newValue =>
+                {
+                    profile.ModernPaperdollAnchorEnabled = newValue;
+                    ModernPaperdoll.UpdateAllOptions();
+                }),
+                search: new SearchMetadata(tuoLang.PaperdollAnchor, Keywords: [kw.Anchor])
             )
         );
     }

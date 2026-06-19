@@ -90,7 +90,12 @@ public static class OptionTabCommons
         string tooltip = null
     ) where TValue : IEquatable<TValue>
     {
-        var comboView = new ComboView { MinWidth = 200, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        var comboView = new ComboView
+        {
+            MinWidth = 200,
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
 
         if (tooltip != null)
             comboView.Tooltip = tooltip;

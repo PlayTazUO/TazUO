@@ -2,17 +2,24 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
-internal sealed class OptionTabGroup(Func<MyraTabControl>? tabControlFactory = null) : IOptionSource
+internal sealed class OptionTabGroup : IOptionSource
 {
     private readonly List<OptionTabDefinition> _tabs = [];
-    private readonly Func<MyraTabControl> _tabControlFactory = tabControlFactory ?? (() => new MyraTabControl());
+    private readonly Func<MyraTabControl> _tabControlFactory;
     private Widget? _cachedWidget;
+
+    public SearchMetadata? Search { get; init; }
+
+    public OptionTabGroup(Func<MyraTabControl>? tabControlFactory = null, SearchMetadata? search = null)
+    {
+        _tabControlFactory = tabControlFactory ?? (() => new MyraTabControl());
+        Search = search;
+    }
 
     public OptionTabGroup AddTab(string label, Func<IOptionSource> contentFactory, SearchMetadata? search = null)
     {
@@ -25,8 +32,6 @@ internal sealed class OptionTabGroup(Func<MyraTabControl>? tabControlFactory = n
 
     public OptionTabGroup AddTab(string label, Func<Widget> contentFactory, SearchMetadata? search = null) => AddTab(label,
         () => new LegacyOptionItemSource(new OptionItem(label, contentFactory, skipSearch: true)), search);
-
-    public SearchMetadata? Search => null;
 
     public Widget Render() => _cachedWidget ??= BuildTabControl();
 

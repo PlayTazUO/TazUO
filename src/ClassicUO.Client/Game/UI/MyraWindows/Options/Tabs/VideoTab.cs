@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
@@ -12,412 +13,450 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class VideoTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent() => GetVideoMenuTabs();
+
+    private static OptionTabGroup GetVideoMenuTabs()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.LabelVideo, GetVideoMenuTabs);
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        return new OptionTabGroup()
+            .AddTab(
+                lang.GameWindow.Label,
+                GetGameWindowSubTabContent,
+                new SearchMetadata(lang.GameWindow.Label, Keywords: [kw.Window, kw.Viewport, kw.Fullscreen, kw.FPS, kw.VSync])
+            )
+            .AddTab(
+                lang.Zoom.Label,
+                GetZoomAndScalingSubTubContent,
+                new SearchMetadata(lang.Zoom.Label, Keywords: [kw.Zoom, kw.Scale, kw.Scaling, kw.Paperdoll, kw.Global])
+            )
+            .AddTab(
+                lang.Lighting.Label,
+                GetLightningSubTabContent,
+                new SearchMetadata(lang.Lighting.Label, Keywords: [kw.Light, kw.Darkness, kw.Night, kw.Color])
+            )
+            .AddTab(
+                lang.Shadows.Label,
+                GetShadowSubTabContent,
+                new SearchMetadata(lang.Shadows.Label, Keywords: [kw.Shadow, kw.Static, kw.Terrain])
+            )
+            .AddTab(
+                lang.Misc.Label,
+                GetMiscSubTabContent,
+                new SearchMetadata(lang.Misc.Label, Keywords: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective])
+            );
     }
 
-    private static MyraTabControl GetVideoMenuTabs()
+    private static IOptionSource GetGameWindowSubTabContent()
     {
-        ModernOptionsGumpLanguage.Video videoLang = Language.Instance.GetModernOptionsGumpLanguage.GetVideo;
-        ModernOptionsGumpLanguage gumpLang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        var tabs = new MyraTabControl();
-        tabs.AddTab(gumpLang.ButtonGameWindow, GetGameWindowSubTabContent);
-        tabs.AddTab(videoLang.ZoomAndScaling, GetZoomAndScalingSubTubContent);
-        tabs.AddTab(videoLang.LabelLighting, GetLightningSubTabContent);
-        tabs.AddTab(gumpLang.ButtonShadows, GetShadowSubTabContent);
-        tabs.AddTab(gumpLang.ButtonMisc, GetMiscSubTabContent);
-        return tabs;
-    }
-
-    private static OptionItem GetViewportSettingsGroup()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        return new OptionItem(
-            lang.LabelViewport,
-            () =>
-                new VisualContainer(
-                    new VisualContainerProps { LabelText = lang.LabelViewport },
-                    OptionsFactory.CreateCheckboxOption(
-                        lang.GetVideo.FullsizeViewport,
-                        profile.GameWindowFullSize,
-                        b =>
-                        {
-                            profile.GameWindowFullSize = b;
-
-                            WorldViewportGump viewport = WorldViewportGump.Instance;
-                            if (viewport == null) return;
-
-                            if (b)
-                            {
-                                viewport.ResizeGameWindow(new Point(Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height));
-                                viewport.SetGameWindowPosition(new Point(0, 0));
-                                profile.GameWindowPosition = new Point(0, 0);
-                            }
-                            else
-                            {
-                                viewport.ResizeGameWindow(new Point(600, 480));
-                                viewport.SetGameWindowPosition(new Point(25, 25));
-                                profile.GameWindowPosition = new Point(25, 25);
-                            }
-
-                            // Trigger a full update to ensure borders and positioning are correct
-                            viewport.OnWindowResized();
-                        }
-                    ),
-                    OptionsFactory.CreateCheckboxOption(
-                        lang.GetVideo.FullScreen,
-                        profile.WindowBorderless,
-                        b =>
-                        {
-                            profile.WindowBorderless = b;
-                            Client.Game.SetWindowBorderless(b);
-                        }
-                    ),
-                    OptionsFactory.CreateCheckboxOption(
-                        lang.GetVideo.LockViewport,
-                        new Accessor<bool>(() => profile.GameWindowLock)
-                    ),
-                    OptionsFactory.CreateSliderOption(
-                        lang.GetVideo.ViewportX,
-                        0,
-                        Client.Game.Window.ClientBounds.Width,
-                        profile.GameWindowPosition.X,
-                        f =>
-                        {
-                            profile.GameWindowPosition = new Point((int)f, profile.GameWindowPosition.Y);
-                            WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
-                        }
-                    ),
-                    OptionsFactory.CreateSliderOption(
-                        lang.GetVideo.ViewportY,
-                        0,
-                        Client.Game.Window.ClientBounds.Height,
-                        profile.GameWindowPosition.Y,
-                        f =>
-                        {
-                            profile.GameWindowPosition = new Point(profile.GameWindowPosition.Y, (int)f);
-                            WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
-                        }
-                    ),
-                    OptionsFactory.CreateSliderOption(
-                        lang.GetVideo.ViewportW,
-                        0,
-                        Client.Game.Window.ClientBounds.Width,
-                        profile.GameWindowSize.X,
-                        f =>
-                        {
-                            profile.GameWindowSize = new Point((int)f, profile.GameWindowSize.Y);
-                            WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
-                        }
-                    ),
-                    OptionsFactory.CreateSliderOption(
-                        lang.GetVideo.ViewportH,
-                        0,
-                        Client.Game.Window.ClientBounds.Height,
-                        profile.GameWindowSize.Y,
-                        f =>
-                        {
-                            profile.GameWindowSize = new Point(profile.GameWindowSize.X, (int)f);
-                            WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
-                        }
-                    )
-                )
-        );
-    }
-
-    private static WrapPanel GetZoomAndScalingSubTubContent() =>
-        OptionTabCommons.StyledVerticalWrapPanel(
-            GetZoomSection(),
-            GetScalingSection()
-        );
-
-    private static WrapPanel GetGameWindowSubTabContent() =>
-        OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateSpacer(),
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+        return OptionsUi.Vertical(
             GetRendererSection(),
             GetViewportSettingsGroup()
-        );
+        ).WithSearch(new SearchMetadata(lang.GameWindow.Label, Tags: [kw.Window, kw.Viewport]));
+    }
 
-
-    private static VisualContainer GetRendererSection()
+    private static OptionFragment GetRendererSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Video videoLang = lang.GetVideo;
+        ModernOptionsGumpLanguage.VideoTabLang.GameWindowSection lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab.GameWindow;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = videoLang.LabelRenderer },
-            OptionsFactory.CreateSliderOption(
-                videoLang.FPSCap,
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = lang.RendererLabel },
+            Option.Slider(
+                lang.FPSCap,
                 Constants.MIN_FPS,
                 Constants.MAX_FPS,
-                Settings.GlobalSettings.FPS,
-                f =>
+                new Accessor<float>(() => Settings.GlobalSettings.FPS, f =>
                 {
                     Settings.GlobalSettings.FPS = (int)f;
                     Client.Game.SetRefreshRate((int)f);
-                }
+                }),
+                search: new SearchMetadata(lang.FPSCap, Keywords: [kw.FPS, kw.Refresh])
             ),
-            OptionsFactory.CreateCheckboxOption(videoLang.BackgroundFPS, new Accessor<bool>(() => profile.ReduceFPSWhenInactive)),
-            OptionsFactory.CreateCheckboxOption(videoLang.EnableVSync,
-                profile.EnableVSync,
-                b =>
-                {
-                    profile.EnableVSync = b;
-                    Client.Game?.SetVSync(b);
-                }
+            Option.Checkbox(
+                lang.BackgroundFPS,
+                new Accessor<bool>(() => profile.ReduceFPSWhenInactive),
+                search: new SearchMetadata(lang.BackgroundFPS, Keywords: [kw.FPS, kw.Background])
+            ),
+            Option.Checkbox(
+                lang.EnableVSync,
+                new Accessor<bool>(() => profile.EnableVSync, b => { profile.EnableVSync = b; Client.Game?.SetVSync(b); }),
+                search: new SearchMetadata(lang.EnableVSync, Keywords: [kw.VSync])
             )
         );
     }
 
-    private static VisualContainer GetZoomSection()
+    private static OptionFragment GetViewportSettingsGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Video videoLang = lang.GetVideo;
+        ModernOptionsGumpLanguage.VideoTabLang.GameWindowSection lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab.GameWindow;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        int cameraZoomCount = (int)(
-            (Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.ZoomMin)
-            / Client.Game.Scene.Camera.ZoomStep
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = lang.ViewportLabel },
+            Option.Checkbox(
+                lang.FullsizeViewport,
+                new Accessor<bool>(() => profile.GameWindowFullSize, b =>
+                {
+                    profile.GameWindowFullSize = b;
+                    WorldViewportGump viewport = WorldViewportGump.Instance;
+                    if (viewport == null) return;
+                    if (b)
+                    {
+                        viewport.ResizeGameWindow(
+                            new Point(Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height)
+                        );
+                        viewport.SetGameWindowPosition(new Point(0, 0));
+                        profile.GameWindowPosition = new Point(0, 0);
+                    }
+                    else
+                    {
+                        viewport.ResizeGameWindow(new Point(600, 480));
+                        viewport.SetGameWindowPosition(new Point(25, 25));
+                        profile.GameWindowPosition = new Point(25, 25);
+                    }
+                    viewport.OnWindowResized();
+                }),
+                search: new SearchMetadata(lang.FullsizeViewport, Keywords: [kw.Full, kw.Size])
+            ),
+            Option.Checkbox(
+                lang.FullScreen,
+                new Accessor<bool>(() => profile.WindowBorderless, b => { profile.WindowBorderless = b; Client.Game.SetWindowBorderless(b); }),
+                search: new SearchMetadata(lang.FullScreen, Keywords: [kw.Fullscreen, kw.Borderless])
+            ),
+            Option.Checkbox(
+                lang.LockViewport,
+                new Accessor<bool>(() => profile.GameWindowLock),
+                search: new SearchMetadata(lang.LockViewport, Keywords: [kw.Lock])
+            ),
+            Option.Slider(
+                lang.ViewportX,
+                0,
+                Client.Game.Window.ClientBounds.Width,
+                new Accessor<float>(() => profile.GameWindowPosition.X, f =>
+                {
+                    profile.GameWindowPosition = new Point((int)f, profile.GameWindowPosition.Y);
+                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                }),
+                search: new SearchMetadata(lang.ViewportX, Keywords: [kw.X])
+            ),
+            Option.Slider(
+                lang.ViewportY,
+                0,
+                Client.Game.Window.ClientBounds.Height,
+                new Accessor<float>(() => profile.GameWindowPosition.Y, f =>
+                {
+                    profile.GameWindowPosition = new Point(profile.GameWindowPosition.X, (int)f);
+                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                }),
+                search: new SearchMetadata(lang.ViewportY, Keywords: [kw.Y])
+            ),
+            Option.Slider(
+                lang.ViewportW,
+                0,
+                Client.Game.Window.ClientBounds.Width,
+                new Accessor<float>(() => profile.GameWindowSize.X, f =>
+                {
+                    profile.GameWindowSize = new Point((int)f, profile.GameWindowSize.Y);
+                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                }),
+                search: new SearchMetadata(lang.ViewportW, Keywords: [kw.Width])
+            ),
+            Option.Slider(
+                lang.ViewportH,
+                0,
+                Client.Game.Window.ClientBounds.Height,
+                new Accessor<float>(() => profile.GameWindowSize.Y, f =>
+                {
+                    profile.GameWindowSize = new Point(profile.GameWindowSize.X, (int)f);
+                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                }),
+                search: new SearchMetadata(lang.ViewportH, Keywords: [kw.Height])
+            )
         );
+    }
 
-        int cameraZoomIndex =
-            cameraZoomCount
-            - (int)(
-                (Client.Game.Scene.Camera.ZoomMax - Client.Game.Scene.Camera.Zoom)
-                / Client.Game.Scene.Camera.ZoomStep
-            );
+    private static IOptionSource GetZoomAndScalingSubTubContent()
+    {
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+        return OptionsUi.Vertical(
+            GetZoomSection(),
+            GetScalingSection()
+        ).WithSearch(new SearchMetadata(lang.Zoom.Label, Tags: [kw.Zoom, kw.Scale]));
+    }
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = videoLang.Zoom },
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateSliderOption(
-                videoLang.DefaultZoom,
+    private static OptionFragment GetZoomSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.VideoTabLang.ZoomSection lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab.Zoom;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        Camera camera = Client.Game.Scene.Camera;
+        int cameraZoomCount = (int)((camera.ZoomMax - camera.ZoomMin) / camera.ZoomStep);
+        int cameraZoomIndex = cameraZoomCount - (int)((camera.ZoomMax - camera.Zoom) / camera.ZoomStep);
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = lang.ZoomLabel },
+            Option.Slider(
+                lang.DefaultZoom,
                 0,
                 cameraZoomCount,
-                cameraZoomIndex,
-                f =>
+                new Accessor<float>(() => cameraZoomIndex, f =>
                 {
-                    profile.DefaultScale = Client.Game.Scene.Camera.Zoom =
-                        (int)f * Client.Game.Scene.Camera.ZoomStep + Client.Game.Scene.Camera.ZoomMin;
-                }
+                    profile.DefaultScale = camera.Zoom = (int)f * camera.ZoomStep + camera.ZoomMin;
+                }),
+                search: new SearchMetadata(lang.DefaultZoom, Keywords: [kw.Zoom])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                videoLang.ZoomWheel,
-                new Accessor<bool>(() => profile.EnableMousewheelScaleZoom)
+            Option.Checkbox(
+                lang.ZoomWheel,
+                new Accessor<bool>(() => profile.EnableMousewheelScaleZoom),
+                search: new SearchMetadata(lang.ZoomWheel, Keywords: [kw.Wheel])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                videoLang.ReturnDefaultZoom,
-                new Accessor<bool>(() => profile.RestoreScaleAfterUnpressCtrl)
+            Option.Checkbox(
+                lang.ReturnDefaultZoom,
+                new Accessor<bool>(() => profile.RestoreScaleAfterUnpressCtrl),
+                search: new SearchMetadata(lang.ReturnDefaultZoom, Keywords: [kw.Restore, kw.Ctrl])
             )
         );
     }
 
-    private static WrapPanel GetLightningSubTabContent()
+    private static OptionFragment GetScalingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Video videoLang = lang.GetVideo;
+        ModernOptionsGumpLanguage.VideoTabLang.ZoomSection videoLang = lang.VideoTab.Zoom;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(videoLang.AltLights, new Accessor<bool>(() => profile.UseAlternativeLights)),
-            new CheckBoxGroup(
-                new PropertyBinder(
-                    new Accessor<bool>(
-                        () => profile.UseCustomLightLevel,
-                        b =>
-                        {
-                            profile.UseCustomLightLevel = b;
+        float? scale = null;
 
-                            if (b)
-                            {
-                                World.Instance.Light.Overall = profile.LightLevelType == 1
-                                    ? Math.Min(World.Instance.Light.RealOverall, profile.LightLevel)
-                                    : profile.LightLevel;
-                                World.Instance.Light.Personal = 0;
-                            }
-                            else
-                            {
-                                World.Instance.Light.Overall = World.Instance.Light.RealOverall;
-                                World.Instance.Light.Personal = World.Instance.Light.RealPersonal;
-                            }
-                        }
-                    ),
-                    videoLang.CustomLLevel
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps
+            {
+                LabelText = lang.ButtonScaling,
+                LabelLink = "https://tazuo.org/wiki/tazuoglobal-scaling/",
+                Spacing = VisualContainerSpacing.Comfortable
+            },
+            Option.Slider(
+                videoLang.PaperdollScaling,
+                50,
+                300,
+                new Accessor<float>(() => (int)(profile.PaperdollScale * 100), newValue =>
+                {
+                    profile.PaperdollScale = Math.Clamp(newValue / 100, 0.5f, 3.0f);
+                }),
+                search: new SearchMetadata(videoLang.PaperdollScaling, Keywords: [kw.Paperdoll, kw.Scale])
+            ),
+            OptionsUi.Horizontal(
+                Option.Slider(
+                    videoLang.GlobalScaling,
+                    50,
+                    Client.Game.MaxRenderScale * 100,
+                    new Accessor<float>(() => Client.Game.RenderScale * 100, newValue =>
+                    {
+                        scale = Math.Clamp(newValue / 100, 0.5f, Client.Game.MaxRenderScale);
+                    }),
+                    search: new SearchMetadata(videoLang.GlobalScaling, Keywords: [kw.Global, kw.Scale])
                 ),
-                OptionsFactory.CreateSliderOption(
-                    videoLang.Level,
+                Option.Button(
+                    lang.Apply,
+                    () =>
+                    {
+                        if (scale != null)
+                        {
+                            Client.Game.SetScale(scale.Value);
+                            _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
+                        }
+                    },
+                    search: new SearchMetadata(lang.Apply)
+                )
+            )
+        );
+    }
+
+    private static IOptionSource GetLightningSubTabContent()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.VideoTabLang.LightingSection lightLang = lang.Lighting;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        void UpdateLight()
+        {
+            if (profile.UseCustomLightLevel)
+            {
+                World.Instance.Light.Overall = profile.LightLevelType == 1
+                    ? Math.Min(World.Instance.Light.RealOverall, profile.LightLevel)
+                    : profile.LightLevel;
+                World.Instance.Light.Personal = 0;
+            }
+            else
+            {
+                World.Instance.Light.Overall = World.Instance.Light.RealOverall;
+                World.Instance.Light.Personal = World.Instance.Light.RealPersonal;
+            }
+        }
+
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                lightLang.AltLights,
+                new Accessor<bool>(() => profile.UseAlternativeLights),
+                search: new SearchMetadata(lightLang.AltLights, Keywords: [kw.Alt, kw.Light])
+            ),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    lightLang.CustomLLevel,
+                    new Accessor<bool>(() => profile.UseCustomLightLevel, b =>
+                    {
+                        profile.UseCustomLightLevel = b;
+                        UpdateLight();
+                    }),
+                    search: new SearchMetadata(lightLang.CustomLLevel, Keywords: [kw.Custom])
+                ),
+                Option.Slider(
+                    lightLang.Level,
                     0,
                     0x1E,
-                    0x1E - profile.LightLevel,
-                    f =>
+                    new Accessor<float>(() => 0x1E - profile.LightLevel, f =>
                     {
                         profile.LightLevel = (byte)(0x1E - (int)f);
-
-                        if (profile.UseCustomLightLevel)
-                        {
-                            World.Instance.Light.Overall = profile.LightLevelType == 1
-                                ? Math.Min(World.Instance.Light.RealOverall, profile.LightLevel)
-                                : profile.LightLevel;
-                            World.Instance.Light.Personal = 0;
-                        }
-                        else
-                        {
-                            World.Instance.Light.Overall = World.Instance.Light.RealOverall;
-                            World.Instance.Light.Personal = World.Instance.Light.RealPersonal;
-                        }
-                    }
+                        UpdateLight();
+                    }),
+                    search: new SearchMetadata(lightLang.Level, Keywords: [kw.Level])
                 ),
-                OptionsFactory.CreateComboBox(
-                    videoLang.LightType,
+                Option.ComboBox(
+                    lightLang.LightType,
                     profile.LightLevelType,
-                    [videoLang.LightType_Absolute, videoLang.LightType_Minimum],
-                    i => profile.LightLevelType = i
+                    [lightLang.LightType_Absolute, lightLang.LightType_Minimum],
+                    i => profile.LightLevelType = i,
+                    search: new SearchMetadata(lightLang.LightType, Keywords: [kw.Type])
                 )
             ),
-            OptionsFactory.CreateCheckboxOption(
-                videoLang.DarkNight,
-                new Accessor<bool>(() => profile.UseDarkNights)
+            Option.Checkbox(
+                lightLang.DarkNight,
+                new Accessor<bool>(() => profile.UseDarkNights),
+                search: new SearchMetadata(lightLang.DarkNight, Keywords: [kw.Dark, kw.Night])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                videoLang.ColoredLight,
-                new Accessor<bool>(() => profile.UseColoredLights)
+            Option.Checkbox(
+                lightLang.ColoredLight,
+                new Accessor<bool>(() => profile.UseColoredLights),
+                search: new SearchMetadata(lightLang.ColoredLight, Keywords: [kw.Color, kw.Light])
             )
-        );
+        ).WithSearch(new SearchMetadata(lightLang.Label, Tags: [kw.Light]));
     }
 
-    private static WrapPanel GetMiscSubTabContent()
+    private static IOptionSource GetShadowSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Video videoLang = lang.GetVideo;
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.VideoTabLang.ShadowsSection shadowLang = lang.Shadows;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(
-                videoLang.EnableDeathScreen,
-                new Accessor<bool>(() => profile.EnableDeathScreen)
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                shadowLang.EnableShadows,
+                new Accessor<bool>(() => profile.ShadowsEnabled),
+                search: new SearchMetadata(shadowLang.EnableShadows, Keywords: [kw.Shadow])
             ),
-            OptionsFactory.CreateCheckboxOption(videoLang.BWDead, new Accessor<bool>(() => profile.EnableBlackWhiteEffect)),
-            OptionsFactory.CreateCheckboxOption(videoLang.MouseThread, new Accessor<bool>(() => Settings.GlobalSettings.RunMouseInASeparateThread)),
-            OptionsFactory.CreateCheckboxOption(videoLang.TargetAura, new Accessor<bool>(() => profile.AuraOnMouse)),
-            OptionsFactory.CreateCheckboxOption(videoLang.AnimWater, new Accessor<bool>(() => profile.AnimatedWaterEffect)),
-            new CheckBoxGroup(
-                new PropertyBinder(
-                    new Accessor<bool>(
-                        () => profile.EnablePostProcessingEffects,
-                        b =>
-                        {
-                            profile.EnablePostProcessingEffects = b;
-                            GameScene.Instance?.SetPostProcessingSettings();
-                        }
-                    ),
-                    videoLang.EnablePostProcessing
+            Option.Checkbox(
+                shadowLang.RockTreeShadows,
+                new Accessor<bool>(() => profile.ShadowsStatics),
+                search: new SearchMetadata(shadowLang.RockTreeShadows, Keywords: [kw.Static, kw.Rock, kw.Tree])
+            ),
+            Option.Slider(
+                shadowLang.TerrainShadowLevel,
+                Constants.MIN_TERRAIN_SHADOWS_LEVEL,
+                Constants.MAX_TERRAIN_SHADOWS_LEVEL,
+                new Accessor<float>(() => profile.TerrainShadowsLevel, f => profile.TerrainShadowsLevel = (int)f),
+                search: new SearchMetadata(shadowLang.TerrainShadowLevel, Keywords: [kw.Terrain])
+            )
+        ).WithSearch(new SearchMetadata(shadowLang.Label, Tags: [kw.Shadow]));
+    }
+
+    private static IOptionSource GetMiscSubTabContent()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
+        ModernOptionsGumpLanguage.VideoTabLang.MiscSection miscLang = lang.Misc;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                miscLang.EnableDeathScreen,
+                new Accessor<bool>(() => profile.EnableDeathScreen),
+                search: new SearchMetadata(miscLang.EnableDeathScreen, Keywords: [kw.Death])
+            ),
+            Option.Checkbox(
+                miscLang.BWDead,
+                new Accessor<bool>(() => profile.EnableBlackWhiteEffect),
+                search: new SearchMetadata(miscLang.BWDead, Keywords: [kw.Dead, kw.BW])
+            ),
+            Option.Checkbox(
+                miscLang.MouseThread,
+                new Accessor<bool>(() => Settings.GlobalSettings.RunMouseInASeparateThread),
+                search: new SearchMetadata(miscLang.MouseThread, Keywords: [kw.Mouse, kw.Thread])
+            ),
+            Option.Checkbox(
+                miscLang.TargetAura,
+                new Accessor<bool>(() => profile.AuraOnMouse),
+                search: new SearchMetadata(miscLang.TargetAura, Keywords: [kw.Target, kw.Aura])
+            ),
+            Option.Checkbox(
+                miscLang.AnimWater,
+                new Accessor<bool>(() => profile.AnimatedWaterEffect),
+                search: new SearchMetadata(miscLang.AnimWater, Keywords: [kw.Water, kw.Anim])
+            ),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    miscLang.EnablePostProcessing,
+                    new Accessor<bool>(() => profile.EnablePostProcessingEffects, b =>
+                    {
+                        profile.EnablePostProcessingEffects = b;
+                        GameScene.Instance?.SetPostProcessingSettings();
+                    }),
+                    search: new SearchMetadata(miscLang.EnablePostProcessing, Keywords: [kw.Post, kw.Process])
                 ),
-                OptionsFactory.CreateComboBox(
-                    videoLang.PostProcessingEffectType,
+                Option.ComboBox(
+                    miscLang.PostProcessingEffectType,
                     profile.PostProcessingType,
                     ["point", "linear", "anisotropic", "xbr"],
                     i =>
                     {
                         profile.PostProcessingType = (ushort)i;
                         GameScene.Instance?.SetPostProcessingSettings();
-                    }
-                )
-            ),
-            new VisualContainer(
-                new VisualContainerProps { LabelText = videoLang.Perspective },
-                OptionsFactory.CreateSliderOption(
-                    videoLang.PlayerPositionOffsetX,
-                    -20,
-                    20,
-                    profile.PlayerOffset.X,
-                    newValue => { profile.PlayerOffset = new Point((int)newValue, profile.PlayerOffset.Y); },
-                    true
-                ),
-                OptionsFactory.CreateSliderOption(
-                    videoLang.PlayerPositionOffsetY,
-                    -20,
-                    20,
-                    profile.PlayerOffset.Y,
-                    newValue => { profile.PlayerOffset = new Point(profile.PlayerOffset.X, (int)newValue); },
-                    true
-                )
-            )
-        );
-    }
-
-    private static VisualContainer GetScalingSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Video videoLang = Language.Instance.GetModernOptionsGumpLanguage.GetVideo;
-
-        float? previousScale = null;
-        float? scale = null;
-
-        return new VisualContainer(
-            new VisualContainerProps
-            {
-                LabelText = lang.ButtonScaling, LabelLink = "https://tazuo.org/wiki/tazuoglobal-scaling/", Spacing = VisualContainerSpacing.Comfortable
-            },
-            OptionsFactory.CreateSliderOption(
-                videoLang.PaperdollScaling,
-                50,
-                300,
-                (int)(profile.PaperdollScale * 100),
-                newValue => profile.PaperdollScale = Math.Clamp(newValue / 100, 0.5f, 3.0f)
-            ),
-            OptionTabCommons.StyledStackPanel(
-                Orientation.Horizontal,
-                OptionsFactory.CreateSliderOption(
-                    videoLang.GlobalScaling,
-                    50, // Limiting min scale to something sane at the UI level, even though render supports it
-                    Client.Game.MaxRenderScale *
-                    100, // For max scale, there's a hard cap at the property level to avoid outright crashing systems when accidentally setting too high
-                    Client.Game.RenderScale * 100,
-                    newValue => scale = Math.Clamp(newValue / 100, 0.5f, Client.Game.MaxRenderScale)
-                ),
-                // Apply button for renderer (global) scale
-                new MyraButton(
-                    lang.Apply,
-                    () =>
-                    {
-                        if (scale == null || scale.Equals(previousScale))
-                            return;
-
-                        previousScale = scale;
-                        Client.Game.SetScale(scale.Value);
-                        _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
                     },
-                    MyraLabel.TextStyle.H5
+                    search: new SearchMetadata(miscLang.PostProcessingEffectType, Keywords: [kw.Type])
+                )
+            ),
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = miscLang.Perspective },
+                Option.Slider(
+                    miscLang.PlayerPositionOffsetX,
+                    -20,
+                    20,
+                    new Accessor<float>(() => profile.PlayerOffset.X, newValue =>
+                    {
+                        profile.PlayerOffset = new Point((int)newValue, profile.PlayerOffset.Y);
+                    }),
+                    true,
+                    search: new SearchMetadata(miscLang.PlayerPositionOffsetX, Keywords: [kw.X])
+                ),
+                Option.Slider(
+                    miscLang.PlayerPositionOffsetY,
+                    -20,
+                    20,
+                    new Accessor<float>(() => profile.PlayerOffset.Y, newValue =>
+                    {
+                        profile.PlayerOffset = new Point(profile.PlayerOffset.X, (int)newValue);
+                    }),
+                    true,
+                    search: new SearchMetadata(miscLang.PlayerPositionOffsetY, Keywords: [kw.Y])
                 )
             )
-        );
-    }
-
-    private static WrapPanel GetShadowSubTabContent()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(lang.GetVideo.EnableShadows, new Accessor<bool>(() => profile.ShadowsEnabled)),
-            OptionsFactory.CreateCheckboxOption(lang.GetVideo.RockTreeShadows, new Accessor<bool>(() => profile.ShadowsStatics)),
-            OptionsFactory.CreateSliderOption(
-                lang.GetVideo.TerrainShadowLevel,
-                Constants.MIN_TERRAIN_SHADOWS_LEVEL,
-                Constants.MAX_TERRAIN_SHADOWS_LEVEL,
-                profile.TerrainShadowsLevel,
-                f => profile.TerrainShadowsLevel = (int)f)
-        );
+        ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective]));
     }
 }

@@ -16,23 +16,28 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class NameplatesTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent() => GetNameplatesMenuTabs();
+
+    private static OptionTabGroup GetNameplatesMenuTabs()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonNameplates, GetNameplatesMenuTabs);
-    }
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-    private static MyraTabControl GetNameplatesMenuTabs()
-    {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-
-        var tabs = new MyraTabControl();
-        tabs.AddTab(lang.ButtonGeneral, GetGeneralNameplatesSubTabContent);
-        tabs.AddTab(lang.ButtonProfiles, GetProfilesSubTabContent);
-        return tabs;
+        return new OptionTabGroup()
+            .AddTab(lang.ButtonGeneral, GetGeneralNameplatesSubTabContent, new SearchMetadata(lang.ButtonGeneral, Keywords: [kw.General]))
+            .AddTab(lang.ButtonProfiles, GetProfilesSubTabContentSource, new SearchMetadata(lang.ButtonProfiles, Keywords: [kw.Profile]));
     }
 
     #region Profiles
+
+    private static IOptionSource GetProfilesSubTabContentSource()
+    {
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        return OptionsUi.Vertical(
+            Option.Custom(GetProfilesSubTabContent, new SearchMetadata(lang.ButtonProfiles, Keywords: [kw.Profile]))
+        ).WithSearch(new SearchMetadata(lang.ButtonProfiles, Tags: [kw.Nameplate, kw.Profile]));
+    }
 
     private static Widget GetProfilesSubTabContent()
     {
@@ -270,47 +275,91 @@ public static class NameplatesTab
 
     #region General Sub-Tab
 
-    private static WrapPanel GetGeneralNameplatesSubTabContent()
+    private static IOptionSource GetGeneralNameplatesSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
         ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateSpacer(),
-            OptionTabCommons.StyledFontSelector(tuoLang.NameplateFont, new Accessor<string>(() => profile.NamePlateFont), s => profile.NamePlateFont = s),
-            OptionsFactory.CreateSliderOption(tuoLang.SharedSize, 5, 50, profile.NamePlateFontSize, i => profile.NamePlateFontSize = (int)i),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateComboBox(
+        return OptionsUi.Vertical(
+            Option.FontSelector(
+                tuoLang.NameplateFont,
+                new Accessor<string>(() => profile.NamePlateFont),
+                s => profile.NamePlateFont = s,
+                search: new SearchMetadata(tuoLang.NameplateFont, Keywords: [kw.Font])
+            ),
+            Option.Slider(
+                tuoLang.SharedSize,
+                5,
+                50,
+                new Accessor<float>(() => profile.NamePlateFontSize, f => profile.NamePlateFontSize = (int)f),
+                search: new SearchMetadata(tuoLang.SharedSize, Keywords: [kw.Size])
+            ),
+            Option.ComboBox(
                 genLang.DragNameplatesOnly,
                 profile.DragSelect_NameplateModifier,
                 [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                i => profile.DragSelect_NameplateModifier = i
+                i => profile.DragSelect_NameplateModifier = i,
+                search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Modifier])
             ),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(genLang.IncomingMobiles, new Accessor<bool>(() => profile.ShowNewMobileNameIncoming)),
-            OptionsFactory.CreateCheckboxOption(genLang.IncomingCorpses, new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming)),
-            OptionsFactory.CreateSpacer(),
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHealthBar), tuoLang.NameplatesAlsoActAsHealthBars),
-                OptionsFactory.CreateSliderOption(
+            Option.Checkbox(
+                genLang.IncomingMobiles,
+                new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
+                search: new SearchMetadata(genLang.IncomingMobiles, Keywords: [kw.Incoming, kw.Mobile])
+            ),
+            Option.Checkbox(
+                genLang.IncomingCorpses,
+                new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
+                search: new SearchMetadata(genLang.IncomingCorpses, Keywords: [kw.Incoming, kw.Corpse])
+            ),
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    tuoLang.NameplatesAlsoActAsHealthBars,
+                    new Accessor<bool>(() => profile.NamePlateHealthBar),
+                    search: new SearchMetadata(tuoLang.NameplatesAlsoActAsHealthBars, Keywords: [kw.HealthBar, kw.HP])
+                ),
+                Option.Slider(
                     tuoLang.HpOpacity,
                     0,
                     100,
-                    profile.NamePlateHealthBarOpacity,
-                    i => profile.NamePlateHealthBarOpacity = (byte)i
+                    new Accessor<float>(() => profile.NamePlateHealthBarOpacity, f => profile.NamePlateHealthBarOpacity = (byte)f),
+                    search: new SearchMetadata(tuoLang.HpOpacity, Keywords: [kw.HP, kw.Opacity])
                 ),
-                new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHideAtFullHealth), tuoLang.HideNameplatesIfFullHealth),
-                    OptionsFactory.CreateCheckboxOption(tuoLang.OnlyInWarmode, new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode))
+                OptionsUi.Vertical(
+                    Option.Checkbox(
+                        tuoLang.HideNameplatesIfFullHealth,
+                        new Accessor<bool>(() => profile.NamePlateHideAtFullHealth),
+                        search: new SearchMetadata(tuoLang.HideNameplatesIfFullHealth, Keywords: [kw.Hide, kw.Full, kw.Health])
+                    ),
+                    Option.Checkbox(
+                        tuoLang.OnlyInWarmode,
+                        new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
+                        search: new SearchMetadata(tuoLang.OnlyInWarmode, Keywords: [kw.War, kw.Mode])
+                    )
                 )
             ),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateSliderOption(tuoLang.BorderOpacity, 0, 100, profile.NamePlateBorderOpacity, i => profile.NamePlateBorderOpacity = (byte)i),
-            OptionsFactory.CreateSliderOption(tuoLang.BackgroundOpacity, 0, 100, profile.NamePlateOpacity, i => profile.NamePlateOpacity = (byte)i),
-            OptionsFactory.CreateCheckboxOption(tuoLang.AvoidOverlap, new Accessor<bool>(() => profile.NamePlateAvoidOverlap))
-        );
+            Option.Slider(
+                tuoLang.BorderOpacity,
+                0,
+                100,
+                new Accessor<float>(() => profile.NamePlateBorderOpacity, f => profile.NamePlateBorderOpacity = (byte)f),
+                search: new SearchMetadata(tuoLang.BorderOpacity, Keywords: [kw.Border, kw.Opacity])
+            ),
+            Option.Slider(
+                tuoLang.BackgroundOpacity,
+                0,
+                100,
+                new Accessor<float>(() => profile.NamePlateOpacity, f => profile.NamePlateOpacity = (byte)f),
+                search: new SearchMetadata(tuoLang.BackgroundOpacity, Keywords: [kw.Background, kw.Opacity])
+            ),
+            Option.Checkbox(
+                tuoLang.AvoidOverlap,
+                new Accessor<bool>(() => profile.NamePlateAvoidOverlap),
+                search: new SearchMetadata(tuoLang.AvoidOverlap, Keywords: [kw.Overlap, kw.Avoid])
+            )
+        ).WithSearch(new SearchMetadata(lang.ButtonGeneral, Tags: [kw.Nameplate, kw.General]));
     }
 
     #endregion General Sub-Tab

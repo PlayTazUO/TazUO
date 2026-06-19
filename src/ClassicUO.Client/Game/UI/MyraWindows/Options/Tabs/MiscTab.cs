@@ -10,277 +10,327 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class MiscTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent() => GetTabs();
+
+    private static OptionTabGroup GetTabs()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        return new OptionItem(lang.ButtonCombatSpells, GetPages);
+        ModernOptionsGumpLanguage.MiscTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+
+        return new OptionTabGroup()
+            .AddTab(lang.GeneralLabel, GetPage1, new SearchMetadata(lang.GeneralLabel))
+            .AddTab(lang.InteractionLabel, GetPage2, new SearchMetadata(lang.InteractionLabel))
+            .AddTab(lang.AdvancedLabel, GetPage3, new SearchMetadata(lang.AdvancedLabel));
     }
 
-    private static PageControl GetPages() => new(
-        GetPage1(),
-        GetPage2(),
-        GetPage3()
-    ) { RetainSizeWhenPaging = true };
-
-    private static WrapPanel GetPage1()
+    private static IOptionSource GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
+        ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        WrapPanel panel = OptionTabCommons.StyledVerticalWrapPanel(
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), genLang.EnableCOT),
-                OptionsFactory.CreateSliderOption(
+        return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = genLang.EnableCOT },
+                Option.Checkbox(
+                    genLang.EnableCOT,
+                    new Accessor<bool>(() => profile.UseCircleOfTransparency),
+                    search: new SearchMetadata(genLang.EnableCOT, Keywords: [kw.COT, kw.Circle])
+                ),
+                Option.Slider(
                     genLang.COTDistance,
                     Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
                     Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                    profile.CircleOfTransparencyRadius,
-                    f => profile.CircleOfTransparencyRadius = (int)f
+                    new Accessor<float>(() => profile.CircleOfTransparencyRadius, f => profile.CircleOfTransparencyRadius = (int)f),
+                    search: new SearchMetadata(genLang.COTDistance, Keywords: [kw.COT, kw.Distance])
                 ),
-                OptionsFactory.CreateComboBox(
+                Option.ComboBox(
                     genLang.COTType,
                     profile.CircleOfTransparencyType,
-                    [
-                        genLang.COTTypeOptFull,
-                        genLang.COTTypeOptGrad,
-                        genLang.COTTypeOptModern
-                    ],
-                    i => profile.CircleOfTransparencyType = i
+                    [genLang.COTTypeOptFull, genLang.COTTypeOptGrad, genLang.COTTypeOptModern],
+                    i => profile.CircleOfTransparencyType = i,
+                    search: new SearchMetadata(genLang.COTType, Keywords: [kw.COT, kw.Type])
                 )
             ),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.HideScreenshotMessage,
-                new Accessor<bool>(() => profile.HideScreenshotStoredInMessage)
+                new Accessor<bool>(() => profile.HideScreenshotStoredInMessage),
+                search: new SearchMetadata(genLang.HideScreenshotMessage, Keywords: [miscLang.LabelScreenshot])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.ObjFade,
-                new Accessor<bool>(() => profile.UseObjectsFading)
+                new Accessor<bool>(() => profile.UseObjectsFading),
+                search: new SearchMetadata(genLang.ObjFade, Keywords: [kw.Fade, kw.Object])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.TextFade,
-                new Accessor<bool>(() => profile.TextFading)
+                new Accessor<bool>(() => profile.TextFading),
+                search: new SearchMetadata(genLang.TextFade, Keywords: [kw.Fade, kw.Text])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.CursorRange,
-                new Accessor<bool>(() => profile.ShowTargetRangeIndicator)
+                new Accessor<bool>(() => profile.ShowTargetRangeIndicator),
+                search: new SearchMetadata(genLang.CursorRange, Keywords: [kw.Cursor, kw.Range])
             ),
-            OptionsFactory.CreateSpacer(),
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableDragSelect), genLang.DragSelectHP),
-                OptionsFactory.CreateComboBox(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = genLang.DraggingSectionLabel },
+                Option.Checkbox(
+                    genLang.DragSelectHP,
+                    new Accessor<bool>(() => profile.EnableDragSelect),
+                    search: new SearchMetadata(genLang.DragSelectHP, Keywords: [kw.Drag, kw.Select])
+                ),
+                Option.ComboBox(
                     genLang.DragKeyMod,
                     profile.DragSelectModifierKey,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelectModifierKey = i
+                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
+                    i => profile.DragSelectModifierKey = i,
+                    search: new SearchMetadata(genLang.DragKeyMod, Keywords: [kw.Drag, kw.Modifier])
                 ),
-                OptionsFactory.CreateComboBox(
+                Option.ComboBox(
                     genLang.DragPlayersOnly,
                     profile.DragSelect_PlayersModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_PlayersModifier = i
+                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
+                    i => profile.DragSelect_PlayersModifier = i,
+                    search: new SearchMetadata(genLang.DragPlayersOnly, Keywords: [kw.Drag, kw.Player])
                 ),
-                OptionsFactory.CreateComboBox(
+                Option.ComboBox(
                     genLang.DragMobsOnly,
                     profile.DragSelect_MonstersModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_MonstersModifier = i
+                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
+                    i => profile.DragSelect_MonstersModifier = i,
+                    search: new SearchMetadata(genLang.DragMobsOnly, Keywords: [kw.Drag, kw.Monster])
                 ),
-                OptionsFactory.CreateComboBox(
+                Option.ComboBox(
                     genLang.DragNameplatesOnly,
                     profile.DragSelect_NameplateModifier,
-                    [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
-                    ],
-                    i => profile.DragSelect_NameplateModifier = i
+                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
+                    i => profile.DragSelect_NameplateModifier = i,
+                    search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Nameplate])
                 ),
-                OptionsFactory.CreateInputField(
+                Option.InputField(
                     genLang.DragX,
-                    profile.DragSelectStartX.ToString(),
-                    s =>
+                    new Accessor<string>(() => profile.DragSelectStartX.ToString(), s =>
                     {
                         if (int.TryParse(s, out int result))
                             profile.DragSelectStartX = result;
-                    }
+                    }),
+                    search: new SearchMetadata(genLang.DragX, Keywords: [kw.Drag, kw.X])
                 ),
-                OptionsFactory.CreateInputField(
+                Option.InputField(
                     genLang.DragY,
-                    profile.DragSelectStartY.ToString(),
-                    s =>
+                    new Accessor<string>(() => profile.DragSelectStartY.ToString(), s =>
                     {
                         if (int.TryParse(s, out int result))
                             profile.DragSelectStartY = result;
-                    }
+                    }),
+                    search: new SearchMetadata(genLang.DragY, Keywords: [kw.Drag, kw.Y])
                 )
             ),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.ShowStatsChangedMsg,
-                new Accessor<bool>(() => profile.ShowStatsChangedMessage)
+                new Accessor<bool>(() => profile.ShowStatsChangedMessage),
+                search: new SearchMetadata(genLang.ShowStatsChangedMsg, Keywords: [kw.Stats, kw.Changed])
             ),
-            new CheckBoxGroup(
-                new PropertyBinder(
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    genLang.ShowSkillsChangedMsg,
                     new Accessor<bool>(() => profile.ShowSkillsChangedMessage),
-                    genLang.ShowSkillsChangedMsg
+                    search: new SearchMetadata(genLang.ShowSkillsChangedMsg, Keywords: [kw.Skills, kw.Changed])
                 ),
-                OptionsFactory.CreateSliderOption(
+                Option.Slider(
                     genLang.ChangeVolume,
                     0,
                     100,
-                    profile.ShowSkillsChangedDeltaValue,
-                    f => profile.ShowSkillsChangedDeltaValue = (int)f
+                    new Accessor<float>(() => profile.ShowSkillsChangedDeltaValue, f => profile.ShowSkillsChangedDeltaValue = (int)f),
+                    search: new SearchMetadata(genLang.ChangeVolume, Keywords: [kw.Skills, kw.Volume])
                 )
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.ShiftContext,
-                new Accessor<bool>(() => profile.HoldShiftForContext)
+                new Accessor<bool>(() => profile.HoldShiftForContext),
+                search: new SearchMetadata(genLang.ShiftContext, Keywords: [kw.Shift, kw.Context])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 genLang.ShiftSplit,
-                new Accessor<bool>(() => profile.HoldShiftToSplitStack)
+                new Accessor<bool>(() => profile.HoldShiftToSplitStack),
+                search: new SearchMetadata(genLang.ShiftSplit, Keywords: [kw.Shift, kw.Split])
             )
-        );
-
-        panel.VerticalAlignment = VerticalAlignment.Top;
-        return panel;
+        ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 
-    private static WrapPanel GetPage2()
+    private static IOptionSource GetPage2()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
-        ModernOptionsGumpLanguage.CombatSpells lang = Language.Instance.GetModernOptionsGumpLanguage.GetCombatSpells;
+        ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        WrapPanel panel = OptionTabCommons.StyledVerticalWrapPanel(
-            OptionsFactory.CreateCheckboxOption(genLang.HighlightObjects, new Accessor<bool>(() => profile.HighlightGameObjects)),
-            OptionsFactory.CreateSpacer(),
-            new OptionItem(genLang.AutoOpenCorpse, () => new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenCorpses), genLang.AutoOpenCorpse),
-                OptionsFactory.CreateSliderOption(genLang.CorpseOpenDistance, 0, 5, profile.AutoOpenCorpseRange,
-                    f => profile.AutoOpenCorpseRange = (int)f),
-                OptionsFactory.CreateCheckboxOption(genLang.CorpseSkipEmpty, new Accessor<bool>(() => profile.SkipEmptyCorpse), genLang.CorpseSkipEmptyTooltip),
-                OptionsFactory.CreateComboBox(genLang.CorpseOpenOptions, profile.CorpseOpenOptions, [
-                    genLang.CorpseOptNone, genLang.CorpseOptNotTarg,
-                    genLang.CorpseOptNotHiding, genLang.CorpseOptBoth
-                ], i => profile.CorpseOpenOptions = i)
-            )),
-            OptionsFactory.CreateSpacer(),
-            OptionsFactory.CreateCheckboxOption(genLang.OutRangeColor, new Accessor<bool>(() => profile.NoColorObjectsOutOfRange)),
-            OptionsFactory.CreateCheckboxOption(genLang.SallosEasyGrab, new Accessor<bool>(() => profile.SallosEasyGrab), genLang.SallosTooltip),
-            OptionsFactory.CreateCheckboxOption(genLang.ShowHouseContent, new Accessor<bool>(() => profile.ShowHouseContent), genLang.ClientVersionLimitedTooltip),
-            OptionsFactory.CreateCheckboxOption(genLang.SmoothBoat, new Accessor<bool>(() => profile.UseSmoothBoatMovement), genLang.ClientVersionLimitedTooltip),
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                genLang.HighlightObjects,
+                new Accessor<bool>(() => profile.HighlightGameObjects),
+                search: new SearchMetadata(genLang.HighlightObjects, Keywords: [kw.Highlight])
+            ),
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = genLang.AutoOpenCorpse },
+                Option.Checkbox(
+                    genLang.AutoOpenCorpse,
+                    new Accessor<bool>(() => profile.AutoOpenCorpses),
+                    search: new SearchMetadata(genLang.AutoOpenCorpse, Keywords: [kw.Corpse, kw.Auto])
+                ),
+                Option.Slider(
+                    genLang.CorpseOpenDistance,
+                    0,
+                    5,
+                    new Accessor<float>(() => profile.AutoOpenCorpseRange, f => profile.AutoOpenCorpseRange = (int)f),
+                    search: new SearchMetadata(genLang.CorpseOpenDistance, Keywords: [kw.Corpse, kw.Distance])
+                ),
+                Option.Checkbox(
+                    genLang.CorpseSkipEmpty,
+                    new Accessor<bool>(() => profile.SkipEmptyCorpse),
+                    genLang.CorpseSkipEmptyTooltip,
+                    search: new SearchMetadata(genLang.CorpseSkipEmpty, Keywords: [kw.Corpse, kw.Empty])
+                ),
+                Option.ComboBox(
+                    genLang.CorpseOpenOptions,
+                    profile.CorpseOpenOptions,
+                    [genLang.CorpseOptNone, genLang.CorpseOptNotTarg, genLang.CorpseOptNotHiding, genLang.CorpseOptBoth],
+                    i => profile.CorpseOpenOptions = i,
+                    search: new SearchMetadata(genLang.CorpseOpenOptions, Keywords: [kw.Corpse, kw.Type])
+                )
+            ),
+            Option.Checkbox(
+                genLang.OutRangeColor,
+                new Accessor<bool>(() => profile.NoColorObjectsOutOfRange),
+                search: new SearchMetadata(genLang.OutRangeColor, Keywords: [kw.Range, kw.Color])
+            ),
+            Option.Checkbox(
+                genLang.SallosEasyGrab,
+                new Accessor<bool>(() => profile.SallosEasyGrab),
+                genLang.SallosTooltip,
+                search: new SearchMetadata(genLang.SallosEasyGrab, Keywords: [kw.Sallos, kw.Grab])
+            ),
+            Option.Checkbox(
+                genLang.ShowHouseContent,
+                new Accessor<bool>(() => profile.ShowHouseContent),
+                genLang.ClientVersionLimitedTooltip,
+                search: new SearchMetadata(genLang.ShowHouseContent, Keywords: [kw.House, kw.Content])
+            ),
+            Option.Checkbox(
+                genLang.SmoothBoat,
+                new Accessor<bool>(() => profile.UseSmoothBoatMovement),
+                genLang.ClientVersionLimitedTooltip,
+                search: new SearchMetadata(genLang.SmoothBoat, Keywords: [kw.Boat, kw.Smooth])
+            ),
             GetExperimentalSection()
-        );
-
-        panel.VerticalAlignment = VerticalAlignment.Top;
-        return panel;
+        ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 
-    private static VisualContainer GetExperimentalSection()
+    private static OptionFragment GetExperimentalSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Experimental experimentalLang = Language.Instance.GetModernOptionsGumpLanguage.GetExperimental;
+        ModernOptionsGumpLanguage.MiscTabLang.ExperimentalSection expLang = lang.MiscTab.Experimental;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = lang.ButtonExperimental },
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableDefaultUoHotkeys,
-                new Accessor<bool>(() => profile.DisableDefaultHotkeys)
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = expLang.Label },
+            Option.Checkbox(
+                expLang.DisableDefaultUoHotkeys,
+                new Accessor<bool>(() => profile.DisableDefaultHotkeys),
+                search: new SearchMetadata(expLang.DisableDefaultUoHotkeys, Keywords: [kw.Hotkey, kw.Disable])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableArrowsNumlockArrowsPlayerMovement,
-                new Accessor<bool>(() => profile.DisableArrowBtn)
+            Option.Checkbox(
+                expLang.DisableArrowsNumlockArrowsPlayerMovement,
+                new Accessor<bool>(() => profile.DisableArrowBtn),
+                search: new SearchMetadata(expLang.DisableArrowsNumlockArrowsPlayerMovement, Keywords: [kw.Arrow, kw.Movement])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableTabToggleWarmode,
-                new Accessor<bool>(() => profile.DisableTabBtn)
+            Option.Checkbox(
+                expLang.DisableTabToggleWarmode,
+                new Accessor<bool>(() => profile.DisableTabBtn),
+                search: new SearchMetadata(expLang.DisableTabToggleWarmode, Keywords: [kw.Tab, kw.Warmode])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableCtrlQWMessageHistory,
-                new Accessor<bool>(() => profile.DisableCtrlQWBtn)
+            Option.Checkbox(
+                expLang.DisableCtrlQWMessageHistory,
+                new Accessor<bool>(() => profile.DisableCtrlQWBtn),
+                search: new SearchMetadata(expLang.DisableCtrlQWMessageHistory, Keywords: [kw.History, kw.Message])
             ),
-            OptionsFactory.CreateCheckboxOption(
-                experimentalLang.DisableRightLeftClickAutoMove,
-                new Accessor<bool>(() => profile.DisableAutoMove)
+            Option.Checkbox(
+                expLang.DisableRightLeftClickAutoMove,
+                new Accessor<bool>(() => profile.DisableAutoMove),
+                search: new SearchMetadata(expLang.DisableRightLeftClickAutoMove, Keywords: [kw.AutoMove, kw.Click])
             )
-        );
+        ).WithSearch(new SearchMetadata(expLang.Label, Keywords: [kw.Experimental, kw.Beta, kw.Test], Tags: [kw.Experimental]));
     }
 
-    private static WrapPanel GetPage3()
+    private static IOptionSource GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionTabCommons.StyledVerticalWrapPanel(
-            OptionTabCommons.StyledButton(
+        return OptionsUi.Vertical(
+            Option.Button(
                 miscLang.ManageIgnoreListButtonLabel,
                 () =>
                 {
                     UIManager.GetGump<IgnoreManagerGump>()?.Dispose();
                     UIManager.Add(new IgnoreManagerGump(World.Instance));
-                }
+                },
+                search: new SearchMetadata(miscLang.ManageIgnoreListButtonLabel, Keywords: [kw.Ignore, kw.Entity])
             ),
-            OptionsFactory.PropBoundUIntInput(
+            Option.NumericInput(
                 miscLang.SosGumpId,
-                new Accessor<uint>(() => profile.SOSGumpID),
-                tooltip: miscLang.SosGumpIdLabelTooltip
+                new Accessor<int>(() => (int)profile.SOSGumpID, i => profile.SOSGumpID = (uint)i),
+                tooltip: miscLang.SosGumpIdLabelTooltip,
+                search: new SearchMetadata(miscLang.SosGumpId, Keywords: [kw.SOS, kw.Gump])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 miscLang.EnableAutoResyncOnHangDetection,
                 new Accessor<bool>(() => profile.ForceResyncOnHang),
-                miscLang.EnableAutoResyncOnHangDetectionTooltip
+                miscLang.EnableAutoResyncOnHangDetectionTooltip,
+                search: new SearchMetadata(miscLang.EnableAutoResyncOnHangDetection, Keywords: [kw.Resync, kw.Hang])
             ),
-            OptionsFactory.CreateCheckboxOption(
+            Option.Checkbox(
                 miscLang.UseManagedZlib,
                 new Accessor<bool>(() => profile.ForceResyncOnHang),
-                miscLang.UseManagedZlibTooltip
+                miscLang.UseManagedZlibTooltip,
+                search: new SearchMetadata(miscLang.UseManagedZlib, Keywords: [kw.Zlib, kw.Managed])
             ),
-            new VisualContainer(
+            OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.HousingTransparency, LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },
-                new CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.ForceHouseTransparency), miscLang.EnableHouseTransparency),
-                    OptionsFactory.CreateSliderOption(
-                        uiLang.Opacity,
-                        0,
-                        255,
-                        profile.ForcedHouseTransparency,
-                        newValue => { profile.ForcedHouseTransparency = (byte)newValue; }
-                    ),
-                    OptionsFactory.CreateSpacer(),
-                    OptionsFactory.PropBoundHuePicker(
-                        uiLang.Hue,
-                        new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue)
-                    )
+                Option.Checkbox(
+                    miscLang.EnableHouseTransparency,
+                    new Accessor<bool>(() => profile.ForceHouseTransparency),
+                    search: new SearchMetadata(miscLang.EnableHouseTransparency, Keywords: [kw.House, kw.Transparency])
+                ),
+                Option.Slider(
+                    uiLang.Opacity,
+                    0,
+                    255,
+                    new Accessor<float>(() => profile.ForcedHouseTransparency, newValue => { profile.ForcedHouseTransparency = (byte)newValue; }),
+                    search: new SearchMetadata(uiLang.Opacity, Keywords: [kw.House, kw.Opacity])
+                ),
+                Option.HuePicker(
+                    uiLang.Hue,
+                    new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue, h => profile.ForcedTransparencyHouseTileHue = h),
+                    search: new SearchMetadata(uiLang.Hue, Keywords: [kw.House, kw.Hue])
                 )
             ),
-            new CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
-                OptionsFactory.PropBoundInputField(
+            OptionsUi.Vertical(
+                Option.Checkbox(
+                    miscLang.DisplayProgressBarOnSkillChanges,
+                    new Accessor<bool>(() => profile.DisplaySkillBarOnChange),
+                    search: new SearchMetadata(miscLang.DisplayProgressBarOnSkillChanges, Keywords: [kw.Skill, kw.Progress])
+                ),
+                Option.InputField(
                     uiLang.Format,
-                    new Accessor<string>(() => profile.SkillBarFormat),
-                    miscLang.SkillProgressBarFormatTooltip
+                    new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
+                    miscLang.SkillProgressBarFormatTooltip,
+                    search: new SearchMetadata(uiLang.Format, Keywords: [kw.Skill, kw.Format])
                 )
             )
-        );
+        ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 }

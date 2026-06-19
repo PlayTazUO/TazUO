@@ -9,148 +9,157 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class CountersTab
 {
-    internal static OptionItem GetContent()
+    internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new OptionItem(
-            "counters",
-            () => new WrapPanel().AddRange(
-                new CheckBoxGroup(
-                    new PropertyBinder(
-                        new Accessor<bool>(
-                            () => profile.CounterBarEnabled,
-                            b =>
-                            {
-                                profile.CounterBarEnabled = b;
-                                CounterBarGump counterGump = UIManager.GetGump<CounterBarGump>();
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                counterLang.EnableCounters,
+                new Accessor<bool>(
+                    () => profile.CounterBarEnabled,
+                    b =>
+                    {
+                        profile.CounterBarEnabled = b;
+                        CounterBarGump counterGump = UIManager.GetGump<CounterBarGump>();
 
-                                if (b)
-                                {
-                                    if (counterGump != null)
-                                        counterGump.IsEnabled = counterGump.IsVisible = true;
-                                    else
-                                        UIManager.Add(counterGump = new CounterBarGump(World.Instance, 200, 200));
-                                }
-                                else
-                                    counterGump?.IsEnabled = counterGump.IsVisible = false;
+                        if (b)
+                        {
+                            if (counterGump != null)
+                                counterGump.IsEnabled = counterGump.IsVisible = true;
+                            else
+                                UIManager.Add(counterGump = new CounterBarGump(World.Instance, 200, 200));
+                        }
+                        else
+                            counterGump?.IsEnabled = counterGump.IsVisible = false;
 
-                                counterGump?.SetLayout(
-                                    profile.CounterBarCellSize,
-                                    profile.CounterBarRows,
-                                    profile.CounterBarColumns
-                                );
-                            }
-                        ),
-                        counterLang.EnableCounters
-                    ),
-                    GetAbbreviationGroup(),
-                    GetHighlightGroup(),
-                    OptionsFactory.CreateSpacer(),
-                    GetLayoutGroup()
-                )
-            )
-        );
+                        counterGump?.SetLayout(
+                            profile.CounterBarCellSize,
+                            profile.CounterBarRows,
+                            profile.CounterBarColumns
+                        );
+                    }
+                ),
+                search: new SearchMetadata(counterLang.EnableCounters, Keywords: [kw.Enable])
+            ),
+            GetAbbreviationGroup(),
+            GetHighlightGroup(),
+            GetLayoutGroup()
+        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter, kw.Reagent]));
     }
 
-    private static CheckBoxGroup GetAbbreviationGroup()
+    private static OptionFragment GetAbbreviationGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new CheckBoxGroup(
-            new PropertyBinder(
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                counterLang.AbbreviatedValues,
                 new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount),
-                counterLang.AbbreviatedValues
+                search: new SearchMetadata(counterLang.AbbreviatedValues, Keywords: [kw.Abbreviate])
             ),
-            new LabeledIntegerInput(
+            Option.NumericInput(
                 counterLang.AbbreviateIfAmountExceeds,
-                new Accessor<int>(() => profile.CounterBarAbbreviatedAmount)
-            ) { InputBoxWidth = StyleConstantsDefaults.NUMERIC_INPUT_BOX_WIDTH, MinValue = 999, MaxValue = 999999999 }
-        );
-    }
-
-    private static VisualContainer GetHighlightGroup()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
-
-        return new VisualContainer(
-            new VisualContainerProps { LabelText = counterLang.SectionHighlightingLabel },
-            OptionsFactory.CreateCheckboxOption(
-                counterLang.HighlightItemsOnUse,
-                new Accessor<bool>(() => profile.CounterBarHighlightOnUse)
-            ),
-            new CheckBoxGroup(
-                new PropertyBinder(
-                    new Accessor<bool>(() => profile.CounterBarHighlightOnAmount),
-                    counterLang.HighlightRedWhenAmountIsLow
-                ),
-                new LabeledIntegerInput(
-                    counterLang.HighlightRedIfAmountIsBelow,
-                    new Accessor<int>(() => profile.CounterBarHighlightAmount)
-                ) { InputBoxWidth = StyleConstantsDefaults.NUMERIC_INPUT_BOX_WIDTH, MinValue = 1, MaxValue = 60000 }
+                new Accessor<int>(() => profile.CounterBarAbbreviatedAmount),
+                min: 999,
+                max: 999999999,
+                search: new SearchMetadata(counterLang.AbbreviateIfAmountExceeds, Keywords: [kw.Abbreviate, kw.Amount, kw.Exceed])
             )
         );
     }
 
-    private static VisualContainer GetLayoutGroup()
+    private static OptionFragment GetHighlightGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return
-            new VisualContainer(
-                new VisualContainerProps { LabelText = counterLang.CounterLayout },
-                OptionsFactory.CreateSliderOption(
-                    counterLang.GridSize,
-                    30,
-                    80,
-                    profile.CounterBarCellSize,
-                    v =>
-                    {
-                        profile.CounterBarCellSize = (int)v;
-                        UIManager.GetGump<CounterBarGump>()
-                            ?.SetLayout(
-                                profile.CounterBarCellSize,
-                                profile.CounterBarRows,
-                                profile.CounterBarColumns
-                            );
-                    }
-                ),
-                new LabeledIntegerInput(
-                    counterLang.Rows,
-                    profile.CounterBarRows,
-                    v =>
-                    {
-                        profile.CounterBarRows = v;
-                        UIManager.GetGump<CounterBarGump>()
-                            ?.SetLayout(
-                                profile.CounterBarCellSize,
-                                profile.CounterBarRows,
-                                profile.CounterBarColumns
-                            );
-                    }
-                ) { InputBoxWidth = StyleConstantsDefaults.NUMERIC_INPUT_BOX_WIDTH, MinValue = 1, MaxValue = 30 },
-                new LabeledIntegerInput(
-                    counterLang.Columns,
-                    profile.CounterBarColumns,
-                    v =>
-                    {
-                        profile.CounterBarColumns = v;
-                        UIManager.GetGump<CounterBarGump>()
-                            ?.SetLayout(
-                                profile.CounterBarCellSize,
-                                profile.CounterBarRows,
-                                profile.CounterBarColumns
-                            );
-                    }
-                ) { InputBoxWidth = StyleConstantsDefaults.NUMERIC_INPUT_BOX_WIDTH, MinValue = 1, MaxValue = 30 }
-            );
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = counterLang.SectionHighlightingLabel },
+            Option.Checkbox(
+                counterLang.HighlightItemsOnUse,
+                new Accessor<bool>(() => profile.CounterBarHighlightOnUse),
+                search: new SearchMetadata(counterLang.HighlightItemsOnUse, Keywords: [kw.Highlight, kw.Item, kw.Use])
+            ),
+            Option.Checkbox(
+                counterLang.HighlightRedWhenAmountIsLow,
+                new Accessor<bool>(() => profile.CounterBarHighlightOnAmount),
+                search: new SearchMetadata(counterLang.HighlightRedWhenAmountIsLow, Keywords: [kw.Highlight, kw.Amount, kw.Low])
+            ),
+            Option.NumericInput(
+                counterLang.HighlightRedIfAmountIsBelow,
+                new Accessor<int>(() => profile.CounterBarHighlightAmount),
+                min: 1,
+                max: 60000,
+                search: new SearchMetadata(counterLang.HighlightRedIfAmountIsBelow, Keywords: [kw.Highlight, kw.Amount, kw.Below])
+            )
+        );
+    }
+
+    private static OptionFragment GetLayoutGroup()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = counterLang.CounterLayout },
+            Option.Slider(
+                counterLang.GridSize,
+                30,
+                80,
+                new Accessor<float>(() => profile.CounterBarCellSize, v =>
+                {
+                    profile.CounterBarCellSize = (int)v;
+                    UIManager.GetGump<CounterBarGump>()
+                        ?.SetLayout(
+                            profile.CounterBarCellSize,
+                            profile.CounterBarRows,
+                            profile.CounterBarColumns
+                        );
+                }),
+                search: new SearchMetadata(counterLang.GridSize, Keywords: [kw.Grid, kw.Size])
+            ),
+            Option.NumericInput(
+                counterLang.Rows,
+                new Accessor<int>(() => profile.CounterBarRows, v =>
+                {
+                    profile.CounterBarRows = v;
+                    UIManager.GetGump<CounterBarGump>()
+                        ?.SetLayout(
+                            profile.CounterBarCellSize,
+                            profile.CounterBarRows,
+                            profile.CounterBarColumns
+                        );
+                }),
+                min: 1,
+                max: 30,
+                search: new SearchMetadata(counterLang.Rows, Keywords: [kw.Row])
+            ),
+            Option.NumericInput(
+                counterLang.Columns,
+                new Accessor<int>(() => profile.CounterBarColumns, v =>
+                {
+                    profile.CounterBarColumns = v;
+                    UIManager.GetGump<CounterBarGump>()
+                        ?.SetLayout(
+                            profile.CounterBarCellSize,
+                            profile.CounterBarRows,
+                            profile.CounterBarColumns
+                        );
+                }),
+                min: 1,
+                max: 30,
+                search: new SearchMetadata(counterLang.Columns, Keywords: [kw.Column])
+            )
+        );
     }
 }
