@@ -105,6 +105,11 @@ public class WorldMapGump : ResizableGump
     private const int MAX_NAV_REPLANS = 3;
     private int _navReplansLeft;
 
+    // User-configurable replan budget; falls back to the default when no profile is loaded.
+    private static int MaxNavReplans => ProfileManager.CurrentProfile?.WorldMapPathfindingMaxRetries >= 0
+        ? ProfileManager.CurrentProfile.WorldMapPathfindingMaxRetries
+        : MAX_NAV_REPLANS;
+
     private static int _mapLoading;
     private Task _loadingTask;
     private World _world;
@@ -512,8 +517,8 @@ public class WorldMapGump : ResizableGump
         ContextMenu?.Dispose();
         ContextMenu = new ContextMenuControl(this);
 
-        var follow = new ContextMenuItemEntry(Language.Instance.MapLanguage.Follow);
-        follow.Add(new ContextMenuItemEntry(Language.Instance.MapLanguage.Yourself, () => { following = World.Player; }, true));
+        var follow = new ContextMenuItemEntry(TazLang.Get("map_follow"));
+        follow.Add(new ContextMenuItemEntry(TazLang.Get("map_yourself"), () => { following = World.Player; }, true));
         if (World.Party != null && World.Party.Leader != 0)
         {
             foreach (PartyMember e in World.Party.Members)
@@ -3380,7 +3385,7 @@ public class WorldMapGump : ResizableGump
                     _navStepFailedHandler = null;
                     _world.Player.Pathfinder.StopAutoWalk();
                 }
-                _navReplansLeft = MAX_NAV_REPLANS;
+                _navReplansLeft = MaxNavReplans;
 
                 int mapIndex = _world.Map.Index;
                 StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY, firstAttempt: true);

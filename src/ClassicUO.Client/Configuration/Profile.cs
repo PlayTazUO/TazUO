@@ -27,6 +27,37 @@ using ClassicUO.Game.UI.MyraWindows;
 
 namespace ClassicUO.Configuration
 {
+    public enum NamePlateBackgroundMode
+    {
+        FixedColor,
+        NotorietyColor
+    }
+
+    public enum NamePlateHealthBarMode
+    {
+        StatusColor,
+        Green,
+        Blue,
+        Red,
+        Cyan,
+        Yellow,
+        Orange,
+        Purple,
+        White,
+        Gray,
+        Black
+    }
+
+    public enum NamePlatePreset
+    {
+        Custom,
+        Orion,
+        WorldOfWarcraftBlockyBars,
+        WorldOfWarcraftCleanHealth,
+        WorldOfWarcraftBlockyCast,
+        WorldOfWarcraftRedName
+    }
+
     //[JsonSourceGenerationOptions(WriteIndented = true, PropertyNamingPolicy = JsonKnownNamingPolicy.Unspecified)]
     [JsonSerializable(typeof(Profile), GenerationMode = JsonSourceGenerationMode.Metadata)]
     sealed partial class ProfileJsonContext : JsonSerializerContext
@@ -182,8 +213,8 @@ namespace ClassicUO.Configuration
         public bool BandageAgentCheckForBuff { get; set => SetProperty(ref field, value); } = false;
         public ushort BandageAgentGraphic { get; set => SetProperty(ref field, value); } = 0x0E21;
         public bool BandageAgentUseNewPacket { get; set => SetProperty(ref field, value); } = true;
-        public bool BandageAgentCheckHidden { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentCheckPoisoned { get; set => SetProperty(ref field, value); } = false;
+        public bool BandageAgentCheckHidden { get; set => SetProperty(ref field, value); } = true;
+        public bool BandageAgentCheckPoisoned { get; set => SetProperty(ref field, value); } = true;
         public int BandageAgentHPPercentage { get; set => SetProperty(ref field, value); } = 80;
         public bool BandageAgentCheckInvul { get; set => SetProperty(ref field, value); } = true;
         public bool BandageAgentBandageFriends { get; set => SetProperty(ref field, value); } = false;
@@ -191,6 +222,14 @@ namespace ClassicUO.Configuration
         public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
         public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
+        public partial bool BandageAgentUseJournalTrigger { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
+        public partial string BandageAgentJournalMessages { get; set; }
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
@@ -425,6 +464,20 @@ namespace ClassicUO.Configuration
         public bool NamePlateHideAtFullHealthInWarmode { get; set => SetProperty(ref field, value); }
         public byte NamePlateBorderOpacity { get; set => SetProperty(ref field, value); } = 50;
         public bool NamePlateAvoidOverlap { get; set => SetProperty(ref field, value); }
+        public bool NamePlateUseFixedWidth { get; set => SetProperty(ref field, value); }
+        public int NamePlateFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
+        public bool NamePlateUseFixedHealthBarWidth { get; set => SetProperty(ref field, value); }
+        public int NamePlateHealthBarFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
+        public bool NamePlateShowWordOfDeathIcon { get; set => SetProperty(ref field, value); }
+        public int NamePlateHeight { get; set => SetProperty(ref field, Math.Clamp(value, 0, 80)); }
+        public bool NamePlateSplitHealthBar { get; set => SetProperty(ref field, value); }
+        public int NamePlateCornerRadius { get; set => SetProperty(ref field, Math.Clamp(value, 0, 40)); }
+        public NamePlateHealthBarMode NamePlateHealthBarMode { get; set => SetProperty(ref field, value); } = NamePlateHealthBarMode.StatusColor;
+        public NamePlateBackgroundMode NamePlateBackgroundMode { get; set => SetProperty(ref field, value); } = NamePlateBackgroundMode.FixedColor;
+        public byte NamePlateBackgroundR { get; set => SetProperty(ref field, value); }
+        public byte NamePlateBackgroundG { get; set => SetProperty(ref field, value); }
+        public byte NamePlateBackgroundB { get; set => SetProperty(ref field, value); }
+        public NamePlatePreset NamePlatePreset { get; set => SetProperty(ref field, value); } = NamePlatePreset.Custom;
 
         public bool LeftAlignToolTips { get; set => SetProperty(ref field, value); }
         public bool ForceCenterAlignTooltipMobiles { get; set => SetProperty(ref field, value); } = true;
@@ -801,6 +854,26 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
         public partial int PathfindingZLevelDiff { get; set; }
+
+        // Maximum number of A* nodes the local (in-game) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
+        public partial int PathfindingMaxNodes { get; set; }
+
+        // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_NODES, 1000000)]
+        public partial int WorldMapPathfindingMaxNodes { get; set; }
+
+        // How many times world map navigation will replan around a blocked tile before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_RETRIES, 3)]
+        public partial int WorldMapPathfindingMaxRetries { get; set; }
+
+        // Wall-clock cap (milliseconds) on a single world map pathfinding search.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_TIMEOUT, 5000)]
+        public partial int WorldMapPathfindingTimeout { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.SINGLE_CLICK_SET_LAST_TARG, true)]

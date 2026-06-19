@@ -5724,6 +5724,27 @@ namespace ClassicUO.LegionScripting
             }
         });
 
+        /// <summary>
+        /// Get the string for a cliloc number.
+        /// Example:
+        /// ```py
+        /// text = API.GetClilocString(1020000)
+        /// if text:
+        ///   API.SysMsg(text)
+        ///
+        /// # Force English regardless of client language setting
+        /// text = API.GetClilocString(1020000, englishOnly=True)
+        /// ```
+        /// </summary>
+        /// <param name="cliloc">The cliloc number</param>
+        /// <param name="englishOnly">True to always return the English string, ignoring the client language setting</param>
+        /// <returns>The cliloc string, or null if not found</returns>
+        public string GetClilocString(int cliloc, bool englishOnly = false) => OnMain(() =>
+            englishOnly
+                ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
+                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc)
+        );
+
         #endregion
     }
 }

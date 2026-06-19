@@ -27,6 +27,9 @@ All notable changes to TazUO will be recorded here.
 * Add option to disable door opening while player is hidden - [P.R 535](https://github.com/PlayTazUO/TazUO/pull/535) ([bittiez](https://github.com/bittiez))
 * Add option to disable system chat while the Resizable Journal is open - [P.R 541](https://github.com/PlayTazUO/TazUO/pull/541) ([bittiez](https://github.com/bittiez))
 * Expanded the spell bar so slots can hold macros and weapon abilities in addition to spells - [P.R 543](https://github.com/PlayTazUO/TazUO/pull/543) ([bittiez](https://github.com/bittiez))
+* Bandage agent now supports journal message triggers — configure messages (separated by `;`) that immediately allow re-bandaging when matched - [P.R 550](https://github.com/PlayTazUO/TazUO/pull/550) ([bittiez](https://github.com/bittiez))
+* Create Tinkerer window with cliloc viewer - [P.R 549](https://github.com/PlayTazUO/TazUO/pull/549) ([bittiez](https://github.com/bittiez))
+* Made pathfinding limits user-configurable (max nodes, search timeout, and retry attempts) in the Pathfinding options tab - [P.R 551](https://github.com/PlayTazUO/TazUO/pull/551) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
@@ -49,10 +52,13 @@ All notable changes to TazUO will be recorded here.
 * Better long distance pathfinding - [P.R 454](https://github.com/PlayTazUO/TazUO/pull/454) [P.R 539](https://github.com/PlayTazUO/TazUO/pull/539) ([eddo87](https://github.com/eddo87))
 * Fixed SDL GPU assertion ("Command buffer already submitted!") on macOS caused by unnecessary GPU texture readback in the web map server - [P.R 538](https://github.com/PlayTazUO/TazUO/pull/538) ([bittiez](https://github.com/bittiez))
 * A few minor ui fixes where focus gained was not needed - ([bittiez](https://github.com/bittiez))
+* Fix: spell bar hotkeys not firing when Scroll Lock is on - [P.R 548](https://github.com/PlayTazUO/TazUO/pull/549) ([eddo87](https://github.com/eddo87))
+* Fixed UltimaLive block reloads leaving the reloaded map chunk untracked, so it could never be garbage collected and stayed loaded until relog - [P.R 556](https://github.com/PlayTazUO/TazUO/pull/556) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
 * Fixed a legion bug where control/gump `.IsDisposed` was not reported correctly. - ([bittiez](https://github.com/bittiez))
+* Added `API.GetClilocString(cliloc, englishOnly=False)` to retrieve cliloc strings from scripts - [P.R 546](https://github.com/PlayTazUO/TazUO/pull/546) ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))

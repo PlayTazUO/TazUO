@@ -130,6 +130,10 @@ public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string OUTLINE_NOTORIETIES = "outline_notorieties";
             public const string IRC_AUTO_CONNECT = "irc_disable_auto_connect";
             public const string PATH_Z_LEVEL = "path_z_level";
+            public const string PATHFINDING_MAX_NODES = "pathfinding_max_nodes";
+            public const string WORLDMAP_PATH_MAX_NODES = "worldmap_path_max_nodes";
+            public const string WORLDMAP_PATH_MAX_RETRIES = "worldmap_path_max_retries";
+            public const string WORLDMAP_PATH_TIMEOUT = "worldmap_path_timeout";
             public const string SINGLE_CLICK_SET_LAST_TARG = "single_click_set_last_targ";
             public const string AUTOLOOT_RETRY_DELAY = "autoloot_retry_delay";
             public const string OVERHEAD_MESSAGE_TYPES_HIDDEN = "overhead_message_types_shown";
@@ -139,6 +143,8 @@ public const string SCALE_PETS_ENABLED = "scale_pets_enabled";
             public const string AUTO_STAT_LOCK = "auto_stat_lock";
             public const string DISABLE_AUTOLOOT_RETRY_CORPSE = "disable_authloot_retry";
             public const string AUTO_OPEN_DOORS_HIDDEN = "auto_open_doors_hidden";
+            public const string BANDAGE_JOURNAL_TRIGGER = "bandage_journal_trigger";
+            public const string BANDAGE_JOURNAL_MESSAGES = "bandage_journal_messages";
         }
     }
 }
