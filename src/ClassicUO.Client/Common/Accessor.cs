@@ -4,6 +4,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ClassicUO.Common;
 
@@ -18,11 +19,13 @@ public class Accessor<T>
         _setter = setter;
     }
 
-    public Accessor(Expression<Func<T>> expr)
+    public Accessor(Expression<Func<T>> expr, [CallerArgumentExpression(nameof(expr))] string exprName = null)
     {
         ArgumentNullException.ThrowIfNull(expr);
 
-        var memberExpression = (MemberExpression)expr.Body;
+        if (expr.Body is not MemberExpression memberExpression)
+            throw new ArgumentException($"Expression '{exprName}' is not a member expression.");
+
         Expression instanceExpression = memberExpression.Expression;
         ParameterExpression parameter = Expression.Parameter(typeof(T));
 

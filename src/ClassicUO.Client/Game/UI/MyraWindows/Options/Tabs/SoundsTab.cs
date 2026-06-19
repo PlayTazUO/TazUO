@@ -30,7 +30,7 @@ public static class SoundsTab
                 soundSubLang.SharedVolume,
                 0,
                 100,
-                new Accessor<float>(() => profile.SoundVolume),
+                new Accessor<int>(() => profile.SoundVolume),
                 search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Volume])
             ),
             Option.Spacer(),
@@ -43,7 +43,7 @@ public static class SoundsTab
                 soundSubLang.SharedVolume,
                 0,
                 100,
-                new Accessor<float>(() => profile.MusicVolume),
+                new Accessor<int>(() => profile.MusicVolume),
                 search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Music, kw.Volume])
             ),
             Option.Spacer(),
@@ -90,14 +90,18 @@ public static class SoundsTab
                     new SearchMetadata(lang.GetTazUO.VoiceModelPath, Keywords: [kw.Voice, kw.Model])
                 )
             )
-        ).WithSearch(new SearchMetadata(SearchText: soundLang.Label, Tags: [soundLang.Tags], Keywords: [soundLang.Keywords]));
+        ).WithSearch(new SearchMetadata(soundLang.Label, [soundLang.Tags], [soundLang.Keywords]));
     }
 
     private static void OnCreateVoiceButtonClick()
     {
+        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
+
         var macroManager = MacroManager.TryGetMacroManager(World.Instance);
-        if (macroManager == null) return;
-        var macro = Macro.CreateFastMacro("Toggle Voice", MacroType.ToggleVoiceRecognition, MacroSubType.MSC_NONE);
+        if (macroManager == null)
+            return;
+
+        var macro = Macro.CreateFastMacro(tuoLang.VoiceToggle, MacroType.ToggleVoiceRecognition, MacroSubType.MSC_NONE);
         macroManager.PushToBack(macro);
         UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
     }
