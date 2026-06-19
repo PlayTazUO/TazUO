@@ -105,6 +105,11 @@ public class WorldMapGump : ResizableGump
     private const int MAX_NAV_REPLANS = 3;
     private int _navReplansLeft;
 
+    // User-configurable replan budget; falls back to the default when no profile is loaded.
+    private static int MaxNavReplans => ProfileManager.CurrentProfile?.WorldMapPathfindingMaxRetries >= 0
+        ? ProfileManager.CurrentProfile.WorldMapPathfindingMaxRetries
+        : MAX_NAV_REPLANS;
+
     private static int _mapLoading;
     private Task _loadingTask;
     private World _world;
@@ -3380,7 +3385,7 @@ public class WorldMapGump : ResizableGump
                     _navStepFailedHandler = null;
                     _world.Player.Pathfinder.StopAutoWalk();
                 }
-                _navReplansLeft = MAX_NAV_REPLANS;
+                _navReplansLeft = MaxNavReplans;
 
                 int mapIndex = _world.Map.Index;
                 StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY, firstAttempt: true);
