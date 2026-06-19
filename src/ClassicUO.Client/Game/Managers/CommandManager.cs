@@ -320,7 +320,7 @@ namespace ClassicUO.Game.Managers
             }
             else
             {
-                GameActions.Print(_world, string.Format(Language.Instance.ErrorsLanguage.CommandNotFound, name));
+                GameActions.Print(_world, TazLang.Get("errors_commandnotfound", new[] { name }));
                 Log.Warn($"Command: '{name}' not exists");
             }
         }

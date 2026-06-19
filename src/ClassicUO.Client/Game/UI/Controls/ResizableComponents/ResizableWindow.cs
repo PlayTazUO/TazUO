@@ -392,7 +392,7 @@ public class ResizableWindow : Window, IDisposable
         {
             Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
             Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Tooltip = Language.Instance.UiCommons.MinMaxWindowButtonTooltip,
+            Tooltip = TazLang.Get("uicommons_minmaxwindow_tooltip"),
             Content = _minMaxButtonLabel,
             VerticalAlignment = VerticalAlignment.Center
         };
@@ -424,7 +424,7 @@ public class ResizableWindow : Window, IDisposable
         {
             Width = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
             Height = StyleConstantsDefaults.TOOLBAR_BUTTON_SIZE,
-            Tooltip = Language.Instance.UiCommons.ResetWindowSizeButtonTooltip,
+            Tooltip = TazLang.Get("uicommons_resetwindowsize_tooltip"),
             Content = label,
             VerticalAlignment = VerticalAlignment.Center
         };
