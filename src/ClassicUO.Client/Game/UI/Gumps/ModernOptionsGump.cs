@@ -3246,6 +3246,21 @@ namespace ClassicUO.Game.UI.Gumps
             (new CheckboxWithLabel(lang.GetTazUO.AlsoScaleItems, 0, profile.GridContainerScaleItems, (b) => { profile.GridContainerScaleItems = b; }),
                 true, page);
 
+            content.AddToRight
+            (new CheckboxWithLabel(lang.GetTazUO.HighlightLowContrastItems, 0, profile.GridHighlightLowContrastItems, (b) => { profile.GridHighlightLowContrastItems = b; }),
+                true, page);
+
+            content.AddToRight
+            (
+                new ComboBoxWithLabel
+                (
+                    World,
+                    lang.GetTazUO.LowContrastHighlightStyle, 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    Enum.GetNames(typeof(GridContainer.LowContrastHighlightStyle)), profile.GridHighlightLowContrastItemsStyle,
+                    (i, s) => { profile.GridHighlightLowContrastItemsStyle = i; }
+                ), true, page
+            );
+
             content.RemoveIndent();
 
             content.BlankLine();
