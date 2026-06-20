@@ -33,6 +33,30 @@ public partial class ScriptFile : IDisposable
 
     public bool IsPlaying => ScriptThread != null;
 
+    /// <summary>
+    /// Stable, portable identifier: the script's path relative to the LegionScripts root,
+    /// normalized to '/'. Unique across groups/subgroups and zip entries
+    /// (zip form: "<relative-zip>::<entry>"). Used to bind scripts to UI without colliding
+    /// on bare file names.
+    /// </summary>
+    public string RelativePath => ToRelativeId(LegionScripting.ScriptPath, FullPath);
+
+    /// <summary>Computes <see cref="RelativePath"/> from a scripts root and a full path. Pure.</summary>
+    public static string ToRelativeId(string scriptRoot, string fullPath)
+    {
+        if (string.IsNullOrEmpty(fullPath))
+            return string.Empty;
+
+        string full = fullPath.Replace('\\', '/');
+        string root = (scriptRoot ?? string.Empty).Replace('\\', '/');
+
+        int i = root.Length > 0 ? full.IndexOf(root, System.StringComparison.Ordinal) : -1;
+        if (i >= 0)
+            full = full.Substring(i + root.Length);
+
+        return full.TrimStart('/');
+    }
+
     public enum ScriptType
     {
         Python,
