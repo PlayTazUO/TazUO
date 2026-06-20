@@ -154,7 +154,7 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
-        public void CastInterrupted_AfterStarting_RetriesFast()
+        public void CastingGoesQuietWithNoCursor_WaitsForGraceBeforeRecast()
         {
             var env = new FakeEnv();
             var sm = new SelfHealStateMachine();
@@ -162,16 +162,44 @@ namespace ClassicUO.UnitTests.Game.Managers
             sm.Tick(env, held: true);            // cast Heal, WaitingForCursor
             env.IsCasting = true;
             sm.Tick(env, held: true);            // observes cast in progress
-            env.IsCasting = false;               // damage interrupts the cast (no cursor)
-            sm.Tick(env, held: true);            // detects interruption -> InterruptRetry
-            env.Casts.Should().HaveCount(1);     // not recast yet
+            env.IsCasting = false;               // cast goes quiet, no cursor (true interrupt OR benign HP-clear)
+            sm.Tick(env, held: true);            // must NOT recast on the falling edge alone
+            env.Casts.Should().HaveCount(1);
 
-            env.Now += env.InterruptRetryMs + 1; // only the short retry delay
+            env.Now += env.CastStartGraceMs + 1; // only once the grace deadline passes with still no cursor...
+            sm.Tick(env, held: true);            // ...-> InterruptRetry
+            env.Casts.Should().HaveCount(1);     // still not recast (in the retry delay)
+
+            env.Now += env.InterruptRetryMs + 1;
             sm.Tick(env, held: true);            // InterruptRetry -> Idle
             sm.Tick(env, held: true);            // Idle + held -> recast
 
             env.Casts.Should().HaveCount(2);
-            env.Now.Should().BeLessThan(SelfHealStateMachine.DefaultCastStartGraceMs); // fast, not a long stall
+        }
+
+        [Fact]
+        public void BenignCastingFlap_CursorStillAppears_TargetsSelfWithoutRecast()
+        {
+            // Reproduces the real-world bug: UpdateHitpoints calls ClearCasting() on EVERY player HP
+            // change, so taking a hit mid-cast drops IsCasting to false even though the heal is still
+            // in flight. The loop must keep waiting for the cursor instead of cancelling and recasting.
+            var env = new FakeEnv();
+            var sm = new SelfHealStateMachine();
+
+            sm.Tick(env, held: true);            // cast Heal, WaitingForCursor
+            env.IsCasting = true;
+            sm.Tick(env, held: true);            // cast in progress
+            env.IsCasting = false;               // a hit lands -> ClearCasting() flaps IsCasting off
+            env.Now += 300;
+            sm.Tick(env, held: true);            // within grace, no cursor yet -> keep waiting
+            env.Casts.Should().HaveCount(1);     // MUST NOT recast (would cancel the in-flight heal)
+
+            env.IsTargetingAfterCast = true;     // the heal's cursor finally comes up
+            env.Now += 200;
+            sm.Tick(env, held: true);
+
+            env.TargetSelfCount.Should().Be(1);  // targeted the in-flight cast
+            env.Casts.Should().HaveCount(1);     // and never double-cast
         }
 
         [Fact]

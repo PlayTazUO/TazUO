@@ -24,9 +24,13 @@ namespace ClassicUO.Game.Managers
     /// verifies the poison actually cleared before re-casting Cure.
     ///
     /// The wait for the cursor is <b>cast-aware</b>: while <see cref="ISelfHealEnv.IsCasting"/> is
-    /// true the loop never times out (so a slow cast is never double-cast); the moment casting
-    /// stops without a cursor — or a cast never registers within <see cref="ISelfHealEnv.CastStartGraceMs"/>
-    /// — it recasts after a short <see cref="ISelfHealEnv.InterruptRetryMs"/> delay instead of stalling.
+    /// true the deadline is pushed forward so a slow cast is never treated as failed. Crucially, a
+    /// cast going <i>quiet</i> (IsCasting dropping to false) is NOT treated as an interrupt on its own:
+    /// the client clears its casting flag on any HP change (UpdateHitpoints → ClearCasting), so taking
+    /// a hit mid-cast flaps IsCasting off constantly while healing under fire — even though the cast is
+    /// still in flight. We therefore keep waiting for the cursor until <see cref="ISelfHealEnv.CastStartGraceMs"/>
+    /// elapses, and only then recast after a short <see cref="ISelfHealEnv.InterruptRetryMs"/> delay.
+    /// This avoids cancelling a real in-flight heal (and thus never landing one) under sustained damage.
     /// Releasing only prevents the next cast.
     /// </summary>
     public sealed class SelfHealStateMachine
@@ -51,14 +55,12 @@ namespace ClassicUO.Game.Managers
         private long _verifyUntil;
         private long _interruptUntil;
         private bool _lastCastWasCure;
-        private bool _castStarted;     // have we observed the in-flight cast actually begin?
 
         public void Tick(ISelfHealEnv env, bool held)
         {
             if (!env.CanAct)
             {
                 _state = State.Idle;
-                _castStarted = false;
                 return;
             }
 
@@ -68,7 +70,6 @@ namespace ClassicUO.Game.Managers
                     if (held)
                     {
                         _lastCastWasCure = env.IsPoisoned;
-                        _castStarted = false;
                         env.Cast(_lastCastWasCure ? env.CureSpellId : env.HealSpellId);
                         _stallUntil = env.Now + env.CastStartGraceMs;
                         _state = State.WaitingForCursor;
@@ -95,14 +96,15 @@ namespace ClassicUO.Game.Managers
                     {
                         // Cast is genuinely in progress — keep waiting and push the grace forward so a
                         // slow cast is never prematurely treated as failed (no double-cast).
-                        _castStarted = true;
                         _stallUntil = env.Now + env.CastStartGraceMs;
                     }
-                    else if (_castStarted || env.Now > _stallUntil)
+                    else if (env.Now > _stallUntil)
                     {
-                        // Either the cast began and then died with no cursor (e.g. damage disrupted it),
-                        // or it never registered within the grace window. Recast quickly rather than stall.
-                        _castStarted = false;
+                        // The cursor never appeared within the grace window. Note we do NOT recast the
+                        // instant IsCasting drops to false: the client clears its casting flag on any HP
+                        // change, so a hit landing mid-cast would otherwise cancel a heal that is still in
+                        // flight. Waiting for the deadline lets the in-flight cursor still arrive; only a
+                        // genuine no-show (true interrupt, fizzle, or never-registered cast) falls through.
                         _interruptUntil = env.Now + env.InterruptRetryMs;
                         _state = State.InterruptRetry;
                     }
