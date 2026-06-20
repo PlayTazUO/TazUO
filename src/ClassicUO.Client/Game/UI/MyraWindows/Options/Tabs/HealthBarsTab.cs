@@ -62,7 +62,7 @@ public static class HealthBarsTab
                     tuoLang.OnlyShowBelowHp,
                     0,
                     100,
-                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow, f => profile.ShowHealthIndicatorBelow = f),
+                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
                     search: new SearchMetadata(tuoLang.OnlyShowBelowHp, Keywords: [kw.HP])
                 ),
                 Option.Slider(

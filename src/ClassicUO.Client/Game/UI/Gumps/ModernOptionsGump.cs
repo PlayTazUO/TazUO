@@ -4161,7 +4161,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     availableFonts,
                     maxFontNameLength,
-                    lang.GetTazUO.InfobarFont,
+                    lang.GetTazUO.InfoBarFont,
                     CurrentProfile.InfoBarFont,
                     (i, s) =>
                     {
@@ -4318,7 +4318,7 @@ namespace ClassicUO.Game.UI.Gumps
                 GenerateFontSelector(
                     availableFonts,
                     maxFontNameLength,
-                    lang.GetTazUO.Optionsfont,
+                    lang.GetTazUO.OptionsFont,
                     CurrentProfile.OptionsFont,
                     (i, s) => { CurrentProfile.OptionsFont = s; }
                 ),

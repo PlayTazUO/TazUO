@@ -1330,14 +1330,14 @@ namespace ClassicUO.Configuration
             #region Fontsettings
             public string FontSettings { get; set; } = "Font settings";
             public string TtfFontBorder { get; set; } = "TTF Font border";
-            public string InfobarFont { get; set; } = "Infobar font";
+            public string InfoBarFont { get; set; } = "Infobar font";
             public string SharedSize { get; set; } = "Size";
             public string SystemChatFont { get; set; } = "System chat font";
             public string TooltipFont { get; set; } = "Tooltip font";
             public string OverheadFont { get; set; } = "Overhead font";
             public string JournalFont { get; set; } = "Journal font";
             public string NameplateFont { get; set; } = "Nameplate font";
-            public string Optionsfont { get; set; } = "Options menu font";
+            public string OptionsFont { get; set; } = "Options menu font";
             #endregion
 
             #region Controller
