@@ -4043,7 +4043,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(lang.GetTazUO.EnableHealthIndicatorBorder, 0, profile.EnableHealthIndicator, (b) => { profile.EnableHealthIndicator = b; }),
+            (new CheckboxWithLabel(lang.GetTazUO.HealthBarIndicator, 0, profile.EnableHealthIndicator, (b) => { profile.EnableHealthIndicator = b; }),
                 true, page);
 
             content.Indent();

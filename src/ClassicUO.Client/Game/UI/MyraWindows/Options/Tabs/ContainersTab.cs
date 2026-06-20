@@ -156,7 +156,18 @@ public static class ContainersTab
         );
     }
 
-    private static IOptionSource GetGridContainerSection()
+    private static IOptionSource GetGridContainerSection() =>
+        OptionsUi.Horizontal(
+            GetGridContainerLeftSide(),
+            GetGridContainerRightSide()
+        );
+
+    private static OptionFragment GetGridContainerRightSide() =>
+        OptionsUi.Vertical(
+            GetGridContainerHighlightingSection()
+        );
+
+    private static OptionFragment GetGridContainerLeftSide()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
@@ -168,7 +179,7 @@ public static class ContainersTab
             OptionsUi.VisualContainer(
                 new VisualContainerProps
                 {
-                    LabelText = containerLang.LabelGridContainers,
+                    LabelText = containerLang.LabelGridContainersWiki,
                     LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/"
                 },
                 Option.Checkbox(
@@ -211,10 +222,9 @@ public static class ContainersTab
                     tuoLang.GridDisableTargeting,
                     new Accessor<bool>(() => profile.DisableTargetingGridContainers),
                     search: new SearchMetadata(tuoLang.GridDisableTargeting, Keywords: [kw.Targeting, kw.Disable])
-                ),
-                GetGridContainerStylingSection(),
-                GetGridContainerHighlightingSection()
-            )
+                )
+            ),
+            GetGridContainerStylingSection()
         ).WithSearch(new SearchMetadata(containerLang.LabelGridContainers, Tags: [kw.Container, kw.Grid]));
     }
 

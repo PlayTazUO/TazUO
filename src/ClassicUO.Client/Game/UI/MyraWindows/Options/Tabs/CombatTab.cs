@@ -55,7 +55,7 @@ public static class CombatTab
             Option.Checkbox(
                 lang.Combat.EnableDPSCounter,
                 new Accessor<bool>(() => profile.ShowDPS),
-                search: new SearchMetadata(lang.Combat.EnableDPSCounter, Keywords: [kw.DPS, kw.Damage])
+                search: new SearchMetadata(lang.Combat.EnableDPSCounter, Keywords: [kw.Dps, kw.Damage])
             )
         ).WithSearch(new SearchMetadata(lang.Combat.Label, [kw.Combat, kw.Battle]));
     }

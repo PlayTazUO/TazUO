@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Game.Managers;
@@ -51,6 +50,9 @@ public static class OptionsFactory
 
     internal static OptionItem PropBoundSliderOption(string label, Accessor<int> backingProperty, int min, int max, bool labelOnLeft = false) =>
         CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((int)value), labelOnLeft);
+
+    internal static OptionItem PropBoundSliderOption(string label, Accessor<byte> backingProperty, byte min, byte max, bool labelOnLeft = false) =>
+        CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((byte)value), labelOnLeft);
 
     internal static OptionItem CreateSliderOption(
         string label,

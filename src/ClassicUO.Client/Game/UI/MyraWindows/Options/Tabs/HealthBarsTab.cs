@@ -52,11 +52,11 @@ public static class HealthBarsTab
                 search: new SearchMetadata(tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars, Keywords: [kw.Close, kw.Anchor])
             ),
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = tuoLang.EnableHealthIndicatorBorder },
+                new VisualContainerProps { LabelText = tuoLang.HealthBarIndicator },
                 Option.Checkbox(
-                    tuoLang.EnableHealthIndicatorBorder,
+                    tuoLang.HealthBarIndicator,
                     new Accessor<bool>(() => profile.EnableHealthIndicator),
-                    search: new SearchMetadata(tuoLang.EnableHealthIndicatorBorder, Keywords: [kw.Indicator, kw.Border])
+                    search: new SearchMetadata(tuoLang.HealthBarIndicator, Keywords: [kw.Indicator, kw.Border])
                 ),
                 Option.Slider(
                     tuoLang.OnlyShowBelowHp,
@@ -89,6 +89,11 @@ public static class HealthBarsTab
                 genLang.DragSelectHP,
                 new Accessor<bool>(() => profile.EnableDragSelect),
                 search: new SearchMetadata(genLang.DragSelectHP, Keywords: [kw.Drag, kw.Select])
+            ),
+            Option.Checkbox(
+                genLang.DragAnchored,
+                new Accessor<bool>(() => profile.DragSelectAsAnchor),
+                search: new SearchMetadata(genLang.DragAnchored, Keywords: [kw.Drag, kw.Select])
             ),
             Option.ComboBox(
                 genLang.DragKeyMod,

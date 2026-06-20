@@ -36,7 +36,7 @@ public static class NameplatesTab
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
         return OptionsUi.Vertical(
             Option.Custom(GetProfilesSubTabContent, new SearchMetadata(lang.ButtonProfiles, Keywords: [kw.Profile]))
-        ).WithSearch(new SearchMetadata(lang.ButtonProfiles, Tags: [kw.Nameplate, kw.Profile]));
+        ).WithSearch(new SearchMetadata(lang.ButtonProfiles, [kw.Nameplate, kw.Profile]));
     }
 
     private static Widget GetProfilesSubTabContent()
@@ -277,89 +277,220 @@ public static class NameplatesTab
 
     private static IOptionSource GetGeneralNameplatesSubTabContent()
     {
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.KeywordsLang kwLang = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        return OptionsUi.Horizontal(GeneralSettingsLeftSide(), GeneralSettingsRightSide())
+            .WithSearch(new SearchMetadata(lang.ButtonGeneral, [kwLang.Nameplate, kwLang.General]));
+    }
+
+    private static OptionFragment GeneralSettingsLeftSide()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+
+        const string locNameplatesHealth = "nameplate_health_";
+        string nameWidthLabel = TazLang.Get("nameplate_width", "Name width");
+        string heightLabel = TazLang.Get("nameplate_height", "Height");
+        string cornerRadiusLabel = TazLang.Get("nameplate_cornerradius", "Corner radius");
+        string separateHealthBarWidthLabel = TazLang.Get("nameplate_separatehealthbarwidth", tuoLang.SeparateHealthBarWidth);
+        string healthBarWidthLabel = TazLang.Get("nameplate_healthbarwidth", tuoLang.HealthBarWidth);
+        string splitHealthBarLabel = TazLang.Get("nameplate_splithealthbar", tuoLang.SplitHealthBar);
+
+        return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = kw.Appearance },
+                Option.NumericInput(
+                    heightLabel,
+                    new Accessor<int>(() => profile.NamePlateHeight),
+                    0,
+                    80,
+                    search: new SearchMetadata(heightLabel, Keywords: [kw.Height])
+                ),
+                Option.NumericInput(
+                    nameWidthLabel,
+                    new Accessor<int>(() => profile.NamePlateFixedWidth),
+                    60,
+                    300,
+                    search: new SearchMetadata(nameWidthLabel, Keywords: [kw.Width])
+                ),
+                Option.NumericInput(
+                    cornerRadiusLabel,
+                    new Accessor<int>(() => profile.NamePlateCornerRadius),
+                    0,
+                    40,
+                    search: new SearchMetadata(cornerRadiusLabel, Keywords: [kw.Corner, kw.Radius])
+                ),
+                Option.FontSelector(
+                    tuoLang.NameplateFont,
+                    new Accessor<string>(() => profile.NamePlateFont),
+                    s => profile.NamePlateFont = s,
+                    new SearchMetadata(tuoLang.NameplateFont, Keywords: [kw.Font])
+                ),
+                Option.Slider(
+                    kw.Size,
+                    5,
+                    50,
+                    new Accessor<int>(() => profile.NamePlateFontSize),
+                    search: new SearchMetadata(tuoLang.SharedSize, Keywords: [kw.Size])
+                )
+            ),
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = tuoLang.BackgroundColor },
+                Option.Slider(
+                    kw.Red,
+                    0,
+                    255,
+                    new Accessor<byte>(() => profile.NamePlateBackgroundR),
+                    search: new SearchMetadata(kw.Red, Keywords: [kw.Red, kw.Color])
+                ),
+                Option.Slider(
+                    kw.Green,
+                    0,
+                    255,
+                    new Accessor<byte>(() => profile.NamePlateBackgroundG),
+                    search: new SearchMetadata(kw.Green, Keywords: [kw.Green, kw.Color])
+                ),
+                Option.Slider(
+                    kw.Blue,
+                    0,
+                    255,
+                    new Accessor<byte>(() => profile.NamePlateBackgroundB),
+                    search: new SearchMetadata(kw.Blue, Keywords: [kw.Blue, kw.Color])
+                ),
+                Option.Slider(
+                    tuoLang.BackgroundOpacity,
+                    0,
+                    100,
+                    new Accessor<byte>(() => profile.NamePlateOpacity),
+                    search: new SearchMetadata(tuoLang.BackgroundOpacity, Keywords: [kw.Background, kw.Opacity])
+                ),
+                Option.ComboBox(
+                    kw.Mode,
+                    new Accessor<NamePlateBackgroundMode>(() => profile.NamePlateBackgroundMode),
+                    search: new SearchMetadata(kw.Mode, Keywords: [kw.Mode, kw.Background])
+                )
+            ),
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = kw.HealthBar },
+                Option.LComboBox(
+                    kw.Mode,
+                    new Accessor<NamePlateHealthBarMode>(() => profile.NamePlateHealthBarMode),
+                    locNameplatesHealth,
+                    search: new SearchMetadata(kw.Mode, Keywords: [kw.HealthBar, kw.Mode])
+                ),
+                Option.Checkbox(
+                    separateHealthBarWidthLabel,
+                    new Accessor<bool>(() => profile.NamePlateUseFixedHealthBarWidth),
+                    search: new SearchMetadata(separateHealthBarWidthLabel, Keywords: [kw.Fixed, kw.Width, kw.HealthBar])
+                ),
+                Option.NumericInput(
+                    healthBarWidthLabel,
+                    new Accessor<int>(() => profile.NamePlateHealthBarFixedWidth),
+                    60,
+                    300,
+                    search: new SearchMetadata(healthBarWidthLabel, Keywords: [kw.HealthBar, kw.Width])
+                ),
+                Option.Checkbox(
+                    splitHealthBarLabel,
+                    new Accessor<bool>(() => profile.NamePlateSplitHealthBar),
+                    search: new SearchMetadata(splitHealthBarLabel, Keywords: [kw.HealthBar, kw.Split])
+                )
+            )
+        );
+    }
+
+    private static OptionFragment GeneralSettingsRightSide()
+    {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
         ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        const string locNameplatesHealth = "nameplate_health_";
+        string fixedWidthLabel = TazLang.Get("nameplate_fixedwidth", tuoLang.FixedWidth);
+        string showWordOfDeathIconLabel = TazLang.Get("nameplate_showwordofdeathicon", tuoLang.ShowWordOfDeathIcon);
+        string presetLabel = TazLang.Get("nameplate_preset", kw.Preset);
+
         return OptionsUi.Vertical(
-            Option.FontSelector(
-                tuoLang.NameplateFont,
-                new Accessor<string>(() => profile.NamePlateFont),
-                s => profile.NamePlateFont = s,
-                search: new SearchMetadata(tuoLang.NameplateFont, Keywords: [kw.Font])
-            ),
-            Option.Slider(
-                tuoLang.SharedSize,
-                5,
-                50,
-                new Accessor<float>(() => profile.NamePlateFontSize, f => profile.NamePlateFontSize = (int)f),
-                search: new SearchMetadata(tuoLang.SharedSize, Keywords: [kw.Size])
-            ),
-            Option.ComboBox(
-                genLang.DragNameplatesOnly,
-                profile.DragSelect_NameplateModifier,
-                [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                i => profile.DragSelect_NameplateModifier = i,
-                search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Modifier])
-            ),
-            Option.Checkbox(
-                genLang.IncomingMobiles,
-                new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
-                search: new SearchMetadata(genLang.IncomingMobiles, Keywords: [kw.Incoming, kw.Mobile])
-            ),
-            Option.Checkbox(
-                genLang.IncomingCorpses,
-                new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
-                search: new SearchMetadata(genLang.IncomingCorpses, Keywords: [kw.Incoming, kw.Corpse])
-            ),
-            OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = kw.Misc },
                 Option.Checkbox(
-                    tuoLang.NameplatesAlsoActAsHealthBars,
-                    new Accessor<bool>(() => profile.NamePlateHealthBar),
-                    search: new SearchMetadata(tuoLang.NameplatesAlsoActAsHealthBars, Keywords: [kw.HealthBar, kw.HP])
+                    fixedWidthLabel,
+                    new Accessor<bool>(() => profile.NamePlateUseFixedWidth),
+                    search: new SearchMetadata(fixedWidthLabel, Keywords: [kw.Fixed, kw.Width])
                 ),
-                Option.Slider(
-                    tuoLang.HpOpacity,
-                    0,
-                    100,
-                    new Accessor<float>(() => profile.NamePlateHealthBarOpacity, f => profile.NamePlateHealthBarOpacity = (byte)f),
-                    search: new SearchMetadata(tuoLang.HpOpacity, Keywords: [kw.HP, kw.Opacity])
+                Option.Checkbox(
+                    showWordOfDeathIconLabel,
+                    new Accessor<bool>(() => profile.NamePlateShowWordOfDeathIcon),
+                    search: new SearchMetadata(showWordOfDeathIconLabel, Keywords: [kw.Icon, kw.Death])
+                ),
+                Option.LComboBox(
+                    presetLabel,
+                    new Accessor<NamePlatePreset>(() => profile.NamePlatePreset),
+                    locNameplatesHealth,
+                    search: new SearchMetadata(presetLabel, Keywords: [kw.Preset])
+                ),
+                Option.ComboBox(
+                    genLang.DragNameplatesOnly,
+                    profile.DragSelect_NameplateModifier,
+                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
+                    i => profile.DragSelect_NameplateModifier = i,
+                    search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Modifier])
+                ),
+                Option.Checkbox(
+                    genLang.IncomingMobiles,
+                    new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
+                    search: new SearchMetadata(genLang.IncomingMobiles, Keywords: [kw.Incoming, kw.Mobile])
+                ),
+                Option.Checkbox(
+                    genLang.IncomingCorpses,
+                    new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
+                    search: new SearchMetadata(genLang.IncomingCorpses, Keywords: [kw.Incoming, kw.Corpse])
                 ),
                 OptionsUi.Vertical(
                     Option.Checkbox(
-                        tuoLang.HideNameplatesIfFullHealth,
-                        new Accessor<bool>(() => profile.NamePlateHideAtFullHealth),
-                        search: new SearchMetadata(tuoLang.HideNameplatesIfFullHealth, Keywords: [kw.Hide, kw.Full, kw.Health])
+                        tuoLang.NameplatesAlsoActAsHealthBars,
+                        new Accessor<bool>(() => profile.NamePlateHealthBar),
+                        search: new SearchMetadata(tuoLang.NameplatesAlsoActAsHealthBars, Keywords: [kw.HealthBar, kw.HP])
                     ),
-                    Option.Checkbox(
-                        tuoLang.OnlyInWarmode,
-                        new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
-                        search: new SearchMetadata(tuoLang.OnlyInWarmode, Keywords: [kw.War, kw.Mode])
+                    Option.Slider(
+                        tuoLang.HpOpacity,
+                        0,
+                        100,
+                        new Accessor<byte>(() => profile.NamePlateHealthBarOpacity),
+                        search: new SearchMetadata(tuoLang.HpOpacity, Keywords: [kw.HP, kw.Opacity])
+                    ),
+                    OptionsUi.Vertical(
+                        Option.Checkbox(
+                            tuoLang.HideNameplatesIfFullHealth,
+                            new Accessor<bool>(() => profile.NamePlateHideAtFullHealth),
+                            search: new SearchMetadata(tuoLang.HideNameplatesIfFullHealth, Keywords: [kw.Hide, kw.Full, kw.Health])
+                        ),
+                        Option.Checkbox(
+                            tuoLang.OnlyInWarmode,
+                            new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
+                            search: new SearchMetadata(tuoLang.OnlyInWarmode, Keywords: [kw.War, kw.Mode])
+                        )
                     )
+                ),
+                Option.Slider(
+                    tuoLang.BorderOpacity,
+                    0,
+                    100,
+                    new Accessor<byte>(() => profile.NamePlateBorderOpacity),
+                    search: new SearchMetadata(tuoLang.BorderOpacity, Keywords: [kw.Border, kw.Opacity])
+                ),
+                Option.Checkbox(
+                    tuoLang.AvoidOverlap,
+                    new Accessor<bool>(() => profile.NamePlateAvoidOverlap),
+                    search: new SearchMetadata(tuoLang.AvoidOverlap, Keywords: [kw.Overlap, kw.Avoid])
                 )
-            ),
-            Option.Slider(
-                tuoLang.BorderOpacity,
-                0,
-                100,
-                new Accessor<float>(() => profile.NamePlateBorderOpacity, f => profile.NamePlateBorderOpacity = (byte)f),
-                search: new SearchMetadata(tuoLang.BorderOpacity, Keywords: [kw.Border, kw.Opacity])
-            ),
-            Option.Slider(
-                tuoLang.BackgroundOpacity,
-                0,
-                100,
-                new Accessor<float>(() => profile.NamePlateOpacity, f => profile.NamePlateOpacity = (byte)f),
-                search: new SearchMetadata(tuoLang.BackgroundOpacity, Keywords: [kw.Background, kw.Opacity])
-            ),
-            Option.Checkbox(
-                tuoLang.AvoidOverlap,
-                new Accessor<bool>(() => profile.NamePlateAvoidOverlap),
-                search: new SearchMetadata(tuoLang.AvoidOverlap, Keywords: [kw.Overlap, kw.Avoid])
             )
-        ).WithSearch(new SearchMetadata(lang.ButtonGeneral, Tags: [kw.Nameplate, kw.General]));
+        );
     }
 
     #endregion General Sub-Tab

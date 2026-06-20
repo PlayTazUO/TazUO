@@ -33,21 +33,21 @@ public static class MiscTab
                 Option.Checkbox(
                     genLang.EnableCOT,
                     new Accessor<bool>(() => profile.UseCircleOfTransparency),
-                    search: new SearchMetadata(genLang.EnableCOT, Keywords: [kw.COT, kw.Circle])
+                    search: new SearchMetadata(genLang.EnableCOT, Keywords: [kw.Cot, kw.Circle])
                 ),
                 Option.Slider(
                     genLang.COTDistance,
                     Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
                     Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
                     new Accessor<float>(() => profile.CircleOfTransparencyRadius, f => profile.CircleOfTransparencyRadius = (int)f),
-                    search: new SearchMetadata(genLang.COTDistance, Keywords: [kw.COT, kw.Distance])
+                    search: new SearchMetadata(genLang.COTDistance, Keywords: [kw.Cot, kw.Distance])
                 ),
                 Option.ComboBox(
                     genLang.COTType,
                     profile.CircleOfTransparencyType,
                     [genLang.COTTypeOptFull, genLang.COTTypeOptGrad, genLang.COTTypeOptModern],
                     i => profile.CircleOfTransparencyType = i,
-                    search: new SearchMetadata(genLang.COTType, Keywords: [kw.COT, kw.Type])
+                    search: new SearchMetadata(genLang.COTType, Keywords: [kw.Cot, kw.Type])
                 )
             ),
             Option.Checkbox(
@@ -69,60 +69,6 @@ public static class MiscTab
                 genLang.CursorRange,
                 new Accessor<bool>(() => profile.ShowTargetRangeIndicator),
                 search: new SearchMetadata(genLang.CursorRange, Keywords: [kw.Cursor, kw.Range])
-            ),
-            OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = genLang.DraggingSectionLabel },
-                Option.Checkbox(
-                    genLang.DragSelectHP,
-                    new Accessor<bool>(() => profile.EnableDragSelect),
-                    search: new SearchMetadata(genLang.DragSelectHP, Keywords: [kw.Drag, kw.Select])
-                ),
-                Option.ComboBox(
-                    genLang.DragKeyMod,
-                    profile.DragSelectModifierKey,
-                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                    i => profile.DragSelectModifierKey = i,
-                    search: new SearchMetadata(genLang.DragKeyMod, Keywords: [kw.Drag, kw.Modifier])
-                ),
-                Option.ComboBox(
-                    genLang.DragPlayersOnly,
-                    profile.DragSelect_PlayersModifier,
-                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                    i => profile.DragSelect_PlayersModifier = i,
-                    search: new SearchMetadata(genLang.DragPlayersOnly, Keywords: [kw.Drag, kw.Player])
-                ),
-                Option.ComboBox(
-                    genLang.DragMobsOnly,
-                    profile.DragSelect_MonstersModifier,
-                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                    i => profile.DragSelect_MonstersModifier = i,
-                    search: new SearchMetadata(genLang.DragMobsOnly, Keywords: [kw.Drag, kw.Monster])
-                ),
-                Option.ComboBox(
-                    genLang.DragNameplatesOnly,
-                    profile.DragSelect_NameplateModifier,
-                    [genLang.SharedNone, genLang.SharedCtrl, genLang.SharedShift, genLang.SharedAlt],
-                    i => profile.DragSelect_NameplateModifier = i,
-                    search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Nameplate])
-                ),
-                Option.InputField(
-                    genLang.DragX,
-                    new Accessor<string>(() => profile.DragSelectStartX.ToString(), s =>
-                    {
-                        if (int.TryParse(s, out int result))
-                            profile.DragSelectStartX = result;
-                    }),
-                    search: new SearchMetadata(genLang.DragX, Keywords: [kw.Drag, kw.X])
-                ),
-                Option.InputField(
-                    genLang.DragY,
-                    new Accessor<string>(() => profile.DragSelectStartY.ToString(), s =>
-                    {
-                        if (int.TryParse(s, out int result))
-                            profile.DragSelectStartY = result;
-                    }),
-                    search: new SearchMetadata(genLang.DragY, Keywords: [kw.Drag, kw.Y])
-                )
             ),
             Option.Checkbox(
                 genLang.ShowStatsChangedMsg,

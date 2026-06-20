@@ -52,6 +52,11 @@ public static class MovementTab
                     search: new SearchMetadata(moveLang.Doors.AutoOpenDoors, Keywords: [kw.Door])
                 ),
                 Option.Checkbox(
+                    moveLang.Doors.AutoOpenHidden,
+                    new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
+                    search: new SearchMetadata(moveLang.Doors.AutoOpenHidden, Keywords: [kw.Door, kw.Hidden])
+                ),
+                Option.Checkbox(
                     moveLang.Doors.AutoOpenPathfinding,
                     new Accessor<bool>(() => profile.SmoothDoors),
                     search: new SearchMetadata(moveLang.Doors.AutoOpenPathfinding, Keywords: [kw.Door, kw.Pathfinding])

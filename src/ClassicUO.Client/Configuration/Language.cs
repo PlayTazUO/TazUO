@@ -184,6 +184,7 @@ namespace ClassicUO.Configuration
             public string Amount { get; set; } = "Amount";
             public string Anchor { get; set; } = "Anchor";
             public string Anim { get; set; } = "Anim";
+            public string Appearance { get; set; } = "Appearance";
             public string Arrow { get; set; } = "Arrow";
             public string Assign { get; set; } = "Assign";
             public string Attack { get; set; } = "Attack";
@@ -192,7 +193,7 @@ namespace ClassicUO.Configuration
             public string Auto { get; set; } = "Auto";
             public string AutoMove { get; set; } = "AutoMove";
             public string Avoid { get; set; } = "Avoid";
-            public string BW { get; set; } = "BW";
+            public string Bw { get; set; } = "BW";
             public string Background { get; set; } = "Background";
             public string Bar { get; set; } = "Bar";
             public string Battle { get; set; } = "Battle";
@@ -200,13 +201,14 @@ namespace ClassicUO.Configuration
             public string Beneficial { get; set; } = "Beneficial";
             public string Beta { get; set; } = "Beta";
             public string Black { get; set; } = "Black";
+            public string Blue { get; set; } = "Blue";
             public string Boat { get; set; } = "Boat";
             public string Border { get; set; } = "Border";
             public string Borderless { get; set; } = "Borderless";
             public string Buff { get; set; } = "Buff";
             public string BuffBar { get; set; } = "Buff Bar";
             public string BuffGump { get; set; } = "Buff Gump";
-            public string COT { get; set; } = "COT";
+            public string Cot { get; set; } = "COT";
             public string Cast { get; set; } = "Cast";
             public string Cave { get; set; } = "Cave";
             public string Center { get; set; } = "Center";
@@ -228,13 +230,14 @@ namespace ClassicUO.Configuration
             public string Context { get; set; } = "Context";
             public string Controller { get; set; } = "Controller";
             public string Cooldown { get; set; } = "Cooldown";
+            public string Corner { get; set; } = "Corner";
             public string Corpse { get; set; } = "Corpse";
             public string Counter { get; set; } = "Counter";
             public string Criminal { get; set; } = "Criminal";
             public string Ctrl { get; set; } = "Ctrl";
             public string Cursor { get; set; } = "Cursor";
             public string Custom { get; set; } = "Custom";
-            public string DPS { get; set; } = "DPS";
+            public string Dps { get; set; } = "DPS";
             public string Damage { get; set; } = "Damage";
             public string Dark { get; set; } = "Dark";
             public string Darkness { get; set; } = "Darkness";
@@ -258,9 +261,10 @@ namespace ClassicUO.Configuration
             public string Equipment { get; set; } = "Equipment";
             public string Exceed { get; set; } = "Exceed";
             public string Experimental { get; set; } = "Experimental";
-            public string FPS { get; set; } = "FPS";
+            public string Fps { get; set; } = "FPS";
             public string Fade { get; set; } = "Fade";
             public string Field { get; set; } = "Field";
+            public string Fixed { get; set; } = "Fixed";
             public string Font { get; set; } = "Font";
             public string Footstep { get; set; } = "Footstep";
             public string Force { get; set; } = "Force";
@@ -275,6 +279,7 @@ namespace ClassicUO.Configuration
             public string Global { get; set; } = "Global";
             public string Grab { get; set; } = "Grab";
             public string Graphic { get; set; } = "Graphic";
+            public string Green { get; set; } = "Green";
             public string Grid { get; set; } = "Grid";
             public string Ground { get; set; } = "Ground";
             public string Group { get; set; } = "Group";
@@ -295,6 +300,7 @@ namespace ClassicUO.Configuration
             public string Hover { get; set; } = "Hover";
             public string Hue { get; set; } = "Hue";
             public string Humanoid { get; set; } = "Humanoid";
+            public string Icon { get; set; } = "Icon";
             public string Ignore { get; set; } = "Ignore";
             public string Import { get; set; } = "Import";
             public string Improved { get; set; } = "Improved";
@@ -363,15 +369,18 @@ namespace ClassicUO.Configuration
             public string Position { get; set; } = "Position";
             public string Post { get; set; } = "Post";
             public string PostProcessing { get; set; } = "Post Processing";
+            public string Preset { get; set; } = "Preset";
             public string Preview { get; set; } = "Preview";
             public string Process { get; set; } = "Process";
             public string Profile { get; set; } = "Profile";
             public string Progress { get; set; } = "Progress";
             public string Property { get; set; } = "Property";
             public string Query { get; set; } = "Query";
+            public string Radius { get; set; } = "Radius";
             public string Range { get; set; } = "Range";
             public string Reagent { get; set; } = "Reagent";
             public string Recolor { get; set; } = "Recolor";
+            public string Red { get; set; } = "Red";
             public string Refresh { get; set; } = "Refresh";
             public string Relative { get; set; } = "Relative";
             public string Resolution { get; set; } = "Resolution";
@@ -480,7 +489,8 @@ namespace ClassicUO.Configuration
             public class DoorsSection
             {
                 public string AutoOpenDoors { get; set; } = "Automatically open doors";
-                public string AutoOpenPathfinding { get; set; } = "Open doors while pathfinding";
+                public string AutoOpenPathfinding { get; set; } = "While pathfinding";
+                public string AutoOpenHidden { get; set; } = "While hidden";
             }
 
             public class ControllerSection
@@ -1112,6 +1122,7 @@ namespace ClassicUO.Configuration
             public string LabelGridContainerHighlighting { get; set; } = "Grid Container Highlighting";
             public string LabelOriginalContainers { get; set; } = "Original";
             public string LabelGridContainers { get; set; } = "Grid";
+            public string LabelGridContainersWiki { get; set; } = "Grid Containers";
             public string Description { get; set; } = "These settings are for original container gumps, for grid container settings visit the TazUO section";
             public string CharacterBackpackStyle { get; set; } = "Character backpack style";
             public string BackpackOpt_Default { get; set; } = "Default";
@@ -1251,6 +1262,15 @@ namespace ClassicUO.Configuration
             public string BorderOpacity { get; set; } = "Border opacity";
             public string BackgroundOpacity { get; set; } = "Background opacity";
             public string AvoidOverlap { get; set; } = "Avoid overlap";
+            public string NameWidth { get; set; } = "Name width";
+            public string NameplateHeight { get; set; } = "Height";
+            public string CornerRadius { get; set; } = "Corner radius";
+            public string SeparateHealthBarWidth { get; set; } = "Separate health bar width";
+            public string HealthBarWidth { get; set; } = "Health bar width";
+            public string SplitHealthBar { get; set; } = "Split health bar";
+            public string FixedWidth { get; set; } = "Fixed width";
+            public string ShowWordOfDeathIcon { get; set; } = "Show Word of Death icon at 30% health";
+            public string Preset { get; set; } = "Preset";
             #endregion
 
             #region Mobile
@@ -1283,7 +1303,7 @@ namespace ClassicUO.Configuration
             public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
             public string BuffGumpHue { get; set; } = "Buff gump hue";
             public string MainGameWindowBackground { get; set; } = "Main game window background";
-            public string EnableHealthIndicatorBorder { get; set; } = "Enable health indicator border";
+            public string HealthBarIndicator { get; set; } = "Health bar indicator";
             public string OnlyShowBelowHp { get; set; } = "Only show below hp %";
             public string Size { get; set; } = "Size";
             public string SpellIconScale { get; set; } = "Spell icon scale";

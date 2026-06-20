@@ -22,7 +22,7 @@ public static class VideoTab
             .AddTab(
                 lang.GameWindow.Label,
                 GetGameWindowSubTabContent,
-                new SearchMetadata(lang.GameWindow.Label, Keywords: [kw.Window, kw.Viewport, kw.Fullscreen, kw.FPS, kw.VSync])
+                new SearchMetadata(lang.GameWindow.Label, Keywords: [kw.Window, kw.Viewport, kw.Fullscreen, kw.Fps, kw.VSync])
             )
             .AddTab(
                 lang.Zoom.Label,
@@ -73,12 +73,12 @@ public static class VideoTab
                     Settings.GlobalSettings.FPS = (int)f;
                     Client.Game.SetRefreshRate((int)f);
                 }),
-                search: new SearchMetadata(lang.FPSCap, Keywords: [kw.FPS, kw.Refresh])
+                search: new SearchMetadata(lang.FPSCap, Keywords: [kw.Fps, kw.Refresh])
             ),
             Option.Checkbox(
                 lang.BackgroundFPS,
                 new Accessor<bool>(() => profile.ReduceFPSWhenInactive),
-                search: new SearchMetadata(lang.BackgroundFPS, Keywords: [kw.FPS, kw.Background])
+                search: new SearchMetadata(lang.BackgroundFPS, Keywords: [kw.Fps, kw.Background])
             ),
             Option.Checkbox(
                 lang.EnableVSync,
@@ -391,7 +391,7 @@ public static class VideoTab
             Option.Checkbox(
                 miscLang.BWDead,
                 new Accessor<bool>(() => profile.EnableBlackWhiteEffect),
-                search: new SearchMetadata(miscLang.BWDead, Keywords: [kw.Dead, kw.BW])
+                search: new SearchMetadata(miscLang.BWDead, Keywords: [kw.Dead, kw.Bw])
             ),
             Option.Checkbox(
                 miscLang.MouseThread,
