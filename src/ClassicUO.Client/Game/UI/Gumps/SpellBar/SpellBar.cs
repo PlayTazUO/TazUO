@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ClassicUO.Assets;
+using ClassicUO.LegionScripting;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -256,6 +257,7 @@ public class SpellBar : Gump
         private TextBox hotkeyLabel;
         private TextBox macroLabel;
         private ContextMenuItemEntry macroMenu;
+        private ContextMenuItemEntry scriptMenu;
         private Microsoft.Xna.Framework.Graphics.Texture2D castingTexture = SolidColorTextureCache.GetTexture(Color.Black);
         private DateTime savedStateTime;
 
@@ -313,15 +315,20 @@ public class SpellBar : Gump
             return this;
         }
 
-        /// <summary>Shows an abbreviation (capital letters) of the macro name inside the slot for macro slots, hidden otherwise.</summary>
+        /// <summary>Shows an abbreviation (capital letters) of the macro or script name inside the slot for macro/script slots, hidden otherwise.</summary>
         private void SetMacroLabel()
         {
             if (macroLabel == null)
                 return;
 
-            if (slot != null && slot.Type == SpellBarSlotType.Macro)
+            string name =
+                slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
+                slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
+                null;
+
+            if (!string.IsNullOrEmpty(name))
             {
-                macroLabel.SetText(AbbreviateMacroName(slot.MacroName));
+                macroLabel.SetText(AbbreviateMacroName(name));
                 macroLabel.Y = (Height - macroLabel.Height) >> 1;
                 macroLabel.IsVisible = true;
             }
@@ -389,6 +396,7 @@ public class SpellBar : Gump
             if (button == MouseButtonType.Right)
             {
                 GenMacroList(macroMenu);
+                GenScriptList(scriptMenu);
                 ContextMenu?.Show();
             }
 
@@ -446,6 +454,10 @@ public class SpellBar : Gump
             }));
             ContextMenu.Add(abilityMenu);
 
+            scriptMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setscript"));
+            GenScriptList(scriptMenu);
+            ContextMenu.Add(scriptMenu);
+
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
                 SetSlot(SpellBarSlot.Empty(), row, col);
@@ -464,6 +476,23 @@ public class SpellBar : Gump
                 {
                     SetSlot(SpellBarSlot.FromMacro(macro), row, col);
                 }));
+        }
+
+        private void GenScriptList(ContextMenuItemEntry parent)
+        {
+            if (parent == null)
+                return;
+
+            parent.Items.Clear();
+
+            foreach (ScriptFile s in ClassicUO.LegionScripting.LegionScripting.LoadedScripts)
+            {
+                ScriptFile script = s;
+                parent.Add(new ContextMenuItemEntry(script.FileName, () =>
+                {
+                    SetSlot(SpellBarSlot.FromScript(script), row, col);
+                }));
+            }
         }
 
         private List<ContextMenuItemEntry> GenSpellList()
@@ -547,6 +576,14 @@ public class SpellBar : Gump
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
+            if (slot != null && slot.Type == SpellBarSlotType.Script)
+            {
+                const ushort runningHue = 0x0044; // green tint while the script runs
+                ushort wanted = slot.IsScriptRunning ? runningHue : SpellBarManager.SpellBarRows[row].RowHue;
+                if (background.Hue != wanted)
+                    background.Hue = wanted;
+            }
+
             if (slot != null && slot.Type == SpellBarSlotType.Ability)
             {
                 // The active primary/secondary ability follows the equipped weapon, so keep icon/hue/tooltip in sync.
