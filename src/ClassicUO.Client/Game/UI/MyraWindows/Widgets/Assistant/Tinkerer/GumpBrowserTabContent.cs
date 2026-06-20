@@ -23,6 +23,7 @@ public static class GumpBrowserTabContent
     private const int ROWS = 8;
     private const int PAGE_SIZE = COLS * ROWS;
     private const int CELL = 44;
+    private const int CELL_ID_FONT = 10;
 
     private const int ZOOM_MIN = 32;
     private const int ZOOM_MAX = 512;
@@ -236,6 +237,16 @@ public static class GumpBrowserTabContent
             VerticalAlignment = VerticalAlignment.Center
         };
         cell.Widgets.Add(art);
+
+        // Overlay the graphic id at the bottom of the cell so it can be read
+        // at a glance without hovering for the tooltip.
+        var idLabel = new MyraLabel(id.ToString(), CELL_ID_FONT)
+        {
+            Wrap = false,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Bottom
+        };
+        cell.Widgets.Add(idLabel);
 
         cell.TouchDown += (_, _) => onSelect(id);
         return cell;
