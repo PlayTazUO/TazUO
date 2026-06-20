@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/16/26`.*
+*This was generated on `6/20/26`.*
 
 ## Properties
 ### `Events`
@@ -103,6 +103,28 @@ You can now type `-updateapi` in game to download the latest API.py file.
 **Type:** `ushort`
 
  The graphic of the last targeting object
+
+
+### `LastSpellIndex`
+
+**Type:** `int`
+
+ The index of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
+ ```
+
+
+### `LastSpellName`
+
+**Type:** `string`
+
+ The name of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell: " + API.LastSpellName)
+ ```
 
 
 ### `Found`
@@ -2424,6 +2446,25 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### PlaySound
+`(index)`
+ Play a sound effect locally (only audible to you).
+ Example:
+ ```py
+ API.PlaySound(0x13E)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `index` | `int` | ❌ No | The sound effect ID to play |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### InJournalAny
 `(msgs, clearMatches)`
  Check if the journal contains *any* of the strings in this list.
@@ -3554,6 +3595,31 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `identifier` | `uint` | ✅ Yes | An identified number if you want multiple arrows. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### GetClilocString
+`(cliloc, englishOnly)`
+ Get the string for a cliloc number.
+ Example:
+ ```py
+ text = API.GetClilocString(1020000)
+ if text:
+   API.SysMsg(text)
+
+ # Force English regardless of client language setting
+ text = API.GetClilocString(1020000, englishOnly=True)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `cliloc` | `int` | ❌ No | The cliloc number |
+| `englishOnly` | `bool` | ✅ Yes | True to always return the English string, ignoring the client language setting |
+
+**Return Type:** `string`
 
 ---
 

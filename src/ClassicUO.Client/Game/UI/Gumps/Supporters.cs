@@ -1,4 +1,5 @@
 ﻿using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -51,7 +52,7 @@ namespace ClassicUO.Game.UI.Gumps
             _background.Y = 1;
             Add(_background);
 
-            var title = new Label("TazUO supporters and honorable mentions<br>And a special thanks to all the ClassicUO devs that made this possible!", true, 0xffff, WIDTH, 255, FontStyle.BlackBorder, Assets.TEXT_ALIGN_TYPE.TS_CENTER, true);
+            var title = new Label(TazLang.Get("supporters_title", "TazUO supporters and honorable mentions<br>And a special thanks to all the ClassicUO devs that made this possible!"), true, 0xffff, WIDTH, 255, FontStyle.BlackBorder, Assets.TEXT_ALIGN_TYPE.TS_CENTER, true);
             title.Y = 1;
             Add(title);
 

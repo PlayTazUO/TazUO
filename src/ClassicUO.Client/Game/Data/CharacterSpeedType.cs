@@ -7,6 +7,7 @@ namespace ClassicUO.Game.Data
         Normal,
         FastUnmount,
         CantRun,
-        FastUnmountAndCantRun
+        FastUnmountAndCantRun,
+        CantWalkOrRun
     }
 }

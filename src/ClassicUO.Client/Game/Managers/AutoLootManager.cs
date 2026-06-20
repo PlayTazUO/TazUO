@@ -38,6 +38,23 @@ namespace ClassicUO.Game.Managers
         }
         public List<AutoLootConfigEntry> AutoLootList { get => _autoLootItems; set => _autoLootItems = value; }
 
+        /// <summary>
+        /// The hue applied to corpses after they have been auto looted.
+        /// </summary>
+        public const ushort LootedCorpseHue = 73;
+
+        /// <summary>
+        /// Max number of looted corpse serials to remember before evicting the oldest.
+        /// </summary>
+        private const int MaxLootedCorpseHistory = 10000;
+
+        /// <summary>
+        /// Serials of corpses that have been looted and hued. Persists across corpse
+        /// recreation (e.g. walking out of and back into view) so the looted hue is reapplied.
+        /// </summary>
+        private static readonly HashSet<uint> _huedCorpses = new();
+        private static readonly Queue<uint> _huedCorpseOrder = new();
+
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
         private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), AutoLootPriority> _lootItems = new ();
@@ -170,7 +187,38 @@ namespace ClassicUO.Game.Managers
                 CheckAndLoot((Item)i);
 
             if(ProfileManager.CurrentProfile.HueCorpseAfterAutoloot)
-                corpse.Hue = 73;
+            {
+                corpse.Hue = LootedCorpseHue;
+                MarkCorpseHued(corpse.Serial);
+            }
+        }
+
+        /// <summary>
+        /// Records a corpse serial as having been looted and hued, so the looted hue can be
+        /// reapplied if the corpse is recreated. Evicts the oldest entry once the history
+        /// reaches <see cref="MaxLootedCorpseHistory"/>.
+        /// </summary>
+        public static void MarkCorpseHued(uint serial)
+        {
+            if (serial == 0) return;
+
+            if (!_huedCorpses.Add(serial)) return;
+
+            _huedCorpseOrder.Enqueue(serial);
+
+            while (_huedCorpseOrder.Count > MaxLootedCorpseHistory && _huedCorpseOrder.TryDequeue(out uint oldest))
+                _huedCorpses.Remove(oldest);
+        }
+
+        /// <summary>
+        /// Applies the looted hue to a corpse if it was previously looted and hued.
+        /// Intended to be called when a corpse is (re)added to the world.
+        /// </summary>
+        public static void ApplyLootedHueIfNeeded(Item corpse)
+        {
+            if (corpse == null || !_huedCorpses.Contains(corpse.Serial)) return;
+
+            corpse.Hue = LootedCorpseHue;
         }
 
         public void TryRemoveAutoLootEntry(string uid)

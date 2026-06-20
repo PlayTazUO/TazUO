@@ -28,9 +28,37 @@ namespace ClassicUO.Game.UI.Gumps
             _needsNameUpdate;
         private TextBox _text;
         private Texture2D _borderColor = SolidColorTextureCache.GetTexture(Color.Black);
-                private Vector2 _textDrawOffset = Vector2.Zero;
+        private Vector2 _textDrawOffset = Vector2.Zero;
+        private Rectangle _wordOfDeathIconBounds = Rectangle.Empty;
+        private int _lastLayoutSignature;
+        private int _namePlateWidth;
+        private int _healthBarWidth;
+        private int _nameBandHeight;
+        private int _resourceBarHeight;
+        private int _resourceBarCount;
+        private bool _useSplitLayout;
         private static int currentHeight = 22;
         private static readonly int COLLISION_SPACING = 8;
+        private static readonly Dictionary<long, int[]> RoundedRectangleInsetCache = new();
+        private const int MIN_NAMEPLATE_WIDTH = 60;
+        private const int NAMEPLATE_HORIZONTAL_PADDING = 4;
+        private const int NAMEPLATE_VERTICAL_PADDING = 4;
+        private const int WORD_OF_DEATH_GUMP_ID = 0x59E5;
+        private const int WORD_OF_DEATH_SPELL_ID = 614;
+        private const double WORD_OF_DEATH_HEALTH_THRESHOLD = 0.30d;
+        private const int WORD_OF_DEATH_ICON_PADDING = 3;
+        private static readonly Color MissingHealthBackgroundColor = new Color(14, 14, 14);
+
+        public static void InvalidateAllLayouts()
+        {
+            foreach (var gump in UIManager.Gumps)
+            {
+                if (gump is NameOverheadGump nameOverhead)
+                {
+                    nameOverhead._needsNameUpdate = true;
+                }
+            }
+        }
 
         public static int CurrentHeight
         {
@@ -139,13 +167,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
-                _text.Text = t;
-
-                Width = _background.Width = Math.Max(60, _text.Width) + 4;
-                Height = _background.Height = CurrentHeight = Math.Max(Constants.OBJECT_HANDLES_GUMP_HEIGHT, _text.Height) + 4;
-                _textDrawOffset.X = (Width - _text.Width - 4) >> 1;
-                _textDrawOffset.Y = (Height - _text.Height) >> 1;
-                WantUpdateSize = false;
+                ApplyNameLayout(entity, t);
 
                 return true;
             }
@@ -155,18 +177,153 @@ namespace ClassicUO.Game.UI.Gumps
                 if (_text == null)
                     return false;
 
-                _text.Text = entity.Name;
-
-                Width = _background.Width = Math.Max(60, _text.Width) + 4;
-                Height = _background.Height = Math.Max(Constants.OBJECT_HANDLES_GUMP_HEIGHT, _text.Height) + 4;
-                _textDrawOffset.X = (Width - _text.Width - 4) >> 1;
-                _textDrawOffset.Y = (Height - _text.Height) >> 1;
-                WantUpdateSize = false;
+                ApplyNameLayout(entity, entity.Name);
 
                 return true;
             }
 
             return false;
+        }
+
+        private void ApplyNameLayout(Entity entity, string name)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            _text.Font = profile.NamePlateFont;
+            _text.FontSize = profile.NamePlateFontSize;
+            SetMeasuredText(name);
+            int nameWidth;
+
+            if (profile.NamePlateUseFixedWidth)
+            {
+                nameWidth = Math.Clamp(profile.NamePlateFixedWidth, 60, 300);
+                SetFittedText(name, Math.Max(1, nameWidth - NAMEPLATE_HORIZONTAL_PADDING));
+            }
+            else
+            {
+                nameWidth = Math.Max(MIN_NAMEPLATE_WIDTH, _text.Width) + NAMEPLATE_HORIZONTAL_PADDING;
+            }
+
+            int healthBarWidth = GetHealthBarWidth(profile, nameWidth, entity);
+            int width = Math.Max(nameWidth, healthBarWidth);
+
+            int minimumNameBandHeight = Math.Max(Constants.OBJECT_HANDLES_GUMP_HEIGHT, _text.Height) + NAMEPLATE_VERTICAL_PADDING;
+            _namePlateWidth = nameWidth;
+            _healthBarWidth = healthBarWidth;
+            _nameBandHeight = minimumNameBandHeight;
+            _resourceBarCount = 0;
+            _resourceBarHeight = 0;
+            _resourceBarCount = GetSplitResourceBarCount(profile, entity);
+            _useSplitLayout = _resourceBarCount > 0;
+
+            if (_useSplitLayout)
+            {
+                _resourceBarHeight = Math.Max(4, Math.Min(8, _nameBandHeight / 4));
+            }
+
+            int automaticHeight = _nameBandHeight + (_useSplitLayout ? _resourceBarHeight * _resourceBarCount + 2 : 0);
+            int height = profile.NamePlateHeight > 0 ? Math.Max(profile.NamePlateHeight, minimumNameBandHeight) : automaticHeight;
+
+            if (_useSplitLayout && profile.NamePlateHeight > 0)
+            {
+                int minimumBarHeight = Math.Max(3, _resourceBarCount);
+                height = Math.Max(height, minimumNameBandHeight + minimumBarHeight + 2);
+                int barAreaHeight = Math.Max(minimumBarHeight, height - minimumNameBandHeight - 2);
+                _resourceBarHeight = Math.Max(1, barAreaHeight / Math.Max(1, _resourceBarCount));
+                _nameBandHeight = height - _resourceBarHeight * _resourceBarCount - 2;
+            }
+
+            Width = _background.Width = width;
+            Height = _background.Height = CurrentHeight = height;
+            int textAreaWidth = Math.Max(1, _namePlateWidth - NAMEPLATE_HORIZONTAL_PADDING);
+            _textDrawOffset.X = Math.Max(0, (textAreaWidth - _text.Width) >> 1);
+            _textDrawOffset.Y = Math.Max(0, ((_useSplitLayout ? _nameBandHeight : Height) - _text.Height) >> 1);
+            _lastLayoutSignature = GetLayoutSignature(profile, entity);
+            WantUpdateSize = false;
+        }
+
+        private int GetLayoutSignature(Profile profile, Entity entity)
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 31 + profile.NamePlateUseFixedWidth.GetHashCode();
+                hash = hash * 31 + profile.NamePlateFixedWidth;
+                hash = hash * 31 + profile.NamePlateUseFixedHealthBarWidth.GetHashCode();
+                hash = hash * 31 + profile.NamePlateHealthBarFixedWidth;
+                hash = hash * 31 + profile.NamePlateHeight;
+                hash = hash * 31 + profile.NamePlateSplitHealthBar.GetHashCode();
+                hash = hash * 31 + profile.NamePlateHealthBar.GetHashCode();
+                hash = hash * 31 + profile.NamePlateCornerRadius;
+                hash = hash * 31 + profile.NamePlateFontSize;
+                hash = hash * 31 + (profile.NamePlateFont?.GetHashCode() ?? 0);
+                hash = hash * 31 + GetSplitResourceBarCount(profile, entity);
+                return hash;
+            }
+        }
+
+        private int GetSplitResourceBarCount(Profile profile, Entity entity)
+        {
+            if (!profile.NamePlateSplitHealthBar || !profile.NamePlateHealthBar || entity is not Mobile mobile)
+            {
+                return 0;
+            }
+
+            return mobile is PlayerMobile || World.Party.Contains(mobile.Serial) ? 3 : 1;
+        }
+
+        private static int GetHealthBarWidth(Profile profile, int nameWidth, Entity entity)
+        {
+            if (!profile.NamePlateHealthBar || entity is not Mobile || !profile.NamePlateUseFixedHealthBarWidth)
+            {
+                return nameWidth;
+            }
+
+            return Math.Clamp(profile.NamePlateHealthBarFixedWidth, 60, 300);
+        }
+
+        private void SetFittedText(string text, int maxWidth)
+        {
+            text ??= string.Empty;
+            SetMeasuredText(text);
+
+            if (_text.Width <= maxWidth)
+            {
+                return;
+            }
+
+            const string ellipsis = "...";
+            SetMeasuredText(ellipsis);
+
+            if (_text.Width > maxWidth || text.Length == 0)
+            {
+                return;
+            }
+
+            int low = 0;
+            int high = text.Length;
+
+            while (low < high)
+            {
+                int mid = (low + high + 1) >> 1;
+                SetMeasuredText(text.Substring(0, mid) + ellipsis);
+
+                if (_text.Width <= maxWidth)
+                {
+                    low = mid;
+                }
+                else
+                {
+                    high = mid - 1;
+                }
+            }
+
+            SetMeasuredText(text.Substring(0, low) + ellipsis);
+        }
+
+        private void SetMeasuredText(string text)
+        {
+            _text.Text = text;
+            _text.Update();
         }
 
         private void BuildGump()
@@ -331,6 +488,13 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         _positionLocked = false;
 
+                        return;
+                    }
+
+                    if (TryCastWordOfDeathFromIcon(x, y))
+                    {
+                        Mouse.LastLeftButtonClickTime = 0;
+                        Mouse.CancelDoubleClick = true;
                         return;
                     }
                 }
@@ -625,6 +789,11 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
+                if (_lastLayoutSignature != GetLayoutSignature(ProfileManager.CurrentProfile, entity))
+                {
+                    _needsNameUpdate = true;
+                }
+
                 if (_needsNameUpdate)
                 {
                     SetName();
@@ -639,9 +808,13 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
             }
 
+            _wordOfDeathIconBounds = Rectangle.Empty;
+
             bool _isMobile = false;
             double _hpPercent = 1;
             IsVisible = true;
+            Entity nameplateEntity = null;
+
             if (SerialHelper.IsMobile(LocalSerial))
             {
                 Mobile m = World.Mobiles.Get(LocalSerial);
@@ -675,7 +848,8 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 _isMobile = true;
-                _hpPercent = (double)m.Hits / (double)m.HitsMax;
+                nameplateEntity = m;
+                _hpPercent = GetResourcePercent(m.Hits, m.HitsMax);
 
                 IsVisible = true;
                 if (ProfileManager.CurrentProfile.NamePlateHideAtFullHealth && _hpPercent >= 1)
@@ -736,26 +910,7 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
-                if (!string.IsNullOrEmpty(NameOverHeadManager.Search))
-                {
-                    string sText = NameOverHeadManager.Search.ToLower();
-                    if (item.Name == null || !item.Name.ToLower().Contains(sText))// && (!item.ItemData.Name?.ToLower().Contains(sText)))
-                    {
-                        if (World.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
-                        {
-                            if ((data != null && !data.ToLower().Contains(sText)) && (name != null && !name.ToLower().Contains(sText)))
-                            {
-                                IsVisible = false;
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            IsVisible = false;
-                            return true;
-                        }
-                    }
-                }
+                nameplateEntity = item;
 
                 if (!string.IsNullOrEmpty(NameOverHeadManager.Search))
                 {
@@ -787,8 +942,6 @@ namespace ClassicUO.Game.UI.Gumps
                     + (bounds.Height >> 1);
             }
 
-            Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
-
             Point p = Client.Game.Scene.Camera.WorldToScreen(new Point(x, y));
             x = p.X - (Width >> 1);
             y = p.Y - (Height);// >> 1);
@@ -814,104 +967,471 @@ namespace ClassicUO.Game.UI.Gumps
             X = x;
             Y = y;
 
-            hueVector.Z = ProfileManager.CurrentProfile.NamePlateBorderOpacity / 100f;
+            Rectangle nameBounds = GetNamePlateBackgroundBounds(x, y);
+            int cornerRadius = GetCornerRadius(nameBounds.Width, nameBounds.Height);
+            DrawNamePlateBackground(batcher, nameplateEntity, nameBounds, cornerRadius);
 
-            batcher.DrawRectangle
-            (
-                _borderColor,
-                x,
-                y,
-                Width,
-                Height,
-                hueVector
-            );
-
-            base.Draw(batcher, x, y);
+            int textY = y;
 
             if (ProfileManager.CurrentProfile.NamePlateHealthBar && _isMobile)
             {
                 Mobile m = World.Mobiles.Get(LocalSerial);
-                bool isPlayer = m is PlayerMobile;
-                bool isInParty = World.Party.Contains(m.Serial);
 
-                float _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
-                DrawResourceBar(batcher, m, x, y, Height / (isPlayer || isInParty ? 3 : 1), m =>
+                if (m != null)
                 {
-                    double hpPercent = (double)m.Hits / (double)m.HitsMax;
-                    int _baseHue = hpPercent switch
-                    {
-                        1 => (m is PlayerMobile || World.Party.Contains(m.Serial)) ? 0x0058 : Notoriety.GetHue(m.NotorietyFlag),
-                        > .8 => 0x0058,
-                        > .4 => 0x0030,
-                        _ => 0x0021
-                    };
-                    Vector3 hueVec = ShaderHueTranslator.GetHueVector(_baseHue, false, _alpha);
+                    bool isPlayer = m is PlayerMobile;
+                    bool isInParty = World.Party.Contains(m.Serial);
+                    bool showAllResources = isPlayer || isInParty;
+                    int barCount = showAllResources ? 3 : 1;
+                    float _alpha = ProfileManager.CurrentProfile.NamePlateHealthBarOpacity / 100f;
 
-                    if (m.IsPoisoned)
-                    {
-                        hueVec = ShaderHueTranslator.GetHueVector(63, false, _alpha);
-                    }
-                    else if (m.IsYellowHits || m.IsParalyzed)
-                    {
-                        hueVec = ShaderHueTranslator.GetHueVector(353, false, _alpha);
-                    }
-                    return (hueVec, hpPercent);
-                }, out int nY);
+                    double hpPercent = GetResourcePercent(m.Hits, m.HitsMax);
+                    Color fillColor = GetHealthFillColor(m, hpPercent);
+                    DrawResourceBar(
+                        batcher,
+                        GetResourceBarBounds(x, y, 0, barCount),
+                        SolidColorTextureCache.GetTexture(fillColor),
+                        ShaderHueTranslator.GetHueVector(0, false, _alpha),
+                        hpPercent,
+                        _alpha
+                    );
 
-                if (m is PlayerMobile || isInParty)
-                {
-                    DrawResourceBar(batcher, m, x, nY, Height / 3, m =>
+                    if (showAllResources)
                     {
-                        double mpPercent = (double)m.Mana / (double)m.ManaMax;
-                        int _baseHue = mpPercent switch
+                        double mpPercent = GetResourcePercent(m.Mana, m.ManaMax);
+                        DrawResourceBar(
+                            batcher,
+                            GetResourceBarBounds(x, y, 1, barCount),
+                            SolidColorTextureCache.GetTexture(Color.White),
+                            ShaderHueTranslator.GetHueVector(GetResourceThresholdHue(mpPercent, .6d, .2d), false, _alpha),
+                            mpPercent,
+                            _alpha
+                        );
+
+                        double spPercent = GetResourcePercent(m.Stamina, m.StaminaMax);
+                        DrawResourceBar(
+                            batcher,
+                            GetResourceBarBounds(x, y, 2, barCount),
+                            SolidColorTextureCache.GetTexture(Color.White),
+                            ShaderHueTranslator.GetHueVector(GetResourceThresholdHue(spPercent, .8d, .5d), false, _alpha),
+                            spPercent,
+                            _alpha
+                        );
+
+                        if (!_useSplitLayout)
                         {
-                            > .6 => 0x0058,
-                            > .2 => 0x0030,
-                            _ => 0x0021
-                        };
-                        Vector3 hueVec = ShaderHueTranslator.GetHueVector(_baseHue, false, _alpha);
-                        return (hueVec, mpPercent);
-                    }, out nY);
-
-                    DrawResourceBar(batcher, m, x, nY, Height / 3, m =>
-                    {
-                        double spPercent = (double)m.Stamina / (double)m.StaminaMax;
-                        int _baseHue = spPercent switch
-                        {
-                            > .8 => 0x0058,
-                            > .5 => 0x0030,
-                            _ => 0x0021
-                        };
-                        Vector3 hueVec = ShaderHueTranslator.GetHueVector(_baseHue, false, _alpha);
-                        return (hueVec, spPercent);
-                    }, out nY);
-                    y += 20;
+                            textY += 20;
+                        }
+                    }
                 }
             }
 
-            return _text.Draw(batcher, (int)(x + 2 + _textDrawOffset.X), (int)(y + 2 + _textDrawOffset.Y));
+            Mobile textMobile = _isMobile ? World.Mobiles.Get(LocalSerial) : null;
+            Color textColor = GetContrastingTextColor(GetTextSurfaceColor(nameplateEntity, textMobile));
+            int textX = (int)(nameBounds.X + 2 + _textDrawOffset.X);
+            int textDrawY = (int)(textY + 2 + _textDrawOffset.Y);
+
+            bool result = _text.Draw(batcher, textX, textDrawY, textColor);
+            DrawWordOfDeathIcon(batcher, textMobile, nameBounds, textDrawY);
+            return result;
         }
 
-        private void DrawResourceBar(UltimaBatcher2D batcher, Mobile m, int x, int y, int height, Func<Mobile, (Vector3, double)> getHueVector, out int nY)
+        private Rectangle GetResourceBarBounds(int x, int y, int barIndex, int barCount)
         {
-            (Vector3, double) data = getHueVector == null ? (ShaderHueTranslator.GetHueVector(0x0058), 0) : getHueVector(m);
-            batcher.DrawRectangle
-            (
-                _borderColor,
-                x,
-                y,
-                Width,
-                height,
-                ShaderHueTranslator.GetHueVector(0)
+            int barWidth = _healthBarWidth > 0 ? _healthBarWidth : Width;
+            int barX = GetCenteredX(x, barWidth);
+
+            if (_useSplitLayout)
+            {
+                return new Rectangle(barX, y + _nameBandHeight + 1 + barIndex * _resourceBarHeight, Math.Max(1, barWidth), _resourceBarHeight);
+            }
+
+            int barHeight = Math.Max(1, Height / Math.Max(1, barCount));
+            int barY = y + barIndex * barHeight;
+            int height = barIndex == barCount - 1 ? Math.Max(1, Height - barHeight * barIndex) : barHeight;
+
+            return new Rectangle(barX, barY, Math.Max(1, barWidth), height);
+        }
+
+        private Rectangle GetNamePlateBackgroundBounds(int x, int y)
+        {
+            int nameWidth = _namePlateWidth > 0 ? _namePlateWidth : Width;
+            int nameHeight = Math.Max(1, _useSplitLayout ? _nameBandHeight : Height);
+
+            return new Rectangle(GetCenteredX(x, nameWidth), y, Math.Max(1, nameWidth), nameHeight);
+        }
+
+        private int GetCenteredX(int x, int width)
+        {
+            return x + Math.Max(0, (Width - width) >> 1);
+        }
+
+        private void DrawNamePlateBackground(UltimaBatcher2D batcher, Entity entity, Rectangle bounds, int radius)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+            float borderAlpha = profile.NamePlateBorderOpacity / 100f;
+            Vector3 borderHue = ShaderHueTranslator.GetHueVector(0, false, borderAlpha);
+
+            DrawRoundedRectangle(batcher, _borderColor, bounds, borderHue, radius);
+
+            Rectangle innerBounds = new Rectangle(bounds.X + 1, bounds.Y + 1, Math.Max(0, bounds.Width - 2), Math.Max(0, bounds.Height - 2));
+
+            if (innerBounds.Width <= 0 || innerBounds.Height <= 0)
+            {
+                return;
+            }
+
+            Texture2D backgroundTexture;
+            Vector3 backgroundHue;
+            float backgroundAlpha = profile.NamePlateOpacity / 100f;
+
+            if (profile.NamePlateBackgroundMode == NamePlateBackgroundMode.NotorietyColor && entity is Mobile mobile)
+            {
+                backgroundTexture = SolidColorTextureCache.GetTexture(Color.Black);
+                backgroundHue = ShaderHueTranslator.GetHueVector(GetNamePlateNotorietyHue(mobile), false, backgroundAlpha);
+            }
+            else
+            {
+                backgroundTexture = SolidColorTextureCache.GetTexture(new Color(profile.NamePlateBackgroundR, profile.NamePlateBackgroundG, profile.NamePlateBackgroundB));
+                backgroundHue = ShaderHueTranslator.GetHueVector(0, false, backgroundAlpha);
+            }
+
+            DrawRoundedRectangle(batcher, backgroundTexture, innerBounds, backgroundHue, Math.Max(0, radius - 1));
+        }
+
+        private Color GetTextSurfaceColor(Entity entity, Mobile mobile)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (!_useSplitLayout && mobile != null && ProfileManager.CurrentProfile.NamePlateHealthBar)
+            {
+                double hpPercent = GetResourcePercent(mobile.Hits, mobile.HitsMax);
+                Color surface = hpPercent >= 0.5d ? GetHealthFillColor(mobile, hpPercent) : MissingHealthBackgroundColor;
+                return ApplyAlphaOverBlack(surface, profile.NamePlateHealthBarOpacity / 100f);
+            }
+
+            return ApplyAlphaOverBlack(GetNamePlateBackgroundColor(entity), profile.NamePlateOpacity / 100f);
+        }
+
+        private Color GetNamePlateBackgroundColor(Entity entity)
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (profile.NamePlateBackgroundMode == NamePlateBackgroundMode.NotorietyColor && entity is Mobile mobile)
+            {
+                return TextBox.ConvertHueToColor(GetNamePlateNotorietyHue(mobile));
+            }
+
+            return new Color(profile.NamePlateBackgroundR, profile.NamePlateBackgroundG, profile.NamePlateBackgroundB);
+        }
+
+        private Color GetHealthFillColor(Mobile mobile, double hpPercent)
+        {
+            switch (ProfileManager.CurrentProfile.NamePlateHealthBarMode)
+            {
+                case NamePlateHealthBarMode.Green:
+                    return Color.Green;
+                case NamePlateHealthBarMode.Blue:
+                    return Color.Blue;
+                case NamePlateHealthBarMode.Red:
+                    return Color.Red;
+                case NamePlateHealthBarMode.Cyan:
+                    return Color.Cyan;
+                case NamePlateHealthBarMode.Yellow:
+                    return Color.Yellow;
+                case NamePlateHealthBarMode.Orange:
+                    return Color.Orange;
+                case NamePlateHealthBarMode.Purple:
+                    return Color.Purple;
+                case NamePlateHealthBarMode.White:
+                    return Color.White;
+                case NamePlateHealthBarMode.Gray:
+                    return Color.Gray;
+                case NamePlateHealthBarMode.Black:
+                    return Color.Black;
+                default:
+                    return TextBox.ConvertHueToColor(GetStatusHealthHue(mobile, hpPercent));
+            }
+        }
+
+        private ushort GetStatusHealthHue(Mobile mobile, double hpPercent)
+        {
+            bool friendly = mobile is PlayerMobile || mobile.Serial == World.Player?.Serial || World.Party.Contains(mobile.Serial);
+            ushort baseHue = hpPercent switch
+            {
+                >= 1d => friendly ? (ushort)0x0058 : Notoriety.GetHue(mobile.NotorietyFlag),
+                > .8d => 0x0058,
+                > .4d => 0x0030,
+                _ => 0x0021
+            };
+
+            if (mobile.IsPoisoned)
+            {
+                baseHue = 63;
+            }
+            else if (mobile.IsYellowHits || mobile.IsParalyzed)
+            {
+                baseHue = 353;
+            }
+
+            return baseHue;
+        }
+
+        private static int GetResourceThresholdHue(double percent, double highThreshold, double midThreshold)
+        {
+            if (percent > highThreshold)
+            {
+                return 0x0058;
+            }
+
+            return percent > midThreshold ? 0x0030 : 0x0021;
+        }
+
+        private static Color GetContrastingTextColor(Color background)
+        {
+            double luminance =
+                (0.2126d * background.R +
+                 0.7152d * background.G +
+                 0.0722d * background.B) / 255d;
+
+            return luminance > 0.72d ? Color.Black : Color.White;
+        }
+
+        private static Color ApplyAlphaOverBlack(Color color, float alpha)
+        {
+            alpha = Math.Clamp(alpha, 0f, 1f);
+
+            return new Color(
+                (byte)Math.Clamp((int)Math.Round(color.R * alpha), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(color.G * alpha), 0, 255),
+                (byte)Math.Clamp((int)Math.Round(color.B * alpha), 0, 255)
             );
-            batcher.Draw
-            (
-                SolidColorTextureCache.GetTexture(Color.White),
-                new Vector2(x + 1, y + 1),
-                new Rectangle(x, y, Math.Min((int)((Width - 1) * data.Item2), Width - 1), height),
-                data.Item1
+        }
+
+        private ushort GetNamePlateNotorietyHue(Mobile mobile)
+        {
+            if (mobile.Serial == World.Player?.Serial)
+            {
+                return Notoriety.GetHue(NotorietyFlag.Innocent);
+            }
+
+            if (World.Party.Contains(mobile.Serial))
+            {
+                return Notoriety.GetHue(NotorietyFlag.Ally);
+            }
+
+            return Notoriety.GetHue(mobile.NotorietyFlag);
+        }
+
+        private void DrawWordOfDeathIcon(UltimaBatcher2D batcher, Mobile mobile, Rectangle nameBounds, int textY)
+        {
+            _wordOfDeathIconBounds = Rectangle.Empty;
+
+            if (!ShouldDrawWordOfDeathIcon(mobile) || nameBounds.Width <= WORD_OF_DEATH_ICON_PADDING * 2)
+            {
+                return;
+            }
+
+            ref readonly SpriteInfo iconInfo = ref Client.Game.UO.Gumps.GetGump(WORD_OF_DEATH_GUMP_ID);
+
+            if (iconInfo.Texture == null)
+            {
+                return;
+            }
+
+            int iconSize = GetWordOfDeathIconSize(nameBounds);
+
+            if (iconSize <= 0)
+            {
+                return;
+            }
+
+            int iconX = nameBounds.Right - iconSize - WORD_OF_DEATH_ICON_PADDING;
+            int iconY = textY + Math.Max(0, (_text.Height - iconSize) >> 1);
+            _wordOfDeathIconBounds = new Rectangle(iconX, iconY, iconSize, iconSize);
+            batcher.Draw(iconInfo.Texture, _wordOfDeathIconBounds, iconInfo.UV, ShaderHueTranslator.GetHueVector(0));
+        }
+
+        private bool ShouldDrawWordOfDeathIcon(Mobile mobile)
+        {
+            return mobile != null
+                   && ProfileManager.CurrentProfile.NamePlateShowWordOfDeathIcon
+                   && mobile.HitsMax > 0
+                   && GetResourcePercent(mobile.Hits, mobile.HitsMax) <= WORD_OF_DEATH_HEALTH_THRESHOLD;
+        }
+
+        private bool TryCastWordOfDeathFromIcon(int x, int y)
+        {
+            if (World.TargetManager.IsTargeting || _wordOfDeathIconBounds.Width <= 0 || _wordOfDeathIconBounds.Height <= 0 || !SerialHelper.IsMobile(LocalSerial))
+            {
+                return false;
+            }
+
+            Mobile mobile = World.Mobiles.Get(LocalSerial);
+
+            if (!ShouldDrawWordOfDeathIcon(mobile))
+            {
+                return false;
+            }
+
+            Rectangle localIconBounds = new Rectangle(
+                _wordOfDeathIconBounds.X - X,
+                _wordOfDeathIconBounds.Y - Y,
+                _wordOfDeathIconBounds.Width,
+                _wordOfDeathIconBounds.Height
             );
-            nY = y + height;
+
+            if (!localIconBounds.Contains(x, y))
+            {
+                return false;
+            }
+
+            TargetManager.SetAutoTarget(LocalSerial, TargetType.Harmful);
+            GameActions.CastSpell(WORD_OF_DEATH_SPELL_ID);
+
+            return true;
+        }
+
+        private int GetWordOfDeathIconSize(Rectangle nameBounds)
+        {
+            int maxSize = Math.Min(nameBounds.Height - WORD_OF_DEATH_ICON_PADDING * 2, _text.Height + 2);
+
+            return Math.Clamp(maxSize, 0, Math.Min(18, nameBounds.Width - WORD_OF_DEATH_ICON_PADDING * 2));
+        }
+
+        private void DrawResourceBar(UltimaBatcher2D batcher, Rectangle bounds, Texture2D fillTexture, Vector3 fillHue, double percent, float alpha)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                return;
+            }
+
+            int radius = GetCornerRadius(bounds.Width, bounds.Height);
+            percent = double.IsNaN(percent) || double.IsInfinity(percent) ? 0 : Math.Clamp(percent, 0, 1);
+
+            DrawRoundedRectangle(batcher, _borderColor, bounds, ShaderHueTranslator.GetHueVector(0), radius);
+
+            Rectangle fillBounds = new Rectangle(bounds.X + 1, bounds.Y + 1, Math.Max(0, bounds.Width - 2), Math.Max(0, bounds.Height - 2));
+
+            if (fillBounds.Width > 0 && fillBounds.Height > 0)
+            {
+                DrawRoundedRectangle(
+                        batcher,
+                        SolidColorTextureCache.GetTexture(MissingHealthBackgroundColor),
+                        fillBounds,
+                        ShaderHueTranslator.GetHueVector(0, false, alpha),
+                        Math.Max(0, radius - 1)
+                    );
+
+                int fillWidth = Math.Min(fillBounds.Width, (int)Math.Round(fillBounds.Width * percent));
+
+                if (fillWidth > 0)
+                {
+                    DrawRoundedRectangleClipped(batcher, fillTexture, fillBounds, fillHue, Math.Max(0, radius - 1), fillWidth);
+                }
+            }
+        }
+
+        private static double GetResourcePercent(int current, int max)
+        {
+            return max <= 0 ? 0 : Math.Clamp((double)current / max, 0, 1);
+        }
+
+        private static int GetCornerRadius(int width, int height)
+        {
+            return Math.Clamp(ProfileManager.CurrentProfile.NamePlateCornerRadius, 0, Math.Min(width, height) >> 1);
+        }
+
+        // Renderer-only rounded fill: uses UltimaBatcher2D/XNA textures, not System.Drawing/GDI.
+        private static void DrawRoundedRectangle(UltimaBatcher2D batcher, Texture2D texture, Rectangle bounds, Vector3 hueVector, int radius)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                return;
+            }
+
+            radius = Math.Clamp(radius, 0, Math.Min(bounds.Width, bounds.Height) >> 1);
+
+            if (radius <= 0)
+            {
+                batcher.Draw(texture, bounds, hueVector);
+                return;
+            }
+
+            int[] insets = GetRoundedRectangleInsets(bounds.Height, radius);
+
+            for (int row = 0; row < bounds.Height; row++)
+            {
+                int inset = insets[row];
+                int width = bounds.Width - inset * 2;
+
+                if (width > 0)
+                {
+                    batcher.Draw(texture, new Rectangle(bounds.X + inset, bounds.Y + row, width, 1), hueVector);
+                }
+            }
+        }
+
+        private static void DrawRoundedRectangleClipped(UltimaBatcher2D batcher, Texture2D texture, Rectangle bounds, Vector3 hueVector, int radius, int clipWidth)
+        {
+            if (bounds.Width <= 0 || bounds.Height <= 0 || clipWidth <= 0)
+            {
+                return;
+            }
+
+            radius = Math.Clamp(radius, 0, Math.Min(bounds.Width, bounds.Height) >> 1);
+            int clippedWidth = Math.Min(bounds.Width, clipWidth);
+
+            if (radius <= 0)
+            {
+                batcher.Draw(texture, new Rectangle(bounds.X, bounds.Y, clippedWidth, bounds.Height), hueVector);
+                return;
+            }
+
+            int clipRight = bounds.X + clippedWidth;
+            int[] insets = GetRoundedRectangleInsets(bounds.Height, radius);
+
+            for (int row = 0; row < bounds.Height; row++)
+            {
+                int inset = insets[row];
+                int rowLeft = bounds.X + inset;
+                int rowRight = Math.Min(bounds.Right - inset, clipRight);
+                int width = rowRight - rowLeft;
+
+                if (width > 0)
+                {
+                    batcher.Draw(texture, new Rectangle(rowLeft, bounds.Y + row, width, 1), hueVector);
+                }
+            }
+        }
+
+        private static int[] GetRoundedRectangleInsets(int height, int radius)
+        {
+            long cacheKey = ((long)height << 32) | (uint)radius;
+
+            if (RoundedRectangleInsetCache.TryGetValue(cacheKey, out int[] insets))
+            {
+                return insets;
+            }
+
+            insets = new int[height];
+
+            for (int row = 0; row < height; row++)
+            {
+                if (row < radius)
+                {
+                    double dy = radius - row - 0.5d;
+                    insets[row] = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
+                }
+                else if (row >= height - radius)
+                {
+                    double dy = row - (height - radius) + 0.5d;
+                    insets[row] = Math.Max(0, radius - (int)Math.Sqrt(radius * radius - dy * dy));
+                }
+            }
+
+            RoundedRectangleInsetCache[cacheKey] = insets;
+            return insets;
         }
 
         public override void Dispose()

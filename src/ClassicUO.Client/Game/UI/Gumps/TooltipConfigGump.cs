@@ -48,11 +48,11 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void AddHeader()
         {
-            var titleLabel = TextBox.GetOne("Tooltip Override Configuration", TrueTypeLoader.EMBEDDED_FONT, 18, Color.OrangeRed, TextBox.RTLOptions.Default());
+            var titleLabel = TextBox.GetOne(TazLang.Get("tooltipconfig_title", "Tooltip Override Configuration"), TrueTypeLoader.EMBEDDED_FONT, 18, Color.OrangeRed, TextBox.RTLOptions.Default());
 
             mainContainer.Add(titleLabel);
 
-            var wikiLink = new HttpClickableLink("Tooltip Overrides Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override", Color.White);
+            var wikiLink = new HttpClickableLink(TazLang.Get("tooltipconfig_wiki", "Tooltip Overrides Wiki"), "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override", Color.White);
 
             mainContainer.Add(wikiLink);
         }
@@ -61,7 +61,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             var buttonContainer = new Area(false);
 
-            var addButton = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Add +")
+            var addButton = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, TazLang.Get("tooltipconfig_add", "Add +"))
             {
                 IsSelectable = false,
                 DisplayBorder = true
@@ -77,7 +77,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             buttonContainer.Add(addButton);
 
-            var exportButton = new NiceButton(65, 0, 60, 20, ButtonAction.Activate, "Export")
+            var exportButton = new NiceButton(65, 0, 60, 20, ButtonAction.Activate, TazLang.Get("tooltipconfig_export", "Export"))
             {
                 IsSelectable = false,
                 DisplayBorder = true
@@ -93,7 +93,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             buttonContainer.Add(exportButton);
 
-            var importButton = new NiceButton(130, 0, 60, 20, ButtonAction.Activate, "Import")
+            var importButton = new NiceButton(130, 0, 60, 20, ButtonAction.Activate, TazLang.Get("tooltipconfig_import", "Import"))
             {
                 IsSelectable = false,
                 DisplayBorder = true
@@ -109,13 +109,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             buttonContainer.Add(importButton);
 
-            var deleteAllButton = new NiceButton(195, 0, 100, 20, ButtonAction.Activate, "Delete All")
+            var deleteAllButton = new NiceButton(195, 0, 100, 20, ButtonAction.Activate, TazLang.Get("tooltipconfig_deleteall", "Delete All"))
             {
                 IsSelectable = false,
                 DisplayBorder = true
             };
 
-            deleteAllButton.SetTooltip("/c[red]This will remove ALL tooltip override settings.\nThis is not reversible.");
+            deleteAllButton.SetTooltip(TazLang.Get("tooltipconfig_deleteall_tooltip", "/c[red]This will remove ALL tooltip override settings.\nThis is not reversible."));
 
             deleteAllButton.MouseUp += (s, e) =>
             {
@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
                     ShowSavedMessage(searchTextInput);
                 }
             }, searchTextInput.Text);
-            searchTextInput.SetTooltip("This is the search text for matching tooltip lines.");
+            searchTextInput.SetTooltip(TazLang.Get("tooltipconfig_searchtext_tooltip", "This is the search text for matching tooltip lines."));
 
             rowContainer.Add(searchTextInput);
 
@@ -216,12 +216,12 @@ namespace ClassicUO.Game.UI.Gumps
                 data.Save();
                 ShowSavedMessage(formatTextInput);
             }, formatTextInput.Text);
-            formatTextInput.SetTooltip("This is what the matching tooltip line will be replaced with. See the wiki for more details!");
+            formatTextInput.SetTooltip(TazLang.Get("tooltipconfig_formattext_tooltip", "This is what the matching tooltip line will be replaced with. See the wiki for more details!"));
 
             rowContainer.Add(formatTextInput);
 
             // Row 2: Min/Max values and Layer
-            var minMaxLabel = new Label("Min/Max", true, 0xFFFF)
+            var minMaxLabel = new Label(TazLang.Get("tooltipconfig_minmax", "Min/Max"), true, 0xFFFF)
             {
                 X = 5,
                 Y = 25
@@ -252,7 +252,7 @@ namespace ClassicUO.Game.UI.Gumps
             }, max1Input.Text);
             rowContainer.Add(max1Input);
 
-            var minMaxLabel2 = new Label("Min/Max", true, 0xFFFF)
+            var minMaxLabel2 = new Label(TazLang.Get("tooltipconfig_minmax", "Min/Max"), true, 0xFFFF)
             {
                 X = max1Input.X + max1Input.Width + 15,
                 Y = 25
@@ -301,7 +301,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 IsSelectable = false
             };
-            deleteButton.SetTooltip("Delete this override");
+            deleteButton.SetTooltip(TazLang.Get("tooltipconfig_deleterow", "Delete this override"));
             deleteButton.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)

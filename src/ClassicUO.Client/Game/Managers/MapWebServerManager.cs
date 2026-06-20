@@ -2,7 +2,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using ClassicUO.Utility.Logging;
-using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 
@@ -27,12 +26,12 @@ namespace ClassicUO.Game.Managers
         {
             // Check if map texture exists first
             int mapIndex = World.Instance?.MapIndex ?? 0;
-            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
             if (mapTexture == null || mapTexture.IsDisposed)
             {
                 await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+                mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
@@ -65,58 +64,37 @@ namespace ClassicUO.Game.Managers
 
                 Log.Info($"Generating PNG for map {mapIndex}...");
 
-                // Try to load the map texture for this map index
+                // Ensure the map PNG file is generated on disk
                 await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+                string pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath();
 
-                Log.Info($"Loaded texture for map {mapIndex}: {(mapTexture != null ? $"{mapTexture.Width}x{mapTexture.Height}" : "null")}");
-
-                // Retry if texture not loaded yet (may happen during map change)
+                // Retry if the PNG file isn't ready yet (may happen during map change)
                 int retries = 0;
-                while ((mapTexture == null || mapTexture.IsDisposed) && retries < 100)
+                while (string.IsNullOrEmpty(pngFilePath) || !File.Exists(pngFilePath))
                 {
-                    Log.Warn($"Map texture not ready yet, retrying in 1000ms... (attempt {retries + 1})");
+                    if (retries >= 100)
+                    {
+                        Log.Warn($"Map PNG not available for map {mapIndex}. Open the world map gump to generate it.");
+                        GameActions.Print(World.Instance, "Please open world map gump first", 0x21);
+                        return;
+                    }
+                    Log.Warn($"Map PNG not ready yet, retrying in 1000ms... (attempt {retries + 1})");
                     await Task.Delay(1000);
                     await UI.Gumps.WorldMapGump.LoadMapTextureForMap(mapIndex);
-                    mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(mapIndex);
+                    pngFilePath = UI.Gumps.WorldMapGump.GetMapPngPath();
                     retries++;
                 }
 
-                if (mapTexture == null || mapTexture.IsDisposed)
-                {
-                    Log.Warn($"Map texture not available for map {mapIndex}. Open the world map gump to generate it.");
-                    GameActions.Print(World.Instance, "Please open world map gump first", 0x21);
-                    return;
-                }
-
-                Log.Info($"Converting map texture to PNG for map {mapIndex} ({mapTexture.Width}x{mapTexture.Height})...");
+                Log.Info($"Reading map PNG for map {mapIndex} from {pngFilePath}...");
                 var startTime = System.Diagnostics.Stopwatch.StartNew();
 
-                // Extract texture data on the main thread (graphics operations must be on main thread)
-                int width = mapTexture.Width;
-                int height = mapTexture.Height;
-                byte[] textureData = new byte[width * height * 4]; // RGBA
-
-                lock (Map.Map.GetMapPngLock())
-                {
-                    mapTexture.GetData(textureData);
-                }
-
-                // Offload the PNG encoding to a background thread
-                byte[] pngData = await Task.Run(() =>
-                {
-                    using (var image = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Rgba32>(textureData, width, height))
-                    using (var ms = new MemoryStream())
-                    {
-                        image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
-                        return ms.ToArray();
-                    }
-                });
+                // Read the already-generated PNG file directly — no GPU operations needed
+                byte[] pngData = await Task.Run(() => File.ReadAllBytes(pngFilePath));
 
                 _server?.SetCachedMapPng(pngData, mapIndex);
 
                 startTime.Stop();
-                Log.Info($"PNG conversion took {startTime.ElapsedMilliseconds}ms, size: {pngData.Length / 1024}KB");
+                Log.Info($"PNG read took {startTime.ElapsedMilliseconds}ms, size: {pngData.Length / 1024}KB");
                 GameActions.Print(World.Instance, "Map loaded in browser", 0x44);
             }
             catch (System.Exception ex)
