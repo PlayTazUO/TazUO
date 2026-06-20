@@ -451,12 +451,8 @@ public static class NameplatesTab
                     new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
                     search: new SearchMetadata(genLang.IncomingCorpses, Keywords: [kw.Incoming, kw.Corpse])
                 ),
-                OptionsUi.Vertical(
-                    Option.Checkbox(
-                        tuoLang.NameplatesAlsoActAsHealthBars,
-                        new Accessor<bool>(() => profile.NamePlateHealthBar),
-                        search: new SearchMetadata(tuoLang.NameplatesAlsoActAsHealthBars, Keywords: [kw.HealthBar, kw.HP])
-                    ),
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHealthBar), tuoLang.NameplatesAlsoActAsHealthBars),
                     Option.Slider(
                         tuoLang.HpOpacity,
                         0,
@@ -464,19 +460,15 @@ public static class NameplatesTab
                         new Accessor<byte>(() => profile.NamePlateHealthBarOpacity),
                         search: new SearchMetadata(tuoLang.HpOpacity, Keywords: [kw.HP, kw.Opacity])
                     ),
-                    OptionsUi.Vertical(
-                        Option.Checkbox(
-                            tuoLang.HideNameplatesIfFullHealth,
-                            new Accessor<bool>(() => profile.NamePlateHideAtFullHealth),
-                            search: new SearchMetadata(tuoLang.HideNameplatesIfFullHealth, Keywords: [kw.Hide, kw.Full, kw.Health])
-                        ),
+                    OptionsUi.CheckBoxGroup(
+                        new PropertyBinder(new Accessor<bool>(() => profile.NamePlateHideAtFullHealth), tuoLang.HideNameplatesIfFullHealth),
                         Option.Checkbox(
                             tuoLang.OnlyInWarmode,
                             new Accessor<bool>(() => profile.NamePlateHideAtFullHealthInWarmode),
                             search: new SearchMetadata(tuoLang.OnlyInWarmode, Keywords: [kw.War, kw.Mode])
                         )
-                    )
-                ),
+                    ).WithSearch(new SearchMetadata(Tags: [kw.Nameplate], Keywords: [kw.Hide, kw.Health]))
+                ).WithSearch(new SearchMetadata(Tags: [kw.Nameplate], Keywords: [kw.HealthBar, kw.HP])),
                 Option.Slider(
                     tuoLang.BorderOpacity,
                     0,

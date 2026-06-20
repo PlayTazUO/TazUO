@@ -20,23 +20,17 @@ public static class LayerHidingTab
         ModernOptionsGumpLanguage.LayerHidingTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.LayerHidingTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return OptionsUi.Vertical(
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(new Accessor<bool>(() => profile.HiddenLayersEnabled), lang.EnableLayerHiding),
             Option.Checkbox(
-                lang.EnableLayerHiding,
-                new Accessor<bool>(() => profile.HiddenLayersEnabled),
-                search: new SearchMetadata(lang.EnableLayerHiding, Keywords: [kw.Enable])
+                lang.OnlyForYourself,
+                new Accessor<bool>(() => profile.HideLayersForSelf),
+                lang.OnlyForYourselfTooltip,
+                search: new SearchMetadata(lang.OnlyForYourself, Keywords: [kw.Self])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.OnlyForYourself,
-                    new Accessor<bool>(() => profile.HideLayersForSelf),
-                    lang.OnlyForYourselfTooltip,
-                    search: new SearchMetadata(lang.OnlyForYourself, Keywords: [kw.Self])
-                ),
-                Option.Spacer(),
-                Option.Custom(() => new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P), new SearchMetadata(lang.HideFollowingLayers)),
-                GetLayerBoxesFragment()
-            )
+            Option.Spacer(),
+            Option.Custom(() => new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P), new SearchMetadata(lang.HideFollowingLayers)),
+            GetLayerBoxesFragment()
         ).WithSearch(new SearchMetadata(lang.Label, Keywords: [kw.Layer, kw.Hide, kw.Equipment, kw.Clothing], Tags: [kw.Layer, kw.Hide]));
     }
 

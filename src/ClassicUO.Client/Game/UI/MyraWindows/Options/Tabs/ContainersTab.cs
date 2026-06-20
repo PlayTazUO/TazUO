@@ -107,23 +107,21 @@ public static class ContainersTab
                 new Accessor<bool>(() => profile.HueContainerGumps),
                 search: new SearchMetadata(containerLang.RecolorContainerGumpByWithContainerHue, Keywords: [kw.Recolor, kw.Hue])
             ),
-            Option.Checkbox(
-                containerLang.OverrideContainerGumpLocations,
-                new Accessor<bool>(() => profile.OverrideContainerLocation),
-                search: new SearchMetadata(containerLang.OverrideContainerGumpLocations, Keywords: [kw.Override, kw.Location])
-            ),
-            Option.ComboBox(
-                containerLang.OverridePosition,
-                profile.OverrideContainerLocationSetting,
-                [
-                    containerLang.PositionOpt_NearContainer,
-                    containerLang.PositionOpt_TopRight,
-                    containerLang.PositionOpt_LastDraggedPosition,
-                    containerLang.RememberEachContainer
-                ],
-                i => profile.OverrideContainerLocationSetting = i,
-                search: new SearchMetadata(containerLang.OverridePosition, Keywords: [kw.Position])
-            )
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.OverrideContainerLocation), containerLang.OverrideContainerGumpLocations),
+                Option.ComboBox(
+                    containerLang.OverridePosition,
+                    profile.OverrideContainerLocationSetting,
+                    [
+                        containerLang.PositionOpt_NearContainer,
+                        containerLang.PositionOpt_TopRight,
+                        containerLang.PositionOpt_LastDraggedPosition,
+                        containerLang.RememberEachContainer
+                    ],
+                    i => profile.OverrideContainerLocationSetting = i,
+                    search: new SearchMetadata(containerLang.OverridePosition, Keywords: [kw.Position])
+                )
+            ).WithSearch(new SearchMetadata(containerLang.LabelOriginalContainers, Tags: [kw.Container], Keywords: [kw.Container, kw.Override, kw.Location]))
         );
     }
 
@@ -175,18 +173,14 @@ public static class ContainersTab
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionsUi.Vertical(
-            OptionsUi.VisualContainer(
-                new VisualContainerProps
-                {
-                    LabelText = containerLang.LabelGridContainersWiki,
-                    LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/"
-                },
-                Option.Checkbox(
-                    tuoLang.EnableGridContainers,
-                    new Accessor<bool>(() => profile.UseGridLayoutContainerGumps),
-                    search: new SearchMetadata(tuoLang.EnableGridContainers, Keywords: [kw.Enable])
-                ),
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps
+            {
+                LabelText = containerLang.LabelGridContainersWiki,
+                LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/"
+            },
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.UseGridLayoutContainerGumps), tuoLang.EnableGridContainers),
                 Option.Checkbox(
                     tuoLang.GridContainersDefaultToOldStyleView,
                     new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
@@ -222,10 +216,10 @@ public static class ContainersTab
                     tuoLang.GridDisableTargeting,
                     new Accessor<bool>(() => profile.DisableTargetingGridContainers),
                     search: new SearchMetadata(tuoLang.GridDisableTargeting, Keywords: [kw.Targeting, kw.Disable])
-                )
-            ),
-            GetGridContainerStylingSection()
-        ).WithSearch(new SearchMetadata(containerLang.LabelGridContainers, Tags: [kw.Container, kw.Grid]));
+                ),
+                GetGridContainerStylingSection()
+            ).WithSearch(new SearchMetadata(containerLang.LabelGridContainers, Tags: [kw.Container, kw.Grid], Keywords: [kw.Grid, kw.Container]))
+        );
     }
 
     private static OptionFragment GetGridContainerStylingSection()

@@ -16,12 +16,8 @@ public static class MovementTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    moveLang.Pathfinding.EnablePathfinding,
-                    new Accessor<bool>(() => profile.EnablePathfind),
-                    search: new SearchMetadata(moveLang.Pathfinding.EnablePathfinding, Keywords: [kw.Pathfinding])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnablePathfind), moveLang.Pathfinding.EnablePathfinding),
                 Option.Checkbox(
                     moveLang.Pathfinding.ShiftPathfinding,
                     new Accessor<bool>(() => profile.UseShiftToPathfind),
@@ -32,25 +28,17 @@ public static class MovementTab
                     new Accessor<bool>(() => profile.PathfindSingleClick),
                     search: new SearchMetadata(moveLang.Pathfinding.SingleClickPathfind, Keywords: [kw.Pathfinding, kw.Click])
                 )
-            ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    moveLang.Running.AlwaysRun,
-                    new Accessor<bool>(() => profile.AlwaysRun),
-                    search: new SearchMetadata(moveLang.Running.AlwaysRun, Keywords: [kw.Run])
-                ),
+            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Pathfinding])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.AlwaysRun), moveLang.Running.AlwaysRun),
                 Option.Checkbox(
                     moveLang.Running.RunUnlessHidden,
                     new Accessor<bool>(() => profile.AlwaysRunUnlessHidden),
                     search: new SearchMetadata(moveLang.Running.RunUnlessHidden, Keywords: [kw.Run, kw.Hidden])
                 )
-            ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    moveLang.Doors.AutoOpenDoors,
-                    new Accessor<bool>(() => profile.AutoOpenDoors),
-                    search: new SearchMetadata(moveLang.Doors.AutoOpenDoors, Keywords: [kw.Door])
-                ),
+            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Run])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenDoors), moveLang.Doors.AutoOpenDoors),
                 Option.Checkbox(
                     moveLang.Doors.AutoOpenHidden,
                     new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
@@ -61,7 +49,7 @@ public static class MovementTab
                     new Accessor<bool>(() => profile.SmoothDoors),
                     search: new SearchMetadata(moveLang.Doors.AutoOpenPathfinding, Keywords: [kw.Door, kw.Pathfinding])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Door])),
             Option.Checkbox(
                 moveLang.AutoAvoidObstacles,
                 new Accessor<bool>(() => profile.AutoAvoidObstacules),
@@ -74,18 +62,16 @@ public static class MovementTab
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = moveLang.Controller.Label, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
-                Option.Checkbox(
-                    moveLang.Controller.EnableController,
-                    new Accessor<bool>(() => profile.ControllerEnabled),
-                    search: new SearchMetadata(moveLang.Controller.EnableController, Keywords: [kw.Controller])
-                ),
-                Option.Slider(
-                    moveLang.Controller.MouseSensitivity,
-                    1,
-                    20,
-                    new Accessor<float>(() => profile.ControllerMouseSensativity, f => profile.ControllerMouseSensativity = (int)f),
-                    search: new SearchMetadata(moveLang.Controller.MouseSensitivity, Keywords: [kw.Controller, kw.Sensitivity])
-                )
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), moveLang.Controller.EnableController),
+                    Option.Slider(
+                        moveLang.Controller.MouseSensitivity,
+                        1,
+                        20,
+                        new Accessor<float>(() => profile.ControllerMouseSensativity, f => profile.ControllerMouseSensativity = (int)f),
+                        search: new SearchMetadata(moveLang.Controller.MouseSensitivity, Keywords: [kw.Controller, kw.Sensitivity])
+                    )
+                ).WithSearch(new SearchMetadata(moveLang.Controller.Label, Tags: [kw.Movement], Keywords: [kw.Controller]))
             )
         ).WithSearch(new SearchMetadata(moveLang.Label, Keywords: [kw.Movement, kw.Pathfinding, kw.WASD, kw.Move], Tags: [kw.Movement]));
     }

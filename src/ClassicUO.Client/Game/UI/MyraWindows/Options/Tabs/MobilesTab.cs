@@ -35,12 +35,8 @@ public static class MobilesTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.ShowMobileHP,
-                    new Accessor<bool>(() => profile.ShowMobilesHP),
-                    search: new SearchMetadata(lang.ShowMobileHP, Keywords: [kw.HP, kw.Health])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), lang.ShowMobileHP),
                 Option.ComboBox(
                     lang.MobileHPType,
                     profile.MobileHPType,
@@ -55,43 +51,31 @@ public static class MobilesTab
                     i => profile.MobileHPShowWhen = i,
                     search: new SearchMetadata(lang.HPShowWhen, Keywords: [kw.HP, kw.Health, kw.Show])
                 )
-            ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.HighlightPoisoned,
-                    new Accessor<bool>(() => profile.HighlightMobilesByPoisoned),
-                    search: new SearchMetadata(lang.HighlightPoisoned, Keywords: [kw.Poison])
-                ),
+            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.HP, kw.Health])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByPoisoned), lang.HighlightPoisoned),
                 Option.HuePicker(
                     genLang.PoisonHighlightColor,
                     new Accessor<ushort>(() => profile.PoisonHue, h => profile.PoisonHue = h),
                     search: new SearchMetadata(genLang.PoisonHighlightColor, Keywords: [kw.Poison, kw.Hue])
                 )
-            ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.HighlightPara,
-                    new Accessor<bool>(() => profile.HighlightMobilesByParalize),
-                    search: new SearchMetadata(lang.HighlightPara, Keywords: [kw.Paralyze])
-                ),
+            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Poison])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByParalize), lang.HighlightPara),
                 Option.HuePicker(
                     genLang.ParaHighlightColor,
                     new Accessor<ushort>(() => profile.ParalyzedHue, h => profile.ParalyzedHue = h),
                     search: new SearchMetadata(genLang.ParaHighlightColor, Keywords: [kw.Paralyze, kw.Hue])
                 )
-            ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.HighlightInvul,
-                    new Accessor<bool>(() => profile.HighlightMobilesByInvul),
-                    search: new SearchMetadata(lang.HighlightInvul, Keywords: [kw.Invulnerable])
-                ),
+            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Paralyze])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByInvul), lang.HighlightInvul),
                 Option.HuePicker(
                     genLang.InvulHighlightColor,
                     new Accessor<ushort>(() => profile.InvulnerableHue, h => profile.InvulnerableHue = h),
                     search: new SearchMetadata(genLang.InvulHighlightColor, Keywords: [kw.Invulnerable, kw.Hue])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Invulnerable])),
             Option.Checkbox(
                 lang.IncomingMobiles,
                 new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
@@ -114,18 +98,14 @@ public static class MobilesTab
                 i => profile.AuraUnderFeetType = i,
                 search: new SearchMetadata(lang.AuraUnderFeet, Keywords: [kw.Aura])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.AuraForParty,
-                    new Accessor<bool>(() => profile.PartyAura),
-                    search: new SearchMetadata(lang.AuraForParty, Keywords: [kw.Aura, kw.Party])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.PartyAura), lang.AuraForParty),
                 Option.HuePicker(
                     genLang.AuraPartyColor,
                     new Accessor<ushort>(() => profile.PartyAuraHue, h => profile.PartyAuraHue = h),
                     search: new SearchMetadata(genLang.AuraPartyColor, Keywords: [kw.Aura, kw.Party, kw.Hue])
                 )
-            )
+            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Aura, kw.Party]))
         ).WithSearch(new SearchMetadata(lang.Label, Tags: [kw.Mobile, kw.Health]));
     }
 

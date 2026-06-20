@@ -55,20 +55,14 @@ internal static class GumpsTab
                 new SearchMetadata(lang.PartyInviteGump, Keywords: [kw.Party, kw.Invite])
             ),
             Option.Spacer(),
-            OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = lang.EnableImprovedBuffGump },
-                Option.Checkbox(
-                    lang.EnableImprovedBuffGump,
-                    new Accessor<bool>(() => profile.UseImprovedBuffBar),
-                    null,
-                    new SearchMetadata(lang.EnableImprovedBuffGump, Keywords: [kw.Improved, kw.Buff, kw.BuffBar, kw.BuffGump])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.UseImprovedBuffBar), lang.EnableImprovedBuffGump),
                 Option.HuePicker(
                     lang.BuffGumpHue,
                     new Accessor<ushort>(() => profile.ImprovedBuffBarHue),
                     new SearchMetadata(lang.BuffGumpHue, Keywords: [kw.Buff, kw.BuffBar, kw.Hue, kw.Color, kw.Colour])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(Tags: [kw.Gump], Keywords: [kw.Buff, kw.BuffBar])),
             Option.Spacer(),
             Option.Checkbox(
                 lang.EnableAdvancedShopGump,

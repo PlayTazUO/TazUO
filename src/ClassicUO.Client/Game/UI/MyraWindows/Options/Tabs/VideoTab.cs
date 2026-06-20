@@ -305,15 +305,14 @@ public static class VideoTab
                 new Accessor<bool>(() => profile.UseAlternativeLights),
                 search: new SearchMetadata(lightLang.AltLights, Keywords: [kw.Alt, kw.Light])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lightLang.CustomLLevel,
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(
                     new Accessor<bool>(() => profile.UseCustomLightLevel, b =>
                     {
                         profile.UseCustomLightLevel = b;
                         UpdateLight();
                     }),
-                    search: new SearchMetadata(lightLang.CustomLLevel, Keywords: [kw.Custom])
+                    lightLang.CustomLLevel
                 ),
                 Option.Slider(
                     lightLang.Level,
@@ -333,7 +332,7 @@ public static class VideoTab
                     i => profile.LightLevelType = i,
                     search: new SearchMetadata(lightLang.LightType, Keywords: [kw.Type])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(lightLang.Label, Tags: [kw.Light], Keywords: [kw.Custom])),
             Option.Checkbox(
                 lightLang.DarkNight,
                 new Accessor<bool>(() => profile.UseDarkNights),
@@ -408,15 +407,14 @@ public static class VideoTab
                 new Accessor<bool>(() => profile.AnimatedWaterEffect),
                 search: new SearchMetadata(miscLang.AnimWater, Keywords: [kw.Water, kw.Anim])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    miscLang.EnablePostProcessing,
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(
                     new Accessor<bool>(() => profile.EnablePostProcessingEffects, b =>
                     {
                         profile.EnablePostProcessingEffects = b;
                         GameScene.Instance?.SetPostProcessingSettings();
                     }),
-                    search: new SearchMetadata(miscLang.EnablePostProcessing, Keywords: [kw.Post, kw.Process])
+                    miscLang.EnablePostProcessing
                 ),
                 Option.ComboBox(
                     miscLang.PostProcessingEffectType,
@@ -429,7 +427,7 @@ public static class VideoTab
                     },
                     search: new SearchMetadata(miscLang.PostProcessingEffectType, Keywords: [kw.Type])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.PostProcessing], Keywords: [kw.Post, kw.Process])),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.Perspective },
                 Option.Slider(

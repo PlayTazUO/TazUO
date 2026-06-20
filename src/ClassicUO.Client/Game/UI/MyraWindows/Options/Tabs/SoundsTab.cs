@@ -21,44 +21,38 @@ public static class SoundsTab
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
-            Option.Checkbox(
-                soundSubLang.EnableSound,
-                new Accessor<bool>(() => profile.EnableSound),
-                search: new SearchMetadata(soundSubLang.EnableSound, Keywords: [kw.Sound])
-            ),
-            Option.Slider(
-                soundSubLang.SharedVolume,
-                0,
-                100,
-                new Accessor<int>(() => profile.SoundVolume),
-                search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Volume])
-            ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableSound), soundSubLang.EnableSound),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<int>(() => profile.SoundVolume),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Volume])
+                )
+            ).WithSearch(new SearchMetadata(soundSubLang.EnableSound, Keywords: [kw.Sound])),
             Option.Spacer(),
-            Option.Checkbox(
-                soundSubLang.EnableMusic,
-                new Accessor<bool>(() => profile.EnableMusic),
-                search: new SearchMetadata(soundSubLang.EnableMusic, Keywords: [kw.Music])
-            ),
-            Option.Slider(
-                soundSubLang.SharedVolume,
-                0,
-                100,
-                new Accessor<int>(() => profile.MusicVolume),
-                search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Music, kw.Volume])
-            ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableMusic), soundSubLang.EnableMusic),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<int>(() => profile.MusicVolume),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Music, kw.Volume])
+                )
+            ).WithSearch(new SearchMetadata(soundSubLang.EnableMusic, Keywords: [kw.Music])),
             Option.Spacer(),
-            Option.Checkbox(
-                soundSubLang.LoginMusic,
-                new Accessor<bool>(() => Settings.GlobalSettings.LoginMusic),
-                search: new SearchMetadata(soundSubLang.LoginMusic, Keywords: [kw.Login, kw.Music])
-            ),
-            Option.Slider(
-                soundSubLang.SharedVolume,
-                0,
-                100,
-                new Accessor<int>(() => Settings.GlobalSettings.LoginMusicVolume),
-                search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Login, kw.Volume])
-            ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => Settings.GlobalSettings.LoginMusic), soundSubLang.LoginMusic),
+                Option.Slider(
+                    soundSubLang.SharedVolume,
+                    0,
+                    100,
+                    new Accessor<int>(() => Settings.GlobalSettings.LoginMusicVolume),
+                    search: new SearchMetadata(soundSubLang.SharedVolume, Keywords: [kw.Login, kw.Volume])
+                )
+            ).WithSearch(new SearchMetadata(soundSubLang.LoginMusic, Keywords: [kw.Login, kw.Music])),
             Option.Spacer(),
             Option.Checkbox(
                 soundSubLang.PlayFootsteps,

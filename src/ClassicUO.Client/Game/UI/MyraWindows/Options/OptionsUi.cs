@@ -37,4 +37,13 @@ internal static class OptionsUi
             () => new VisualContainer(props, children.Select(c => c.Render()).ToArray()),
             children
         );
+
+    public static OptionFragment CheckBoxGroup(
+        PropertyBinder controlProp,
+        params OptionContent[] children
+    ) =>
+        new(
+            () => new CheckBoxGroup(controlProp, children.Select(c => c.Render()).ToArray()),
+            children
+        );
 }

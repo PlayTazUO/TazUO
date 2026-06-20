@@ -28,13 +28,8 @@ public static class MiscTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
-            OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = genLang.EnableCOT },
-                Option.Checkbox(
-                    genLang.EnableCOT,
-                    new Accessor<bool>(() => profile.UseCircleOfTransparency),
-                    search: new SearchMetadata(genLang.EnableCOT, Keywords: [kw.Cot, kw.Circle])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), genLang.EnableCOT),
                 Option.Slider(
                     genLang.COTDistance,
                     Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
@@ -49,7 +44,7 @@ public static class MiscTab
                     i => profile.CircleOfTransparencyType = i,
                     search: new SearchMetadata(genLang.COTType, Keywords: [kw.Cot, kw.Type])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Cot, kw.Circle])),
             Option.Checkbox(
                 genLang.HideScreenshotMessage,
                 new Accessor<bool>(() => profile.HideScreenshotStoredInMessage),
@@ -75,12 +70,8 @@ public static class MiscTab
                 new Accessor<bool>(() => profile.ShowStatsChangedMessage),
                 search: new SearchMetadata(genLang.ShowStatsChangedMsg, Keywords: [kw.Stats, kw.Changed])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    genLang.ShowSkillsChangedMsg,
-                    new Accessor<bool>(() => profile.ShowSkillsChangedMessage),
-                    search: new SearchMetadata(genLang.ShowSkillsChangedMsg, Keywords: [kw.Skills, kw.Changed])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.ShowSkillsChangedMessage), genLang.ShowSkillsChangedMsg),
                 Option.Slider(
                     genLang.ChangeVolume,
                     0,
@@ -88,7 +79,7 @@ public static class MiscTab
                     new Accessor<float>(() => profile.ShowSkillsChangedDeltaValue, f => profile.ShowSkillsChangedDeltaValue = (int)f),
                     search: new SearchMetadata(genLang.ChangeVolume, Keywords: [kw.Skills, kw.Volume])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skills])),
             Option.Checkbox(
                 genLang.ShiftContext,
                 new Accessor<bool>(() => profile.HoldShiftForContext),
@@ -115,13 +106,8 @@ public static class MiscTab
                 new Accessor<bool>(() => profile.HighlightGameObjects),
                 search: new SearchMetadata(genLang.HighlightObjects, Keywords: [kw.Highlight])
             ),
-            OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = genLang.AutoOpenCorpse },
-                Option.Checkbox(
-                    genLang.AutoOpenCorpse,
-                    new Accessor<bool>(() => profile.AutoOpenCorpses),
-                    search: new SearchMetadata(genLang.AutoOpenCorpse, Keywords: [kw.Corpse, kw.Auto])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenCorpses), genLang.AutoOpenCorpse),
                 Option.Slider(
                     genLang.CorpseOpenDistance,
                     0,
@@ -142,7 +128,7 @@ public static class MiscTab
                     i => profile.CorpseOpenOptions = i,
                     search: new SearchMetadata(genLang.CorpseOpenOptions, Keywords: [kw.Corpse, kw.Type])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Corpse])),
             Option.Checkbox(
                 genLang.OutRangeColor,
                 new Accessor<bool>(() => profile.NoColorObjectsOutOfRange),
@@ -244,37 +230,31 @@ public static class MiscTab
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.HousingTransparency, LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },
-                Option.Checkbox(
-                    miscLang.EnableHouseTransparency,
-                    new Accessor<bool>(() => profile.ForceHouseTransparency),
-                    search: new SearchMetadata(miscLang.EnableHouseTransparency, Keywords: [kw.House, kw.Transparency])
-                ),
-                Option.Slider(
-                    uiLang.Opacity,
-                    0,
-                    255,
-                    new Accessor<float>(() => profile.ForcedHouseTransparency, newValue => { profile.ForcedHouseTransparency = (byte)newValue; }),
-                    search: new SearchMetadata(uiLang.Opacity, Keywords: [kw.House, kw.Opacity])
-                ),
-                Option.HuePicker(
-                    uiLang.Hue,
-                    new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue, h => profile.ForcedTransparencyHouseTileHue = h),
-                    search: new SearchMetadata(uiLang.Hue, Keywords: [kw.House, kw.Hue])
-                )
+                OptionsUi.CheckBoxGroup(
+                    new PropertyBinder(new Accessor<bool>(() => profile.ForceHouseTransparency), miscLang.EnableHouseTransparency),
+                    Option.Slider(
+                        uiLang.Opacity,
+                        0,
+                        255,
+                        new Accessor<float>(() => profile.ForcedHouseTransparency, newValue => { profile.ForcedHouseTransparency = (byte)newValue; }),
+                        search: new SearchMetadata(uiLang.Opacity, Keywords: [kw.House, kw.Opacity])
+                    ),
+                    Option.HuePicker(
+                        uiLang.Hue,
+                        new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue, h => profile.ForcedTransparencyHouseTileHue = h),
+                        search: new SearchMetadata(uiLang.Hue, Keywords: [kw.House, kw.Hue])
+                    )
+                ).WithSearch(new SearchMetadata(miscLang.HousingTransparency, Tags: [kw.Misc], Keywords: [kw.House, kw.Transparency]))
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    miscLang.DisplayProgressBarOnSkillChanges,
-                    new Accessor<bool>(() => profile.DisplaySkillBarOnChange),
-                    search: new SearchMetadata(miscLang.DisplayProgressBarOnSkillChanges, Keywords: [kw.Skill, kw.Progress])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
                 Option.InputField(
                     uiLang.Format,
                     new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
                     miscLang.SkillProgressBarFormatTooltip,
                     search: new SearchMetadata(uiLang.Format, Keywords: [kw.Skill, kw.Format])
                 )
-            )
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skill]))
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 }

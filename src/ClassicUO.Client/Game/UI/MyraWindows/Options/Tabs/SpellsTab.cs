@@ -20,18 +20,14 @@ public static class SpellsTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.EnableOverheadSpellFormat,
-                    new Accessor<bool>(() => profile.EnabledSpellFormat),
-                    search: new SearchMetadata(lang.EnableOverheadSpellFormat, Keywords: [kw.Format])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnabledSpellFormat), lang.EnableOverheadSpellFormat),
                 Option.InputField(
                     lang.SpellOverheadFormat,
                     new Accessor<string>(() => profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s),
                     search: new SearchMetadata(lang.SpellOverheadFormat, Keywords: [kw.Format])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(Tags: [kw.Spell], Keywords: [kw.Format])),
             Option.Checkbox(
                 lang.EnableOverheadSpellHue,
                 new Accessor<bool>(() => profile.EnabledSpellHue),
@@ -51,18 +47,14 @@ public static class SpellsTab
                 lang.SpellIconScale, 50, 300, new Accessor<float>(() => profile.SpellIconScale, f => profile.SpellIconScale = (int)f),
                 search: new SearchMetadata(lang.SpellIconScale, Keywords: [kw.Scale, kw.Size])
             ),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    lang.DisplayMatchingHotkeysOnSpellIcons,
-                    new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey),
-                    search: new SearchMetadata(lang.DisplayMatchingHotkeysOnSpellIcons, Keywords: [kw.Hotkey])
-                ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey), lang.DisplayMatchingHotkeysOnSpellIcons),
                 Option.HuePicker(
                     lang.HotkeyTextHue,
                     new Accessor<ushort>(() => profile.SpellIcon_HotkeyHue, h => profile.SpellIcon_HotkeyHue = h),
                     search: new SearchMetadata(lang.HotkeyTextHue, Keywords: [kw.Color, kw.Hue])
                 )
-            ),
+            ).WithSearch(new SearchMetadata(Tags: [kw.Spell], Keywords: [kw.Hotkey])),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = lang.SpellIndicators },
                 Option.Checkbox(

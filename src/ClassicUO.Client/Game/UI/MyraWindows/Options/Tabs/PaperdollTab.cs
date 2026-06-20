@@ -25,45 +25,43 @@ public class PaperdollTab
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = tuoLang.ModernPaperdoll, LabelLink = "https://tazuo.org/wiki/alternate-paperdoll/" },
-            Option.Checkbox(
-                tuoLang.EnableModernPaperdoll,
-                new Accessor<bool>(() => profile.UseModernPaperdoll),
-                search: new SearchMetadata(tuoLang.EnableModernPaperdoll, Keywords: [kw.Enable])
-            ),
-            Option.HuePicker(
-                tuoLang.PaperdollHue,
-                new Accessor<ushort>(() => profile.ModernPaperDollHue, newHue =>
-                {
-                    profile.ModernPaperDollHue = newHue;
-                    ModernPaperdoll.UpdateAllOptions();
-                }),
-                search: new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
-            ),
-            Option.HuePicker(
-                tuoLang.DurabilityBarHue,
-                new Accessor<ushort>(() => profile.ModernPaperDollDurabilityHue, newHue =>
-                {
-                    profile.ModernPaperDollDurabilityHue = newHue;
-                    ModernPaperdoll.UpdateAllOptions();
-                }),
-                search: new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
-            ),
-            Option.Slider(
-                tuoLang.ShowDurabilityBarBelow,
-                1,
-                100,
-                new Accessor<float>(() => profile.ModernPaperDoll_DurabilityPercent, f => profile.ModernPaperDoll_DurabilityPercent = (int)f),
-                search: new SearchMetadata(tuoLang.ShowDurabilityBarBelow, Keywords: [kw.Durability, kw.Bar, kw.Below])
-            ),
-            Option.Checkbox(
-                tuoLang.PaperdollAnchor,
-                new Accessor<bool>(() => profile.ModernPaperdollAnchorEnabled, newValue =>
-                {
-                    profile.ModernPaperdollAnchorEnabled = newValue;
-                    ModernPaperdoll.UpdateAllOptions();
-                }),
-                search: new SearchMetadata(tuoLang.PaperdollAnchor, Keywords: [kw.Anchor])
-            )
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.UseModernPaperdoll), tuoLang.EnableModernPaperdoll),
+                Option.HuePicker(
+                    tuoLang.PaperdollHue,
+                    new Accessor<ushort>(() => profile.ModernPaperDollHue, newHue =>
+                    {
+                        profile.ModernPaperDollHue = newHue;
+                        ModernPaperdoll.UpdateAllOptions();
+                    }),
+                    search: new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
+                ),
+                Option.HuePicker(
+                    tuoLang.DurabilityBarHue,
+                    new Accessor<ushort>(() => profile.ModernPaperDollDurabilityHue, newHue =>
+                    {
+                        profile.ModernPaperDollDurabilityHue = newHue;
+                        ModernPaperdoll.UpdateAllOptions();
+                    }),
+                    search: new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
+                ),
+                Option.Slider(
+                    tuoLang.ShowDurabilityBarBelow,
+                    1,
+                    100,
+                    new Accessor<float>(() => profile.ModernPaperDoll_DurabilityPercent, f => profile.ModernPaperDoll_DurabilityPercent = (int)f),
+                    search: new SearchMetadata(tuoLang.ShowDurabilityBarBelow, Keywords: [kw.Durability, kw.Bar, kw.Below])
+                ),
+                Option.Checkbox(
+                    tuoLang.PaperdollAnchor,
+                    new Accessor<bool>(() => profile.ModernPaperdollAnchorEnabled, newValue =>
+                    {
+                        profile.ModernPaperdollAnchorEnabled = newValue;
+                        ModernPaperdoll.UpdateAllOptions();
+                    }),
+                    search: new SearchMetadata(tuoLang.PaperdollAnchor, Keywords: [kw.Anchor])
+                )
+            ).WithSearch(new SearchMetadata(Tags: [kw.Paperdoll], Keywords: [kw.Enable]))
         );
     }
 }

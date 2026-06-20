@@ -15,9 +15,8 @@ public static class CountersTab
         ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionsUi.Vertical(
-            Option.Checkbox(
-                counterLang.EnableCounters,
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(
                 new Accessor<bool>(
                     () => profile.CounterBarEnabled,
                     b =>
@@ -42,12 +41,12 @@ public static class CountersTab
                         );
                     }
                 ),
-                search: new SearchMetadata(counterLang.EnableCounters, Keywords: [kw.Enable])
+                counterLang.EnableCounters
             ),
             GetAbbreviationGroup(),
             GetHighlightGroup(),
             GetLayoutGroup()
-        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter, kw.Reagent]));
+        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter, kw.Reagent], Keywords: [kw.Counter]));
     }
 
     private static OptionFragment GetAbbreviationGroup()
@@ -57,12 +56,8 @@ public static class CountersTab
         ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return OptionsUi.Vertical(
-            Option.Checkbox(
-                counterLang.AbbreviatedValues,
-                new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount),
-                search: new SearchMetadata(counterLang.AbbreviatedValues, Keywords: [kw.Abbreviate])
-            ),
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount), counterLang.AbbreviatedValues),
             Option.NumericInput(
                 counterLang.AbbreviateIfAmountExceeds,
                 new Accessor<int>(() => profile.CounterBarAbbreviatedAmount),
@@ -70,7 +65,7 @@ public static class CountersTab
                 max: 999999999,
                 search: new SearchMetadata(counterLang.AbbreviateIfAmountExceeds, Keywords: [kw.Abbreviate, kw.Amount, kw.Exceed])
             )
-        );
+        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter], Keywords: [kw.Abbreviate]));
     }
 
     private static OptionFragment GetHighlightGroup()
@@ -87,18 +82,16 @@ public static class CountersTab
                 new Accessor<bool>(() => profile.CounterBarHighlightOnUse),
                 search: new SearchMetadata(counterLang.HighlightItemsOnUse, Keywords: [kw.Highlight, kw.Item, kw.Use])
             ),
-            Option.Checkbox(
-                counterLang.HighlightRedWhenAmountIsLow,
-                new Accessor<bool>(() => profile.CounterBarHighlightOnAmount),
-                search: new SearchMetadata(counterLang.HighlightRedWhenAmountIsLow, Keywords: [kw.Highlight, kw.Amount, kw.Low])
-            ),
-            Option.NumericInput(
-                counterLang.HighlightRedIfAmountIsBelow,
-                new Accessor<int>(() => profile.CounterBarHighlightAmount),
-                min: 1,
-                max: 60000,
-                search: new SearchMetadata(counterLang.HighlightRedIfAmountIsBelow, Keywords: [kw.Highlight, kw.Amount, kw.Below])
-            )
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.CounterBarHighlightOnAmount), counterLang.HighlightRedWhenAmountIsLow),
+                Option.NumericInput(
+                    counterLang.HighlightRedIfAmountIsBelow,
+                    new Accessor<int>(() => profile.CounterBarHighlightAmount),
+                    min: 1,
+                    max: 60000,
+                    search: new SearchMetadata(counterLang.HighlightRedIfAmountIsBelow, Keywords: [kw.Highlight, kw.Amount, kw.Below])
+                )
+            ).WithSearch(new SearchMetadata(counterLang.SectionHighlightingLabel, Tags: [kw.Counter], Keywords: [kw.Highlight]))
         );
     }
 

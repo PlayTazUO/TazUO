@@ -78,12 +78,8 @@ public static class ChatTab
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
-        return OptionsUi.Vertical(
-            Option.Checkbox(
-                speechLang.ScaleSpeechDelay,
-                new Accessor<bool>(() => profile.ScaleSpeechDelay),
-                search: new SearchMetadata(speechLang.ScaleSpeechDelay)
-            ),
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(new Accessor<bool>(() => profile.ScaleSpeechDelay), speechLang.ScaleSpeechDelay),
             Option.Slider(
                 speechLang.SpeechDelay,
                 0,
@@ -91,7 +87,7 @@ public static class ChatTab
                 new Accessor<int>(() => profile.SpeechDelay),
                 search: new SearchMetadata(speechLang.SpeechDelay)
             )
-        );
+        ).WithSearch(new SearchMetadata(speechLang.ScaleSpeechDelay));
     }
 
     private static OptionFragment GetActivationSection()
@@ -100,12 +96,8 @@ public static class ChatTab
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
-        return OptionsUi.Vertical(
-            Option.Checkbox(
-                speechLang.ChatEnterActivation,
-                new Accessor<bool>(() => profile.ActivateChatAfterEnter),
-                search: new SearchMetadata(speechLang.ChatEnterActivation)
-            ),
+        return OptionsUi.CheckBoxGroup(
+            new PropertyBinder(new Accessor<bool>(() => profile.ActivateChatAfterEnter), speechLang.ChatEnterActivation),
             Option.Checkbox(
                 speechLang.ChatEnterSpecial,
                 new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
@@ -116,7 +108,7 @@ public static class ChatTab
                 new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
                 search: new SearchMetadata(speechLang.ShiftEnterChat)
             )
-        );
+        ).WithSearch(new SearchMetadata(speechLang.ChatEnterActivation));
     }
 
     private static OptionFragment GetColorSection()
