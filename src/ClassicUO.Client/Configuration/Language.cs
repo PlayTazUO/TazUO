@@ -693,7 +693,27 @@ namespace ClassicUO.Configuration
                 public string WhisperColor { get; set; } = "Whisper color";
                 public string GuildColor { get; set; } = "Guild color";
                 public string CharColor { get; set; } = "Chat color";
+
+                public string DisableOverheadMessages { get; set; } = "Disable Overhead Messages";
+                public string MessageTypeRegular { get; set; } = "Regular";
+                public string MessageTypeSystem { get; set; } = "System";
+                public string MessageTypeEmote { get; set; } = "Emote";
+                public string MessageTypeLimit3Spell { get; set; } = "Limit-3-Spell";
+                public string MessageTypeLabel { get; set; } = "Label";
+                public string MessageTypeFocus { get; set; } = "Focus";
+                public string MessageTypeWhisper { get; set; } = "Whisper";
+                public string MessageTypeYell { get; set; } = "Yell";
+                public string MessageTypeSpell { get; set; } = "Spell";
+                public string MessageTypeGuild { get; set; } = "Guild";
+                public string MessageTypeAlliance { get; set; } = "Alliance";
+                public string MessageTypeCommand { get; set; } = "Command";
+                public string MessageTypeEncoded { get; set; } = "Encoded";
+                public string MessageTypeChatSystem { get; set; } = "Chat System";
+                public string MessageTypeDamage { get; set; } = "Damage";
+                public string MessageTypeDiscord { get; set; } = "Discord";
+                public string MessageTypeParty { get; set; } = "Party";
             }
+
 
             public class JournalSection
             {

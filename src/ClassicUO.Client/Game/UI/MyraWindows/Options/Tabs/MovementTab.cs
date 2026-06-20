@@ -40,14 +40,14 @@ public static class MovementTab
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenDoors), moveLang.Doors.AutoOpenDoors),
                 Option.Checkbox(
-                    moveLang.Doors.AutoOpenHidden,
-                    new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
-                    search: new SearchMetadata(moveLang.Doors.AutoOpenHidden, Keywords: [kw.Door, kw.Hidden])
-                ),
-                Option.Checkbox(
                     moveLang.Doors.AutoOpenPathfinding,
                     new Accessor<bool>(() => profile.SmoothDoors),
                     search: new SearchMetadata(moveLang.Doors.AutoOpenPathfinding, Keywords: [kw.Door, kw.Pathfinding])
+                ),
+                Option.Checkbox(
+                    moveLang.Doors.AutoOpenHidden,
+                    new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
+                    search: new SearchMetadata(moveLang.Doors.AutoOpenHidden, Keywords: [kw.Door, kw.Hidden])
                 )
             ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Door])),
             Option.Checkbox(

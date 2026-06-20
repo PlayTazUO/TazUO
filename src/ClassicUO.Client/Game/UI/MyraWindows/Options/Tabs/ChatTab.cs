@@ -19,7 +19,7 @@ public static class ChatTab
         return new OptionTabGroup()
             .AddTab(
                 chatLang.Speech.Label,
-                GetSpeechSubTabContent,
+                SpeechTab.GetContent,
                 new SearchMetadata(chatLang.Speech.Label, Keywords: [kw.Speech, kw.Talk])
             )
             .AddTab(
@@ -33,109 +33,6 @@ public static class ChatTab
                 new SearchMetadata(chatLang.FontTab.FontsLabel, Keywords: [kw.Font, kw.Text, kw.Style])
             );
     }
-
-    #region Speech
-
-    private static IOptionSource GetSpeechSubTabContent()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
-
-        return OptionsUi.Vertical(
-            GetDelaySection(),
-            OptionsUi.Vertical(
-                Option.Checkbox(
-                    speechLang.ChatGradient,
-                    new Accessor<bool>(() => profile.HideChatGradient),
-                    search: new SearchMetadata(speechLang.ChatGradient)
-                ),
-                Option.Checkbox(
-                    speechLang.HideGuildChat,
-                    new Accessor<bool>(() => profile.IgnoreGuildMessages),
-                    search: new SearchMetadata(speechLang.HideGuildChat)
-                ),
-                Option.Checkbox(
-                    speechLang.HideAllianceChat,
-                    new Accessor<bool>(() => profile.IgnoreAllianceMessages),
-                    search: new SearchMetadata(speechLang.HideAllianceChat)
-                ),
-                Option.Checkbox(
-                    speechLang.DisableSystemChat,
-                    new Accessor<bool>(() => profile.DisableSystemChat),
-                    search: new SearchMetadata(speechLang.DisableSystemChat)
-                )
-            ),
-            GetActivationSection(),
-            GetColorSection()
-        ).WithSearch(new SearchMetadata(speechLang.Label, [kw.Speech, kw.Chat, kw.Text]));
-    }
-
-    private static OptionFragment GetDelaySection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-
-        return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ScaleSpeechDelay), speechLang.ScaleSpeechDelay),
-            Option.Slider(
-                speechLang.SpeechDelay,
-                0,
-                1000,
-                new Accessor<int>(() => profile.SpeechDelay),
-                search: new SearchMetadata(speechLang.SpeechDelay)
-            )
-        ).WithSearch(new SearchMetadata(speechLang.ScaleSpeechDelay));
-    }
-
-    private static OptionFragment GetActivationSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-
-        return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ActivateChatAfterEnter), speechLang.ChatEnterActivation),
-            Option.Checkbox(
-                speechLang.ChatEnterSpecial,
-                new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
-                search: new SearchMetadata(speechLang.ChatEnterSpecial)
-            ),
-            Option.Checkbox(
-                speechLang.ShiftEnterChat,
-                new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
-                search: new SearchMetadata(speechLang.ShiftEnterChat)
-            )
-        ).WithSearch(new SearchMetadata(speechLang.ChatEnterActivation));
-    }
-
-    private static OptionFragment GetColorSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-
-        return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = speechLang.ColorsSection },
-            Option.HuePicker(speechLang.SpeechColor, new Accessor<ushort>(() => profile.SpeechHue, h => profile.SpeechHue = h),
-                new SearchMetadata(speechLang.SpeechColor)),
-            Option.HuePicker(
-                speechLang.YellColor,
-                new Accessor<ushort>(() => profile.YellHue, h => profile.YellHue = h),
-                new SearchMetadata(speechLang.YellColor)
-            ),
-            Option.HuePicker(speechLang.PartyColor, new Accessor<ushort>(() => profile.PartyMessageHue), new SearchMetadata(speechLang.PartyColor)),
-            Option.HuePicker(speechLang.AllianceColor, new Accessor<ushort>(() => profile.AllyMessageHue), new SearchMetadata(speechLang.AllianceColor)),
-            Option.HuePicker(speechLang.EmoteColor, new Accessor<ushort>(() => profile.EmoteHue), new SearchMetadata(speechLang.EmoteColor)),
-            Option.HuePicker(speechLang.WhisperColor, new Accessor<ushort>(() => profile.WhisperHue), new SearchMetadata(speechLang.WhisperColor)),
-            Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue), new SearchMetadata(speechLang.GuildColor)),
-            Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue), new SearchMetadata(speechLang.CharColor))
-        );
-    }
-
-    #endregion
 
     #region Journal
 

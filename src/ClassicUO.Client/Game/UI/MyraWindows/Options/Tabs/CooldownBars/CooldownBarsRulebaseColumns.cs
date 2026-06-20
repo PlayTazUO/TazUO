@@ -1,6 +1,7 @@
 using System;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D.UI;
@@ -12,6 +13,7 @@ internal static partial class CooldownBarsTab
     private static RulebaseColumn<CooldownBarRule>[] GetRulebaseColumns()
     {
         ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
+        ModernOptionsGumpLanguage.KeywordsLang kwLang = Language.Instance.GetModernOptionsGumpLanguage.Kw;
         return
         [
             new RulebaseColumn<CooldownBarRule>
@@ -68,8 +70,17 @@ internal static partial class CooldownBarsTab
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.TriggerMessage,
-                Proportion = new Proportion(ProportionType.Fill),
+                Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.TriggerMessage))
+            },
+            new RulebaseColumn<CooldownBarRule>
+            {
+                Header = kwLang.Preview,
+                Proportion = new Proportion(ProportionType.Fill),
+                CellFactory = rule => new BasicButton(() =>
+                {
+                    CoolDownBarManager.AddCoolDownBar(World.Instance, TimeSpan.FromSeconds(rule.Cooldown), rule.Name, rule.Hue, true);
+                }) { Width = 45, Height = 18 }
             }
         ];
     }

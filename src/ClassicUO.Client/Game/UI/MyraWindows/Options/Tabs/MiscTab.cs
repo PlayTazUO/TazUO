@@ -15,17 +15,18 @@ public static class MiscTab
         ModernOptionsGumpLanguage.MiscTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
 
         return new OptionTabGroup()
-            .AddTab(lang.GeneralLabel, GetPage1, new SearchMetadata(lang.GeneralLabel))
-            .AddTab(lang.InteractionLabel, GetPage2, new SearchMetadata(lang.InteractionLabel))
-            .AddTab(lang.AdvancedLabel, GetPage3, new SearchMetadata(lang.AdvancedLabel));
+            .AddTab(lang.GeneralLabel, GetGeneralPage, new SearchMetadata(lang.GeneralLabel))
+            .AddTab(lang.InteractionLabel, GetInteractionPage, new SearchMetadata(lang.InteractionLabel))
+            .AddTab(lang.AdvancedLabel, GetAdvancedPage, new SearchMetadata(lang.AdvancedLabel));
     }
 
-    private static IOptionSource GetPage1()
+    private static IOptionSource GetGeneralPage()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+        UiCommonsLanguage uiLang = Language.Instance.UiCommons;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
@@ -80,6 +81,15 @@ public static class MiscTab
                     search: new SearchMetadata(genLang.ChangeVolume, Keywords: [kw.Skills, kw.Volume])
                 )
             ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skills])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
+                Option.InputField(
+                    uiLang.Format,
+                    new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
+                    miscLang.SkillProgressBarFormatTooltip,
+                    search: new SearchMetadata(uiLang.Format, Keywords: [kw.Skill, kw.Format])
+                )
+            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skill])),
             Option.Checkbox(
                 genLang.ShiftContext,
                 new Accessor<bool>(() => profile.HoldShiftForContext),
@@ -93,7 +103,7 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 
-    private static IOptionSource GetPage2()
+    private static IOptionSource GetInteractionPage()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
@@ -152,6 +162,18 @@ public static class MiscTab
                 genLang.ClientVersionLimitedTooltip,
                 search: new SearchMetadata(genLang.SmoothBoat, Keywords: [kw.Boat, kw.Smooth])
             ),
+            Option.ComboBox(
+                genLang.GridLoot,
+                profile.GridLootType,
+                [
+                    genLang.GridLootOptDisable,
+                    genLang.GridLootOptOnly,
+                    genLang.GridLootOptBoth
+                ],
+                newValue => profile.GridLootType = newValue,
+                genLang.GridLootOptOnlyTooltip,
+                new SearchMetadata(genLang.GridLoot, Keywords: [kw.Grid, kw.Loot])
+            ),
             GetExperimentalSection()
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
@@ -193,7 +215,7 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(expLang.Label, Keywords: [kw.Experimental, kw.Beta, kw.Test], Tags: [kw.Experimental]));
     }
 
-    private static IOptionSource GetPage3()
+    private static IOptionSource GetAdvancedPage()
     {
         Profile profile = ProfileManager.CurrentProfile;
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
@@ -245,16 +267,7 @@ public static class MiscTab
                         search: new SearchMetadata(uiLang.Hue, Keywords: [kw.House, kw.Hue])
                     )
                 ).WithSearch(new SearchMetadata(miscLang.HousingTransparency, Tags: [kw.Misc], Keywords: [kw.House, kw.Transparency]))
-            ),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
-                Option.InputField(
-                    uiLang.Format,
-                    new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
-                    miscLang.SkillProgressBarFormatTooltip,
-                    search: new SearchMetadata(uiLang.Format, Keywords: [kw.Skill, kw.Format])
-                )
-            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skill]))
+            )
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 }
