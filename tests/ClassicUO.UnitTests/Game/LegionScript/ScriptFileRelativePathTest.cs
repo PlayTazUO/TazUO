@@ -50,5 +50,14 @@ namespace ClassicUO.UnitTests.Game.LegionScript
             ScriptFile.ToRelativeId(Root, "D:/elsewhere/C:/uo/LegionScripts/x.py")
                 .Should().Be("D:/elsewhere/C:/uo/LegionScripts/x.py");
         }
+
+        [Fact]
+        public void SiblingDirSharingRootPrefix_NotStripped()
+        {
+            // A sibling dir whose name merely shares the root as a string prefix
+            // (LegionScripts2) must NOT be stripped — only a real path-segment boundary counts.
+            ScriptFile.ToRelativeId(Root, "C:/uo/LegionScripts2/loot.py")
+                .Should().Be("C:/uo/LegionScripts2/loot.py");
+        }
     }
 }

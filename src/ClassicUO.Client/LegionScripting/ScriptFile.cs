@@ -48,10 +48,17 @@ public partial class ScriptFile : IDisposable
             return string.Empty;
 
         string full = fullPath.Replace('\\', '/');
-        string root = (scriptRoot ?? string.Empty).Replace('\\', '/');
+        string root = (scriptRoot ?? string.Empty).Replace('\\', '/').TrimEnd('/');
 
-        if (root.Length > 0 && full.StartsWith(root, System.StringComparison.Ordinal))
-            full = full.Substring(root.Length);
+        // Strip the root only on a path-segment boundary, so a sibling dir that merely shares
+        // the root as a string prefix (e.g. ".../LegionScripts2/...") is not stripped.
+        if (root.Length > 0)
+        {
+            if (full.Equals(root, System.StringComparison.Ordinal))
+                full = string.Empty;
+            else if (full.StartsWith(root + "/", System.StringComparison.Ordinal))
+                full = full.Substring(root.Length);
+        }
 
         return full.TrimStart('/');
     }

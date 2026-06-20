@@ -488,7 +488,8 @@ public class SpellBar : Gump
             foreach (ScriptFile s in ClassicUO.LegionScripting.LegionScripting.LoadedScripts)
             {
                 ScriptFile script = s;
-                parent.Add(new ContextMenuItemEntry(script.FileName, () =>
+                // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups are distinguishable.
+                parent.Add(new ContextMenuItemEntry(script.RelativePath, () =>
                 {
                     SetSlot(SpellBarSlot.FromScript(script), row, col);
                 }));
