@@ -22,13 +22,19 @@ public static class SelfHealTabContent
 
         root.Widgets.Add(new MyraLabel("Self Heal", MyraLabel.TextStyle.H2));
         root.Widgets.Add(new MyraLabel(
-            "Hold the bound key to cast Heal on yourself (Cure when poisoned). Release to stop.",
+            "Hold the bound key to heal yourself (cure when poisoned). Release to stop.",
             MyraLabel.TextStyle.P));
 
         root.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.SelfHeal_Enabled,
             b => profile.SelfHeal_Enabled = b,
             "Enable self heal", "Enable or disable the hold-to-heal hotkey"));
+
+        root.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.SelfHeal_UseChivalry,
+            b => profile.SelfHeal_UseChivalry = b,
+            "Use Chivalry (Close Wounds / Cleanse by Fire)",
+            "Off = Magery (Heal / Cure). On = Chivalry: Close Wounds to heal, Cleanse by Fire to cure poison."));
 
         string KeyDisplay()
         {

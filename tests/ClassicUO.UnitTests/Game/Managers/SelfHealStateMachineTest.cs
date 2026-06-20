@@ -14,6 +14,8 @@ namespace ClassicUO.UnitTests.Game.Managers
             public bool IsPoisoned { get; set; }
             public bool IsTargetingAfterCast { get; set; }
             public bool IsCasting { get; set; }
+            public int HealSpellId { get; set; } = SelfHealStateMachine.MageryHealSpellId;
+            public int CureSpellId { get; set; } = SelfHealStateMachine.MageryCureSpellId;
             public long RecastDelayMs { get; set; } = SelfHealStateMachine.DefaultRecastDelayMs;
             public long CastStartGraceMs { get; set; } = SelfHealStateMachine.DefaultCastStartGraceMs;
             public long CureVerifyMs { get; set; } = SelfHealStateMachine.DefaultCureVerifyMs;
@@ -32,7 +34,7 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             sm.Tick(env, held: true);
 
-            env.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.HealSpellId);
+            env.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.MageryHealSpellId);
         }
 
         [Fact]
@@ -43,7 +45,7 @@ namespace ClassicUO.UnitTests.Game.Managers
 
             sm.Tick(env, held: true);
 
-            env.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.CureSpellId);
+            env.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.MageryCureSpellId);
         }
 
         [Fact]
@@ -129,7 +131,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             env.IsTargetingAfterCast = false;
             sm.Tick(env, held: true);            // Idle + held + not poisoned -> Heal
 
-            env.Casts.Should().Equal(SelfHealStateMachine.CureSpellId, SelfHealStateMachine.HealSpellId);
+            env.Casts.Should().Equal(SelfHealStateMachine.MageryCureSpellId, SelfHealStateMachine.MageryHealSpellId);
         }
 
         [Fact]
@@ -148,7 +150,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             env.IsTargetingAfterCast = false;
             sm.Tick(env, held: true);            // Idle + held + still poisoned -> Cure again
 
-            env.Casts.Should().Equal(SelfHealStateMachine.CureSpellId, SelfHealStateMachine.CureSpellId);
+            env.Casts.Should().Equal(SelfHealStateMachine.MageryCureSpellId, SelfHealStateMachine.MageryCureSpellId);
         }
 
         [Fact]
@@ -202,6 +204,27 @@ namespace ClassicUO.UnitTests.Game.Managers
             sm.Tick(env, held: true);
 
             env.Casts.Should().HaveCount(1);     // still waiting, no premature recast
+        }
+
+        [Fact]
+        public void ChivalrySpellIds_CastCloseWoundsAndCleanseByFire()
+        {
+            var heal = new FakeEnv
+            {
+                HealSpellId = SelfHealStateMachine.ChivalryHealSpellId,
+                CureSpellId = SelfHealStateMachine.ChivalryCureSpellId,
+            };
+            new SelfHealStateMachine().Tick(heal, held: true);
+            heal.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.ChivalryHealSpellId); // Close Wounds
+
+            var cure = new FakeEnv
+            {
+                IsPoisoned = true,
+                HealSpellId = SelfHealStateMachine.ChivalryHealSpellId,
+                CureSpellId = SelfHealStateMachine.ChivalryCureSpellId,
+            };
+            new SelfHealStateMachine().Tick(cure, held: true);
+            cure.Casts.Should().ContainSingle().Which.Should().Be(SelfHealStateMachine.ChivalryCureSpellId); // Cleanse by Fire
         }
     }
 }

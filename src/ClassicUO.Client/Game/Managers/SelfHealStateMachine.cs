@@ -8,6 +8,8 @@ namespace ClassicUO.Game.Managers
         bool IsPoisoned { get; }
         bool IsTargetingAfterCast { get; }   // a post-cast target cursor is up
         bool IsCasting { get; }              // a spell cast is currently in progress
+        int HealSpellId { get; }             // spell to cast for healing (Magery Heal / Chivalry Close Wounds)
+        int CureSpellId { get; }             // spell to cast to cure poison (Magery Cure / Chivalry Cleanse by Fire)
         long RecastDelayMs { get; }          // pad after a successful heal before the next cast ("recuperation")
         long CastStartGraceMs { get; }       // how long a cast may take to register before we treat it as failed
         long CureVerifyMs { get; }           // how long to wait for poison to clear before recasting Cure
@@ -29,8 +31,11 @@ namespace ClassicUO.Game.Managers
     /// </summary>
     public sealed class SelfHealStateMachine
     {
-        public const int HealSpellId = 4;     // Magery: Heal
-        public const int CureSpellId = 11;    // Magery: Cure
+        // Spell ids (the global cast ids GameActions.CastSpell expects).
+        public const int MageryHealSpellId = 4;       // Magery: Heal
+        public const int MageryCureSpellId = 11;      // Magery: Cure
+        public const int ChivalryHealSpellId = 202;   // Chivalry: Close Wounds
+        public const int ChivalryCureSpellId = 201;   // Chivalry: Cleanse by Fire
 
         // Defaults for the configurable timings (all overridable via ISelfHealEnv).
         public const long DefaultRecastDelayMs = 50;       // pad after a successful heal
@@ -64,7 +69,7 @@ namespace ClassicUO.Game.Managers
                     {
                         _lastCastWasCure = env.IsPoisoned;
                         _castStarted = false;
-                        env.Cast(_lastCastWasCure ? CureSpellId : HealSpellId);
+                        env.Cast(_lastCastWasCure ? env.CureSpellId : env.HealSpellId);
                         _stallUntil = env.Now + env.CastStartGraceMs;
                         _state = State.WaitingForCursor;
                     }

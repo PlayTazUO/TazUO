@@ -141,6 +141,14 @@ namespace ClassicUO.Game.Managers
 
             public bool IsCasting => Client.Game?.UO?.World?.Player?.IsCasting ?? false;
 
+            private static bool UseChivalry => ProfileManager.CurrentProfile?.SelfHeal_UseChivalry ?? false;
+
+            public int HealSpellId =>
+                UseChivalry ? SelfHealStateMachine.ChivalryHealSpellId : SelfHealStateMachine.MageryHealSpellId;
+
+            public int CureSpellId =>
+                UseChivalry ? SelfHealStateMachine.ChivalryCureSpellId : SelfHealStateMachine.MageryCureSpellId;
+
             public bool IsTargetingAfterCast
             {
                 get
