@@ -42,5 +42,13 @@ namespace ClassicUO.UnitTests.Game.LegionScript
         {
             ScriptFile.ToRelativeId(Root, "").Should().BeEmpty();
         }
+
+        [Fact]
+        public void RootMatchedAsPrefixOnly_NotMidPath()
+        {
+            // The root appears mid-path, not as a prefix, so nothing should be stripped.
+            ScriptFile.ToRelativeId(Root, "D:/elsewhere/C:/uo/LegionScripts/x.py")
+                .Should().Be("D:/elsewhere/C:/uo/LegionScripts/x.py");
+        }
     }
 }

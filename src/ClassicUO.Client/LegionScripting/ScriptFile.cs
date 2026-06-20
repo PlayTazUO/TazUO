@@ -50,9 +50,8 @@ public partial class ScriptFile : IDisposable
         string full = fullPath.Replace('\\', '/');
         string root = (scriptRoot ?? string.Empty).Replace('\\', '/');
 
-        int i = root.Length > 0 ? full.IndexOf(root, System.StringComparison.Ordinal) : -1;
-        if (i >= 0)
-            full = full.Substring(i + root.Length);
+        if (root.Length > 0 && full.StartsWith(root, System.StringComparison.Ordinal))
+            full = full.Substring(root.Length);
 
         return full.TrimStart('/');
     }
