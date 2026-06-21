@@ -8,19 +8,22 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 public static class MiscTab
 {
-    internal static IOptionSource GetContent() => GetTabs();
+    internal static IOptionSource GetContent() => GetPages();
 
-    private static OptionTabGroup GetTabs()
+    private static OptionPageGroup GetPages()
     {
         ModernOptionsGumpLanguage.MiscTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        return new OptionTabGroup()
-            .AddTab(lang.GeneralLabel, GetGeneralPage, new SearchMetadata(lang.GeneralLabel))
-            .AddTab(lang.InteractionLabel, GetInteractionPage, new SearchMetadata(lang.InteractionLabel))
-            .AddTab(lang.AdvancedLabel, GetAdvancedPage, new SearchMetadata(lang.AdvancedLabel));
+        return new OptionPageGroup(
+            new SearchMetadata(Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]),
+            GetPage1,
+            GetPage2,
+            GetPage3
+        );
     }
 
-    private static IOptionSource GetGeneralPage()
+    private static IOptionSource GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
@@ -103,7 +106,7 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 
-    private static IOptionSource GetInteractionPage()
+    private static IOptionSource GetPage2()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
@@ -215,7 +218,7 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(expLang.Label, Keywords: [kw.Experimental, kw.Beta, kw.Test], Tags: [kw.Experimental]));
     }
 
-    private static IOptionSource GetAdvancedPage()
+    private static IOptionSource GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
         UiCommonsLanguage uiLang = Language.Instance.UiCommons;
