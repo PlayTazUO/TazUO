@@ -284,6 +284,7 @@ namespace ClassicUO.Game.Managers
             Register("organizer", s => OrganizerAgent.Instance?.OrganizerCommand(s));
             Register("organizerlist", s => OrganizerAgent.Instance?.ListOrganizers());
             Register("test", s => UIManager.Add(new OptionsWindow()));
+            Register("old-options-window", s => GameActions.ShowNewOptionsGump());
             Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));

@@ -15,11 +15,12 @@ using ClassicUO.LegionScripting;
 using ClassicUO.Network;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using static ClassicUO.Network.AsyncNetClient;
 
 namespace ClassicUO.Game;
+
+using NewOptionsWindow = UI.MyraWindows.Options.OptionsWindow;
 
 internal static class GameActions
 {
@@ -178,6 +179,32 @@ internal static class GameActions
     }
 
     internal static void OpenSettings(World world, int page = 0)
+    {
+        // Default to new window if unset
+        if (ProfileManager.CurrentProfile?.UseNewOptionsWindow == false)
+            ShowLegacyOptionsGump(world, page);
+        else
+            ShowNewOptionsGump();
+    }
+
+    /// <summary>
+    /// Creates or opens the new options window
+    /// </summary>
+    public static void ShowNewOptionsGump()
+    {
+        NewOptionsWindow existing = UIManager.GetGump<NewOptionsWindow>();
+        if (existing == null)
+            UIManager.Add(new NewOptionsWindow());
+        else
+            existing.BringOnTop();
+    }
+
+    /// <summary>
+    /// Creates or opens the legacy options window
+    /// </summary>
+    /// <param name="world">The world instance the gump belongs to</param>
+    /// <param name="page">The specific page to open</param>
+    private static void ShowLegacyOptionsGump(World world, int page = 0)
     {
         ModernOptionsGump opt = UIManager.GetGump<ModernOptionsGump>();
 
