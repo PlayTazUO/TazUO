@@ -3,7 +3,6 @@
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Network
@@ -49,8 +48,6 @@ namespace ClassicUO.Network
         /// </summary>
         private void SetCapacity(int capacity)
         {
-            Profiler.EnterContext("BUFFER_RESIZE");
-
             int oldCapacity = _buffer.Length;
             if (capacity > oldCapacity * 2)
             {
@@ -79,8 +76,6 @@ namespace ClassicUO.Network
 
             // Return old buffer to pool
             ArrayPool<byte>.Shared.Return(oldBuffer);
-
-            Profiler.ExitContext("BUFFER_RESIZE");
         }
 
         public void Enqueue(Span<byte> buffer) => Enqueue(buffer, 0, buffer.Length);
