@@ -47,6 +47,14 @@ namespace ClassicUO.Game.UI.Gumps
                 IsSelectable = false
             };
             Add(resetButton);
+
+            var copyButton = new NiceButton(270, y, 110, 22, ButtonAction.Activate, "Copy Output")
+            {
+                ButtonParameter = 3,
+                DisplayBorder = true,
+                IsSelectable = false
+            };
+            Add(copyButton);
             y += 30;
 
             var scrollArea = new ScrollArea(0, y, WIDTH, HEIGHT - y - 5, true);
@@ -77,7 +85,39 @@ namespace ClassicUO.Game.UI.Gumps
                 case 2:
                     Profiler.Reset();
                     break;
+                case 3:
+                    CopyToClipboard();
+                    break;
             }
+        }
+
+        private static void CopyToClipboard()
+        {
+            List<Profiler.ProfileData> data = Profiler.AllFrameData
+                .OrderByDescending(pd => pd.AverageTime)
+                .ToList();
+
+            if (data.Count == 0)
+            {
+                Clipboard.SetClipboardText("No profiler data available.");
+                return;
+            }
+
+            double totalAvg = data.Sum(pd => pd.AverageTime);
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("TazUO Profiler Output");
+            sb.AppendLine($"{"Context",-30}  {"Avg(ms)",7}  {"Last(ms)",8}  {"% Total",7}");
+            sb.AppendLine(new string('-', 60));
+
+            foreach (Profiler.ProfileData pd in data)
+            {
+                string name = string.Join(" > ", pd.Context);
+                double pct = totalAvg > 0 ? 100.0 * pd.AverageTime / totalAvg : 0.0;
+                sb.AppendLine($"{name,-30}  {pd.AverageTime,7:F2}  {pd.LastTime,8:F2}  {pct,6:F1}%");
+            }
+
+            Clipboard.SetClipboardText(sb.ToString());
         }
 
         public override void Update()
