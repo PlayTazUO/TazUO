@@ -12,7 +12,6 @@ public static class MiscTab
 
     private static OptionPageGroup GetPages()
     {
-        ModernOptionsGumpLanguage.MiscTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return new OptionPageGroup(

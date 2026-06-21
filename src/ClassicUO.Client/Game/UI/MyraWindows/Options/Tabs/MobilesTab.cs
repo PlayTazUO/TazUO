@@ -51,7 +51,7 @@ public static class MobilesTab
                     i => profile.MobileHPShowWhen = i,
                     search: new SearchMetadata(lang.HPShowWhen, Keywords: [kw.HP, kw.Health, kw.Show])
                 )
-            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.HP, kw.Health])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.HP, kw.Health])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByPoisoned), lang.HighlightPoisoned),
                 Option.HuePicker(
@@ -59,7 +59,7 @@ public static class MobilesTab
                     new Accessor<ushort>(() => profile.PoisonHue, h => profile.PoisonHue = h),
                     search: new SearchMetadata(genLang.PoisonHighlightColor, Keywords: [kw.Poison, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Poison])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Poison])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByParalize), lang.HighlightPara),
                 Option.HuePicker(
@@ -67,7 +67,7 @@ public static class MobilesTab
                     new Accessor<ushort>(() => profile.ParalyzedHue, h => profile.ParalyzedHue = h),
                     search: new SearchMetadata(genLang.ParaHighlightColor, Keywords: [kw.Paralyze, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Paralyze])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Paralyze])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByInvul), lang.HighlightInvul),
                 Option.HuePicker(
@@ -75,7 +75,7 @@ public static class MobilesTab
                     new Accessor<ushort>(() => profile.InvulnerableHue, h => profile.InvulnerableHue = h),
                     search: new SearchMetadata(genLang.InvulHighlightColor, Keywords: [kw.Invulnerable, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Highlight, kw.Invulnerable])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Invulnerable])),
             Option.Checkbox(
                 lang.IncomingMobiles,
                 new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
@@ -105,7 +105,7 @@ public static class MobilesTab
                     new Accessor<ushort>(() => profile.PartyAuraHue, h => profile.PartyAuraHue = h),
                     search: new SearchMetadata(genLang.AuraPartyColor, Keywords: [kw.Aura, kw.Party, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(mobLang.Label, Tags: [kw.Mobile], Keywords: [kw.Aura, kw.Party]))
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Aura, kw.Party]))
         ).WithSearch(new SearchMetadata(lang.Label, Tags: [kw.Mobile, kw.Health]));
     }
 
@@ -164,6 +164,6 @@ public static class MobilesTab
                 new Accessor<ushort>(() => profile.EnemyHue, b => profile.EnemyHue = b),
                 search: new SearchMetadata(combatLang.Spells.Enemy, Keywords: [kw.Notoriety, kw.Enemy])
             )
-        ).WithSearch(new SearchMetadata(mobLang.Hues.Label, Tags: [kw.Mobile, kw.Health]));
+        ).WithSearch(new SearchMetadata(mobLang.Hues.Label, Tags: [kw.Mobile, kw.Notoriety]));
     }
 }

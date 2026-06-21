@@ -40,7 +40,7 @@ internal static class GumpsTab
                 lang.OriginalSkillsGump,
                 new Accessor<bool>(() => profile.StandardSkillsGump),
                 null,
-                new SearchMetadata(lang.OriginalSkillsGump, Keywords: [kw.Move, kw.Alt])
+                new SearchMetadata(lang.OriginalSkillsGump, Keywords: [kw.Skill, kw.Old, kw.Original])
             ),
             Option.Checkbox(
                 lang.OldStatusGump,

@@ -11,7 +11,6 @@ public static class MovementTab
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.MovementTabLang moveLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
@@ -73,6 +72,6 @@ public static class MovementTab
                     )
                 ).WithSearch(new SearchMetadata(moveLang.Controller.Label, Tags: [kw.Movement], Keywords: [kw.Controller]))
             )
-        ).WithSearch(new SearchMetadata(moveLang.Label, Keywords: [kw.Movement, kw.Pathfinding, kw.WASD, kw.Move], Tags: [kw.Movement]));
+        ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement]));
     }
 }

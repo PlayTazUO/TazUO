@@ -27,7 +27,7 @@ public static class SpellsTab
                     new Accessor<string>(() => profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s),
                     search: new SearchMetadata(lang.SpellOverheadFormat, Keywords: [kw.Format])
                 )
-            ).WithSearch(new SearchMetadata(Tags: [kw.Spell], Keywords: [kw.Format])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Format])),
             Option.Checkbox(
                 lang.EnableOverheadSpellHue,
                 new Accessor<bool>(() => profile.EnabledSpellHue),
@@ -54,7 +54,7 @@ public static class SpellsTab
                     new Accessor<ushort>(() => profile.SpellIcon_HotkeyHue, h => profile.SpellIcon_HotkeyHue = h),
                     search: new SearchMetadata(lang.HotkeyTextHue, Keywords: [kw.Color, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(Tags: [kw.Spell], Keywords: [kw.Hotkey])),
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Hotkey])),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = lang.SpellIndicators },
                 Option.Checkbox(
@@ -68,7 +68,7 @@ public static class SpellsTab
                     search: new SearchMetadata(lang.ImportIndicatorsFromUrl, Keywords: [kw.Import, kw.Download])
                 )
             )
-        ).WithSearch(new SearchMetadata(lang.SpellLabel, Keywords: [kw.Spell, kw.Magic, kw.Cast], Tags: [kw.Spell, kw.Magic]));
+        ).WithSearch(new SearchMetadata(lang.SpellLabel, Tags: [kw.Spell, kw.Magic]));
     }
 
     private static void OpenConfigDownloadModal()

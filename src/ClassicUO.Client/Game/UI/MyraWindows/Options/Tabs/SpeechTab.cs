@@ -129,8 +129,6 @@ internal static class SpeechTab
     private static OptionFragment CreateMessageTypeCheckboxes()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.Speech;
 
         MessageType[] messageTypes = Enum.GetValues<MessageType>();
 

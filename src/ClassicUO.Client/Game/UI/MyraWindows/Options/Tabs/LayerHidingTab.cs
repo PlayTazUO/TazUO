@@ -31,7 +31,7 @@ public static class LayerHidingTab
             Option.Spacer(),
             Option.Custom(() => new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P), new SearchMetadata(lang.HideFollowingLayers)),
             GetLayerBoxesFragment()
-        ).WithSearch(new SearchMetadata(lang.Label, Keywords: [kw.Layer, kw.Hide, kw.Equipment, kw.Clothing], Tags: [kw.Layer, kw.Hide]));
+        ).WithSearch(new SearchMetadata(lang.Label, Tags: [kw.Layer, kw.Hide]));
     }
 
     private static OptionFragment GetLayerBoxesFragment()
@@ -83,11 +83,20 @@ public static class LayerHidingTab
 
                 return panel;
             },
-            relevantLayers.Select(layer => (OptionContent)Option.Checkbox(layer.ToString(), profile.HiddenLayers.Contains((int)layer), b =>
-            {
-                if (b) profile.HiddenLayers.Add((int)layer);
-                else profile.HiddenLayers.Remove((int)layer);
-            }, search: new SearchMetadata(layer.ToString(), Keywords: [kw.Layer])))
+            relevantLayers.Select(layer => (OptionContent)Option.Checkbox(
+                layer.ToString(),
+                new Accessor<bool>(
+                    () => profile.HiddenLayers.Contains((int)layer),
+                    enabled =>
+                    {
+                        if (enabled)
+                            profile.HiddenLayers.Add((int)layer);
+                        else
+                            profile.HiddenLayers.Remove((int)layer);
+                    }
+                ),
+                search: new SearchMetadata(layer.ToString(), Keywords: [kw.Layer])
+            ))
         );
     }
 }
