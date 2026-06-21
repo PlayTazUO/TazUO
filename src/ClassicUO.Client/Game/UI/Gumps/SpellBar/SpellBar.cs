@@ -41,6 +41,8 @@ public class SpellBar : Gump
         Build();
 
         EventSink.SpellCastBegin += EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted += OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped += OnScriptStopped;
     }
 
     private void EventSinkOnSpellCastBegin(object sender, int e)
@@ -48,6 +50,18 @@ public class SpellBar : Gump
         foreach (SpellEntry entry in spellEntries)
             if (entry.CurrentSpellID == e)
                 entry.BeginTrackingCasting();
+    }
+
+    private void OnScriptStarted(object sender, ScriptFile e) => UpdateScriptHighlights(e, true);
+    private void OnScriptStopped(object sender, ScriptFile e) => UpdateScriptHighlights(e, false);
+
+    private void UpdateScriptHighlights(ScriptFile script, bool running)
+    {
+        if (script == null)
+            return;
+
+        foreach (SpellEntry entry in spellEntries)
+            entry.SetScriptRunning(script.RelativePath, running);
     }
 
     public override GumpType GumpType { get; } = GumpType.SpellBar;
@@ -209,6 +223,8 @@ public class SpellBar : Gump
     {
         base.Dispose();
         EventSink.SpellCastBegin -= EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted -= OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped -= OnScriptStopped;
     }
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -252,6 +268,7 @@ public class SpellBar : Gump
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
+        private bool scriptRunning;
         private World World;
         private Gump parentGump;
         private TextBox hotkeyLabel;
@@ -285,6 +302,10 @@ public class SpellBar : Gump
 
             icon.Hue = 0; // Draw() re-applies the active highlight for ability slots
             SetMacroLabel();
+
+            // Seed the script running-highlight once at assignment (events keep it updated thereafter).
+            scriptRunning = this.slot.IsScriptRunning;
+            ApplyScriptHighlight();
 
             if (!this.slot.IsEmpty)
             {
@@ -575,16 +596,27 @@ public class SpellBar : Gump
 
         private void resetStates() => trackCasting = false;
 
+        /// <summary>
+        /// Updates this slot's running highlight when its script starts/stops. Driven by
+        /// LegionScripting's ScriptStarted/ScriptStopped events, so there is no per-frame scan.
+        /// </summary>
+        public void SetScriptRunning(string scriptId, bool running)
+        {
+            if (slot == null || slot.Type != SpellBarSlotType.Script || slot.ScriptId != scriptId)
+                return;
+
+            scriptRunning = running;
+            ApplyScriptHighlight();
+        }
+
+        private void ApplyScriptHighlight()
+        {
+            const ushort runningHue = 0x0044; // green tint while the script runs
+            background.Hue = scriptRunning ? runningHue : SpellBarManager.SpellBarRows[row].RowHue;
+        }
+
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
-            if (slot != null && slot.Type == SpellBarSlotType.Script)
-            {
-                const ushort runningHue = 0x0044; // green tint while the script runs
-                ushort wanted = slot.IsScriptRunning ? runningHue : SpellBarManager.SpellBarRows[row].RowHue;
-                if (background.Hue != wanted)
-                    background.Hue = wanted;
-            }
-
             if (slot != null && slot.Type == SpellBarSlotType.Ability)
             {
                 // The active primary/secondary ability follows the equipped weapon, so keep icon/hue/tooltip in sync.
