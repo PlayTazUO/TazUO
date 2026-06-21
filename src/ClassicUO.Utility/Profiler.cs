@@ -157,6 +157,13 @@ namespace ClassicUO.Utility
             return ProfileData.Empty;
         }
 
+        public static void Reset()
+        {
+            m_AllFrameData.Clear();
+            m_ThisFrameData.Clear();
+            m_Context.Clear();
+        }
+
         public class ProfileData
         {
             public static ProfileData Empty = new ProfileData(null, 0d);
