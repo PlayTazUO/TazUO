@@ -13,6 +13,7 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     private Widget? _cachedWidget;
 
     public SearchMetadata? Search { get; init; } = search;
+    public bool InheritsSearch { get; set; } = true;
 
     public OptionPageGroup(SearchMetadata? search, params Func<IOptionSource>[] pages) : this(search)
     {
@@ -30,21 +31,26 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
 
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
-        var merged = SearchMetadata.Merge(Search, search);
+        SearchMetadata? finalSearch = GetSearchMeta(search);
+        if (finalSearch == null)
+            yield break;
 
         foreach (OptionPageDefinition page in _pages)
-            foreach (OptionEntry entry in page.ContentFactory().Match(merged))
+            foreach (OptionEntry entry in page.ContentFactory().Match(finalSearch))
                 yield return entry;
     }
 
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
-        var merged = SearchMetadata.Merge(Search, inheritedSearch);
+        SearchMetadata? search = GetSearchMeta(inheritedSearch);
 
         foreach (OptionPageDefinition page in _pages)
-            foreach (OptionEntry entry in page.ContentFactory().GetOptions(merged))
+            foreach (OptionEntry entry in page.ContentFactory().GetOptions(search))
                 yield return entry;
     }
+
+    private SearchMetadata? GetSearchMeta(SearchMetadata? inheritedSearch) => InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
+
 
     private PageControl BuildPageControl()
     {

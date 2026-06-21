@@ -22,6 +22,7 @@ public class OptionsWindow : MyraControl
 {
     private const int MAX_HEIGHT = 850;
     private const int MAX_WIDTH = 1200;
+    private const int SEARCH_DEBOUNCE_MS = 500;
 
     private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
     private readonly Dictionary<string, List<OptionEntry>> _searchIndex = new();
@@ -37,7 +38,6 @@ public class OptionsWindow : MyraControl
         Padding = new Thickness(3, 0, 0, 10)
     };
 
-    private readonly WrapPanel _searchPanel = new() { UniformSizing = false, Orientation = Orientation.Vertical };
     private readonly WrapPanel _optionsStack = new() { UniformSizing = false, Orientation = Orientation.Vertical };
 
     private readonly MyraInputBox _searchField = new()
@@ -58,6 +58,10 @@ public class OptionsWindow : MyraControl
     };
 
     private string _lastCategory = string.Empty;
+    private string _pendingSearchText = string.Empty;
+    private double _searchDebounceTimer;
+    private bool _searchPending;
+    private Point? _resultsBudget;
 
     public event EventHandler<string>? SelectedCategoryChanged;
 
@@ -154,8 +158,24 @@ public class OptionsWindow : MyraControl
 
     private void SearchFieldOnTextChangedByUser(object? sender, ValueChangedEventArgs<string> e)
     {
-        string searchText = e.NewValue?.Trim() ?? string.Empty;
+        _pendingSearchText = e.NewValue?.Trim() ?? string.Empty;
+        _searchDebounceTimer = Environment.TickCount;
+        _searchPending = true;
+    }
 
+    public override void Update()
+    {
+        base.Update();
+
+        if (_searchPending && Environment.TickCount - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
+        {
+            _searchPending = false;
+            ApplySearch(_pendingSearchText);
+        }
+    }
+
+    private void ApplySearch(string searchText)
+    {
         if (string.IsNullOrEmpty(searchText))
         {
             _optionsStack.Widgets.Clear();
@@ -167,17 +187,110 @@ public class OptionsWindow : MyraControl
             return;
         }
 
-        _searchPanel.Widgets.Clear();
+        List<Widget> matches = CollectSearchMatches(searchText);
 
-        // This gets collapsed by IDE; Need to construct a proper search results page anyways
+        _optionsStack.Widgets.Clear();
+        _optionsStack.Widgets.Add(BuildPagedResults(matches));
+    }
+
+    private List<Widget> CollectSearchMatches(string searchText)
+    {
+        List<Widget> matches = [];
+
         foreach ((string _, List<OptionEntry> entries) in _searchIndex)
         foreach (OptionEntry entry in entries)
         foreach (OptionEntry match in entry.Match(new SearchMetadata(searchText)))
-            _searchPanel.Widgets.Add(match.Render());
+            matches.Add(match.Render());
 
-        _optionsStack.Widgets.Clear();
-        _optionsStack.Widgets.Add(_searchPanel);
+        return matches;
     }
+
+    private PageControl BuildPagedResults(List<Widget> matches)
+    {
+        Point budget = _resultsBudget ??= ComputeResultsBudget();
+        budget.X = Math.Max(budget.X, Math.Min(WidestMatchWidth(matches), MAX_WIDTH));
+
+        return new PageControl(PackIntoPages(matches, budget).ToArray());
+    }
+
+    /// <summary>
+    /// The cached budget can be narrower than an individual match (e.g., a long option row),
+    /// which would otherwise overflow the page's width. Widen to fit, capped at MAX_WIDTH.
+    /// </summary>
+    private static int WidestMatchWidth(List<Widget> matches)
+    {
+        int widest = 0;
+
+        foreach (Widget widget in matches)
+            widest = Math.Max(widest, widget.Measure(new Point(MAX_WIDTH, MAX_HEIGHT)).X);
+
+        return widest;
+    }
+
+    /// <summary>
+    /// Captured once from the default (unpaged) category view. Reading this live while a
+    /// PageControl is showing would include its own control-bar/padding overhead, compounding
+    /// the budget larger on every search.
+    /// </summary>
+    private Point ComputeResultsBudget()
+    {
+        Rectangle contentBounds = _optionsStack.ActualBounds;
+
+        return contentBounds is { Width: > 0, Height: > 0 }
+            ? new Point(contentBounds.Width, contentBounds.Height)
+            : new Point(MAX_WIDTH, MAX_HEIGHT);
+    }
+
+    /// <summary>
+    /// Mirrors WrapPanel's vertical-bias column packing (fill height, wrap column), then adds
+    /// the width-based page break WrapPanel itself doesn't have, since it grows columns unbounded.
+    /// </summary>
+    private static List<Widget> PackIntoPages(List<Widget> matches, Point budget)
+    {
+        List<Widget> pages = [];
+        WrapPanel page = NewResultsPage(budget);
+
+        int columnHeight = 0;
+        int columnWidth = 0;
+        int pageWidth = 0;
+
+        foreach (Widget widget in matches)
+        {
+            Point size = widget.Measure(budget);
+
+            if (columnHeight > 0 && columnHeight + MyraStyle.STANDARD_SPACING + size.Y > budget.Y)
+            {
+                pageWidth += columnWidth + MyraStyle.STANDARD_SPACING;
+                columnHeight = 0;
+                columnWidth = 0;
+            }
+
+            if (pageWidth > 0 && pageWidth + size.X > budget.X)
+            {
+                pages.Add(page);
+                page = NewResultsPage(budget);
+                pageWidth = 0;
+            }
+
+            page.Widgets.Add(widget);
+            columnHeight += (columnHeight > 0 ? MyraStyle.STANDARD_SPACING : 0) + size.Y;
+            columnWidth = Math.Max(columnWidth, size.X);
+        }
+
+        pages.Add(page);
+
+        return pages;
+    }
+
+    private static WrapPanel NewResultsPage(Point budget) => new()
+    {
+        UniformSizing = false,
+        Orientation = Orientation.Vertical,
+        HorizontalSpacing = MyraStyle.STANDARD_SPACING,
+        VerticalSpacing = MyraStyle.STANDARD_SPACING,
+        Width = budget.X,
+        Height = budget.Y
+    };
 
     private static ButtonStyle _lastUsedButtonStylesheet = null!;
     private static ButtonStyle _tabButtonStyle = null!;

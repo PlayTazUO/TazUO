@@ -10,17 +10,18 @@ internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? S
 {
     private Widget? _cachedWidget;
 
+    public bool InheritsSearch { get; set; } = true;
+
     public Widget Render() => _cachedWidget ??= RenderFactory();
 
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
-        var merged = SearchMetadata.Merge(Search, search);
-        if (merged.Matches(search))
-            yield return this with { Search = merged };
+        if (Search?.Matches(search) == true)
+            yield return this;
     }
 
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
-        yield return this with { Search = SearchMetadata.Merge(Search, inheritedSearch) };
+        yield return this with { Search = InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search };
     }
 }

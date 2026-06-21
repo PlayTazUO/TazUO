@@ -14,6 +14,7 @@ internal sealed class OptionTabGroup : IOptionSource
     private Widget? _cachedWidget;
 
     public SearchMetadata? Search { get; init; }
+    public bool InheritsSearch { get; set; } = true;
 
     public OptionTabGroup(Func<MyraTabControl>? tabControlFactory = null, SearchMetadata? search = null)
     {
@@ -27,21 +28,17 @@ internal sealed class OptionTabGroup : IOptionSource
         return this;
     }
 
-    public OptionTabGroup AddTab(string label, Func<OptionItem> contentFactory, SearchMetadata? search = null) =>
-        AddTab(label, () => new LegacyOptionItemSource(contentFactory()), search);
-
-    public OptionTabGroup AddTab(string label, Func<Widget> contentFactory, SearchMetadata? search = null) => AddTab(label,
-        () => new LegacyOptionItemSource(new OptionItem(label, contentFactory, skipSearch: true)), search);
-
     public Widget Render() => _cachedWidget ??= BuildTabControl();
 
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
-        var merged = SearchMetadata.Merge(Search, search);
+        SearchMetadata? selfSearch = GetSearchMeta(search);
+        if (selfSearch == null)
+            yield break;
 
         foreach (OptionTabDefinition tab in _tabs)
         {
-            var tabMerged = SearchMetadata.Merge(tab.Search, merged);
+            var tabMerged = SearchMetadata.Merge(tab.Search, selfSearch);
 
             foreach (OptionEntry entry in tab.ContentFactory().Match(tabMerged))
                 yield return entry;
@@ -50,16 +47,18 @@ internal sealed class OptionTabGroup : IOptionSource
 
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
-        var merged = SearchMetadata.Merge(Search, inheritedSearch);
+        SearchMetadata? selfSearch = GetSearchMeta(inheritedSearch);
 
         foreach (OptionTabDefinition tab in _tabs)
         {
-            var tabMerged = SearchMetadata.Merge(tab.Search, merged);
+            var tabMerged = SearchMetadata.Merge(tab.Search, selfSearch);
 
             foreach (OptionEntry entry in tab.ContentFactory().GetOptions(tabMerged))
                 yield return entry;
         }
     }
+
+    private SearchMetadata? GetSearchMeta(SearchMetadata? inheritedSearch) => InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
 
     private MyraTabControl BuildTabControl()
     {

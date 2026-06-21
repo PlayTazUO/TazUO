@@ -25,18 +25,19 @@ public static class NameplatesTab
 
         return new OptionTabGroup()
             .AddTab(lang.ButtonGeneral, GetGeneralNameplatesSubTabContent, new SearchMetadata(lang.ButtonGeneral, Keywords: [kw.General]))
-            .AddTab(lang.ButtonProfiles, GetProfilesSubTabContentSource, new SearchMetadata(lang.ButtonProfiles, Keywords: [kw.Profile]));
+            .AddTab(lang.ButtonProfiles, GetProfilesSubTabContentSource, new SearchMetadata()); // Empty metadata to disable search; Doesn't render well in the results page.
     }
 
     #region Profiles
 
     private static IOptionSource GetProfilesSubTabContentSource()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
-        return OptionsUi.Vertical(
-            Option.Custom(GetProfilesSubTabContent, new SearchMetadata(lang.ButtonProfiles, Keywords: [kw.Profile]))
-        ).WithSearch(new SearchMetadata(lang.ButtonProfiles, [kw.Nameplate, kw.Profile]));
+        // The profile editor is not 'searchable' right now since it doesn't really fit well in the search results page.
+        OptionFragment panel = OptionsUi.Vertical(
+            Option.Custom(GetProfilesSubTabContent)
+        );
+        panel.InheritsSearch = false;
+        return panel;
     }
 
     private static Widget GetProfilesSubTabContent()

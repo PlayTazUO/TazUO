@@ -92,7 +92,7 @@ internal static class Option
     ) =>
         new(() => OptionTabCommons.StyledFontSelector(label, backingProperty, onSelectionChanged), search ?? new SearchMetadata(label));
 
-    public static OptionEntry Custom(Func<Widget> render, SearchMetadata search) => new(render, search);
+    public static OptionEntry Custom(Func<Widget> render, SearchMetadata? search = null) => new(render, search);
 
     public static OptionEntry Spacer() => new(() => new MyraSpacer(1, 4));
 

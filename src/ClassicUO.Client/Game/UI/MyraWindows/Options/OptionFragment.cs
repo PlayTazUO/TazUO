@@ -12,18 +12,21 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
     private Widget? _cachedWidget;
 
     public SearchMetadata? Search { get; set; }
+    public bool InheritsSearch { get; set; } = true;
 
     public Widget Render() => _cachedWidget ??= renderFactory();
 
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
-        var merged = SearchMetadata.Merge(Search, search);
-        return children.SelectMany(c => c.Match(merged));
+        SearchMetadata? finalSearch = InheritsSearch ? SearchMetadata.Merge(Search, search) : Search;
+        return finalSearch == null
+            ? []
+            : children.SelectMany(c => c.Match(finalSearch));
     }
 
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
-        var merged = SearchMetadata.Merge(Search, inheritedSearch);
+        SearchMetadata? merged = InheritsSearch ? SearchMetadata.Merge(Search, inheritedSearch) : Search;
         return children.SelectMany(c => c.GetOptions(merged));
     }
 

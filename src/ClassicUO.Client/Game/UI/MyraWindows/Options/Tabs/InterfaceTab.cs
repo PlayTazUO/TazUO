@@ -10,7 +10,7 @@ public static class InterfaceTab
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new OptionTabGroup(search: new SearchMetadata(Tags: [kw.Interface, kw.Container]))
+        return new OptionTabGroup(search: new SearchMetadata(Tags: [kw.Interface]))
             .AddTab(
                 lang.ButtonContainers,
                 ContainersTab.GetContent,
