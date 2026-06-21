@@ -1731,7 +1731,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (!_lowContrastCache.TryGetValue(key, out bool result))
                 {
                     double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
-                    ArtInfo artInfo = Client.Game.UO.FileManager.Arts.GetArt((uint)key.Graphic + 0x4000u);
+                    ArtInfo artInfo = Client.Game.UO.Arts.GetArtPixels(key.Graphic);
                     LowContrastSample sample = GetItemContrastSample(
                         artInfo.Pixels,
                         artInfo.Width,
