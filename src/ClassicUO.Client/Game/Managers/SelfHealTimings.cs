@@ -51,5 +51,21 @@ namespace ClassicUO.Game.Managers
 
             return (recoveryMs, longestCastMs + GraceMarginMs);
         }
+
+        private const int PingPadMultiplier = 2;   // pad the verify window by ~one round-trip of slack
+        private const int MaxPingMs = 1000;         // clamp absurd/garbage ping readings
+
+        /// <summary>
+        /// Cure-verify window: how long to wait for the poison-cleared status before recasting Cure.
+        /// The clear arrives via a server health-bar packet ~one round-trip after we self-target, so a
+        /// fixed window (e.g. 600ms) is too short on a 150-200ms connection — the guard times out and
+        /// fires a redundant second cure. We pad the configured base by 2x the current ping so the
+        /// window scales with latency. ping is clamped so a bad reading can't blow the window up.
+        /// </summary>
+        public static int CureVerifyWindow(int configuredMs, int pingMs)
+        {
+            int pad = Math.Clamp(pingMs, 0, MaxPingMs) * PingPadMultiplier;
+            return Math.Max(0, configuredMs) + pad;
+        }
     }
 }

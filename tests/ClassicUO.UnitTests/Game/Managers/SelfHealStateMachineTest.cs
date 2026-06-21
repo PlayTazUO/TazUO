@@ -20,6 +20,7 @@ namespace ClassicUO.UnitTests.Game.Managers
             public long CastStartGraceMs { get; set; } = SelfHealStateMachine.DefaultCastStartGraceMs;
             public long CureVerifyMs { get; set; } = SelfHealStateMachine.DefaultCureVerifyMs;
             public long InterruptRetryMs { get; set; } = SelfHealStateMachine.DefaultInterruptRetryMs;
+            public long LastCastFailedAt { get; set; }
             public List<int> Casts { get; } = new();
             public int TargetSelfCount { get; private set; }
             public void Cast(int spellId) => Casts.Add(spellId);
@@ -175,6 +176,40 @@ namespace ClassicUO.UnitTests.Game.Managers
             sm.Tick(env, held: true);            // Idle + held -> recast
 
             env.Casts.Should().HaveCount(2);
+        }
+
+        [Fact]
+        public void ServerReportsCastFailed_RetriesImmediatelyNotAfterGrace()
+        {
+            // A genuine failure (concentration disturbed / out of mana, etc.) is reported by the server
+            // via a cliloc. We should retry right away rather than waiting out the full cast grace.
+            var env = new FakeEnv();
+            var sm = new SelfHealStateMachine();
+
+            sm.Tick(env, held: true);                 // cast, WaitingForCursor (castIssuedAt = 0)
+            env.Now += 50;
+            env.LastCastFailedAt = env.Now;            // server: that cast was disrupted
+            sm.Tick(env, held: true);                  // sees failure -> InterruptRetry (no grace wait)
+            env.Casts.Should().HaveCount(1);
+
+            env.Now += env.InterruptRetryMs + 1;
+            sm.Tick(env, held: true);                  // InterruptRetry -> Idle
+            sm.Tick(env, held: true);                  // recast
+            env.Casts.Should().HaveCount(2);
+            env.Now.Should().BeLessThan(SelfHealStateMachine.DefaultCastStartGraceMs); // fast, not grace-bound
+        }
+
+        [Fact]
+        public void StaleFailureBeforeThisCast_DoesNotTriggerRetry()
+        {
+            // A failure recorded BEFORE the current cast was issued must not be mistaken for this cast failing.
+            var env = new FakeEnv { LastCastFailedAt = 100 };
+            var sm = new SelfHealStateMachine();
+
+            env.Now = 500;
+            sm.Tick(env, held: true);                  // cast at Now=500 (castIssuedAt=500), stale failure=100
+            sm.Tick(env, held: true);                  // failure(100) < castIssuedAt(500) -> ignored, keep waiting
+            env.Casts.Should().HaveCount(1);           // no premature recast
         }
 
         [Fact]

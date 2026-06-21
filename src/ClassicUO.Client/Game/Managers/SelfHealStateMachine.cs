@@ -14,6 +14,7 @@ namespace ClassicUO.Game.Managers
         long CastStartGraceMs { get; }       // how long a cast may take to register before we treat it as failed
         long CureVerifyMs { get; }           // how long to wait for poison to clear before recasting Cure
         long InterruptRetryMs { get; }       // delay before recasting after an interrupted cast
+        long LastCastFailedAt { get; }       // monotonic tick the server last reported a cast failure (disrupt/mana/etc.)
         void Cast(int spellId);
         void TargetSelf();
     }
@@ -54,6 +55,7 @@ namespace ClassicUO.Game.Managers
         private long _settleUntil;
         private long _verifyUntil;
         private long _interruptUntil;
+        private long _castIssuedAt;    // env.Now when we issued the in-flight cast (to detect failures since)
         private bool _lastCastWasCure;
 
         public void Tick(ISelfHealEnv env, bool held)
@@ -70,6 +72,7 @@ namespace ClassicUO.Game.Managers
                     if (held)
                     {
                         _lastCastWasCure = env.IsPoisoned;
+                        _castIssuedAt = env.Now;
                         env.Cast(_lastCastWasCure ? env.CureSpellId : env.HealSpellId);
                         _stallUntil = env.Now + env.CastStartGraceMs;
                         _state = State.WaitingForCursor;
@@ -91,6 +94,14 @@ namespace ClassicUO.Game.Managers
                             _settleUntil = env.Now + env.RecastDelayMs;
                             _state = State.Settle;
                         }
+                    }
+                    else if (env.LastCastFailedAt > _castIssuedAt)
+                    {
+                        // The server reported THIS cast failed (concentration disturbed, out of mana/
+                        // reagents, frozen, ...). It's a real failure, not a benign HP-driven casting-flag
+                        // flap, so retry immediately instead of waiting out the full cast grace.
+                        _interruptUntil = env.Now + env.InterruptRetryMs;
+                        _state = State.InterruptRetry;
                     }
                     else if (env.IsCasting)
                     {

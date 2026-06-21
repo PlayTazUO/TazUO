@@ -2,6 +2,7 @@ using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Input;
+using ClassicUO.Network;
 using SDL3;
 
 namespace ClassicUO.Game.Managers
@@ -127,19 +128,42 @@ namespace ClassicUO.Game.Managers
 
             public bool IsPoisoned => Client.Game?.UO?.World?.Player?.IsPoisoned ?? false;
 
-            public long RecastDelayMs =>
-                ProfileManager.CurrentProfile?.SelfHeal_RecastDelayMs ?? SelfHealStateMachine.DefaultRecastDelayMs;
+            // Recast (recovery) and cast-start grace are physical consequences of the spell school
+            // + FC/FCR, not free-form preferences, so we derive them from SelfHealTimings at runtime
+            // rather than a stored default. A stale stored grace (e.g. 800ms) can be shorter than the
+            // actual Cure cast (~0.75s + latency), which let the loop time out mid-cast and recast on
+            // top of the in-flight Cure (auto-fizzle). The formula always yields cast + a latency margin.
+            public long RecastDelayMs => Timings.recastDelayMs;
 
-            public long CastStartGraceMs =>
-                ProfileManager.CurrentProfile?.SelfHeal_CastStartGraceMs ?? SelfHealStateMachine.DefaultCastStartGraceMs;
+            public long CastStartGraceMs => Timings.castStartGraceMs;
 
-            public long CureVerifyMs =>
-                ProfileManager.CurrentProfile?.SelfHeal_CureVerifyMs ?? SelfHealStateMachine.DefaultCureVerifyMs;
+            private static (int recastDelayMs, int castStartGraceMs) Timings
+            {
+                get
+                {
+                    Profile p = ProfileManager.CurrentProfile;
+                    if (p == null)
+                        return ((int)SelfHealStateMachine.DefaultRecastDelayMs, (int)SelfHealStateMachine.DefaultCastStartGraceMs);
+                    return SelfHealTimings.Compute(p.SelfHeal_UseChivalry, p.SelfHeal_FC, p.SelfHeal_FCR);
+                }
+            }
+
+            public long CureVerifyMs
+            {
+                get
+                {
+                    int configured = (int)(ProfileManager.CurrentProfile?.SelfHeal_CureVerifyMs ?? SelfHealStateMachine.DefaultCureVerifyMs);
+                    int ping = (int)(AsyncNetClient.Socket?.Statistics?.Ping ?? 0);
+                    return SelfHealTimings.CureVerifyWindow(configured, ping);
+                }
+            }
 
             public long InterruptRetryMs =>
                 ProfileManager.CurrentProfile?.SelfHeal_InterruptRetryMs ?? SelfHealStateMachine.DefaultInterruptRetryMs;
 
             public bool IsCasting => Client.Game?.UO?.World?.Player?.IsCasting ?? false;
+
+            public long LastCastFailedAt => SpellVisualRangeManager.Instance?.LastCastFailedTick ?? 0;
 
             private static bool UseChivalry => ProfileManager.CurrentProfile?.SelfHeal_UseChivalry ?? false;
 

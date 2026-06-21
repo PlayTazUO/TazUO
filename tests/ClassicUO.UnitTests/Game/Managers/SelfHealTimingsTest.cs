@@ -66,5 +66,22 @@ namespace ClassicUO.UnitTests.Game.Managers
                 prev = recast;
             }
         }
+
+        [Fact]
+        public void CureVerifyWindow_PadsByTwicePing()
+        {
+            // 150-200ms ping: the fixed 600ms base was too short to see the poison-cleared packet,
+            // causing a redundant second cure. Padding by 2x ping widens it to land comfortably after.
+            SelfHealTimings.CureVerifyWindow(600, 0).Should().Be(600);
+            SelfHealTimings.CureVerifyWindow(600, 200).Should().Be(1000);   // 600 + 2*200
+        }
+
+        [Fact]
+        public void CureVerifyWindow_ClampsGarbagePing()
+        {
+            // A bad/huge ping reading must not blow the window up unbounded (clamped at 1000ms ping).
+            SelfHealTimings.CureVerifyWindow(600, 999999).Should().Be(600 + 2 * 1000);
+            SelfHealTimings.CureVerifyWindow(600, -50).Should().Be(600);    // negative ping ignored
+        }
     }
 }
