@@ -28,6 +28,7 @@ namespace ClassicUO.Game.Managers
         public static readonly string[] MacroNames = Enum.GetNames(typeof(MacroType));
         private readonly uint[] _itemsInHand = new uint[2];
         private MacroObject _lastMacro;
+        private MacroObject _currentMacroHead; // head node of the macro currently executing (for toggle-stop)
         private long _nextTimer;
         private readonly World _world;
 
@@ -536,6 +537,14 @@ namespace ClassicUO.Game.Managers
 
         public void SetMacroToExecute(MacroObject macro)
         {
+            // If this exact macro is already running and it contains a loop,
+            // treat triggering it again as a "stop" request.
+            if (_lastMacro != null && _currentMacroHead == macro && MacroContainsLoop(macro))
+            {
+                StopExecution();
+                return;
+            }
+
             // Reset any loop containers in this macro's action chain so a fresh
             // invocation always starts loops from iteration 0, even if a previous
             // run was interrupted mid-loop.
@@ -548,6 +557,38 @@ namespace ClassicUO.Game.Managers
             }
 
             _lastMacro = macro;
+            _currentMacroHead = macro;
+        }
+
+        private static bool MacroContainsLoop(MacroObject macro)
+        {
+            for (MacroObject node = macro; node != null; node = (MacroObject)node.Next)
+            {
+                if (node is MacroLoopContainer)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public void StopExecution()
+        {
+            // Reset any loop containers so a future run starts clean.
+            if (_currentMacroHead != null)
+            {
+                for (MacroObject node = _currentMacroHead; node != null; node = (MacroObject)node.Next)
+                {
+                    if (node is MacroLoopContainer loop)
+                    {
+                        loop.Reset();
+                    }
+                }
+            }
+
+            _lastMacro = null;
+            _currentMacroHead = null;
         }
 
         public void Update()
@@ -558,6 +599,7 @@ namespace ClassicUO.Game.Managers
                 {
                     case 2:
                         _lastMacro = null;
+                        _currentMacroHead = null;
 
                         break;
 
@@ -565,6 +607,11 @@ namespace ClassicUO.Game.Managers
 
                     case 0:
                         _lastMacro = (MacroObject)_lastMacro?.Next;
+
+                        if (_lastMacro == null)
+                        {
+                            _currentMacroHead = null;
+                        }
 
                         break;
                 }
@@ -2457,6 +2504,18 @@ namespace ClassicUO.Game.Managers
                     bool newStatus = !ProfileManager.CurrentProfile.EnableBandageAgent;
                     ProfileManager.CurrentProfile.EnableBandageAgent = newStatus;
                     GameActions.Print($"Bandage agent {(newStatus ? "enabled" : "disabled")}.", newStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    break;
+
+                case MacroType.ToggleBuyAgent:
+                    bool newBuyStatus = !ProfileManager.CurrentProfile.BuyAgentEnabled;
+                    ProfileManager.CurrentProfile.BuyAgentEnabled = newBuyStatus;
+                    GameActions.Print($"Buy agent {(newBuyStatus ? "enabled" : "disabled")}.", newBuyStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    break;
+
+                case MacroType.ToggleSellAgent:
+                    bool newSellStatus = !ProfileManager.CurrentProfile.SellAgentEnabled;
+                    ProfileManager.CurrentProfile.SellAgentEnabled = newSellStatus;
+                    GameActions.Print($"Sell agent {(newSellStatus ? "enabled" : "disabled")}.", newSellStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
 
                 case MacroType.SetOrganizerSource:

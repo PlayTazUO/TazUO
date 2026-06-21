@@ -227,6 +227,7 @@ namespace ClassicUO.Game.Scenes
             OrganizerAgent.Load();
             GraphicsReplacement.Load();
             SpellBarManager.Load();
+            SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
                 StaticFilters.ApplyCaveTileBorder();
 
@@ -368,6 +369,7 @@ namespace ClassicUO.Game.Scenes
             JournalFilterManager.Instance.Save();
 
             SpellBarManager.Unload();
+            SelfHealManager.Unload();
             _autoUnequipActionManager?.Dispose();
             ObjectActionQueue.Instance.Clear();
 
@@ -727,7 +729,6 @@ namespace ClassicUO.Game.Scenes
             (int minChunkX, int minChunkY) = (minX >> 3, minY >> 3);
             (int maxChunkX, int maxChunkY) = (maxX >> 3, maxY >> 3);
 
-            Profiler.EnterContext("MapChunkLoop");
             int totalChunksX = maxChunkX - minChunkX + 1;
             int totalChunksY = maxChunkY - minChunkY + 1;
 
@@ -765,7 +766,6 @@ namespace ClassicUO.Game.Scenes
                 }
             }
 
-            Profiler.ExitContext("MapChunkLoop");
 
 
             //for (var x = minX; x <= maxX; x++)
@@ -826,6 +826,7 @@ namespace ClassicUO.Game.Scenes
             SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
 
             base.Update();
+            SelfHealManager.Update();
 
             // Check if we're waiting for window resize to complete
             if (_waitingForWindowResize)
@@ -1134,9 +1135,7 @@ namespace ClassicUO.Game.Scenes
             EnsureRenderTargets(gd);
 
             // Always use render target for consistent scaling
-            Profiler.EnterContext("DrawWorldRenderTarget");
             bool canDrawLights = DrawWorldRenderTarget(batcher, gd, cameraViewport);
-            Profiler.ExitContext("DrawWorldRenderTarget");
 
             // draw lights
             if (canDrawLights)
@@ -1221,9 +1220,7 @@ namespace ClassicUO.Game.Scenes
         private void DrawWorld(UltimaBatcher2D batcher, ref Matrix matrix)
         {
             SelectedObject.Object = null;
-            Profiler.EnterContext("FillObjectList");
             FillGameObjectList();
-            Profiler.ExitContext("FillObjectList");
 
             // Always use render target for consistent scaling
             RenderTargetBinding[] previousRenderTargets = batcher.GraphicsDevice.GetRenderTargets();
@@ -1236,38 +1233,16 @@ namespace ClassicUO.Game.Scenes
             batcher.SetBrightlight(ProfileManager.CurrentProfile.TerrainShadowsLevel * 0.1f);
             batcher.SetStencil(DepthStencilState.Default);
 
-            Profiler.EnterContext("DrawObjects");
             RenderedObjectsCount = 0;
-            Profiler.EnterContext("Statics");
-            RenderedObjectsCount += DrawRenderList(
-                batcher,
-                _renderListStatics
-            );
-            Profiler.ExitContext("Statics");
-            Profiler.EnterContext("Animations");
-            RenderedObjectsCount += DrawRenderList(
-                batcher,
-                _renderListAnimations
-            );
-            Profiler.ExitContext("Animations");
-            Profiler.EnterContext("Effects");
-            RenderedObjectsCount += DrawRenderList(
-                batcher,
-                _renderListEffects
-            );
-            Profiler.ExitContext("Effects");
+            RenderedObjectsCount += DrawRenderList(batcher, _renderListStatics);
+            RenderedObjectsCount += DrawRenderList(batcher, _renderListAnimations);
+            RenderedObjectsCount += DrawRenderList(batcher, _renderListEffects);
 
             if (_renderListTransparentObjects.Count > 0)
             {
-                Profiler.EnterContext("Transparency");
                 batcher.SetStencil(DepthStencilState.DepthRead);
-                RenderedObjectsCount += DrawRenderList(
-                    batcher,
-                    _renderListTransparentObjects
-                );
-                Profiler.ExitContext("Transparency");
+                RenderedObjectsCount += DrawRenderList(batcher, _renderListTransparentObjects);
             }
-            Profiler.ExitContext("DrawObjects");
 
             batcher.SetStencil(null);
 
@@ -1277,14 +1252,12 @@ namespace ClassicUO.Game.Scenes
                 && _world.TargetManager.TargetingState == CursorTarget.MultiPlacement
             )
             {
-                Profiler.EnterContext("DrawMulti");
                 _multi.Draw(
                     batcher,
                     _multi.RealScreenPosition.X,
                     _multi.RealScreenPosition.Y,
                     _multi.CalculateDepthZ()
                 );
-                Profiler.ExitContext("DrawMulti");
             }
 
             batcher.SetSampler(null);
@@ -1319,18 +1292,11 @@ namespace ClassicUO.Game.Scenes
             {
                 if (obj.Z <= _maxGroundZ)
                 {
-                    Profiler.EnterContext("Calculate depth");
                     float depth = obj.CalculateDepthZ();
-                    Profiler.ExitContext("Calculate depth");
-
-                    Profiler.EnterContext("Draw");
-                    if (
-                        obj.Draw(batcher, obj.RealScreenPosition.X, obj.RealScreenPosition.Y, depth)
-                    )
+                    if (obj.Draw(batcher, obj.RealScreenPosition.X, obj.RealScreenPosition.Y, depth))
                     {
                         ++done;
                     }
-                    Profiler.ExitContext("Draw");
                 }
             }
 

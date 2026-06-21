@@ -1119,6 +1119,8 @@ Random = None
 LastTargetSerial: int = None
 LastTargetPos: ApiPoint3D = None
 LastTargetGraphic: int = None
+LastSpellIndex: int = None
+LastSpellName: str = None
 Found: int = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
@@ -2533,6 +2535,17 @@ def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
      if list:
        for entry in list:
          entry.ID # Do something with this
+     ```
+    
+    """
+    pass
+
+def PlaySound(index: "int") -> None:
+    """
+     Play a sound effect locally (only audible to you).
+     Example:
+     ```py
+     API.PlaySound(0x13E)
      ```
     
     """
