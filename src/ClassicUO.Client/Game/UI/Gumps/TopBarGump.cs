@@ -269,6 +269,21 @@ namespace ClassicUO.Game.UI.Gumps
 
             var devSubmenu = new ContextMenuItemEntry("Developer");
             devSubmenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+#if DEBUG
+            devSubmenu.Add(new ContextMenuItemEntry("Profiler", () =>
+            {
+                ProfilerWindow pw = UIManager.GetGump<ProfilerWindow>();
+                if (pw == null)
+                {
+                    UIManager.Add(new ProfilerWindow(World) { X = 100, Y = 100 });
+                }
+                else
+                {
+                    pw.IsVisible = !pw.IsVisible;
+                    pw.SetInScreen();
+                }
+            }));
+#endif
             moreMenu.ContextMenu.Add(devSubmenu);
 
             startX += largeWidth + 1;
