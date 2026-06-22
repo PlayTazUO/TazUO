@@ -36,6 +36,7 @@ All notable changes to TazUO will be recorded here.
 * Add Self Heal hotkey (hold-to-heal, Magery + Chivalry) - [P.R 567](https://github.com/PlayTazUO/TazUO/pull/567) ([eddo87](https://github.com/eddo87))
 * Add highlight low contrast grid items option - [P.R 563](https://github.com/PlayTazUO/TazUO/pull/563) ([Nesci28](https://github.com/Nesci28))
 * Add option to select and copy text in journal - [P.R 575](https://github.com/PlayTazUO/TazUO/pull/575) ([Nesci28](https://github.com/Nesci28))
+* Add Script slot type to the Spell Bar - [P.R 568](https://github.com/PlayTazUO/TazUO/pull/568) ([eddo87](https://github.com/eddo87))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
