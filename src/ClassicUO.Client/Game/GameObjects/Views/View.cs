@@ -111,6 +111,17 @@ namespace ClassicUO.Game.GameObjects
         }
 
         /// <summary>
+        /// Cheap broad-phase hit test: true if (relX, relY) lies inside the sprite rect.
+        /// Used to reject objects the cursor isn't over before doing the expensive
+        /// pixel-perfect <c>PixelCheck</c> (which pays a texture-id hash lookup first).
+        /// <paramref name="pad"/> widens the rect so the gate can never be tighter than
+        /// PixelCheck's own internal bounds, avoiding false negatives.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static bool PointInSpriteBounds(int relX, int relY, int width, int height, int pad = 0)
+            => relX >= -pad && relX < width + pad && relY >= -pad && relY < height + pad;
+
+        /// <summary>
         /// Tests if the object is transparent at the given Z coordinate.
         /// Default implementation treats objects as opaque.
         /// </summary>

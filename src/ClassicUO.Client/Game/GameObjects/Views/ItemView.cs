@@ -494,25 +494,23 @@ namespace ClassicUO.Game.GameObjects
                     position.X -= index.Width;
                     position.Y -= index.Height;
 
-                    if (
-                        Client.Game.UO.Arts.PixelCheck(
-                            graphic,
-                            SelectedObject.TranslatedMousePositionByViewport.X - position.X,
-                            SelectedObject.TranslatedMousePositionByViewport.Y - position.Y
-                        )
-                    )
+                    int relX = SelectedObject.TranslatedMousePositionByViewport.X - position.X;
+                    int relY = SelectedObject.TranslatedMousePositionByViewport.Y - position.Y;
+
+                    // Cheap bounding-box reject before the expensive pixel-perfect check.
+                    // Pad by 5 so the stackable (+5,+5) sample below is never falsely rejected.
+                    if (!PointInSpriteBounds(relX, relY, index.Width, index.Height, pad: 5))
+                    {
+                        return false;
+                    }
+
+                    if (Client.Game.UO.Arts.PixelCheck(graphic, relX, relY))
                     {
                         return true;
                     }
                     else if (!IsMulti && !IsCoin && Amount > 1 && ItemData.IsStackable)
                     {
-                        if (
-                            Client.Game.UO.Arts.PixelCheck(
-                                graphic,
-                                SelectedObject.TranslatedMousePositionByViewport.X - position.X + 5,
-                                SelectedObject.TranslatedMousePositionByViewport.Y - position.Y + 5
-                            )
-                        )
+                        if (Client.Game.UO.Arts.PixelCheck(graphic, relX + 5, relY + 5))
                         {
                             return true;
                         }
