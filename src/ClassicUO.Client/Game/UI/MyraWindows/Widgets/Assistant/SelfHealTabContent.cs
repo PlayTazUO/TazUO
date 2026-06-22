@@ -20,8 +20,8 @@ public static class SelfHealTabContent
         Action? unsubscribe = null;
 
         // The recast + grace sliders are auto-filled from FC/FCR (and stay manually editable).
-        MyraHSlider recastSlider = null!;
-        MyraHSlider graceSlider = null!;
+        LabeledHorizontalSlider recastSlider = null!;
+        LabeledHorizontalSlider graceSlider = null!;
 
         void ApplyFcFcr()
         {
@@ -116,12 +116,12 @@ public static class SelfHealTabContent
 
         // Faster Casting / Recovery -> auto-computes the recast & grace below for your school.
         root.Widgets.Add(new MyraLabel("Your FC / FCR (auto-sets recast & grace):", MyraLabel.TextStyle.P));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "Faster Casting (FC) - Magery caps at 2, Chivalry at 4 (2 if you have Magery/Mysticism 70+)",
             out _,
             v => { profile.SelfHeal_FC = (int)v; ApplyFcFcr(); },
             min: 0, max: 4, value: profile.SelfHeal_FC));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "Faster Cast Recovery (FCR) - Magery caps at 6, Chivalry at 7",
             out _,
             v => { profile.SelfHeal_FCR = (int)v; ApplyFcFcr(); },
@@ -129,7 +129,7 @@ public static class SelfHealTabContent
 
         // Recast delay ("recuperation"): pad after a successful heal before the next cast. Auto from FCR.
         root.Widgets.Add(new MyraLabel("Recast delay / recuperation (ms):", MyraLabel.TextStyle.P));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "ms pad after a heal before recasting (auto from FCR; lower = faster)",
             out recastSlider,
             v => profile.SelfHeal_RecastDelayMs = (int)v,
@@ -137,7 +137,7 @@ public static class SelfHealTabContent
 
         // Cast start grace: how long a cast may take to register before treating it as failed. Auto from FC.
         root.Widgets.Add(new MyraLabel("Cast start grace (ms):", MyraLabel.TextStyle.P));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "ms to wait for a cast to register before retrying (auto from FC; bounds the post-interrupt stall)",
             out graceSlider,
             v => profile.SelfHeal_CastStartGraceMs = (int)v,
@@ -145,7 +145,7 @@ public static class SelfHealTabContent
 
         // Cure recheck delay: how long to wait for poison to clear before recasting Cure.
         root.Widgets.Add(new MyraLabel("Cure recheck delay (ms):", MyraLabel.TextStyle.P));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "ms before recasting Cure if still poisoned",
             out _,
             v => profile.SelfHeal_CureVerifyMs = (int)v,
@@ -153,7 +153,7 @@ public static class SelfHealTabContent
 
         // Interrupt retry delay: how fast to recast after a cast is disrupted (e.g. by damage).
         root.Widgets.Add(new MyraLabel("Interrupt retry delay (ms):", MyraLabel.TextStyle.P));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             "ms before recasting after a cast is interrupted",
             out _,
             v => profile.SelfHeal_InterruptRetryMs = (int)v,

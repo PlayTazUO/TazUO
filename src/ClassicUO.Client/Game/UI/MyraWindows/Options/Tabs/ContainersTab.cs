@@ -255,6 +255,17 @@ public static class ContainersTab
                 new Accessor<bool>(() => profile.GridContainerScaleItems),
                 search: new SearchMetadata(tuoLang.AlsoScaleItems, Keywords: [kw.Scale, kw.Item])
             ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.GridHighlightLowContrastItems), tuoLang.HighlightLowContrastItems),
+                Option.LComboBox(
+                    tuoLang.LowContrastHighlightStyle,
+                    new Accessor<GridContainer.LowContrastHighlightStyle>(
+                        () => (GridContainer.LowContrastHighlightStyle)profile.GridHighlightLowContrastItemsStyle,
+                        newValue => profile.GridHighlightLowContrastItemsStyle = (int)newValue
+                    ),
+                    search: new SearchMetadata(tuoLang.LowContrastHighlightStyle, Keywords: [kw.Style])
+                )
+            ).WithSearch(new SearchMetadata(tuoLang.HighlightLowContrastItems, Keywords: [kw.Highlight, kw.Low, kw.Contrast, kw.Item])),
             Option.Slider(
                 tuoLang.GridItemBorderOpacity,
                 0,

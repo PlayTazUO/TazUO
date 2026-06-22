@@ -228,6 +228,7 @@ namespace ClassicUO.Configuration
             public string Container { get; set; } = "Container";
             public string Content { get; set; } = "Content";
             public string Context { get; set; } = "Context";
+            public string Contrast { get; set; } = "Contrast";
             public string Controller { get; set; } = "Controller";
             public string Cooldown { get; set; } = "Cooldown";
             public string Corner { get; set; } = "Corner";
