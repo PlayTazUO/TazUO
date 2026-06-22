@@ -55,7 +55,7 @@ internal static class GumpHelpers
     )
     {
         ScriptRecorder.Instance.RecordWaitForGump(gumpID);
-        ScriptingInfoGump.AddOrUpdateInfo("Last Gump Opened", $"0x{gumpID:X}");
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_gump_opened", "Last Gump Opened"), $"0x{gumpID:X}");
 
         if (string.IsNullOrEmpty(layout))
             return null;
@@ -183,7 +183,7 @@ internal static class GumpHelpers
                         case 18:
                         case 2210:
                         case 1348:
-                            lvl = "Seeker of ";
+                            lvl = TazLang.Get("virtue_rank_seeker_of", "Seeker of ");
 
                             break;
 
@@ -195,7 +195,7 @@ internal static class GumpHelpers
                         case 618:
                         case 2212:
                         case 1352:
-                            lvl = "Follower of ";
+                            lvl = TazLang.Get("virtue_rank_follower_of", "Follower of ");
 
                             break;
 
@@ -206,15 +206,15 @@ internal static class GumpHelpers
                         case 318:
                         case 67:
                         case 98:
-                            lvl = "Knight of ";
+                            lvl = TazLang.Get("virtue_rank_knight_of", "Knight of ");
 
                             break;
 
                         case 2406:
                             if (pic.Graphic == 0x6F)
-                                lvl = "Seeker of ";
+                                lvl = TazLang.Get("virtue_rank_seeker_of", "Seeker of ");
                             else
-                                lvl = "Knight of ";
+                                lvl = TazLang.Get("virtue_rank_knight_of", "Knight of ");
 
                             break;
 
@@ -269,7 +269,7 @@ internal static class GumpHelpers
                     }
 
                     if (string.IsNullOrEmpty(s))
-                        s = "Unknown virtue";
+                        s = TazLang.Get("virtue_unknown", "Unknown virtue");
 
                     pic.SetTooltip(lvl + s, 100);
                 }
@@ -613,10 +613,9 @@ internal static class GumpHelpers
                         ;
                         ymins = int.Parse(loc[1].Substring(0, loc[1].Length - 1));
                         Vector3 location = LocationHelpers.ReverseLookup(xlong, ylat, xmins, ymins, xeast, ysouth);
-                        GameActions.Print(world,
-                            $"If I am on the correct facet I think these coords should be somewhere near.. {location.X} and {location.Y}..");
+                        GameActions.Print(world, string.Format(TazLang.Get("sos_gump_msg_coordinates_fmt", "If I am on the correct facet I think these coords should be somewhere near.. {0} and {1}.."), location.X, location.Y));
 
-                        var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu")
+                        var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, TazLang.Get("sos_gump_btn_menu", "Menu"))
                         {
                             X = gump.Width - 46, Y = 6
                         };
@@ -626,7 +625,7 @@ internal static class GumpHelpers
                         };
 
                         menu.ContextMenu = new ContextMenuControl(gump);
-                        menu.ContextMenu.Add(new ContextMenuItemEntry("Locate on world map", () =>
+                        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("sos_gump_menu_locate", "Locate on world map"), () =>
                         {
                             WorldMapGump gump = UIManager.GetGump<WorldMapGump>();
                             if (gump == null)
@@ -638,7 +637,7 @@ internal static class GumpHelpers
                             gump.GoToMarker((int)location.X, (int)location.Y, true);
                         }));
 
-                        menu.ContextMenu.Add(new ContextMenuItemEntry("Add marker on world map", () =>
+                        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("sos_gump_menu_add_marker", "Add marker on world map"), () =>
                         {
                             WorldMapGump gump = UIManager.GetGump<WorldMapGump>();
                             if (gump == null)
@@ -650,12 +649,12 @@ internal static class GumpHelpers
                             gump.AddUserMarker("SOS", (int)location.X, (int)location.Y, world.Map.Index);
                         }));
 
-                        menu.ContextMenu.Add(new ContextMenuItemEntry("Create arrow pointing to location", () =>
+                        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("sos_gump_menu_arrow", "Create arrow pointing to location"), () =>
                         {
                             UIManager.Add(new QuestArrowGump(world, 0, (int)location.X, (int)location.Y) { CanCloseWithRightClick = true });
                         }));
 
-                        menu.ContextMenu.Add(new ContextMenuItemEntry("Close", () =>
+                        menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("shared_close", "Close"), () =>
                         {
                             gump.Dispose();
                         }));

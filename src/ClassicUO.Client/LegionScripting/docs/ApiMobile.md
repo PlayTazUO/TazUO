@@ -142,8 +142,9 @@ description:  Represents a Python-accessible mobile (NPC, creature, or player ch
 ## Methods
 ### NameAndProps
 `(wait, timeout)`
- Gets the mobile name and properties (tooltip text).
- This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+ Gets the mobile name and properties (tooltip text) in English.
+ This returns the name and properties in a single string, regardless of the client's UI language.
+ You can split it by newline if you want to separate them.
 
 
 **Parameters:**

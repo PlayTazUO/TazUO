@@ -414,7 +414,7 @@ internal static class GameActions
         }
         catch (Exception ex)
         {
-            Print(World.Instance, $"Failed to open browser: {ex.Message}", 0x21);
+            Print(World.Instance, string.Format(TazLang.Get("game_actions_error_browser_fmt", "Failed to open browser: {0}"), ex.Message), 0x21);
         }
     }
 
@@ -577,7 +577,7 @@ internal static class GameActions
 
         // Record action for script recording
         ScriptRecorder.Instance.RecordAttack(serial);
-        ScriptingInfoGump.AddOrUpdateInfo("Last Attacked", $"0x{serial:X8}");
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_attacked", "Last Attacked"), $"0x{serial:X8}");
 
         world.TargetManager.NewTargetSystemSerial = serial;
         world.TargetManager.LastAttack = serial;
@@ -622,10 +622,10 @@ internal static class GameActions
         if (isItem)
             ScriptRecorder.Instance.RecordUseItem(serial);
 
-        ScriptingInfoGump.AddOrUpdateInfo("Last Object", $"0x{serial:X}");
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_object", "Last Object"), $"0x{serial:X}");
         Entity obj = World.Instance.Get(serial);
         if (obj != null)
-            ScriptingInfoGump.AddOrUpdateInfo("Last Object Graphic", $"0x{obj.Graphic:X}");
+            ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_object_graphic", "Last Object Graphic"), $"0x{obj.Graphic:X}");
 
         if (serial != world.Player && isMobile && world.Player.InWarMode && !ignoreWarMode)
         {
@@ -750,7 +750,7 @@ internal static class GameActions
             (
                 null,
                 message,
-                "Chat",
+                TazLang.Get("game_actions_name_chat", "Chat"),
                 hue,
                 type,
                 font,
@@ -786,7 +786,7 @@ internal static class GameActions
         (
             entity,
             message,
-            entity != null ? entity.Name : "System",
+            entity != null ? entity.Name : TazLang.Get("game_actions_name_system", "System"),
             hue,
             type,
             font,
@@ -879,8 +879,8 @@ internal static class GameActions
         if (!ProfileManager.CurrentProfile.QueueManualItemMoves || skipQueue)
             Socket.Send_PickUpRequest(item, (ushort)amount);
 
-        ScriptingInfoGump.AddOrUpdateInfo("Last Picked Up Item", $"0x{item.Serial:X}");
-        ScriptingInfoGump.AddOrUpdateInfo("Last Object Graphic", $"0x{item.Graphic:X}");
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_picked_up_item", "Last Picked Up Item"), $"0x{item.Serial:X}");
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_object_graphic", "Last Object Graphic"), $"0x{item.Graphic:X}");
 
         if (item.OnGround)
         {
@@ -956,13 +956,13 @@ internal static class GameActions
     internal static void ReplyGump(World world, uint local, uint server, int button, uint[] switches = null, Tuple<ushort, string>[] entries = null)
     {
         ScriptRecorder.Instance.RecordReplyGump(server, button, switches, entries);
-        ScriptingInfoGump.AddOrUpdateInfo("Last Gump Button", button);
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_gump_button", "Last Gump Button"), button);
 
         if (switches != null)
-            ScriptingInfoGump.AddOrUpdateInfo("Last Gump Switch", string.Join(", ", switches));
+            ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_gump_switch", "Last Gump Switch"), string.Join(", ", switches));
 
         if (entries != null)
-            ScriptingInfoGump.AddOrUpdateInfo("Last Gump Entries", string.Join(", ", entries));
+            ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_gump_entries", "Last Gump Entries"), string.Join(", ", entries));
 
 
         Socket.Send_GumpResponse(world, local,
@@ -1084,7 +1084,7 @@ internal static class GameActions
             // Record action for script recording
             string name = SpellDefinition.FullIndexGetSpell(index).Name;
             ScriptRecorder.Instance.RecordCastSpell(name);
-            ScriptingInfoGump.AddOrUpdateInfo("Last Spell", name);
+            ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_spell", "Last Spell"), name);
         }
     }
 
@@ -1100,7 +1100,7 @@ internal static class GameActions
         {
             // Record action for script recording
             ScriptRecorder.Instance.RecordCastSpell(name);
-            ScriptingInfoGump.AddOrUpdateInfo("Last Spell", name);
+            ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_spell", "Last Spell"), name);
 
             CastSpell(spellDef.ID);
             return true;
@@ -1146,7 +1146,7 @@ internal static class GameActions
                 if (index < World.Instance.Player.Skills.Length)
                     skillName = World.Instance.Player.Skills[index].Name;
                 ScriptRecorder.Instance.RecordUseSkill(skillName);
-                ScriptingInfoGump.AddOrUpdateInfo("Last Skill", skillName);
+                ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_skill", "Last Skill"), skillName);
 
             LastSkillIndex = index;
             Socket.Send_UseSkill(index);
@@ -1169,7 +1169,7 @@ internal static class GameActions
     {
         // Record action for script recording
         ScriptRecorder.Instance.RecordContextMenu(serial, index);
-        ScriptingInfoGump.AddOrUpdateInfo("Last Context Menu response", index);
+        ScriptingInfoGump.AddOrUpdateInfo(TazLang.Get("debug_info_last_context_menu_response", "Last Context Menu response"), index);
 
         Socket.Send_PopupMenuSelection(serial, index);
     }

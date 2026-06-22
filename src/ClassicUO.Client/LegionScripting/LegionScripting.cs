@@ -68,7 +68,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: playlscript <filename>");
+                        GameActions.Print(world, TazLang.Get("script_engine_msg_usage_play", "Usage: playlscript <filename>"));
 
                         return;
                     }
@@ -89,7 +89,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: stoplscript <filename>");
+                        GameActions.Print(world, TazLang.Get("script_engine_msg_usage_stop", "Usage: stoplscript <filename>"));
 
                         return;
                     }
@@ -110,7 +110,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (a.Length < 2)
                     {
-                        GameActions.Print(world, "Usage: togglelscript <filename>");
+                        GameActions.Print(world, TazLang.Get("script_engine_msg_usage_toggle", "Usage: togglelscript <filename>"));
 
                         return;
                     }
@@ -139,7 +139,7 @@ namespace ClassicUO.LegionScripting
                 {
                     if (RunningScripts.Count == 0)
                     {
-                        GameActions.Print(world, "No scripts are currently running.");
+                        GameActions.Print(world, TazLang.Get("script_engine_msg_no_scripts_running", "No scripts are currently running."));
                         return;
                     }
 
@@ -152,7 +152,7 @@ namespace ClassicUO.LegionScripting
                         StopScript(sf);
                     }
 
-                    GameActions.Print(world, $"Stopped {count} running script(s).");
+                    GameActions.Print(world, TazLang.Get("script_engine_msg_stopped_fmt", new[] { count.ToString() }));
                 }
             );
         }
@@ -533,7 +533,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="e">The thrown error</param>
         private static void ShowScriptError(ScriptFile script, Exception e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered an error.", Constants.HUE_ERROR);
+            GameActions.Print(_world, TazLang.Get("script_engine_msg_script_error_fmt", new[] { script.FileName }), Constants.HUE_ERROR);
 
             ExceptionOperations eo = script.PythonEngine.GetService<ExceptionOperations>();
             if (eo != null)
@@ -606,7 +606,7 @@ namespace ClassicUO.LegionScripting
             for (int i = start; i <= end; i++)
             {
                 string text = lines[i];
-                if (i == index) text += "  <-- Error line";
+                if (i == index) text += TazLang.Get("script_engine_error_line_marker", "  <-- Error line");
                 result.Add(text);
             }
 
@@ -615,7 +615,7 @@ namespace ClassicUO.LegionScripting
 
         private static void ShowCSharpCompilationError(ScriptFile script, CompilationErrorException e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' has compilation errors.", Constants.HUE_ERROR);
+            GameActions.Print(_world, TazLang.Get("script_engine_error_compilation_fmt", new[] { script.FileName }), Constants.HUE_ERROR);
 
             var errorLocations = new List<ScriptErrorLocation>();
 
@@ -658,7 +658,7 @@ namespace ClassicUO.LegionScripting
 
         private static void ShowCSharpRuntimeError(ScriptFile script, Exception e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered a runtime error.", Constants.HUE_ERROR);
+            GameActions.Print(_world, TazLang.Get("script_engine_error_runtime_fmt", new[] { script.FileName }), Constants.HUE_ERROR);
 
             // Unwrap AggregateException if present
             Exception actualException = e;
@@ -753,11 +753,11 @@ namespace ClassicUO.LegionScripting
                         var client = new System.Net.WebClient();
                         string api = client.DownloadString(new Uri("https://raw.githubusercontent.com/PlayTazUO/TazUO/refs/heads/dev/src/ClassicUO.Client/LegionScripting/docs/API.py"));
                         File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "API.py"), api);
-                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, "Updated API!"); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, TazLang.Get("script_engine_msg_api_updated", "Updated API!")); });
                     }
                     catch (Exception ex)
                     {
-                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, "Failed to update the API..", 32); });
+                        MainThreadQueue.EnqueueAction(() => { GameActions.Print(_world, TazLang.Get("script_engine_error_api_update", "Failed to update the API.."), 32); });
                         Log.Error(ex.ToString());
                     }
 

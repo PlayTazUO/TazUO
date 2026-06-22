@@ -413,7 +413,7 @@ namespace ClassicUO.Game.Managers
                 ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, destinationSerial, moveItem.Amount).ToObjectActionQueueItem(), lootPriority);
             }
             else
-                GameActions.Print("Could not find a container to loot into. Try setting a grab bag.");
+                GameActions.Print(TazLang.Get("manager_autoloot_no_container", "Could not find a container to loot into. Try setting a grab bag."));
 
             _nextLootTime = Time.Ticks + ProfileManager.CurrentProfile.MoveMultiObjectDelay;
         }
@@ -422,7 +422,7 @@ namespace ClassicUO.Game.Managers
         {
             if (ProfileManager.CurrentProfile.EnableAutoLootProgressBar && (_progressBarGump == null || _progressBarGump.IsDisposed))
             {
-                _progressBarGump = new ProgressBarGump(_world, "Auto looting...", 0)
+                _progressBarGump = new ProgressBarGump(_world, TazLang.Get("manager_autoloot_progress_title", "Auto looting..."), 0)
                 {
                     Y = ProfileManager.CurrentProfile.GameWindowPosition.Y + ProfileManager.CurrentProfile.GameWindowSize.Y - 150,
                     ForegrouneColor = Color.DarkOrange
@@ -497,13 +497,13 @@ namespace ClassicUO.Game.Managers
             try
             {
                 if (entries != null && entries.Count > 0)
-                    ImportEntries(entries, $"character: {characterName}");
+                    ImportEntries(entries, TazLang.Get("manager_autoloot_import_source_fmt", new[] { characterName }));
                 else
-                    GameActions.Print($"No autoloot entries found for character: {characterName}", Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("manager_autoloot_import_none_fmt", new[] { characterName }), Constants.HUE_ERROR);
             }
             catch (Exception e)
             {
-                GameActions.Print($"Error importing from other character: {e.Message}", Constants.HUE_ERROR);
+                GameActions.Print(TazLang.Get("manager_autoloot_import_error_fmt", new[] { e.Message }), Constants.HUE_ERROR);
             }
         }
 
@@ -532,8 +532,8 @@ namespace ClassicUO.Game.Managers
                 Save();
             }
 
-            string message = $"Imported {newItems.Count} new autoloot entries from {source}";
-            if (duplicateCount > 0) message += $" ({duplicateCount} duplicates skipped)";
+            string message = TazLang.Get("manager_autoloot_imported_fmt", new[] { newItems.Count.ToString(), source });
+            if (duplicateCount > 0) message += TazLang.Get("manager_autoloot_imported_duplicates_fmt", new[] { duplicateCount.ToString() });
             GameActions.Print(message, 0x48);
         }
 
@@ -551,7 +551,7 @@ namespace ClassicUO.Game.Managers
             }
             catch (Exception e)
             {
-                GameActions.Print($"Error loading autoloot config from {characterPath}: {e.Message}", Constants.HUE_ERROR);
+                GameActions.Print(TazLang.Get("manager_autoloot_load_error_fmt", new[] { characterPath, e.Message }), Constants.HUE_ERROR);
             }
             return new List<AutoLootConfigEntry>();
         }

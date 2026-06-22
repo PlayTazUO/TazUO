@@ -15,16 +15,29 @@ namespace ClassicUO.Configuration
         /// <paramref name="fallback"/> if the key is not found.
         /// </summary>
         public static string Get(string key, string fallback = "")
-            => _strings.TryGetValue(key, out string v) ? v : fallback;
+        {
+            string v = _strings.TryGetValue(key, out string s) ? s : fallback;
+            // Traditional→Simplified (no-op for English/ASCII; idempotent for already-simplified text).
+            return ClassicUO.Utility.ChineseConverter.ToSimplified(v);
+        }
 
         /// <summary>
         /// Returns the localized string for <paramref name="key"/> with formatted values.
         /// </summary>
         public static string Get(string key, string[] replace)
         {
-            if(!_strings.TryGetValue(key, out string v))
-                return string.Empty;
-            
+            return Get(key, string.Empty, replace);
+        }
+
+        /// <summary>
+        /// Returns the localized string for <paramref name="key"/> with <paramref name="fallback"/> and formatted values.
+        /// </summary>
+        public static string Get(string key, string fallback, string[] replace)
+        {
+            string v = _strings.TryGetValue(key, out string s) ? s : fallback;
+
+            // Convert the template before formatting, so {0} placeholders survive intact.
+            v = ClassicUO.Utility.ChineseConverter.ToSimplified(v);
             return string.Format(v, replace);
         }
 

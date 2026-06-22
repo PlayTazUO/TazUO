@@ -544,6 +544,12 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     // Reload the language strings and rebuild the login screen so the
                     // selection takes effect live without requiring a restart.
                     TazLang.Load(langs[i]);
+
+                    // Keep the Traditional→Simplified converter in sync with the UI language,
+                    // so switching to/from CHS updates in-game cliloc rendering without a restart.
+                    ClassicUO.Utility.ChineseConverter.Enabled =
+                        string.Equals(langs[i], "CHS", System.StringComparison.OrdinalIgnoreCase);
+
                     Client.Game.GetScene<LoginScene>()?.RebuildLoginGump();
                 },
                 TazLang.Get("uilangtooltip")

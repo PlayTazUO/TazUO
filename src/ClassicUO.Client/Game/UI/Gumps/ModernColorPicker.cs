@@ -6,6 +6,7 @@ using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -128,7 +129,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (!isClickable)
                         SetTooltip(hue.ToString());
                     else
-                        SetTooltip($"Click to select a hue ({hue})");
+                        SetTooltip(TazLang.Get("gump_moderncolorpicker_selecthue_tooltip_fmt", "Click to select a hue ({0})", new[] { hue.ToString() }));
                 }
             }
 
@@ -174,7 +175,7 @@ namespace ClassicUO.Game.UI.Gumps
                         flash = true;
                     }
                     if (sendSysMessage)
-                        GameActions.Print(world, $"Selected hue: {hue}");
+                        GameActions.Print(world, TazLang.Get("gump_moderncolorpicker_selectedhue_msg_fmt", "Selected hue: {0}", new[] { hue.ToString() }));
                 }
             }
 

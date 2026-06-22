@@ -140,7 +140,7 @@ namespace ClassicUO.Game.Managers
         {
             if (args.Length < 3)
             {
-                GameActions.Print(World.Instance, "Usage: -dressagent <dress|undress> \"<config name>\"");
+                GameActions.Print(World.Instance, TazLang.Get("manager_dress_usage", "Usage: -dressagent <dress|undress> \"<config name>\""));
                 return;
             }
 
@@ -150,7 +150,7 @@ namespace ClassicUO.Game.Managers
             DressConfig config = CurrentPlayerConfigs.FirstOrDefault(c => c.Name.Equals(configName, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Dress config '{configName}' not found");
+                GameActions.Print(World.Instance, TazLang.Get("manager_dress_not_found_fmt", new[] { configName }));
                 return;
             }
 
@@ -158,14 +158,14 @@ namespace ClassicUO.Game.Managers
             {
                 case "dress":
                     DressFromConfig(config);
-                    GameActions.Print(World.Instance, $"Dressing from config: {configName}");
+                    GameActions.Print(World.Instance, TazLang.Get("manager_dress_dressing_fmt", new[] { configName }));
                     break;
                 case "undress":
                     UndressFromConfig(config);
-                    GameActions.Print(World.Instance, $"Undressing from config: {configName}");
+                    GameActions.Print(World.Instance, TazLang.Get("manager_dress_undressing_fmt", new[] { configName }));
                     break;
                 default:
-                    GameActions.Print(World.Instance, "Usage: -dressagent <dress|undress> \"<config name>\"");
+                    GameActions.Print(World.Instance, TazLang.Get("manager_dress_usage", "Usage: -dressagent <dress|undress> \"<config name>\""));
                     break;
             }
         }
@@ -451,7 +451,7 @@ namespace ClassicUO.Game.Managers
 
             if (macroManager == null) return;
 
-            var macro = new Macro($"Dress: {configName}", SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent dress \"{configName}\"") };
+            var macro = new Macro(TazLang.Get("manager_dress_macro_dress_fmt", new[] { configName }), SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent dress \"{configName}\"") };
 
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
@@ -463,7 +463,7 @@ namespace ClassicUO.Game.Managers
 
             if (macroManager == null) return;
 
-            var macro = new Macro($"Undress: {configName}", SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent undress \"{configName}\"") };
+            var macro = new Macro(TazLang.Get("manager_dress_macro_undress_fmt", new[] { configName }), SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"dressagent undress \"{configName}\"") };
 
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));

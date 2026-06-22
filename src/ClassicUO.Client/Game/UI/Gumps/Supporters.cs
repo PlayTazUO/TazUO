@@ -13,21 +13,11 @@ namespace ClassicUO.Game.UI.Gumps
         private const int WIDTH = 512;
         private const int HEIGHT = 512;
 
-
-        private static readonly string[] SUPPORTERS = {
-            "TazmanianTad - Developer",
-            "Doskan - Random coffee bringer",
-            "Auburok - Don't leave Brit Bank without TazUO",
-            "IDiivil - Happily Organized Now",
-            "Avernal",
-            "d6punk - UO for life!",
-            "Eora - Always looking for interesting adventures"
-        };
         private AlphaBlendControl _background;
 
         private Texture2D image = PNGLoader.Instance.GetImageTexture(Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "tazuo.png"));
 
-        private Label[] supporterLabels = new Label[SUPPORTERS.Length];
+        private Label[] supporterLabels;
 
         private Line line;
 
@@ -59,15 +49,25 @@ namespace ClassicUO.Game.UI.Gumps
             line = new Line(0, title.Height, WIDTH, 2, Color.Gray.PackedValue);
             Add(line);
 
-            int y = line.Y + line.Height + 1, count = 0;
-            foreach (string SUPPORTER in SUPPORTERS)
+            int y = line.Y + line.Height + 1;
+            string[] supporters = new[]
             {
-                var l = new Label(SUPPORTER, true, 0xffff, WIDTH, 255, FontStyle.BlackBorder, Assets.TEXT_ALIGN_TYPE.TS_CENTER, true);
+                TazLang.Get("supporters_entry_0", "TazmanianTad - Developer"),
+                TazLang.Get("supporters_entry_1", "Doskan - Random coffee bringer"),
+                TazLang.Get("supporters_entry_2", "Auburok - Don't leave Brit Bank without TazUO"),
+                TazLang.Get("supporters_entry_3", "IDiivil - Happily Organized Now"),
+                TazLang.Get("supporters_entry_4", "Avernal"),
+                TazLang.Get("supporters_entry_5", "d6punk - UO for life!"),
+                TazLang.Get("supporters_entry_6", "Eora - Always looking for interesting adventures")
+            };
+            supporterLabels = new Label[supporters.Length];
+            for (int i = 0; i < supporters.Length; i++)
+            {
+                var l = new Label(supporters[i], true, 0xffff, WIDTH, 255, FontStyle.BlackBorder, Assets.TEXT_ALIGN_TYPE.TS_CENTER, true);
                 l.Y = y;
                 y += l.Height + 1;
                 Add(l);
-                supporterLabels[count] = l;
-                count++;
+                supporterLabels[i] = l;
             }
         }
 

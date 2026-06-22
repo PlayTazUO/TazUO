@@ -27,7 +27,7 @@ public static class CililocsTabContent
         string searchId = "";
         string searchText = "";
 
-        var statusLabel = new MyraLabel("Select a language to load clilocs", MyraLabel.TextStyle.P);
+        var statusLabel = new MyraLabel(TazLang.Get("tinkerer_cliloc_msg_select_language", "Select a language to load clilocs"), MyraLabel.TextStyle.P);
         var countLabel = new MyraLabel("", MyraLabel.TextStyle.P);
         var resultsPanel = new VerticalStackPanel { Spacing = 2 };
         var pageLabel = new MyraLabel("", MyraLabel.TextStyle.P);
@@ -42,7 +42,7 @@ public static class CililocsTabContent
 
             if (filteredResults.Count == 0)
             {
-                resultsPanel.Widgets.Add(new MyraLabel("No results", MyraLabel.TextStyle.P));
+                resultsPanel.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_empty_no_results", "No results"), MyraLabel.TextStyle.P));
                 pageLabel.Text = "";
                 if (prevBtn != null) prevBtn.Enabled = false;
                 if (nextBtn != null) nextBtn.Enabled = false;
@@ -53,14 +53,14 @@ public static class CililocsTabContent
             int start = currentPage * PAGE_SIZE;
             int end = Math.Min(start + PAGE_SIZE, filteredResults.Count);
 
-            pageLabel.Text = $"Page {currentPage + 1} of {totalPages}";
+            pageLabel.Text = TazLang.Get("tinkerer_cliloc_msg_page_fmt", new[] { (currentPage + 1).ToString(), totalPages.ToString() });
             if (prevBtn != null) prevBtn.Enabled = currentPage > 0;
             if (nextBtn != null) nextBtn.Enabled = currentPage < totalPages - 1;
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Numeric("ID"),
-                GridColumnInfo.Fill("Text")
+                GridColumnInfo.Numeric(TazLang.Get("tinkerer_cliloc_col_id", "ID")),
+                GridColumnInfo.Fill(TazLang.Get("tinkerer_cliloc_col_text", "Text"))
             );
 
             for (int i = start; i < end; i++)
@@ -74,7 +74,7 @@ public static class CililocsTabContent
                     gridRow, 0);
 
                 var textLabel = new MyraLabel(text, MyraLabel.TextStyle.P)
-                    { MaxWidth = 600, Tooltip = $"#{id}: {text}" };
+                    { MaxWidth = 600, Tooltip = TazLang.Get("tinkerer_cliloc_tooltip_fmt", new[] { id.ToString(), text }) };
                 grid.AddWidget(textLabel, gridRow, 1);
             }
 
@@ -85,7 +85,7 @@ public static class CililocsTabContent
         {
             if (loadedEntries.Count == 0)
             {
-                statusLabel.Text = "No clilocs loaded. Select a language first.";
+                statusLabel.Text = TazLang.Get("tinkerer_cliloc_msg_no_clilocs_loaded", "No clilocs loaded. Select a language first.");
                 return;
             }
 
@@ -107,8 +107,8 @@ public static class CililocsTabContent
 
             filteredResults.Sort((a, b) => a.Key.CompareTo(b.Key));
             statusLabel.Text = filteredResults.Count == 0
-                ? "No results found"
-                : $"Found {filteredResults.Count:N0} result{(filteredResults.Count == 1 ? "" : "s")}";
+                ? TazLang.Get("tinkerer_cliloc_msg_no_results_found", "No results found")
+                : TazLang.Get("tinkerer_cliloc_msg_found_fmt", new[] { filteredResults.Count.ToString("N0") });
             BuildResultsPage();
         }
 
@@ -116,7 +116,7 @@ public static class CililocsTabContent
         {
             if (isLoading) return;
             isLoading = true;
-            statusLabel.Text = $"Loading Cliloc.{langCode}...";
+            statusLabel.Text = TazLang.Get("tinkerer_cliloc_msg_loading_fmt", new[] { langCode });
             countLabel.Text = "";
             loadedEntries.Clear();
             filteredResults.Clear();
@@ -132,8 +132,8 @@ public static class CililocsTabContent
                     MainThreadQueue.EnqueueAction(() =>
                     {
                         loadedEntries = entries;
-                        countLabel.Text = $"({entries.Count:N0} entries)";
-                        statusLabel.Text = "Ready — enter search terms or leave blank to show all";
+                        countLabel.Text = TazLang.Get("tinkerer_cliloc_msg_entries_fmt", new[] { entries.Count.ToString("N0") });
+                        statusLabel.Text = TazLang.Get("tinkerer_cliloc_msg_ready", "Ready — enter search terms or leave blank to show all");
                         isLoading = false;
                         PerformSearch();
                     });
@@ -142,7 +142,7 @@ public static class CililocsTabContent
                 {
                     MainThreadQueue.EnqueueAction(() =>
                     {
-                        statusLabel.Text = $"Error loading: {ex.Message}";
+                        statusLabel.Text = TazLang.Get("tinkerer_cliloc_error_loading_fmt", new[] { ex.Message });
                         isLoading = false;
                     });
                 }
@@ -151,11 +151,11 @@ public static class CililocsTabContent
 
         // Language selector
         var langRow = new HorizontalStackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-        langRow.Widgets.Add(new MyraLabel("Language:", MyraLabel.TextStyle.P));
+        langRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_label_language", "Language:"), MyraLabel.TextStyle.P));
 
         if (langCodes.Count == 0)
         {
-            langRow.Widgets.Add(new MyraLabel("No Cliloc files found in UO directory", MyraLabel.TextStyle.P));
+            langRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_msg_no_cliloc_files", "No Cliloc files found in UO directory"), MyraLabel.TextStyle.P));
         }
         else
         {
@@ -180,24 +180,24 @@ public static class CililocsTabContent
         root.Widgets.Add(langRow);
 
         // Search fields
-        root.Widgets.Add(new MyraLabel("Search:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_label_search", "Search:"), MyraLabel.TextStyle.H3));
 
-        var idBox = new MyraInputBox { HintText = "Filter by ID (partial match)", Width = 200 };
+        var idBox = new MyraInputBox { HintText = TazLang.Get("tinkerer_cliloc_hint_filter_id", "Filter by ID (partial match)"), Width = 200 };
         idBox.TextChangedByUser += (_, _) => searchId = idBox.Text ?? "";
 
-        var textBox = new MyraInputBox { HintText = "Filter by text (partial match)", Width = 320 };
+        var textBox = new MyraInputBox { HintText = TazLang.Get("tinkerer_cliloc_hint_filter_text", "Filter by text (partial match)"), Width = 320 };
         textBox.TextChangedByUser += (_, _) => searchText = textBox.Text ?? "";
 
         var searchRow = new HorizontalStackPanel { Spacing = 6 };
-        searchRow.Widgets.Add(new MyraLabel("ID:", MyraLabel.TextStyle.P));
+        searchRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_label_id", "ID:"), MyraLabel.TextStyle.P));
         searchRow.Widgets.Add(idBox);
-        searchRow.Widgets.Add(new MyraLabel("Text:", MyraLabel.TextStyle.P));
+        searchRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_cliloc_label_text", "Text:"), MyraLabel.TextStyle.P));
         searchRow.Widgets.Add(textBox);
         root.Widgets.Add(searchRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Search", () => PerformSearch()));
-        actionRow.Widgets.Add(new MyraButton("Clear", () =>
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_cliloc_btn_search", "Search"), () => PerformSearch()));
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_cliloc_btn_clear", "Clear"), () =>
         {
             searchId = ""; idBox.Text = "";
             searchText = ""; textBox.Text = "";
@@ -207,11 +207,11 @@ public static class CililocsTabContent
         root.Widgets.Add(statusLabel);
 
         // Pagination controls
-        prevBtn = new MyraButton("< Prev", () =>
+        prevBtn = new MyraButton(TazLang.Get("tinkerer_cliloc_btn_prev", "< Prev"), () =>
         {
             if (currentPage > 0) { currentPage--; BuildResultsPage(); }
         }) { Enabled = false };
-        nextBtn = new MyraButton("Next >", () =>
+        nextBtn = new MyraButton(TazLang.Get("tinkerer_cliloc_btn_next", "Next >"), () =>
         {
             int totalPages = (filteredResults.Count + PAGE_SIZE - 1) / PAGE_SIZE;
             if (currentPage < totalPages - 1) { currentPage++; BuildResultsPage(); }

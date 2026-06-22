@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
@@ -16,7 +17,7 @@ public static class SoundFilterTabContent
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Sound Filter allows you to mute specific in-game sounds by their ID.",
+            TazLang.Get("sound_filter_tabs_desc", "Sound Filter allows you to mute specific in-game sounds by their ID."),
             MyraLabel.TextStyle.H3));
 
         var lastSoundPanel = new VerticalStackPanel { Spacing = 2 };
@@ -29,13 +30,13 @@ public static class SoundFilterTabContent
 
             if (filterList.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No sounds filtered.", MyraLabel.TextStyle.P));
+                filtersPanel.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_empty_filtered", "No sounds filtered."), MyraLabel.TextStyle.P));
                 return;
             }
 
-            filtersPanel.Widgets.Add(new MyraLabel($"Total: {filterList.Count} sound(s) filtered", MyraLabel.TextStyle.P));
+            filtersPanel.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_total_fmt", new[] { filterList.Count.ToString() }), MyraLabel.TextStyle.P));
 
-            filtersPanel.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Clear All Filters", () =>
+            filtersPanel.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(TazLang.Get("sound_filter_tabs_btn_clear_all", "Clear All Filters"), () =>
             {
                 SoundFilterManager.Instance.Clear();
                 BuildFilterList();
@@ -43,8 +44,8 @@ public static class SoundFilterTabContent
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Sound ID"),
-                GridColumnInfo.Fill("Actions")
+                GridColumnInfo.Auto(TazLang.Get("sound_filter_tabs_col_sound_id", "Sound ID")),
+                GridColumnInfo.Fill(TazLang.Get("sound_filter_tabs_col_actions", "Actions"))
             );
 
             int dataRow = 1;
@@ -73,15 +74,15 @@ public static class SoundFilterTabContent
                 int capturedId = soundId;
                 var actionsPanel = new HorizontalStackPanel { Spacing = 4 };
                 actionsPanel.Widgets.Add(
-                    new MyraButton("Play", () => Client.Game.Audio.PlaySound(current[0], true))
+                    new MyraButton(TazLang.Get("sound_filter_tabs_btn_play", "Play"), () => Client.Game.Audio.PlaySound(current[0], true))
                     {
-                        Tooltip = "Test play this sound (bypasses filter)",
+                        Tooltip = TazLang.Get("sound_filter_tabs_tooltip_play", "Test play this sound (bypasses filter)"),
                     }
                 );
                 actionsPanel.Widgets.Add(
                     MyraStyle.ApplyButtonDangerStyle(
                         new MyraButton(
-                            "Delete",
+                            TazLang.Get("shared_delete", "Delete"),
                             () =>
                             {
                                 SoundFilterManager.Instance.RemoveFilter(current[0]);
@@ -89,7 +90,7 @@ public static class SoundFilterTabContent
                             }
                         )
                         {
-                            Tooltip = "Delete this filter",
+                            Tooltip = TazLang.Get("sound_filter_tabs_tooltip_delete_filter", "Delete this filter"),
                         }
                     )
                 );
@@ -106,7 +107,7 @@ public static class SoundFilterTabContent
         void BuildLastSoundSection()
         {
             lastSoundPanel.Widgets.Clear();
-            lastSoundPanel.Widgets.Add(new MyraLabel("Recently played:", MyraLabel.TextStyle.H3));
+            lastSoundPanel.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_label_recently_played", "Recently played:"), MyraLabel.TextStyle.H3));
 
             int c = 0;
             foreach ((int, string) sound in Client.Game.Audio.LastPlayedSounds.GetItems())
@@ -116,39 +117,39 @@ public static class SoundFilterTabContent
                 int id = sound.Item1;
 
                 var row = new HorizontalStackPanel { Spacing = 4 };
-                row.Widgets.Add(new MyraLabel($"Sound ID: {id} ({sound.Item2})", MyraLabel.TextStyle.P));
-                row.Widgets.Add(new MyraButton("Add Filter", () =>
+                row.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_sound_id_fmt", new[] { id.ToString(), sound.Item2 }), MyraLabel.TextStyle.P));
+                row.Widgets.Add(new MyraButton(TazLang.Get("sound_filter_tabs_btn_add_filter", "Add Filter"), () =>
                 {
                     SoundFilterManager.Instance.AddFilter(id);
                     BuildFilterList();
-                }) { Tooltip = "Add this sound to the filter list" });
-                row.Widgets.Add(new MyraButton("Play Again", () =>
-                    Client.Game.Audio.PlaySound(id, true)) { Tooltip = "Play this sound again" });
+                }) { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_add_filter", "Add this sound to the filter list") });
+                row.Widgets.Add(new MyraButton(TazLang.Get("sound_filter_tabs_btn_play_again", "Play Again"), () =>
+                    Client.Game.Audio.PlaySound(id, true)) { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_play_again", "Play this sound again") });
                 lastSoundPanel.Widgets.Add(row);
             }
 
-            lastSoundPanel.Widgets.Add(new MyraButton("Refresh", () => BuildLastSoundSection())
+            lastSoundPanel.Widgets.Add(new MyraButton(TazLang.Get("shared_refresh", "Refresh"), () => BuildLastSoundSection())
             {
-                Tooltip = "Refresh last played sound display"
+                Tooltip = TazLang.Get("sound_filter_tabs_tooltip_refresh", "Refresh last played sound display")
             }.PlaceBefore(new MyraLabel(
-                                          "Tip: Play a sound in-game to see its ID above, then click Add Filter.",
+                                          TazLang.Get("sound_filter_tabs_tip", "Tip: Play a sound in-game to see its ID above, then click Add Filter."),
                                           MyraLabel.TextStyle.P)));
 
             if(c == 0)
             {
                 var row = new HorizontalStackPanel { Spacing = 4 };
-                row.Widgets.Add(new MyraLabel("No sound played yet.", MyraLabel.TextStyle.P));
-                row.Widgets.Add(new MyraButton("Refresh", () => BuildLastSoundSection())
-                    { Tooltip = "Refresh last played sound display" });
+                row.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_empty_no_sound_played", "No sound played yet."), MyraLabel.TextStyle.P));
+                row.Widgets.Add(new MyraButton(TazLang.Get("shared_refresh", "Refresh"), () => BuildLastSoundSection())
+                    { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_refresh", "Refresh last played sound display") });
                 lastSoundPanel.Widgets.Add(row);
             }
         }
 
         var addFilterPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newSoundBox = new MyraInputBox { HintText = "Sound ID (0-65535)", Width = 120 };
+        var newSoundBox = new MyraInputBox { HintText = TazLang.Get("sound_filter_tabs_hint_sound_id", "Sound ID (0-65535)"), Width = 120 };
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(TazLang.Get("shared_add", "Add"), () =>
         {
             if (int.TryParse(newSoundBox.Text, out int soundId))
             {
@@ -159,43 +160,43 @@ public static class SoundFilterTabContent
                 BuildFilterList();
             }
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Test Play", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(TazLang.Get("sound_filter_tabs_btn_test_play", "Test Play"), () =>
         {
             if (int.TryParse(newSoundBox.Text, out int soundId))
                 Client.Game.Audio.PlaySound(Math.Clamp(soundId, 0, 65535), true);
-        }) { Tooltip = "Test play this sound ID" });
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        }) { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_test_play", "Test play this sound ID") });
+        addConfirmRow.Widgets.Add(new MyraButton(TazLang.Get("shared_cancel", "Cancel"), () =>
         {
             addFilterPanel.Visible = false;
             newSoundBox.Text = "";
         }));
 
         var addFieldRow = new HorizontalStackPanel { Spacing = 4 };
-        addFieldRow.Widgets.Add(new MyraLabel("Sound ID:", MyraLabel.TextStyle.P)
-            { Tooltip = "Enter the numeric ID of the sound to filter (0-65535)" });
+        addFieldRow.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_label_sound_id", "Sound ID:"), MyraLabel.TextStyle.P)
+            { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_sound_id_field", "Enter the numeric ID of the sound to filter (0-65535)") });
         addFieldRow.Widgets.Add(newSoundBox);
 
-        addFilterPanel.Widgets.Add(new MyraLabel("Add Sound Filter:", MyraLabel.TextStyle.H3));
+        addFilterPanel.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_label_add_sound_filter", "Add Sound Filter:"), MyraLabel.TextStyle.H3));
         addFilterPanel.Widgets.Add(addFieldRow);
         addFilterPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Filter Entry", () => addFilterPanel.Visible = !addFilterPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("sound_filter_tabs_btn_add_filter_entry", "Add Filter Entry"), () => addFilterPanel.Visible = !addFilterPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_import", "Import"), () =>
         {
             try
             {
                 string? json = Clipboard.GetClipboardText();
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    GameActions.Print("Clipboard is empty", Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("sound_filter_tabs_msg_clipboard_empty", "Clipboard is empty"), Constants.HUE_ERROR);
                     return;
                 }
 
                 HashSet<int>? importedFilters = JsonSerializer.Deserialize(json, HashSetIntContext.Default.HashSetInt32);
                 if (importedFilters == null)
                 {
-                    GameActions.Print("Failed to parse clipboard data", Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("sound_filter_tabs_error_parse_failed", "Failed to parse clipboard data"), Constants.HUE_ERROR);
                     return;
                 }
 
@@ -207,14 +208,14 @@ public static class SoundFilterTabContent
                 }
                 SoundFilterManager.Instance.Save();
                 BuildFilterList();
-                GameActions.Print($"Added {added} sound filter(s) from clipboard", Constants.HUE_SUCCESS);
+                GameActions.Print(TazLang.Get("sound_filter_tabs_msg_added_fmt", new[] { added.ToString() }), Constants.HUE_SUCCESS);
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Import failed: {ex.Message}", Constants.HUE_ERROR);
+                GameActions.Print(TazLang.Get("sound_filter_tabs_error_import_failed_fmt", new[] { ex.Message }), Constants.HUE_ERROR);
             }
-        }) { Tooltip = "Import filtered sounds from clipboard JSON (adds to current filters)" });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+        }) { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_import", "Import filtered sounds from clipboard JSON (adds to current filters)") });
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_export", "Export"), () =>
         {
             try
             {
@@ -223,20 +224,20 @@ public static class SoundFilterTabContent
                     HashSetIntContext.Default.HashSetInt32);
                 json.CopyToClipboard();
                 GameActions.Print(
-                    $"Exported {SoundFilterManager.Instance.FilteredSounds.Count} sound filter(s) to clipboard",
+                    TazLang.Get("sound_filter_tabs_msg_exported_fmt", new[] { SoundFilterManager.Instance.FilteredSounds.Count.ToString() }),
                     Constants.HUE_SUCCESS);
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Export failed: {ex.Message}", Constants.HUE_ERROR);
+                GameActions.Print(TazLang.Get("sound_filter_tabs_error_export_failed_fmt", new[] { ex.Message }), Constants.HUE_ERROR);
             }
-        }) { Tooltip = "Export all filtered sounds as JSON to clipboard" });
+        }) { Tooltip = TazLang.Get("sound_filter_tabs_tooltip_export", "Export all filtered sounds as JSON to clipboard") });
 
         BuildLastSoundSection();
         root.Widgets.Add(lastSoundPanel);
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addFilterPanel);
-        root.Widgets.Add(new MyraLabel("Filtered Sounds:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("sound_filter_tabs_label_filtered_sounds", "Filtered Sounds:"), MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 250, Content = filtersPanel });
 

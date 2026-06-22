@@ -367,7 +367,7 @@ public class WorldMapGump : ResizableGump
             true,
             _showPartyMembers
         );
-        _options["show_corpse"] = new ContextMenuItemEntry("Show my Corpse", () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
+        _options["show_corpse"] = new ContextMenuItemEntry(TazLang.Get("gump_world_map_menu_show_corpse", "Show my Corpse"), () => { _showCorpse = !_showCorpse; SaveSettings(); }, true, _showCorpse);
 
         _options["show_mobiles"] = new ContextMenuItemEntry(ResGumps.ShowMobiles, () => { _showMobiles = !_showMobiles; SaveSettings(); }, true, _showMobiles);
 
@@ -402,9 +402,9 @@ public class WorldMapGump : ResizableGump
 
         _options["add_marker_on_player"] = new ContextMenuItemEntry(ResGumps.AddMarkerOnPlayer, () => AddMarkerOnPlayer());
 
-        _options["open_web_map"] = new ContextMenuItemEntry("Open Web Map (Browser)", GameActions.OpenWorldMapWebWindow);
+        _options["open_web_map"] = new ContextMenuItemEntry(TazLang.Get("gump_world_map_menu_open_web_map", "Open Web Map (Browser)"), GameActions.OpenWorldMapWebWindow);
 
-        _options["auto_start_web_map"] = new ContextMenuItemEntry("Auto start web map", () =>
+        _options["auto_start_web_map"] = new ContextMenuItemEntry(TazLang.Get("gump_world_map_menu_auto_start_web_map", "Auto start web map"), () =>
         {
             ProfileManager.CurrentProfile.WebMapAutoStart = !ProfileManager.CurrentProfile.WebMapAutoStart;
             if (!MapWebServerManager.Instance.IsRunning)
@@ -431,7 +431,7 @@ public class WorldMapGump : ResizableGump
         {
             Color = Color.Aquamarine,
             MapId = _map.Index,
-            Name = isManualType ? $"Go to: {x}, {y}" : "",
+            Name = isManualType ? TazLang.Get("gump_world_map_marker_goto_fmt", new[] { x.ToString(), y.ToString() }) : "",
             X = x,
             Y = y,
             ZoomIndex = 1
@@ -1784,7 +1784,7 @@ public class WorldMapGump : ResizableGump
 
                         if (markerFile.Markers.Count > 0)
                         {
-                            GameActions.Print(World, $"..{Path.GetFileName(mapFile)} ({markerFile.Markers.Count})", 0x2B);
+                            GameActions.Print(World, TazLang.Get("gump_world_map_msg_loaded_file_fmt", new[] { Path.GetFileName(mapFile), markerFile.Markers.Count.ToString() }), 0x2B);
                         }
                         _markerFiles.Add(markerFile);
                     }
@@ -1897,7 +1897,7 @@ public class WorldMapGump : ResizableGump
             catch (Exception e)
             {
                 Log.Error($"Error saving user marker: {e}");
-                GameActions.Print(_world, "Failed to save user markers", 32);
+                GameActions.Print(_world, TazLang.Get("gump_world_map_msg_failed_save_markers", "Failed to save user markers"), 32);
             }
 
         var mapMarker = new WMapMarker
@@ -2072,7 +2072,7 @@ public class WorldMapGump : ResizableGump
         {
             if (batcher.ClipBegin(gX, gY, gWidth, gHeight))
             {
-                ReadOnlySpan<char> str = "Please wait, I'm making the map file...".AsSpan();
+                ReadOnlySpan<char> str = TazLang.Get("gump_world_map_msg_making_map", "Please wait, I'm making the map file...").AsSpan();
                 //str = str[..(str.Length - (int)_mapLoadingTime % 3)];
 
                 //if (Time.Ticks > _mapLoadingTime)
@@ -3353,7 +3353,7 @@ public class WorldMapGump : ResizableGump
             if (x > 10 && x < 120 && y > 10 && y < 25)
             {
                 SDL.SDL_SetClipboardText($"{World.Player.X}, {World.Player.Y}, {World.Player.Z}");
-                GameActions.Print("Copied player coords to clipboard.");
+                GameActions.Print(TazLang.Get("gump_world_map_msg_copied_coords", "Copied player coords to clipboard."));
             }
         }
 
@@ -3432,7 +3432,7 @@ public class WorldMapGump : ResizableGump
             if (path == null || path.Count == 0)
             {
                 if (firstAttempt)
-                    GameActions.Print("Can't find a path there.");
+                    GameActions.Print(TazLang.Get("gump_world_map_msg_no_path", "Can't find a path there."));
                 _navDest = null;
                 _navPath = null;
                 return;

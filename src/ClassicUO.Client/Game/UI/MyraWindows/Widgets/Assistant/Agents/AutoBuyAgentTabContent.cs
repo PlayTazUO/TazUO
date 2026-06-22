@@ -146,11 +146,11 @@ public static class AutoBuyAgentTabContent
 
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new MyraInputBox { HintText = "Graphic ID", Width = 80 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1=any)");
-        var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
-        var newRestockBox = new MyraInputBox { HintText = "Restock Up To", Width = 100 };
-        var newMaxPriceBox = new MyraInputBox { HintText = "Max Price (0=no limit)", Width = 110 };
+        var newGraphicBox = new MyraInputBox { HintText = TazLang.Get("agent_hint_graphic", "Graphic ID"), Width = 80 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, TazLang.Get("agent_hint_hue", "Hue (-1=any)"));
+        var newMaxAmountBox = new MyraInputBox { HintText = TazLang.Get("agent_hint_maxamount", "Max Amount (0=unlimited)"), Width = 130 };
+        var newRestockBox = new MyraInputBox { HintText = TazLang.Get("autobuy_hint_restockupto", "Restock Up To"), Width = 100 };
+        var newMaxPriceBox = new MyraInputBox { HintText = TazLang.Get("autobuy_hint_maxprice", "Max Price (0=no limit)"), Width = 110 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
         addFieldsRow1.Widgets.Add(new MyraLabel(TazLang.Get("agent_graphic_label"), MyraLabel.TextStyle.P));

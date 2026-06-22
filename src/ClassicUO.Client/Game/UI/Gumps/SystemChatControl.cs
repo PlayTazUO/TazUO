@@ -637,7 +637,7 @@ namespace ClassicUO.Game.UI.Gumps
                     cutoffIndex = lastSpaceIndex;
                 }
 
-                GameActions.Print(World.Instance, "Message too long, sending the first " + cutoffIndex + " characters.");
+                GameActions.Print(World.Instance, TazLang.Get("gump_systemchat_messagetoolong_fmt", "Message too long, sending the first {0} characters.", new[] { cutoffIndex.ToString() }));
                 Mode = sentMode;
                 TextBoxControl.SetText(text.Substring(cutoffIndex).TrimStart());
                 text = text.Substring(0, cutoffIndex);

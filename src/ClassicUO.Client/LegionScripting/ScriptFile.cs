@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using ClassicUO.Configuration;
 using ClassicUO.Game;
 using ClassicUO.Utility.Logging;
 using IronPython.Hosting;
@@ -80,7 +81,7 @@ public partial class ScriptFile : IDisposable
             File.WriteAllText(temp, contents);
             File.Move(temp, FullPath, true);
 
-            GameActions.Print(World, $"Saved {FileName}.");
+            GameActions.Print(World, TazLang.Get("script_engine_msg_saved_fmt", new[] { FileName }));
         }
         catch (Exception ex)
         {

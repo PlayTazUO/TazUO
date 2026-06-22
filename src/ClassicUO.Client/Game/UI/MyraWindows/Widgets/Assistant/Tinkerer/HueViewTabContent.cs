@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
@@ -21,7 +22,7 @@ public static class HueViewTabContent
     {
         HuesLoader huesLoader = Client.Game.UO.FileManager.Hues;
         if (huesLoader == null || huesLoader.HuesCount == 0)
-            return new MyraLabel("Hue data not available", MyraLabel.TextStyle.P);
+            return new MyraLabel(TazLang.Get("tinkerer_hue_nodata", "Hue data not available"), MyraLabel.TextStyle.P);
 
         var root = new VerticalStackPanel { Spacing = 4 };
 
@@ -45,8 +46,8 @@ public static class HueViewTabContent
             int totalPages = Math.Max(1, (total + PAGE_SIZE - 1) / PAGE_SIZE);
             if (currentPage >= totalPages) currentPage = totalPages - 1;
 
-            statusLabel.Text = $"{total:N0} hue{(total == 1 ? "" : "s")}";
-            pageLabel.Text = $"Page {currentPage + 1} of {totalPages}";
+            statusLabel.Text = TazLang.Get("tinkerer_hue_count_fmt", new[] { total.ToString("N0") });
+            pageLabel.Text = TazLang.Get("tinkerer_hue_page_fmt", new[] { (currentPage + 1).ToString(), totalPages.ToString() });
             prevBtn.Enabled = currentPage > 0;
             nextBtn.Enabled = currentPage < totalPages - 1;
 
@@ -77,17 +78,17 @@ public static class HueViewTabContent
 
         // Filter row
         var filterRow = new HorizontalStackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
-        var numBox = new MyraInputBox { HintText = "Filter by #", Width = 100 };
+        var numBox = new MyraInputBox { HintText = TazLang.Get("tinkerer_hue_hint_filter_num", "Filter by #"), Width = 100 };
         numBox.TextChangedByUser += (_, _) => filterNum = numBox.Text ?? "";
-        var nameBox = new MyraInputBox { HintText = "Filter by name", Width = 180 };
+        var nameBox = new MyraInputBox { HintText = TazLang.Get("tinkerer_hue_hint_filter_name", "Filter by name"), Width = 180 };
         nameBox.TextChangedByUser += (_, _) => filterName = nameBox.Text ?? "";
 
-        filterRow.Widgets.Add(new MyraLabel("#:", MyraLabel.TextStyle.P));
+        filterRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_hue_label_hash", "#:"), MyraLabel.TextStyle.P));
         filterRow.Widgets.Add(numBox);
-        filterRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+        filterRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_hue_label_name", "Name:"), MyraLabel.TextStyle.P));
         filterRow.Widgets.Add(nameBox);
-        filterRow.Widgets.Add(new MyraButton("Search", ApplyFilter));
-        filterRow.Widgets.Add(new MyraButton("Clear", () =>
+        filterRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_hue_btn_search", "Search"), ApplyFilter));
+        filterRow.Widgets.Add(new MyraButton(TazLang.Get("tinkerer_hue_btn_clear", "Clear"), () =>
         {
             filterNum = ""; numBox.Text = "";
             filterName = ""; nameBox.Text = "";
@@ -97,8 +98,8 @@ public static class HueViewTabContent
         root.Widgets.Add(statusLabel);
 
         // Pagination controls
-        prevBtn = new MyraButton("< Prev", () => { currentPage--; BuildPage(); }) { Enabled = false };
-        nextBtn = new MyraButton("Next >", () => { currentPage++; BuildPage(); }) { Enabled = false };
+        prevBtn = new MyraButton(TazLang.Get("tinkerer_hue_btn_prev", "< Prev"), () => { currentPage--; BuildPage(); }) { Enabled = false };
+        nextBtn = new MyraButton(TazLang.Get("tinkerer_hue_btn_next", "Next >"), () => { currentPage++; BuildPage(); }) { Enabled = false };
 
         var pageRow = new HorizontalStackPanel { Spacing = 6 };
         pageRow.Widgets.Add(prevBtn);
@@ -108,8 +109,8 @@ public static class HueViewTabContent
 
         // Column headers
         var headerRow = new HorizontalStackPanel { Spacing = 2 };
-        headerRow.Widgets.Add(new MyraLabel("ID", MyraLabel.TextStyle.TableHeader) { Width = HUE_ID_WIDTH });
-        headerRow.Widgets.Add(new MyraLabel($"Colors (0–{COLORS_PER_HUE - 1})", MyraLabel.TextStyle.TableHeader));
+        headerRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_hue_col_id", "ID"), MyraLabel.TextStyle.TableHeader) { Width = HUE_ID_WIDTH });
+        headerRow.Widgets.Add(new MyraLabel(TazLang.Get("tinkerer_hue_col_colors_fmt", new[] { (COLORS_PER_HUE - 1).ToString() }), MyraLabel.TextStyle.TableHeader));
         root.Widgets.Add(headerRow);
 
         root.Widgets.Add(new ScrollViewer { MaxHeight = 450, Content = resultsPanel });
@@ -167,7 +168,7 @@ public static class HueViewTabContent
                 Width = SWATCH_W,
                 Height = SWATCH_H,
                 Background = new SolidBrush(color),
-                Tooltip = $"Hue {hueId} / Index {c}: #{color.R:X2}{color.G:X2}{color.B:X2}"
+                Tooltip = TazLang.Get("tinkerer_hue_tooltip_swatch_fmt", new[] { hueId.ToString(), c.ToString(), $"{color.R:X2}{color.G:X2}{color.B:X2}" })
             };
             swatchRow.Widgets.Add(swatch);
         }

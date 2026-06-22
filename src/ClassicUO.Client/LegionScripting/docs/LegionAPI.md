@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `6/20/26`.*
+*This was generated on `6/22/26`.*
 
 ## Properties
 ### `Events`
@@ -2049,8 +2049,9 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### ItemNameAndProps
 `(serial, wait, timeout)`
- Gets item name and properties.
- This returns the name and properties in a single string. You can split it by new line if you want to separate them.
+ Gets item name and properties in English.
+ This returns the name and properties in a single string, regardless of the client's UI language.
+ You can split it by new line if you want to separate them.
  Example:
  ```py
  data = API.ItemNameAndProps(0x12345678, True)

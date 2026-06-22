@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Xml;
@@ -15,13 +15,8 @@ namespace ClassicUO.Game.UI.Gumps
 {
     public class DebugGump : Gump
     {
-        private const string DEBUG_STRING_0 = "- FPS: {0} (Min={1}, Max={2}), Zoom: {3:0.00}, Total Objs: {4}\n";
         private const string DEBUG_STRING_1 = "- Mobiles: {0}   Items: {1}   Statics: {2}   Multi: {3}   Lands: {4}   Effects: {5}\n";
-        private const string DEBUG_STRING_2 = "- CharPos: {0}\n- Mouse: {1}\n- InGamePos: {2}\n";
-        private const string DEBUG_STRING_3 = "- Selected: {0}";
 
-        private const string DEBUG_STRING_SMALL = "FPS: {0}\nZoom: {1:0.00}";
-        private const string DEBUG_STRING_SMALL_NO_ZOOM = "FPS: {0}";
         private static Point _last_position = new Point(-1, -1);
 
         private uint _timeToUpdate;
@@ -91,7 +86,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     sb.Append
                     (string.Format(
-                         DEBUG_STRING_0,
+                         TazLang.Get("debuggump_fps_fmt", "- FPS: {0} (Min={1}, Max={2}), Zoom: {3:0.00}, Total Objs: {4}\n"),
                          CUOEnviroment.CurrentRefreshRate,
                          0,
                          0,
@@ -100,12 +95,21 @@ namespace ClassicUO.Game.UI.Gumps
                          )
                      );
 
-                    sb.Append($"- CUO version: {CUOEnviroment.Version}, Client version: {Settings.GlobalSettings.ClientVersion}\n");
+                    sb.Append(string.Format(
+                        TazLang.Get("debuggump_version_fmt", "- CUO version: {0}, Client version: {1}\n"),
+                        CUOEnviroment.Version,
+                        Settings.GlobalSettings.ClientVersion));
 
                     //_sb.AppendFormat(DEBUG_STRING_1, Engine.DebugInfo.MobilesRendered, Engine.DebugInfo.ItemsRendered, Engine.DebugInfo.StaticsRendered, Engine.DebugInfo.MultiRendered, Engine.DebugInfo.LandsRendered, Engine.DebugInfo.EffectsRendered);
-                    sb.Append(string.Format(DEBUG_STRING_2, World.InGame ? $"{World.Player.X}, {World.Player.Y}, {World.Player.Z}" : "0xFFFF, 0xFFFF, 0", Mouse.Position, SelectedObject.Object is GameObject gobj ? $"{gobj.X}, {gobj.Y}, {gobj.Z}" : "0xFFFF, 0xFFFF, 0"));
+                    sb.Append(string.Format(
+                        TazLang.Get("debuggump_charpos_fmt", "- CharPos: {0}\n- Mouse: {1}\n- InGamePos: {2}\n"),
+                        World.InGame ? $"{World.Player.X}, {World.Player.Y}, {World.Player.Z}" : "0xFFFF, 0xFFFF, 0",
+                        Mouse.Position,
+                        SelectedObject.Object is GameObject gobj ? $"{gobj.X}, {gobj.Y}, {gobj.Z}" : "0xFFFF, 0xFFFF, 0"));
 
-                    sb.Append(string.Format(DEBUG_STRING_3, ReadObject(SelectedObject.Object)));
+                    sb.Append(string.Format(
+                        TazLang.Get("debuggump_selected_fmt", "- Selected: {0}"),
+                        ReadObject(SelectedObject.Object)));
 
                     if (Profiler.Enabled)
                     {
@@ -113,7 +117,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                         foreach (Profiler.ProfileData pd in Profiler.AllFrameData)
                         {
-                            sb.Append($"\n[{pd.Context[pd.Context.Length - 1]}] [Last: {pd.LastTime:0.0}ms] [Total %: {100d * (pd.TimeInContext / timeTotal):0.00}]");
+                            sb.Append(string.Format(
+                                TazLang.Get("debuggump_profiler_fmt", "\n[{0}] [Last: {1:0.0}ms] [Total %: {2:0.00}]"),
+                                pd.Context[pd.Context.Length - 1],
+                                pd.LastTime,
+                                100d * (pd.TimeInContext / timeTotal)));
                         }
                     }
                 }
@@ -124,11 +132,16 @@ namespace ClassicUO.Game.UI.Gumps
 
                     if (scene != null && cameraZoomIndex != 5)
                     {
-                        sb.Append(string.Format(DEBUG_STRING_SMALL, CUOEnviroment.CurrentRefreshRate, !World.InGame ? 1f : scene.Camera.Zoom));
+                        sb.Append(string.Format(
+                            TazLang.Get("debuggump_small_fmt", "FPS: {0}\nZoom: {1:0.00}"),
+                            CUOEnviroment.CurrentRefreshRate,
+                            !World.InGame ? 1f : scene.Camera.Zoom));
                     }
                     else
                     {
-                        sb.Append(string.Format(DEBUG_STRING_SMALL_NO_ZOOM, CUOEnviroment.CurrentRefreshRate));
+                        sb.Append(string.Format(
+                            TazLang.Get("debuggump_small_nozoom_fmt", "FPS: {0}"),
+                            CUOEnviroment.CurrentRefreshRate));
                     }
                 }
 
@@ -173,19 +186,31 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 switch (obj)
                 {
-                    case Mobile mob: return $"Mobile (0x{mob.Serial:X8})  graphic: 0x{mob.Graphic:X4}  flags: {mob.Flags}  noto: {mob.NotorietyFlag}";
+                    case Mobile mob: return string.Format(
+                        TazLang.Get("debuggump_readobj_mobile_fmt", "Mobile (0x{0:X8})  graphic: 0x{1:X4}  flags: {2}  noto: {3}"),
+                        mob.Serial, mob.Graphic, mob.Flags, mob.NotorietyFlag);
 
-                    case Item item: return $"Item (0x{item.Serial:X8})  graphic: 0x{item.Graphic:X4}  flags: {item.Flags}  amount: {item.Amount} itemdata: {item.ItemData.Flags}";
+                    case Item item: return string.Format(
+                        TazLang.Get("debuggump_readobj_item_fmt", "Item (0x{0:X8})  graphic: 0x{1:X4}  flags: {2}  amount: {3} itemdata: {4}"),
+                        item.Serial, item.Graphic, item.Flags, item.Amount, item.ItemData.Flags);
 
-                    case Static st: return $"Static (0x{st.Graphic:X4})  height: {st.ItemData.Height}  flags: {st.ItemData.Flags}  Alpha: {st.AlphaHue}";
+                    case Static st: return string.Format(
+                        TazLang.Get("debuggump_readobj_static_fmt", "Static (0x{0:X4})  height: {1}  flags: {2}  Alpha: {3}"),
+                        st.Graphic, st.ItemData.Height, st.ItemData.Flags, st.AlphaHue);
 
-                    case Multi multi: return $"Multi (0x{multi.Graphic:X4})  height: {multi.ItemData.Height}  flags: {multi.ItemData.Flags}";
+                    case Multi multi: return string.Format(
+                        TazLang.Get("debuggump_readobj_multi_fmt", "Multi (0x{0:X4})  height: {1}  flags: {2}"),
+                        multi.Graphic, multi.ItemData.Height, multi.ItemData.Flags);
 
-                    case GameEffect effect: return "GameEffect";
+                    case GameEffect effect: return TazLang.Get("debuggump_readobj_effect", "GameEffect");
 
-                    case TextObject overhead: return $"TextOverhead type: {overhead.Type}  hue: 0x{overhead.Hue:X4}";
+                    case TextObject overhead: return string.Format(
+                        TazLang.Get("debuggump_readobj_textoverhead_fmt", "TextOverhead type: {0}  hue: 0x{1:X4}"),
+                        overhead.Type, overhead.Hue);
 
-                    case Land land: return $"Land (0x{land.Graphic:X4})  flags: {land.TileData.Flags} stretched: {land.IsStretched}  avgZ: {land.AverageZ} minZ: {land.MinZ}";
+                    case Land land: return string.Format(
+                        TazLang.Get("debuggump_readobj_land_fmt", "Land (0x{0:X4})  flags: {1} stretched: {2}  avgZ: {3} minZ: {4}"),
+                        land.Graphic, land.TileData.Flags, land.IsStretched, land.AverageZ, land.MinZ);
                 }
             }
 

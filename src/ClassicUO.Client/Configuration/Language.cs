@@ -3,86 +3,54 @@ using System.Text.Json;
 
 namespace ClassicUO.Configuration
 {
-    using System.Text.Json.Serialization;
-
-    [JsonSerializable(typeof(Language))]
-    public partial class LanguageJsonContext : JsonSerializerContext
-    {
-    }
-
+    /// <summary>
+    ///     Compatibility shell for the legacy JSON-backed language system. All string
+    ///     properties now resolve through <see cref="TazLang"/> so they participate in
+    ///     the UI language dropdown. The object graph is preserved so the ~400 call
+    ///     sites (<c>lang.XXX</c>) keep compiling without changes.
+    /// </summary>
     public class Language
     {
         public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
         public AssistantLanguage Assistant { get; set; } = new();
 
-        public string TazuoVersionHistory { get; set; } = "TazUO Version History";
-        public string CurrentVersion { get; set; } = "Current Version: ";
-        public string TazUOWiki { get; set; } = "TazUO Wiki";
-        public string TazUODiscord { get; set; } = "TazUO Discord";
-        public string CommandGump { get; set; } = "Available Client Commands";
+        public string TazuoVersionHistory => TazLang.Get("tazuoversionhistory");
+        public string CurrentVersion => TazLang.Get("currentversion");
+        public string TazUOWiki => TazLang.Get("tazuowiki");
+        public string TazUODiscord => TazLang.Get("tazuodiscord");
+        public string CommandGump => TazLang.Get("commandgump");
 
-        [JsonIgnore]
-        public static Language Instance { get; private set; } = new();
-
-        public static void Load()
-        {
-            if (File.Exists(languageFilePath))
-            {
-                Language f = JsonSerializer.Deserialize(File.ReadAllText(languageFilePath), LanguageJsonContext.Default.Language);
-                Instance = f;
-                Save(); //To update language file with new additions as needed
-            }
-            else
-            {
-                CreateNewLanguageFile();
-            }
-        }
-
-        private static void CreateNewLanguageFile()
-        {
-            Directory.CreateDirectory(Path.Combine(CUOEnviroment.ExecutablePath, "Data"));
-
-            string defaultLanguage = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, defaultLanguage);
-        }
-
-        private static void Save()
-        {
-            string language = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, language);
-        }
-
-        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
+        public static Language Instance { get; } = new();
     }
 
     public class ModernOptionsGumpLanguage
     {
-        public string OptionsTitle { get; set; } = "Options";
-        public string Search { get; set; } = "Search";
+        public string OptionsTitle => TazLang.Get("options_optionstitle");
+        public string Search => TazLang.Get("options_search");
 
-        public string ButtonGeneral { get; set; } = "General";
-        public string ButtonSound { get; set; } = "Sound";
-        public string ButtonVideo { get; set; } = "Video";
-        public string ButtonMacros { get; set; } = "Macros";
-        public string ButtonTooltips { get; set; } = "Tooltips";
-        public string ButtonSpeech { get; set; } = "Speech";
-        public string ButtonCombatSpells { get; set; } = "Combat & Spells";
-        public string ButtonCounters { get; set; } = "Counters";
-        public string ButtonInfobar { get; set; } = "Infobar";
-        public string ButtonContainers { get; set; } = "Containers";
-        public string ButtonExperimental { get; set; } = "Experimental";
-        public string ButtonIgnoreList { get; set; } = "Ignore List";
-        public string ButtonNameplates { get; set; } = "Nameplate Options";
-        public string ButtonCooldowns { get; set; } = "Cooldown bars";
-        public string ButtonTazUO { get; set; } = "TazUO Specific";
-        public string ButtonMobiles { get; set; } = "Mobiles";
-        public string ButtonGumpContext { get; set; } = "Gumps & Context";
-        public string ButtonMisc { get; set; } = "Misc";
-        public string ButtonTerrainStatics { get; set; } = "Terrain & Statics";
-        public string ButtonGameWindow { get; set; } = "Game window";
-        public string ButtonZoom { get; set; } = "Zoom";
-        public string ButtonLighting { get; set; } = "Lighting";
-        public string ButtonShadows { get; set; } = "Shadows";
+        public string ButtonGeneral => TazLang.Get("options_buttongeneral");
+        public string ButtonSound => TazLang.Get("options_buttonsound");
+        public string ButtonVideo => TazLang.Get("options_buttonvideo");
+        public string ButtonMacros => TazLang.Get("options_buttonmacros");
+        public string ButtonTooltips => TazLang.Get("options_buttontooltips");
+        public string ButtonSpeech => TazLang.Get("options_buttonspeech");
+        public string ButtonCombatSpells => TazLang.Get("options_buttoncombatspells");
+        public string ButtonCounters => TazLang.Get("options_buttoncounters");
+        public string ButtonInfobar => TazLang.Get("options_buttoninfobar");
+        public string ButtonContainers => TazLang.Get("options_buttoncontainers");
+        public string ButtonExperimental => TazLang.Get("options_buttonexperimental");
+        public string ButtonIgnoreList => TazLang.Get("options_buttonignorelist");
+        public string ButtonNameplates => TazLang.Get("options_buttonnameplates");
+        public string ButtonCooldowns => TazLang.Get("options_buttoncooldowns");
+        public string ButtonTazUO => TazLang.Get("options_buttontazuo");
+        public string ButtonMobiles => TazLang.Get("options_buttonmobiles");
+        public string ButtonGumpContext => TazLang.Get("options_buttongumpcontext");
+        public string ButtonMisc => TazLang.Get("options_buttonmisc");
+        public string ButtonTerrainStatics => TazLang.Get("options_buttonterrainstatics");
+        public string ButtonGameWindow => TazLang.Get("options_buttongamewindow");
+        public string ButtonZoom => TazLang.Get("options_buttonzoom");
+        public string ButtonLighting => TazLang.Get("options_buttonlighting");
+        public string ButtonShadows => TazLang.Get("options_buttonshadows");
 
         public General GetGeneral { get; set; } = new();
         public Video GetVideo { get; set; } = new();
@@ -101,572 +69,568 @@ namespace ClassicUO.Configuration
 
         public class General
         {
-            public string SharedNone { get; set; } = "None";
-            public string SharedShift { get; set; } = "Shift";
-            public string SharedCtrl { get; set; } = "Ctrl";
-            public string SharedAlt { get; set; } = "Alt";
+            public string SharedNone => TazLang.Get("options_general_sharednone");
+            public string SharedShift => TazLang.Get("options_general_sharedshift");
+            public string SharedCtrl => TazLang.Get("options_general_sharedctrl");
+            public string SharedAlt => TazLang.Get("options_general_sharedalt");
 
             #region General->General
-            public string HighlightObjects { get; set; } = "Highlight objects under cursor";
-            public string Pathfinding { get; set; } = "Enable pathfinding";
-            public string ShiftPathfinding { get; set; } = "Use shift for pathfinding";
-            public string SingleClickPathfind { get; set; } = "Single click for pathfinding";
-            public string AlwaysRun { get; set; } = "Always run";
-            public string RunUnlessHidden { get; set; } = "Unless hidden";
-            public string AutoOpenDoors { get; set; } = "Automatically open doors";
-            public string AutoOpenPathfinding { get; set; } = "Open doors while pathfinding";
-            public string AutoOpenCorpse { get; set; } = "Automatically open corpses";
-            public string CorpseOpenDistance { get; set; } = "Corpse open distance";
-            public string CorpseSkipEmpty { get; set; } = "Skip empty corpses";
-            public string CorpseOpenOptions { get; set; } = "Corpse open options";
-            public string CorpseOptNone { get; set; } = "None";
-            public string CorpseOptNotTarg { get; set; } = "Not targeting";
-            public string CorpseOptNotHiding { get; set; } = "Not hiding";
-            public string CorpseOptBoth { get; set; } = "Both";
-            public string OutRangeColor { get; set; } = "No color for out of range objects";
-            public string SallosEasyGrab { get; set; } = "Enable sallos easy grab";
-            public string SallosTooltip { get; set; } = "Sallos easy grab is not recommended with grid containers enabled.";
-            public string ShowHouseContent { get; set; } = "Show house content";
-            public string SmoothBoat { get; set; } = "Smooth boat movements";
+            public string HighlightObjects => TazLang.Get("options_general_highlightobjects");
+            public string Pathfinding => TazLang.Get("options_general_pathfinding");
+            public string ShiftPathfinding => TazLang.Get("options_general_shiftpathfinding");
+            public string SingleClickPathfind => TazLang.Get("options_general_singleclickpathfind");
+            public string AlwaysRun => TazLang.Get("options_general_alwaysrun");
+            public string RunUnlessHidden => TazLang.Get("options_general_rununlesshidden");
+            public string AutoOpenDoors => TazLang.Get("options_general_autoopendoors");
+            public string AutoOpenPathfinding => TazLang.Get("options_general_autoopenpathfinding");
+            public string AutoOpenCorpse => TazLang.Get("options_general_autoopencorpse");
+            public string CorpseOpenDistance => TazLang.Get("options_general_corpseopendistance");
+            public string CorpseSkipEmpty => TazLang.Get("options_general_corpseskipempty");
+            public string CorpseOpenOptions => TazLang.Get("options_general_corpseopenoptions");
+            public string CorpseOptNone => TazLang.Get("options_general_corpseoptnone");
+            public string CorpseOptNotTarg => TazLang.Get("options_general_corpseoptnottarg");
+            public string CorpseOptNotHiding => TazLang.Get("options_general_corpseoptnothiding");
+            public string CorpseOptBoth => TazLang.Get("options_general_corpseoptboth");
+            public string OutRangeColor => TazLang.Get("options_general_outrangecolor");
+            public string SallosEasyGrab => TazLang.Get("options_general_salloseasygrab");
+            public string SallosTooltip => TazLang.Get("options_general_sallostooltip");
+            public string ShowHouseContent => TazLang.Get("options_general_showhousecontent");
+            public string SmoothBoat => TazLang.Get("options_general_smoothboat");
             #endregion
 
             #region General->Mobiles
-            public string ShowMobileHP { get; set; } = "Show mobile's HP";
-            public string ShowTargetIndicator { get; set; } = "Show Target Indicator";
-            public string MobileHPType { get; set; } = "Type";
-            public string HPTypePerc { get; set; } = "Percentage";
-            public string HPTypeBar { get; set; } = "Bar";
-            public string HPTypeNBoth { get; set; } = "Both";
-            public string HPShowWhen { get; set; } = "Show when";
-            public string HPShowWhen_Always { get; set; } = "Always";
-            public string HPShowWhen_Less100 { get; set; } = "Less than 100%";
-            public string HPShowWhen_Smart { get; set; } = "Smart";
-            public string HighlightPoisoned { get; set; } = "Highlight poisoned mobiles";
-            public string PoisonHighlightColor { get; set; } = "Highlight color";
-            public string HighlightPara { get; set; } = "Highlight paralyzed mobiles";
-            public string ParaHighlightColor { get; set; } = "Highlight color";
-            public string HighlightInvul { get; set; } = "Highlight invulnerable mobiles";
-            public string InvulHighlightColor { get; set; } = "Highlight color";
-            public string IncomingMobiles { get; set; } = "Show incoming mobile names";
-            public string IncomingCorpses { get; set; } = "Show incoming corpse names";
-            public string AuraUnderFeet { get; set; } = "Show aura under feet";
-            public string AuraOptDisabled { get; set; } = "Disabled";
-            public string AuroOptWarmode { get; set; } = "Warmode";
-            public string AuraOptCtrlShift { get; set; } = "Ctrl + Shift";
-            public string AuraOptAlways { get; set; } = "Always";
-            public string AuraForParty { get; set; } = "Use a custom color for party members";
-            public string AuraPartyColor { get; set; } = "Party aura color";
-            public string IgnoreStaminaCheck { get; set; } = "Disable stamina check for movement";
-            public string DisableGrayEnemies { get; set; } = "Don't make last target/enemies gray";
-            public string DisableDismountWarmode { get; set; } = "Prevent dismounting in combat";
+            public string ShowMobileHP => TazLang.Get("options_general_showmobilehp");
+            public string ShowTargetIndicator => TazLang.Get("options_general_showtargetindicator");
+            public string MobileHPType => TazLang.Get("options_general_mobilehptype");
+            public string HPTypePerc => TazLang.Get("options_general_hptypeperc");
+            public string HPTypeBar => TazLang.Get("options_general_hptypebar");
+            public string HPTypeNBoth => TazLang.Get("options_general_hptypenboth");
+            public string HPShowWhen => TazLang.Get("options_general_hpshowwhen");
+            public string HPShowWhen_Always => TazLang.Get("options_general_hpshowwhen_always");
+            public string HPShowWhen_Less100 => TazLang.Get("options_general_hpshowwhen_less100");
+            public string HPShowWhen_Smart => TazLang.Get("options_general_hpshowwhen_smart");
+            public string HighlightPoisoned => TazLang.Get("options_general_highlightpoisoned");
+            public string PoisonHighlightColor => TazLang.Get("options_general_poisonhighlightcolor");
+            public string HighlightPara => TazLang.Get("options_general_highlightpara");
+            public string ParaHighlightColor => TazLang.Get("options_general_parahighlightcolor");
+            public string HighlightInvul => TazLang.Get("options_general_highlightinvul");
+            public string InvulHighlightColor => TazLang.Get("options_general_invulhighlightcolor");
+            public string IncomingMobiles => TazLang.Get("options_general_incomingmobiles");
+            public string IncomingCorpses => TazLang.Get("options_general_incomingcorpses");
+            public string AuraUnderFeet => TazLang.Get("options_general_auraunderfeet");
+            public string AuraOptDisabled => TazLang.Get("options_general_auraoptdisabled");
+            public string AuroOptWarmode => TazLang.Get("options_general_aurooptwarmode");
+            public string AuraOptCtrlShift => TazLang.Get("options_general_auraoptctrlshift");
+            public string AuraOptAlways => TazLang.Get("options_general_auraoptalways");
+            public string AuraForParty => TazLang.Get("options_general_auraforparty");
+            public string AuraPartyColor => TazLang.Get("options_general_aurapartycolor");
+            public string IgnoreStaminaCheck => TazLang.Get("options_general_ignorestaminacheck");
+            public string DisableGrayEnemies => TazLang.Get("options_general_disablegrayenemies");
+            public string DisableDismountWarmode => TazLang.Get("options_general_disabledismountwarmode");
             #endregion
 
             #region General->Gumps
-            public string DisableTopMenu { get; set; } = "Disable top menu bar";
-            public string AltForAnchorsGumps { get; set; } = "Require alt to close anchored gumps";
-            public string AltToMoveGumps { get; set; } = "Require alt to move gumps";
-            public string CloseEntireAnchorWithRClick { get; set; } = "Close entire group of anchored gumps with right click";
-            public string OriginalSkillsGump { get; set; } = "Use original skills gump";
-            public string OldStatusGump { get; set; } = "Use old status gump";
-            public string PartyInviteGump { get; set; } = "Show party invite gump";
-            public string ModernHealthBars { get; set; } = "Use modern health bar gumps";
-            public string ModernHPBlackBG { get; set; } = "Use black background";
-            public string SaveHPBars { get; set; } = "Save health bars on logout";
-            public string CloseHPGumpsWhen { get; set; } = "Close health bars when";
-            public string CloseHPOptDisable { get; set; } = "Disabled";
-            public string CloseHPOptOOR { get; set; } = "Out of range";
-            public string CloseHPOptDead { get; set; } = "Dead";
-            public string CloseHPOptBoth { get; set; } = "Both";
-            public string GridLoot { get; set; } = "Grid Loot";
-            public string GridLootOptDisable { get; set; } = "Disabled";
-            public string GridLootOptOnly { get; set; } = "Grid loot only";
-            public string GridLootOptBoth { get; set; } = "Grid loot and normal container";
-            public string GridLootTooltip { get; set; } = "This is not the same as Grid Containers, this is a simple grid gump used for looting corpses.";
-            public string ShiftContext { get; set; } = "Require shift to open context menus";
-            public string ShiftSplit { get; set; } = "Require shift to split stacks of items";
+            public string DisableTopMenu => TazLang.Get("options_general_disabletopmenu");
+            public string AltForAnchorsGumps => TazLang.Get("options_general_altforanchorsgumps");
+            public string AltToMoveGumps => TazLang.Get("options_general_alttomovegumps");
+            public string CloseEntireAnchorWithRClick => TazLang.Get("options_general_closeentireanchorwithrclick");
+            public string OriginalSkillsGump => TazLang.Get("options_general_originalskillsgump");
+            public string OldStatusGump => TazLang.Get("options_general_oldstatusgump");
+            public string PartyInviteGump => TazLang.Get("options_general_partyinvitegump");
+            public string ModernHealthBars => TazLang.Get("options_general_modernhealthbars");
+            public string ModernHPBlackBG => TazLang.Get("options_general_modernhpblackbg");
+            public string SaveHPBars => TazLang.Get("options_general_savehpbars");
+            public string CloseHPGumpsWhen => TazLang.Get("options_general_closehpgumpswhen");
+            public string CloseHPOptDisable => TazLang.Get("options_general_closehpoptdisable");
+            public string CloseHPOptOOR => TazLang.Get("options_general_closehpoptoor");
+            public string CloseHPOptDead => TazLang.Get("options_general_closehpoptdead");
+            public string CloseHPOptBoth => TazLang.Get("options_general_closehpoptboth");
+            public string GridLoot => TazLang.Get("options_general_gridloot");
+            public string GridLootOptDisable => TazLang.Get("options_general_gridlootoptdisable");
+            public string GridLootOptOnly => TazLang.Get("options_general_gridlootoptonly");
+            public string GridLootOptBoth => TazLang.Get("options_general_gridlootoptboth");
+            public string GridLootTooltip => TazLang.Get("options_general_gridloottooltip");
+            public string ShiftContext => TazLang.Get("options_general_shiftcontext");
+            public string ShiftSplit => TazLang.Get("options_general_shiftsplit");
 
             #endregion
 
             #region General->Misc
-            public string EnableCOT { get; set; } = "Enable circle of transparency";
-            public string COTDistance { get; set; } = "Distance";
-            public string COTType { get; set; } = "Type";
-            public string COTTypeOptFull { get; set; } = "Full";
-            public string COTTypeOptGrad { get; set; } = "Gradient";
-            public string COTTypeOptModern { get; set; } = "Modern";
-            public string HideScreenshotMessage { get; set; } = "Hide 'screenshot stored in' message";
-            public string ObjFade { get; set; } = "Enable object fading";
-            public string TextFade { get; set; } = "Enable text fading";
-            public string CursorRange { get; set; } = "Show target range indicator";
+            public string EnableCOT => TazLang.Get("options_general_enablecot");
+            public string COTDistance => TazLang.Get("options_general_cotdistance");
+            public string COTType => TazLang.Get("options_general_cottype");
+            public string COTTypeOptFull => TazLang.Get("options_general_cottypeoptfull");
+            public string COTTypeOptGrad => TazLang.Get("options_general_cottypeoptgrad");
+            public string COTTypeOptModern => TazLang.Get("options_general_cottypeoptmodern");
+            public string HideScreenshotMessage => TazLang.Get("options_general_hidescreenshotmessage");
+            public string ObjFade => TazLang.Get("options_general_objfade");
+            public string TextFade => TazLang.Get("options_general_textfade");
+            public string CursorRange => TazLang.Get("options_general_cursorrange");
 
-            public string AutoAvoidObstacules { get; set; } = "Auto Avoid Obstacles";
-            public string DragSelectHP { get; set; } = "Enable drag select for health bars";
-            public string DragKeyMod { get; set; } = "Key modifier";
-            public string DragPlayersOnly { get; set; } = "Players only";
-            public string DragMobsOnly { get; set; } = "Monsters only";
-            public string DragNameplatesOnly { get; set; } = "Visible nameplates only";
-            public string DragX { get; set; } = "X Position of healthbars";
-            public string DragY { get; set; } = "Y Position of healthbars";
-            public string DragAnchored { get; set; } = "Anchor opened health bars together";
-            public string ShowStatsChangedMsg { get; set; } = "Show stats changed messages";
-            public string ShowSkillsChangedMsg { get; set; } = "Show skills changed messages";
-            public string ChangeVolume { get; set; } = "Every tenth (0.1)";
+            public string AutoAvoidObstacules => TazLang.Get("options_general_autoavoidobstacules");
+            public string DragSelectHP => TazLang.Get("options_general_dragselecthp");
+            public string DragKeyMod => TazLang.Get("options_general_dragkeymod");
+            public string DragPlayersOnly => TazLang.Get("options_general_dragplayersonly");
+            public string DragMobsOnly => TazLang.Get("options_general_dragmobsonly");
+            public string DragNameplatesOnly => TazLang.Get("options_general_dragnameplatesonly");
+            public string DragX => TazLang.Get("options_general_dragx");
+            public string DragY => TazLang.Get("options_general_dragy");
+            public string DragAnchored => TazLang.Get("options_general_draganchored");
+            public string ShowStatsChangedMsg => TazLang.Get("options_general_showstatschangedmsg");
+            public string ShowSkillsChangedMsg => TazLang.Get("options_general_showskillschangedmsg");
+            public string ChangeVolume => TazLang.Get("options_general_changevolume");
             #endregion
 
             #region General->TerrainStatics
-            public string HideRoof { get; set; } = "Hide roof tiles";
-            public string TreesToStump { get; set; } = "Change trees to stumps";
-            public string HideVegetation { get; set; } = "Hide vegetation";
-            public string MagicFieldType { get; set; } = "Field types";
-            public string MagicFieldOpt_Normal { get; set; } = "Normal";
-            public string MagicFieldOpt_Static { get; set; } = "Static";
-            public string MagicFieldOpt_Tile { get; set; } = "Tile";
+            public string HideRoof => TazLang.Get("options_general_hideroof");
+            public string TreesToStump => TazLang.Get("options_general_treestostump");
+            public string HideVegetation => TazLang.Get("options_general_hidevegetation");
+            public string MagicFieldType => TazLang.Get("options_general_magicfieldtype");
+            public string MagicFieldOpt_Normal => TazLang.Get("options_general_magicfieldopt_normal");
+            public string MagicFieldOpt_Static => TazLang.Get("options_general_magicfieldopt_static");
+            public string MagicFieldOpt_Tile => TazLang.Get("options_general_magicfieldopt_tile");
             #endregion
         }
 
         public class Sound
         {
-            public string SharedVolume { get; set; } = "Volume";
+            public string SharedVolume => TazLang.Get("options_sound_sharedvolume");
 
-            public string EnableSound { get; set; } = "Enable sound";
-            public string EnableMusic { get; set; } = "Enable music";
-            public string LoginMusic { get; set; } = "Enable login page music";
-            public string PlayFootsteps { get; set; } = "Play footsteps";
-            public string CombatMusic { get; set; } = "Combat music";
-            public string BackgroundMusic { get; set; } = "Play sound when UO is not in focus";
+            public string EnableSound => TazLang.Get("options_sound_enablesound");
+            public string EnableMusic => TazLang.Get("options_sound_enablemusic");
+            public string LoginMusic => TazLang.Get("options_sound_loginmusic");
+            public string PlayFootsteps => TazLang.Get("options_sound_playfootsteps");
+            public string CombatMusic => TazLang.Get("options_sound_combatmusic");
+            public string BackgroundMusic => TazLang.Get("options_sound_backgroundmusic");
         }
 
         public class Video
         {
             #region GameWindow
-            public string FPSCap { get; set; } = "FPS Cap";
-            public string BackgroundFPS { get; set; } = "Reduce FPS when game is not in focus";
-            public string EnableVSync { get; set; } = "Enable VSync";
-            public string FullsizeViewport { get; set; } = "Always use fullsize game world viewport";
-            public string FullScreen { get; set; } = "Fullscreen window";
-            public string LockViewport { get; set; } = "Lock game world viewport position/size";
-            public string ViewportX { get; set; } = "Viewport position X";
-            public string ViewportY { get; set; } = "Viewport position Y";
-            public string ViewportW { get; set; } = "Viewport width";
-            public string ViewportH { get; set; } = "Viewport height";
+            public string FPSCap => TazLang.Get("options_video_fpscap");
+            public string BackgroundFPS => TazLang.Get("options_video_backgroundfps");
+            public string EnableVSync => TazLang.Get("options_video_enablevsync");
+            public string FullsizeViewport => TazLang.Get("options_video_fullsizeviewport");
+            public string FullScreen => TazLang.Get("options_video_fullscreen");
+            public string LockViewport => TazLang.Get("options_video_lockviewport");
+            public string ViewportX => TazLang.Get("options_video_viewportx");
+            public string ViewportY => TazLang.Get("options_video_viewporty");
+            public string ViewportW => TazLang.Get("options_video_viewportw");
+            public string ViewportH => TazLang.Get("options_video_viewporth");
             #endregion
 
             #region Zoom
-            public string DefaultZoom { get; set; } = "Default zoom";
-            public string ZoomWheel { get; set; } = "Enable zooming with ctrl + mousewheel";
-            public string ReturnDefaultZoom { get; set; } = "Return to default zoom after ctrl is released";
+            public string DefaultZoom => TazLang.Get("options_video_defaultzoom");
+            public string ZoomWheel => TazLang.Get("options_video_zoomwheel");
+            public string ReturnDefaultZoom => TazLang.Get("options_video_returndefaultzoom");
             #endregion
 
             #region Lighting
-            public string AltLights { get; set; } = "Alternative lights";
-            public string CustomLLevel { get; set; } = "Custom light level";
-            public string Level { get; set; } = "Light level";
-            public string LightType { get; set; } = "Light level type";
-            public string LightType_Absolute { get; set; } = "Absolute";
-            public string LightType_Minimum { get; set; } = "Minimum";
-            public string DarkNight { get; set; } = "Dark nights";
-            public string ColoredLight { get; set; } = "Colored lighting";
+            public string AltLights => TazLang.Get("options_video_altlights");
+            public string CustomLLevel => TazLang.Get("options_video_customllevel");
+            public string Level => TazLang.Get("options_video_level");
+            public string LightType => TazLang.Get("options_video_lighttype");
+            public string LightType_Absolute => TazLang.Get("options_video_lighttype_absolute");
+            public string LightType_Minimum => TazLang.Get("options_video_lighttype_minimum");
+            public string DarkNight => TazLang.Get("options_video_darknight");
+            public string ColoredLight => TazLang.Get("options_video_coloredlight");
             #endregion
 
             #region Misc
-            public string EnableDeathScreen { get; set; } = "Enable death screen";
-            public string BWDead { get; set; } = "Black and white mode while dead";
-            public string MouseThread { get; set; } = "Run mouse in seperate thread";
-            public string TargetAura { get; set; } = "Aura on mouse target";
-            public string AnimWater { get; set; } = "Animated water effect";
+            public string EnableDeathScreen => TazLang.Get("options_video_enabledeathscreen");
+            public string BWDead => TazLang.Get("options_video_bwdead");
+            public string MouseThread => TazLang.Get("options_video_mousethread");
+            public string TargetAura => TazLang.Get("options_video_targetaura");
+            public string AnimWater => TazLang.Get("options_video_animwater");
             #endregion
 
             #region Shadows
-            public string EnableShadows { get; set; } = "Enable shadows";
-            public string RockTreeShadows { get; set; } = "Rock and tree shadows";
-            public string TerrainShadowLevel { get; set; } = "Terrain shadow level";
+            public string EnableShadows => TazLang.Get("options_video_enableshadows");
+            public string RockTreeShadows => TazLang.Get("options_video_rocktreeshadows");
+            public string TerrainShadowLevel => TazLang.Get("options_video_terrainshadowlevel");
             #endregion
         }
 
         public class Macros
         {
-            public string NewMacro { get; set; } = "New Macro";
-            public string DelMacro { get; set; } = "Delete Macro";
+            public string NewMacro => TazLang.Get("options_macros_newmacro");
+            public string DelMacro => TazLang.Get("options_macros_delmacro");
         }
 
         public class ToolTips
         {
-            public string EnableToolTips { get; set; } = "Enable tooltips";
-            public string ToolTipDelay { get; set; } = "Tooltip delay";
-            public string ToolTipBG { get; set; } = "Tooltip background opacity";
-            public string ToolTipFont { get; set; } = "Default tooltip font color";
+            public string EnableToolTips => TazLang.Get("options_tooltips_enabletooltips");
+            public string ToolTipDelay => TazLang.Get("options_tooltips_tooltipdelay");
+            public string ToolTipBG => TazLang.Get("options_tooltips_tooltipbg");
+            public string ToolTipFont => TazLang.Get("options_tooltips_tooltipfont");
         }
 
         public class Speech
         {
-            public string ScaleSpeechDelay { get; set; } = "Scale speech delay";
-            public string SpeechDelay { get; set; } = "Delay";
-            public string SaveJournalE { get; set; } = "Save journal entries to file";
-            public string ChatEnterActivation { get; set; } = "Activate chat by pressing Enter";
-            public string ChatEnterSpecial { get; set; } = "Also activate with common keys( ! ; : / \\ \\ , . [ | ~ )";
-            public string ShiftEnterChat { get; set; } = "Use Shift + Enter to send message without closing chat";
-            public string ChatGradient { get; set; } = "Hide chat gradient";
-            public string HideGuildChat { get; set; } = "Hide guild chat";
-            public string HideAllianceChat { get; set; } = "Hide alliance chat";
-            public string SpeechColor { get; set; } = "Speech color";
-            public string YellColor { get; set; } = "Yell color";
-            public string PartyColor { get; set; } = "Party color";
-            public string AllianceColor { get; set; } = "Alliance color";
-            public string EmoteColor { get; set; } = "Emote color";
-            public string WhisperColor { get; set; } = "Whisper color";
-            public string GuildColor { get; set; } = "Guild color";
-            public string CharColor { get; set; } = "Chat color";
+            public string ScaleSpeechDelay => TazLang.Get("options_speech_scalespeechdelay");
+            public string SpeechDelay => TazLang.Get("options_speech_speechdelay");
+            public string SaveJournalE => TazLang.Get("options_speech_savejournale");
+            public string ChatEnterActivation => TazLang.Get("options_speech_chatenteractivation");
+            public string ChatEnterSpecial => TazLang.Get("options_speech_chatenterspecial");
+            public string ShiftEnterChat => TazLang.Get("options_speech_shiftenterchat");
+            public string ChatGradient => TazLang.Get("options_speech_chatgradient");
+            public string HideGuildChat => TazLang.Get("options_speech_hideguildchat");
+            public string HideAllianceChat => TazLang.Get("options_speech_hidealliancechat");
+            public string SpeechColor => TazLang.Get("options_speech_speechcolor");
+            public string YellColor => TazLang.Get("options_speech_yellcolor");
+            public string PartyColor => TazLang.Get("options_speech_partycolor");
+            public string AllianceColor => TazLang.Get("options_speech_alliancecolor");
+            public string EmoteColor => TazLang.Get("options_speech_emotecolor");
+            public string WhisperColor => TazLang.Get("options_speech_whispercolor");
+            public string GuildColor => TazLang.Get("options_speech_guildcolor");
+            public string CharColor => TazLang.Get("options_speech_charcolor");
         }
 
         public class CombatSpells
         {
-            public string HoldTabForCombat { get; set; } = "Hold tab for combat";
-            public string QueryBeforeAttack { get; set; } = "Query before attack";
-            public string QueryBeforeBeneficial { get; set; } = "Query before beneficial acts on murderers/criminals/gray";
-            public string EnableOverheadSpellFormat { get; set; } = "Enable overhead spell format";
-            public string EnableOverheadSpellHue { get; set; } = "Enable overhead spell hue";
-            public string SingleClickForSpellIcons { get; set; } = "Single click for spell icons";
-            public string ShowBuffDurationOnOldStyleBuffBar { get; set; } = "Show buff duration on old style buff bar";
-            public string EnableFastSpellHotkeyAssigning { get; set; } = "Enable fast spell hotkey assigning";
-            public string EnableDPSCounter { get; set; } = "Enable damage-taken DPS counter with damage numbers";
-            public string TooltipFastSpellAssign { get; set; } = "Ctrl + Alt + Click a spell icon the open a gump to set a hotkey";
-            public string InnocentColor { get; set; } = "Innocent color";
-            public string BeneficialSpell { get; set; } = "Beneficial spell";
-            public string FriendColor { get; set; } = "Friend color";
-            public string HarmfulSpell { get; set; } = "Harmful spell";
-            public string Criminal { get; set; } = "Criminal";
-            public string NeutralSpell { get; set; } = "Neutral spell";
-            public string CanBeAttackedHue { get; set; } = "Can be attacked hue";
-            public string Murderer { get; set; } = "Murderer";
-            public string Enemy { get; set; } = "Enemy";
-            public string SpellOverheadFormat { get; set; } = "Spell overhead format";
-            public string TooltipSpellFormat { get; set; } = "{power} for powerword, {spell} for spell name";
+            public string HoldTabForCombat => TazLang.Get("options_combatspells_holdtabforcombat");
+            public string QueryBeforeAttack => TazLang.Get("options_combatspells_querybeforeattack");
+            public string QueryBeforeBeneficial => TazLang.Get("options_combatspells_querybeforebeneficial");
+            public string EnableOverheadSpellFormat => TazLang.Get("options_combatspells_enableoverheadspellformat");
+            public string EnableOverheadSpellHue => TazLang.Get("options_combatspells_enableoverheadspellhue");
+            public string SingleClickForSpellIcons => TazLang.Get("options_combatspells_singleclickforspellicons");
+            public string ShowBuffDurationOnOldStyleBuffBar => TazLang.Get("options_combatspells_showbuffdurationonoldstylebuffbar");
+            public string EnableFastSpellHotkeyAssigning => TazLang.Get("options_combatspells_enablefastspellhotkeyassigning");
+            public string EnableDPSCounter => TazLang.Get("options_combatspells_enabledpscounter");
+            public string TooltipFastSpellAssign => TazLang.Get("options_combatspells_tooltipfastspellassign");
+            public string InnocentColor => TazLang.Get("options_combatspells_innocentcolor");
+            public string BeneficialSpell => TazLang.Get("options_combatspells_beneficialspell");
+            public string FriendColor => TazLang.Get("options_combatspells_friendcolor");
+            public string HarmfulSpell => TazLang.Get("options_combatspells_harmfulspell");
+            public string Criminal => TazLang.Get("options_combatspells_criminal");
+            public string NeutralSpell => TazLang.Get("options_combatspells_neutralspell");
+            public string CanBeAttackedHue => TazLang.Get("options_combatspells_canbeattackedhue");
+            public string Murderer => TazLang.Get("options_combatspells_murderer");
+            public string Enemy => TazLang.Get("options_combatspells_enemy");
+            public string SpellOverheadFormat => TazLang.Get("options_combatspells_spelloverheadformat");
+            public string TooltipSpellFormat => TazLang.Get("options_combatspells_tooltipspellformat");
         }
 
         public class Counters
         {
-            public string EnableCounters { get; set; } = "Enable counters";
-            public string HighlightItemsOnUse { get; set; } = "Highlight items on use";
-            public string AbbreviatedValues { get; set; } = "Abbreviated values";
-            public string AbbreviateIfAmountExceeds { get; set; } = "Abbreviate if amount exceeds";
-            public string HighlightRedWhenAmountIsLow { get; set; } = "Highlight red when amount is low";
-            public string HighlightRedIfAmountIsBelow { get; set; } = "Highlight red if amount is below";
-            public string CounterLayout { get; set; } = "Counter layout";
-            public string GridSize { get; set; } = "Grid size";
-            public string Rows { get; set; } = "Rows";
-            public string Columns { get; set; } = "Columns";
+            public string EnableCounters => TazLang.Get("options_counters_enablecounters");
+            public string HighlightItemsOnUse => TazLang.Get("options_counters_highlightitemsonuse");
+            public string AbbreviatedValues => TazLang.Get("options_counters_abbreviatedvalues");
+            public string AbbreviateIfAmountExceeds => TazLang.Get("options_counters_abbreviateifamountexceeds");
+            public string HighlightRedWhenAmountIsLow => TazLang.Get("options_counters_highlightredwhenamountislow");
+            public string HighlightRedIfAmountIsBelow => TazLang.Get("options_counters_highlightredifamountisbelow");
+            public string CounterLayout => TazLang.Get("options_counters_counterlayout");
+            public string GridSize => TazLang.Get("options_counters_gridsize");
+            public string Rows => TazLang.Get("options_counters_rows");
+            public string Columns => TazLang.Get("options_counters_columns");
         }
 
         public class InfoBars
         {
-            public string ShowInfoBar { get; set; } = "Show info bar";
-            public string HighlightType { get; set; } = "Highlight type";
-            public string HighLightOpt_TextColor { get; set; } = "Text color";
-            public string HighLightOpt_ColoredBars { get; set; } = "Colored bars";
-            public string AddItem { get; set; } = "+ Add item";
-            public string Hp { get; set; } = "HP";
-            public string Label { get; set; } = "Label";
-            public string Color { get; set; } = "Color";
-            public string Data { get; set; } = "Data";
+            public string ShowInfoBar => TazLang.Get("options_infobars_showinfobar");
+            public string HighlightType => TazLang.Get("options_infobars_highlighttype");
+            public string HighLightOpt_TextColor => TazLang.Get("options_infobars_highlightopt_textcolor");
+            public string HighLightOpt_ColoredBars => TazLang.Get("options_infobars_highlightopt_coloredbars");
+            public string AddItem => TazLang.Get("options_infobars_additem");
+            public string Hp => TazLang.Get("options_infobars_hp");
+            public string Label => TazLang.Get("options_infobars_label");
+            public string Color => TazLang.Get("options_infobars_color");
+            public string Data => TazLang.Get("options_infobars_data");
         }
 
         public class Containers
         {
-            public string Description { get; set; } = "These settings are for original container gumps, for grid container settings visit the TazUO section";
-            public string CharacterBackpackStyle { get; set; } = "Character backpack style";
-            public string BackpackOpt_Default { get; set; } = "Default";
-            public string BackpackOpt_Suede { get; set; } = "Suede";
-            public string BackpackOpt_PolarBear { get; set; } = "Polar bear";
-            public string BackpackOpt_GhoulSkin { get; set; } = "Ghoul skin";
-            public string ContainerScale { get; set; } = "Container scale";
-            public string AlsoScaleItems { get; set; } = "Also scale items";
-            public string UseLargeContainerGumps { get; set; } = "Use large container gumps";
-            public string DoubleClickToLootItemsInsideContainers { get; set; } = "Double click to loot items inside containers";
-            public string RelativeDragAndDropItemsInContainers { get; set; } = "Relative drag and drop items in containers";
-            public string HighlightContainerOnGroundWhenMouseIsOverAContainerGump { get; set; } = "Highlight container on ground when mouse is over a container gump";
-            public string RecolorContainerGumpByWithContainerHue { get; set; } = "Recolor container gump with container hue";
-            public string OverrideContainerGumpLocations { get; set; } = "Override container gump locations";
-            public string OverridePosition { get; set; } = "Override position";
-            public string PositionOpt_NearContainer { get; set; } = "Near container";
-            public string PositionOpt_TopRight { get; set; } = "Top right";
-            public string PositionOpt_LastDraggedPosition { get; set; } = "Last dragged position";
-            public string RememberEachContainer { get; set; } = "Remember each container";
-            public string RebuildContainersTxt { get; set; } = "Rebuild containers.txt";
+            public string Description => TazLang.Get("options_containers_description");
+            public string CharacterBackpackStyle => TazLang.Get("options_containers_characterbackpackstyle");
+            public string BackpackOpt_Default => TazLang.Get("options_containers_backpackopt_default");
+            public string BackpackOpt_Suede => TazLang.Get("options_containers_backpackopt_suede");
+            public string BackpackOpt_PolarBear => TazLang.Get("options_containers_backpackopt_polarbear");
+            public string BackpackOpt_GhoulSkin => TazLang.Get("options_containers_backpackopt_ghoulskin");
+            public string ContainerScale => TazLang.Get("options_containers_containerscale");
+            public string AlsoScaleItems => TazLang.Get("options_containers_alsoscaleitems");
+            public string UseLargeContainerGumps => TazLang.Get("options_containers_uselargecontainergumps");
+            public string DoubleClickToLootItemsInsideContainers => TazLang.Get("options_containers_doubleclicktolootitemsinsidecontainers");
+            public string RelativeDragAndDropItemsInContainers => TazLang.Get("options_containers_relativedraganddropitemsincontainers");
+            public string HighlightContainerOnGroundWhenMouseIsOverAContainerGump => TazLang.Get("options_containers_highlightcontainerongroundwhenmouseisoveracontainergump");
+            public string RecolorContainerGumpByWithContainerHue => TazLang.Get("options_containers_recolorcontainergumpbywithcontainerhue");
+            public string OverrideContainerGumpLocations => TazLang.Get("options_containers_overridecontainergumplocations");
+            public string OverridePosition => TazLang.Get("options_containers_overrideposition");
+            public string PositionOpt_NearContainer => TazLang.Get("options_containers_positionopt_nearcontainer");
+            public string PositionOpt_TopRight => TazLang.Get("options_containers_positionopt_topright");
+            public string PositionOpt_LastDraggedPosition => TazLang.Get("options_containers_positionopt_lastdraggedposition");
+            public string RememberEachContainer => TazLang.Get("options_containers_remembereachcontainer");
+            public string RebuildContainersTxt => TazLang.Get("options_containers_rebuildcontainerstxt");
         }
 
         public class Experimental
         {
-            public string DisableDefaultUoHotkeys { get; set; } = "Disable default UO hotkeys";
-            public string DisableArrowsNumlockArrowsPlayerMovement { get; set; } = "Disable arrows & numlock arrows(player movement)";
-            public string DisableTabToggleWarmode { get; set; } = "Disable tab (toggle warmode)";
-            public string DisableCtrlQWMessageHistory { get; set; } = "Disable Ctrl + Q/W (message history)";
-            public string DisableRightLeftClickAutoMove { get; set; } = "Disable right + left click auto move";
+            public string DisableDefaultUoHotkeys => TazLang.Get("options_experimental_disabledefaultuohotkeys");
+            public string DisableArrowsNumlockArrowsPlayerMovement => TazLang.Get("options_experimental_disablearrowsnumlockarrowsplayermovement");
+            public string DisableTabToggleWarmode => TazLang.Get("options_experimental_disabletabtogglewarmode");
+            public string DisableCtrlQWMessageHistory => TazLang.Get("options_experimental_disablectrlqwmessagehistory");
+            public string DisableRightLeftClickAutoMove => TazLang.Get("options_experimental_disablerightleftclickautomove");
         }
 
         public class NamePlates
         {
-            public string NewEntry { get; set; } = "New entry";
-            public string NameOverheadEntryName { get; set; } = "Name overhead entry name";
-            public string DeleteEntry { get; set; } = "Delete entry";
+            public string NewEntry => TazLang.Get("options_nameplates_newentry");
+            public string NameOverheadEntryName => TazLang.Get("options_nameplates_nameoverheadentryname");
+            public string DeleteEntry => TazLang.Get("options_nameplates_deleteentry");
         }
 
         public class Cooldowns
         {
-            public string CustomCooldownBars { get; set; } = "Custom cooldown bars";
-            public string PositionX { get; set; } = "Position X";
-            public string PositionY { get; set; } = "Position Y";
-            public string UseLastMovedBarPosition { get; set; } = "Use last moved bar position";
-            public string Conditions { get; set; } = "Conditions";
-            public string AddCondition { get; set; } = "+ Add condition";
+            public string CustomCooldownBars => TazLang.Get("options_cooldowns_customcooldownbars");
+            public string PositionX => TazLang.Get("options_cooldowns_positionx");
+            public string PositionY => TazLang.Get("options_cooldowns_positiony");
+            public string UseLastMovedBarPosition => TazLang.Get("options_cooldowns_uselastmovedbarposition");
+            public string Conditions => TazLang.Get("options_cooldowns_conditions");
+            public string AddCondition => TazLang.Get("options_cooldowns_addcondition");
         }
 
         public class TazUO
         {
             #region General
-            public string GridContainers { get; set; } = "Grid containers";
-            public string EnableGridContainers { get; set; } = "Enable grid containers";
-            public string GridContainersDefaultToOldStyleView { get; set; } = "Open new containers in the original view";
-            public string GridContainerScale { get; set; } = "Grid container scale";
-            public string AlsoScaleItems { get; set; } = "Also scale items";
-            public string HighlightLowContrastItems { get; set; } = "Highlight low contrast items";
-            public string LowContrastHighlightStyle { get; set; } = "Low contrast highlight style";
-            public string GridItemBorderOpacity { get; set; } = "Grid item border opacity";
-            public string BorderColor { get; set; } = "Border color";
-            public string ContainerOpacity { get; set; } = "Container opacity";
-            public string BackgroundColor { get; set; } = "Background color";
-            public string UseContainersHue { get; set; } = "Use container's hue";
-            public string SearchStyle { get; set; } = "Search style";
-            public string OnlyShow { get; set; } = "Only show";
-            public string Highlight { get; set; } = "Highlight";
-            public string EnableContainerPreview { get; set; } = "Enable container preview";
-            public string TooltipPreview { get; set; } = "This only works on containers that you have opened, otherwise the client does not have that information yet.";
-            public string MakeAnchorable { get; set; } = "Make anchorable";
-            public string TooltipGridAnchor { get; set; } = "This will allow grid containers to be anchored to other containers/world map/journal";
-            public string ContainerStyle { get; set; } = "Container style";
-            public string HideBorders { get; set; } = "Hide borders";
-            public string DefaultGridRows { get; set; } = "Default grid rows";
-            public string DefaultGridColumns { get; set; } = "Default grid columns";
-            public string GridHighlightSettings { get; set; } = "Grid highlight settings";
-            public string GridHighlightSize { get; set; } = "Grid highlight size";
-            public string GridHighlightProperties { get; set; } = "Show highlighted item properties in tooltip";
-            public string GridHighlightShowRuleName { get; set; } = "Show matched rule name in tooltip";
-            public string GridDisableTargeting { get; set; } = "Disable Targeting Grid Containers";
+            public string GridContainers => TazLang.Get("options_tazuo_gridcontainers");
+            public string EnableGridContainers => TazLang.Get("options_tazuo_enablegridcontainers");
+            public string GridContainersDefaultToOldStyleView => TazLang.Get("options_tazuo_gridcontainersdefaulttooldstyleview");
+            public string GridContainerScale => TazLang.Get("options_tazuo_gridcontainerscale");
+            public string AlsoScaleItems => TazLang.Get("options_tazuo_alsoscaleitems");
+            public string HighlightLowContrastItems => TazLang.Get("options_tazuo_highlightlowcontrastitems");
+            public string LowContrastHighlightStyle => TazLang.Get("options_tazuo_lowcontrasthighlightstyle");
+            public string GridItemBorderOpacity => TazLang.Get("options_tazuo_griditemborderopacity");
+            public string BorderColor => TazLang.Get("options_tazuo_bordercolor");
+            public string ContainerOpacity => TazLang.Get("options_tazuo_containeropacity");
+            public string BackgroundColor => TazLang.Get("options_tazuo_backgroundcolor");
+            public string UseContainersHue => TazLang.Get("options_tazuo_usecontainershue");
+            public string SearchStyle => TazLang.Get("options_tazuo_searchstyle");
+            public string OnlyShow => TazLang.Get("options_tazuo_onlyshow");
+            public string Highlight => TazLang.Get("options_tazuo_highlight");
+            public string EnableContainerPreview => TazLang.Get("options_tazuo_enablecontainerpreview");
+            public string TooltipPreview => TazLang.Get("options_tazuo_tooltippreview");
+            public string MakeAnchorable => TazLang.Get("options_tazuo_makeanchorable");
+            public string TooltipGridAnchor => TazLang.Get("options_tazuo_tooltipgridanchor");
+            public string ContainerStyle => TazLang.Get("options_tazuo_containerstyle");
+            public string HideBorders => TazLang.Get("options_tazuo_hideborders");
+            public string DefaultGridRows => TazLang.Get("options_tazuo_defaultgridrows");
+            public string DefaultGridColumns => TazLang.Get("options_tazuo_defaultgridcolumns");
+            public string GridHighlightSettings => TazLang.Get("options_tazuo_gridhighlightsettings");
+            public string GridHighlightSize => TazLang.Get("options_tazuo_gridhighlightsize");
+            public string GridHighlightProperties => TazLang.Get("options_tazuo_gridhighlightproperties");
+            public string GridHighlightShowRuleName => TazLang.Get("options_tazuo_gridhighlightshowrulename");
+            public string GridDisableTargeting => TazLang.Get("options_tazuo_griddisabletargeting");
             #endregion
 
             #region Journal
-            public string Journal { get; set; } = "Journal";
-            public string MaxJournalEntries { get; set; } = "Max journal entries";
-            public string JournalOpacity { get; set; } = "Journal opacity";
-            public string JournalBackgroundColor { get; set; } = "Background color";
-            public string JournalStyle { get; set; } = "Journal style";
-            public string JournalHideBorders { get; set; } = "Hide borders";
-            public string JournalHideSystemPrefix { get; set; } = "Hide \"System:\" prefix";
-            public string HideTimestamp { get; set; } = "Hide timestamp";
-            public string JournalAnchor { get; set; } = "Make anchorable";
+            public string Journal => TazLang.Get("options_tazuo_journal");
+            public string MaxJournalEntries => TazLang.Get("options_tazuo_maxjournalentries");
+            public string JournalOpacity => TazLang.Get("options_tazuo_journalopacity");
+            public string JournalBackgroundColor => TazLang.Get("options_tazuo_journalbackgroundcolor");
+            public string JournalStyle => TazLang.Get("options_tazuo_journalstyle");
+            public string JournalHideBorders => TazLang.Get("options_tazuo_journalhideborders");
+            public string JournalHideSystemPrefix => TazLang.Get("options_tazuo_journalhidesystemprefix");
+            public string HideTimestamp => TazLang.Get("options_tazuo_hidetimestamp");
+            public string JournalAnchor => TazLang.Get("options_tazuo_journalanchor");
             #endregion
 
             #region ModernPaperdoll
-            public string ModernPaperdoll { get; set; } = "Modern paperdoll";
-            public string EnableModernPaperdoll { get; set; } = "Enable modern paperdoll";
-            public string PaperdollHue { get; set; } = "Paperdoll hue";
-            public string DurabilityBarHue { get; set; } = "Durability bar hue";
-            public string ShowDurabilityBarBelow { get; set; } = "Show durability bar below %";
-            public string PaperdollAnchor { get; set; } = "Make anchorable";
+            public string ModernPaperdoll => TazLang.Get("options_tazuo_modernpaperdoll");
+            public string EnableModernPaperdoll => TazLang.Get("options_tazuo_enablemodernpaperdoll");
+            public string PaperdollHue => TazLang.Get("options_tazuo_paperdollhue");
+            public string DurabilityBarHue => TazLang.Get("options_tazuo_durabilitybarhue");
+            public string ShowDurabilityBarBelow => TazLang.Get("options_tazuo_showdurabilitybarbelow");
+            public string PaperdollAnchor => TazLang.Get("options_tazuo_paperdollanchor");
             #endregion
 
             #region Nameplates
-            public string Nameplates { get; set; } = "Nameplates";
-            public string NameplatesAlsoActAsHealthBars { get; set; } = "Nameplates also act as health bars";
-            public string HpOpacity { get; set; } = "HP opacity";
-            public string HideNameplatesIfFullHealth { get; set; } = "Hide nameplates if full health";
-            public string OnlyInWarmode { get; set; } = "Only in warmode";
-            public string BorderOpacity { get; set; } = "Border opacity";
-            public string BackgroundOpacity { get; set; } = "Background opacity";
+            public string Nameplates => TazLang.Get("options_tazuo_nameplates");
+            public string NameplatesAlsoActAsHealthBars => TazLang.Get("options_tazuo_nameplatesalsoactashealthbars");
+            public string HpOpacity => TazLang.Get("options_tazuo_hpopacity");
+            public string HideNameplatesIfFullHealth => TazLang.Get("options_tazuo_hidenameplatesiffullhealth");
+            public string OnlyInWarmode => TazLang.Get("options_tazuo_onlyinwarmode");
+            public string BorderOpacity => TazLang.Get("options_tazuo_borderopacity");
+            public string BackgroundOpacity => TazLang.Get("options_tazuo_backgroundopacity");
             #endregion
 
             #region Mobile
-            public string Mobiles { get; set; } = "Mobiles";
-            public string DamageToSelf { get; set; } = "Damage to self";
-            public string DamageToOthers { get; set; } = "Damage to others";
-            public string DamageToPets { get; set; } = "Damage to pets";
-            public string DamageToAllies { get; set; } = "Damage to allies";
-            public string DamageToLastAttack { get; set; } = "Damage to last attack";
-            public string DisplayPartyChatOverPlayerHeads { get; set; } = "Display party chat over player heads";
-            public string TooltipPartyChat { get; set; } = "If a party member uses party chat their text will also show above their head to you";
-            public string OverheadTextWidth { get; set; } = "Overhead text width";
-            public string TooltipOverheadText { get; set; } = "This adjusts the maximum width for text over players, setting to 0 will allow it to use any width needed to stay one line";
-            public string BelowMobileHealthBarScale { get; set; } = "Below mobile health bar scale";
-            public string AutomaticallyOpenHealthBarsForLastAttack { get; set; } = "Automatically open health bars for last attack";
-            public string UpdateOneBarAsLastAttack { get; set; } = "Update one bar as last attack";
-            public string HiddenPlayerOpacity { get; set; } = "Hidden player opacity";
-            public string HiddenPlayerHue { get; set; } = "Hidden player hue";
-            public string RegularPlayerOpacity { get; set; } = "Regular player opacity";
-            public string AutoFollowDistance { get; set; } = "Auto follow distance";
-            public string DisableAutoFollow { get; set; } = "Disable alt click to auto follow";
-            public string DisableMouseInteractionsForOverheadText { get; set; } = "Disable mouse interactions for overhead text";
-            public string OverridePartyMemberHues { get; set; } = "Override party member body hues with friendly hue";
-            public string TurnDelay { get; set; } = "Adjust turn delay";
+            public string Mobiles => TazLang.Get("options_tazuo_mobiles");
+            public string DamageToSelf => TazLang.Get("options_tazuo_damagetoself");
+            public string DamageToOthers => TazLang.Get("options_tazuo_damagetoothers");
+            public string DamageToPets => TazLang.Get("options_tazuo_damagetopets");
+            public string DamageToAllies => TazLang.Get("options_tazuo_damagetoallies");
+            public string DamageToLastAttack => TazLang.Get("options_tazuo_damagetolastattack");
+            public string DisplayPartyChatOverPlayerHeads => TazLang.Get("options_tazuo_displaypartychatoverplayerheads");
+            public string TooltipPartyChat => TazLang.Get("options_tazuo_tooltippartychat");
+            public string OverheadTextWidth => TazLang.Get("options_tazuo_overheadtextwidth");
+            public string TooltipOverheadText => TazLang.Get("options_tazuo_tooltipoverheadtext");
+            public string BelowMobileHealthBarScale => TazLang.Get("options_tazuo_belowmobilehealthbarscale");
+            public string AutomaticallyOpenHealthBarsForLastAttack => TazLang.Get("options_tazuo_automaticallyopenhealthbarsforlastattack");
+            public string UpdateOneBarAsLastAttack => TazLang.Get("options_tazuo_updateonebaraslastattack");
+            public string HiddenPlayerOpacity => TazLang.Get("options_tazuo_hiddenplayeropacity");
+            public string HiddenPlayerHue => TazLang.Get("options_tazuo_hiddenplayerhue");
+            public string RegularPlayerOpacity => TazLang.Get("options_tazuo_regularplayeropacity");
+            public string AutoFollowDistance => TazLang.Get("options_tazuo_autofollowdistance");
+            public string DisableAutoFollow => TazLang.Get("options_tazuo_disableautofollow");
+            public string DisableMouseInteractionsForOverheadText => TazLang.Get("options_tazuo_disablemouseinteractionsforoverheadtext");
+            public string OverridePartyMemberHues => TazLang.Get("options_tazuo_overridepartymemberhues");
+            public string TurnDelay => TazLang.Get("options_tazuo_turndelay");
             #endregion
 
             #region Misc
-            public string Misc { get; set; } = "Misc";
-            public string DisableSystemChat { get; set; } = "Disable system chat";
-            public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
-            public string BuffGumpHue { get; set; } = "Buff gump hue";
-            public string MainGameWindowBackground { get; set; } = "Main game window background";
-            public string EnableHealthIndicatorBorder { get; set; } = "Enable health indicator border";
-            public string OnlyShowBelowHp { get; set; } = "Only show below hp %";
-            public string Size { get; set; } = "Size";
-            public string SpellIconScale { get; set; } = "Spell icon scale";
-            public string DisplayMatchingHotkeysOnSpellIcons { get; set; } = "Display matching hotkeys on spell icons";
-            public string HotkeyTextHue { get; set; } = "Hotkey text hue";
-            public string EnableGumpOpacityAdjustViaAltScroll { get; set; } = "Enable gump opacity adjust via Alt + Scroll";
-            public string EnableAdvancedShopGump { get; set; } = "Enable advanced shop gump";
-            public string DisplaySkillProgressBarOnSkillChanges { get; set; } = "Display skill progress bar on skill changes";
-            public string TextFormat { get; set; } = "Text format";
-            public string EnableSpellIndicatorSystem { get; set; } = "Enable spell indicator system";
-            public string ImportFromUrl { get; set; } = "Import from url";
-            public string InputRequestUrl { get; set; } = "Enter the url for the spell config. \n/c[red]This will override your current config.";
-            public string Download { get; set; } = "Download";
-            public string Cancel { get; set; } = "Cancel";
-            public string AttemptingToDownloadSpellConfig { get; set; } = "Attempting to download spell config..";
-            public string SuccesfullyDownloadedNewSpellConfig { get; set; } = "Succesfully downloaded new spell config.";
-            public string FailedToDownloadTheSpellConfigExMessage { get; set; } = "Failed to download the spell config. ({0})";
-            public string AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars { get; set; } = "Also close anchored healthbars when auto closing healthbars";
-            public string EnableAutoResyncOnHangDetection { get; set; } = "Enable auto resync on hang detection";
-            public string PlayerOffsetX { get; set; } = "Player Offset X";
-            public string PlayerOffsetY { get; set; } = "Player Offset Y";
-            public string UseLandTexturesWhereAvailable { get; set; } = "Use land textures where available(Experimental)";
-            public string SOSGumpID { get; set; } = "SOS Gump ID";
-            public string UseWASDMovement { get; set; } = "Use WASD movement instead of arrow keys";
-            public string ApplyBorderCaveTiles { get; set; } = "Apply a border to cave tile art";
-            public string ForcedHouseTransparencyLevel { get; set; } = "Forced house transparency";
-            public string EnableHouseTransparency { get; set; } = "Enable forced house transparency";
-            public string HouseTransparencyTileHue { get; set; } = "House transparency tile hue";
-            public string EnableASyncMapLoading { get; set; } = "Enable ASync map loading";
-            public string ForceManagedZlib { get; set; } = "Force using a managed zlib";
+            public string Misc => TazLang.Get("options_tazuo_misc");
+            public string DisableSystemChat => TazLang.Get("options_tazuo_disablesystemchat");
+            public string EnableImprovedBuffGump => TazLang.Get("options_tazuo_enableimprovedbuffgump");
+            public string BuffGumpHue => TazLang.Get("options_tazuo_buffgumphue");
+            public string MainGameWindowBackground => TazLang.Get("options_tazuo_maingamewindowbackground");
+            public string EnableHealthIndicatorBorder => TazLang.Get("options_tazuo_enablehealthindicatorborder");
+            public string OnlyShowBelowHp => TazLang.Get("options_tazuo_onlyshowbelowhp");
+            public string Size => TazLang.Get("options_tazuo_size");
+            public string SpellIconScale => TazLang.Get("options_tazuo_spelliconscale");
+            public string DisplayMatchingHotkeysOnSpellIcons => TazLang.Get("options_tazuo_displaymatchinghotkeysonspellicons");
+            public string HotkeyTextHue => TazLang.Get("options_tazuo_hotkeytexthue");
+            public string EnableGumpOpacityAdjustViaAltScroll => TazLang.Get("options_tazuo_enablegumpopacityadjustviaaltscroll");
+            public string EnableAdvancedShopGump => TazLang.Get("options_tazuo_enableadvancedshopgump");
+            public string DisplaySkillProgressBarOnSkillChanges => TazLang.Get("options_tazuo_displayskillprogressbaronskillchanges");
+            public string TextFormat => TazLang.Get("options_tazuo_textformat");
+            public string EnableSpellIndicatorSystem => TazLang.Get("options_tazuo_enablespellindicatorsystem");
+            public string ImportFromUrl => TazLang.Get("options_tazuo_importfromurl");
+            public string InputRequestUrl => TazLang.Get("options_tazuo_inputrequesturl");
+            public string Download => TazLang.Get("options_tazuo_download");
+            public string Cancel => TazLang.Get("options_tazuo_cancel");
+            public string AttemptingToDownloadSpellConfig => TazLang.Get("options_tazuo_attemptingtodownloadspellconfig");
+            public string SuccesfullyDownloadedNewSpellConfig => TazLang.Get("options_tazuo_succesfullydownloadednewspellconfig");
+            public string FailedToDownloadTheSpellConfigExMessage => TazLang.Get("options_tazuo_failedtodownloadthespellconfigexmessage");
+            public string AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars => TazLang.Get("options_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars");
+            public string EnableAutoResyncOnHangDetection => TazLang.Get("options_tazuo_enableautoresynconhangdetection");
+            public string PlayerOffsetX => TazLang.Get("options_tazuo_playeroffsetx");
+            public string PlayerOffsetY => TazLang.Get("options_tazuo_playeroffsety");
+            public string UseLandTexturesWhereAvailable => TazLang.Get("options_tazuo_uselandtextureswhereavailable");
+            public string SOSGumpID => TazLang.Get("options_tazuo_sosgumpid");
+            public string UseWASDMovement => TazLang.Get("options_tazuo_usewasdmovement");
+            public string ApplyBorderCaveTiles => TazLang.Get("options_tazuo_applybordercavetiles");
+            public string ForcedHouseTransparencyLevel => TazLang.Get("options_tazuo_forcedhousetransparencylevel");
+            public string EnableHouseTransparency => TazLang.Get("options_tazuo_enablehousetransparency");
+            public string HouseTransparencyTileHue => TazLang.Get("options_tazuo_housetransparencytilehue");
+            public string EnableASyncMapLoading => TazLang.Get("options_tazuo_enableasyncmaploading");
+            public string ForceManagedZlib => TazLang.Get("options_tazuo_forcemanagedzlib");
             #endregion
 
             #region Tooltips
-            public string Tooltips { get; set; } = "Tooltips";
-            public string AlignTooltipsToTheLeftSide { get; set; } = "Align tooltips to the left side";
-            public string AlignMobileTooltipsToCenter { get; set; } = "Align mobile tooltips to center";
-            public string BackgroundHue { get; set; } = "Background hue";
-            public string HeaderFormatItemName { get; set; } = "Header format(Item name)";
-            public string TooltipOverrideSettings { get; set; } = "Tooltip override settings";
-            public string ForcedTooltips { get; set; } = "Force tooltips on pre-tooltip servers";
+            public string Tooltips => TazLang.Get("options_tazuo_tooltips");
+            public string AlignTooltipsToTheLeftSide => TazLang.Get("options_tazuo_aligntooltipstotheleftside");
+            public string AlignMobileTooltipsToCenter => TazLang.Get("options_tazuo_alignmobiletooltipstocenter");
+            public string BackgroundHue => TazLang.Get("options_tazuo_backgroundhue");
+            public string HeaderFormatItemName => TazLang.Get("options_tazuo_headerformatitemname");
+            public string TooltipOverrideSettings => TazLang.Get("options_tazuo_tooltipoverridesettings");
+            public string ForcedTooltips => TazLang.Get("options_tazuo_forcedtooltips");
             #endregion
 
             #region Fontsettings
-            public string FontSettings { get; set; } = "Font settings";
-            public string TtfFontBorder { get; set; } = "TTF Font border";
-            public string InfobarFont { get; set; } = "Infobar font";
-            public string SharedSize { get; set; } = "Size";
-            public string SystemChatFont { get; set; } = "System chat font";
-            public string TooltipFont { get; set; } = "Tooltip font";
-            public string OverheadFont { get; set; } = "Overhead font";
-            public string JournalFont { get; set; } = "Journal font";
-            public string NameplateFont { get; set; } = "Nameplate font";
-            public string Optionsfont { get; set; } = "Options menu font";
+            public string FontSettings => TazLang.Get("options_tazuo_fontsettings");
+            public string TtfFontBorder => TazLang.Get("options_tazuo_ttffontborder");
+            public string InfobarFont => TazLang.Get("options_tazuo_infobarfont");
+            public string SharedSize => TazLang.Get("options_tazuo_sharedsize");
+            public string SystemChatFont => TazLang.Get("options_tazuo_systemchatfont");
+            public string TooltipFont => TazLang.Get("options_tazuo_tooltipfont");
+            public string OverheadFont => TazLang.Get("options_tazuo_overheadfont");
+            public string JournalFont => TazLang.Get("options_tazuo_journalfont");
+            public string NameplateFont => TazLang.Get("options_tazuo_nameplatefont");
+            public string Optionsfont => TazLang.Get("options_tazuo_optionsfont");
             #endregion
 
             #region Controller
-            public string Controller { get; set; } = "Controller";
-            public string MouseSesitivity { get; set; } = "Mouse Sensitivity";
-            public string EnableController { get; set; } = "Enable controller input";
+            public string Controller => TazLang.Get("options_tazuo_controller");
+            public string MouseSesitivity => TazLang.Get("options_tazuo_mousesesitivity");
+            public string EnableController => TazLang.Get("options_tazuo_enablecontroller");
             #endregion
 
             #region SettingsTransfer
-            public string SettingsTransfers { get; set; } = "Settings transfers";
-            public string SettingsWarning { get; set; } = "/es/c[red]! Warning !/cd\n" +
-                "This will override other character's profile options!\n" +
-                "This is not reversable!\n" +
-                "You have {0} other profiles that will may overridden with the settings in this profile.\n\n" +
-                "This will not override: Macros, skill groups, info bar, grid container data, or gump saved positions.";
-            public string OverrideAll { get; set; } = "Override {0} other profiles with this one.";
-            public string OverrideAllMacros { get; set; } = "Override {0} other profile's macros with this one.";
-            public string OverrideSuccess { get; set; } = "{0} profiles overriden.";
-            public string OverrideSame { get; set; } = "Override {0} other profiles on this same server with this one.";
-            public string SetAsDefault { get; set; } = "Set this profile as the default for new characters.";
-            public string SetMacrosAsDefault { get; set; } = "Set this profile's macros as the default for new characters.";
-            public string SetAsDefaultSuccess { get; set; } = "This profile is now the default for new characters.";
-            public string SetMacrosAsDefaultSuccess { get; set; } = "This profile's macros are now the default for new characters.";
+            public string SettingsTransfers => TazLang.Get("options_tazuo_settingstransfers");
+            public string SettingsWarning => TazLang.Get("options_tazuo_settingswarning");
+            public string OverrideAll => TazLang.Get("options_tazuo_overrideall");
+            public string OverrideAllMacros => TazLang.Get("options_tazuo_overrideallmacros");
+            public string OverrideSuccess => TazLang.Get("options_tazuo_overridesuccess");
+            public string OverrideSame => TazLang.Get("options_tazuo_overridesame");
+            public string SetAsDefault => TazLang.Get("options_tazuo_setasdefault");
+            public string SetMacrosAsDefault => TazLang.Get("options_tazuo_setmacrosasdefault");
+            public string SetAsDefaultSuccess => TazLang.Get("options_tazuo_setasdefaultsuccess");
+            public string SetMacrosAsDefaultSuccess => TazLang.Get("options_tazuo_setmacrosasdefaultsuccess");
 
             #endregion
 
             #region GumpScaling
-            public string GumpScaling { get; set; } = "Gump scaling";
-            public string ScalingInfo { get; set; } = "Some of these settings may only take effect after closing and reopening. Visual bugs may occur until the gump is closed and reopened.";
-            public string PaperdollGump { get; set; } = "Paperdoll Gump";
-            public string GlobalScaling { get; set; } = "Global scale";
-            public string GlobalScale { get; set; } = "Scale";
+            public string GumpScaling => TazLang.Get("options_tazuo_gumpscaling");
+            public string ScalingInfo => TazLang.Get("options_tazuo_scalinginfo");
+            public string PaperdollGump => TazLang.Get("options_tazuo_paperdollgump");
+            public string GlobalScaling => TazLang.Get("options_tazuo_globalscaling");
+            public string GlobalScale => TazLang.Get("options_tazuo_globalscale");
             #endregion
 
-            public string AutoLoot { get; set; } = "Autoloot";
-            public string AutoLootEnable { get; set; } = "Enable auto loot";
-            public string ScavengerEnable { get; set; } = "Enable scavenger";
-            public string AutoLootProgessBarEnable { get; set; } = "Show progress bar while looting";
-            public string AutoLootHumanCorpses { get; set; } = "Loot human corpses? (Potentially player corpses)";
+            public string AutoLoot => TazLang.Get("options_tazuo_autoloot");
+            public string AutoLootEnable => TazLang.Get("options_tazuo_autolootenable");
+            public string ScavengerEnable => TazLang.Get("options_tazuo_scavengerenable");
+            public string AutoLootProgessBarEnable => TazLang.Get("options_tazuo_autolootprogessbarenable");
+            public string AutoLootHumanCorpses => TazLang.Get("options_tazuo_autoloothumancorpses");
 
-            public string GraphicChangeFilter { get; set; } = "Graphic Filter";
-            public string Hotkeys { get; set; } = "Hotkeys";
+            public string GraphicChangeFilter => TazLang.Get("options_tazuo_graphicchangefilter");
+            public string Hotkeys => TazLang.Get("options_tazuo_hotkeys");
 
 
             #region VoiceRecognition
-            public string VoiceRecognition { get; set; } = "Voice Recognition";
-            public string VoiceRecognitionEnable { get; set; } = "Enable voice recognition";
-            public string VoiceModelPath { get; set; } = "Vosk model path";
-            public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory or .zip file. Download models from alphacephei.com/vosk/models - zip files will be auto-extracted to the vosk/ folder.";
-            public string VoiceRecognitionStatus { get; set; } = "Status: {0}";
-            public string VoiceStatusReady { get; set; } = "Ready";
-            public string VoiceStatusNotInitialized { get; set; } = "Not initialized - set model path first";
-            public string VoiceStatusListening { get; set; } = "Listening...";
-            public string VoiceApplyModel { get; set; } = "Apply model path";
-            public string VoiceCreateMacro { get; set; } = "Create macro button";
+            public string VoiceRecognition => TazLang.Get("options_tazuo_voicerecognition");
+            public string VoiceRecognitionEnable => TazLang.Get("options_tazuo_voicerecognitionenable");
+            public string VoiceModelPath => TazLang.Get("options_tazuo_voicemodelpath");
+            public string VoiceModelPathTooltip => TazLang.Get("options_tazuo_voicemodelpathtooltip");
+            public string VoiceRecognitionStatus => TazLang.Get("options_tazuo_voicerecognitionstatus");
+            public string VoiceStatusReady => TazLang.Get("options_tazuo_voicestatusready");
+            public string VoiceStatusNotInitialized => TazLang.Get("options_tazuo_voicestatusnotinitialized");
+            public string VoiceStatusListening => TazLang.Get("options_tazuo_voicestatuslistening");
+            public string VoiceApplyModel => TazLang.Get("options_tazuo_voiceapplymodel");
+            public string VoiceCreateMacro => TazLang.Get("options_tazuo_voicecreatemacro");
             #endregion
 
             #region VisibileLayers
-            public string VisibleLayers { get; set; } = "Visible Layers";
-            public string VisLayersInfo { get; set; } = "These settings are to hide layers on in-game mobiles. Check the box to hide that layer.";
-            public string OnlyForYourself { get; set; } = "Only for yourself";
-            public string HiddenLayersEnabled { get; set; } = "Enable visible layer system";
+            public string VisibleLayers => TazLang.Get("options_tazuo_visiblelayers");
+            public string VisLayersInfo => TazLang.Get("options_tazuo_vislayersinfo");
+            public string OnlyForYourself => TazLang.Get("options_tazuo_onlyforyourself");
+            public string HiddenLayersEnabled => TazLang.Get("options_tazuo_hiddenlayersenabled");
             #endregion
         }
     }
 
     public class AssistantLanguage
     {
-        public string VisualConfig { get; set; } = "Visual Config";
-        public string DelayConfig { get; set; } = "Delay Config";
-        public string CameraSmoothing { get; set; } = "Camera smoothing";
-        public string CameraSmoothingTooltip { get; set; } = "Smooth camera following when moving. 0 = instant (classic), 1 = very smooth/floaty.";
-        public string HighlightGameObjects { get; set; } = "Highlight game objects";
-        public string ShowNameplates { get; set; } = "Show nameplates";
-        public string PetScaling { get; set; } = "Pet scaling";
-        public string PetScalingTooltip { get; set; } = "Toggle the display of names above characters and NPCs in the game world.";
-        public string OutlineMobiles { get; set; } = "Outline mobiles";
-        public string MinGumpDragDist { get; set; } = "Min gump drag distance";
-        public string MinGumpDragDistTooltip { get; set; } = "How far you need to drag before a gump will move, this helps prevent accidentally dragging instead of clicking.";
-        public string GameScale { get; set; } = "Game scale";
-        public string GameScaleTooltip { get; set; } = "Adjust the scale of the entire game.";
-        public string TurnDelay { get; set; } = "Turn delay";
-        public string ObjectDelay { get; set; } = "Object delay";
-        public string AutoDelayChecker { get; set; } = "Auto delay checker";
-        public string AutoDelayCheckerTooltip { get; set; } = "Run a small test to try to determine the best object delay time.\nThis is an experimental feature, if it doesn't work for you just adjust your delay manually.";
-        public string Misc { get; set; } = "Misc";
-        public string QueueItemMoves { get; set; } = "Queue item moves";
-        public string QueueItemMovesTooltip { get; set; } = "Instead of instantly moving an item, put it in a queue to prevent \"You must wait\" messages.";
-        public string QueueObjectUses { get; set; } = "Queue object uses";
-        public string QueueObjectUsesTooltip { get; set; } = "Instead of instantly double clicking an item or mobile, put it in a queue to prevent \"You must wait\" messages.";
-        public string AutoOpenOwnCorpse { get; set; } = "Auto open own corpse";
-        public string AutoOpenOwnCorpseTooltip { get; set; } = "Automatically open your own corpse when you die, even if auto open corpses is disabled.";
-        public string AutoUnequipForActions { get; set; } = "Auto unequip for actions";
-        public string AutoUnequipForActionsTooltip { get; set; } = "Automatically unequip weapons for spells & potions, then reequip them after.";
-        public string DisableWeather { get; set; } = "Disable weather";
-        public string DisableWeatherTooltip { get; set; } = "Disable weather effects (rain, snow, storms).";
-        public string SetQuickHealSpell { get; set; } = "Set heal spell";
-        public string SetQuickCureSpell { get; set; } = "Set cure spell";
-        public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
-        public string SingleClickLastTarg { get; set; } = "Single clicking a mobile will set it as last target.";
+        public string VisualConfig => TazLang.Get("assistant_visualconfig");
+        public string DelayConfig => TazLang.Get("assistant_delayconfig");
+        public string CameraSmoothing => TazLang.Get("assistant_camerasmoothing");
+        public string CameraSmoothingTooltip => TazLang.Get("assistant_camerasmoothingtooltip");
+        public string HighlightGameObjects => TazLang.Get("assistant_highlightgameobjects");
+        public string ShowNameplates => TazLang.Get("assistant_shownameplates");
+        public string PetScaling => TazLang.Get("assistant_petscaling");
+        public string PetScalingTooltip => TazLang.Get("assistant_petscalingtooltip");
+        public string OutlineMobiles => TazLang.Get("assistant_outlinemobiles");
+        public string MinGumpDragDist => TazLang.Get("assistant_mingumpdragdist");
+        public string MinGumpDragDistTooltip => TazLang.Get("assistant_mingumpdragdisttooltip");
+        public string GameScale => TazLang.Get("assistant_gamescale");
+        public string GameScaleTooltip => TazLang.Get("assistant_gamescaletooltip");
+        public string TurnDelay => TazLang.Get("assistant_turndelay");
+        public string ObjectDelay => TazLang.Get("assistant_objectdelay");
+        public string AutoDelayChecker => TazLang.Get("assistant_autodelaychecker");
+        public string AutoDelayCheckerTooltip => TazLang.Get("assistant_autodelaycheckertooltip");
+        public string Misc => TazLang.Get("assistant_misc");
+        public string QueueItemMoves => TazLang.Get("assistant_queueitemmoves");
+        public string QueueItemMovesTooltip => TazLang.Get("assistant_queueitemmovestooltip");
+        public string QueueObjectUses => TazLang.Get("assistant_queueobjectuses");
+        public string QueueObjectUsesTooltip => TazLang.Get("assistant_queueobjectusestooltip");
+        public string AutoOpenOwnCorpse => TazLang.Get("assistant_autoopenowncorpse");
+        public string AutoOpenOwnCorpseTooltip => TazLang.Get("assistant_autoopenowncorpsetooltip");
+        public string AutoUnequipForActions => TazLang.Get("assistant_autounequipforactions");
+        public string AutoUnequipForActionsTooltip => TazLang.Get("assistant_autounequipforactionstooltip");
+        public string DisableWeather => TazLang.Get("assistant_disableweather");
+        public string DisableWeatherTooltip => TazLang.Get("assistant_disableweathertooltip");
+        public string SetQuickHealSpell => TazLang.Get("assistant_setquickhealspell");
+        public string SetQuickCureSpell => TazLang.Get("assistant_setquickcurespell");
+        public string QuickSpellTooltip => TazLang.Get("assistant_quickspelltooltip");
+        public string SingleClickLastTarg => TazLang.Get("assistant_singleclicklasttarg");
     }
 }

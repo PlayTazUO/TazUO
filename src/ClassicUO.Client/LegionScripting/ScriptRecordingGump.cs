@@ -8,6 +8,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
+using ClassicUO.Configuration;
 using System.Threading.Tasks;
 
 namespace ClassicUO.LegionScripting
@@ -48,7 +49,7 @@ namespace ClassicUO.LegionScripting
         private void BuildGump()
         {
             // Title bar
-            _titleBar = new Label("Script Recording - Stopped", true, 52, font: 1)
+            _titleBar = new Label(TazLang.Get("script_recording_title_fmt", new[] { TazLang.Get("script_recording_status_stopped", "Stopped") }), true, 52, font: 1)
             {
                 X = BorderSize + 10,
                 Y = BorderSize + 10
@@ -58,7 +59,7 @@ namespace ClassicUO.LegionScripting
             int currentY = _titleBar.Y + _titleBar.Height + 15;
 
             // Control buttons
-            _recordButton = new NiceButton(BorderSize + 10, currentY, 80, 25, ButtonAction.Activate, "Record", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            _recordButton = new NiceButton(BorderSize + 10, currentY, 80, 25, ButtonAction.Activate, TazLang.Get("script_recording_btn_record", "Record"), 0, TEXT_ALIGN_TYPE.TS_CENTER)
             {
                 ButtonParameter = (int)RecordingAction.ToggleRecord,
                 DisplayBorder = true
@@ -66,7 +67,7 @@ namespace ClassicUO.LegionScripting
             _recordButton.MouseUp += OnButtonClick;
             Add(_recordButton);
 
-            _pauseButton = new NiceButton(BorderSize + 100, currentY, 60, 25, ButtonAction.Activate, "Pause", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            _pauseButton = new NiceButton(BorderSize + 100, currentY, 60, 25, ButtonAction.Activate, TazLang.Get("script_recording_btn_pause", "Pause"), 0, TEXT_ALIGN_TYPE.TS_CENTER)
             {
                 ButtonParameter = (int)RecordingAction.Pause,
                 IsEnabled = false,
@@ -75,7 +76,7 @@ namespace ClassicUO.LegionScripting
             _pauseButton.MouseUp += OnButtonClick;
             Add(_pauseButton);
 
-            _clearButton = new NiceButton(BorderSize + 170, currentY, 60, 25, ButtonAction.Activate, "Clear", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            _clearButton = new NiceButton(BorderSize + 170, currentY, 60, 25, ButtonAction.Activate, TazLang.Get("script_recording_btn_clear", "Clear"), 0, TEXT_ALIGN_TYPE.TS_CENTER)
             {
                 ButtonParameter = (int)RecordingAction.Clear,
                 DisplayBorder = true
@@ -86,7 +87,7 @@ namespace ClassicUO.LegionScripting
             currentY += 35;
 
             // Status information
-            _statusText = new Label("Status: Ready", true, 0xFFFF, font: 1)
+            _statusText = new Label(TazLang.Get("script_recording_status_fmt", new[] { TazLang.Get("script_recording_status_ready", "Ready") }), true, 0xFFFF, font: 1)
             {
                 X = BorderSize + 10,
                 Y = currentY
@@ -95,7 +96,7 @@ namespace ClassicUO.LegionScripting
 
             currentY += _statusText.Height + 5;
 
-            _durationText = new Label("Duration: 0:00", true, 999, font: 1)
+            _durationText = new Label(TazLang.Get("script_recording_duration_fmt", new[] { "0", "00" }), true, 999, font: 1)
             {
                 X = BorderSize + 10,
                 Y = currentY
@@ -104,7 +105,7 @@ namespace ClassicUO.LegionScripting
 
             currentY += _durationText.Height + 5;
 
-            _actionCountText = new Label("Actions: 0", true, 999, font: 1)
+            _actionCountText = new Label(TazLang.Get("script_recording_action_count_fmt", new[] { "0" }), true, 999, font: 1)
             {
                 X = BorderSize + 10,
                 Y = currentY
@@ -114,7 +115,7 @@ namespace ClassicUO.LegionScripting
             currentY += _actionCountText.Height + 10;
 
             // Record pauses option
-            _recordPausesCheckbox = new Checkbox(0x00D2, 0x00D3, "Included pauses (timing delays)", 1, 0xFFFF)
+            _recordPausesCheckbox = new Checkbox(0x00D2, 0x00D3, TazLang.Get("script_recording_checkbox_label", "Included pauses (timing delays)"), 1, 0xFFFF)
             {
                 X = BorderSize + 10,
                 Y = currentY,
@@ -125,7 +126,7 @@ namespace ClassicUO.LegionScripting
             currentY += _recordPausesCheckbox.Height + 15;
 
             // Action list
-            var actionListLabel = new Label("Recorded Actions:", true, 0x35, font: 1)
+            var actionListLabel = new Label(TazLang.Get("script_recording_action_list_label", "Recorded Actions:"), true, 0x35, font: 1)
             {
                 X = BorderSize + 10,
                 Y = currentY
@@ -152,7 +153,7 @@ namespace ClassicUO.LegionScripting
 
             // Bottom buttons
             int bottomY = Height - BorderSize - 35;
-            _copyButton = new NiceButton(BorderSize + 10, bottomY, 100, 25, ButtonAction.Activate, "Copy Script", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            _copyButton = new NiceButton(BorderSize + 10, bottomY, 100, 25, ButtonAction.Activate, TazLang.Get("script_recording_btn_copy", "Copy Script"), 0, TEXT_ALIGN_TYPE.TS_CENTER)
             {
                 ButtonParameter = (int)RecordingAction.Copy,
                 DisplayBorder = true
@@ -160,7 +161,7 @@ namespace ClassicUO.LegionScripting
             _copyButton.MouseUp += OnButtonClick;
             Add(_copyButton);
 
-            _saveButton = new NiceButton(BorderSize + 120, bottomY, 100, 25, ButtonAction.Activate, "Save Script", 0, TEXT_ALIGN_TYPE.TS_CENTER)
+            _saveButton = new NiceButton(BorderSize + 120, bottomY, 100, 25, ButtonAction.Activate, TazLang.Get("script_recording_btn_save", "Save Script"), 0, TEXT_ALIGN_TYPE.TS_CENTER)
             {
                 ButtonParameter = (int)RecordingAction.Save,
                 DisplayBorder = true
@@ -298,18 +299,18 @@ namespace ClassicUO.LegionScripting
 
             // Update title
             string status = recorder.IsRecording
-                ? (recorder.IsPaused ? "Paused" : "Recording")
-                : "Stopped";
+                ? (recorder.IsPaused ? TazLang.Get("script_recording_status_paused", "Paused") : TazLang.Get("script_recording_status_recording", "Recording"))
+                : TazLang.Get("script_recording_status_stopped", "Stopped");
 
-            _titleBar.Text = $"Script Recording - {status}";
+            _titleBar.Text = TazLang.Get("script_recording_title_fmt", new[] { status });
 
             // Update buttons
-            _recordButton.SetText(recorder.IsRecording ? "Stop" : "Record");
+            _recordButton.SetText(recorder.IsRecording ? TazLang.Get("script_recording_btn_stop", "Stop") : TazLang.Get("script_recording_btn_record", "Record"));
             _pauseButton.IsEnabled = recorder.IsRecording;
-            _pauseButton.SetText(recorder.IsPaused ? "Resume" : "Pause");
+            _pauseButton.SetText(recorder.IsPaused ? TazLang.Get("script_recording_btn_resume", "Resume") : TazLang.Get("script_recording_btn_pause", "Pause"));
 
             // Update status
-            _statusText.Text = $"Status: {status}";
+            _statusText.Text = TazLang.Get("script_recording_status_fmt", new[] { status });
 
             // Update duration and action count
             UpdateDuration();
@@ -323,10 +324,10 @@ namespace ClassicUO.LegionScripting
             uint minutes = seconds / 60;
             seconds %= 60;
 
-            _durationText.Text = $"Duration: {minutes}:{seconds:D2}";
+            _durationText.Text = TazLang.Get("script_recording_duration_fmt", new[] { minutes.ToString(), seconds.ToString("D2") });
         }
 
-        private void UpdateActionCount() => _actionCountText.Text = $"Actions: {ScriptRecorder.Instance.ActionCount}";
+        private void UpdateActionCount() => _actionCountText.Text = TazLang.Get("script_recording_action_count_fmt", new[] { ScriptRecorder.Instance.ActionCount.ToString() });
 
         private void UpdateActionList()
         {
@@ -394,111 +395,111 @@ namespace ClassicUO.LegionScripting
             {
                 case "walk":
                     string walkDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
-                    return $"Walk {walkDir}";
+                    return TazLang.Get("script_recording_action_walk_fmt", new[] { walkDir });
                 case "run":
                     string runDir = action.Parameters.ContainsKey("direction") ? Utility.GetDirectionString(Utility.GetDirection(action.Parameters["direction"].ToString())) : "?";
-                    return $"Run {runDir}";
+                    return TazLang.Get("script_recording_action_run_fmt", new[] { runDir });
                 case "cast":
                     object spell = action.Parameters.ContainsKey("spell") ? action.Parameters["spell"] : "?";
-                    return $"Cast \"{spell}\"";
+                    return TazLang.Get("script_recording_action_cast_fmt", new[] { spell.ToString() });
                 case "say":
                     string message = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (message.Length > 30)
                         message = message.Substring(0, 27) + "...";
-                    return $"Say \"{message}\"";
+                    return TazLang.Get("script_recording_action_say_fmt", new[] { message });
                 case "useitem":
                     object serial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    return $"Use Item 0x{serial:X8}";
+                    return TazLang.Get("script_recording_action_useitem_fmt", new[] { $"0x{serial:X8}" });
                 case "dragdrop":
                     object from = action.Parameters.ContainsKey("from") ? action.Parameters["from"] : "?";
                     object to = action.Parameters.ContainsKey("to") ? action.Parameters["to"] : "?";
-                    return $"DragDrop 0x{from:X8} → 0x{to:X8}";
+                    return TazLang.Get("script_recording_action_dragdrop_fmt", new[] { $"0x{from:X8}", $"0x{to:X8}" });
                 case "target":
                     object targetSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    return $"Target 0x{targetSerial:X8}";
+                    return TazLang.Get("script_recording_action_target_fmt", new[] { $"0x{targetSerial:X8}" });
                 case "targetlocation":
                     object targX = action.Parameters.ContainsKey("x") ? action.Parameters["x"] : "?";
                     object targY = action.Parameters.ContainsKey("y") ? action.Parameters["y"] : "?";
                     object targZ = action.Parameters.ContainsKey("z") ? action.Parameters["z"] : "?";
-                    return $"Target Loc ({targX}, {targY}, {targZ})";
+                    return TazLang.Get("script_recording_action_targetloc_fmt", new[] { targX.ToString(), targY.ToString(), targZ.ToString() });
                 case "opencontainer":
                     object openSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     object openType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
-                    return $"Open {openType} 0x{openSerial:X8}";
+                    return TazLang.Get("script_recording_action_opencontainer_fmt", new[] { openType.ToString(), $"0x{openSerial:X8}" });
                 case "closecontainer":
                     object closeSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     object closeType = action.Parameters.ContainsKey("type") ? action.Parameters["type"] : "container";
-                    return $"Close {closeType} 0x{closeSerial:X8}";
+                    return TazLang.Get("script_recording_action_closecontainer_fmt", new[] { closeType.ToString(), $"0x{closeSerial:X8}" });
                 case "attack":
                     object attackSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    return $"Attack 0x{attackSerial:X8}";
+                    return TazLang.Get("script_recording_action_attack_fmt", new[] { $"0x{attackSerial:X8}" });
                 case "bandageself":
-                    return "Bandage Self";
+                    return TazLang.Get("script_recording_action_bandageself", "Bandage Self");
                 case "contextmenu":
                     object contextSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     object contextIndex = action.Parameters.ContainsKey("index") ? action.Parameters["index"] : "?";
-                    return $"Context Menu 0x{contextSerial:X8} [{contextIndex}]";
+                    return TazLang.Get("script_recording_action_contextmenu_fmt", new[] { $"0x{contextSerial:X8}", contextIndex.ToString() });
                 case "menuresponse":
                     object menuIndex = action.Parameters.ContainsKey("index") ? action.Parameters["index"] : "?";
-                    return $"Menu Response [{menuIndex}]";
+                    return TazLang.Get("script_recording_action_menuresponse_fmt", new[] { menuIndex.ToString() });
                 case "graymenuresponse":
                     object grayMenuIndex = action.Parameters.ContainsKey("index") ? action.Parameters["index"] : "?";
-                    return $"Gray Menu Response [{grayMenuIndex}]";
+                    return TazLang.Get("script_recording_action_graymenuresponse_fmt", new[] { grayMenuIndex.ToString() });
                 case "useskill":
                     object skillName = action.Parameters.ContainsKey("skill") ? action.Parameters["skill"] : "?";
-                    return $"Use Skill \"{skillName}\"";
+                    return TazLang.Get("script_recording_action_useskill_fmt", new[] { skillName.ToString() });
                 case "equipitem":
                     object equipSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     object layer = action.Parameters.ContainsKey("layer") ? action.Parameters["layer"] : "?";
-                    return $"Equip 0x{equipSerial:X8} ({layer})";
+                    return TazLang.Get("script_recording_action_equipitem_fmt", new[] { $"0x{equipSerial:X8}", layer.ToString() });
                 case "replygump":
                     object gumpButton = action.Parameters.ContainsKey("button") ? action.Parameters["button"] : "?";
                     object gumpId = action.Parameters.ContainsKey("gumpid") ? action.Parameters["gumpid"] : "?";
-                    return $"Gump Button {gumpButton} (0x{gumpId:X8})";
+                    return TazLang.Get("script_recording_action_replygump_fmt", new[] { gumpButton.ToString(), $"0x{gumpId:X8}" });
                 case "headmsg":
                     string headMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     object headSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
                     if (headMsgText.Length > 20) headMsgText = headMsgText.Substring(0, 17) + "...";
-                    return $"Head Msg \"{headMsgText}\" (0x{headSerial:X8})";
+                    return TazLang.Get("script_recording_action_headmsg_fmt", new[] { headMsgText, $"0x{headSerial:X8}" });
                 case "partymsg":
                     string partyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (partyMsgText.Length > 25) partyMsgText = partyMsgText.Substring(0, 22) + "...";
-                    return $"Party: \"{partyMsgText}\"";
+                    return TazLang.Get("script_recording_action_partymsg_fmt", new[] { partyMsgText });
                 case "guildmsg":
                     string guildMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (guildMsgText.Length > 25) guildMsgText = guildMsgText.Substring(0, 22) + "...";
-                    return $"Guild: \"{guildMsgText}\"";
+                    return TazLang.Get("script_recording_action_guildmsg_fmt", new[] { guildMsgText });
                 case "allymsg":
                     string allyMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (allyMsgText.Length > 25) allyMsgText = allyMsgText.Substring(0, 22) + "...";
-                    return $"Ally: \"{allyMsgText}\"";
+                    return TazLang.Get("script_recording_action_allymsg_fmt", new[] { allyMsgText });
                 case "whispermsg":
                     string whisperMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (whisperMsgText.Length > 25) whisperMsgText = whisperMsgText.Substring(0, 22) + "...";
-                    return $"Whisper: \"{whisperMsgText}\"";
+                    return TazLang.Get("script_recording_action_whispermsg_fmt", new[] { whisperMsgText });
                 case "yellmsg":
                     string yellMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (yellMsgText.Length > 25) yellMsgText = yellMsgText.Substring(0, 22) + "...";
-                    return $"Yell: \"{yellMsgText}\"";
+                    return TazLang.Get("script_recording_action_yellmsg_fmt", new[] { yellMsgText });
                 case "emotemsg":
                     string emoteMsgText = action.Parameters.ContainsKey("message") ? action.Parameters["message"].ToString() : "?";
                     if (emoteMsgText.Length > 25) emoteMsgText = emoteMsgText.Substring(0, 22) + "...";
-                    return $"Emote: \"{emoteMsgText}\"";
+                    return TazLang.Get("script_recording_action_emotemsg_fmt", new[] { emoteMsgText });
                 case "mount":
                     object mountSerial = action.Parameters.ContainsKey("serial") ? action.Parameters["serial"] : "?";
-                    return $"Mount 0x{mountSerial:X8}";
+                    return TazLang.Get("script_recording_action_mount_fmt", new[] { $"0x{mountSerial:X8}" });
                 case "dismount":
-                    return "Dismount";
+                    return TazLang.Get("script_recording_action_dismount", "Dismount");
                 case "toggleability":
                     object ability = action.Parameters.ContainsKey("ability") ? action.Parameters["ability"] : "?";
-                    return $"Toggle Ability \"{ability}\"";
+                    return TazLang.Get("script_recording_action_toggleability_fmt", new[] { ability.ToString() });
                 case "virtue":
                     object virtue = action.Parameters.ContainsKey("virtue") ? action.Parameters["virtue"] : "?";
-                    return $"Invoke Virtue \"{virtue}\"";
+                    return TazLang.Get("script_recording_action_virtue_fmt", new[] { virtue.ToString() });
                 case "waitforgump":
-                    return "Wait for gump";
+                    return TazLang.Get("script_recording_action_waitforgump", "Wait for gump");
                 default:
-                    return $"{action.ActionType}(...)";
+                    return TazLang.Get("script_recording_action_unknown_fmt", new[] { action.ActionType });
             }
         }
 
@@ -508,11 +509,11 @@ namespace ClassicUO.LegionScripting
             {
                 string script = ScriptRecorder.Instance.GenerateScript(_recordPausesCheckbox.IsChecked);
                 SDL3.SDL.SDL_SetClipboardText(script);
-                GameActions.Print("Script copied to clipboard!");
+                GameActions.Print(TazLang.Get("script_recording_msg_copied", "Script copied to clipboard!"));
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Failed to copy script: {ex.Message}");
+                GameActions.Print(string.Format(TazLang.Get("script_recording_error_copy_fmt", "Failed to copy script: {0}"), ex.Message));
             }
         }
 
@@ -531,13 +532,13 @@ namespace ClassicUO.LegionScripting
                 string filePath = System.IO.Path.Combine(LegionScripting.ScriptPath, fileName);
 
                 System.IO.File.WriteAllText(filePath, script);
-                GameActions.Print($"Script saved as {fileName}");
+                GameActions.Print(string.Format(TazLang.Get("script_recording_msg_saved_fmt", "Script saved as {0}"), fileName));
 
                 MainThreadQueue.EnqueueAction(() => ScriptManagerWindow.Instance?.Refresh());
             }
             catch (Exception ex)
             {
-                GameActions.Print($"Failed to save script: {ex.Message}", Constants.HUE_ERROR);
+                GameActions.Print(string.Format(TazLang.Get("script_recording_error_save_fmt", "Failed to save script: {0}"), ex.Message), Constants.HUE_ERROR);
             }
         }
 

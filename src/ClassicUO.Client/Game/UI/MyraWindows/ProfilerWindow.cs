@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -33,7 +34,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             UIManager.Add(new ProfilerWindow());
         }
 
-        public ProfilerWindow() : base("Profiler")
+        public ProfilerWindow() : base(TazLang.Get("myra_profiler_title", "Profiler"))
         {
             _dataPanel = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
@@ -41,8 +42,8 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             var buttons = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             buttons.Widgets.Add(_toggleButton);
-            buttons.Widgets.Add(new MyraButton("Reset", () => Profiler.Reset()));
-            buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
+            buttons.Widgets.Add(new MyraButton(TazLang.Get("shared_reset", "Reset"), () => Profiler.Reset()));
+            buttons.Widgets.Add(new MyraButton(TazLang.Get("myra_profiler_btn_copy_output", "Copy Output"), CopyToClipboard));
 
             var scrollViewer = new ScrollViewer
             {
@@ -74,7 +75,7 @@ namespace ClassicUO.Game.UI.MyraWindows
         }
 
         private static string GetToggleLabel() =>
-            Profiler.Enabled ? "Disable Profiler" : "Enable Profiler";
+            Profiler.Enabled ? TazLang.Get("myra_profiler_btn_disable", "Disable Profiler") : TazLang.Get("myra_profiler_btn_enable", "Enable Profiler");
 
         private static void CopyToClipboard()
         {
@@ -84,15 +85,15 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             if (data.Count == 0)
             {
-                Clipboard.SetClipboardText("No profiler data available.");
-                GameActions.Print("Copied to clipboard!", Constants.HUE_SUCCESS);
+                Clipboard.SetClipboardText(TazLang.Get("myra_profiler_msg_no_data", "No profiler data available."));
+                GameActions.Print(TazLang.Get("shared_copied", "Copied to clipboard!"), Constants.HUE_SUCCESS);
                 return;
             }
 
             double totalAvg = data.Sum(pd => pd.AverageTime);
             var sb = new StringBuilder();
-            sb.AppendLine("TazUO Profiler Output");
-            sb.AppendLine($"{"Context",-40}  {"Avg(ms)",7}  {"Peak(ms)",8}  {"Last(ms)",8}  {"% Total",7}");
+            sb.AppendLine(TazLang.Get("myra_profiler_copy_title", "TazUO Profiler Output"));
+            sb.AppendLine($"{TazLang.Get("myra_profiler_copy_header_context", "Context"),-40}  {TazLang.Get("myra_profiler_copy_header_avg", "Avg(ms)"),7}  {TazLang.Get("myra_profiler_copy_header_peak", "Peak(ms)"),8}  {TazLang.Get("myra_profiler_copy_header_last", "Last(ms)"),8}  {TazLang.Get("myra_profiler_copy_header_pct", "% Total"),7}");
             sb.AppendLine(new string('-', 76));
 
             foreach (Profiler.ProfileData pd in data)
@@ -105,7 +106,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             }
 
             Clipboard.SetClipboardText(sb.ToString());
-            GameActions.Print("Copied to clipboard!", Constants.HUE_SUCCESS);
+            GameActions.Print(TazLang.Get("shared_copied", "Copied to clipboard!"), Constants.HUE_SUCCESS);
         }
 
         public override void Update()
@@ -125,7 +126,7 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             if (!Profiler.Enabled)
             {
-                _dataPanel.Widgets.Add(new MyraLabel("Profiler is disabled. Click 'Enable Profiler' to start.", MyraLabel.TextStyle.P));
+                _dataPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_profiler_disabled", "Profiler is disabled. Click 'Enable Profiler' to start."), MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -135,7 +136,7 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             if (data.Count == 0)
             {
-                _dataPanel.Widgets.Add(new MyraLabel("No data collected yet — play the game to populate.", MyraLabel.TextStyle.P));
+                _dataPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_profiler_empty", "No data collected yet — play the game to populate."), MyraLabel.TextStyle.P));
                 return;
             }
 
@@ -143,11 +144,11 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Fill("Context"),
-                GridColumnInfo.Numeric("Avg(ms)"),
-                GridColumnInfo.Numeric("Peak(ms)"),
-                GridColumnInfo.Numeric("Last(ms)"),
-                GridColumnInfo.Numeric("% Total")
+                GridColumnInfo.Fill(TazLang.Get("myra_profiler_col_context", "Context")),
+                GridColumnInfo.Numeric(TazLang.Get("myra_profiler_col_avg", "Avg(ms)")),
+                GridColumnInfo.Numeric(TazLang.Get("myra_profiler_col_peak", "Peak(ms)")),
+                GridColumnInfo.Numeric(TazLang.Get("myra_profiler_col_last", "Last(ms)")),
+                GridColumnInfo.Numeric(TazLang.Get("myra_profiler_col_pct", "% Total"))
             );
 
             int row = 1;

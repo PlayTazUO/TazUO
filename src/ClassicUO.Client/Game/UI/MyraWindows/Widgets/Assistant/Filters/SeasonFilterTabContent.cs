@@ -1,4 +1,5 @@
 #nullable enable
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using Myra.Graphics2D.UI;
 
@@ -6,7 +7,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
 public static class SeasonFilterTabContent
 {
-    private static readonly string[] SeasonNames = { "Spring", "Summer", "Fall", "Winter", "Desolation" };
     private static readonly Season[] AllSeasons =
     {
         Season.Spring,
@@ -16,15 +16,21 @@ public static class SeasonFilterTabContent
         Season.Desolation
     };
 
-    // Display options: "None" followed by each season
-    private static readonly string[] DisplayOptions;
-
-    static SeasonFilterTabContent()
+    private static string GetSeasonName(Season s) => s switch
     {
-        DisplayOptions = new string[AllSeasons.Length + 1];
-        DisplayOptions[0] = "None";
-        for (int j = 0; j < SeasonNames.Length; j++)
-            DisplayOptions[j + 1] = SeasonNames[j];
+        Season.Spring => TazLang.Get("season_filter_tabs_season_spring", "Spring"),
+        Season.Summer => TazLang.Get("season_filter_tabs_season_summer", "Summer"),
+        Season.Fall => TazLang.Get("season_filter_tabs_season_fall", "Fall"),
+        Season.Winter => TazLang.Get("season_filter_tabs_season_winter", "Winter"),
+        Season.Desolation => TazLang.Get("season_filter_tabs_season_desolation", "Desolation"),
+        _ => "Unknown"
+    };
+
+    private static string GetDisplayOption(int index)
+    {
+        if (index == 0)
+            return TazLang.Get("season_filter_tabs_option_none", "None");
+        return GetSeasonName(AllSeasons[index - 1]);
     }
 
     public static Widget Build()
@@ -32,27 +38,31 @@ public static class SeasonFilterTabContent
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead.",
+            TazLang.Get("season_filter_tabs_desc", "Override seasons sent by the server. For example, if the server sends Winter, you can display Fall instead."),
             MyraLabel.TextStyle.H3) { MaxWidth = 500 });
 
         // Collect BuildCycleBtn delegates so Clear can refresh all wrappers
         var rebuildActions = new System.Collections.Generic.List<System.Action>();
 
-        root.Widgets.Add(new MyraButton("Clear All Filters", () =>
+        root.Widgets.Add(new MyraButton(TazLang.Get("season_filter_tabs_btn_clear_all", "Clear All Filters"), () =>
         {
             SeasonFilter.Instance.Clear();
             foreach (System.Action rebuild in rebuildActions) rebuild();
-        }) { Tooltip = "Remove all season filters and display seasons as sent by the server" });
+        }) { Tooltip = TazLang.Get("season_filter_tabs_tooltip_clear_all", "Remove all season filters and display seasons as sent by the server") });
 
-        root.Widgets.Add(new MyraLabel("Season Filters:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("season_filter_tabs_label_season_filters", "Season Filters:"), MyraLabel.TextStyle.H3));
 
         var grid = new MyraGrid();
-        grid.SetupWithHeaders(GridColumnInfo.Auto("When Server Sends"), GridColumnInfo.Auto("Show As"));
+        grid.SetupWithHeaders(
+            GridColumnInfo.Auto(TazLang.Get("season_filter_tabs_col_server_sends", "When Server Sends")),
+            GridColumnInfo.Auto(TazLang.Get("season_filter_tabs_col_show_as", "Show As")));
+
+        int displayOptionCount = AllSeasons.Length + 1;
 
         for (int i = 0; i < AllSeasons.Length; i++)
         {
             Season incoming = AllSeasons[i];
-            string incomingName = SeasonNames[i];
+            string incomingName = GetSeasonName(incoming);
 
             grid.AddWidget(new MyraLabel(incomingName, MyraLabel.TextStyle.P), i + 1, 0);
 
@@ -62,7 +72,7 @@ public static class SeasonFilterTabContent
             {
                 cycleWrapper.Widgets.Clear();
 
-                string currentLabel = "None";
+                string currentLabel = GetDisplayOption(0);
                 int currentIdx = 0;
                 if (SeasonFilter.Instance.Filters.TryGetValue(incoming, out Season replacement))
                 {
@@ -71,7 +81,7 @@ public static class SeasonFilterTabContent
                         if (AllSeasons[k] == replacement)
                         {
                             currentIdx = k + 1;
-                            currentLabel = SeasonNames[k];
+                            currentLabel = GetSeasonName(AllSeasons[k]);
                             break;
                         }
                     }
@@ -79,13 +89,13 @@ public static class SeasonFilterTabContent
 
                 cycleWrapper.Widgets.Add(new MyraButton(currentLabel, () =>
                 {
-                    int nextIdx = (currentIdx + 1) % DisplayOptions.Length;
+                    int nextIdx = (currentIdx + 1) % displayOptionCount;
                     if (nextIdx == 0)
                         SeasonFilter.Instance.RemoveFilter(incoming);
                     else
                         SeasonFilter.Instance.SetFilter(incoming, AllSeasons[nextIdx - 1]);
                     BuildCycleBtn();
-                }) { Tooltip = $"Click to cycle season override for {incomingName}" });
+                }) { Tooltip = TazLang.Get("season_filter_tabs_tooltip_cycle_season_fmt", new[] { incomingName }) });
             }
 
             rebuildActions.Add(BuildCycleBtn);
@@ -95,7 +105,7 @@ public static class SeasonFilterTabContent
 
         root.Widgets.Add(grid);
         root.Widgets.Add(new MyraLabel(
-            "Click the button to cycle through options. 'None' disables the filter.",
+            TazLang.Get("season_filter_tabs_help", "Click the button to cycle through options. 'None' disables the filter."),
             MyraLabel.TextStyle.P));
 
         return root;

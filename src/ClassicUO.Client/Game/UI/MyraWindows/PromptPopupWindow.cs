@@ -36,11 +36,11 @@ public class PromptPopupWindow : MyraControl
         string title,
         string message,
         Action<string> onSubmit,
-        string submitText = "Submit",
-        string cancelText = "Cancel",
+        string submitText = null,
+        string cancelText = null,
         Action onCancel = null,
         string defaultValue = "",
-        string hintText = "Enter your response..."
+        string hintText = null
     ) : this(title, message, onSubmit, submitText, cancelText, onCancel, defaultValue, hintText, null)
     {
     }
@@ -50,14 +50,14 @@ public class PromptPopupWindow : MyraControl
     /// user disable the popup for future system prompts (handling them through chat instead).
     /// </summary>
     public PromptPopupWindow(World world) : this(
-        "Server Prompt",
-        "The server is requesting input:",
+        TazLang.Get("myra_prompt_title_server", "Server Prompt"),
+        TazLang.Get("myra_prompt_message_server", "The server is requesting input:"),
         text => SendResponse(world, text, text.Length < 1),
-        "Submit",
-        "Cancel",
+        null,
+        null,
         () => SendResponse(world, string.Empty, true),
         string.Empty,
-        "Enter your response...",
+        null,
         BuildDisablePopupCheckbox()
     )
     {
@@ -77,6 +77,10 @@ public class PromptPopupWindow : MyraControl
     {
         _onSubmit = onSubmit;
         _onCancel = onCancel;
+
+        submitText ??= TazLang.Get("shared_submit", "Submit");
+        cancelText ??= TazLang.Get("shared_cancel", "Cancel");
+        hintText   ??= TazLang.Get("myra_prompt_hint_default", "Enter your response...");
 
         var layout = new VerticalStackPanel { Spacing = 8, Padding = new Thickness(8) };
 
@@ -124,8 +128,8 @@ public class PromptPopupWindow : MyraControl
         MyraCheckButton.CreateWithCallback(
             !ProfileManager.CurrentProfile.UsePromptPopup,
             isChecked => ProfileManager.CurrentProfile.UsePromptPopup = !isChecked,
-            "Disable this popup (use chat instead)",
-            "When checked, server prompts will only be handled through the chat input"
+            TazLang.Get("myra_prompt_checkbox_disable", "Disable this popup (use chat instead)"),
+            TazLang.Get("myra_prompt_checkbox_disable_tooltip", "When checked, server prompts will only be handled through the chat input")
         );
 
     private static void SendResponse(World world, string text, bool cancel)

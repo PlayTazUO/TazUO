@@ -43,7 +43,6 @@ namespace ClassicUO
         {
             CopyRequiredLibs();
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-            Language.Load();
             Log.Start(LogTypes.All);
 
             //DllMap.Init();
@@ -524,6 +523,10 @@ namespace ClassicUO
                             case "PTB": Settings.GlobalSettings.Language = "PTB"; break;
                             case "ITA": Settings.GlobalSettings.Language = "ITA"; break;
                             case "CHT": Settings.GlobalSettings.Language = "CHT"; break;
+                            // CHS (Simplified Chinese): load the Traditional cliloc files and rely on
+                            // ChineseConverter (OpenCC) to render Simplified at display time. This avoids
+                            // requiring users to source a separate Cliloc.chs.
+                            case "CHS": Settings.GlobalSettings.Language = "CHT"; break;
                             default:
 
                                 Settings.GlobalSettings.Language = "ENU";

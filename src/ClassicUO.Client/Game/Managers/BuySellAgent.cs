@@ -233,7 +233,7 @@ namespace ClassicUO.Game.Managers
             if (buyList.Count == 0) return;
 
             AsyncNetClient.Socket.Send_BuyRequest(shopSerial, buyList.ToArray());
-            GameActions.Print(Client.Game.UO.World, $"Purchased {total_count} items for {val} gold.");
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("managers_buysellagent_msg_purchased_fmt", new[] { total_count.ToString(), val.ToString() }));
             UIManager.GetGump(shopSerial)?.Dispose();
         }
 
@@ -352,7 +352,7 @@ namespace ClassicUO.Game.Managers
             if (sellList.Count == 0) return;
 
             AsyncNetClient.Socket.Send_SellRequest(vendorSerial, sellList.ToArray());
-            GameActions.Print(Client.Game.UO.World, $"Sold {total_count} items for {val} gold.");
+            GameActions.Print(Client.Game.UO.World, TazLang.Get("managers_buysellagent_msg_sold_fmt", new[] { total_count.ToString(), val.ToString() }));
             UIManager.ForEach<ModernShopGump>(g => g.Dispose(), vendorSerial);
             UIManager.ForEach<ShopGump>(g => g.Dispose(), vendorSerial);
         }

@@ -4,6 +4,7 @@ using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using System;
 using ClassicUO.Game.Data;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -34,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Clear();
 
-            Add(new Label("Select Color", true, 0xFFFF, font: 1)
+            Add(new Label(TazLang.Get("gump_rgbcolorpicker_title", "Select Color"), true, 0xFFFF, font: 1)
             {
                 X = 10,
                 Y = 10
@@ -46,13 +47,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             NiceButton okButton, cancelButton;
 
-            Add(okButton = new NiceButton(WIDTH - 120, HEIGHT - 40, 50, 25, ButtonAction.Activate, "OK")
+            Add(okButton = new NiceButton(WIDTH - 120, HEIGHT - 40, 50, 25, ButtonAction.Activate, TazLang.Get("gump_rgbcolorpicker_ok", "OK"))
             {
                 IsSelectable = false,
                 ButtonParameter = 1
             });
 
-            Add(cancelButton = new NiceButton(WIDTH - 60, HEIGHT - 40, 50, 25, ButtonAction.Activate, "Cancel")
+            Add(cancelButton = new NiceButton(WIDTH - 60, HEIGHT - 40, 50, 25, ButtonAction.Activate, TazLang.Get("gump_rgbcolorpicker_cancel", "Cancel"))
             {
                 IsSelectable = false,
                 ButtonParameter = 2

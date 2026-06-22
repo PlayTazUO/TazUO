@@ -13,6 +13,10 @@ description:  Represents a Python-accessible entity in the game world, such as a
 
 **Type:** `string`
 
+ The entity's name. For items this returns the English OPL name when available,
+ falling back to the localized name if English data is not loaded.
+
+
 ### `__class__`
 
 **Type:** `string`

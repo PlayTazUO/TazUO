@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
@@ -10,17 +11,28 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
 
 public static class GraphicReplacementTabContent
 {
-    private static readonly string[] TypeNames = { "Mobile", "Land", "Static" };
     private static readonly byte[] TypeValues = { 1, 2, 3 };
 
-    private static string GetTypeName(byte t) => t switch { 1 => "Mobile", 2 => "Land", _ => "Static" };
+    private static string GetTypeName(byte t) => t switch
+    {
+        1 => TazLang.Get("graphic_replacement_tabs_type_mobile", "Mobile"),
+        2 => TazLang.Get("graphic_replacement_tabs_type_land", "Land"),
+        _ => TazLang.Get("graphic_replacement_tabs_type_static", "Static")
+    };
+
+    private static string GetTypeNameByIndex(int index) => index switch
+    {
+        0 => TazLang.Get("graphic_replacement_tabs_type_mobile", "Mobile"),
+        1 => TazLang.Get("graphic_replacement_tabs_type_land", "Land"),
+        _ => TazLang.Get("graphic_replacement_tabs_type_static", "Static")
+    };
 
     public static Widget Build()
     {
         var root = new VerticalStackPanel { Spacing = 6 };
 
         root.Widgets.Add(new MyraLabel(
-            "Replace graphics with other graphics. Mobile = animations, Land = terrain tiles, Static = items/statics.",
+            TazLang.Get("graphic_replacement_tabs_desc", "Replace graphics with other graphics. Mobile = animations, Land = terrain tiles, Static = items/statics."),
             MyraLabel.TextStyle.H3));
 
         var filtersPanel = new VerticalStackPanel { Spacing = 2 };
@@ -32,18 +44,18 @@ public static class GraphicReplacementTabContent
 
             if (filters.Count == 0)
             {
-                filtersPanel.Widgets.Add(new MyraLabel("No replacements configured.", MyraLabel.TextStyle.H3));
+                filtersPanel.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_empty_replacements", "No replacements configured."), MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Original"),
-                GridColumnInfo.Auto("Type"),
-                GridColumnInfo.Fill("Replacement"),
-                GridColumnInfo.Fill("Preview"),
-                GridColumnInfo.Fill("New Hue"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto(TazLang.Get("graphic_replacement_tabs_col_original", "Original")),
+                GridColumnInfo.Auto(TazLang.Get("graphic_replacement_tabs_col_type", "Type")),
+                GridColumnInfo.Fill(TazLang.Get("graphic_replacement_tabs_col_replacement", "Replacement")),
+                GridColumnInfo.Fill(TazLang.Get("graphic_replacement_tabs_col_preview", "Preview")),
+                GridColumnInfo.Fill(TazLang.Get("graphic_replacement_tabs_col_new_hue", "New Hue")),
+                GridColumnInfo.Auto(TazLang.Get("graphic_replacement_tabs_col_actions", "Actions"))
             );
 
             var filterList = filters.Values.ToList();
@@ -70,7 +82,7 @@ public static class GraphicReplacementTabContent
                             filter.ReplacementGraphic, newType,
                             filter.NewHue);
                         BuildFilterList();
-                    }) { Tooltip = "Click to cycle: Mobile / Land / Static", MinWidth = 65 };
+                    }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_cycle_type", "Click to cycle: Mobile / Land / Static"), MinWidth = 65 };
                     btn.Content.HorizontalAlignment = HorizontalAlignment.Center;
                     typeWrapper.Widgets.Add(btn);
                 }
@@ -123,11 +135,11 @@ public static class GraphicReplacementTabContent
                 // Delete
                 ushort capturedOrigGraphic = filter.OriginalGraphic;
                 byte capturedOrigType = filter.OriginalType;
-                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton(TazLang.Get("shared_delete", "Delete"), () =>
                 {
                     GraphicsReplacement.DeleteFilter(capturedOrigGraphic, capturedOrigType);
                     BuildFilterList();
-                }) { Tooltip = "Delete this replacement" }), dataRow, 5);
+                }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_delete", "Delete this replacement") }), dataRow, 5);
 
                 dataRow++;
             }
@@ -137,9 +149,9 @@ public static class GraphicReplacementTabContent
 
         // Add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newOriginalBox = new MyraInputBox { HintText = "Original graphic (e.g. 0x0EED)", Width = 170 };
-        var newReplacementBox = new MyraInputBox { HintText = "Replacement graphic", Width = 170 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 120, "Hue (-1 = unchanged)");
+        var newOriginalBox = new MyraInputBox { HintText = TazLang.Get("graphic_replacement_tabs_hint_original", "Original graphic (e.g. 0x0EED)"), Width = 170 };
+        var newReplacementBox = new MyraInputBox { HintText = TazLang.Get("graphic_replacement_tabs_hint_replacement", "Replacement graphic"), Width = 170 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 120, TazLang.Get("graphic_replacement_tabs_hint_hue", "Hue (-1 = unchanged)"));
         int[] newTypeIndex = { 2 }; // Default: Static
 
         var newTypeWrapper = new HorizontalStackPanel();
@@ -148,16 +160,17 @@ public static class GraphicReplacementTabContent
         void BuildNewTypeBtn()
         {
             newTypeWrapper.Widgets.Clear();
-            newTypeWrapper.Widgets.Add(new MyraButton(TypeNames[newTypeIndex[0]], () =>
+            int typeCount = TypeValues.Length;
+            newTypeWrapper.Widgets.Add(new MyraButton(GetTypeNameByIndex(newTypeIndex[0]), () =>
             {
-                newTypeIndex[0] = (newTypeIndex[0] + 1) % TypeNames.Length;
+                newTypeIndex[0] = (newTypeIndex[0] + 1) % typeCount;
                 BuildNewTypeBtn();
-            }) { Tooltip = "Click to cycle: Mobile / Land / Static" });
+            }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_cycle_type", "Click to cycle: Mobile / Land / Static") });
         }
         BuildNewTypeBtn();
 
         var addConfirmRow = new HorizontalStackPanel { Spacing = 4 };
-        addConfirmRow.Widgets.Add(new MyraButton("Add", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(TazLang.Get("shared_add", "Add"), () =>
         {
             string origText = newOriginalBox.Text ?? "";
             string replText = newReplacementBox.Text ?? "";
@@ -170,7 +183,7 @@ public static class GraphicReplacementTabContent
             {
                 if (!string.IsNullOrEmpty(newHueBox.Text))
                 {
-                    validationLabel.Text = $"Invalid hue: '{newHueBox.Text}'. Must be 0-65535, 0x hex, or -1";
+                    validationLabel.Text = TazLang.Get("graphic_replacement_tabs_error_invalid_hue_fmt", new[] { newHueBox.Text });
                     validationLabel.Visible = true;
                     return;
                 }
@@ -190,7 +203,7 @@ public static class GraphicReplacementTabContent
             addEntryPanel.Visible = false;
             BuildFilterList();
         }));
-        addConfirmRow.Widgets.Add(new MyraButton("Cancel", () =>
+        addConfirmRow.Widgets.Add(new MyraButton(TazLang.Get("shared_cancel", "Cancel"), () =>
         {
             addEntryPanel.Visible = false;
             newOriginalBox.Text = "";
@@ -200,26 +213,26 @@ public static class GraphicReplacementTabContent
         }));
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow1.Widgets.Add(new MyraLabel("Original:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_original", "Original:"), MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newOriginalBox);
-        addFieldsRow1.Widgets.Add(new MyraLabel("Replacement:", MyraLabel.TextStyle.P));
+        addFieldsRow1.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_replacement", "Replacement:"), MyraLabel.TextStyle.P));
         addFieldsRow1.Widgets.Add(newReplacementBox);
 
         var addFieldsRow2 = new HorizontalStackPanel { Spacing = 4 };
-        addFieldsRow2.Widgets.Add(new MyraLabel("Type:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_type", "Type:"), MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newTypeWrapper);
-        addFieldsRow2.Widgets.Add(new MyraLabel("New Hue:", MyraLabel.TextStyle.P));
+        addFieldsRow2.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_new_hue", "New Hue:"), MyraLabel.TextStyle.P));
         addFieldsRow2.Widgets.Add(newHueBox);
 
-        addEntryPanel.Widgets.Add(new MyraLabel("New Entry:", MyraLabel.TextStyle.H3));
+        addEntryPanel.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_new_entry", "New Entry:"), MyraLabel.TextStyle.H3));
         addEntryPanel.Widgets.Add(addFieldsRow1);
         addEntryPanel.Widgets.Add(addFieldsRow2);
         addEntryPanel.Widgets.Add(validationLabel);
         addEntryPanel.Widgets.Add(addConfirmRow);
 
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
-        actionRow.Widgets.Add(new MyraButton("Add Entry", () => addEntryPanel.Visible = !addEntryPanel.Visible));
-        actionRow.Widgets.Add(new MyraButton("Target Entity", () =>
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("graphic_replacement_tabs_btn_add_entry", "Add Entry"), () => addEntryPanel.Visible = !addEntryPanel.Visible));
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("graphic_replacement_tabs_btn_target_entity", "Target Entity"), () =>
         {
             if (World.Instance == null) return;
             World.Instance.TargetManager.SetTargeting(targeted =>
@@ -239,8 +252,8 @@ public static class GraphicReplacementTabContent
                 GraphicsReplacement.NewFilter(graphic, entityType, graphic, entityType, hue);
                 BuildFilterList();
             });
-        }) { Tooltip = "Target an entity to add it to the replacement list" });
-        actionRow.Widgets.Add(new MyraButton("Import", () =>
+        }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_target", "Target an entity to add it to the replacement list") });
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_import", "Import"), () =>
         {
             string? json = Clipboard.GetClipboardText();
             if (json.NotNullNotEmpty() && GraphicsReplacement.ImportFromJson(json))
@@ -248,14 +261,14 @@ public static class GraphicReplacementTabContent
                 BuildFilterList();
                 return;
             }
-            GameActions.Print("Your clipboard does not have a valid export copied.", Constants.HUE_ERROR);
-        }) { Tooltip = "Import from your clipboard, must have a valid export copied." });
-        actionRow.Widgets.Add(new MyraButton("Export", () =>
+            GameActions.Print(TazLang.Get("graphic_replacement_tabs_msg_invalid_clipboard", "Your clipboard does not have a valid export copied."), Constants.HUE_ERROR);
+        }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_import", "Import from your clipboard, must have a valid export copied.") });
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_export", "Export"), () =>
         {
             GraphicsReplacement.GetJsonExport()?.CopyToClipboard();
-            GameActions.Print("Exported graphic filters to your clipboard!", Constants.HUE_SUCCESS);
-        }) { Tooltip = "Export your filters to your clipboard." });
-        actionRow.Widgets.Add(new MyraButton("Apply to All Entities", () =>
+            GameActions.Print(TazLang.Get("graphic_replacement_tabs_msg_exported", "Exported graphic filters to your clipboard!"), Constants.HUE_SUCCESS);
+        }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_export", "Export your filters to your clipboard.") });
+        actionRow.Widgets.Add(new MyraButton(TazLang.Get("graphic_replacement_tabs_btn_apply_all", "Apply to All Entities"), () =>
         {
             World? world = World.Instance;
             if (world == null) return;
@@ -264,12 +277,12 @@ public static class GraphicReplacementTabContent
                 if (!mobile.IsDestroyed && mobile.OriginalGraphic != 0) { mobile.Graphic = mobile.OriginalGraphic; count++; }
             foreach (Item item in world.Items.Values.ToList())
                 if (!item.IsDestroyed && item.OriginalGraphic != 0) { item.Graphic = item.OriginalGraphic; count++; }
-            GameActions.Print($"Refreshed {count} entities with graphic replacements");
-        }) { Tooltip = "Reapply graphic replacements to all entities currently in the world" });
+            GameActions.Print(TazLang.Get("graphic_replacement_tabs_msg_refreshed_fmt", new[] { count.ToString() }));
+        }) { Tooltip = TazLang.Get("graphic_replacement_tabs_tooltip_apply_all", "Reapply graphic replacements to all entities currently in the world") });
 
         root.Widgets.Add(actionRow);
         root.Widgets.Add(addEntryPanel);
-        root.Widgets.Add(new MyraLabel("Current Graphic Replacements:", MyraLabel.TextStyle.H3));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("graphic_replacement_tabs_label_current_replacements", "Current Graphic Replacements:"), MyraLabel.TextStyle.H3));
         BuildFilterList();
         root.Widgets.Add(new ScrollViewer { Height = 300, Content = filtersPanel });
 

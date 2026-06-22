@@ -129,10 +129,10 @@ public static class AutoSellAgentTabContent
 
         // Inline add entry panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
-        var newGraphicBox = new MyraInputBox { HintText= "Graphic ID", Width= 80 };
-        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, "Hue (-1=any)");
-        var newMaxAmountBox = new MyraInputBox { HintText = "Max Amount (0=unlimited)", Width = 130 };
-        var newRestockBox = new MyraInputBox { HintText = "Min on Hand (0=disabled)", Width = 130 };
+        var newGraphicBox = new MyraInputBox { HintText = TazLang.Get("agent_hint_graphic", "Graphic ID"), Width= 80 };
+        var newHueBox = MyraInputBox.Hue(ushort.MaxValue, 80, TazLang.Get("agent_hint_hue", "Hue (-1=any)"));
+        var newMaxAmountBox = new MyraInputBox { HintText = TazLang.Get("agent_hint_maxamount", "Max Amount (0=unlimited)"), Width = 130 };
+        var newRestockBox = new MyraInputBox { HintText = TazLang.Get("autosell_hint_minonhand", "Min on Hand (0=disabled)"), Width = 130 };
 
         var addFieldsRow1 = new HorizontalStackPanel { Spacing = 4 };
         addFieldsRow1.Widgets.Add(new MyraLabel(TazLang.Get("agent_graphic_label"), MyraLabel.TextStyle.P));

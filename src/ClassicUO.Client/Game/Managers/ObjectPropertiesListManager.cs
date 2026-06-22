@@ -23,7 +23,7 @@ namespace ClassicUO.Game.Managers
             _world = world;
         }
 
-        public void Add(uint serial, uint revision, string name, string data, int namecliloc)
+        public void Add(uint serial, uint revision, string name, string data, int namecliloc, string nameEnglish = null, string dataEnglish = null)
         {
             if (!_itemsProperties.TryGetValue(serial, out ItemProperty prop))
             {
@@ -35,6 +35,8 @@ namespace ClassicUO.Game.Managers
             prop.Revision = revision;
             prop.Name = name;
             prop.Data = data;
+            prop.NameEnglish = nameEnglish;
+            prop.DataEnglish = dataEnglish;
             prop.NameCliloc = namecliloc;
 
             EventSink.InvokeOPLOnReceive(null, new OPLEventArgs(serial, name, data));
@@ -100,6 +102,27 @@ namespace ClassicUO.Game.Managers
             return false;
         }
 
+        public bool TryGetNameAndDataEnglish(uint serial, out string name, out string data)
+        {
+            if (_itemsProperties.TryGetValue(serial, out ItemProperty p))
+            {
+                name = p.NameEnglish;
+                data = p.DataEnglish;
+
+                if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(data))
+                {
+                    name = p.Name;
+                    data = p.Data;
+                }
+
+                return true;
+            }
+
+            name = data = null;
+
+            return false;
+        }
+
         public int GetNameCliloc(uint serial)
         {
             if (_itemsProperties.TryGetValue(serial, out ItemProperty p))
@@ -127,7 +150,9 @@ namespace ClassicUO.Game.Managers
     {
         public bool IsEmpty => string.IsNullOrEmpty(Name) && string.IsNullOrEmpty(Data);
         public string Data;
+        public string DataEnglish;
         public string Name;
+        public string NameEnglish;
         public uint Revision;
         public uint Serial;
         public int NameCliloc;

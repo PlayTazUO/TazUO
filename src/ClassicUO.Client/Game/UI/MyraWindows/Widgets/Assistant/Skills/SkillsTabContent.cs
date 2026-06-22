@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -68,8 +69,8 @@ public class SkillsTabContent : VerticalStackPanel
             {
                 int capturedIdx = skill.Index;
                 grid.AddWidget(
-                    new MyraButton("Use", () => GameActions.UseSkill(capturedIdx))
-                        { Tooltip = $"Use {skill.Name}" },
+                    new MyraButton(TazLang.Get("shared_use", "Use"), () => GameActions.UseSkill(capturedIdx))
+                        { Tooltip = TazLang.Get("assistant_skills_use_tooltip_fmt", "Use {0}", new[] { skill.Name }) },
                     row, 0);
             }
 
@@ -78,7 +79,7 @@ public class SkillsTabContent : VerticalStackPanel
             {
                 name.TouchDoubleClick += (_, _) => UIManager.Add(new SkillButtonGump(World.Instance, skill,
                     Input.Mouse.Position.X, Input.Mouse.Position.Y));
-                name.Tooltip = $"Double click to create a skill button for {skill.Name}";
+                name.Tooltip = TazLang.Get("assistant_skills_skillbutton_tooltip_fmt", "Double click to create a skill button for {0}", new[] { skill.Name });
             }
             grid.AddWidget(name, row, 1);
             grid.AddWidget(new MyraLabel(skill.Value.ToString("F1"), MyraLabel.TextStyle.P), row, 2);
@@ -106,7 +107,7 @@ public class SkillsTabContent : VerticalStackPanel
                     AsyncNetClient.Socket.Send_SkillsRequest(player.Serial);
                     BuildLockBtn();
                 });
-                btn.Tooltip = $"Lock: {skill.Lock}. Click to cycle.";
+                btn.Tooltip = TazLang.Get("assistant_skills_lock_tooltip_fmt", "Lock: {0}. Click to cycle.", new[] { skill.Lock.ToString() });
                 lockWrapper.Widgets.Add(MyraStyle.ApplySkillButtonStyle(btn, skill.Lock));
             }
             BuildLockBtn();

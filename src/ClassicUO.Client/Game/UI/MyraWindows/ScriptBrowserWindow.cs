@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -35,7 +36,7 @@ public class ScriptBrowserWindow : MyraControl
     private MyraLabel _previewLoadingLabel;
     private MyraInputBox _previewContentBox;
 
-    public ScriptBrowserWindow() : base("Public Script Browser")
+    public ScriptBrowserWindow() : base(TazLang.Get("myra_scriptbrowser_title", "Public Script Browser"))
     {
         _cache = new GitHubContentCache(ScriptBrowser.REPO);
         CanBeSaved = true;
@@ -64,7 +65,7 @@ public class ScriptBrowserWindow : MyraControl
         grid.AddRow();                                       // Row 1: preview (auto-height)
         grid.AddColumn(new Proportion(ProportionType.Fill));
 
-        _statusLabel = new MyraLabel("Loading repository contents...", MyraLabel.TextStyle.P);
+        _statusLabel = new MyraLabel(TazLang.Get("myra_scriptbrowser_status_loading", "Loading repository contents..."), MyraLabel.TextStyle.P);
 
         var treeContainer = new VerticalStackPanel { Spacing = 4 };
         treeContainer.Widgets.Add(_statusLabel);
@@ -81,7 +82,7 @@ public class ScriptBrowserWindow : MyraControl
         _previewPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
 
         _previewTitleLabel = new MyraLabel("", MyraLabel.TextStyle.H2);
-        _previewLoadingLabel = new MyraLabel("Loading...", MyraLabel.TextStyle.P);
+        _previewLoadingLabel = new MyraLabel(TazLang.Get("shared_loading", "Loading..."), MyraLabel.TextStyle.P);
 
         _previewContentBox = new MyraInputBox
         {
@@ -93,7 +94,7 @@ public class ScriptBrowserWindow : MyraControl
 
         var previewHeader = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
         previewHeader.Widgets.Add(_previewTitleLabel);
-        previewHeader.Widgets.Add(new MyraButton("Close Preview", () => _previewPanel.Visible = false));
+        previewHeader.Widgets.Add(new MyraButton(TazLang.Get("myra_scriptbrowser_btn_close_preview", "Close Preview"), () => _previewPanel.Visible = false));
 
         _previewPanel.Widgets.Add(previewHeader);
         _previewPanel.Widgets.Add(_previewLoadingLabel);
@@ -129,7 +130,7 @@ public class ScriptBrowserWindow : MyraControl
 
         if (_isInitialLoading)
         {
-            _statusLabel.Text = "Loading repository contents...";
+            _statusLabel.Text = TazLang.Get("myra_scriptbrowser_status_loading", "Loading repository contents...");
             _statusLabel.TextColor = Color.White;
             _statusLabel.Visible = true;
             return;
@@ -140,7 +141,7 @@ public class ScriptBrowserWindow : MyraControl
             _statusLabel.Text = _errorMessage;
             _statusLabel.TextColor = Color.OrangeRed;
             _statusLabel.Visible = true;
-            _treePanel.Widgets.Add(new MyraButton("Retry", () =>
+            _treePanel.Widgets.Add(new MyraButton(TazLang.Get("myra_scriptbrowser_btn_retry", "Retry"), () =>
             {
                 _errorMessage = "";
                 _directoryCache.Clear();
@@ -164,13 +165,13 @@ public class ScriptBrowserWindow : MyraControl
         if (!node.IsLoaded && !node.IsLoading)
         {
             LoadDirectoryAsync(path);
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + TazLang.Get("shared_loading", "Loading..."), MyraLabel.TextStyle.P));
             return;
         }
 
         if (node.IsLoading)
         {
-            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + "Loading...", MyraLabel.TextStyle.P));
+            _treePanel.Widgets.Add(new MyraLabel(Indent(depth) + TazLang.Get("shared_loading", "Loading..."), MyraLabel.TextStyle.P));
             return;
         }
 
@@ -209,9 +210,9 @@ public class ScriptBrowserWindow : MyraControl
                 row.Widgets.Add(new MyraLabel(Indent(depth + 1), MyraLabel.TextStyle.P));
 
             row.Widgets.Add(new MyraLabel(f.Name, MyraLabel.TextStyle.P));
-            row.Widgets.Add(new MyraButton("View",      () => ViewScript(f)));
-            row.Widgets.Add(new MyraButton("Download",  () => DownloadAndOpenScript(f)));
-            row.Widgets.Add(new MyraButton("Open Link", () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
+            row.Widgets.Add(new MyraButton(TazLang.Get("myra_scriptbrowser_btn_view", "View"),      () => ViewScript(f)));
+            row.Widgets.Add(new MyraButton(TazLang.Get("shared_download", "Download"),  () => DownloadAndOpenScript(f)));
+            row.Widgets.Add(new MyraButton(TazLang.Get("myra_scriptbrowser_btn_open_link", "Open Link"), () => PlatformHelper.LaunchBrowser(f.HtmlUrl)));
             _treePanel.Widgets.Add(row);
         }
     }
@@ -259,7 +260,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (string.IsNullOrEmpty(path))
                     {
                         _isInitialLoading = false;
-                        _errorMessage = $"Failed to load scripts: {ex.Message}";
+                        _errorMessage = TazLang.Get("myra_scriptbrowser_error_failed_to_load_fmt", new[] { ex.Message });
                     }
                     _rebuildPending = true;
                 });
@@ -293,7 +294,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file for preview: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                _previewContentBox.Text = $"Error loading file: {ex.Message}";
+                _previewContentBox.Text = TazLang.Get("myra_scriptbrowser_error_loading_file_fmt", new[] { ex.Message });
                 _previewLoadingLabel.Visible = false;
                 _previewContentBox.Visible = true;
             });
@@ -319,7 +320,7 @@ public class ScriptBrowserWindow : MyraControl
                         sanitizedFileName == "." ||
                         sanitizedFileName == "..")
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters or path separators.", 32);
+                        GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_error_invalid_filename_path_fmt", new[] { file.Name }), 32);
                         Console.WriteLine($"Security: Rejected invalid filename: {file.Name}");
                         return;
                     }
@@ -327,7 +328,7 @@ public class ScriptBrowserWindow : MyraControl
                     char[] invalidChars = Path.GetInvalidFileNameChars();
                     if (sanitizedFileName.IndexOfAny(invalidChars) >= 0)
                     {
-                        GameActions.Print(World.Instance, $"Invalid script filename: {file.Name}. Filename contains invalid characters.", 32);
+                        GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_error_invalid_filename_chars_fmt", new[] { file.Name }), 32);
                         Console.WriteLine($"Security: Rejected filename with invalid characters: {file.Name}");
                         return;
                     }
@@ -342,7 +343,7 @@ public class ScriptBrowserWindow : MyraControl
                     if (!fullFilePath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                         !fullFilePath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        GameActions.Print(World.Instance, $"Security error: Script path must be within the scripts directory.", 32);
+                        GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_error_path_security", "Security error: Script path must be within the scripts directory."), 32);
                         Console.WriteLine($"Security: Path traversal attempt blocked. File: {file.Name}, Resolved: {fullFilePath}");
                         return;
                     }
@@ -365,7 +366,7 @@ public class ScriptBrowserWindow : MyraControl
                             if (!fullFinalPath.StartsWith(fullScriptPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                                 !fullFinalPath.Equals(fullScriptPath, StringComparison.OrdinalIgnoreCase))
                             {
-                                GameActions.Print(World.Instance, $"Security error: Generated path is invalid.", 32);
+                                GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_error_generated_path_invalid", "Security error: Generated path is invalid."), 32);
                                 return;
                             }
 
@@ -375,7 +376,7 @@ public class ScriptBrowserWindow : MyraControl
 
                         if (counter >= 1000)
                         {
-                            GameActions.Print(World.Instance, $"Too many duplicate files. Please clean up your scripts directory.", 32);
+                            GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_error_too_many_duplicates", "Too many duplicate files. Please clean up your scripts directory."), 32);
                             return;
                         }
                     }
@@ -385,14 +386,14 @@ public class ScriptBrowserWindow : MyraControl
                     var f = new ScriptFile(World.Instance, LegionScripting.LegionScripting.ScriptPath, finalFileName);
                     new ScriptEditorWindow(f);
 
-                    GameActions.Print(World.Instance, $"Downloaded script: {finalFileName}");
+                    GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_msg_downloaded_fmt", new[] { finalFileName }));
 
                     ScriptManagerWindow.Instance?.Refresh();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error creating script file: {ex.Message}");
-                    GameActions.Print(World.Instance, $"Error saving script: {file.Name} - {ex.Message}");
+                    GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_msg_error_saving_fmt", new[] { file.Name, ex.Message }));
                 }
             });
         }
@@ -401,7 +402,7 @@ public class ScriptBrowserWindow : MyraControl
             Console.WriteLine($"Error loading file: {ex.Message}");
             _mainThreadActions.Enqueue(() =>
             {
-                GameActions.Print(World.Instance, $"Error loading script: {file.Name}");
+                GameActions.Print(World.Instance, TazLang.Get("myra_scriptbrowser_msg_error_loading_fmt", new[] { file.Name }));
             });
         }
     });

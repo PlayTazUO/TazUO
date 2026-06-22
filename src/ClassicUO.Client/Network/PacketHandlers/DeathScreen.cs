@@ -30,7 +30,7 @@ internal static class DeathScreen
                 Map = world.Map.Index,
                 LastUpdate = Time.Ticks + 1000 * 60 * 5,
                 IsGuild = false,
-                Name = "Your Corpse"
+                Name = TazLang.Get("death_screen_your_corpse", "Your Corpse")
             };
 
             EventSink.InvokeOnPlayerDeath(world.Player, world.Player.Serial);

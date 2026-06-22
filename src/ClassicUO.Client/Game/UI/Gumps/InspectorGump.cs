@@ -212,7 +212,7 @@ namespace ClassicUO.Game.UI.Gumps
                     sb.AppendLine("");
 
                     sb.ToString().CopyToClipboard();
-                    GameActions.Print(World, $"Copied to clipboard!", Constants.HUE_SUCCESS);
+                    GameActions.Print(World, TazLang.Get("gump_inspector_copied", "Copied to clipboard!"), Constants.HUE_SUCCESS);
                 }
             }
         }
@@ -224,7 +224,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (e.Button == MouseButtonType.Left && l != null)
             {
                 SDL.SDL_SetClipboardText(l.Text);
-                GameActions.Print(World, $"Copied to clipboard: {l.Text}");
+                GameActions.Print(World, TazLang.Get("gump_inspector_copiedwithtext_fmt", "Copied to clipboard: {0}", new[] { l.Text }));
             }
         }
 
@@ -232,88 +232,88 @@ namespace ClassicUO.Game.UI.Gumps
         {
             var dict = new Dictionary<string, string>();
 
-            dict["Graphics"] = $"0x{obj.Graphic:X4}";
-            dict["Hue"] = $"{obj.Hue}";
-            dict["Position"] = $"X={obj.X}, Y={obj.Y}, Z={obj.Z}";
-            dict["PriorityZ"] = obj.PriorityZ.ToString();
-            dict["Distance"] = obj.Distance.ToString();
-            dict["AllowedToDraw"] = obj.AllowedToDraw.ToString();
-            dict["AlphaHue"] = obj.AlphaHue.ToString();
-            dict["HasLineOfSightFromPlayer"] = obj.HasLineOfSightFrom().ToString();
+            dict[TazLang.Get("gump_inspector_graphics", "Graphics")] = $"0x{obj.Graphic:X4}";
+            dict[TazLang.Get("gump_inspector_hue", "Hue")] = $"{obj.Hue}";
+            dict[TazLang.Get("gump_inspector_position", "Position")] = $"X={obj.X}, Y={obj.Y}, Z={obj.Z}";
+            dict[TazLang.Get("gump_inspector_priorityz", "PriorityZ")] = obj.PriorityZ.ToString();
+            dict[TazLang.Get("gump_inspector_distance", "Distance")] = obj.Distance.ToString();
+            dict[TazLang.Get("gump_inspector_allowedtodraw", "AllowedToDraw")] = obj.AllowedToDraw.ToString();
+            dict[TazLang.Get("gump_inspector_alphahue", "AlphaHue")] = obj.AlphaHue.ToString();
+            dict[TazLang.Get("gump_inspector_haslineofsightfromplayer", "HasLineOfSightFromPlayer")] = obj.HasLineOfSightFrom().ToString();
 
             switch (obj)
             {
                 case Mobile mob:
 
-                    dict["Type"] = "Mobile";
-                    dict["Serial"] = $"0x{mob.Serial:X8}";
-                    dict["Flags"] = mob.Flags.ToString();
-                    dict["Notoriety"] = mob.NotorietyFlag.ToString();
-                    dict["Title"] = mob.Title ?? string.Empty;
-                    dict["Name"] = mob.Name ?? string.Empty;
-                    dict["HP"] = $"{mob.Hits}/{mob.HitsMax}";
-                    dict["Mana"] = $"{mob.Mana}/{mob.ManaMax}";
-                    dict["Stamina"] = $"{mob.Stamina}/{mob.StaminaMax}";
-                    dict["SpeedMode"] = mob.SpeedMode.ToString();
-                    dict["Race"] = mob.Race.ToString();
-                    dict["IsRenamable"] = mob.IsRenamable.ToString();
-                    dict["Direction"] = mob.Direction.ToString();
-                    dict["IsDead"] = mob.IsDead.ToString();
-                    dict["IsDrivingABoat"] = mob.IsDrivingBoat.ToString();
-                    dict["IsMounted"] = mob.IsMounted.ToString();
+                    dict[TazLang.Get("gump_inspector_type", "Type")] = "Mobile";
+                    dict[TazLang.Get("gump_inspector_serial", "Serial")] = $"0x{mob.Serial:X8}";
+                    dict[TazLang.Get("gump_inspector_flags", "Flags")] = mob.Flags.ToString();
+                    dict[TazLang.Get("gump_inspector_notoriety", "Notoriety")] = mob.NotorietyFlag.ToString();
+                    dict[TazLang.Get("gump_inspector_title", "Title")] = mob.Title ?? string.Empty;
+                    dict[TazLang.Get("gump_inspector_name", "Name")] = mob.Name ?? string.Empty;
+                    dict[TazLang.Get("gump_inspector_hp", "HP")] = $"{mob.Hits}/{mob.HitsMax}";
+                    dict[TazLang.Get("gump_inspector_mana", "Mana")] = $"{mob.Mana}/{mob.ManaMax}";
+                    dict[TazLang.Get("gump_inspector_stamina", "Stamina")] = $"{mob.Stamina}/{mob.StaminaMax}";
+                    dict[TazLang.Get("gump_inspector_speedmode", "SpeedMode")] = mob.SpeedMode.ToString();
+                    dict[TazLang.Get("gump_inspector_race", "Race")] = mob.Race.ToString();
+                    dict[TazLang.Get("gump_inspector_isrenamable", "IsRenamable")] = mob.IsRenamable.ToString();
+                    dict[TazLang.Get("gump_inspector_direction", "Direction")] = mob.Direction.ToString();
+                    dict[TazLang.Get("gump_inspector_isdead", "IsDead")] = mob.IsDead.ToString();
+                    dict[TazLang.Get("gump_inspector_isdrivingaboat", "IsDrivingABoat")] = mob.IsDrivingBoat.ToString();
+                    dict[TazLang.Get("gump_inspector_ismounted", "IsMounted")] = mob.IsMounted.ToString();
 
                     break;
 
                 case Item it:
 
-                    dict["Type"] = "Item";
-                    dict["Serial"] = $"0x{it.Serial:X8}";
-                    dict["Flags"] = it.Flags.ToString();
-                    dict["HP"] = $"{it.Hits}/{it.HitsMax}";
-                    dict["IsCoins"] = it.IsCoin.ToString();
-                    dict["Amount"] = it.Amount.ToString();
-                    dict["Container"] = $"0x{it.Container:X8}";
-                    dict["Layer"] = it.Layer.ToString();
-                    dict["Price"] = it.Price.ToString();
-                    dict["Direction"] = it.Direction.ToString();
-                    dict["IsMulti"] = it.IsMulti.ToString();
-                    dict["MultiGraphic"] = $"0x{it.MultiGraphic:X4}";
-                    dict["IsImpassable"] = it.ItemData.IsImpassable.ToString();
-                    dict["CustomName"] = it.CustomName;
+                    dict[TazLang.Get("gump_inspector_type", "Type")] = "Item";
+                    dict[TazLang.Get("gump_inspector_serial", "Serial")] = $"0x{it.Serial:X8}";
+                    dict[TazLang.Get("gump_inspector_flags", "Flags")] = it.Flags.ToString();
+                    dict[TazLang.Get("gump_inspector_hp", "HP")] = $"{it.Hits}/{it.HitsMax}";
+                    dict[TazLang.Get("gump_inspector_iscoins", "IsCoins")] = it.IsCoin.ToString();
+                    dict[TazLang.Get("gump_inspector_amount", "Amount")] = it.Amount.ToString();
+                    dict[TazLang.Get("gump_inspector_container", "Container")] = $"0x{it.Container:X8}";
+                    dict[TazLang.Get("gump_inspector_layer", "Layer")] = it.Layer.ToString();
+                    dict[TazLang.Get("gump_inspector_price", "Price")] = it.Price.ToString();
+                    dict[TazLang.Get("gump_inspector_direction", "Direction")] = it.Direction.ToString();
+                    dict[TazLang.Get("gump_inspector_ismulti", "IsMulti")] = it.IsMulti.ToString();
+                    dict[TazLang.Get("gump_inspector_multigraphic", "MultiGraphic")] = $"0x{it.MultiGraphic:X4}";
+                    dict[TazLang.Get("gump_inspector_isimpassable", "IsImpassable")] = it.ItemData.IsImpassable.ToString();
+                    dict[TazLang.Get("gump_inspector_customname", "CustomName")] = it.CustomName;
 
                     break;
 
                 case Static st:
                     ref StaticTiles staticData = ref Client.Game.UO.FileManager.TileData.StaticData[st.OriginalGraphic];
-                    dict["Type"] = "Static";
-                    dict["IsVegetation"] = st.IsVegetation.ToString();
-                    dict["IsWall"] = staticData.IsWall.ToString();
-                    dict["IsImpassable"] = staticData.IsImpassable.ToString();
+                    dict[TazLang.Get("gump_inspector_type", "Type")] = "Static";
+                    dict[TazLang.Get("gump_inspector_isvegetation", "IsVegetation")] = st.IsVegetation.ToString();
+                    dict[TazLang.Get("gump_inspector_iswall", "IsWall")] = staticData.IsWall.ToString();
+                    dict[TazLang.Get("gump_inspector_isimpassable", "IsImpassable")] = staticData.IsImpassable.ToString();
 
                     break;
 
                 case Multi multi:
 
-                    dict["Type"] = "Multi";
-                    dict["State"] = multi.State.ToString();
-                    dict["IsMovable"] = multi.IsMovable.ToString();
-                    dict["IsImpassable"] = multi.ItemData.IsImpassable.ToString();
-                    dict["IsWall"] = multi.ItemData.IsWall.ToString();
+                    dict[TazLang.Get("gump_inspector_type", "Type")] = "Multi";
+                    dict[TazLang.Get("gump_inspector_state", "State")] = multi.State.ToString();
+                    dict[TazLang.Get("gump_inspector_ismovable", "IsMovable")] = multi.IsMovable.ToString();
+                    dict[TazLang.Get("gump_inspector_isimpassable", "IsImpassable")] = multi.ItemData.IsImpassable.ToString();
+                    dict[TazLang.Get("gump_inspector_iswall", "IsWall")] = multi.ItemData.IsWall.ToString();
 
                     break;
 
                 case Land land:
 
-                    dict["Type"] = "Land";
-                    dict["IsFlat"] = (!land.IsStretched).ToString();
-                    dict["NormalLeft"] = land.NormalLeft.ToString();
-                    dict["NormalRight"] = land.NormalRight.ToString();
-                    dict["NormalTop"] = land.NormalTop.ToString();
-                    dict["NormalBottom"] = land.NormalBottom.ToString();
-                    dict["MinZ"] = land.MinZ.ToString();
-                    dict["AvgZ"] = land.AverageZ.ToString();
-                    dict["YOffsets"] = land.YOffsets.ToString();
-                    dict["IsImpassable"] = land.TileData.IsImpassable.ToString();
+                    dict[TazLang.Get("gump_inspector_type", "Type")] = "Land";
+                    dict[TazLang.Get("gump_inspector_isflat", "IsFlat")] = (!land.IsStretched).ToString();
+                    dict[TazLang.Get("gump_inspector_normalleft", "NormalLeft")] = land.NormalLeft.ToString();
+                    dict[TazLang.Get("gump_inspector_normalright", "NormalRight")] = land.NormalRight.ToString();
+                    dict[TazLang.Get("gump_inspector_normaltop", "NormalTop")] = land.NormalTop.ToString();
+                    dict[TazLang.Get("gump_inspector_normalbottom", "NormalBottom")] = land.NormalBottom.ToString();
+                    dict[TazLang.Get("gump_inspector_minz", "MinZ")] = land.MinZ.ToString();
+                    dict[TazLang.Get("gump_inspector_avgz", "AvgZ")] = land.AverageZ.ToString();
+                    dict[TazLang.Get("gump_inspector_yoffsets", "YOffsets")] = land.YOffsets.ToString();
+                    dict[TazLang.Get("gump_inspector_isimpassable", "IsImpassable")] = land.TileData.IsImpassable.ToString();
 
                     break;
             }

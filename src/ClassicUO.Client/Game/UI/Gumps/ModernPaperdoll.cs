@@ -72,7 +72,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             var _menuHit = new HitBox(Width - 26, 1, 25, 16, alpha: 0f);
             Add(_menuHit);
-            _menuHit.SetTooltip("Open paperdoll menu");
+            _menuHit.SetTooltip(TazLang.Get("gump_modern_paperdoll_tooltip_menu", "Open paperdoll menu"));
             _menuHit.MouseUp += (sender, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -159,7 +159,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             BuildLayerSlots();
 
-            var _virtueHitBox = new HitBox((WIDTH / 2) - 16, 1, 32, 32, "Virtues menu", 0f);
+            var _virtueHitBox = new HitBox((WIDTH / 2) - 16, 1, 32, 32, TazLang.Get("gump_modern_paperdoll_tooltip_virtues", "Virtues menu"), 0f);
             _virtueHitBox.MouseDoubleClick += (s, e) =>
             {
                 GameActions.ReplyGump
@@ -180,7 +180,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(titleLabel = new Label("", true, 0xffff, maxwidth: WIDTH - 30, align: TEXT_ALIGN_TYPE.TS_CENTER) { X = 15, Y = 273 + CELL_SPACING + TOP_SPACING, AcceptMouseInput = false });
 
             var _minHit = new HitBox(1, 1, 14, 18, alpha: 0f);
-            _minHit.SetTooltip("Minimize paperdoll");
+            _minHit.SetTooltip(TazLang.Get("gump_modern_paperdoll_tooltip_minimize", "Minimize paperdoll"));
             _minHit.MouseUp += (s, e) =>
             {
                 Dispose();
@@ -635,7 +635,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 int i = 1;
 
-                var preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, "Preview");
+                var preview = new NiceButton(1, 1, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_preview", "Preview"));
                 preview.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -646,7 +646,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(preview);
 
-                var help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Help");
+                var help = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_help", "Help"));
                 help.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -656,7 +656,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(help);
 
-                var options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Options");
+                var options = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_options", "Options"));
                 options.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -666,7 +666,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(options);
 
-                var logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Log Out");
+                var logout = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_logout", "Log Out"));
                 logout.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -676,7 +676,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(logout);
 
-                var quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Quests");
+                var quests = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_quests", "Quests"));
                 quests.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -686,7 +686,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(quests);
 
-                var skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Skills");
+                var skills = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_skills", "Skills"));
                 skills.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -696,7 +696,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(skills);
 
-                var guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Guild");
+                var guild = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_guild", "Guild"));
                 guild.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -706,7 +706,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(guild);
 
-                var peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Peace/War");
+                var peace = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_peace_war", "Peace/War"));
                 peace.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -716,7 +716,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(peace);
 
-                var durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Durability Tracker");
+                var durability = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_durability_tracker", "Durability Tracker"));
                 durability.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -727,7 +727,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(durability);
 
-                var status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Status");
+                var status = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_status", "Status"));
                 status.MouseUp += (s, e) =>
                 {
                     if (e.Button == MouseButtonType.Left)
@@ -785,7 +785,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(status);
 
-                var party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Party");
+                var party = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_party", "Party"));
                 party.MouseUp += (s, e) =>
                 {
                     PartyGump party = UIManager.GetGump<PartyGump>();
@@ -803,14 +803,14 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(party);
 
-                var profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Profile");
+                var profileEditor = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_profile", "Profile"));
                 profileEditor.MouseUp += (s, e) =>
                 {
                     GameActions.RequestProfile(LocalSerial);
                 };
                 Add(profileEditor);
 
-                var abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Abilities");
+                var abilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_abilities", "Abilities"));
                 abilities.MouseUp += (s, e) =>
                 {
                     if (UIManager.GetGump<RacialAbilitiesBookGump>() == null)
@@ -820,7 +820,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
                 Add(abilities);
 
-                var weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, "Weapon abilities");
+                var weaponAbilities = new NiceButton(1, 1 + 20 * i++, Width - 2, 20, ButtonAction.Activate, TazLang.Get("gump_modern_paperdoll_menu_weapon_abilities", "Weapon abilities"));
                 weaponAbilities.MouseUp += (s, e) =>
                 {
                     GameActions.OpenAbilitiesBook(world);
@@ -872,7 +872,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Add(_ = new Checkbox(0x00D2, 0x00D3) { X = 66, Y = 2 });
                 _.IsChecked = ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc;
-                _.SetTooltip("Open paperdoll at this location");
+                _.SetTooltip(TazLang.Get("gump_modern_paperdoll_tooltip_open_at_minimize", "Open paperdoll at this location"));
                 _.MouseUp += (s, e) =>
                 {
                     ProfileManager.CurrentProfile.OpenModernPaperdollAtMinimizeLoc = _.IsChecked;

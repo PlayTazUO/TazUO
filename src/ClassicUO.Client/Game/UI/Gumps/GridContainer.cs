@@ -212,7 +212,7 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>
         /// Generates color-coded enabled/disabled status text for tooltips
         /// </summary>
-        private static string GetEnabledDisabledText(bool isEnabled) => isEnabled ? "<basefont color=\"green\">Enabled" : "<basefont color=\"red\">Disabled";
+        private static string GetEnabledDisabledText(bool isEnabled) => isEnabled ? TazLang.Get("gump_gridcontainer_enabled", "<basefont color=\"green\">Enabled") : TazLang.Get("gump_gridcontainer_disabled", "<basefont color=\"red\">Disabled");
 
         /// <summary>
         /// Updates both background and backgroundTexture dimensions
@@ -1031,9 +1031,9 @@ namespace ClassicUO.Game.UI.Gumps
         {
             string rawName = GridContainerEntry?.CustomName.NotNullNotEmpty() == true
                 ? GridContainerEntry.CustomName
-                : !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+                : !string.IsNullOrEmpty(Container.Name) ? Container.Name : TazLang.Get("gump_gridcontainer_defaultname", "a container");
 
-            string countSuffix = SlotManager != null ? $" ({SlotManager.ContainerContents.Count})" : "";
+            string countSuffix = SlotManager != null ? TazLang.Get("gump_gridcontainer_count_fmt", " ({0})", new[] { SlotManager.ContainerContents.Count.ToString() }) : "";
 
             // Available width = from left border to the sort button, minus a small padding
             int availableWidth = _sortContents.X - _borderWidth - 2;
@@ -1061,14 +1061,14 @@ namespace ClassicUO.Game.UI.Gumps
         {
             string containerName =
                 GridContainerEntry?.CustomName.NotNullNotEmpty() == true ? GridContainerEntry.CustomName :
-                !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+                !string.IsNullOrEmpty(Container.Name) ? Container.Name : TazLang.Get("gump_gridcontainer_defaultname", "a container");
 
             if (truncate)
                 containerName = containerName.Truncate(21);
 
             if (!skipCount && SlotManager != null)
             {
-                containerName += $" ({SlotManager.ContainerContents.Count})";
+                containerName += TazLang.Get("gump_gridcontainer_count_fmt", " ({0})", new[] { SlotManager.ContainerContents.Count.ToString() });
             }
 
             return containerName;
@@ -1471,7 +1471,7 @@ namespace ClassicUO.Game.UI.Gumps
                     else if (Keyboard.Shift && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
                     {
                         AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
-                        GameActions.Print(_world, $"Added this item to auto loot.");
+                        GameActions.Print(_world, TazLang.Get("gump_gridcontainer_autolootadded", "Added this item to auto loot."));
                     }
                     else if (_item != null)
                     {
@@ -2035,7 +2035,7 @@ namespace ClassicUO.Game.UI.Gumps
                         var toolTipList = new List<CustomToolTip>();
                         _toolTipThis = new CustomToolTip(_world, _item, Mouse.Position.X + 5, Mouse.Position.Y + 5, this, compareTo: compItem);
                         toolTipList.Add(_toolTipThis);
-                        _toolTipitem1 = new CustomToolTip(_world, compItem, _toolTipThis.X + _toolTipThis.Width + 10, _toolTipThis.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
+                        _toolTipitem1 = new CustomToolTip(_world, compItem, _toolTipThis.X + _toolTipThis.Width + 10, _toolTipThis.Y, this, TazLang.Get("gump_gridcontainer_equippeditem_tooltip", "<basefont color=\"orange\">Equipped Item<br>"));
                         toolTipList.Add(_toolTipitem1);
 
                         if (CUOEnviroment.Debug)

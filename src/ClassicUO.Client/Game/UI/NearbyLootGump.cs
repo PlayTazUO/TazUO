@@ -70,19 +70,19 @@ namespace ClassicUO.Game.UI
             Add(_alphaBg = new AlphaBlendControl() { Width = Width, Height = Height });
 
             Control c;
-            c = TextBox.GetOne("Nearby corpse loot", Assets.TrueTypeLoader.EMBEDDED_FONT, 24, Color.OrangeRed, TextBox.RTLOptions.DefaultCentered(WIDTH));
+            c = TextBox.GetOne(TazLang.Get("gump_nearby_loot_title", "Nearby corpse loot"), Assets.TrueTypeLoader.EMBEDDED_FONT, 24, Color.OrangeRed, TextBox.RTLOptions.DefaultCentered(WIDTH));
             c.AcceptMouseInput = false;
             Add(c);
 
             Add(c = new NiceButton(Width - 20, 0, 20, 20, ButtonAction.Default, "+"));
-            c.SetTooltip("Options");
+            c.SetTooltip(TazLang.Get("gump_nearby_loot_tooltip_options", "Options"));
             c.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                     GenOptionsContext().Show();
             };
 
-            Add(_lootButton = new NiceButton(0, c.Height, WIDTH >> 1, 20, ButtonAction.Default, "Loot All"));
+            Add(_lootButton = new NiceButton(0, c.Height, WIDTH >> 1, 20, ButtonAction.Default, TazLang.Get("gump_nearby_loot_btn_loot_all", "Loot All")));
             _lootButton.MouseUp += (sender, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -97,7 +97,7 @@ namespace ClassicUO.Game.UI
                 }
             };
 
-            Add(c = new NiceButton(WIDTH >> 1, c.Height, WIDTH >> 1, 20, ButtonAction.Default, "Set Loot Bag"));
+            Add(c = new NiceButton(WIDTH >> 1, c.Height, WIDTH >> 1, 20, ButtonAction.Default, TazLang.Get("gump_nearby_loot_btn_set_loot_bag", "Set Loot Bag")));
             c.MouseUp += (sender, e) =>
             {
                 if (e.Button != MouseButtonType.Left) return;
@@ -113,7 +113,7 @@ namespace ClassicUO.Game.UI
 
             _scrollArea.Add(_dataBox = new(Width - 12));//ModernScrollArea uses 12px wide scrollbar
 
-            Add(_resizeDrag = new HitBox(Width / 2 - 10, Height - 10, 20, 10, "Drag to resize", 0.50f));
+            Add(_resizeDrag = new HitBox(Width / 2 - 10, Height - 10, 20, 10, TazLang.Get("gump_nearby_loot_tooltip_drag_resize", "Drag to resize"), 0.50f));
             _resizeDrag.Add(new AlphaBlendControl(0.25f) { Width = 20, Height = 10, BaseColor = Color.OrangeRed });
             _resizeDrag.MouseDown += ResizeDrag_MouseDown;
             _resizeDrag.MouseUp += ResizeDrag_MouseUp;
@@ -156,13 +156,13 @@ namespace ClassicUO.Game.UI
         private ContextMenuControl GenOptionsContext()
         {
             var c = new ContextMenuControl(this);
-            c.Add(new ContextMenuItemEntry("Open human corpses?", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("gump_nearby_loot_menu_open_human_corpses", "Open human corpses?"), () =>
             {
                 ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses = !ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses;
                 RequestUpdateContents();
             }, true, ProfileManager.CurrentProfile.NearbyLootOpensHumanCorpses));
 
-            c.Add(new ContextMenuItemEntry("Hide containers when opening corpses?", () =>
+            c.Add(new ContextMenuItemEntry(TazLang.Get("gump_nearby_loot_menu_hide_containers", "Hide containers when opening corpses?"), () =>
             {
                ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen = !ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen;
             }, true, ProfileManager.CurrentProfile.NearbyLootConcealsContainerOnOpen));
@@ -462,7 +462,7 @@ namespace ClassicUO.Game.UI
             if (Keyboard.Shift && currentItem != null && ProfileManager.CurrentProfile.EnableAutoLoot && !ProfileManager.CurrentProfile.HoldShiftForContext && !ProfileManager.CurrentProfile.HoldShiftToSplitStack)
             {
                 AutoLootManager.Instance.AddAutoLootEntry(currentItem.Graphic, currentItem.Hue, currentItem.Name);
-                GameActions.Print(world, $"Added this item to auto loot.");
+                GameActions.Print(world, TazLang.Get("gump_nearby_loot_msg_added_auto_loot", "Added this item to auto loot."));
             }
 
             ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.QuickLoot(currentItem), ActionPriority.MoveItem);

@@ -53,7 +53,7 @@ namespace ClassicUO.Game.Managers
             bool isNew = false;
             if (ProfileManager.CurrentProfile != null)
             {
-                string searchText = "Weapon Damage", formattedText = "DMG /c[orange]{1} /cd- /c[red]{2}";
+                string searchText = TazLang.Get("manager_tooltip_default_search", "Weapon Damage"), formattedText = TazLang.Get("manager_tooltip_default_format", "DMG /c[orange]{1} /cd- /c[red]{2}");
                 int min1 = -1, max1 = 99, min2 = -1, max2 = 99;
                 byte layer = (byte)TooltipLayers.Any;
 
@@ -179,7 +179,7 @@ namespace ClassicUO.Game.Managers
             {
                 if (!Directory.Exists(p))
                 {
-                    GameActions.Print(World.Instance, "Directory doesn't exist!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, TazLang.Get("manager_tooltip_dir_missing", "Directory doesn't exist!"), Constants.HUE_ERROR);
                     return;
                 }
 
@@ -188,11 +188,11 @@ namespace ClassicUO.Game.Managers
                     string result = JsonSerializer.Serialize(allData);
                     string path = Path.Combine(p, "tooltip_overrides.json");
                     File.WriteAllText(path, result);
-                    GameActions.Print(World.Instance, $"The override file has been saved to [{path}]");
+                    GameActions.Print(World.Instance, TazLang.Get("manager_tooltip_export_saved_fmt", new[] { path }));
                 }
                 catch (Exception e)
                 {
-                    GameActions.Print(World.Instance, "Failed to save the override file!", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, TazLang.Get("manager_tooltip_export_failed", "Failed to save the override file!"), Constants.HUE_ERROR);
                     Log.Error(e.ToString());
                 }
             }));
@@ -202,7 +202,7 @@ namespace ClassicUO.Game.Managers
                                                                 {
                                                                     if (!File.Exists(p))
                                                                     {
-                                                                        GameActions.Print(World.Instance, "File doesn't exist!", Constants.HUE_ERROR);
+                                                                        GameActions.Print(World.Instance, TazLang.Get("manager_tooltip_file_missing", "File doesn't exist!"), Constants.HUE_ERROR);
                                                                         return;
                                                                     }
 
@@ -215,7 +215,7 @@ namespace ClassicUO.Game.Managers
                                                                         foreach (ToolTipOverrideData importedData in imported)
                                                                             new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer).Save();
 
-                                                                        GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
+                                                                        GameActions.Print(World.Instance, TazLang.Get("manager_tooltip_imported_fmt", new[] { imported.Length.ToString() }));
                                                                     }
                                                                     catch (System.Exception e)
                                                                     {

@@ -274,7 +274,7 @@ namespace ClassicUO.Game.Managers
                 Settings.GlobalSettings.FPS = GameController.SupportedRefreshRate;
                 Settings.GlobalSettings.Save();
                 Client.Game.SetRefreshRate(Settings.GlobalSettings.FPS);
-                GameActions.Print($"FPS Limit updated to: {Settings.GlobalSettings.FPS}", Constants.HUE_SUCCESS);
+                GameActions.Print(TazLang.Get("managers_command_msg_fpslimit_fmt", new[] { Settings.GlobalSettings.FPS.ToString() }), Constants.HUE_SUCCESS);
             });
 
             Register("dressagent", (s) => DressAgentManager.Instance?.DressAgentCommand(s));

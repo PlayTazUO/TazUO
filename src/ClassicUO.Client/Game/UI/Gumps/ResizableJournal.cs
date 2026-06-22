@@ -113,24 +113,24 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_journalArea);
 
             Add(_newTabButton = new NiceButton(0, 0, 20, TAB_HEIGHT, ButtonAction.Activate, "+") { IsSelectable = false });
-            _newTabButton.SetTooltip("Add a new tab");
+            _newTabButton.SetTooltip(TazLang.Get("gump_journal_addtab_tooltip", "Add a new tab"));
             _newTabButton.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    new PromptPopupWindow("New Tab", "Enter a tab name", entry =>
+                    new PromptPopupWindow(TazLang.Get("gump_journal_newtab_title", "New Tab"), TazLang.Get("gump_journal_newtab_body", "Enter a tab name"), entry =>
                     {
                         if (!string.IsNullOrEmpty(entry))
                         {
                             ProfileManager.CurrentProfile.JournalTabs.Add(entry, new MessageType[] { MessageType.Regular });
                             ResizableJournal.ReloadTabs = true;
                         }
-                    }, "Save", "Cancel");
+                    }, TazLang.Get("gump_journal_save", "Save"), TazLang.Get("gump_journal_cancel", "Cancel"));
                 }
             };
 
-            Add(_clearJournalButton = new NiceButton(0, 0, 20, TAB_HEIGHT, ButtonAction.Activate, "X") { IsSelectable = false });
-            _clearJournalButton.SetTooltip("Clear journal entries");
+            Add(_clearJournalButton = new NiceButton(0, 0, 20, TAB_HEIGHT, ButtonAction.Activate, TazLang.Get("gump_journal_clear", "X")) { IsSelectable = false });
+            _clearJournalButton.SetTooltip(TazLang.Get("gump_journal_clear_tooltip", "Clear journal entries"));
             _clearJournalButton.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -668,55 +668,55 @@ namespace ClassicUO.Game.UI.Gumps
                         switch (item)
                         {
                             case MessageType.Regular:
-                                entryName = "Regular";
+                                entryName = TazLang.Get("gump_journal_filter_regular", "Regular");
                                 break;
                             case MessageType.System:
-                                entryName = "System";
+                                entryName = TazLang.Get("gump_journal_filter_system", "System");
                                 break;
                             case MessageType.Emote:
-                                entryName = "Emote";
+                                entryName = TazLang.Get("gump_journal_filter_emote", "Emote");
                                 break;
                             case MessageType.Limit3Spell:
-                                entryName = "Limit3Spell(Sphere)";
+                                entryName = TazLang.Get("gump_journal_filter_limit3spell", "Limit3Spell(Sphere)");
                                 break;
                             case MessageType.Label:
-                                entryName = "Label";
+                                entryName = TazLang.Get("gump_journal_filter_label", "Label");
                                 break;
                             case MessageType.Focus:
-                                entryName = "Focus";
+                                entryName = TazLang.Get("gump_journal_filter_focus", "Focus");
                                 break;
                             case MessageType.Whisper:
-                                entryName = "Whisper";
+                                entryName = TazLang.Get("gump_journal_filter_whisper", "Whisper");
                                 break;
                             case MessageType.Yell:
-                                entryName = "Yell";
+                                entryName = TazLang.Get("gump_journal_filter_yell", "Yell");
                                 break;
                             case MessageType.Spell:
-                                entryName = "Spell";
+                                entryName = TazLang.Get("gump_journal_filter_spell", "Spell");
                                 break;
                             case MessageType.Guild:
-                                entryName = "Guild";
+                                entryName = TazLang.Get("gump_journal_filter_guild", "Guild");
                                 break;
                             case MessageType.Alliance:
-                                entryName = "Alliance";
+                                entryName = TazLang.Get("gump_journal_filter_alliance", "Alliance");
                                 break;
                             case MessageType.Command:
-                                entryName = "Command";
+                                entryName = TazLang.Get("gump_journal_filter_command", "Command");
                                 break;
                             case MessageType.Encoded:
-                                entryName = "Encoded";
+                                entryName = TazLang.Get("gump_journal_filter_encoded", "Encoded");
                                 break;
                             case MessageType.ChatSystem:
-                                entryName = "Global Chat";
+                                entryName = TazLang.Get("gump_journal_filter_globalchat", "Global Chat");
                                 break;
                             case MessageType.Party:
-                                entryName = "Party";
+                                entryName = TazLang.Get("gump_journal_filter_party", "Party");
                                 break;
                             case MessageType.Damage:
-                                entryName = "Damage";
+                                entryName = TazLang.Get("gump_journal_filter_damage", "Damage");
                                 break;
                             case MessageType.Discord:
-                                entryName = "Discord";
+                                entryName = TazLang.Get("gump_journal_filter_discord", "Discord");
                                 break;
                         }
 
@@ -744,9 +744,9 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                Add("X Delete Tab", () =>
+                Add(TazLang.Get("gump_journal_deletetab", "X Delete Tab"), () =>
                 {
-                    UIManager.Add(new QuestionGump(gump.World, $"Delete [{name}] tab?", (yes) =>
+                    UIManager.Add(new QuestionGump(gump.World, TazLang.Get("gump_journal_deletetab_confirm_fmt", "Delete [{0}] tab?", new[] { name }), (yes) =>
                     {
                         if (yes)
                         {

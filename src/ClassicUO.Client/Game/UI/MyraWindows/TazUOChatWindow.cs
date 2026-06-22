@@ -44,7 +44,7 @@ public class TazUOChatWindow : MyraControl
         }
     }
 
-    public TazUOChatWindow() : base("TazUO Chat")
+    public TazUOChatWindow() : base(TazLang.Get("myra_chat_title", "TazUO Chat"))
     {
         CanBeSaved = true;
         _wasConnected = _manager.IsConnected;
@@ -128,8 +128,8 @@ public class TazUOChatWindow : MyraControl
         if (!_manager.IsConnected)
         {
             var row = new HorizontalStackPanel { Spacing = 6 };
-            row.Widgets.Add(new MyraLabel("Not connected..", MyraLabel.TextStyle.P));
-            row.Widgets.Add(new MyraButton("Try to connect", () =>
+            row.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_status_not_connected", "Not connected.."), MyraLabel.TextStyle.P));
+            row.Widgets.Add(new MyraButton(TazLang.Get("myra_chat_btn_try_connect", "Try to connect"), () =>
             {
                 _manager.Dispose();
                 _manager.Init();
@@ -169,17 +169,17 @@ public class TazUOChatWindow : MyraControl
     {
         _chatInput = new MyraInputBox
         {
-            HintText = "Type a message...",
+            HintText = TazLang.Get("myra_chat_input_hint", "Type a message..."),
             Width = MSG_WIDTH + CHANNEL_WIDTH + 3
         };
         _chatInput.KeyDown += (_, args) => { if (args.Data == Keys.Enter) TrySend(); };
 
         var row = new HorizontalStackPanel { Spacing = 4 };
         row.Widgets.Add(_chatInput);
-        row.Widgets.Add(new MyraButton("Send", TrySend));
-        row.Widgets.Add(new MyraButton("Options", () =>
+        row.Widgets.Add(new MyraButton(TazLang.Get("shared_send", "Send"), TrySend));
+        row.Widgets.Add(new MyraButton(TazLang.Get("shared_options", "Options"), () =>
         {
-            ShowContextMenu((ContextMenuLabelToggle(!ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin, "Auto connect"), () =>
+            ShowContextMenu((ContextMenuLabelToggle(!ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin, TazLang.Get("myra_chat_ctx_auto_connect", "Auto connect")), () =>
             {
                 ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin = !ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin;
             }));
@@ -201,7 +201,7 @@ public class TazUOChatWindow : MyraControl
         }
 
         _channelsPanel.Widgets.Clear();
-        _channelsPanel.Widgets.Add(new MyraLabel("Channels", MyraLabel.TextStyle.P));
+        _channelsPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_label_channels", "Channels"), MyraLabel.TextStyle.P));
 
         foreach (string ch in channels)
         {
@@ -220,17 +220,17 @@ public class TazUOChatWindow : MyraControl
 
             chRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
                 TazUOChatManager.Instance.LeaveChannel(captured))
-            { Tooltip = "Leave channel" }));
+            { Tooltip = TazLang.Get("myra_chat_btn_leave_channel_tooltip", "Leave channel") }));
 
             _channelsPanel.Widgets.Add(chRow);
         }
 
         // Join input row
-        var joinBox = new MyraInputBox { HintText = "channel...", Width = CHANNEL_WIDTH - 30 };
+        var joinBox = new MyraInputBox { HintText = TazLang.Get("myra_chat_hint_channel", "channel..."), Width = CHANNEL_WIDTH - 30 };
         var joinRow = new HorizontalStackPanel { Spacing = 2 };
         joinRow.Widgets.Add(joinBox);
         joinRow.Widgets.Add(new MyraButton("+", () => DoJoin(joinBox))
-            { Tooltip = "Join or create a channel" });
+            { Tooltip = TazLang.Get("myra_chat_btn_join_tooltip", "Join or create a channel") });
         joinBox.KeyDown += (_, args) => { if (args.Data == Keys.Enter) DoJoin(joinBox); };
         _channelsPanel.Widgets.Add(joinRow);
 
@@ -252,14 +252,14 @@ public class TazUOChatWindow : MyraControl
         {
             string[] messages = _manager.GetMessages(_selectedChannel);
             if (messages.Length == 0)
-                _messagesPanel.Widgets.Add(new MyraLabel("No messages yet.", MyraLabel.TextStyle.P));
+                _messagesPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_empty_messages", "No messages yet."), MyraLabel.TextStyle.P));
             else
                 foreach (string msg in messages)
                     _messagesPanel.Widgets.Add(new MyraLabel(msg, MyraLabel.TextStyle.P) { MaxWidth = _messagesPanel.MaxWidth });
         }
         else
         {
-            _messagesPanel.Widgets.Add(new MyraLabel("Select a channel.", MyraLabel.TextStyle.P));
+            _messagesPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_select_channel", "Select a channel."), MyraLabel.TextStyle.P));
         }
 
         _lastMessageCount = _manager.TotalMessageCount;
@@ -274,13 +274,13 @@ public class TazUOChatWindow : MyraControl
         if (!string.IsNullOrEmpty(_selectedChannel))
         {
             string[] users = _manager.GetUsers(_selectedChannel);
-            _usersPanel.Widgets.Add(new MyraLabel($"Users ({users.Length})", MyraLabel.TextStyle.P));
+            _usersPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_label_users_fmt", new[] { users.Length.ToString() }), MyraLabel.TextStyle.P));
             foreach (string user in users)
                 _usersPanel.Widgets.Add(new MyraLabel(user == _manager.CurrentNick ? $"/c[green]{user}" : user, MyraLabel.TextStyle.P));
         }
         else
         {
-            _usersPanel.Widgets.Add(new MyraLabel("Users", MyraLabel.TextStyle.P));
+            _usersPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_chat_label_users", "Users"), MyraLabel.TextStyle.P));
         }
 
         _lastUserCount = _manager.TotalUserUpdates;

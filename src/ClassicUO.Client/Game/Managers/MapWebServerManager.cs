@@ -2,6 +2,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 using ClassicUO.Utility.Logging;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 
@@ -36,7 +37,7 @@ namespace ClassicUO.Game.Managers
                 if (mapTexture == null || mapTexture.IsDisposed)
                 {
                     Log.Error("Map texture not available - please open the world map first");
-                    GameActions.Print(World.Instance, "Please open the world map first", 0x21);
+                    GameActions.Print(World.Instance, TazLang.Get("managers_mapwebserver_msg_openmapfirst", "Please open the world map first"), 0x21);
                     return false;
                 }
             }
@@ -75,7 +76,7 @@ namespace ClassicUO.Game.Managers
                     if (retries >= 100)
                     {
                         Log.Warn($"Map PNG not available for map {mapIndex}. Open the world map gump to generate it.");
-                        GameActions.Print(World.Instance, "Please open world map gump first", 0x21);
+                        GameActions.Print(World.Instance, TazLang.Get("managers_mapwebserver_msg_openworldmapgump", "Please open world map gump first"), 0x21);
                         return;
                     }
                     Log.Warn($"Map PNG not ready yet, retrying in 1000ms... (attempt {retries + 1})");
@@ -95,12 +96,12 @@ namespace ClassicUO.Game.Managers
 
                 startTime.Stop();
                 Log.Info($"PNG read took {startTime.ElapsedMilliseconds}ms, size: {pngData.Length / 1024}KB");
-                GameActions.Print(World.Instance, "Map loaded in browser", 0x44);
+                GameActions.Print(World.Instance, TazLang.Get("managers_mapwebserver_msg_maploaded", "Map loaded in browser"), 0x44);
             }
             catch (System.Exception ex)
             {
                 Log.Error($"Failed to generate map PNG: {ex.Message}");
-                GameActions.Print(World.Instance, "Failed to load map texture", 0x21);
+                GameActions.Print(World.Instance, TazLang.Get("managers_mapwebserver_msg_failedmapload", "Failed to load map texture"), 0x21);
             }
         }
 

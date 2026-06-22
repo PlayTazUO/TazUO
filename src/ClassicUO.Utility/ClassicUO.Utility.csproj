@@ -10,6 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="OpenCC\TSCharacters.txt" />
+    <EmbeddedResource Include="OpenCC\TSPhrases.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Update="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 

@@ -14,7 +14,7 @@ public static class TitleBarTabContent
         var outer = new VerticalStackPanel { Spacing = 6 };
 
         outer.Widgets.Add(new MyraLabel(
-            "Configure window title bar to show HP, Mana, and Stamina information.",
+            TazLang.Get("assistant_titlebar_desc", "Configure window title bar to show HP, Mana, and Stamina information."),
             MyraLabel.TextStyle.H3));
 
         // Enable
@@ -29,11 +29,11 @@ public static class TitleBarTabContent
                         string.IsNullOrEmpty(World.Instance.Player?.Name)
                             ? string.Empty
                             : World.Instance.Player.Name);
-            }, "Enable title bar stats"));
+            }, TazLang.Get("assistant_titlebar_enable", "Enable title bar stats")));
 
         // Display mode
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Display Mode", MyraLabel.TextStyle.H2));
+        outer.Widgets.Add(new MyraLabel(TazLang.Get("assistant_titlebar_displaymode", "Display Mode"), MyraLabel.TextStyle.H2));
 
         var previewLabel = new MyraLabel(TitleBarStatsManager.GetPreviewText(), MyraLabel.TextStyle.P);
 
@@ -50,21 +50,21 @@ public static class TitleBarTabContent
 
         var rbText = new RadioButton
         {
-            Content = new MyraLabel("Text  (HP 85/100, MP 42/50, SP 95/100)", MyraLabel.TextStyle.P),
+            Content = new MyraLabel(TazLang.Get("assistant_titlebar_mode_text", "Text  (HP 85/100, MP 42/50, SP 95/100)"), MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Text
         };
         rbText.PressedChanged += (_, _) => { if (rbText.IsPressed) SetMode(TitleBarStatsMode.Text); };
 
         var rbPercent = new RadioButton
         {
-            Content = new MyraLabel("Percent  (HP 85%, MP 84%, SP 95%)", MyraLabel.TextStyle.P),
+            Content = new MyraLabel(TazLang.Get("assistant_titlebar_mode_percent", "Percent  (HP 85%, MP 84%, SP 95%)"), MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.Percent
         };
         rbPercent.PressedChanged += (_, _) => { if (rbPercent.IsPressed) SetMode(TitleBarStatsMode.Percent); };
 
         var rbBar = new RadioButton
         {
-            Content = new MyraLabel("Progress Bar  (HP [||||||    ] MP [||||||    ] SP [||||||    ])", MyraLabel.TextStyle.P),
+            Content = new MyraLabel(TazLang.Get("assistant_titlebar_mode_bar", "Progress Bar  (HP [||||||    ] MP [||||||    ] SP [||||||    ])"), MyraLabel.TextStyle.P),
             IsPressed = profile.TitleBarStatsMode == TitleBarStatsMode.ProgressBar
         };
         rbBar.PressedChanged += (_, _) => { if (rbBar.IsPressed) SetMode(TitleBarStatsMode.ProgressBar); };
@@ -76,7 +76,7 @@ public static class TitleBarTabContent
 
         // Preview
         outer.Widgets.Add(new MyraSpacer(15, 5));
-        outer.Widgets.Add(new MyraLabel("Preview", MyraLabel.TextStyle.H2));
+        outer.Widgets.Add(new MyraLabel(TazLang.Get("assistant_titlebar_preview", "Preview"), MyraLabel.TextStyle.H2));
         outer.Widgets.Add(previewLabel);
 
         return outer;

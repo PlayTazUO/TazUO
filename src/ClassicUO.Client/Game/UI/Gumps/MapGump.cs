@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -62,14 +63,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             _hit.MouseUp += TextureControlOnMouseUp;
 
-            var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, "Menu") { X = width + 44 - 43, Y = 6 };
+            var menu = new MenuButton(25, Color.Black.PackedValue, 0.75f, TazLang.Get("gump_map_tooltip_menu", "Menu")) { X = width + 44 - 43, Y = 6 };
 
             menu.MouseUp += (s, e) =>
             {
                 menu.ContextMenu?.Show();
             };
             menu.ContextMenu = new ContextMenuControl(this);
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Show approximate location on world map", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_map_menu_show_on_world_map", "Show approximate location on world map"), () =>
             {
                 if (foundMapLoc)
                 {
@@ -79,7 +80,7 @@ namespace ClassicUO.Game.UI.Gumps
                         if (mapFacet != -1)
                         {
                             if (World.MapIndex != mapFacet)
-                                GameActions.Print(World, "You're on the wrong facet!", 32);
+                                GameActions.Print(World, TazLang.Get("gump_map_msg_wrong_facet", "You're on the wrong facet!"), 32);
                             else
                                 map.GoToMarker(mapX, mapY, true);
                         }
@@ -88,7 +89,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Add as marker on world map", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_map_menu_add_marker", "Add as marker on world map"), () =>
             {
                 if (foundMapLoc)
                 {
@@ -104,7 +105,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Create arrow pointing to location", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_map_menu_create_arrow", "Create arrow pointing to location"), () =>
             {
                 if (foundMapLoc)
                 {
@@ -112,20 +113,20 @@ namespace ClassicUO.Game.UI.Gumps
                     if (map != null)
                     {
                         if (mapFacet != World.MapIndex)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, TazLang.Get("gump_map_msg_wrong_facet", "You're on the wrong facet!"), 32);
                         else
                             UIManager.Add(new QuestArrowGump(world, 0, mapX, mapY) { CanCloseWithRightClick = true });
                     }
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Try to pathfind", () =>
+            menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_map_menu_pathfind", "Try to pathfind"), () =>
             {
                 if (foundMapLoc)
                 {
                     if (mapFacet != -1)
                     {
                         if (World.MapIndex != mapFacet)
-                            GameActions.Print(World, "You're on the wrong facet!", 32);
+                            GameActions.Print(World, TazLang.Get("gump_map_msg_wrong_facet", "You're on the wrong facet!"), 32);
                         else
                             World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                     }
@@ -133,7 +134,7 @@ namespace ClassicUO.Game.UI.Gumps
                         World.Player.Pathfinder.WalkTo(mapX, mapY, 0, 1);
                 }
             }));
-            menu.ContextMenu.Add(new ContextMenuItemEntry("Close", () => { Dispose(); }));
+            menu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_map_menu_close", "Close"), () => { Dispose(); }));
             menu.CanCloseWithRightClick = false;
 
             Add(new GumpPic(width - 20, height - 20, 0x0139D, 0));
@@ -197,7 +198,7 @@ namespace ClassicUO.Game.UI.Gumps
                 //mapY = mapY + y;
                 foundMapLoc = true;
 
-                _hit?.SetTooltip($"Estimated loc: {mapX}, {mapY}");
+                _hit?.SetTooltip(TazLang.Get("gump_map_tooltip_estimated_loc_fmt", new[] { mapX.ToString(), mapY.ToString() }));
             }
         }
 

@@ -77,6 +77,8 @@ internal static class UnicodeTalk
         {
             p.Seek(48);
             text = p.ReadUnicodeBE();
+            // Convert Traditional Chinese speech to Simplified when CHS is selected.
+            text = ClassicUO.Utility.ChineseConverter.ToSimplified(text);
         }
 
         TextType text_type = TextType.SYSTEM;

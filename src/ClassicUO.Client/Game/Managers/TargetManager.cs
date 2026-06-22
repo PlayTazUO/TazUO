@@ -382,7 +382,7 @@ namespace ClassicUO.Game.Managers
                                     var messageBox = new QuestionGump
                                     (
                                         _world,
-                                        "This may flag\nyou criminal!",
+                                        TazLang.Get("manager_target_criminal_warning", "This may flag\nyou criminal!"),
                                         s =>
                                         {
                                             if (s)
@@ -492,12 +492,12 @@ namespace ClassicUO.Game.Managers
                         {
                             ProfileManager.CurrentProfile.SavedMountSerial = serial;
                             Entity mount = _world.Get(serial);
-                            string mountName = mount?.Name ?? "mount";
-                            GameActions.Print(_world, $"Mount set: {mountName} (Serial: {serial})", 48);
+                            string mountName = mount?.Name ?? TazLang.Get("manager_target_mount_default", "mount");
+                            GameActions.Print(_world, TazLang.Get("manager_target_mount_set_fmt", new[] { mountName, serial.ToString() }), 48);
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, TazLang.Get("manager_target_mount_invalid", "You must target a mobile/creature to set as your mount."), 32);
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -511,16 +511,16 @@ namespace ClassicUO.Game.Managers
                             if (item != null && item.ItemData.IsContainer)
                             {
                                 ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial = serial;
-                                GameActions.Print(_world, "Favorite move bag set.");
+                                GameActions.Print(_world, TazLang.Get("manager_target_favorite_bag_set", "Favorite move bag set."));
                             }
                             else
                             {
-                                GameActions.Print(_world, "That doesn't appear to be a valid container.");
+                                GameActions.Print(_world, TazLang.Get("manager_target_invalid_container", "That doesn't appear to be a valid container."));
                             }
                         }
                         else
                         {
-                            GameActions.Print(_world, "That is not a valid item.");
+                            GameActions.Print(_world, TazLang.Get("manager_target_invalid_item", "That is not a valid item."));
                         }
 
                         ClearTargetingWithoutTargetCancelPacket();
@@ -555,11 +555,11 @@ namespace ClassicUO.Game.Managers
                         if (SerialHelper.IsMobile(serial))
                         {
                             ProfileManager.CurrentProfile.SavedMountSerial = serial;
-                            GameActions.Print(_world, $"Mount set (Serial: {serial})", 48);
+                            GameActions.Print(_world, TazLang.Get("manager_target_mount_set_serial_fmt", new[] { serial.ToString() }), 48);
                         }
                         else
                         {
-                            GameActions.Print(_world, "You must target a mobile/creature to set as your mount.", 32);
+                            GameActions.Print(_world, TazLang.Get("manager_target_mount_invalid", "You must target a mobile/creature to set as your mount."), 32);
                         }
                         ClearTargetingWithoutTargetCancelPacket();
                         return;

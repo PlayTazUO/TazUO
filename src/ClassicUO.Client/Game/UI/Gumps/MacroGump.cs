@@ -21,7 +21,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Alpha = 0.8f
             };
 
-            var text = new Label($"Edit macro: {name}", true, 15)
+            var text = new Label(TazLang.Get("gump_macro_title_fmt", "Edit macro: {0}", new[] { name }), true, 15)
             {
                 X = camera.Bounds.Width / 2 - 105,
                 Y = macroGumpBackground.Y + 2

@@ -1,3 +1,4 @@
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
@@ -29,7 +30,7 @@ public class AssistantWindow : MyraControl
 
     private SkillsTabContent _skillsTabContent;
 
-    public AssistantWindow() : base("Legion Assistant")
+    public AssistantWindow() : base(TazLang.Get("myra_assistant_title", "Legion Assistant"))
     {
         CanBeSaved = true;
         Build();
@@ -56,12 +57,12 @@ public class AssistantWindow : MyraControl
     private void Build()
     {
         var tabs = new MyraTabControl();
-        tabs.AddTab("General", GeneralTab.Build);
-        tabs.AddTab("Agents", AgentTab.Build);
-        tabs.AddTab("Filters", FiltersTab.Build);
-        tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
-        tabs.AddTab("Macros", () => MacrosTabContent.Build(this));
-        tabs.AddTab("Skills", () => _skillsTabContent = new());
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_general", "General"), GeneralTab.Build);
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_agents", "Agents"), AgentTab.Build);
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_filters", "Filters"), FiltersTab.Build);
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_item_database", "Item Database"), ItemDatabaseTabContent.Build);
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_macros", "Macros"), () => MacrosTabContent.Build(this));
+        tabs.AddTab(TazLang.Get("myra_assistant_tab_skills", "Skills"), () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);
     }

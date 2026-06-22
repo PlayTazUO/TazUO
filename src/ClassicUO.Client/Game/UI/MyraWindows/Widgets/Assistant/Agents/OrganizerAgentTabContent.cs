@@ -1,12 +1,20 @@
 #nullable enable
 using System.Collections.Generic;
+using ClassicUO.Configuration;
 using System.Globalization;
+using ClassicUO.Configuration;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Configuration;
 using ClassicUO.Utility;
+using ClassicUO.Configuration;
 using Myra.Graphics2D;
+using ClassicUO.Configuration;
 using Myra.Graphics2D.UI;
+using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 
@@ -23,18 +31,18 @@ public static class OrganizerAgentTabContent
             itemsPanel.Widgets.Clear();
             if (selectedConfig == null || selectedConfig.ItemConfigs.Count == 0)
             {
-                itemsPanel.Widgets.Add(new MyraLabel("No items configured.", MyraLabel.TextStyle.H3));
+                itemsPanel.Widgets.Add(new MyraLabel(TazLang.Get("organizeragent_noitems", "No items configured."), MyraLabel.TextStyle.H3));
                 return;
             }
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Art"),
-                GridColumnInfo.Auto("Hue"),
-                GridColumnInfo.Auto("Amount"),
-                GridColumnInfo.Fill("Destination"),
-                GridColumnInfo.Auto("Enabled"),
-                GridColumnInfo.Auto("Actions")
+                GridColumnInfo.Auto(TazLang.Get("agent_col_art", "Art")),
+                GridColumnInfo.Auto(TazLang.Get("agent_col_hue", "Hue")),
+                GridColumnInfo.Auto(TazLang.Get("organizeragent_col_amount", "Amount")),
+                GridColumnInfo.Fill(TazLang.Get("organizeragent_col_destination", "Destination")),
+                GridColumnInfo.Auto(TazLang.Get("organizeragent_enabled", "Enabled")),
+                GridColumnInfo.Auto(TazLang.Get("agent_col_actions", "Actions"))
             );
 
             int dataRow = 1;
@@ -47,7 +55,7 @@ public static class OrganizerAgentTabContent
                     item.Graphic > 0
                         ? new MyraArtTexture((uint)item.Graphic)
                         {
-                            Tooltip = $"Graphic: {item.Graphic:X4}",
+                            Tooltip = string.Format(TazLang.Get("organizeragent_graphic_tooltip_fmt", "Graphic: {0}"), item.Graphic.ToString("X4")),
                             Margin = new Thickness(2, 0),
                         }
                         : new MyraLabel($"{item.Graphic:X4}", MyraLabel.TextStyle.P);
@@ -66,7 +74,7 @@ public static class OrganizerAgentTabContent
                 var amountBox = new MyraInputBox
                 {
                     Text = item.Amount.ToString(),
-                    Tooltip = "Amount to move. Takes into account items already in destination.\n(0 = move all)",
+                    Tooltip = TazLang.Get("organizeragent_amount_tooltip", "Amount to move. Takes into account items already in destination.\n(0 = move all)"),
                     Width = 80,
                 };
                 amountBox.TextChangedByUser += (_, _) =>

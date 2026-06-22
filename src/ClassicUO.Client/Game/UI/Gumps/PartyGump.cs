@@ -6,6 +6,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Assets;
 using ClassicUO.Network;
 using ClassicUO.Resources;
+using ClassicUO.Configuration;
 using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -89,7 +90,7 @@ namespace ClassicUO.Game.UI.Gumps
             int entryStartX = BorderSize + (entryAreaWidth - (buttonAreaWidth + nameAreaWidth + 120)) / 2;
 
             // Header labels with TTF font and orange color aligned with buttons
-            var msgLabel = TextBox.GetOne("Msg", TrueTypeLoader.EMBEDDED_FONT, 14, Color.Orange, TextBox.RTLOptions.Default());
+            var msgLabel = TextBox.GetOne(TazLang.Get("gump_party_msg", "Msg"), TrueTypeLoader.EMBEDDED_FONT, 14, Color.Orange, TextBox.RTLOptions.Default());
             msgLabel.X = entryStartX;
             msgLabel.Y = BorderSize + 17;
             msgLabel.AcceptMouseInput = false;
@@ -123,7 +124,7 @@ namespace ClassicUO.Game.UI.Gumps
                 // Msg button
                 Add
                 (
-                    new NiceButton(currentX, yPtr + 2, 25, 20, ButtonAction.Activate, "Msg")
+                    new NiceButton(currentX, yPtr + 2, 25, 20, ButtonAction.Activate, TazLang.Get("gump_party_msg", "Msg"))
                     {
                         ButtonParameter = (int)(Buttons.TellMember + i),
                         IsSelectable = false
@@ -136,7 +137,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     Add
                     (
-                        new NiceButton(currentX, yPtr + 2, 25, 20, ButtonAction.Activate, "Kick", hue: 34)
+                        new NiceButton(currentX, yPtr + 2, 25, 20, ButtonAction.Activate, TazLang.Get("gump_party_kick", "Kick"), hue: 34)
                         {
                             ButtonParameter = (int)(Buttons.KickMember + i),
                             IsSelectable = false

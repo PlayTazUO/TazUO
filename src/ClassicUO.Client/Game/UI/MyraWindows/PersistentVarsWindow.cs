@@ -23,7 +23,7 @@ public class PersistentVarsWindow : MyraControl
     private readonly HorizontalStackPanel _scopeButtonRow = new() { Spacing = 4 };
     private readonly HorizontalStackPanel _scopeDescPanel = new() { Spacing = 4 };
 
-    public PersistentVarsWindow() : base("Persistent Variables Manager")
+    public PersistentVarsWindow() : base(TazLang.Get("myra_persistentvars_title", "Persistent Variables Manager"))
     {
         CanBeSaved = true;
         Build();
@@ -49,7 +49,7 @@ public class PersistentVarsWindow : MyraControl
 
         // Scope selector
         var scopeRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
-        scopeRow.Widgets.Add(new MyraLabel("Scope:", MyraLabel.TextStyle.P));
+        scopeRow.Widgets.Add(new MyraLabel(TazLang.Get("myra_persistentvars_label_scope", "Scope:"), MyraLabel.TextStyle.P));
         BuildScopeButtons();
         scopeRow.Widgets.Add(_scopeButtonRow);
         BuildScopeDesc();
@@ -70,18 +70,18 @@ public class PersistentVarsWindow : MyraControl
     {
         _scopeButtonRow.Widgets.Clear();
 
-        (LegionAPI.PersistentVar scope, string label)[] scopes =
+        (LegionAPI.PersistentVar scope, string labelKey, string fallback)[] scopes =
         [
-            (LegionAPI.PersistentVar.Char,    "Character"),
-            (LegionAPI.PersistentVar.Account, "Account"),
-            (LegionAPI.PersistentVar.Server,  "Server"),
-            (LegionAPI.PersistentVar.Global,  "Global"),
+            (LegionAPI.PersistentVar.Char,    "myra_persistentvars_scope_character", "Character"),
+            (LegionAPI.PersistentVar.Account, "myra_persistentvars_scope_account",   "Account"),
+            (LegionAPI.PersistentVar.Server,  "myra_persistentvars_scope_server",    "Server"),
+            (LegionAPI.PersistentVar.Global,  "myra_persistentvars_scope_global",    "Global"),
         ];
 
-        foreach ((LegionAPI.PersistentVar scope, string label) in scopes)
+        foreach ((LegionAPI.PersistentVar scope, string labelKey, string fallback) in scopes)
         {
             LegionAPI.PersistentVar capturedScope = scope;
-            var btn = new MyraButton(label, () =>
+            var btn = new MyraButton(TazLang.Get(labelKey, fallback), () =>
             {
                 _selectedScope = capturedScope;
                 _editingKey    = null;
@@ -108,7 +108,7 @@ public class PersistentVarsWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { Text = _filterText, HintText = "Filter variables...", Width = 200 };
+        var filterBox = new MyraInputBox { Text = _filterText, HintText = TazLang.Get("myra_persistentvars_filter_hint", "Filter variables..."), Width = 200 };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -116,8 +116,8 @@ public class PersistentVarsWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Add New Variable", ShowAddDialog));
-        toolbar.Widgets.Add(new MyraButton("Refresh", () =>
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("myra_persistentvars_btn_add_variable", "Add New Variable"), ShowAddDialog));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("shared_refresh", "Refresh"), () =>
         {
             PersistentVars.Load();
             BuildVarsGrid();
@@ -143,15 +143,15 @@ public class PersistentVarsWindow : MyraControl
 
         if (variables.Count == 0)
         {
-            _varsPanel.Widgets.Add(new MyraLabel("No variables found.", MyraLabel.TextStyle.P));
+            _varsPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_persistentvars_empty", "No variables found."), MyraLabel.TextStyle.P));
             return;
         }
 
         var grid = new MyraGrid();
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Key"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Actions")
+            GridColumnInfo.Auto(TazLang.Get("myra_persistentvars_col_key", "Key")),
+            GridColumnInfo.Fill(TazLang.Get("myra_persistentvars_col_value", "Value")),
+            GridColumnInfo.Auto(TazLang.Get("myra_persistentvars_col_actions", "Actions"))
         );
 
         int dataRow = 1;
@@ -169,7 +169,7 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(editBox, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Save", () =>
+                actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_save", "Save"), () =>
                 {
                     string savedKey = key;
                     string savedValue = _editingValue;
@@ -178,7 +178,7 @@ public class PersistentVarsWindow : MyraControl
                     PersistentVars.SaveVar(_selectedScope, savedKey, savedValue, () =>
                         MainThreadQueue.InvokeOnMainThread(BuildVarsGrid));
                 }));
-                actionRow.Widgets.Add(new MyraButton("Cancel", () =>
+                actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_cancel", "Cancel"), () =>
                 {
                     _editingKey   = null;
                     _editingValue = "";
@@ -191,13 +191,13 @@ public class PersistentVarsWindow : MyraControl
                 grid.AddWidget(new MyraLabel(value, MyraLabel.TextStyle.P) { Tooltip = value }, dataRow, 1);
 
                 var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraButton("Edit", () =>
+                actionRow.Widgets.Add(new MyraButton(TazLang.Get("shared_edit", "Edit"), () =>
                 {
                     _editingKey   = key;
                     _editingValue = value;
                     BuildVarsGrid();
                 }));
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Delete", () =>
+                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton(TazLang.Get("shared_delete", "Delete"), () =>
                     ShowDeleteDialog(key))));
                 grid.AddWidget(actionRow, dataRow, 2);
             }
@@ -210,17 +210,26 @@ public class PersistentVarsWindow : MyraControl
 
     private void ShowAddDialog()
     {
-        var keyBox   = new MyraInputBox { HintText = "Key name...", Width = 300 };
-        var valueBox = new MyraInputBox { HintText = "Value...",    Width = 300 };
+        var keyBox   = new MyraInputBox { HintText = TazLang.Get("myra_persistentvars_hint_key", "Key name..."), Width = 300 };
+        var valueBox = new MyraInputBox { HintText = TazLang.Get("myra_persistentvars_hint_value", "Value..."),    Width = 300 };
+
+        string scopeLabel = _selectedScope switch
+        {
+            LegionAPI.PersistentVar.Char    => TazLang.Get("myra_persistentvars_scope_character", "Character"),
+            LegionAPI.PersistentVar.Account => TazLang.Get("myra_persistentvars_scope_account", "Account"),
+            LegionAPI.PersistentVar.Server  => TazLang.Get("myra_persistentvars_scope_server", "Server"),
+            LegionAPI.PersistentVar.Global  => TazLang.Get("myra_persistentvars_scope_global", "Global"),
+            _                               => ""
+        };
 
         var form = new VerticalStackPanel { Spacing = 4 };
-        form.Widgets.Add(new MyraLabel($"Add new variable to {_selectedScope} scope:", MyraLabel.TextStyle.P));
-        form.Widgets.Add(new MyraLabel("Key:",   MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(TazLang.Get("myra_persistentvars_dialog_add_label_fmt", new[] { scopeLabel }), MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(TazLang.Get("myra_persistentvars_label_key", "Key:"),   MyraLabel.TextStyle.P));
         form.Widgets.Add(keyBox);
-        form.Widgets.Add(new MyraLabel("Value:", MyraLabel.TextStyle.P));
+        form.Widgets.Add(new MyraLabel(TazLang.Get("myra_persistentvars_label_value", "Value:"), MyraLabel.TextStyle.P));
         form.Widgets.Add(valueBox);
 
-        new MyraDialog("Add Variable", form, ok =>
+        new MyraDialog(TazLang.Get("myra_persistentvars_dialog_add_title", "Add Variable"), form, ok =>
         {
             if (!ok || string.IsNullOrWhiteSpace(keyBox.Text)) return;
             PersistentVars.SaveVar(_selectedScope, keyBox.Text.Trim(), valueBox.Text ?? "", () =>
@@ -229,8 +238,8 @@ public class PersistentVarsWindow : MyraControl
     }
 
     private void ShowDeleteDialog(string key) =>
-        new MyraDialog("Confirm Delete",
-            new MyraLabel($"Delete variable '{key}'?", MyraLabel.TextStyle.P),
+        new MyraDialog(TazLang.Get("myra_persistentvars_confirm_delete_title", "Confirm Delete"),
+            new MyraLabel(TazLang.Get("myra_persistentvars_confirm_delete_body_fmt", new[] { key }), MyraLabel.TextStyle.P),
             ok =>
             {
                 if (!ok) return;
@@ -241,10 +250,10 @@ public class PersistentVarsWindow : MyraControl
 
     private string GetScopeDescription() => _selectedScope switch
     {
-        LegionAPI.PersistentVar.Char    => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.CharacterName}",
-        LegionAPI.PersistentVar.Account => $"{ProfileManager.CurrentProfile.ServerName} - {ProfileManager.CurrentProfile.Username}",
-        LegionAPI.PersistentVar.Server  => ProfileManager.CurrentProfile.ServerName,
-        LegionAPI.PersistentVar.Global  => "All servers and characters",
+        LegionAPI.PersistentVar.Char    => TazLang.Get("myra_persistentvars_scope_desc_char_fmt",    new[] { ProfileManager.CurrentProfile.ServerName, ProfileManager.CurrentProfile.CharacterName }),
+        LegionAPI.PersistentVar.Account => TazLang.Get("myra_persistentvars_scope_desc_account_fmt", new[] { ProfileManager.CurrentProfile.ServerName, ProfileManager.CurrentProfile.Username }),
+        LegionAPI.PersistentVar.Server  => TazLang.Get("myra_persistentvars_scope_desc_server_fmt",  new[] { ProfileManager.CurrentProfile.ServerName }),
+        LegionAPI.PersistentVar.Global  => TazLang.Get("myra_persistentvars_scope_desc_global",      "All servers and characters"),
         _                               => ""
     };
 }

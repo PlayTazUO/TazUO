@@ -2526,8 +2526,9 @@ namespace ClassicUO.LegionScripting
         public void Logout() => OnMain(() => GameActions.Logout(World));
 
         /// <summary>
-        /// Gets item name and properties.
-        /// This returns the name and properties in a single string. You can split it by new line if you want to separate them.
+        /// Gets item name and properties in English.
+        /// This returns the name and properties in a single string, regardless of the client's UI language.
+        /// You can split it by new line if you want to separate them.
         /// Example:
         /// ```py
         /// data = API.ItemNameAndProps(0x12345678, True)
@@ -2556,7 +2557,7 @@ namespace ClassicUO.LegionScripting
             return OnMain
             (() =>
                 {
-                    if (World.OPL.TryGetNameAndData(serial, out string n, out string d))
+                    if (World.OPL.TryGetNameAndDataEnglish(serial, out string n, out string d))
                     {
                         return n + "\n" + d;
                     }

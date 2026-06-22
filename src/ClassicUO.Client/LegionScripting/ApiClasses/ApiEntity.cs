@@ -15,7 +15,22 @@ public class ApiEntity : ApiGameObject
     /// </summary>
     public readonly uint Serial;
 
-    public string Name => GetEntity()?.Name ?? "";
+    /// <summary>
+    /// The entity's name. For items this returns the English OPL name when available,
+    /// falling back to the localized name if English data is not loaded.
+    /// </summary>
+    public string Name => MainThreadQueue.InvokeOnMainThread(() =>
+    {
+        Entity e = GetEntity();
+
+        if (e == null)
+            return string.Empty;
+
+        if (e is Item && Client.Game.UO.World.OPL.TryGetNameAndDataEnglish(e.Serial, out string englishName, out _))
+            return englishName;
+
+        return e.Name ?? string.Empty;
+    });
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiEntity"/> class from an <see cref="Entity"/>.

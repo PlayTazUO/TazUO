@@ -113,8 +113,9 @@ class ApiItem(ApiEntity):
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
-         Gets the item name and properties (tooltip text).
-         This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+         Gets the item name and properties (tooltip text) in English.
+         This returns the name and properties in a single string, regardless of the client's UI language.
+         You can split it by newline if you want to separate them.
         
         """
         pass
@@ -201,8 +202,9 @@ class ApiMobile(ApiEntity):
 
     def NameAndProps(self, wait: "bool" = False, timeout: "int" = 10) -> "str":
         """
-         Gets the mobile name and properties (tooltip text).
-         This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+         Gets the mobile name and properties (tooltip text) in English.
+         This returns the name and properties in a single string, regardless of the client's UI language.
+         You can split it by newline if you want to separate them.
         
         """
         pass
@@ -2285,8 +2287,9 @@ def Logout() -> None:
 
 def ItemNameAndProps(serial: "int", wait: "bool" = False, timeout: "int" = 10) -> "str":
     """
-     Gets item name and properties.
-     This returns the name and properties in a single string. You can split it by new line if you want to separate them.
+     Gets item name and properties in English.
+     This returns the name and properties in a single string, regardless of the client's UI language.
+     You can split it by new line if you want to separate them.
      Example:
      ```py
      data = API.ItemNameAndProps(0x12345678, True)

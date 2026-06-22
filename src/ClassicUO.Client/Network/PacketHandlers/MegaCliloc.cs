@@ -39,8 +39,9 @@ internal static class MegaCliLoc
             entity = world.Items.Get(serial);
         }
 
-        var list = new List<(int, string, int)>();
+        var list = new List<(int, string, string, int)>();
         int totalLength = 0;
+        int totalEnglishLength = 0;
 
         while (p.Position < p.Length)
         {
@@ -57,6 +58,7 @@ internal static class MegaCliLoc
                 argument = p.ReadUnicodeLE(length / 2);
 
             string str = Client.Game.UO.FileManager.Clilocs.Translate(cliloc, argument, true);
+            string strEnglish = Client.Game.UO.FileManager.Clilocs.TranslateEnglish(cliloc, argument, true) ?? str;
 
             if (str == null)
                 continue;
@@ -76,17 +78,25 @@ internal static class MegaCliLoc
             {
                 case 1080418:
                     if (Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_60143)
+                    {
                         str = "<basefont color=#40a4fe>" + str + "</basefont>";
+                        strEnglish = "<basefont color=#40a4fe>" + strEnglish + "</basefont>";
+                    }
                     break;
                 case 1061170:
                     if (int.TryParse(argument, out int strength) && world.Player.Strength < strength)
+                    {
                         str = "<basefont color=#FF0000>" + str + "</basefont>";
+                        strEnglish = "<basefont color=#FF0000>" + strEnglish + "</basefont>";
+                    }
                     break;
                 case 1062613:
                     str = "<basefont color=#FFCC33>" + str + "</basefont>";
+                    strEnglish = "<basefont color=#FFCC33>" + strEnglish + "</basefont>";
                     break;
                 case 1159561:
                     str = "<basefont color=#b66dff>" + str + "</basefont>";
+                    strEnglish = "<basefont color=#b66dff>" + strEnglish + "</basefont>";
                     break;
             }
 
@@ -102,9 +112,10 @@ internal static class MegaCliLoc
                     break;
                 }
 
-            list.Add((cliloc, str, argcliloc));
+            list.Add((cliloc, str, strEnglish, argcliloc));
 
             totalLength += str.Length;
+            totalEnglishLength += strEnglish?.Length ?? 0;
         }
 
         Item container = null;
@@ -124,6 +135,8 @@ internal static class MegaCliLoc
 
         string name = string.Empty;
         string data = string.Empty;
+        string nameEnglish = string.Empty;
+        string dataEnglish = string.Empty;
         int namecliloc = 0;
 
         if (list.Count != 0)
@@ -131,18 +144,23 @@ internal static class MegaCliLoc
             Span<char> span = stackalloc char[totalLength];
             var sb = new ValueStringBuilder(span);
 
-            foreach ((int, string, int) s in list)
+            Span<char> spanEnglish = stackalloc char[totalEnglishLength];
+            var sbEnglish = new ValueStringBuilder(spanEnglish);
+
+            foreach ((int, string, string, int) s in list)
             {
                 string str = s.Item2;
+                string strEnglish = s.Item3;
 
                 if (first)
                 {
                     name = str;
+                    nameEnglish = strEnglish;
 
                     if (entity != null && !SerialHelper.IsMobile(serial))
                     {
                         entity.Name = str;
-                        namecliloc = s.Item3 > 0 ? s.Item3 : s.Item1;
+                        namecliloc = s.Item4 > 0 ? s.Item4 : s.Item1;
                     }
 
                     first = false;
@@ -153,15 +171,22 @@ internal static class MegaCliLoc
                         sb.Append('\n');
 
                     sb.Append(str);
+
+                    if (sbEnglish.Length != 0)
+                        sbEnglish.Append('\n');
+
+                    sbEnglish.Append(strEnglish);
                 }
             }
 
             data = sb.ToString();
+            dataEnglish = sbEnglish.ToString();
 
             sb.Dispose();
+            sbEnglish.Dispose();
         }
 
-        world.OPL.Add(serial, revision, name, data, namecliloc);
+        world.OPL.Add(serial, revision, name, data, namecliloc, nameEnglish, dataEnglish);
 
         if (inBuyList && container != null && SerialHelper.IsValid(container.Serial))
         {

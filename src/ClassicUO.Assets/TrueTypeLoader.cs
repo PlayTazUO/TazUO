@@ -60,6 +60,7 @@ public static class EmbeddedFontNames
     public const string KINGTHINGS_EXETER = "Kingthings Exeter";
     public const string LEAGUE_SPARTAN_BOLD = "LeagueSpartan-Bold";
     public const string UO_UNICODE = "uo-unicode-1";
+    public const string NOTO_SANS_CJK_SC = "NotoSansCJK-SC";
 
     /// <summary>
     ///     The names of all embedded fonts
@@ -89,6 +90,13 @@ public class TrueTypeLoader
     /// This can be used to render a font list without loading the fonts into memory
     /// </summary>
     private HashSet<string> _availableSystemFontFamilyNames = [];
+
+    /// <summary>
+    ///     Bytes of any CJK fallback fonts (embedded + user) collected during load.
+    ///     Appended to every non-CJK FontSystem so Latin fonts transparently render
+    ///     Chinese/Japanese/Korean glyphs via FontStashSharp's glyph fallback chain.
+    /// </summary>
+    private readonly List<byte[]> _cjkFallbackBytes = [];
 
     private TrueTypeLoader()
     {
@@ -121,12 +129,19 @@ public class TrueTypeLoader
 
         foreach (string ttf in Directory.GetFiles(fontPath, "*.ttf"))
         {
-            try 
+            try
             {
+                byte[] fontBytes = File.ReadAllBytes(ttf);
                 var fontSystem = new FontSystem(_fontSysSettings);
-                fontSystem.AddFont(File.ReadAllBytes(ttf));
+                fontSystem.AddFont(fontBytes);
 
-                _fonts[Path.GetFileNameWithoutExtension(ttf)] = fontSystem;
+                string fontName = Path.GetFileNameWithoutExtension(ttf);
+                _fonts[fontName] = fontSystem;
+
+                // Collect CJK fonts as fallback candidates so they can be appended
+                // to every non-CJK FontSystem later (glyph fallback chain).
+                if (IsCjkFontName(fontName))
+                    _cjkFallbackBytes.Add(fontBytes);
             }
             catch (Exception e)
             {
@@ -134,6 +149,39 @@ public class TrueTypeLoader
             }
         }
     }
+
+    /// <summary>
+    ///     Heuristic: does the font name suggest it carries CJK glyphs?
+    ///     Used to decide which fonts should act as fallbacks for Latin fonts.
+    /// </summary>
+    private static bool IsCjkFontName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return false;
+
+        ReadOnlySpan<char> n = name.AsSpan();
+
+        // Explicit allow-list of embedded CJK fonts.
+        if (n.SequenceEqual(EmbeddedFontNames.NOTO_SANS_CJK_SC.AsSpan()))
+            return true;
+
+        // Common substrings for CJK font files dropped by users.
+        foreach (string token in s_cjkNameTokens)
+        {
+            if (n.IndexOf(token.AsSpan(), StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static readonly string[] s_cjkNameTokens =
+    {
+        "CJK", "NotoSansSC", "NotoSansTC", "NotoSerifCJK", "SourceHan",
+        "msyh", "simsun", "simhei", "simkai", "simfang", "deng",
+        "yahei", "pingfang", "hiragino", "meiryo", "malgun", "gulim",
+        "wqy", "wenquanyi"
+    };
 
     /// <summary>
     ///     Greedily attempts to load all available system fonts to determine which ones can be processed
@@ -346,6 +394,47 @@ public class TrueTypeLoader
                 var fontSystem = new FontSystem(settings);
                 fontSystem.AddFont(fileBytes);
                 _fonts[fName] = fontSystem;
+
+                // Collect embedded CJK fonts as fallback candidates.
+                if (IsCjkFontName(fName))
+                    _cjkFallbackBytes.Add(fileBytes);
+            }
+        }
+
+        // After every font is loaded, append all collected CJK fonts as a glyph
+        // fallback chain to every NON-CJK FontSystem. This lets the Latin UI fonts
+        // (Roboto, ibm-plex, uo-unicode-1, ...) transparently render Chinese glyphs,
+        // which is what makes the localized UI work out-of-the-box.
+        ApplyCjkFallbackToAllFonts();
+    }
+
+    /// <summary>
+    ///     Appends every collected CJK font to every non-CJK FontSystem in <see cref="_fonts"/>.
+    ///     FontStashSharp resolves missing glyphs by walking the FontSystem's font stack,
+    ///     so a Latin font with a CJK fallback renders both scripts correctly.
+    /// </summary>
+    private void ApplyCjkFallbackToAllFonts()
+    {
+        if (_cjkFallbackBytes.Count == 0)
+            return;
+
+        foreach (KeyValuePair<string, FontSystem> kv in _fonts)
+        {
+            // Don't add CJK as a fallback to itself.
+            if (IsCjkFontName(kv.Key))
+                continue;
+
+            FontSystem fs = kv.Value;
+            foreach (byte[] cjk in _cjkFallbackBytes)
+            {
+                try
+                {
+                    fs.AddFont(cjk);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn($"Failed to register CJK fallback for '{kv.Key}': {e.Message}");
+                }
             }
         }
     }

@@ -96,22 +96,22 @@ namespace ClassicUO.Game.Managers
             OrganizerConfig config = FindConfig(nameOrIndex);
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Organizer '{nameOrIndex}' not found.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_not_found_fmt", new[] { nameOrIndex }), Constants.HUE_ERROR);
                 return;
             }
 
-            GameActions.Print(World.Instance, $"Target the source container for organizer '{config.Name}'.");
+            GameActions.Print(World.Instance, TazLang.Get("manager_organizer_target_source_fmt", new[] { config.Name }));
             World.Instance.TargetManager.SetTargeting((o) =>
             {
                 if (o is Item item && item.ItemData.IsContainer)
                 {
                     config.SourceContSerial = item.Serial;
                     Save();
-                    GameActions.Print(World.Instance, $"Source container for organizer '{config.Name}' set.", Constants.HUE_SUCCESS);
+                    GameActions.Print(World.Instance, TazLang.Get("manager_organizer_source_set_fmt", new[] { config.Name }), Constants.HUE_SUCCESS);
                 }
                 else
                 {
-                    GameActions.Print(World.Instance, "That doesn't appear to be a valid container.", Constants.HUE_ERROR);
+                    GameActions.Print(World.Instance, TazLang.Get("manager_organizer_invalid_container", "That doesn't appear to be a valid container."), Constants.HUE_ERROR);
                 }
             });
         }
@@ -143,7 +143,7 @@ namespace ClassicUO.Game.Managers
 
             var dupedConfig = new OrganizerConfig
             {
-                Name = GetUniqueName(config.Name + " Copy"),
+                Name = GetUniqueName(config.Name + TazLang.Get("manager_organizer_copy_suffix", " Copy")),
                 SourceContSerial = config.SourceContSerial,
                 DestContSerial = config.DestContSerial,
                 Enabled = false,
@@ -165,7 +165,10 @@ namespace ClassicUO.Game.Managers
             string name = baseName;
             int i = 2;
             while (OrganizerConfigs.Any(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase)))
-                name = $"{baseName} ({i++})";
+            {
+                name = TazLang.Get("manager_organizer_unique_name_fmt", new[] { baseName, i.ToString() });
+                i++;
+            }
             return name;
         }
 
@@ -178,7 +181,7 @@ namespace ClassicUO.Game.Managers
             OrganizerConfig config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (config == null) return;
             int index = OrganizerConfigs.IndexOf(config);
-            var macro = new Macro($"Organizer: {config.Name}", SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"organize {index}") };
+            var macro = new Macro(TazLang.Get("manager_organizer_macro_name_fmt", new[] { config.Name }), SDL3.SDL.SDL_Keycode.SDLK_UNKNOWN, false, false, false) { Items = new MacroObjectString(MacroType.ClientCommand, MacroSubType.MSC_NONE, $"organize {index}") };
 
             macroManager.PushToBack(macro);
             UIManager.Add(new MacroButtonGump(World.Instance, macro, Mouse.Position.X, Mouse.Position.Y));
@@ -187,17 +190,17 @@ namespace ClassicUO.Game.Managers
         {
             if (OrganizerConfigs.Count == 0)
             {
-                GameActions.Print(World.Instance, "No organizers configured.");
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_none", "No organizers configured."));
                 return;
             }
 
-            GameActions.Print(World.Instance, $"Available organizers ({OrganizerConfigs.Count}):");
+            GameActions.Print(World.Instance, TazLang.Get("manager_organizer_available_fmt", new[] { OrganizerConfigs.Count.ToString() }));
             for (int i = 0; i < OrganizerConfigs.Count; i++)
             {
                 OrganizerConfig config = OrganizerConfigs[i];
-                string status = config.Enabled ? "enabled" : "disabled";
+                string status = config.Enabled ? TazLang.Get("shared_enabled", "enabled") : TazLang.Get("shared_disabled", "disabled");
                 int itemCount = config.ItemConfigs.Count(ic => ic.Enabled);
-                GameActions.Print(World.Instance, $"  {i}: '{config.Name}' ({status}, {itemCount} item types, destination: {config.DestContSerial:X})");
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_list_item_fmt", new[] { i.ToString(), config.Name, status, itemCount.ToString(), config.DestContSerial.ToString("X") }));
             }
         }
 
@@ -206,7 +209,7 @@ namespace ClassicUO.Game.Managers
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_no_backpack", "Cannot find player backpack."));
                 return;
             }
 
@@ -221,7 +224,7 @@ namespace ClassicUO.Game.Managers
 
                 if (sourceCont == null)
                 {
-                    GameActions.Print(World.Instance, $"Cannot find source container for organizer '{config.Name}'.");
+                    GameActions.Print(World.Instance, TazLang.Get("manager_organizer_source_missing_fmt", new[] { config.Name }));
                     continue;
                 }
 
@@ -231,7 +234,7 @@ namespace ClassicUO.Game.Managers
 
                 if (destCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container for organizer '{config.Name}'. Using backpack as default.");
+                    GameActions.Print(TazLang.Get("manager_organizer_dest_default_fmt", new[] { config.Name }));
                     destCont = backpack;
                 }
 
@@ -240,7 +243,7 @@ namespace ClassicUO.Game.Managers
 
             if (totalOrganized == 0)
             {
-                GameActions.Print(World.Instance, "No items were organized.", 33);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_none_organized", "No items were organized."), 33);
             }
         }
 
@@ -249,7 +252,7 @@ namespace ClassicUO.Game.Managers
             OrganizerConfig config = OrganizerConfigs.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (config == null)
             {
-                GameActions.Print(World.Instance, $"Organizer '{name}' not found.", 33);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_not_found_fmt", new[] { name }), 33);
                 return;
             }
 
@@ -260,7 +263,7 @@ namespace ClassicUO.Game.Managers
         {
             if (index < 0 || index >= OrganizerConfigs.Count)
             {
-                GameActions.Print(World.Instance, $"Organizer index {index} is out of range. Available organizers: 0-{OrganizerConfigs.Count - 1}", 33);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_index_range_fmt", new[] { index.ToString(), (OrganizerConfigs.Count - 1).ToString() }), 33);
                 return;
             }
 
@@ -307,7 +310,7 @@ namespace ClassicUO.Game.Managers
                 Item thisDestCont = World.Instance.Items.Get(destinationSerial);
                 if (thisDestCont == null)
                 {
-                    GameActions.Print($"Cannot find destination container {destinationSerial:X}. Using backpack as default.");
+                    GameActions.Print(TazLang.Get("manager_organizer_dest_missing_fmt", new[] { destinationSerial.ToString("X") }));
                     thisDestCont = backpack;
                     if (thisDestCont == null) continue;
                 }
@@ -369,7 +372,7 @@ namespace ClassicUO.Game.Managers
 
             if (totalItemsMoved > 0)
             {
-                GameActions.Print($"Organizing {totalItemsMoved} items from '{config.Name}'...", Constants.HUE_SUCCESS);
+                GameActions.Print(TazLang.Get("manager_organizer_organizing_fmt", new[] { totalItemsMoved.ToString(), config.Name }), Constants.HUE_SUCCESS);
             }
 
             return totalItemsMoved;
@@ -379,14 +382,14 @@ namespace ClassicUO.Game.Managers
         {
             if (!config.Enabled)
             {
-                GameActions.Print(World.Instance, $"Organizer '{config.Name}' is disabled.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_disabled_fmt", new[] { config.Name }), Constants.HUE_ERROR);
                 return;
             }
 
             Item backpack = World.Instance.Player?.Backpack;
             if (backpack == null)
             {
-                GameActions.Print(World.Instance, "Cannot find player backpack.");
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_no_backpack", "Cannot find player backpack."));
                 return;
             }
 
@@ -398,7 +401,7 @@ namespace ClassicUO.Game.Managers
 
             if (sourceCont == null)
             {
-                GameActions.Print($"Cannot find source container for organizer '{config.Name}'.");
+                GameActions.Print(TazLang.Get("manager_organizer_source_missing_fmt", new[] { config.Name }));
                 return;
             }
 
@@ -409,14 +412,14 @@ namespace ClassicUO.Game.Managers
 
             if (destCont == null)
             {
-                GameActions.Print(World.Instance, $"Cannot find destination container for organizer '{config.Name}' (Serial: {config.DestContSerial:X})", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_dest_missing_serial_fmt", new[] { config.Name, config.DestContSerial.ToString("X") }), Constants.HUE_ERROR);
                 return;
             }
 
             int organized = OrganizeItems(sourceCont, destCont, config);
             if (organized == 0)
             {
-                GameActions.Print(World.Instance, $"No items were organized by '{config.Name}'.", Constants.HUE_ERROR);
+                GameActions.Print(World.Instance, TazLang.Get("manager_organizer_none_by_name_fmt", new[] { config.Name }), Constants.HUE_ERROR);
             }
         }
 
@@ -447,7 +450,7 @@ namespace ClassicUO.Game.Managers
                     importedConfig.Name = GetUniqueName(importedConfig.Name);
                     importedConfig.Enabled = false;
                     OrganizerConfigs.Add(importedConfig);
-                    GameActions.Print($"Imported organizer '{importedConfig.Name}' with {importedConfig.ItemConfigs.Count} items!", Constants.HUE_SUCCESS);
+                    GameActions.Print(TazLang.Get("manager_organizer_imported_fmt", new[] { importedConfig.Name, importedConfig.ItemConfigs.Count.ToString() }), Constants.HUE_SUCCESS);
                     return true;
                 }
             }
@@ -468,7 +471,7 @@ namespace ClassicUO.Game.Managers
 
     internal class OrganizerConfig
     {
-        public string Name { get; set; } = "Organizer";
+        public string Name { get; set; } = TazLang.Get("manager_organizer_default_name", "Organizer");
         public uint SourceContSerial { get; set; }
         public uint DestContSerial { get; set; }
         public bool Enabled { get; set; } = true;

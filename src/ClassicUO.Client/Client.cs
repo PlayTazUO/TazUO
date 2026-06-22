@@ -108,6 +108,11 @@ namespace ClassicUO
 
             TazLang.Load(Settings.GlobalSettings.UILanguage);
 
+            // Enable Traditional→Simplified conversion when the UI language is CHS,
+            // so in-game cliloc text (loaded as CHT) is displayed in Simplified Chinese.
+            ClassicUO.Utility.ChineseConverter.Enabled =
+                string.Equals(Settings.GlobalSettings.UILanguage, "CHS", StringComparison.OrdinalIgnoreCase);
+
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");
 
@@ -245,6 +250,6 @@ namespace ClassicUO
             Log.Trace("Exiting game...");
         }
 
-        public static void ShowErrorMessage(string msg) => SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "ERROR", msg, IntPtr.Zero);
+        public static void ShowErrorMessage(string msg) => SDL.SDL_ShowSimpleMessageBox(SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, TazLang.Get("error_dialog_title", "ERROR"), msg, IntPtr.Zero);
     }
 }

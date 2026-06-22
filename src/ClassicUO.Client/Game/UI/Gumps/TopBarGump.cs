@@ -135,7 +135,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                "Assistant",
+                TazLang.Get("gump_topbar_btn_assistant", "Assistant"),
                 1,
                 true,
                 0,
@@ -158,7 +158,7 @@ namespace ClassicUO.Game.UI.Gumps
                 0x098D,
                 0x098D,
                 0x098D,
-                "Legion Script",
+                TazLang.Get("gump_topbar_btn_legion_script", "Legion Script"),
                 1,
                 true,
                 0,
@@ -184,7 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
                     0x098D,
                     0x098D,
                     0x098D,
-                    "More +",
+                    TazLang.Get("gump_topbar_btn_more", "More +"),
                     1,
                     true,
                     0,
@@ -246,14 +246,14 @@ namespace ClassicUO.Game.UI.Gumps
             }));
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(cliloc.GetString(3000134, ResGumps.Help), () => { GameActions.RequestHelp(); }));
 
-            moreMenu.ContextMenu.Add(new ContextMenuItemEntry("Toggle nameplates", () => { World.NameOverHeadManager.ToggleOverheads(); }));
+            moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_toggle_nameplates", "Toggle nameplates"), () => { World.NameOverHeadManager.ToggleOverheads(); }));
 
-            var submenu = new ContextMenuItemEntry("Tools");
-            submenu.Add(new ContextMenuItemEntry("Spell quick cast", () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
-            submenu.Add(new ContextMenuItemEntry("Open boat control", () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
-            submenu.Add(new ContextMenuItemEntry("Nearby loot", () => { UIManager.Add(new NearbyLootGump(World)); }));
-            submenu.Add(new ContextMenuItemEntry("Healthbar Collector", () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
-            submenu.Add(new ContextMenuItemEntry("Retrieve gumps", () =>
+            var submenu = new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_tools", "Tools"));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_spell_quick_cast", "Spell quick cast"), () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_open_boat_control", "Open boat control"), () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_nearby_loot", "Nearby loot"), () => { UIManager.Add(new NearbyLootGump(World)); }));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_healthbar_collector", "Healthbar Collector"), () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_retrieve_gumps", "Retrieve gumps"), () =>
             {
                 for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
                 {
@@ -267,10 +267,10 @@ namespace ClassicUO.Game.UI.Gumps
             }));
             moreMenu.ContextMenu.Add(submenu);
 
-            var devSubmenu = new ContextMenuItemEntry("Developer");
-            devSubmenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+            var devSubmenu = new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_developer", "Developer"));
+            devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_tinkerer", "Tinkerer"), TinkererWindow.Show));
 #if DEBUG
-            devSubmenu.Add(new ContextMenuItemEntry("Profiler", MyraWindows.ProfilerWindow.Show));
+            devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_profiler", "Profiler"), MyraWindows.ProfilerWindow.Show));
 #endif
             moreMenu.ContextMenu.Add(devSubmenu);
 
@@ -287,7 +287,7 @@ namespace ClassicUO.Game.UI.Gumps
                         0x098D,
                         0x098D,
                         0x098D,
-                        "Xml Gumps",
+                        TazLang.Get("gump_topbar_btn_xml_gumps", "Xml Gumps"),
                         1,
                         true,
                         0,
@@ -351,7 +351,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }, false, ProfileManager.CurrentProfile.AutoOpenXmlGumps.Contains(xml)));
             }
 
-            var reload = new ContextMenuItemEntry("Reload", RefreshXmlGumps);
+            var reload = new ContextMenuItemEntry(TazLang.Get("gump_topbar_menu_reload_xml", "Reload"), RefreshXmlGumps);
             XmlGumps.ContextMenu.Add(reload);
         }
 

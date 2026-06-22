@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -24,7 +25,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     private MyraLabel _statusLabel = null!;
     private MyraLabel _countLabel = null!;
 
-    public ScriptConstantsEditorWindow(ScriptFile script) : base(script.FileName + " Constants")
+    public ScriptConstantsEditorWindow(ScriptFile script) : base(TazLang.Get("myra_constants_title_fmt", new[] { script.FileName }))
     {
         _script = script;
         ParseConstants();
@@ -54,7 +55,7 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         var toolbar = new HorizontalStackPanel { Spacing = 4 };
 
-        var filterBox = new MyraInputBox { HintText = "Filter constants...", Width = 175, Text = _filterText };
+        var filterBox = new MyraInputBox { HintText = TazLang.Get("myra_constants_filter_hint", "Filter constants..."), Width = 175, Text = _filterText };
         filterBox.TextChangedByUser += (_, _) =>
         {
             _filterText = filterBox.Text ?? "";
@@ -62,8 +63,8 @@ public class ScriptConstantsEditorWindow : MyraControl
         };
         toolbar.Widgets.Add(filterBox);
 
-        toolbar.Widgets.Add(new MyraButton("Refresh", RefreshConstants));
-        toolbar.Widgets.Add(new MyraButton("Save", SaveConstants));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("shared_refresh", "Refresh"), RefreshConstants));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("shared_save", "Save"), SaveConstants));
 
         _statusLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
         toolbar.Widgets.Add(_statusLabel);
@@ -78,7 +79,9 @@ public class ScriptConstantsEditorWindow : MyraControl
     private void UpdateCountLabel()
     {
         int n = _constants.Count;
-        _countLabel.Text = $"({n} constant{(n != 1 ? "s" : "")})";
+        _countLabel.Text = n == 1
+            ? TazLang.Get("myra_constants_count_one_fmt", new[] { n.ToString() })
+            : TazLang.Get("myra_constants_count_many_fmt", new[] { n.ToString() });
     }
 
     private void ShowStatus(string text, float seconds)
@@ -104,20 +107,20 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (string.IsNullOrWhiteSpace(_filterText))
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants found in script.\nConstants must be top-level assignments with UPPERCASE names.\nExample:  MAX_DISTANCE = 10", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_constants_empty_no_constants", "No constants found in script.\nConstants must be top-level assignments with UPPERCASE names.\nExample:  MAX_DISTANCE = 10"), MyraLabel.TextStyle.P));
             }
             else
             {
-                _constantsPanel.Widgets.Add(new MyraLabel("No constants match the filter.", MyraLabel.TextStyle.P));
+                _constantsPanel.Widgets.Add(new MyraLabel(TazLang.Get("myra_constants_empty_no_match", "No constants match the filter."), MyraLabel.TextStyle.P));
             }
             return;
         }
 
         var grid = new MyraGrid();
         grid.SetupWithHeaders(
-            GridColumnInfo.Auto("Constant"),
-            GridColumnInfo.Fill("Value"),
-            GridColumnInfo.Auto("Line")
+            GridColumnInfo.Auto(TazLang.Get("myra_constants_col_constant", "Constant")),
+            GridColumnInfo.Fill(TazLang.Get("myra_persistentvars_col_value", "Value")),
+            GridColumnInfo.Auto(TazLang.Get("myra_constants_col_line", "Line"))
         );
 
         int row = 1;
@@ -147,11 +150,11 @@ public class ScriptConstantsEditorWindow : MyraControl
         box.TextChangedByUser += (_, _) =>
         {
             constant.EditValue = box.Text ?? "";
-            box.Tooltip = constant.OriginalValue != constant.EditValue ? $"Original: {original}" : null;
+            box.Tooltip = constant.OriginalValue != constant.EditValue ? TazLang.Get("myra_constants_tooltip_original_fmt", new[] { original }) : null;
             CheckForChanges();
         };
         if (constant.OriginalValue != constant.EditValue)
-            box.Tooltip = $"Original: {original}";
+            box.Tooltip = TazLang.Get("myra_constants_tooltip_original_fmt", new[] { original });
         return box;
     }
 
@@ -160,19 +163,19 @@ public class ScriptConstantsEditorWindow : MyraControl
         string original = constant.OriginalValue;
 #pragma warning disable CS0612, CS0618
         var combo = new ComboBox();
-        combo.Items.Add(new ListItem("True"));
-        combo.Items.Add(new ListItem("False"));
+        combo.Items.Add(new ListItem(TazLang.Get("shared_true", "True")));
+        combo.Items.Add(new ListItem(TazLang.Get("shared_false", "False")));
         combo.SelectedIndex = constant.EditValue.Trim().Equals("True", StringComparison.OrdinalIgnoreCase) ? 0 : 1;
         combo.SelectedIndexChanged += (_, _) =>
         {
             if (combo.SelectedIndex == null) return;
             constant.EditValue = combo.SelectedIndex == 0 ? "True" : "False";
-            combo.Tooltip = constant.OriginalValue != constant.EditValue ? $"Original: {original}" : null;
+            combo.Tooltip = constant.OriginalValue != constant.EditValue ? TazLang.Get("myra_constants_tooltip_original_fmt", new[] { original }) : null;
             CheckForChanges();
         };
 #pragma warning restore CS0612, CS0618
         if (constant.OriginalValue != constant.EditValue)
-            combo.Tooltip = $"Original: {original}";
+            combo.Tooltip = TazLang.Get("myra_constants_tooltip_original_fmt", new[] { original });
         return combo;
     }
 
@@ -182,9 +185,9 @@ public class ScriptConstantsEditorWindow : MyraControl
         var row = new HorizontalStackPanel { Spacing = 4 };
         var readonlyBox = new MyraInputBox { Text = constant.EditValue, Enabled = false };
         if (constant.OriginalValue != constant.EditValue)
-            readonlyBox.Tooltip = $"Original: {original}";
+            readonlyBox.Tooltip = TazLang.Get("myra_constants_tooltip_original_fmt", new[] { original });
         row.Widgets.Add(readonlyBox);
-        row.Widgets.Add(new MyraButton("Edit", () => ShowArrayEditor(constant)));
+        row.Widgets.Add(new MyraButton(TazLang.Get("shared_edit", "Edit"), () => ShowArrayEditor(constant)));
         return row;
     }
 
@@ -210,10 +213,10 @@ public class ScriptConstantsEditorWindow : MyraControl
                 {
                     elementsCopy.RemoveAt(idx);
                     BuildElements();
-                }) { Tooltip = "Remove this element" }));
+                }) { Tooltip = TazLang.Get("myra_constants_tooltip_remove_element", "Remove this element") }));
                 elementsPanel.Widgets.Add(eRow);
             }
-            elementsPanel.Widgets.Add(new MyraButton("Add Element", () =>
+            elementsPanel.Widgets.Add(new MyraButton(TazLang.Get("myra_constants_btn_add_element", "Add Element"), () =>
             {
                 elementsCopy.Add("0");
                 BuildElements();
@@ -223,10 +226,10 @@ public class ScriptConstantsEditorWindow : MyraControl
         BuildElements();
 
         var content = new VerticalStackPanel { Spacing = 4 };
-        content.Widgets.Add(new MyraLabel($"Editing: {constant.Name}", MyraLabel.TextStyle.H3));
+        content.Widgets.Add(new MyraLabel(TazLang.Get("myra_constants_dialog_array_editing_fmt", new[] { constant.Name }), MyraLabel.TextStyle.H3));
         content.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = elementsPanel });
 
-        new MyraDialog($"Array Editor: {constant.Name}", content, ok =>
+        new MyraDialog(TazLang.Get("myra_constants_dialog_array_title_fmt", new[] { constant.Name }), content, ok =>
         {
             if (!ok) return;
             constant.EditValue = "[" + string.Join(", ", elementsCopy) + "]";
@@ -239,8 +242,8 @@ public class ScriptConstantsEditorWindow : MyraControl
     {
         _hasUnsavedChanges = _constants.Values.Any(c => c.OriginalValue != c.EditValue);
         if (_hasUnsavedChanges)
-            ShowStatus("• Unsaved changes", 0);
-        else if (_statusLabel.Text == "• Unsaved changes")
+            ShowStatus(TazLang.Get("myra_constants_status_unsaved", "• Unsaved changes"), 0);
+        else if (_statusLabel.Text == TazLang.Get("myra_constants_status_unsaved", "• Unsaved changes"))
             _statusLabel.Visible = false;
     }
 
@@ -253,7 +256,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         _hasUnsavedChanges = false;
         UpdateCountLabel();
         BuildConstantsGrid();
-        ShowStatus("Refreshed from file", 3);
+        ShowStatus(TazLang.Get("myra_constants_status_refreshed", "Refreshed from file"), 3);
     }
 
     private void SaveConstants()
@@ -262,7 +265,7 @@ public class ScriptConstantsEditorWindow : MyraControl
         {
             if (!_hasUnsavedChanges)
             {
-                ShowStatus("No changes to save", 2);
+                ShowStatus(TazLang.Get("myra_constants_status_no_changes", "No changes to save"), 2);
                 return;
             }
 
@@ -284,12 +287,12 @@ public class ScriptConstantsEditorWindow : MyraControl
             }
 
             _hasUnsavedChanges = false;
-            ShowStatus("Saved successfully!", 3);
+            ShowStatus(TazLang.Get("myra_constants_status_saved", "Saved successfully!"), 3);
             BuildConstantsGrid();
         }
         catch (Exception ex)
         {
-            ShowStatus($"Error: {ex.Message}", 5);
+            ShowStatus(TazLang.Get("myra_constants_status_error_fmt", new[] { ex.Message }), 5);
         }
     }
 

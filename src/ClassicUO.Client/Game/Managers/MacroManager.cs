@@ -220,7 +220,7 @@ namespace ClassicUO.Game.Managers
                     if (addedCount > 0)
                     {
                         Save();
-                        GameActions.Print($"Imported {addedCount} macro(s) from clipboard!", Constants.HUE_SUCCESS);
+                        GameActions.Print(TazLang.Get("manager_macro_imported_fmt", new[] { addedCount.ToString() }), Constants.HUE_SUCCESS);
                         return true;
                     }
                 }
@@ -313,7 +313,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    "Use last object",
+                    TazLang.Get("manager_macro_name_use_last_object", "Use last object"),
                     SDL_Keycode.SDLK_F5,
                     false,
                     false,
@@ -328,7 +328,7 @@ namespace ClassicUO.Game.Managers
             (
                 new Macro
                 (
-                    "Last target",
+                    TazLang.Get("manager_macro_name_last_target", "Last target"),
                     SDL_Keycode.SDLK_F6,
                     false,
                     false,
@@ -1300,7 +1300,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        GameActions.Print(_world, "That is not a valid row.", Constants.HUE_ERROR);
+                        GameActions.Print(_world, TazLang.Get("manager_macro_invalid_row", "That is not a valid row."), Constants.HUE_ERROR);
                     }
                     break;
 
@@ -1316,13 +1316,13 @@ namespace ClassicUO.Game.Managers
                 case MacroType.Mount:
                     if (!GameActions.Mount())
                     {
-                        GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
+                        GameActions.Print(_world, TazLang.Get("manager_macro_mount_not_found", "Saved mount not found."), Constants.HUE_ERROR);
                         goto case MacroType.SetMount;
                     }
                     break;
 
                 case MacroType.SetMount:
-                    GameActions.Print(_world, "Target a mount to save it for the Mount macro.", 48);
+                    GameActions.Print(_world, TazLang.Get("manager_macro_target_mount", "Target a mount to save it for the Mount macro."), 48);
                     _world.TargetManager.SetTargeting(CursorTarget.SetMount, 0, TargetType.Neutral);
                     break;
 
@@ -1338,54 +1338,54 @@ namespace ClassicUO.Game.Managers
                         // Player is not mounted, try to mount
                         if (!GameActions.Mount())
                         {
-                            GameActions.Print(_world, "Saved mount not found.", Constants.HUE_ERROR);
+                            GameActions.Print(_world, TazLang.Get("manager_macro_mount_not_found", "Saved mount not found."), Constants.HUE_ERROR);
                             goto case MacroType.SetMount;
                         }
                     }
                     break;
 
                 case MacroType.AddFriend:
-                    GameActions.Print(_world, "Target a player to add as a friend.", 62);
+                    GameActions.Print(_world, TazLang.Get("manager_macro_target_friend", "Target a player to add as a friend."), 62);
                     _world.TargetManager.SetTargeting(targeted =>
                     {
                         if (targeted != null && targeted is Mobile mobile && mobile.Serial != _world.Player.Serial)
                         {
                             if (FriendsListManager.Instance.AddFriend(mobile))
                             {
-                                GameActions.Print(_world, $"Added {mobile.Name} to friends list", 62);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_added_fmt", new[] { mobile.Name }), 62);
                             }
                             else
                             {
-                                GameActions.Print(_world, $"Could not add {mobile.Name} - already in friends list", Constants.HUE_ERROR);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_add_failed_fmt", new[] { mobile.Name }), Constants.HUE_ERROR);
                             }
                         }
                         else
                         {
                             if (targeted is Entity entity && entity.Serial == _world.Player.Serial)
                             {
-                                GameActions.Print(_world, "You cannot add yourself as a friend", Constants.HUE_ERROR);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_self_error", "You cannot add yourself as a friend"), Constants.HUE_ERROR);
                             }
                             else
                             {
-                                GameActions.Print(_world, "Invalid target - must be a player", Constants.HUE_ERROR);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_invalid_target", "Invalid target - must be a player"), Constants.HUE_ERROR);
                             }
                         }
                     });
                     break;
 
                 case MacroType.RemoveFriend:
-                    GameActions.Print(_world, "Target a friend to remove from your friend list.", Constants.HUE_ERROR);
+                    GameActions.Print(_world, TazLang.Get("manager_macro_target_remove_friend", "Target a friend to remove from your friend list."), Constants.HUE_ERROR);
                     _world.TargetManager.SetTargeting(targeted =>
                     {
                         if (targeted != null && targeted is Mobile mobile)
                         {
                             if (FriendsListManager.Instance.RemoveFriend(mobile))
                             {
-                                GameActions.Print(_world, $"Removed {mobile.Name} from friends list", Constants.HUE_ERROR);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_removed_fmt", new[] { mobile.Name }), Constants.HUE_ERROR);
                             }
                             else
                             {
-                                GameActions.Print(_world, $"Could not remove {mobile.Name} - not in friends list", Constants.HUE_ERROR);
+                                GameActions.Print(_world, TazLang.Get("manager_macro_friend_remove_failed_fmt", new[] { mobile.Name }), Constants.HUE_ERROR);
                             }
                         }
                     });
@@ -1852,12 +1852,12 @@ namespace ClassicUO.Game.Managers
                     if (ProfileManager.CurrentProfile.UseNewTargetSystem)
                     {
                         ProfileManager.CurrentProfile.UseNewTargetSystem = false;
-                        GameActions.Print(_world, "Target System: Off");
+                        GameActions.Print(_world, TazLang.Get("manager_macro_target_system_off", "Target System: Off"));
                     }
                     else
                     {
                         ProfileManager.CurrentProfile.UseNewTargetSystem = true;
-                        GameActions.Print(_world, "Target System: On");
+                        GameActions.Print(_world, TazLang.Get("manager_macro_target_system_on", "Target System: On"));
                     }
 
                     break;
@@ -2472,7 +2472,7 @@ namespace ClassicUO.Game.Managers
 
                 case MacroType.ToggleHotkeys:
                     ProfileManager.CurrentProfile.DisableHotkeys = !ProfileManager.CurrentProfile.DisableHotkeys;
-                    GameActions.Print($"Hotkeys {(ProfileManager.CurrentProfile.DisableHotkeys ? "disabled" : "enabled")}.");
+                    GameActions.Print(TazLang.Get("manager_macro_hotkeys_fmt", new[] { ProfileManager.CurrentProfile.DisableHotkeys ? TazLang.Get("shared_disabled", "disabled") : TazLang.Get("shared_enabled", "enabled") }));
                     break;
 
 
@@ -2488,7 +2488,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.SetLastTarget:
-                    GameActions.Print("Who would you like to set as last target?");
+                    GameActions.Print(TazLang.Get("manager_macro_set_last_target", "Who would you like to set as last target?"));
                     _world.TargetManager.SetTargeting((o) =>
                     {
                         if (o is Entity e)
@@ -2503,19 +2503,19 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ToggleBandageAgent:
                     bool newStatus = !ProfileManager.CurrentProfile.EnableBandageAgent;
                     ProfileManager.CurrentProfile.EnableBandageAgent = newStatus;
-                    GameActions.Print($"Bandage agent {(newStatus ? "enabled" : "disabled")}.", newStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("manager_macro_bandage_agent_fmt", new[] { newStatus ? TazLang.Get("shared_enabled", "enabled") : TazLang.Get("shared_disabled", "disabled") }), newStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
 
                 case MacroType.ToggleBuyAgent:
                     bool newBuyStatus = !ProfileManager.CurrentProfile.BuyAgentEnabled;
                     ProfileManager.CurrentProfile.BuyAgentEnabled = newBuyStatus;
-                    GameActions.Print($"Buy agent {(newBuyStatus ? "enabled" : "disabled")}.", newBuyStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("manager_macro_buy_agent_fmt", new[] { newBuyStatus ? TazLang.Get("shared_enabled", "enabled") : TazLang.Get("shared_disabled", "disabled") }), newBuyStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
 
                 case MacroType.ToggleSellAgent:
                     bool newSellStatus = !ProfileManager.CurrentProfile.SellAgentEnabled;
                     ProfileManager.CurrentProfile.SellAgentEnabled = newSellStatus;
-                    GameActions.Print($"Sell agent {(newSellStatus ? "enabled" : "disabled")}.", newSellStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
+                    GameActions.Print(TazLang.Get("manager_macro_sell_agent_fmt", new[] { newSellStatus ? TazLang.Get("shared_enabled", "enabled") : TazLang.Get("shared_disabled", "disabled") }), newSellStatus ? Constants.HUE_SUCCESS : Constants.HUE_ERROR);
                     break;
 
                 case MacroType.SetOrganizerSource:
@@ -2525,7 +2525,7 @@ namespace ClassicUO.Game.Managers
                     }
                     else
                     {
-                        GameActions.Print(_world, "Set the organizer name (or index) in the macro to target a source container for it.", Constants.HUE_ERROR);
+                        GameActions.Print(_world, TazLang.Get("manager_macro_organizer_source", "Set the organizer name (or index) in the macro to target a source container for it."), Constants.HUE_ERROR);
                     }
                     break;
             }

@@ -120,8 +120,9 @@ public class ApiItem : ApiEntity
     }
 
     /// <summary>
-    /// Gets the item name and properties (tooltip text).
-    /// This returns the name and properties in a single string. You can split it by newline if you want to separate them.
+    /// Gets the item name and properties (tooltip text) in English.
+    /// This returns the name and properties in a single string, regardless of the client's UI language.
+    /// You can split it by newline if you want to separate them.
     /// </summary>
     /// <param name="wait">True or false to wait for name and props</param>
     /// <param name="timeout">Timeout in seconds</param>
@@ -140,7 +141,7 @@ public class ApiItem : ApiEntity
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            if (Client.Game.UO.World.OPL.TryGetNameAndDataEnglish(Serial, out string n, out string d))
             {
                 return n + "\n" + d;
             }
