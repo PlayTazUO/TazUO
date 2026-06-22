@@ -85,12 +85,15 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.GameplayTab.GameplayLabel, GameplayTab.GetContent());
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.Kw.Interface, InterfaceTab.GetContent());
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.LabelChatAndText, ChatTab.GetContent());
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.VideoTab.Label, VideoTab.GetContent());
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.SoundTab.Label, SoundsTab.GetContent());
-        AddOptionSource(Language.Instance.GetModernOptionsGumpLanguage.MiscTab.Label, MiscTab.GetContent());
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+
+        AddOptionSource(lang.GameplayTab.GameplayLabel, GameplayTab.GetContent());
+        AddOptionSource(lang.Kw.Interface, InterfaceTab.GetContent());
+        AddOptionSource(lang.LabelChatAndText, ChatTab.GetContent());
+        AddOptionSource(lang.VideoTab.Label, VideoTab.GetContent());
+        AddOptionSource(lang.SoundTab.Label, SoundsTab.GetContent());
+        AddOptionSource(lang.MiscTab.Label, MiscTab.GetContent());
+        AddOptionSource(lang.Kw.Profile, ProfileTab.GetContent());
     }
 
     private void AddOptionSource(string category, IOptionSource source)

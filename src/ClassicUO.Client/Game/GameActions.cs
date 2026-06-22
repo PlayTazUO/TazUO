@@ -204,7 +204,7 @@ internal static class GameActions
     /// </summary>
     /// <param name="world">The world instance the gump belongs to</param>
     /// <param name="page">The specific page to open</param>
-    private static void ShowLegacyOptionsGump(World world, int page = 0)
+    public static void ShowLegacyOptionsGump(World world, int page = 0)
     {
         ModernOptionsGump opt = UIManager.GetGump<ModernOptionsGump>();
 
