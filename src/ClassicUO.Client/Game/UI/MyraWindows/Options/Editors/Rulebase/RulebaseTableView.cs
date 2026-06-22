@@ -11,6 +11,12 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
+/// <summary>
+/// Renders a list of <typeparamref name="TRule"/> rows as a styled grid: header, striped/selected
+/// row backgrounds, and per-column cells produced by <see cref="RulebaseColumn{TRule}.CellFactory"/>.
+/// Cell widgets are cached per rule/column so re-rendering on data changes is cheap.
+/// </summary>
+/// <typeparam name="TRule">The rule type the table displays.</typeparam>
 public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
 {
     private readonly MyraGrid _grid = new() { RowSpacing = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -22,12 +28,23 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     private readonly List<MyraLabel> _headerLabels = [];
     private bool _lastShowHeader;
 
+    /// <summary>Raised when <see cref="SelectedIndex"/> changes via <see cref="SetSelectedIndex"/></summary>
     public event EventHandler? SelectedIndexChanged;
 
+    /// <summary>The columns to render. Mutating this list does not auto-refresh; call <see cref="Refresh"/></summary>
     public IList<RulebaseColumn<TRule>> Columns { get; }
+
+    /// <summary>Visual styling applied to the table; changes auto-trigger a refresh</summary>
     public RulebaseStyleOptions StyleOptions { get; }
+
+    /// <summary>Index of the currently selected row, or null if none is selected</summary>
     public int? SelectedIndex { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RulebaseTableView{TRule}"/> class.
+    /// </summary>
+    /// <param name="columns">The columns to render.</param>
+    /// <param name="styleOptions">Visual styling for the table.</param>
     public RulebaseTableView(IList<RulebaseColumn<TRule>> columns, RulebaseStyleOptions styleOptions)
     {
         Columns = columns;
@@ -38,6 +55,10 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         Widgets.Add(_grid);
     }
 
+    /// <summary>
+    /// Sets the selected row index and re-renders to reflect the new selection highlight.
+    /// </summary>
+    /// <param name="index">The row index to select, or null to clear selection.</param>
     public void SetSelectedIndex(int? index)
     {
         if (SelectedIndex == index)
@@ -48,6 +69,10 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         SelectedIndexChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Replaces the displayed rules and drops cached cells for any rules no longer present.
+    /// </summary>
+    /// <param name="rules">The new set of rules to display.</param>
     public void SetRules(IEnumerable<TRule> rules)
     {
         _rules.Clear();
@@ -62,6 +87,11 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         Refresh();
     }
 
+    /// <summary>
+    /// Rebuilds the underlying grid's structure and cell contents to match the current rules,
+    /// columns, and style options. Reuses cached cell widgets where possible.
+    /// </summary>
+    /// <param name="force">When true, skips change-detection and rebuilds the grid structure unconditionally.</param>
     public void Refresh(bool force = false)
     {
         _grid.Border = StyleOptions.OuterBorder.Brush;
@@ -218,6 +248,9 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             _grid.Widgets.Remove(w);
     }
 
+    /// <summary>Builds a styled header label widget</summary>
+    /// <param name="text">The header text to display</param>
+    /// <param name="withRightBorder">Whether to draw a vertical separator on the cell's right edge</param>
     private MyraLabel CreateHeaderCell(string text, bool withRightBorder) =>
         new(text, MyraLabel.TextStyle.H5)
         {
@@ -228,6 +261,9 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             BorderThickness = withRightBorder ? new Thickness(0, 0, 1, 0) : new Thickness(0)
         };
 
+    /// <summary>Applies cell padding/alignment and the right-hand column border, if any</summary>
+    /// <param name="content">The cell widget to style</param>
+    /// <param name="withRightBorder">Whether to draw a vertical separator on the cell's right edge</param>
     private void UpdateCell(Widget content, bool withRightBorder)
     {
         content.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -243,6 +279,8 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         content.BorderThickness = thickness;
     }
 
+    /// <summary>Determines a row's background color from selection state and striping settings</summary>
+    /// <param name="rowIndex">The rule index of the row</param>
     private Color GetRowColor(int rowIndex)
     {
         if (StyleOptions.HighlightSelectedRow && SelectedIndex == rowIndex)
@@ -256,9 +294,15 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             : StyleOptions.OddRowBackground;
     }
 
+    /// <summary>Filters <see cref="Columns"/> down to those currently visible</summary>
     private IEnumerable<RulebaseColumn<TRule>> GetVisibleColumns() =>
         Columns.Where(column => column.Visible);
 
+    /// <summary>
+    /// Resolves the rule index of the row located at the given screen position, accounting for the header row.
+    /// </summary>
+    /// <param name="globalPos">The position to test, in screen coordinates.</param>
+    /// <returns>The rule index hit, or null if the position is outside any row.</returns>
     public int? GetRowIndexAt(Point globalPos)
     {
         Widget? hit = _grid.HitTest(globalPos);

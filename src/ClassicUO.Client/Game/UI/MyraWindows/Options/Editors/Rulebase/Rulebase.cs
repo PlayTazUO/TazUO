@@ -20,24 +20,42 @@ using Container = Myra.Graphics2D.UI.Container;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
+/// <summary>
+/// A self-contained CRUD widget for managing an ordered list of rules: renders the rules as a
+/// <see cref="RulebaseTableView{TRule}"/>, provides a toolbar (add/edit/delete/reorder), and
+/// optionally swaps in an <see cref="IRuleConfigurator{TRule}"/> widget in-place for create/edit flows.
+/// </summary>
+/// <typeparam name="TRule">The rule type managed by this rulebase. Must be a reference type with a parameterless constructor.</typeparam>
 public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : class, IRule, new()
 {
     #region Events
 
+    /// <inheritdoc/>
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>Raised when a rule is created, updated, or deleted (either via a configurator or, with no configurator, the default add/delete flow)</summary>
     public event EventHandler<RuleCrudEventArgs<TRule>>? RuleCrud;
+
+    /// <summary>Raised when a rule's position changes via the move up/down/top/bottom toolbar buttons</summary>
     public event EventHandler<RulebaseOrderChangedEventArgs<TRule>>? Reordered;
 
     #endregion
 
     #region Accessors
 
+    /// <summary>The rules currently managed by this rulebase, in display order</summary>
     public ObservableCollection<TRule> Rules { get; } = [];
+
+    /// <summary>The columns rendered by the underlying table view</summary>
     public ObservableCollection<RulebaseColumn<TRule>> Columns { get; } = [];
+
+    /// <summary>Visual styling applied to the underlying table view</summary>
     public RulebaseStyleOptions TableStyleOptions { get; } = new();
 
+    /// <summary>The label displayed above the toolbar; set its <c>Text</c> to title the rulebase</summary>
     public Label TitleLabel => _titleLabel;
 
+    /// <summary>Whether the rulebase is currently showing a configurator widget instead of the table</summary>
     public bool IsInEditor
     {
         get => field;
@@ -48,6 +66,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         }
     }
 
+    /// <summary>Index of the currently selected rule, or null if none is selected</summary>
     public int? SelectedIndex
     {
         get => field;
@@ -84,6 +103,14 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #endregion
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Rulebase{TRule}"/> class.
+    /// </summary>
+    /// <param name="ruleConfigurator">
+    /// Optional widget provider for create/edit flows. When null, "Add" creates a default
+    /// <typeparamref name="TRule"/> instance directly and the "Edit" button is hidden, leaving
+    /// inline editing to the column cell factories.
+    /// </param>
     public Rulebase(IRuleConfigurator<TRule>? ruleConfigurator = null)
     {
         _ruleConfigurator = ruleConfigurator;
@@ -102,6 +129,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Public Methods
 
+    /// <summary>Forces the underlying table view to re-render</summary>
+    /// <param name="force">When true, skips change-detection and rebuilds the grid structure unconditionally</param>
     public void RefreshTable(bool force = false) => _tableView.Refresh(force);
 
     #endregion
@@ -110,6 +139,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Overrides
 
+    /// <summary>Resubscribes desktop touch handling whenever the control is attached to or detached from a desktop</summary>
     protected override void OnPlacedChanged()
     {
         base.OnPlacedChanged();
@@ -118,9 +148,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #endregion
 
+    /// <summary>Raises <see cref="PropertyChanged"/> for the given property</summary>
+    /// <param name="propertyName">The property that changed; defaults to the calling member's name</param>
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
+    /// <summary>Updates a backing field and raises <see cref="PropertyChanged"/> if the value changed</summary>
+    /// <param name="field">Reference to the backing field</param>
+    /// <param name="value">The new value</param>
+    /// <param name="propertyName">The property being set; defaults to the calling member's name</param>
+    /// <returns>True if the value changed; false if it was equal to the current value</returns>
     protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))
@@ -135,6 +172,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Private Methos
 
+    /// <summary>Creates the toolbar buttons (add/edit/delete/reorder) and sets their initial enabled state</summary>
     private void InitializeToolbar()
     {
         SpriteFontBase smallNoto = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 28);
@@ -167,6 +205,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         UpdateToolbarState();
     }
 
+    /// <summary>Subscribes or unsubscribes from collection, table, configurator, and desktop touch events</summary>
+    /// <param name="subscribe">True to subscribe; false to unsubscribe everything</param>
     private void ManageSubscriptions(bool subscribe)
     {
         Rules.CollectionChanged -= OnRuleCollectionChanged;
@@ -197,6 +237,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         _subscribedDesktop.TouchDown += OnDesktopTouchDown;
     }
 
+    /// <summary>Checks whether a touch position landed on an open context menu belonging to a combo box nested in the table</summary>
+    /// <param name="touchPos">The touch position to test, in screen coordinates</param>
     private bool IsTouchDownInChildContextMenu(Point touchPos)
     {
         if (Desktop?.ContextMenu == null)
@@ -232,6 +274,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return comboContextChild != null && Desktop!.ContextMenu.HitTest(touchPos) != null;
     }
 
+    /// <summary>Applies the container's own margin, padding, background, and border styling</summary>
     private void ConfigureContainer()
     {
         Margin = new Thickness(4);
@@ -243,6 +286,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         VerticalAlignment = VerticalAlignment.Stretch;
     }
 
+    /// <summary>Assembles the title label, toolbar, and content panel into the widget's root layout</summary>
     private StackPanel CreateComponent()
     {
         StackPanel primaryControl = OptionTabCommons.StyledStackPanel(
@@ -259,6 +303,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return primaryControl;
     }
 
+    /// <summary>Creates the panel that hosts the table view and, when editing, the configurator widget</summary>
     private Panel CreateContentPanel()
     {
         var panel = new Panel
@@ -272,6 +317,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return panel;
     }
 
+    /// <summary>Appends a rule, assigns it the next order value, selects it, and raises <see cref="RuleCrud"/></summary>
+    /// <param name="rule">The rule to add</param>
     private void AddRule(TRule rule)
     {
         rule.Order = GetNextOrder();
@@ -280,9 +327,12 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Create));
     }
 
+    /// <summary>Computes the order value for a newly added rule (one past the current max)</summary>
     private uint GetNextOrder() =>
         Rules.Count == 0 ? 0 : Rules.Max(rule => rule.Order) + 1;
 
+    /// <summary>Swaps in the configurator widget for creating or editing a rule</summary>
+    /// <param name="isEdit">True to edit the currently selected rule; false to create a new instance</param>
     private void OpenRuleEditor(bool isEdit)
     {
         if (_ruleConfigurator == null)
@@ -296,6 +346,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         SetCurrentContent(_ruleConfigurator.GetConfiguratorWidget(rule, isEdit));
     }
 
+    /// <summary>Removes the currently selected rule, if deletable, and raises <see cref="RuleCrud"/></summary>
     private void DeleteRule()
     {
         TRule? rule = GetSelectedRule();
@@ -310,6 +361,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         RuleCrud?.Invoke(this, new RuleCrudEventArgs<TRule>(rule, RuleCrudEventType.Delete));
     }
 
+    /// <summary>Resolves the rule at <see cref="SelectedIndex"/>, or null if there is no valid selection</summary>
     private TRule? GetSelectedRule()
     {
         if (!SelectedIndex.HasValue)
@@ -319,6 +371,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         return index >= 0 && index < Rules.Count ? Rules[index] : null;
     }
 
+    /// <summary>Moves the selected rule by a relative offset (negative moves it up, positive moves it down)</summary>
+    /// <param name="offset">The number of positions to move the selected rule by</param>
     private void MoveSelectedBy(int offset)
     {
         if (!SelectedIndex.HasValue)
@@ -327,10 +381,14 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         MoveSelectedTo(SelectedIndex.Value + offset);
     }
 
+    /// <summary>Moves the selected rule to the first position</summary>
     private void MoveSelectedToTop() => MoveSelectedTo(0);
 
+    /// <summary>Moves the selected rule to the last position</summary>
     private void MoveSelectedToBottom() => MoveSelectedTo(Rules.Count - 1);
 
+    /// <summary>Moves the selected rule to an absolute index, recalculates order, and raises <see cref="Reordered"/></summary>
+    /// <param name="newIndex">The destination index</param>
     private void MoveSelectedTo(int newIndex)
     {
         if (!SelectedIndex.HasValue || newIndex < 0 || newIndex >= Rules.Count)
@@ -347,6 +405,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         Reordered?.Invoke(this, new RulebaseOrderChangedEventArgs<TRule>(Rules[newIndex], oldIndex, newIndex));
     }
 
+    /// <summary>Re-stamps each rule's <see cref="IRule.Order"/> to match its current index and refreshes the table</summary>
     private void RecalculateOrder()
     {
         for (int i = 0; i < Rules.Count; i++)
@@ -360,6 +419,7 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         RefreshTable(true);
     }
 
+    /// <summary>Re-evaluates enabled/visible state of every toolbar button based on selection and editor state</summary>
     private void UpdateToolbarState()
     {
         TRule? selectedRule = GetSelectedRule();
@@ -384,6 +444,8 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         _moveBottomButton.Enabled = hasSelection && SelectedIndex < Rules.Count - 1;
     }
 
+    /// <summary>Swaps the content panel's widget, fading the transition if content is already present</summary>
+    /// <param name="content">The widget to display (the table view or a configurator widget)</param>
     private void SetCurrentContent(Widget content)
     {
         content.VerticalAlignment = VerticalAlignment.Top;
@@ -398,12 +460,14 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
 
     #region Event Handlers
 
+    /// <summary>Pushes the updated <see cref="Rules"/> collection into the table view and refreshes toolbar state</summary>
     private void OnRuleCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         _tableView.SetRules(Rules);
         UpdateToolbarState();
     }
 
+    /// <summary>Handles a create/update/delete result from the configurator, closing the editor and forwarding <see cref="RuleCrud"/></summary>
     private void OnConfiguratorCrud(object? sender, RuleCrudEventArgs<TRule> args)
     {
         IsInEditor = false;
@@ -416,12 +480,16 @@ public class Rulebase<TRule> : Container, INotifyPropertyChanged where TRule : c
         RuleCrud?.Invoke(this, args);
     }
 
+    /// <summary>Refreshes the table view when the column set changes</summary>
     private void OnColumnsChanged(object? sender, NotifyCollectionChangedEventArgs e) => _tableView.Refresh();
 
+    /// <summary>Mirrors the table view's selection into <see cref="SelectedIndex"/></summary>
     private void OnTableSelectedIndexChanged(object? sender, EventArgs e) => SelectedIndex = _tableView.SelectedIndex;
 
+    /// <summary>Returns to the table view when the configurator's editor UI is dismissed</summary>
     private void OnEditorClosed(object? sender, EventArgs e) => IsInEditor = false;
 
+    /// <summary>Updates selection based on where the desktop was touched, ignoring touches on the toolbar or an open context menu</summary>
     private void OnDesktopTouchDown(object? sender, EventArgs e)
     {
         if (Desktop?.TouchPosition == null || IsInEditor)
