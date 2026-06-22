@@ -162,20 +162,23 @@ internal static class GameActions
     }
 
     /// <summary>
-    ///
+    /// Closes a currently opened settings window.
+    /// Note that this method attempts to close only the setting window currently defined as 'in-use' by the <see cref="Profile.UseNewOptionsWindow"/> property
     /// </summary>
     /// <returns>False if no settings are open</returns>
-    internal static bool CloseSettings()
+    internal static bool CloseSettings() =>
+        ProfileManager.CurrentProfile?.UseNewOptionsWindow == false
+            ? CloseSingletonGump<ModernOptionsGump>()
+            : CloseSingletonGump<NewOptionsWindow>();
+
+    private static bool CloseSingletonGump<TGump>() where TGump : class, IGui
     {
-        Gump g = UIManager.GetGump<ModernOptionsGump>();
+        TGump g = UIManager.GetGump<TGump>();
+        if (g == null)
+            return false;
 
-        if (g != null)
-        {
-            g.Dispose();
-            return true;
-        }
-
-        return false;
+        g.Dispose();
+        return true;
     }
 
     internal static void OpenSettings(World world, int page = 0)

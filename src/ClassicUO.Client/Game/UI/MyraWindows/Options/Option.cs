@@ -37,7 +37,7 @@ internal static class Option
                 label,
                 backingProperty.Get().ToInt(),
                 Enum.GetNames<TEnum>(),
-                v => backingProperty.Set((TEnum)(object)v), // This is some ugly casting right here...
+                v => backingProperty.Set((TEnum)Enum.ToObject(typeof(TEnum), v)),
                 tooltip
             ),
             search ?? new SearchMetadata(label)
@@ -56,7 +56,7 @@ internal static class Option
                 label,
                 backingProperty.Get().ToInt(),
                 LocalizeEnumWithFallback<TEnum>(optionLocalizationPrefix),
-                v => backingProperty.Set((TEnum)(object)v), // This is some ugly casting right here...
+                v => backingProperty.Set((TEnum)Enum.ToObject(typeof(TEnum), v)),
                 tooltip
             ),
             search ?? new SearchMetadata(label)

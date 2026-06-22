@@ -31,8 +31,11 @@ public static class CountersTab
                             else
                                 UIManager.Add(counterGump = new CounterBarGump(World.Instance, 200, 200));
                         }
-                        else
-                            counterGump?.IsEnabled = counterGump.IsVisible = false;
+                        else if (counterGump != null)
+                        {
+                            counterGump.IsEnabled = false;
+                            counterGump.IsVisible = false;
+                        }
 
                         counterGump?.SetLayout(
                             profile.CounterBarCellSize,

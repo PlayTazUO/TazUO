@@ -77,7 +77,7 @@ public static class ArtBrowserTabContent
             // Preview, scaled to the requested zoom while preserving aspect ratio.
             if (hasArt)
             {
-                var preview = new MyraArtTexture(id, (ushort)zoomSize);
+                var preview = new MyraArtTexture(id, hue: 0, maxSize: zoomSize);
                 int natW = art.UV.Width;
                 int natH = art.UV.Height;
                 if (natW > 0 && natH > 0)
@@ -250,7 +250,7 @@ public static class ArtBrowserTabContent
         if (id == selectedGraphic)
             cell.Border = SelectedBorder;
 
-        var art = new MyraArtTexture((uint)id, CELL - 4)
+        var art = new MyraArtTexture((uint)id, maxSize: CELL - 4)
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
