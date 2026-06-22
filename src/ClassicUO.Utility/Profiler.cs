@@ -169,6 +169,7 @@ namespace ClassicUO.Utility
             public static ProfileData Empty = new ProfileData(null, 0d);
             private uint m_LastIndex;
             private readonly double[] m_LastTimes = new double[ProfileTimeCount];
+            private double m_PeakTime;
 
             public ProfileData(string[] context, double time)
             {
@@ -178,6 +179,7 @@ namespace ClassicUO.Utility
             }
 
             public double LastTime => m_LastTimes[m_LastIndex % ProfileTimeCount];
+            public double PeakTime => m_PeakTime;
 
             public double TimeInContext
             {
@@ -232,6 +234,8 @@ namespace ClassicUO.Utility
 
                 m_LastTimes[m_LastIndex % ProfileTimeCount] = time;
                 m_LastIndex++;
+                if (time > m_PeakTime)
+                    m_PeakTime = time;
             }
 
             public override string ToString()
