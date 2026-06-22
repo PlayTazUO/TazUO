@@ -676,7 +676,6 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            Profiler.EnterContext("Get Anim Frames");
             Span<SpriteInfo> frames = Client.Game.UO.Animations.GetAnimationFrames(
                 id,
                 animGroup,
@@ -686,7 +685,6 @@ namespace ClassicUO.Game.GameObjects
                 isEquip,
                 false
             );
-            Profiler.ExitContext("Get Anim Frames");
 
             if (hueFromFile == 0)
             {

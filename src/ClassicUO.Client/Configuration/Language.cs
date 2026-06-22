@@ -1229,6 +1229,8 @@ namespace ClassicUO.Configuration
             public string GridContainersDefaultToOldStyleView { get; set; } = "Open new containers in the original view";
             public string GridContainerScale { get; set; } = "Grid container scale";
             public string AlsoScaleItems { get; set; } = "Also scale items";
+            public string HighlightLowContrastItems { get; set; } = "Highlight low contrast items";
+            public string LowContrastHighlightStyle { get; set; } = "Low contrast highlight style";
             public string GridItemBorderOpacity { get; set; } = "Grid item border opacity";
             public string BorderColor { get; set; } = "Border color";
             public string ContainerOpacity { get; set; } = "Container opacity";

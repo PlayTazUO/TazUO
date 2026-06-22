@@ -31,6 +31,8 @@ All notable changes to TazUO will be recorded here.
 * Create Tinkerer window with cliloc viewer - [P.R 549](https://github.com/PlayTazUO/TazUO/pull/549) ([bittiez](https://github.com/bittiez))
 * Made pathfinding limits user-configurable (max nodes, search timeout, and retry attempts) in the Pathfinding options tab - [P.R 551](https://github.com/PlayTazUO/TazUO/pull/551) ([bittiez](https://github.com/bittiez))
 * Added customizable nameplates with presets, sizing, health bar, background, font, and overlap options - [P.R 558](https://github.com/PlayTazUO/TazUO/pull/558) ([Nesci28](https://github.com/Nesci28))
+* Add marker search to web map to hide non-matching markers - [P.R 565](https://github.com/PlayTazUO/TazUO/pull/565) ([bittiez](https://github.com/bittiez))
+* Add toggle buy and sell agent macros - [P.R 566](https://github.com/PlayTazUO/TazUO/pull/566) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))

@@ -166,16 +166,12 @@ namespace ClassicUO
             int packetsProcessed = 0;
             while (packetsProcessed < MAX_PACKETS_PER_FRAME)
             {
-                Profiler.EnterContext("DEQUEUE");
                 bool hasPacket = AsyncNetClient.Socket.TryDequeuePacket(out byte[] message);
-                Profiler.ExitContext("DEQUEUE");
 
                 if (!hasPacket)
                     break;
 
-                Profiler.EnterContext("PARSE");
                 int c = PacketParser.Instance.ParsePackets(Client.Game.UO.World, message);
-                Profiler.ExitContext("PARSE");
 
                 AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
                 packetsProcessed++;
@@ -459,8 +455,6 @@ namespace ClassicUO
 
         protected override void Update(GameTime gameTime)
         {
-            Profiler.ExitContext("OutOfContext");
-
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -575,7 +569,9 @@ namespace ClassicUO
         {
             Profiler.EndFrame();
 
+            Profiler.EnterContext("PreDraw");
             UIManager.PreDraw();
+            Profiler.ExitContext("PreDraw");
 
             Profiler.BeginFrame();
 
@@ -609,38 +605,29 @@ namespace ClassicUO
                 GraphicsDevice.Clear(Color.Black);
             }
 
+            Profiler.EnterContext("Draw");
+
             _uoSpriteBatch.Begin();
             _uoSpriteBatch.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
             _uoSpriteBatch.End();
-            Profiler.ExitContext("OutOfContext");
 
-            Profiler.EnterContext("Draw-Scene");
             if (drawScene)
                 Scene.Draw(_uoSpriteBatch);
-            Profiler.ExitContext("Draw-Scene");
 
-            Profiler.EnterContext("Draw-UI");
             UIManager.Draw(_uoSpriteBatch);
-            Profiler.ExitContext("Draw-UI");
 
-            Profiler.EnterContext("Game Cursor");
             SelectedObject.HealthbarObject = null;
             SelectedObject.SelectedContainer = null;
 
             _uoSpriteBatch.Begin();
             UO.GameCursor?.Draw(_uoSpriteBatch);
             _uoSpriteBatch.End();
-            Profiler.ExitContext("Game Cursor");
 
             // Render ImGui and plugins to the render target (for consistent scaling)
             if (useRenderTarget)
             {
                 if(_pluginsInitialized)
-                {
-                    Profiler.EnterContext("Plugins");
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
-                    Profiler.ExitContext("Plugins");
-                }
 
                 // Set back to back buffer and composite the render target
                 GraphicsDevice.SetRenderTarget(null);
@@ -666,7 +653,7 @@ namespace ClassicUO
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
             }
 
-            Profiler.EnterContext("OutOfContext");
+            Profiler.ExitContext("Draw");
             base.Draw(gameTime);
         }
 

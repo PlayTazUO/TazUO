@@ -1207,6 +1207,12 @@ namespace ClassicUO.Game.UI.Gumps
             Style7
         }
 
+        public enum LowContrastHighlightStyle
+        {
+            Border,
+            Spotlight
+        }
+
         public class GridItem : Control
         {
             private bool _mousePressedWhenEntered;
@@ -1310,6 +1316,7 @@ namespace ClassicUO.Game.UI.Gumps
                     CanMove = true;
                     _hasItem = false;
                     _shouldDraw = !_gridContainer._isCorpse;
+                    _hasLastLowContrastCacheKey = false;
                     return;
                 }
 
@@ -1321,6 +1328,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _bounds = text.UV;
                 _rect = Client.Game.UO.Arts.GetRealArtBounds(_item.DisplayedGraphic);
                 _shouldDraw = _texture != null;
+                _hasLastLowContrastCacheKey = false;
 
                 LocalSerial = item.Serial;
                 int itemAmt = _item.ItemData.IsStackable ? _item.Amount : 1;
@@ -1566,10 +1574,41 @@ namespace ClassicUO.Game.UI.Gumps
             private Rectangle _bounds;
             private readonly Profile _profile = ProfileManager.CurrentProfile;
             private readonly Texture2D _whiteTexture = SolidColorTextureCache.GetTexture(Color.White);
+            private static readonly Dictionary<LowContrastCacheKey, bool> _lowContrastCache = new();
+            private static readonly Queue<LowContrastCacheKey> _lowContrastCacheOrder = new();
+            private static readonly Vector3 _lowContrastOutlineHue = ShaderHueTranslator.GetOutlineHueVector(1f);
+            private static readonly Vector3 _whiteOutlineColor = new(1f, 1f, 1f);
+            private static readonly Vector3 _lowContrastSpotlightOuterHue = ShaderHueTranslator.GetHueVector(0, false, 0.16f);
+            private static readonly Vector3 _lowContrastSpotlightInnerHue = ShaderHueTranslator.GetHueVector(0, false, 0.28f);
             private bool _hasItem;
             private static readonly Vector3 _highLightHue = ShaderHueTranslator.GetHueVector(0x34, false, 1);
             private static Vector3 _borderHueVec;
             private bool _shouldDraw;
+            private LowContrastCacheKey _lastLowContrastCacheKey;
+            private bool _lastLowContrastResult;
+            private bool _hasLastLowContrastCacheKey;
+            private const ushort PARTIAL_HUE_FLAG = 0x8000;
+            private const ushort SPECTRAL_HUE_FLAG = 0x4000;
+            private const int LOW_CONTRAST_OUTLINE_PADDING = 1;
+            private const int LOW_CONTRAST_CACHE_MAX_ENTRIES = 8192;
+            private const double LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD = 1.45d;
+            private const double LOW_CONTRAST_PIXEL_RATIO_THRESHOLD = 1.35d;
+            private const double LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD = 0.75d;
+            private static readonly double[] _srgbToLinearLut = CreateSrgbToLinearLut();
+
+            private readonly record struct LowContrastCacheKey(
+                ushort Graphic,
+                ushort Hue,
+                bool PartialHue,
+                bool SpectralHue,
+                ushort BackgroundHue,
+                byte BackgroundAlpha
+            );
+
+            private readonly record struct LowContrastSample(
+                double AverageLuminance,
+                double LowContrastPixelFraction
+            );
 
             /// <summary>
             /// Calculates the centered dimension and offset for rendering an item within a grid cell
@@ -1639,6 +1678,337 @@ namespace ClassicUO.Game.UI.Gumps
 
                 // Bottom border
                 batcher.Draw(borderTexture, new Rectangle(bx, by + innerHeight - bsize, innerWidth, bsize), borderHueVec);
+            }
+
+            private LowContrastCacheKey CreateLowContrastCacheKey()
+            {
+                ushort backgroundHue = _profile.Grid_UseContainerHue && _container != null
+                    ? _container.Hue
+                    : _profile.AltGridContainerBackgroundHue;
+                ushort itemHue = _item?.Hue ?? 0;
+                bool partialHue = _item?.ItemData.IsPartialHue ?? false;
+                bool spectralHue = NormalizeItemHueForRendering(ref itemHue, ref partialHue);
+
+                return new LowContrastCacheKey(
+                    _item?.DisplayedGraphic ?? 0,
+                    itemHue,
+                    partialHue,
+                    spectralHue,
+                    backgroundHue,
+                    _profile.ContainerOpacity
+                );
+            }
+
+            private static bool NormalizeItemHueForRendering(ref ushort hue, ref bool partialHue)
+            {
+                if ((hue & PARTIAL_HUE_FLAG) != 0)
+                {
+                    partialHue = true;
+                    hue &= 0x7FFF;
+                }
+
+                if (hue == 0)
+                    partialHue = false;
+
+                if ((hue & SPECTRAL_HUE_FLAG) == 0)
+                    return false;
+
+                hue = 0;
+                partialHue = false;
+                return true;
+            }
+
+            private bool IsLowContrastItem()
+            {
+                if (!_hasItem || _item == null || _texture == null || _texture.IsDisposed || _rect.Width <= 0 || _rect.Height <= 0)
+                    return false;
+
+                LowContrastCacheKey key = CreateLowContrastCacheKey();
+
+                if (_hasLastLowContrastCacheKey && key.Equals(_lastLowContrastCacheKey))
+                    return _lastLowContrastResult;
+
+                if (!_lowContrastCache.TryGetValue(key, out bool result))
+                {
+                    double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
+                    ArtInfo artInfo = Client.Game.UO.Arts.GetArtPixels(key.Graphic);
+                    LowContrastSample sample = GetItemContrastSample(
+                        artInfo.Pixels,
+                        artInfo.Width,
+                        artInfo.Height,
+                        _rect,
+                        key.Hue,
+                        key.PartialHue,
+                        key.SpectralHue,
+                        backgroundLuminance
+                    );
+
+                    double contrastRatio = GetContrastRatio(sample.AverageLuminance, backgroundLuminance);
+
+                    result = contrastRatio < LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD
+                        && sample.LowContrastPixelFraction >= LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD;
+                    AddLowContrastCacheResult(key, result);
+                }
+
+                _lastLowContrastCacheKey = key;
+                _lastLowContrastResult = result;
+                _hasLastLowContrastCacheKey = true;
+
+                return result;
+            }
+
+            private static void AddLowContrastCacheResult(LowContrastCacheKey key, bool result)
+            {
+                if (_lowContrastCache.Count >= LOW_CONTRAST_CACHE_MAX_ENTRIES)
+                {
+                    while (_lowContrastCache.Count >= LOW_CONTRAST_CACHE_MAX_ENTRIES && _lowContrastCacheOrder.Count > 0)
+                        _lowContrastCache.Remove(_lowContrastCacheOrder.Dequeue());
+
+                    if (_lowContrastCache.Count >= LOW_CONTRAST_CACHE_MAX_ENTRIES)
+                    {
+                        _lowContrastCache.Clear();
+                        _lowContrastCacheOrder.Clear();
+                    }
+                }
+
+                _lowContrastCache[key] = result;
+                _lowContrastCacheOrder.Enqueue(key);
+            }
+
+            private static LowContrastSample GetItemContrastSample(
+                ReadOnlySpan<uint> pixels,
+                int pixelWidth,
+                int pixelHeight,
+                Rectangle sourceRectangle,
+                ushort hue,
+                bool partialHue,
+                bool spectralHue,
+                double backgroundLuminance
+            )
+            {
+                if (pixels.IsEmpty || pixelWidth <= 0 || pixelHeight <= 0 || pixels.Length < pixelWidth * pixelHeight)
+                    return new LowContrastSample(1d, 0d);
+
+                sourceRectangle = ClampRectangleToPixelBounds(sourceRectangle, pixelWidth, pixelHeight);
+
+                if (sourceRectangle.Width <= 0 || sourceRectangle.Height <= 0)
+                    return new LowContrastSample(1d, 0d);
+
+                Span<uint> hueColors = stackalloc uint[32];
+                bool hasHueColors = TryFillHueColors(hue, hueColors);
+                double total = 0d;
+                int count = 0;
+                int lowContrastPixels = 0;
+
+                for (int y = sourceRectangle.Top; y < sourceRectangle.Bottom; y++)
+                {
+                    int rowOffset = y * pixelWidth;
+
+                    for (int x = sourceRectangle.Left; x < sourceRectangle.Right; x++)
+                    {
+                        uint pixel = pixels[rowOffset + x];
+
+                        if ((pixel & 0xFF000000u) == 0)
+                            continue;
+
+                        uint rendered = ApplyItemHue(pixel, hue, partialHue, spectralHue, hasHueColors, hueColors);
+                        double luminance = GetRelativeLuminance(rendered);
+
+                        total += luminance;
+                        if (GetContrastRatio(luminance, backgroundLuminance) < LOW_CONTRAST_PIXEL_RATIO_THRESHOLD)
+                            lowContrastPixels++;
+
+                        count++;
+                    }
+                }
+
+                return count == 0
+                    ? new LowContrastSample(1d, 0d)
+                    : new LowContrastSample(total / count, lowContrastPixels / (double)count);
+            }
+
+            private static Rectangle ClampRectangleToPixelBounds(Rectangle rectangle, int width, int height)
+            {
+                int left = Math.Clamp(rectangle.Left, 0, width);
+                int top = Math.Clamp(rectangle.Top, 0, height);
+                int right = Math.Clamp(rectangle.Right, left, width);
+                int bottom = Math.Clamp(rectangle.Bottom, top, height);
+
+                return new Rectangle(left, top, right - left, bottom - top);
+            }
+
+            private static bool TryFillHueColors(ushort hue, Span<uint> hueColors)
+            {
+                if (hue == 0 || hue >= Client.Game.UO.FileManager.Hues.HuesCount)
+                    return false;
+
+                hue -= 1;
+                int group = hue >> 3;
+                int entry = hue % 8;
+
+                for (int i = 0; i < hueColors.Length; i++)
+                    hueColors[i] = HuesHelper.Color16To32(Client.Game.UO.FileManager.Hues.HuesRange[group].Entries[entry].ColorTable[i]);
+
+                return true;
+            }
+
+            private static uint ApplyItemHue(uint color, ushort hue, bool partialHue, bool spectralHue, bool hasHueColors, ReadOnlySpan<uint> hueColors)
+            {
+                if (spectralHue)
+                    return color & 0xFF000000u;
+
+                if (hue == 0)
+                    return color;
+
+                if (!hasHueColors)
+                {
+                    ushort color16 = HuesHelper.Color32To16(color);
+                    return partialHue
+                        ? HuesHelper.Color16To32(color16)
+                        : HuesHelper.Color16To32(hue);
+                }
+
+                int red5 = (int)(color & 0xFF) >> 3;
+                int green5 = (int)((color >> 8) & 0xFF) >> 3;
+                int blue5 = (int)((color >> 16) & 0xFF) >> 3;
+
+                if (partialHue && (red5 != green5 || red5 != blue5))
+                    return HuesHelper.Color16To32(HuesHelper.Color32To16(color));
+
+                return hueColors[blue5];
+            }
+
+            private static double GetBackgroundLuminance(ushort backgroundHue, byte backgroundAlpha)
+            {
+                Color background = Color.Black;
+
+                if (backgroundHue != 0)
+                    background = ColorFromUOPacked(Client.Game.UO.FileManager.Hues.GetHueColorRgba8888(0, backgroundHue));
+
+                double alpha = Math.Clamp(backgroundAlpha / 100d, 0d, 1d);
+                return GetRelativeLuminance(background.R, background.G, background.B) * alpha;
+            }
+
+            private static Color ColorFromUOPacked(uint packed) =>
+                new(
+                    (byte)(packed & 0xFF),
+                    (byte)((packed >> 8) & 0xFF),
+                    (byte)((packed >> 16) & 0xFF),
+                    (byte)((packed >> 24) & 0xFF)
+                );
+
+            private static double GetRelativeLuminance(uint packed) =>
+                GetRelativeLuminance(
+                    (byte)(packed & 0xFF),
+                    (byte)((packed >> 8) & 0xFF),
+                    (byte)((packed >> 16) & 0xFF)
+                );
+
+            private static double GetRelativeLuminance(byte r, byte g, byte b) =>
+                0.2126d * _srgbToLinearLut[r] + 0.7152d * _srgbToLinearLut[g] + 0.0722d * _srgbToLinearLut[b];
+
+            private static double GetContrastRatio(double luminanceA, double luminanceB)
+            {
+                double lighter = Math.Max(luminanceA, luminanceB);
+                double darker = Math.Min(luminanceA, luminanceB);
+
+                return (lighter + 0.05d) / (darker + 0.05d);
+            }
+
+            private static double ToLinear(byte value)
+            {
+                double channel = value / 255d;
+                return channel <= 0.03928d
+                    ? channel / 12.92d
+                    : Math.Pow((channel + 0.055d) / 1.055d, 2.4d);
+            }
+
+            private static double[] CreateSrgbToLinearLut()
+            {
+                double[] lut = new double[256];
+
+                for (int i = 0; i < lut.Length; i++)
+                    lut[i] = ToLinear((byte)i);
+
+                return lut;
+            }
+
+            private void DrawLowContrastSpriteBorder(UltimaBatcher2D batcher, Rectangle destination, Rectangle source)
+            {
+                if (source.Width <= 0 || source.Height <= 0 || destination.Width <= 0 || destination.Height <= 0)
+                    return;
+
+                Rectangle outlineSource = InflateRectangleWithinBounds(
+                    source,
+                    LOW_CONTRAST_OUTLINE_PADDING,
+                    0,
+                    LOW_CONTRAST_OUTLINE_PADDING,
+                    LOW_CONTRAST_OUTLINE_PADDING,
+                    _bounds
+                );
+                Vector2 scale = new(
+                    destination.Width / (float)source.Width,
+                    destination.Height / (float)source.Height
+                );
+                Vector2 position = new(
+                    destination.X - ((source.X - outlineSource.X) * scale.X),
+                    destination.Y - ((source.Y - outlineSource.Y) * scale.Y)
+                );
+
+                batcher.DrawOutlined(
+                    _texture,
+                    position,
+                    outlineSource,
+                    _lowContrastOutlineHue,
+                    _whiteOutlineColor,
+                    0f,
+                    Vector2.Zero,
+                    scale,
+                    SpriteEffects.None,
+                    0f
+                );
+            }
+
+            private void DrawLowContrastSpotlight(UltimaBatcher2D batcher, Rectangle destination, Rectangle cellBounds)
+            {
+                DrawSpotlightRectangle(batcher, InflateRectangle(destination, 4), cellBounds, _lowContrastSpotlightOuterHue);
+                DrawSpotlightRectangle(batcher, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
+            }
+
+            private void DrawSpotlightRectangle(UltimaBatcher2D batcher, Rectangle rectangle, Rectangle cellBounds, Vector3 hueVector)
+            {
+                int left = Math.Max(rectangle.Left, cellBounds.Left);
+                int top = Math.Max(rectangle.Top, cellBounds.Top);
+                int right = Math.Min(rectangle.Right, cellBounds.Right);
+                int bottom = Math.Min(rectangle.Bottom, cellBounds.Bottom);
+
+                if (right <= left || bottom <= top)
+                    return;
+
+                batcher.Draw(_whiteTexture, new Rectangle(left, top, right - left, bottom - top), hueVector);
+            }
+
+            private static Rectangle InflateRectangle(Rectangle rectangle, int padding) =>
+                new(
+                    rectangle.X - padding,
+                    rectangle.Y - padding,
+                    rectangle.Width + (padding * 2),
+                    rectangle.Height + (padding * 2)
+                );
+
+            private static Rectangle InflateRectangleWithinBounds(Rectangle rectangle, int leftPadding, int topPadding, int rightPadding, int bottomPadding, Rectangle bounds)
+            {
+                leftPadding = Math.Max(0, Math.Min(leftPadding, rectangle.Left - bounds.Left));
+                topPadding = Math.Max(0, Math.Min(topPadding, rectangle.Top - bounds.Top));
+                rightPadding = Math.Max(0, Math.Min(rightPadding, bounds.Right - rectangle.Right));
+                bottomPadding = Math.Max(0, Math.Min(bottomPadding, bounds.Bottom - rectangle.Bottom));
+
+                return new Rectangle(
+                    rectangle.X - leftPadding,
+                    rectangle.Y - topPadding,
+                    rectangle.Width + leftPadding + rightPadding,
+                    rectangle.Height + topPadding + bottomPadding
+                );
             }
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -1759,25 +2129,29 @@ namespace ClassicUO.Game.UI.Gumps
                 // Calculate centered Y dimension
                 (originalSize.Y, point.Y) = CalculateCenteredDimension(_rect.Height, Height, scaleItems, scale);
 
-                batcher.Draw
-                (
-                    _texture,
-                    new Rectangle
-                    (
-                        x + point.X,
-                        y + point.Y,
-                        originalSize.X,
-                        originalSize.Y
-                    ),
-                    new Rectangle
-                    (
-                        _bounds.X + _rect.X,
-                        _bounds.Y + _rect.Y,
-                        _rect.Width,
-                        _rect.Height
-                    ),
-                    hueVector
+                Rectangle destination = new(
+                    x + point.X,
+                    y + point.Y,
+                    originalSize.X,
+                    originalSize.Y
                 );
+
+                Rectangle source = new(
+                    _bounds.X + _rect.X,
+                    _bounds.Y + _rect.Y,
+                    _rect.Width,
+                    _rect.Height
+                );
+
+                if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
+                {
+                    if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
+                        DrawLowContrastSpotlight(batcher, destination, new Rectangle(x, y, Width, Height));
+                    else
+                        DrawLowContrastSpriteBorder(batcher, destination, source);
+                }
+
+                batcher.Draw(_texture, destination, source, hueVector);
 
                 _count?.Draw(batcher, x + _count.X, y + _count.Y);
 

@@ -269,6 +269,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             var devSubmenu = new ContextMenuItemEntry("Developer");
             devSubmenu.Add(new ContextMenuItemEntry("Tinkerer", TinkererWindow.Show));
+#if DEBUG
+            devSubmenu.Add(new ContextMenuItemEntry("Profiler", MyraWindows.ProfilerWindow.Show));
+#endif
             moreMenu.ContextMenu.Add(devSubmenu);
 
             startX += largeWidth + 1;
