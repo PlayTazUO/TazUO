@@ -99,149 +99,199 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
 
         RulebaseColumn<TRule>[] visibleColumns = GetVisibleColumns().ToArray();
 
-        // Short circuit the logic with 'force' to avoid comparing the sequences in case force re-render is issued
-        bool columnsChanged = force || !visibleColumns.SequenceEqual(_lastVisibleColumns);
-        bool headerVisibilityChanged = force || _lastShowHeader != StyleOptions.ShowHeader;
-
-        if (columnsChanged || headerVisibilityChanged)
-        {
-            _grid.Widgets.Clear();
-            _grid.ColumnsProportions.Clear();
-            _grid.RowsProportions.Clear();
-            _rowBackgrounds.Clear();
-            _headerLabels.Clear();
-            _headerBackground = null;
-
-            _lastVisibleColumns = visibleColumns;
-            _lastShowHeader = StyleOptions.ShowHeader;
-
-            foreach (RulebaseColumn<TRule> column in visibleColumns)
-                _grid.ColumnsProportions.Add(column.Proportion);
-        }
+        RebuildGridStructureIfNeeded(visibleColumns, force);
 
         if (visibleColumns.Length == 0)
             return;
 
         HashSet<Widget> activeWidgets = [];
-        int currentRow = 0;
+        int currentRow = RenderHeader(visibleColumns, activeWidgets);
+        RenderRows(visibleColumns, currentRow, activeWidgets);
+        RemoveInactiveWidgets(activeWidgets);
+    }
 
-        if (StyleOptions.ShowHeader)
-        {
-            if (_grid.RowsProportions.Count == 0)
-                _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+    /// <summary>Clears and re-seeds the grid's column/row proportions when columns or header visibility change</summary>
+    /// <param name="visibleColumns">The columns currently visible</param>
+    /// <param name="force">When true, skips change-detection and rebuilds unconditionally</param>
+    private void RebuildGridStructureIfNeeded(RulebaseColumn<TRule>[] visibleColumns, bool force)
+    {
+        // Short circuit the logic with 'force' to avoid comparing the sequences in case force re-render is issued
+        bool columnsChanged = force || !visibleColumns.SequenceEqual(_lastVisibleColumns);
+        bool headerVisibilityChanged = force || _lastShowHeader != StyleOptions.ShowHeader;
 
-            _headerBackground ??= new Panel
-            {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch
-            };
-            _headerBackground.Background = new SolidBrush(StyleOptions.HeaderBackground);
+        if (!columnsChanged && !headerVisibilityChanged)
+            return;
 
-            if (!_grid.Widgets.Contains(_headerBackground))
-                _grid.AddWidget(_headerBackground, currentRow, 0, colspan: visibleColumns.Length);
-            else
-            {
-                Grid.SetRow(_headerBackground, currentRow);
-                Grid.SetColumnSpan(_headerBackground, visibleColumns.Length);
-            }
+        _grid.Widgets.Clear();
+        _grid.ColumnsProportions.Clear();
+        _grid.RowsProportions.Clear();
+        _rowBackgrounds.Clear();
+        _headerLabels.Clear();
+        _headerBackground = null;
 
-            activeWidgets.Add(_headerBackground);
+        _lastVisibleColumns = visibleColumns;
+        _lastShowHeader = StyleOptions.ShowHeader;
 
-            for (int i = 0; i < visibleColumns.Length; i++)
-            {
-                if (i >= _headerLabels.Count)
-                {
-                    _headerLabels.Add(
-                        CreateHeaderCell(visibleColumns[i].Header, i < visibleColumns.Length - 1)
-                    );
-                }
+        foreach (RulebaseColumn<TRule> column in visibleColumns)
+            _grid.ColumnsProportions.Add(column.Proportion);
+    }
 
-                MyraLabel headerLabel = _headerLabels[i];
-                headerLabel.Text = visibleColumns[i].Header;
-                headerLabel.Border = i < visibleColumns.Length - 1 ? StyleOptions.HeaderVerticalBorder : null;
-                headerLabel.BorderThickness = i < visibleColumns.Length - 1 ? new Thickness(0, 0, 1, 0) : new Thickness(0);
+    /// <summary>Renders the header row, if enabled, reusing cached label widgets</summary>
+    /// <param name="visibleColumns">The columns currently visible</param>
+    /// <param name="activeWidgets">Set to record widgets still in use this refresh</param>
+    /// <returns>The grid row index at which rule rows should start</returns>
+    private int RenderHeader(RulebaseColumn<TRule>[] visibleColumns, HashSet<Widget> activeWidgets)
+    {
+        const int currentRow = 0;
 
-                if (!_grid.Widgets.Contains(headerLabel))
-                    _grid.AddWidget(headerLabel, currentRow, i);
-                else
-                {
-                    Grid.SetRow(headerLabel, currentRow);
-                    Grid.SetColumn(headerLabel, i);
-                }
+        if (!StyleOptions.ShowHeader)
+            return currentRow;
 
-                activeWidgets.Add(headerLabel);
-            }
-
-            currentRow++;
-        }
-
-        while (_grid.RowsProportions.Count < currentRow + _rules.Count)
+        if (_grid.RowsProportions.Count == 0)
             _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-        while (_grid.RowsProportions.Count > currentRow + _rules.Count)
+        _headerBackground ??= new Panel
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            VerticalAlignment = VerticalAlignment.Stretch
+        };
+        _headerBackground.Background = new SolidBrush(StyleOptions.HeaderBackground);
+
+        if (!_grid.Widgets.Contains(_headerBackground))
+            _grid.AddWidget(_headerBackground, currentRow, 0, colspan: visibleColumns.Length);
+        else
+        {
+            Grid.SetRow(_headerBackground, currentRow);
+            Grid.SetColumnSpan(_headerBackground, visibleColumns.Length);
+        }
+
+        activeWidgets.Add(_headerBackground);
+
+        for (int i = 0; i < visibleColumns.Length; i++)
+        {
+            if (i >= _headerLabels.Count)
+            {
+                _headerLabels.Add(
+                    CreateHeaderCell(visibleColumns[i].Header, i < visibleColumns.Length - 1)
+                );
+            }
+
+            MyraLabel headerLabel = _headerLabels[i];
+            headerLabel.Text = visibleColumns[i].Header;
+            headerLabel.Border = i < visibleColumns.Length - 1 ? StyleOptions.HeaderVerticalBorder : null;
+            headerLabel.BorderThickness = i < visibleColumns.Length - 1 ? new Thickness(0, 0, 1, 0) : new Thickness(0);
+
+            if (!_grid.Widgets.Contains(headerLabel))
+                _grid.AddWidget(headerLabel, currentRow, i);
+            else
+            {
+                Grid.SetRow(headerLabel, currentRow);
+                Grid.SetColumn(headerLabel, i);
+            }
+
+            activeWidgets.Add(headerLabel);
+        }
+
+        return currentRow + 1;
+    }
+
+    /// <summary>Syncs row proportions to the current rule count and renders each rule's background and cells</summary>
+    /// <param name="visibleColumns">The columns currently visible</param>
+    /// <param name="startRow">The grid row index of the first rule row</param>
+    /// <param name="activeWidgets">Set to record widgets still in use this refresh</param>
+    private void RenderRows(RulebaseColumn<TRule>[] visibleColumns, int startRow, HashSet<Widget> activeWidgets)
+    {
+        while (_grid.RowsProportions.Count < startRow + _rules.Count)
+            _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
+
+        while (_grid.RowsProportions.Count > startRow + _rules.Count)
             _grid.RowsProportions.RemoveAt(_grid.RowsProportions.Count - 1);
 
         for (int i = 0; i < _rules.Count; i++)
         {
-            int gridRow = currentRow + i;
+            int gridRow = startRow + i;
             TRule rule = _rules[i];
 
-            if (i >= _rowBackgrounds.Count)
-            {
-                _rowBackgrounds.Add(
-                    new Panel
-                    {
-                        HorizontalAlignment = HorizontalAlignment.Stretch,
-                        VerticalAlignment = VerticalAlignment.Stretch
-                    }
-                );
-            }
+            RenderRowBackground(i, gridRow, visibleColumns.Length, activeWidgets);
+            RenderRowCells(rule, gridRow, visibleColumns, activeWidgets);
+        }
+    }
 
-            Panel bg = _rowBackgrounds[i];
-            bg.Background = new SolidBrush(GetRowColor(i));
-            bg.Border = i + 1 < _rules.Count ? StyleOptions.RowBorders?.Brush : null;
-            bg.BorderThickness = new Thickness(0, 0, 0, StyleOptions.RowBorders?.Thickness ?? 0);
-
-            if (!_grid.Widgets.Contains(bg))
-                _grid.AddWidget(bg, gridRow, 0, colspan: visibleColumns.Length);
-            else
-            {
-                Grid.SetRow(bg, gridRow);
-                Grid.SetColumnSpan(bg, visibleColumns.Length);
-            }
-
-            activeWidgets.Add(bg);
-
-            if (!_cellCache.TryGetValue(rule, out Dictionary<RulebaseColumn<TRule>, Widget>? ruleCells))
-            {
-                ruleCells = [];
-                _cellCache[rule] = ruleCells;
-            }
-
-            for (int j = 0; j < visibleColumns.Length; j++)
-            {
-                RulebaseColumn<TRule> col = visibleColumns[j];
-
-                if (!ruleCells.TryGetValue(col, out Widget? cell))
+    /// <summary>Creates or reuses a row's background panel and positions it in the grid</summary>
+    /// <param name="rowIndex">The rule index of the row</param>
+    /// <param name="gridRow">The grid row index to place the background at</param>
+    /// <param name="columnCount">The number of visible columns, used for the colspan</param>
+    /// <param name="activeWidgets">Set to record widgets still in use this refresh</param>
+    private void RenderRowBackground(int rowIndex, int gridRow, int columnCount, HashSet<Widget> activeWidgets)
+    {
+        if (rowIndex >= _rowBackgrounds.Count)
+        {
+            _rowBackgrounds.Add(
+                new Panel
                 {
-                    cell = col.CellFactory(rule);
-                    ruleCells[col] = cell;
+                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                    VerticalAlignment = VerticalAlignment.Stretch
                 }
-
-                UpdateCell(cell, j < visibleColumns.Length - 1);
-
-                if (!_grid.Widgets.Contains(cell))
-                    _grid.AddWidget(cell, gridRow, j);
-                else
-                {
-                    Grid.SetRow(cell, gridRow);
-                    Grid.SetColumn(cell, j);
-                }
-
-                activeWidgets.Add(cell);
-            }
+            );
         }
 
+        Panel bg = _rowBackgrounds[rowIndex];
+        bg.Background = new SolidBrush(GetRowColor(rowIndex));
+        bg.Border = rowIndex + 1 < _rules.Count ? StyleOptions.RowBorders?.Brush : null;
+        bg.BorderThickness = new Thickness(0, 0, 0, StyleOptions.RowBorders?.Thickness ?? 0);
+
+        if (!_grid.Widgets.Contains(bg))
+            _grid.AddWidget(bg, gridRow, 0, colspan: columnCount);
+        else
+        {
+            Grid.SetRow(bg, gridRow);
+            Grid.SetColumnSpan(bg, columnCount);
+        }
+
+        activeWidgets.Add(bg);
+    }
+
+    /// <summary>Creates or reuses a rule's cached cell widgets for each visible column and positions them in the grid</summary>
+    /// <param name="rule">The rule whose cells are being rendered</param>
+    /// <param name="gridRow">The grid row index to place the cells at</param>
+    /// <param name="visibleColumns">The columns currently visible</param>
+    /// <param name="activeWidgets">Set to record widgets still in use this refresh</param>
+    private void RenderRowCells(TRule rule, int gridRow, RulebaseColumn<TRule>[] visibleColumns, HashSet<Widget> activeWidgets)
+    {
+        if (!_cellCache.TryGetValue(rule, out Dictionary<RulebaseColumn<TRule>, Widget>? ruleCells))
+        {
+            ruleCells = [];
+            _cellCache[rule] = ruleCells;
+        }
+
+        for (int j = 0; j < visibleColumns.Length; j++)
+        {
+            RulebaseColumn<TRule> col = visibleColumns[j];
+
+            if (!ruleCells.TryGetValue(col, out Widget? cell))
+            {
+                cell = col.CellFactory(rule);
+                ruleCells[col] = cell;
+            }
+
+            UpdateCell(cell, j < visibleColumns.Length - 1);
+
+            if (!_grid.Widgets.Contains(cell))
+                _grid.AddWidget(cell, gridRow, j);
+            else
+            {
+                Grid.SetRow(cell, gridRow);
+                Grid.SetColumn(cell, j);
+            }
+
+            activeWidgets.Add(cell);
+        }
+    }
+
+    /// <summary>Removes any grid widgets not touched during this refresh (e.g. dropped rows/columns)</summary>
+    /// <param name="activeWidgets">Widgets that were rendered this refresh and should be kept</param>
+    private void RemoveInactiveWidgets(HashSet<Widget> activeWidgets)
+    {
         List<Widget> toRemove = _grid.Widgets.Where(w => !activeWidgets.Contains(w)).ToList();
 
         foreach (Widget w in toRemove)
