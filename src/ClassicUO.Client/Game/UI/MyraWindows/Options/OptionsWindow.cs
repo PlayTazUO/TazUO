@@ -291,8 +291,8 @@ public class OptionsWindow : MyraControl
         Orientation = Orientation.Vertical,
         HorizontalSpacing = MyraStyle.STANDARD_SPACING,
         VerticalSpacing = MyraStyle.STANDARD_SPACING,
-        Width = budget.X,
-        Height = budget.Y
+        MaxWidth = budget.X,
+        MaxHeight = budget.Y
     };
 
     private static ButtonStyle _lastUsedButtonStylesheet = null!;
