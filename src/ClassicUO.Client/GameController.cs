@@ -451,27 +451,42 @@ namespace ClassicUO
 
         protected override void Update(GameTime gameTime)
         {
+            Profiler.EnterContext("Update");
+
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+            Profiler.EnterContext("Mouse");
             Mouse.Update();
+            Profiler.ExitContext("Mouse");
 
+            Profiler.EnterContext("ProcessNetworkPackets");
             ProcessNetworkPackets();
+            Profiler.ExitContext("ProcessNetworkPackets");
 
             if(_pluginsInitialized)
+            {
+                Profiler.EnterContext("PluginTick");
                 Plugin.Tick();
+                Profiler.ExitContext("PluginTick");
+            }
 
             if(drawScene)
             {
-                Profiler.EnterContext("Update");
+                Profiler.EnterContext("SceneUpdate");
                 Scene.Update();
-                Profiler.ExitContext("Update");
+                Profiler.ExitContext("SceneUpdate");
             }
 
+            Profiler.EnterContext("UIManagerUpdate");
             UIManager.Update();
+            Profiler.ExitContext("UIManagerUpdate");
 
+            Profiler.EnterContext("MainThreadQueue");
             MainThreadQueue.ProcessQueue();
+            Profiler.ExitContext("MainThreadQueue");
 
+            Profiler.EnterContext("FpsTiming");
             _totalElapsed += gameTime.ElapsedGameTime.TotalMilliseconds;
             _currentFpsTime += gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -506,11 +521,19 @@ namespace ClassicUO
                     Thread.Sleep(1);
                 }
             }
+            Profiler.ExitContext("FpsTiming");
 
+            Profiler.EnterContext("GameCursor");
             UO.GameCursor?.Update();
+            Profiler.ExitContext("GameCursor");
+
+            Profiler.EnterContext("Audio");
             Audio?.Update();
+            Profiler.ExitContext("Audio");
 
             base.Update(gameTime);
+
+            Profiler.ExitContext("Update");
         }
 
         public static void UpdateBackgroundHueShader()
@@ -563,6 +586,8 @@ namespace ClassicUO
 
         protected override void Draw(GameTime gameTime)
         {
+            Profiler.EnterContext("Draw");
+
             Profiler.EndFrame();
 
             Profiler.EnterContext("PreDraw");
@@ -571,16 +596,15 @@ namespace ClassicUO
 
             Profiler.BeginFrame();
 
+            Profiler.EnterContext("RenderSetup");
             _totalFrames++;
 
             bool useRenderTarget = false;
 
             if (_useScreenRenderTarget)
             {
-                // Ensure render target is created and properly sized
                 EnsureScreenRenderTarget();
 
-                // Check if we should use render target or render directly
                 useRenderTarget = _screenRenderTarget != null && !_screenRenderTarget.IsDisposed;
 
                 if (!useRenderTarget)
@@ -591,17 +615,16 @@ namespace ClassicUO
 
             if (useRenderTarget)
             {
-                // Render everything to the render target
                 GraphicsDevice.SetRenderTarget(_screenRenderTarget);
                 GraphicsDevice.Clear(Color.Black);
             }
             else
             {
-                // Render directly to back buffer (original behavior)
                 GraphicsDevice.Clear(Color.Black);
             }
+            Profiler.ExitContext("RenderSetup");
 
-            Profiler.EnterContext("Draw");
+            Profiler.EnterContext("SceneRender");
 
             _uoSpriteBatch.Begin();
             _uoSpriteBatch.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
@@ -619,22 +642,21 @@ namespace ClassicUO
             UO.GameCursor?.Draw(_uoSpriteBatch);
             _uoSpriteBatch.End();
 
-            // Render ImGui and plugins to the render target (for consistent scaling)
+            Profiler.ExitContext("SceneRender");
+
+            Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
 
-                // Set back to back buffer and composite the render target
                 GraphicsDevice.SetRenderTarget(null);
                 GraphicsDevice.Clear(Color.Black);
 
-                // Source and destination rectangles (full render target to full back buffer)
                 var srcRect = new Rectangle(0, 0, _screenRenderTarget.Width, _screenRenderTarget.Height);
                 Rectangle destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
-                // Match GameScene's composite pattern - use source rectangle overload
                 if(RenderScale != 1.0f)
                 {
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
@@ -648,9 +670,11 @@ namespace ClassicUO
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
             }
+            Profiler.ExitContext("PluginRender");
+
+            base.Draw(gameTime);
 
             Profiler.ExitContext("Draw");
-            base.Draw(gameTime);
         }
 
         protected override bool BeginDraw() => !_suppressedDraw && base.BeginDraw();
