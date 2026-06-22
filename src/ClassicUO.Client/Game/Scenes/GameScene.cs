@@ -1233,6 +1233,14 @@ namespace ClassicUO.Game.Scenes
             batcher.SetBrightlight(ProfileManager.CurrentProfile.TerrainShadowsLevel * 0.1f);
             batcher.SetStencil(DepthStencilState.Default);
 
+            // Reorder opaque sprites so same-texture draws are adjacent, minimizing batcher
+            // texture switches. Layering is preserved by the hardware depth buffer (opaque
+            // occlusion is resolved by per-sprite depth, not submission order). The transparent
+            // list is intentionally NOT sorted - it must stay in back-to-front z-order.
+            _renderListStatics.Sort(_renderSortKeyComparison);
+            _renderListAnimations.Sort(_renderSortKeyComparison);
+            _renderListEffects.Sort(_renderSortKeyComparison);
+
             RenderedObjectsCount = 0;
             RenderedObjectsCount += DrawRenderList(batcher, _renderListStatics);
             RenderedObjectsCount += DrawRenderList(batcher, _renderListAnimations);
@@ -1284,6 +1292,10 @@ namespace ClassicUO.Game.Scenes
             }
         }
 
+        // Sorts opaque render lists by atlas-texture key to cluster same-texture draws.
+        private static readonly Comparison<GameObject> _renderSortKeyComparison =
+            static (a, b) => a.RenderSortKey.CompareTo(b.RenderSortKey);
+
         private int DrawRenderList(UltimaBatcher2D batcher, List<GameObject> renderList)
         {
             int done = 0;
@@ -1292,7 +1304,8 @@ namespace ClassicUO.Game.Scenes
             {
                 if (obj.Z <= _maxGroundZ)
                 {
-                    float depth = obj.CalculateDepthZ();
+                    // Depth was computed once during render-list build (PushToRenderList).
+                    float depth = obj.CachedDepthZ;
                     if (obj.Draw(batcher, obj.RealScreenPosition.X, obj.RealScreenPosition.Y, depth))
                     {
                         ++done;

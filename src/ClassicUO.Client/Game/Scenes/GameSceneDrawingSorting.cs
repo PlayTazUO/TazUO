@@ -18,7 +18,7 @@ namespace ClassicUO.Game.Scenes
 {
     public partial class GameScene
     {
-        private static GameObject[] _foliages = new GameObject[100];
+        private static GameObject[] _foliages = new GameObject[256];
         private static readonly TreeUnion[] _treeInfos =
         {
             new TreeUnion(0x0D45, 0x0D4C),
@@ -626,17 +626,25 @@ namespace ClassicUO.Game.Scenes
                 return;
             }
 
-            // slow as fuck
+            // Compute the screen depth once per frame; reused below and at draw time.
+            obj.CachedDepthZ = obj.CalculateDepthZ();
+
+            // Pixel-perfect mouse selection used to run for every visible object every frame
+            // (the old "slow as fuck" path). Reject with a cheap bounding-box test first so the
+            // expensive per-pixel check only runs for objects actually under the cursor. Mobiles
+            // are few and their clickable area can extend past the body frame, so they skip the
+            // box shortcut and always run the precise check.
             if (
                 allowSelection
                 && obj.Z <= _maxGroundZ
                 && obj.AllowedToDraw
+                && (obj is Mobile || obj.GetOnScreenRectangle().Contains(SelectedObject.TranslatedMousePositionByViewport))
                 && obj.CheckMouseSelection()
             )
             {
                 if (SelectedObject.Object is GameObject prev)
                 {
-                    if (obj.CalculateDepthZ() >= prev.CalculateDepthZ())
+                    if (obj.CachedDepthZ >= prev.CachedDepthZ)
                     {
                         SelectedObject.Object = obj;
                     }
@@ -649,10 +657,15 @@ namespace ClassicUO.Game.Scenes
 
             if (obj.AlphaHue != byte.MaxValue)
             {
+                // Semi-transparent objects must stay in z-order (drawn last with depth-read);
+                // do not assign a texture sort key here.
                 _renderListTransparentObjects.Add(obj);
             }
             else
             {
+                // Group opaque sprites by atlas texture so the batcher can draw same-texture
+                // sprites together. Safe because the depth buffer resolves opaque layering.
+                obj.RenderSortKey = obj.GetRenderTextureKey();
                 renderList.Add(obj);
             }
         }

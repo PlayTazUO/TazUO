@@ -80,6 +80,19 @@ namespace ClassicUO.Game.GameObjects
 
         public abstract bool CheckMouseSelection();
 
+        // Per-frame render caches (set during render-list build in GameSceneDrawingSorting).
+        // RenderSortKey groups opaque sprites by their atlas texture so the batcher can draw
+        // same-texture sprites together; the hardware depth buffer keeps layering correct
+        // regardless of submission order. CachedDepthZ avoids recomputing CalculateDepthZ().
+        public int RenderSortKey;
+        public float CachedDepthZ;
+
+        /// <summary>
+        /// Returns a cheap, stable key identifying the primary atlas texture this object draws
+        /// from, used to group same-texture opaque sprites in the render lists. Default 0.
+        /// </summary>
+        public virtual int GetRenderTextureKey() => 0;
+
         // FIXME: remove it
         public sbyte FoliageIndex = -1;
         public ushort OriginalGraphic => originalGraphic == 0 ? Graphic : originalGraphic;

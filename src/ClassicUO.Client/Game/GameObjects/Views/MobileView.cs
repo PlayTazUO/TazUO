@@ -21,6 +21,12 @@ namespace ClassicUO.Game.GameObjects
         private int _startCharacterWaistY;
         private int _startCharacterKneesY;
 
+        // Mobiles draw many sub-sprites (body + mount + up to ~14 equipment layers) spread
+        // across several animation atlas pages, so a single representative texture key isn't
+        // meaningful. Use a fixed key so all mobiles cluster together in the animations list,
+        // separated from ground items (which carry their real art-atlas keys).
+        public override int GetRenderTextureKey() => int.MinValue;
+
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
             if (IsDestroyed || !AllowedToDraw || !IsVisible)

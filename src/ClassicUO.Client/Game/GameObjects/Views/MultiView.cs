@@ -31,6 +31,8 @@ namespace ClassicUO.Game.GameObjects
             return r;
         }
 
+        public override int GetRenderTextureKey() => ArtTextureKey(Graphic);
+
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
             if (!AllowedToDraw || IsDestroyed)

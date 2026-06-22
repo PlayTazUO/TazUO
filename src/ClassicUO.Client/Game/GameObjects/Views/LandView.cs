@@ -4,6 +4,7 @@ using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Runtime.CompilerServices;
 using ClassicUO.Game.Managers.SpellVisualRange;
 
 namespace ClassicUO.Game.GameObjects
@@ -16,6 +17,20 @@ namespace ClassicUO.Game.GameObjects
         private static float _cachedWaterSin;
         private static float _cachedWaterCos;
         private static uint _lastWaterAnimTicks;
+
+        public override int GetRenderTextureKey()
+        {
+            if (IsStretched)
+            {
+                ref readonly SpriteInfo texmap = ref Client.Game.UO.Texmaps.GetTexmap(
+                    Client.Game.UO.FileManager.TileData.LandData[Graphic].TexID
+                );
+                return texmap.Texture == null ? 0 : RuntimeHelpers.GetHashCode(texmap.Texture);
+            }
+
+            ref readonly SpriteInfo land = ref Client.Game.UO.Arts.GetLand(Graphic);
+            return land.Texture == null ? 0 : RuntimeHelpers.GetHashCode(land.Texture);
+        }
 
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {

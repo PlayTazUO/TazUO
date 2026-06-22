@@ -20,6 +20,8 @@ namespace ClassicUO.Game.GameObjects
     {
         private static EquipConvData? _equipConvData;
 
+        public override int GetRenderTextureKey() => ArtTextureKey(DisplayedGraphic);
+
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
             if (IsDestroyed)

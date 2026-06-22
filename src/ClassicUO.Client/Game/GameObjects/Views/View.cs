@@ -98,6 +98,19 @@ namespace ClassicUO.Game.GameObjects
             return (x + y) + (DEPTH_Z_OFFSET + z) * DEPTH_Z_SCALE;
         }
 
+        /// <summary>
+        /// Cheap, stable grouping key for the art-atlas page backing <paramref name="graphic"/>.
+        /// Same atlas texture -> same key, so sorting opaque render lists by it clusters
+        /// same-texture sprites and reduces batcher texture switches. Layering is unaffected
+        /// because the hardware depth buffer resolves opaque occlusion regardless of order.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected static int ArtTextureKey(ushort graphic)
+        {
+            ref readonly SpriteInfo info = ref Client.Game.UO.Arts.GetArt(graphic);
+            return info.Texture == null ? 0 : RuntimeHelpers.GetHashCode(info.Texture);
+        }
+
         public Rectangle GetOnScreenRectangle()
         {
             Rectangle prect = Rectangle.Empty;

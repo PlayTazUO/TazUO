@@ -62,6 +62,8 @@ namespace ClassicUO.Game.GameObjects
         /// <param name="posY">The Y screen position.</param>
         /// <param name="depth">The rendering depth for sorting.</param>
         /// <returns>True if the object was rendered, false if skipped.</returns>
+        public override int GetRenderTextureKey() => ArtTextureKey(GetDisplayGraphic(Graphic));
+
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
             if (!AllowedToDraw || IsDestroyed)
