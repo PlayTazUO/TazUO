@@ -124,7 +124,15 @@ namespace ClassicUO
             SetRefreshRate(Settings.GlobalSettings.FPS);
             SupportedRefreshRate = Settings.GlobalSettings.FPS;
 
-            _uoSpriteBatch = new UltimaBatcher2D(GraphicsDevice);
+            try
+            {
+                _uoSpriteBatch = new UltimaBatcher2D(GraphicsDevice);
+            }
+            catch (Exception ex) when (Client.IsShaderCompileFailure(ex))
+            {
+                Client.ShowErrorMessage(Client.GraphicsShaderHelpMessage);
+                throw; // preserve existing crash logging / report
+            }
 
             _filter = HandleSdlEvent;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
