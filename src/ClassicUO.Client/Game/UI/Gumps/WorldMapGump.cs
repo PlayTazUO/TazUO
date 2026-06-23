@@ -3369,6 +3369,13 @@ public class WorldMapGump : ResizableGump
             if (button == MouseButtonType.Left && Keyboard.Ctrl && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
+                GoToMarker(wX, wY, true);
+                return;
+            }
+
+            if (button == MouseButtonType.Right && Keyboard.Ctrl && !Keyboard.Alt)
+            {
+                CanvasToWorld(x, y, out int wX, out int wY);
                 _navDest = new Point(wX, wY);
                 _navDestSetTime = Environment.TickCount64;
                 _navPath = null;
