@@ -225,6 +225,52 @@ namespace ClassicUO.Assets
         }
 
         /// <summary>
+        ///     Number of sound index slots available in the loaded sound file.
+        /// </summary>
+        public int Count => _file?.Entries?.Length ?? 0;
+
+        /// <summary>
+        ///     Returns true if a playable sound exists at the given index.
+        /// </summary>
+        public bool HasSound(int index)
+        {
+            if (index < 0 || _file?.Entries == null || index >= _file.Entries.Length)
+            {
+                return false;
+            }
+
+            return _file.Entries[index].Length > 0;
+        }
+
+        /// <summary>
+        ///     Reads only the embedded name header for a sound, skipping the audio payload.
+        ///     Uses offset-based reads so it is safe to call off the main thread.
+        /// </summary>
+        public bool TryGetSoundName(int index, out string name)
+        {
+            name = null;
+
+            if (index < 0 || _file == null)
+            {
+                return false;
+            }
+
+            ref UOFileIndex entry = ref _file.GetValidRefEntry(index);
+
+            if (entry.Length <= 0)
+            {
+                return false;
+            }
+
+            Span<byte> buf = stackalloc byte[40];
+            _file.ReadAt(entry.Offset, buf);
+
+            name = Encoding.UTF8.GetString(buf).TrimEnd('\0').Trim();
+
+            return true;
+        }
+
+        /// <summary>
         ///     Attempts to parse a line from UO's music Config.txt.
         /// </summary>
         /// <param name="line">A line from the file.</param>
