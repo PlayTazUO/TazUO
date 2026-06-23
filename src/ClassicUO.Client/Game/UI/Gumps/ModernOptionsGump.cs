@@ -252,6 +252,15 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
+            (
+                new CheckboxWithLabel(TazLang.Get("disable_gargoyle_flying_animation", "Disable gargoyle flying animation"), isChecked: profile.DisableGargoyleFlyingAnimation,
+                    valueChanged: (b) => { profile.DisableGargoyleFlyingAnimation = b; }),
+                true, page
+            );
+
+            content.BlankLine();
+
+            content.AddToRight
             (c = new CheckboxWithLabel(lang.GetGeneral.SallosEasyGrab, isChecked: profile.SallosEasyGrab, valueChanged: (b) => { profile.SallosEasyGrab = b; }),
                 true, page);
 

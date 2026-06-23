@@ -123,7 +123,7 @@ namespace ClassicUO.Game.Managers
                                 Point p1 = p;
                                 p1.Y -= height + centerY + 8 + 22;
 
-                                if (mobile.IsGargoyle && mobile.IsFlying)
+                                if (mobile.IsGargoyle && mobile.IsFlyingAnimationEnabled)
                                 {
                                     p1.Y -= 22;
                                 }
