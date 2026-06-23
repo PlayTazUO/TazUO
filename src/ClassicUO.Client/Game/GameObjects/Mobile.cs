@@ -177,6 +177,9 @@ namespace ClassicUO.Game.GameObjects
         public bool IsFlying =>
             Client.Game.UO.Version >= ClientVersion.CV_7000 && (Flags & Flags.Flying) != 0;
 
+        public bool IsFlyingAnimationEnabled =>
+            IsFlying && (!IsGargoyle || !(_profile ?? Profile.DefaultPreviewProfile).DisableGargoyleFlyingAnimation);
+
         public virtual bool InWarMode
         {
             get => (Flags & Flags.WarMode) != 0;
@@ -518,7 +521,7 @@ namespace ClassicUO.Game.GameObjects
                         return;
                     }
 
-                    if (IsGargoyle && IsFlying)
+                    if (IsGargoyle && IsFlyingAnimationEnabled)
                     {
                         if (RandomHelper.GetValue(0, 2) != 0)
                         {
@@ -990,7 +993,7 @@ namespace ClassicUO.Game.GameObjects
 
             Point p = RealScreenPosition;
 
-            if (IsGargoyle && IsFlying)
+            if (IsGargoyle && IsFlyingAnimationEnabled)
             {
                 p.Y -= 22;
             }
