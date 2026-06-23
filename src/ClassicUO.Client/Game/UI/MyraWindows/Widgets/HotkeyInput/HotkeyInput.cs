@@ -34,9 +34,9 @@ public class HotkeyInput : Panel
             if (_selection.Equals(value))
                 return;
 
-            _selection = value;
-
             var eventArgs = new SelectionChangedEventArgs { OldValue = _selection, NewValue = value };
+
+            _selection = value;
             _onSelectionChanged?.Invoke(eventArgs);
             SelectionChanged?.Invoke(this, eventArgs);
         }

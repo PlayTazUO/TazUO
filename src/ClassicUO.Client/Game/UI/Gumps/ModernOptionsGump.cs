@@ -4358,7 +4358,7 @@ namespace ClassicUO.Game.UI.Gumps
                     "Disable overhead messages of these types:",
                     ThemeSettings.FONT,
                     ThemeSettings.STANDARD_TEXT_SIZE,
-                    ThemeSettings.TEXT_FONT_COLOR, 
+                    ThemeSettings.TEXT_FONT_COLOR,
                     TextBox.RTLOptions.Default()),
                 true, page);
 
@@ -4462,7 +4462,7 @@ namespace ClassicUO.Game.UI.Gumps
             page = ((int)PAGE.TUOOptions + 1007);
 
             // Enumerate once to save a bit of compute
-            (string[] availableFonts, int maxFontNameLength) = TrueTypeLoader.Instance.OrderedFontNames;
+            (string[] availableFonts, int maxFontNameLength) = TrueTypeLoader.Instance.GetSortedFontNames(true);
 
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.FontSettings, page, content.LeftWidth));
             content.ResetRightSide();

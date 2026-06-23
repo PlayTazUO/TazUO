@@ -97,7 +97,7 @@ public class HotkeySelection : IEquatable<HotkeySelection>
 
     public static HotkeySelection FromString(string hotkeyString)
     {
-        if (string.IsNullOrWhiteSpace(hotkeyString))
+        if (string.IsNullOrWhiteSpace(hotkeyString) || hotkeyString == "None")
             return new HotkeySelection();
 
         // Matches the split logic used in Keyboard.NormalizeKeyString
@@ -105,6 +105,9 @@ public class HotkeySelection : IEquatable<HotkeySelection>
 
         SDL.SDL_Keymod modifiers = SDL.SDL_Keymod.SDL_KMOD_NONE;
         SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
+        MouseButtonType? mouseButton = null;
+        MouseWheelEvent? wheel = null;
+        List<SDL.SDL_GamepadButton> gamepadButtons = [];
 
         foreach (string part in parts)
             switch (part)
@@ -118,7 +121,35 @@ public class HotkeySelection : IEquatable<HotkeySelection>
                 case "ALT":
                     modifiers |= SDL.SDL_Keymod.SDL_KMOD_ALT;
                     break;
+                case "WIN":
+                    modifiers |= SDL.SDL_Keymod.SDL_KMOD_GUI;
+                    break;
+                case "WHEELUP":
+                    wheel = MouseWheelEvent.ScrollUp;
+                    break;
+                case "WHEELDOWN":
+                    wheel = MouseWheelEvent.ScrollDown;
+                    break;
+                case "WHEELCLICK":
+                    wheel = MouseWheelEvent.Click;
+                    break;
+                case "NONE":
+                    break;
                 default:
+                    // Mouse button names (Left, Middle, Right, XButton1, XButton2) match MouseButtonType exactly
+                    if (Enum.TryParse(part, true, out MouseButtonType parsedMouse))
+                    {
+                        mouseButton = parsedMouse;
+                        break;
+                    }
+
+                    // Gamepad button names already include the "SDL_GAMEPAD_BUTTON_" prefix from ToString()
+                    if (Enum.TryParse(part, true, out SDL.SDL_GamepadButton parsedGamepad))
+                    {
+                        gamepadButtons.Add(parsedGamepad);
+                        break;
+                    }
+
                     // Ensure the key has the "SDLK_" prefix before parsing
                     string keyName = part.StartsWith("SDLK_") ? part : "SDLK_" + part;
 
@@ -127,7 +158,7 @@ public class HotkeySelection : IEquatable<HotkeySelection>
                     break;
             }
 
-        return new HotkeySelection(key, modifiers);
+        return new HotkeySelection(key, modifiers, gamepadButtons, mouseButton, wheel);
     }
 
     public bool Equals(HotkeySelection? other)

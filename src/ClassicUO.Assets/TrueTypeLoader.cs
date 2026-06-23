@@ -122,7 +122,7 @@ public class TrueTypeLoader
 
         foreach (string ttf in Directory.GetFiles(fontPath, "*.ttf"))
         {
-            try 
+            try
             {
                 var fontSystem = new FontSystem(_fontSysSettings);
                 fontSystem.AddFont(File.ReadAllBytes(ttf));
@@ -428,7 +428,21 @@ public class TrueTypeLoader
         }
     }
 
-    public (string[] Names, int MaxNameLength) OrderedFontNames => _orderedFontNames.Value;
+    /// <summary>
+    ///     Retrieves a list of available font names, sorted alphabetically, as well as the longest font name length.
+    /// </summary>
+    /// <param name="fresh">
+    ///     Whether to re-compute the list or used a cache one.
+    ///     Computation efficientcy is O(3n).
+    /// </param>
+    /// <returns></returns>
+    public (string[] Names, int MaxNameLength) GetSortedFontNames(bool fresh = false)
+    {
+        if (fresh)
+            _orderedFontNames = new Lazy<(string[], int)>(GetOrderedFontNames);
+
+        return _orderedFontNames.Value;
+    }
 
     /// <summary>
     ///     Retrieves an ordered collection of font names along with the maximum length of all font names.

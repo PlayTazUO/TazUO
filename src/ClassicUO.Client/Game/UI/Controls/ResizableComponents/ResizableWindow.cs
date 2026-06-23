@@ -28,9 +28,8 @@ public class ResizableWindowProps : MyraCommonProps
             ResizeBehavior oldValue = field;
             if (SetField(ref field, value))
             {
-                field.PropertyChanged += OnResizePropertyChanged;
-                if (oldValue != null)
-                    oldValue.PropertyChanged -= OnResizePropertyChanged;
+                oldValue?.PropertyChanged -= OnResizePropertyChanged;
+                field?.PropertyChanged += OnResizePropertyChanged;
             }
         }
     } = new();
@@ -225,6 +224,7 @@ public class ResizableWindow : Window, IDisposable
         if (IsDisposed)
             return;
 
+        Props?.PropertyChanged -= OnPropsChanged;
         Mouse.Moved -= OnMouseMovedWhileInWindow;
         Mouse.LeftButtonClickStateChanged -= LeftClickChangedHandler;
         Mouse.Moved -= OnMouseMovedWhileResizing;

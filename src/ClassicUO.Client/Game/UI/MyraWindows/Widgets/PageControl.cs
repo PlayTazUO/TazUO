@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Assets;
@@ -26,17 +27,30 @@ public class PageControl : Container
 
     private MyraLabel _currentPageDisplay;
 
+    /// <summary>
+    /// Gets or sets the current page.
+    /// Note that this property is 'guarded' in that it will not allow the current page to be set to a value outside the range of the number of pages.
+    /// </summary>
     public int CurrentPage
     {
         get => field;
         set
         {
-            if (value == field)
+            if (_pages.Count == 0)
+            {
+                field = 0;
+                _contentPanel.Widgets.Clear();
+                UpdateControlBar();
                 return;
-            field = value;
+            }
+
+            int clamped = Math.Clamp(value, 0, _pages.Count - 1);
+            if (clamped == field)
+                return;
+            field = clamped;
 
             _contentPanel.Widgets.Clear();
-            _contentPanel.Widgets.Add(_pages[value]);
+            _contentPanel.Widgets.Add(_pages[field]);
             UpdateControlBar();
         }
     }

@@ -160,7 +160,7 @@ public static class VideoTab
                 new Accessor<float>(() => profile.GameWindowSize.X, f =>
                 {
                     profile.GameWindowSize = new Point((int)f, profile.GameWindowSize.Y);
-                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                    WorldViewportGump.Instance?.ResizeGameWindow(profile.GameWindowSize);
                 }),
                 search: new SearchMetadata(lang.ViewportW, Keywords: [kw.Width])
             ),
@@ -171,7 +171,7 @@ public static class VideoTab
                 new Accessor<float>(() => profile.GameWindowSize.Y, f =>
                 {
                     profile.GameWindowSize = new Point(profile.GameWindowSize.X, (int)f);
-                    WorldViewportGump.Instance?.SetGameWindowPosition(profile.GameWindowPosition);
+                    WorldViewportGump.Instance?.ResizeGameWindow(profile.GameWindowSize);
                 }),
                 search: new SearchMetadata(lang.ViewportH, Keywords: [kw.Height])
             )

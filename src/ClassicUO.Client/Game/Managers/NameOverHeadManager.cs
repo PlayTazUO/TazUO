@@ -23,7 +23,7 @@ using ClassicUO.Utility;
 namespace ClassicUO.Game.Managers
 {
     [Flags]
-    public enum NameOverheadOptions
+    public enum NameOverheadOptions : int
     {
         None = 0,
 

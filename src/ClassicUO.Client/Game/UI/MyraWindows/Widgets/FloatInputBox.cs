@@ -13,12 +13,12 @@ public class FloatInputBox : NumericInputBox<float>
     protected override bool TryParse(string text, out float value) =>
         float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
 
-    protected override bool IsIntermediate(string text) => 
+    protected override bool IsIntermediate(string text) =>
         string.IsNullOrEmpty(text) || text == "-" || text == "." || text == "," || text == "-." || text == "-,";
 
     public override void OnChar(char c)
     {
-        if (!char.IsDigit(c) && c != '-' && c != '.' && c != ',')
+        if (!char.IsDigit(c) && c != '-' && c != '.')
             return;
 
         base.OnChar(c);

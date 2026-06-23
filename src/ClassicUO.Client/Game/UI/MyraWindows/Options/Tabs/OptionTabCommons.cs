@@ -5,6 +5,7 @@ using ClassicUO.Assets;
 using ClassicUO.Common;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using FontStashSharp;
 using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
@@ -72,7 +73,7 @@ public static class OptionTabCommons
         else
             callback = backingProp.Set;
 
-        return OptionsFactory.CreateComboBox(label, backingProp.Get(), TrueTypeLoader.Instance.OrderedFontNames.Names, callback);
+        return OptionsFactory.CreateComboBox(label, backingProp.Get(), TrueTypeLoader.Instance.GetSortedFontNames().Names, callback);
     }
 
     internal static Widget StyledHorizontalSeparator() =>
@@ -104,12 +105,20 @@ public static class OptionTabCommons
         Dictionary<TValue, int> valueToIndex = new();
 
         TValue[] optionsArray = options.ToArray();
-        for (int i = 0; i < optionsArray.Length; i++)
+
+        int i = 0;
+        foreach (TValue option in optionsArray)
         {
-            TValue option = optionsArray[i];
+            if (!valueToIndex.TryAdd(option, i))
+            {
+                // Duplicate, ignore
+                Log.WarnDebug($"A duplicate option {option.ToString()} encountered. Ignoring");
+                continue;
+            }
+
             indexToValue.Add(i, option);
-            valueToIndex.Add(option, i);
             comboView.ListView.Widgets.Add(new Label { Text = option.ToString(), Tag = i });
+            i++;
         }
 
         int selectedIndex = valueToIndex.GetValueOrDefault(value, -1);
