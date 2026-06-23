@@ -62,6 +62,7 @@ All notable changes to TazUO will be recorded here.
 * Fix: spell bar hotkeys not firing when Scroll Lock is on - [P.R 548](https://github.com/PlayTazUO/TazUO/pull/549) ([eddo87](https://github.com/eddo87))
 * Fixed UltimaLive block reloads leaving the reloaded map chunk untracked, so it could never be garbage collected and stayed loaded until relog - [P.R 556](https://github.com/PlayTazUO/TazUO/pull/556) ([bittiez](https://github.com/bittiez))
 * Fix IsFlying flag reference and add missing CantWalkOrRun speed mode - [P.R 560](https://github.com/PlayTazUO/TazUO/pull/560) ([bittiez](https://github.com/bittiez))
+* Fixed EndOfStreamException when loading world map marker icons (.cur/.ico) caused by reading the full pooled buffer instead of the actual stream length - [P.R 579](https://github.com/PlayTazUO/TazUO/pull/579) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
