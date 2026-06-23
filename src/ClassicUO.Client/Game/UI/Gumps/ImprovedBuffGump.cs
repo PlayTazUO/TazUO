@@ -36,7 +36,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (icon != null)
             {
-                var coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), icon.Title.Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
+                var coolDownBar = new CoolDownBar(World, TimeSpan.FromMilliseconds(icon.Timer - Time.Ticks), (icon.Title ?? string.Empty).Replace("<br>", " "), ProfileManager.CurrentProfile.ImprovedBuffBarHue, 0, 0, icon.Graphic, icon.Type, true);
                 coolDownBar.SetTooltip(icon.Text);
                 BuffBarManager.AddCoolDownBar(coolDownBar, _direction, _box);
                 _box.Add(coolDownBar);
