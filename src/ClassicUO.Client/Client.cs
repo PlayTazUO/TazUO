@@ -193,7 +193,27 @@ namespace ClassicUO
             Log.Trace($"Protocol: {Protocol}");
 
             FileManager = new UOFileManager(clientVersion, clientPath);
-            FileManager.Load(Settings.GlobalSettings.UseVerdata, Settings.GlobalSettings.Language, Settings.GlobalSettings.MapsLayouts);
+
+            try
+            {
+                FileManager.Load(Settings.GlobalSettings.UseVerdata, Settings.GlobalSettings.Language, Settings.GlobalSettings.MapsLayouts);
+            }
+            catch (FileNotFoundException ex)
+            {
+                string missing = !string.IsNullOrEmpty(ex.FileName) ? ex.FileName : ex.Message;
+
+                Log.Error($"Missing required UO data file while loading: {ex}");
+
+                Client.ShowErrorMessage(
+                    "A required Ultima Online data file could not be found:\n\n" +
+                    $"{missing}\n\n" +
+                    "Please verify your UO data files are present in:\n" +
+                    $"{clientPath}");
+
+                // Exit cleanly so the global unhandled-exception handler does not
+                // generate a crash log/report for what is a missing-files setup issue.
+                Environment.Exit(0);
+            }
 
             StaticFilters.Load(FileManager.TileData);
             BuffTable.Load();
