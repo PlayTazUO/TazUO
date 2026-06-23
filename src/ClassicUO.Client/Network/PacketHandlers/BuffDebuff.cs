@@ -57,7 +57,7 @@ internal static class BuffDebuff
                         (int)titleCliloc,
                         args,
                         true
-                    );
+                    ) ?? string.Empty;
 
                     arg_length = p.ReadUInt16BE();
                     string args_2 = p.ReadUnicodeLE();
