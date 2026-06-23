@@ -39,6 +39,14 @@ namespace ClassicUO.Assets
                 }
             }
 
+            if (File == null)
+            {
+                throw new System.IO.FileNotFoundException(
+                    "Multi files not found. Expected 'MultiCollection.uop' or " +
+                    "'multi.mul' + 'multi.idx' in the UO data directory: " +
+                    $"{FileManager.BasePath}");
+            }
+
             File.FillEntries();
         }
 
