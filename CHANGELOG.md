@@ -64,6 +64,7 @@ All notable changes to TazUO will be recorded here.
 * Fix IsFlying flag reference and add missing CantWalkOrRun speed mode - [P.R 560](https://github.com/PlayTazUO/TazUO/pull/560) ([bittiez](https://github.com/bittiez))
 * Fixed EndOfStreamException when loading world map marker icons (.cur/.ico) caused by reading the full pooled buffer instead of the actual stream length - [P.R 579](https://github.com/PlayTazUO/TazUO/pull/579) ([bittiez](https://github.com/bittiez))
 * Fixed NullReferenceException in ArtLoader/MultiLoader when art or multi data files are missing, replacing the cryptic crash with a clear FileNotFoundException pointing at the UO data directory - [P.R 582](https://github.com/PlayTazUO/TazUO/pull/582) ([bittiez](https://github.com/bittiez))
+* Missing required UO data files now show a clear error message naming the file and data directory instead of crashing with a crash report - [P.R 583](https://github.com/PlayTazUO/TazUO/pull/583) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

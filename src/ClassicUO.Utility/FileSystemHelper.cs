@@ -64,7 +64,7 @@ namespace ClassicUO.Utility
         {
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException(path);
+                throw new FileNotFoundException($"Required file not found: {path}", path);
             }
         }
 
