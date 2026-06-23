@@ -928,7 +928,7 @@ public class WorldMapGump : ResizableGump
 
             try
             {
-                stream.ReadExactly(buffer, 0, buffer.Length);
+                stream.ReadExactly(buffer, 0, (int)stream.Length);
 
                 var reader = new StackDataReader(buffer.AsSpan(0, (int)stream.Length));
 
