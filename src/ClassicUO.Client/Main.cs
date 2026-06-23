@@ -236,6 +236,11 @@ namespace ClassicUO
                            "This can sometimes occur if your operating system shuts down your graphics adapter to preserve power.";
                 }
 
+                if (e is Exception shaderException && Client.IsShaderCompileFailure(shaderException))
+                {
+                    return Client.GraphicsShaderHelpMessage;
+                }
+
                 if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException graphicsException &&
                     graphicsException.Message.Contains("Could not create swapchain!"))
                 {
