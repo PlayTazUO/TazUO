@@ -1,36 +1,36 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ClassicUO.Utility;
 using ClassicUO.Configuration;
+using ClassicUO.Utility;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
-using static ClassicUO.Game.UI.Gumps.WorldMapGump;
-using ClassicUO.Assets;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Resources;
+using Myra.Graphics2D;
+using Myra.Graphics2D.UI;
+using static ClassicUO.Game.UI.Gumps.WorldMapGump;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public sealed class UserMarkersGump : Gump
+    public sealed class UserMarkersGump : MyraControl
     {
-        private readonly StbTextBox _textBoxX;
-        private readonly StbTextBox _textBoxY;
-        private readonly StbTextBox _markerName;
+        private readonly MyraInputBox _textBoxX;
+        private readonly MyraInputBox _textBoxY;
+        private readonly MyraInputBox _markerName;
 
-        private const ushort HUE_FONT = 0xFFFF;
-        private const ushort LABEL_OFFSET = 40;
-        private const ushort Y_OFFSET = 30;
-
-        private readonly Combobox _colorsCombo;
         private readonly string[] _colors;
+        private int _selectedColorIndex;
 
-        private readonly Combobox _iconsCombo;
         private readonly string[] _icons;
+        private readonly bool _hasIcons;
+        private int _selectedIconIndex;
 
         private readonly List<WMapMarker> _markers;
         private readonly int _markerIdx;
+        private readonly int _mapIndex;
 
-        private const int MAX_CORD_LEN = 10;
         private const int MAX_NAME_LEN = 25;
 
         private const int MAP_MIN_CORD = 0;
@@ -41,22 +41,19 @@ namespace ClassicUO.Game.UI.Gumps
 
         public event EventHandler EditEnd;
 
-        private enum ButtonsOption
+        internal UserMarkersGump(World world, int x, int y, List<WMapMarker> markers, string color = "none", string icon = "exit", bool isEdit = false, int markerIdx = -1, int? mapIndex = null)
+            : base(isEdit ? ResGumps.EditMarker : ResGumps.AddMarker)
         {
-            ADD_BTN,
-            EDIT_BTN,
-            CANCEL_BTN,
-        }
-
-        internal UserMarkersGump(World world, int x, int y, List<WMapMarker> markers, string color = "none", string icon = "exit", bool isEdit = false, int markerIdx = -1) : base(world, 0, 0)
-        {
-            CanMove = true;
-
-            _mapMaxX= Client.Game.UO.FileManager.Maps.MapsDefaultSize[world.MapIndex, 0];
-            _mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[world.MapIndex, 1];
-
             _markers = markers;
             _markerIdx = markerIdx;
+
+            // Persist against the map the marker actually belongs to: an existing marker keeps its
+            // own MapId on edit, new markers use the explicitly displayed map (the world map can
+            // free-view a different map than the player is currently on), falling back to the player's map.
+            _mapIndex = isEdit && _markerIdx >= 0 ? _markers[_markerIdx].MapId : mapIndex ?? world.MapIndex;
+
+            _mapMaxX = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 0];
+            _mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 1];
 
             _colors = new[] { "none", "red", "green", "blue", "purple", "black", "yellow", "white" };
             _icons = _markerIcons.Keys.ToArray();
@@ -71,193 +68,85 @@ namespace ClassicUO.Game.UI.Gumps
             if (selectedColor < 0)
                 selectedColor = 0;
 
-            var markersGumpBackground = new AlphaBlendControl
-            {
-                Width = 320,
-                Height = 220,
-                X = Client.Game.Scene.Camera.Bounds.Width / 2 - 125,
-                Y = 150,
-                Alpha = 0.7f,
-                CanMove = true,
-                CanCloseWithRightClick = true,
-                AcceptMouseInput = true
-            };
+            _hasIcons = _icons.Length > 0;
+            _selectedColorIndex = selectedColor;
+            _selectedIconIndex = selectedIcon;
 
-            Add(markersGumpBackground);
-
-            if (!isEdit)
-                Add(new Label(ResGumps.AddMarker, true, HUE_FONT, 0, 255, FontStyle.BlackBorder)
-                {
-                    X = markersGumpBackground.X + 100,
-                    Y = markersGumpBackground.Y + 3,
-                });
-            else
-                Add(new Label(ResGumps.EditMarker, true, HUE_FONT, 0, 255, FontStyle.BlackBorder)
-                {
-                    X = markersGumpBackground.X + 100,
-                    Y = markersGumpBackground.Y + 3,
-                });
+            var layout = new VerticalStackPanel { Spacing = 6, Padding = new Thickness(8) };
 
             // X Field
-            int fx = markersGumpBackground.X + 5;
-            int fy = markersGumpBackground.Y + 25;
-            Add(new ResizePic(0x0BB8)
+            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerX, _textBoxX = new MyraInputBox
             {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 90,
-                Height = 25
-            });
-
-            _textBoxX = new StbTextBox(
-                0xFF,
-                MAX_CORD_LEN,
-                90,
-                true,
-                FontStyle.BlackBorder | FontStyle.Fixed
-            )
-            {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 90,
-                Height = 25,
-                Text = x.ToString()
-            };
-            Add(_textBoxX);
-            Add(new Label(ResGumps.MarkerX, true, HUE_FONT, 0, 255, FontStyle.BlackBorder) { X = fx, Y = fy });
+                Text = x.ToString(),
+                Width = 200,
+                InputFilter = MyraInputBox.DigitInputFilter
+            }));
 
             // Y Field
-            fy += Y_OFFSET;
-            Add(new ResizePic(0x0BB8)
+            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerY, _textBoxY = new MyraInputBox
             {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 90,
-                Height = 25
-            });
-
-            _textBoxY = new StbTextBox(
-                0xFF,
-                MAX_CORD_LEN,
-                90,
-                true,
-                FontStyle.BlackBorder | FontStyle.Fixed
-            )
-            {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 90,
-                Height = 25,
-                Text = y.ToString()
-            };
-            Add(_textBoxY);
-            Add(new Label(ResGumps.MarkerY, true, HUE_FONT, 0, 255, FontStyle.BlackBorder) { X = fx, Y = fy });
+                Text = y.ToString(),
+                Width = 200,
+                InputFilter = MyraInputBox.DigitInputFilter
+            }));
 
             // Marker Name field
-            fy += Y_OFFSET;
-            Add(new ResizePic(0x0BB8)
+            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerName, _markerName = new MyraInputBox
             {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 250,
-                Height = 25
-            });
-
-            _markerName = new StbTextBox(
-                0xFF,
-                MAX_NAME_LEN,
-                250,
-                true,
-                FontStyle.BlackBorder | FontStyle.Fixed
-            )
-            {
-                X = fx + LABEL_OFFSET,
-                Y = fy,
-                Width = 250,
-                Height = 25,
-                Text = markerName
-            };
-            Add(_markerName);
-            Add(new Label(ResGumps.MarkerName, true, HUE_FONT, 0, 255, FontStyle.BlackBorder) { X = fx, Y = fy });
+                Text = markerName,
+                Width = 200
+            }));
 
             // Color Combobox
-            fy += Y_OFFSET;
-            _colorsCombo = new Combobox
-                (
-                    fx + LABEL_OFFSET,
-                    fy,
-                    250,
-                    _colors,
-                    selectedColor
-                );
-            Add(_colorsCombo);
-            Add(new Label(ResGumps.MarkerColor, true, HUE_FONT, 0, 255, FontStyle.BlackBorder) { X = fx, Y = fy });
+            layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerColor,
+                BuildCombo(_colors, selectedColor, idx => _selectedColorIndex = idx)));
 
-            if (_icons.Length > 0)
+            // Icon combobox
+            if (_hasIcons)
             {
-                // Icon combobox
-                fy += Y_OFFSET;
-                _iconsCombo = new Combobox
-                    (
-                        fx + LABEL_OFFSET,
-                        fy,
-                        250,
-                        _icons,
-                        selectedIcon
-                    );
-                Add(_iconsCombo);
-                Add(new Label(ResGumps.MarkerIcon, true, HUE_FONT, 0, 255, FontStyle.BlackBorder) { X = fx, Y = fy });
+                layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerIcon,
+                    BuildCombo(_icons, selectedIcon, idx => _selectedIconIndex = idx)));
             }
 
-            // Buttons Add and Edit depend of state
-            if (!isEdit)
-            {
-                Add
-                (
-                    new NiceButton
-                        (
-                            markersGumpBackground.X + 13,
-                            markersGumpBackground.Y + markersGumpBackground.Height - 30,
-                            60,
-                            25,
-                            ButtonAction.Activate,
-                            ResGumps.CreateMarker
-                        )
-                    { ButtonParameter = (int)ButtonsOption.ADD_BTN, IsSelectable = false }
-                );
-            }
-            else
-            {
-                Add
-                (
-                    new NiceButton
-                        (
-                            markersGumpBackground.X + 13,
-                            markersGumpBackground.Y + markersGumpBackground.Height - 30,
-                            60,
-                            25,
-                            ButtonAction.Activate,
-                            ResGumps.Edit
-                        )
-                    { ButtonParameter = (int)ButtonsOption.EDIT_BTN, IsSelectable = false }
-                );
-            }
+            // Buttons Add/Edit and Cancel depend on state
+            var btnRow = new HorizontalStackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
+            btnRow.Widgets.Add(new MyraButton(isEdit ? ResGumps.Edit : ResGumps.CreateMarker, isEdit ? EditMarker : (Action)AddNewMarker));
+            btnRow.Widgets.Add(new MyraButton(ResGumps.Cancel, Dispose));
+            layout.Widgets.Add(btnRow);
 
-            Add
-            (
-                new NiceButton
-                    (
-                        markersGumpBackground.X + 78,
-                        markersGumpBackground.Y + markersGumpBackground.Height - 30,
-                        60,
-                        25,
-                        ButtonAction.Activate,
-                        ResGumps.Cancel
-                    )
-                { ButtonParameter = (int)ButtonsOption.CANCEL_BTN, IsSelectable = false }
-            );
+            SetRootContent(layout);
+            CenterInViewPort();
+            UIManager.Add(this);
+            BringOnTop();
+        }
 
-            SetInScreen();
+        private static HorizontalStackPanel BuildLabeledRow(string label, Widget widget)
+        {
+            var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            row.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P) { Width = 90 });
+            row.Widgets.Add(widget);
+            return row;
+        }
+
+        private static Widget BuildCombo(string[] items, int selectedIndex, Action<int> onChange)
+        {
+#pragma warning disable CS0612, CS0618
+            var combo = new ComboBox { VerticalAlignment = VerticalAlignment.Center, Width = 200 };
+
+            foreach (var item in items)
+                combo.Items.Add(new ListItem(item));
+
+            if (selectedIndex >= 0 && selectedIndex < items.Length)
+                combo.SelectedIndex = selectedIndex;
+
+            combo.SelectedIndexChanged += (_, _) =>
+            {
+                if (combo.SelectedIndex.HasValue)
+                    onChange(combo.SelectedIndex.Value);
+            };
+#pragma warning restore CS0612, CS0618
+
+            return combo;
         }
 
         private void EditMarker()
@@ -317,12 +206,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (string.IsNullOrEmpty(markerName))
                 return null;
 
+            if (markerName.Length > MAX_NAME_LEN)
+                markerName = markerName.Substring(0, MAX_NAME_LEN);
+
             if (markerName.Contains(","))
                 markerName = markerName.Replace(",", "");
 
-            int mapIdx = World.MapIndex;
-            string color = _colors[_colorsCombo.SelectedIndex];
-            string icon = _iconsCombo == null ? string.Empty : _icons[_iconsCombo.SelectedIndex];
+            int mapIdx = _mapIndex;
+            string color = _colors[_selectedColorIndex];
+            string icon = _hasIcons ? _icons[_selectedIconIndex] : string.Empty;
 
             var marker = new WMapMarker
             {
@@ -343,22 +235,6 @@ namespace ClassicUO.Game.UI.Gumps
             marker.MarkerIconName = icon;
 
             return marker;
-        }
-
-        public override void OnButtonClick(int buttonId)
-        {
-            switch (buttonId)
-            {
-                case (int)ButtonsOption.ADD_BTN:
-                    AddNewMarker();
-                    break;
-                case (int)ButtonsOption.EDIT_BTN:
-                    EditMarker();
-                    break;
-                case (int)ButtonsOption.CANCEL_BTN:
-                    Dispose();
-                    break;
-            }
         }
     }
 }

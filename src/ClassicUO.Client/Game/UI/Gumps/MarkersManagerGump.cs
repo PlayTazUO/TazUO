@@ -447,8 +447,6 @@ namespace ClassicUO.Game.UI.Gumps
                         var editUserMarkerGump = new UserMarkersGump(_gump.World, _marker.X, _marker.Y, _markers, _marker.ColorName, _marker.MarkerIconName, true, _idx);
                         editUserMarkerGump.EditEnd += OnEditEnd;
 
-                        UIManager.Add(editUserMarkerGump);
-
                         break;
                     case (int)ButtonsOption.REMOVE_MARKER_BTN:
                         RemoveMarkerEvent.Raise(_idx);
