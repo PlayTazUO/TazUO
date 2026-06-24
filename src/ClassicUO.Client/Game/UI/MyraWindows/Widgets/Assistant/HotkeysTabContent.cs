@@ -42,10 +42,6 @@ public static class HotkeysTabContent
     {
         var root = new VerticalStackPanel { Spacing = 6 };
         root.Widgets.Add(new MyraLabel("Hotkeys", MyraLabel.TextStyle.H2));
-        root.Widgets.Add(new MyraLabel(
-            "Every hotkey is listed here. Macro hotkeys are editable too — changes to a macro's "
-            + "hotkey are saved back to the macro itself.",
-            MyraLabel.TextStyle.P));
 
         var listPanel = new VerticalStackPanel { Spacing = 1 };
 
@@ -102,7 +98,7 @@ public static class HotkeysTabContent
                 grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 1);
 
                 string bindingText = isCapturing
-                    ? "Listening… press key / mouse / wheel / controller (Esc to cancel)"
+                    ? "Listening… press key / modifier / mouse / wheel / controller (Esc to cancel)"
                     : binding.Describe();
                 if (conflicts.Count > 0)
                     bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts);
@@ -174,11 +170,6 @@ public static class HotkeysTabContent
 
         BuildList();
 
-        root.Widgets.Add(new MyraLabel(
-            "Capturing records keyboard keys, mouse buttons (middle/extra), mouse wheel, or "
-            + "controller buttons, together with any held modifiers. Left/right mouse buttons "
-            + "can't be bound.",
-            MyraLabel.TextStyle.P));
         root.Widgets.Add(new ScrollViewer { Height = 360, Content = listPanel });
 
         return root;

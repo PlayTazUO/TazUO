@@ -43,7 +43,10 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public bool HasMouseButton => MouseButton != MouseButtonType.None;
         public bool HasKey => Key != SDL.SDL_Keycode.SDLK_UNKNOWN && Key != 0;
 
-        public bool IsEmpty => !HasController && !HasMouseButton && !WheelScroll && !HasKey;
+        /// <summary>True when this binding is a bare modifier (Ctrl/Shift/Alt) with no other input.</summary>
+        public bool HasModifiers => Ctrl || Shift || Alt;
+
+        public bool IsEmpty => !HasController && !HasMouseButton && !WheelScroll && !HasKey && !HasModifiers;
 
         public void Clear()
         {
@@ -94,7 +97,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
             if (WheelScroll || other.WheelScroll)
                 return WheelScroll && other.WheelScroll && WheelUp == other.WheelUp && SameMods(other);
 
-            return HasKey && other.HasKey && Key == other.Key && SameMods(other);
+            // Both are now key-only or modifier-only (no controller/mouse/wheel).
+            if (HasKey || other.HasKey)
+                return HasKey && other.HasKey && Key == other.Key && SameMods(other);
+
+            // Modifier-only on both sides.
+            return SameMods(other);
         }
 
         /// <summary>
@@ -122,7 +130,11 @@ namespace ClassicUO.Game.Managers.Hotkeys
             if (WheelScroll)
                 return false;
 
-            return HasKey && HotKeys.IsKeyHeld(Key);
+            if (HasKey)
+                return HotKeys.IsKeyHeld(Key);
+
+            // Modifier-only binding: active whenever the required modifiers (checked above) are held.
+            return HasModifiers;
         }
 
         private bool ModifiersSatisfied(bool allowAdditionalModifiers)
@@ -163,7 +175,19 @@ namespace ClassicUO.Game.Managers.Hotkeys
             if (HasKey)
                 return KeysTranslator.TryGetKey(Key, Mod);
 
+            if (HasModifiers)
+                return ModifierText();
+
             return "None";
+        }
+
+        private string ModifierText()
+        {
+            string s = string.Empty;
+            if (Ctrl) s += "Ctrl";
+            if (Shift) s += (s.Length > 0 ? " + " : string.Empty) + "Shift";
+            if (Alt) s += (s.Length > 0 ? " + " : string.Empty) + "Alt";
+            return s.Length == 0 ? "None" : s;
         }
     }
 }

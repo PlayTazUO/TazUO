@@ -16,6 +16,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
         private Action<HotkeyBinding>? _onCaptured;
         private Action? _onCancelled;
         private bool _active;
+        private SDL.SDL_Keymod _modAccum;
 
         public bool IsActive => _active;
 
@@ -25,9 +26,11 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
             _onCaptured = onCaptured;
             _onCancelled = onCancelled;
+            _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
             _active = true;
 
             Keyboard.KeyDownEvent += OnKey;
+            Keyboard.BareModifierEvent += OnBareModifier;
             Mouse.ButtonDownEvent += OnMouseButton;
             Mouse.WheelEvent += OnWheel;
             Controller.ButtonDownEvent += OnController;
@@ -40,11 +43,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
             _active = false;
             Keyboard.KeyDownEvent -= OnKey;
+            Keyboard.BareModifierEvent -= OnBareModifier;
             Mouse.ButtonDownEvent -= OnMouseButton;
             Mouse.WheelEvent -= OnWheel;
             Controller.ButtonDownEvent -= OnController;
             _onCaptured = null;
             _onCancelled = null;
+            _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
         }
 
         private void OnKey(string hotkey)
@@ -90,6 +95,28 @@ namespace ClassicUO.Game.Managers.Hotkeys
                 Ctrl = Keyboard.Ctrl,
                 Shift = Keyboard.Shift,
                 Alt = Keyboard.Alt
+            });
+        }
+
+        private void OnBareModifier(SDL.SDL_Keymod mods)
+        {
+            if (mods != SDL.SDL_Keymod.SDL_KMOD_NONE)
+            {
+                // Remember the largest combo held so chords (e.g. Ctrl+Shift) can be captured;
+                // commit only once everything is released.
+                _modAccum |= mods;
+                return;
+            }
+
+            if (_modAccum == SDL.SDL_Keymod.SDL_KMOD_NONE)
+                return;
+
+            SDL.SDL_Keymod accumulated = _modAccum;
+            Capture(new HotkeyBinding
+            {
+                Ctrl = (accumulated & SDL.SDL_Keymod.SDL_KMOD_CTRL) != 0,
+                Shift = (accumulated & SDL.SDL_Keymod.SDL_KMOD_SHIFT) != 0,
+                Alt = (accumulated & SDL.SDL_Keymod.SDL_KMOD_ALT) != 0
             });
         }
 
