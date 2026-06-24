@@ -15,7 +15,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 /// Central place to view and edit every hotkey in one table. Registered hotkeys persist to
 /// hotkeys.json; macro hotkeys are shown in the same table and, when edited here, are saved back
 /// to the macro itself (macros.xml) so the macro system stays the owner of its bindings.
-/// Conflicts across both systems are flagged inline.
+/// Conflicts across both systems are surfaced in the Conflicts column (hover for details).
 /// </summary>
 public static class HotkeysTabContent
 {
@@ -75,7 +75,7 @@ public static class HotkeysTabContent
                 GridColumnInfo.Auto("Name"),
                 GridColumnInfo.Auto("Category"),
                 GridColumnInfo.Auto("Binding"),
-                GridColumnInfo.Auto(""),
+                GridColumnInfo.Auto("Conflicts"),
                 GridColumnInfo.Auto(""),
                 GridColumnInfo.Auto(""),
                 GridColumnInfo.Auto("On")
@@ -100,35 +100,33 @@ public static class HotkeysTabContent
                 string bindingText = isCapturing
                     ? "Listening… press key / modifier / mouse / wheel / controller (Esc to cancel)"
                     : binding.Describe();
-                if (conflicts.Count > 0)
-                    bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts);
                 grid.AddWidget(new MyraLabel(bindingText, MyraLabel.TextStyle.P), row, 2);
 
+                var conflictLabel = new MyraLabel(conflicts.Count > 0 ? "Yes" : string.Empty, MyraLabel.TextStyle.P);
+                if (conflicts.Count > 0)
+                    conflictLabel.Tooltip = "Conflicts with: " + string.Join(", ", conflicts);
+                grid.AddWidget(conflictLabel, row, 3);
+
                 if (isCapturing)
-                    grid.AddWidget(new MyraButton("Cancel", () => { StopCapture(); BuildList(); }), row, 3);
+                    grid.AddWidget(new MyraButton("Cancel", () => { StopCapture(); BuildList(); }), row, 4);
                 else
-                    grid.AddWidget(new MyraButton("Set", () => StartCapture(localRow)), row, 3);
+                    grid.AddWidget(new MyraButton("Set", () => StartCapture(localRow)), row, 4);
 
-                grid.AddWidget(new MyraButton("Clear", () =>
+                MyraButton menuButton = null!;
+                menuButton = new MyraButton("...", () =>
                 {
-                    StopCapture();
-                    localRow.ClearBinding();
-                    BuildList();
-                }), row, 4);
-
-                if (localRow.ResetBinding != null)
-                {
-                    grid.AddWidget(new MyraButton("Reset", () =>
+                    var items = new List<(string Label, Action Action)>
                     {
-                        StopCapture();
-                        localRow.ResetBinding();
-                        BuildList();
-                    }), row, 5);
-                }
-                else
-                {
-                    grid.AddWidget(new MyraLabel(string.Empty, MyraLabel.TextStyle.P), row, 5);
-                }
+                        ("Clear", () => { StopCapture(); localRow.ClearBinding(); BuildList(); })
+                    };
+                    if (localRow.ResetBinding != null)
+                    {
+                        Action reset = localRow.ResetBinding;
+                        items.Add(("Reset", () => { StopCapture(); reset(); BuildList(); }));
+                    }
+                    ShowRowMenu(menuButton, items.ToArray());
+                });
+                grid.AddWidget(menuButton, row, 5);
 
                 if (localRow.SupportsEnable)
                 {
@@ -170,9 +168,35 @@ public static class HotkeysTabContent
 
         BuildList();
 
+        var topBar = new HorizontalStackPanel { Spacing = 4 };
+        topBar.Widgets.Add(new MyraButton("Reset all", () =>
+        {
+            StopCapture();
+            foreach (HotKeyEntry e in HotKeys.AllRegistered())
+                e.ResetToDefault();
+            BuildList();
+        }));
+        root.Widgets.Add(topBar);
+
         root.Widgets.Add(new ScrollViewer { Height = 360, Content = listPanel });
 
         return root;
+    }
+
+    private static void ShowRowMenu(Widget anchor, params (string Label, Action Action)[] items)
+    {
+        var menu = new VerticalMenu();
+        foreach ((string label, Action action) in items)
+        {
+            var item = new MenuItem { Text = label };
+            if (action != null)
+            {
+                Action captured = action;
+                item.Selected += (_, _) => captured();
+            }
+            menu.Items.Add(item);
+        }
+        anchor.Desktop?.ShowContextMenu(menu, Mouse.Position);
     }
 
     private static List<HotkeyRow> BuildRows()
