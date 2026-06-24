@@ -6,6 +6,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -226,6 +227,7 @@ namespace ClassicUO.Game.Scenes
             BuySellAgent.Load();
             OrganizerAgent.Load();
             GraphicsReplacement.Load();
+            HotKeys.Load();
             SpellBarManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
@@ -426,6 +428,7 @@ namespace ClassicUO.Game.Scenes
 
             _world.Macros.Save();
             _world.Macros.Clear();
+            HotKeys.Save();
             _world.InfoBars.Save();
             ProfileManager.UnLoadProfile();
 
