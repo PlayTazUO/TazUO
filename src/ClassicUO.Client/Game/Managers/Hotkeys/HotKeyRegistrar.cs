@@ -21,6 +21,11 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public const string GridCompareId = "grid.compareequipped";
         #endregion
 
+        #region World map
+        public const string WorldMapMarkerId = "worldmap.addmarker";
+        public const string WorldMapPathfindId = "worldmap.pathfind";
+        #endregion
+
         #region World interaction
         public const string FollowMobileId = "world.followmobile";
         public const string PathfindId = "world.pathfind";
@@ -37,6 +42,14 @@ namespace ClassicUO.Game.Managers.Hotkeys
             RegisterGlobal();
             RegisterGridContainer();
             RegisterWorld();
+            RegisterWorldMap();
+        }
+
+        private static void RegisterWorldMap()
+        {
+            const string category = "World Map";
+            HotKeys.Register(WorldMapMarkerId, "World Map: add marker", Modifier(ctrl: true), category);
+            HotKeys.Register(WorldMapPathfindId, "World Map: pathfind to point", Modifier(ctrl: true), category);
         }
 
         private static void RegisterGlobal()
