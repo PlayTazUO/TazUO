@@ -124,7 +124,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     new PromptPopupWindow("New Tab", "Enter a tab name", entry =>
                     {
-                        if (!string.IsNullOrEmpty(entry))
+                        if (!string.IsNullOrEmpty(entry) && !ProfileManager.CurrentProfile.JournalTabs.ContainsKey(entry))
                         {
                             ProfileManager.CurrentProfile.JournalTabs.Add(entry, new MessageType[] { MessageType.Regular });
                             ResizableJournal.ReloadTabs = true;
