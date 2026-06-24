@@ -21,6 +21,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public const string GridCompareId = "grid.compareequipped";
         #endregion
 
+        #region Gumps
+        public const string GumpModifierId = "gump.modifier";
+        public const string GumpLockId = "gump.lock";
+        public const string GumpOpacityId = "gump.opacityscroll";
+        #endregion
+
         #region World map
         public const string WorldMapMarkerId = "worldmap.addmarker";
         public const string WorldMapPathfindId = "worldmap.pathfind";
@@ -43,6 +49,15 @@ namespace ClassicUO.Game.Managers.Hotkeys
             RegisterGridContainer();
             RegisterWorld();
             RegisterWorldMap();
+            RegisterGumps();
+        }
+
+        private static void RegisterGumps()
+        {
+            const string category = "Gumps";
+            HotKeys.Register(GumpModifierId, "Gump: move / detach / show lock icon", Modifier(alt: true), category);
+            HotKeys.Register(GumpLockId, "Gump: lock or unlock", Modifier(ctrl: true, alt: true), category);
+            HotKeys.Register(GumpOpacityId, "Gump: adjust opacity with wheel", Modifier(alt: true), category);
         }
 
         private static void RegisterWorldMap()
