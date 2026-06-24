@@ -21,11 +21,22 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public const string GridCompareId = "grid.compareequipped";
         #endregion
 
+        #region World interaction
+        public const string FollowMobileId = "world.followmobile";
+        public const string PathfindId = "world.pathfind";
+        public const string ItemDragLockId = "world.itemdraglock";
+        public const string ZoomScrollId = "world.zoomscroll";
+        public const string SplitStackId = "world.splitstack";
+        public const string ShopBulkId = "world.shopbulk";
+        public const string ShowNameplatesId = "world.shownameplates";
+        #endregion
+
         /// <summary>Register all systems' hotkeys. Safe to call again on profile switch.</summary>
         public static void RegisterAll()
         {
             RegisterGlobal();
             RegisterGridContainer();
+            RegisterWorld();
         }
 
         private static void RegisterGlobal()
@@ -53,6 +64,18 @@ namespace ClassicUO.Game.Managers.Hotkeys
             HotKeys.Register(GridAutoLootId, "Grid: add item to autoloot", Modifier(shift: true), category);
             HotKeys.Register(GridLockSlotId, "Grid: lock item in slot", Modifier(ctrl: true), category);
             HotKeys.Register(GridCompareId, "Grid: compare item to equipped", Modifier(ctrl: true), category);
+        }
+
+        private static void RegisterWorld()
+        {
+            const string category = "World";
+            HotKeys.Register(FollowMobileId, "World: click to follow a mobile", Modifier(alt: true), category);
+            HotKeys.Register(PathfindId, "World: pathfind modifier", Modifier(shift: true), category);
+            HotKeys.Register(ItemDragLockId, "World: lock item drag position", Modifier(ctrl: true), category);
+            HotKeys.Register(ZoomScrollId, "World: zoom with mouse wheel", Modifier(ctrl: true), category);
+            HotKeys.Register(SplitStackId, "World: split stack modifier", Modifier(shift: true), category);
+            HotKeys.Register(ShopBulkId, "Shop: buy/sell entire stack", Modifier(shift: true), category);
+            HotKeys.Register(ShowNameplatesId, "World: show all nameplates", Modifier(ctrl: true, shift: true), category);
         }
 
         private static HotkeyBinding Modifier(bool ctrl = false, bool shift = false, bool alt = false)

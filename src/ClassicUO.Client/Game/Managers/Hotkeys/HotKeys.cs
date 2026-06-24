@@ -102,6 +102,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
             return entry;
         }
 
+        /// <summary>
+        /// Convenience poll: true when the hotkey <paramref name="id"/> is registered and currently
+        /// pressed. Honors the entry's Enabled flag and the global disable. Unknown ids return false.
+        /// </summary>
+        public static bool IsPressed(string id, bool allowAdditionalModifiers = true)
+            => _entries.TryGetValue(id, out HotKeyEntry entry) && entry.IsPressed(allowAdditionalModifiers);
+
         /// <summary>All entries currently registered this session.</summary>
         public static IEnumerable<HotKeyEntry> AllRegistered() => _entries.Values.Where(e => e.Registered);
 
