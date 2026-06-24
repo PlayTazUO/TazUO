@@ -228,7 +228,7 @@ namespace ClassicUO.Game.Scenes
             OrganizerAgent.Load();
             GraphicsReplacement.Load();
             HotKeys.Load();
-            GridContainerHotkeys.Register();
+            HotKeyRegistrar.RegisterAll();
             SpellBarManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
