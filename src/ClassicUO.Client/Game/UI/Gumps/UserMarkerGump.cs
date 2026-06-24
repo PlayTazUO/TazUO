@@ -16,8 +16,6 @@ namespace ClassicUO.Game.UI.Gumps
 {
     public sealed class UserMarkersGump : MyraControl
     {
-        private readonly World _world;
-
         private readonly MyraInputBox _textBoxX;
         private readonly MyraInputBox _textBoxY;
         private readonly MyraInputBox _markerName;
@@ -31,6 +29,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private readonly List<WMapMarker> _markers;
         private readonly int _markerIdx;
+        private readonly int _mapIndex;
 
         private const int MAX_NAME_LEN = 25;
 
@@ -42,16 +41,19 @@ namespace ClassicUO.Game.UI.Gumps
 
         public event EventHandler EditEnd;
 
-        internal UserMarkersGump(World world, int x, int y, List<WMapMarker> markers, string color = "none", string icon = "exit", bool isEdit = false, int markerIdx = -1)
+        internal UserMarkersGump(World world, int x, int y, List<WMapMarker> markers, string color = "none", string icon = "exit", bool isEdit = false, int markerIdx = -1, int? mapIndex = null)
             : base(isEdit ? ResGumps.EditMarker : ResGumps.AddMarker)
         {
-            _world = world;
-
-            _mapMaxX = Client.Game.UO.FileManager.Maps.MapsDefaultSize[world.MapIndex, 0];
-            _mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[world.MapIndex, 1];
-
             _markers = markers;
             _markerIdx = markerIdx;
+
+            // Persist against the map the marker actually belongs to: an existing marker keeps its
+            // own MapId on edit, new markers use the explicitly displayed map (the world map can
+            // free-view a different map than the player is currently on), falling back to the player's map.
+            _mapIndex = isEdit && _markerIdx >= 0 ? _markers[_markerIdx].MapId : mapIndex ?? world.MapIndex;
+
+            _mapMaxX = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 0];
+            _mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 1];
 
             _colors = new[] { "none", "red", "green", "blue", "purple", "black", "yellow", "white" };
             _icons = _markerIcons.Keys.ToArray();
@@ -210,7 +212,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (markerName.Contains(","))
                 markerName = markerName.Replace(",", "");
 
-            int mapIdx = _world.MapIndex;
+            int mapIdx = _mapIndex;
             string color = _colors[_selectedColorIndex];
             string icon = _hasIcons ? _icons[_selectedIconIndex] : string.Empty;
 
