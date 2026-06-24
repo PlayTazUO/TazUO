@@ -28,6 +28,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public static string FilePath => Path.Combine(ProfileManager.ProfilePath, "hotkeys.json");
 
         /// <summary>
+        /// True when all hotkeys are globally disabled (the shared Profile.DisableHotkeys flag,
+        /// toggled by the global shutoff hotkey). Entries flagged
+        /// <see cref="HotKeyEntry.IgnoresGlobalDisable"/> ignore this.
+        /// </summary>
+        public static bool GloballyDisabled => ProfileManager.CurrentProfile?.DisableHotkeys ?? false;
+
+        /// <summary>
         /// Load the active profile's saved bindings and re-apply them to any already-registered
         /// entries. Call this before consumers register (so first-time registration can adopt a
         /// saved binding) and again whenever the active profile changes.
@@ -150,6 +157,9 @@ namespace ClassicUO.Game.Managers.Hotkeys
             foreach (HotKeyEntry entry in _entries.Values)
             {
                 if (!entry.Registered || !entry.Enabled || entry.OnPressed == null)
+                    continue;
+
+                if (GloballyDisabled && !entry.IgnoresGlobalDisable)
                     continue;
 
                 HotkeyBinding b = entry.Binding;

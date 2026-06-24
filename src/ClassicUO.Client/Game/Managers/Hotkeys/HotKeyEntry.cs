@@ -31,6 +31,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
         /// <summary>True while a consumer has this id registered this session (drives prune-on-save).</summary>
         internal bool Registered { get; set; }
 
+        /// <summary>
+        /// When true, this hotkey keeps working while hotkeys are globally disabled. Used by the
+        /// global shutoff hotkey itself so it can always toggle the rest back on.
+        /// </summary>
+        internal bool IgnoresGlobalDisable { get; set; }
+
         public HotKeyEntry(string id, string name, HotkeyBinding defaults, string category)
         {
             Id = id;
@@ -41,7 +47,9 @@ namespace ClassicUO.Game.Managers.Hotkeys
         }
 
         public bool IsPressed(bool allowAdditionalModifiers = true)
-            => Enabled && Binding != null && Binding.IsPressed(allowAdditionalModifiers);
+            => Enabled
+               && (IgnoresGlobalDisable || !HotKeys.GloballyDisabled)
+               && Binding != null && Binding.IsPressed(allowAdditionalModifiers);
 
         public void ResetToDefault() => Binding = Default.Clone();
 
