@@ -49,13 +49,12 @@ public static class HotkeysTabContent
 
         var listPanel = new VerticalStackPanel { Spacing = 1 };
 
-        Action? unsubscribe = null;
+        var capture = new HotkeyCapture();
         object? capturingSource = null;
 
         void StopCapture()
         {
-            unsubscribe?.Invoke();
-            unsubscribe = null;
+            capture.Stop();
             capturingSource = null;
         }
 
@@ -102,7 +101,9 @@ public static class HotkeysTabContent
                 grid.AddWidget(new MyraLabel(r.Name, MyraLabel.TextStyle.P), row, 0);
                 grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 1);
 
-                string bindingText = isCapturing ? "Press a key (Esc to cancel)..." : binding.Describe();
+                string bindingText = isCapturing
+                    ? "Listening… press key / mouse / wheel / controller (Esc to cancel)"
+                    : binding.Describe();
                 if (conflicts.Count > 0)
                     bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts);
                 grid.AddWidget(new MyraLabel(bindingText, MyraLabel.TextStyle.P), row, 2);
@@ -154,38 +155,29 @@ public static class HotkeysTabContent
 
         void StartCapture(HotkeyRow row)
         {
-            StopCapture();
             capturingSource = row.Source;
             BuildList();
 
-            void Handler(string hotkey)
-            {
-                (SDL.SDL_Keycode key, SDL.SDL_Keymod mod) = HotkeyUtil.ParseHotKeyString(hotkey);
-
-                if (key == SDL.SDL_Keycode.SDLK_ESCAPE)
+            capture.Start(
+                binding =>
                 {
-                    StopCapture();
+                    row.Apply(binding);
+                    capturingSource = null;
                     BuildList();
-                    return;
-                }
-
-                if (key != SDL.SDL_Keycode.SDLK_UNKNOWN)
+                },
+                () =>
                 {
-                    row.Apply(new HotkeyBinding(key, mod));
-                    StopCapture();
+                    capturingSource = null;
                     BuildList();
-                }
-            }
-
-            Keyboard.KeyDownEvent += Handler;
-            unsubscribe = () => Keyboard.KeyDownEvent -= Handler;
+                });
         }
 
         BuildList();
 
         root.Widgets.Add(new MyraLabel(
-            "Capturing a binding records keyboard keys + modifiers. Mouse, wheel and controller "
-            + "bindings are shown but are set from the system that owns them.",
+            "Capturing records keyboard keys, mouse buttons (middle/extra), mouse wheel, or "
+            + "controller buttons, together with any held modifiers. Left/right mouse buttons "
+            + "can't be bound.",
             MyraLabel.TextStyle.P));
         root.Widgets.Add(new ScrollViewer { Height = 360, Content = listPanel });
 
@@ -231,7 +223,7 @@ public static class HotkeysTabContent
                     GetBinding = () => MacroBinding(macro),
                     Apply = b =>
                     {
-                        ApplyKeyboardBinding(macro, b);
+                        ApplyBindingToMacro(macro, b);
                         macros.Save();
                     },
                     ClearBinding = () =>
@@ -249,18 +241,18 @@ public static class HotkeysTabContent
         return rows;
     }
 
-    private static void ApplyKeyboardBinding(Macro macro, HotkeyBinding b)
+    private static void ApplyBindingToMacro(Macro macro, HotkeyBinding b)
     {
-        // A macro holds a single binding of one kind; assigning a keyboard hotkey from this tab
-        // replaces whatever was there (mouse/wheel/controller included).
+        // A macro holds a single binding; a captured binding has exactly one input kind set, so
+        // copying every field cleanly replaces whatever was bound before.
         macro.Key = b.Key;
         macro.Ctrl = b.Ctrl;
         macro.Shift = b.Shift;
         macro.Alt = b.Alt;
-        macro.MouseButton = MouseButtonType.None;
-        macro.WheelScroll = false;
-        macro.WheelUp = false;
-        macro.ControllerButtons = null;
+        macro.MouseButton = b.MouseButton;
+        macro.WheelScroll = b.WheelScroll;
+        macro.WheelUp = b.WheelUp;
+        macro.ControllerButtons = b.ControllerButtons;
     }
 
     private static void ClearMacroBinding(Macro macro)

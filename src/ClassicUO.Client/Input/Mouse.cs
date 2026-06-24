@@ -22,6 +22,19 @@ namespace ClassicUO.Input
         /// </summary>
         public static event EventHandler<MouseLeftButtonClickStateChangedEventArgs> LeftButtonClickStateChanged;
 
+        /// <summary>
+        /// Invoked whenever any mouse button is pressed. Used by hotkey capture in the UI.
+        /// </summary>
+        public static event Action<MouseButtonType> ButtonDownEvent;
+
+        /// <summary>
+        /// Invoked on mouse wheel scroll; the argument is true when scrolled up. Used by hotkey capture.
+        /// </summary>
+        public static event Action<bool> WheelEvent;
+
+        /// <summary>Raise <see cref="WheelEvent"/>. Called from the SDL wheel dispatch.</summary>
+        public static void RaiseWheelEvent(bool up) => WheelEvent?.Invoke(up);
+
         public static MouseInfo GetMyraMouseInfo()
         {
             var info = new MouseInfo();
@@ -69,6 +82,8 @@ namespace ClassicUO.Input
 
                     break;
             }
+
+            ButtonDownEvent?.Invoke(type);
 
             SDL.SDL_CaptureMouse(true);
         }

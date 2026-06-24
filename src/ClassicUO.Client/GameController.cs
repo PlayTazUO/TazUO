@@ -889,6 +889,8 @@ namespace ClassicUO
                     Mouse.Update();
                     bool isScrolledUp = sdlEvent->wheel.y > 0;
 
+                    Mouse.RaiseWheelEvent(isScrolledUp);
+
                     if (_pluginsInitialized)
                         Plugin.ProcessMouse(0, (int)sdlEvent->wheel.y);
 
