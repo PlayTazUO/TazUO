@@ -12,45 +12,68 @@ using SDL3;
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 
 /// <summary>
-/// Central place to view and edit every registered hotkey, plus a read-only view of macro
-/// hotkeys so conflicts across the two systems are visible in one spot.
+/// Central place to view and edit every hotkey in one table. Registered hotkeys persist to
+/// hotkeys.json; macro hotkeys are shown in the same table and, when edited here, are saved back
+/// to the macro itself (macros.xml) so the macro system stays the owner of its bindings.
+/// Conflicts across both systems are flagged inline.
 /// </summary>
 public static class HotkeysTabContent
 {
+    /// <summary>
+    /// A unified editable row over either a registered <see cref="HotKeyEntry"/> or a <see cref="Macro"/>.
+    /// <see cref="Source"/> is the stable backing object, used to keep "currently capturing" identity
+    /// across table rebuilds.
+    /// </summary>
+    private sealed class HotkeyRow
+    {
+        public string Name = string.Empty;
+        public string Category = string.Empty;
+        public object Source = null!;
+        public Func<HotkeyBinding> GetBinding = () => new HotkeyBinding();
+        public Action<HotkeyBinding> Apply = _ => { };
+        public Action ClearBinding = () => { };
+        public Action? ResetBinding;
+        public bool SupportsEnable;
+        public Func<bool> GetEnabled = () => true;
+        public Action<bool> SetEnabled = _ => { };
+    }
+
     public static Widget Build()
     {
         var root = new VerticalStackPanel { Spacing = 6 };
         root.Widgets.Add(new MyraLabel("Hotkeys", MyraLabel.TextStyle.H2));
         root.Widgets.Add(new MyraLabel(
-            "All registered hotkeys are listed here. Macro hotkeys are shown read-only for reference; edit those in the Macros tab.",
+            "Every hotkey is listed here. Macro hotkeys are editable too — changes to a macro's "
+            + "hotkey are saved back to the macro itself.",
             MyraLabel.TextStyle.P));
 
         var listPanel = new VerticalStackPanel { Spacing = 1 };
 
         Action? unsubscribe = null;
-        HotKeyEntry? capturingEntry = null;
+        object? capturingSource = null;
 
         void StopCapture()
         {
             unsubscribe?.Invoke();
             unsubscribe = null;
-            capturingEntry = null;
+            capturingSource = null;
         }
 
         void BuildList()
         {
             listPanel.Widgets.Clear();
 
-            List<HotKeyEntry> registered = HotKeys.AllRegistered()
-                .OrderBy(e => e.Category ?? string.Empty)
-                .ThenBy(e => e.Name)
-                .ToList();
-
-            if (registered.Count == 0)
+            List<HotkeyRow> rows = BuildRows();
+            if (rows.Count == 0)
             {
                 listPanel.Widgets.Add(new MyraLabel("No hotkeys registered.", MyraLabel.TextStyle.P));
                 return;
             }
+
+            // Snapshot every binding up front so conflicts are detected across the whole table
+            // (registered hotkeys and macros alike), not just within one system.
+            List<(HotkeyRow Row, HotkeyBinding Binding)> snapshots =
+                rows.Select(r => (Row: r, Binding: r.GetBinding())).ToList();
 
             var grid = new MyraGrid();
             grid.SetupWithHeaders(
@@ -64,47 +87,64 @@ public static class HotkeysTabContent
             );
 
             int row = 1;
-            foreach (HotKeyEntry entry in registered)
+            foreach ((HotkeyRow r, HotkeyBinding binding) in snapshots)
             {
-                HotKeyEntry localEntry = entry;
-                List<HotKeyEntry> conflicts = HotKeys.FindConflicts(entry);
+                HotkeyRow localRow = r;
+                bool isCapturing = capturingSource != null && ReferenceEquals(r.Source, capturingSource);
 
-                grid.AddWidget(new MyraLabel(entry.Name, MyraLabel.TextStyle.P), row, 0);
-                grid.AddWidget(new MyraLabel(entry.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 1);
+                List<string> conflicts = binding.IsEmpty
+                    ? new List<string>()
+                    : snapshots
+                        .Where(s => !ReferenceEquals(s.Row, r) && binding.Matches(s.Binding))
+                        .Select(s => s.Row.Name)
+                        .ToList();
 
-                string bindingText = capturingEntry == entry ? "Press a key (Esc to cancel)..." : entry.Binding.Describe();
+                grid.AddWidget(new MyraLabel(r.Name, MyraLabel.TextStyle.P), row, 0);
+                grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 1);
+
+                string bindingText = isCapturing ? "Press a key (Esc to cancel)..." : binding.Describe();
                 if (conflicts.Count > 0)
-                    bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts.Select(c => c.Name));
+                    bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts);
                 grid.AddWidget(new MyraLabel(bindingText, MyraLabel.TextStyle.P), row, 2);
 
-                if (capturingEntry == entry)
-                {
+                if (isCapturing)
                     grid.AddWidget(new MyraButton("Cancel", () => { StopCapture(); BuildList(); }), row, 3);
-                }
                 else
-                {
-                    grid.AddWidget(new MyraButton("Set", () => StartCapture(localEntry)), row, 3);
-                }
+                    grid.AddWidget(new MyraButton("Set", () => StartCapture(localRow)), row, 3);
 
                 grid.AddWidget(new MyraButton("Clear", () =>
                 {
                     StopCapture();
-                    localEntry.Binding.Clear();
+                    localRow.ClearBinding();
                     BuildList();
                 }), row, 4);
 
-                grid.AddWidget(new MyraButton("Reset", () =>
+                if (localRow.ResetBinding != null)
                 {
-                    StopCapture();
-                    localEntry.ResetToDefault();
-                    BuildList();
-                }), row, 5);
+                    grid.AddWidget(new MyraButton("Reset", () =>
+                    {
+                        StopCapture();
+                        localRow.ResetBinding();
+                        BuildList();
+                    }), row, 5);
+                }
+                else
+                {
+                    grid.AddWidget(new MyraLabel(string.Empty, MyraLabel.TextStyle.P), row, 5);
+                }
 
-                grid.AddWidget(MyraCheckButton.CreateWithCallback(
-                    entry.Enabled,
-                    b => localEntry.Enabled = b,
-                    null,
-                    "Enable or disable this hotkey"), row, 6);
+                if (localRow.SupportsEnable)
+                {
+                    grid.AddWidget(MyraCheckButton.CreateWithCallback(
+                        localRow.GetEnabled(),
+                        b => localRow.SetEnabled(b),
+                        null,
+                        "Enable or disable this hotkey"), row, 6);
+                }
+                else
+                {
+                    grid.AddWidget(new MyraLabel(string.Empty, MyraLabel.TextStyle.P), row, 6);
+                }
 
                 row++;
             }
@@ -112,10 +152,10 @@ public static class HotkeysTabContent
             listPanel.Widgets.Add(grid);
         }
 
-        void StartCapture(HotKeyEntry entry)
+        void StartCapture(HotkeyRow row)
         {
             StopCapture();
-            capturingEntry = entry;
+            capturingSource = row.Source;
             BuildList();
 
             void Handler(string hotkey)
@@ -131,7 +171,7 @@ public static class HotkeysTabContent
 
                 if (key != SDL.SDL_Keycode.SDLK_UNKNOWN)
                 {
-                    entry.Binding = new HotkeyBinding(key, mod);
+                    row.Apply(new HotkeyBinding(key, mod));
                     StopCapture();
                     BuildList();
                 }
@@ -144,60 +184,93 @@ public static class HotkeysTabContent
         BuildList();
 
         root.Widgets.Add(new MyraLabel(
-            "Capturing a binding records keyboard keys + modifiers. Mouse, wheel and controller bindings are shown but are currently set from the system that owns them.",
+            "Capturing a binding records keyboard keys + modifiers. Mouse, wheel and controller "
+            + "bindings are shown but are set from the system that owns them.",
             MyraLabel.TextStyle.P));
-        root.Widgets.Add(new ScrollViewer { Height = 260, Content = listPanel });
-
-        root.Widgets.Add(new MyraLabel("Macro hotkeys (read-only)", MyraLabel.TextStyle.H3));
-        root.Widgets.Add(new ScrollViewer { Height = 160, Content = BuildMacroList() });
+        root.Widgets.Add(new ScrollViewer { Height = 360, Content = listPanel });
 
         return root;
     }
 
-    private static Widget BuildMacroList()
+    private static List<HotkeyRow> BuildRows()
     {
-        var panel = new VerticalStackPanel { Spacing = 1 };
+        var rows = new List<HotkeyRow>();
 
-        List<(string Name, HotkeyBinding Binding)> macros = new();
+        foreach (HotKeyEntry entry in HotKeys.AllRegistered()
+                     .OrderBy(e => e.Category ?? string.Empty)
+                     .ThenBy(e => e.Name))
+        {
+            HotKeyEntry e = entry;
+            rows.Add(new HotkeyRow
+            {
+                Name = e.Name,
+                Category = e.Category ?? string.Empty,
+                Source = e,
+                GetBinding = () => e.Binding ?? new HotkeyBinding(),
+                Apply = b => e.Binding = b,
+                ClearBinding = () => e.Binding?.Clear(),
+                ResetBinding = e.ResetToDefault,
+                SupportsEnable = true,
+                GetEnabled = () => e.Enabled,
+                SetEnabled = v => e.Enabled = v,
+            });
+        }
+
         MacroManager? manager = World.Instance?.Macros;
         if (manager != null)
         {
-            foreach (Macro m in manager.GetAllMacros())
+            MacroManager macros = manager;
+            foreach (Macro m in macros.GetAllMacros().OrderBy(x => x.Name))
             {
-                var binding = MacroBinding(m);
-                if (!binding.IsEmpty)
-                    macros.Add((m.Name, binding));
+                Macro macro = m;
+                rows.Add(new HotkeyRow
+                {
+                    Name = macro.Name,
+                    Category = "Macro",
+                    Source = macro,
+                    GetBinding = () => MacroBinding(macro),
+                    Apply = b =>
+                    {
+                        ApplyKeyboardBinding(macro, b);
+                        macros.Save();
+                    },
+                    ClearBinding = () =>
+                    {
+                        ClearMacroBinding(macro);
+                        macros.Save();
+                    },
+                    // Macros have no registered default to reset to; Clear covers removal.
+                    ResetBinding = null,
+                    SupportsEnable = false,
+                });
             }
         }
 
-        if (macros.Count == 0)
-        {
-            panel.Widgets.Add(new MyraLabel("No macros with hotkeys.", MyraLabel.TextStyle.P));
-            return panel;
-        }
+        return rows;
+    }
 
-        var grid = new MyraGrid();
-        grid.SetupWithHeaders(
-            GridColumnInfo.Fill("Macro", 2),
-            GridColumnInfo.Fill("Binding", 3)
-        );
+    private static void ApplyKeyboardBinding(Macro macro, HotkeyBinding b)
+    {
+        // A macro holds a single binding of one kind; assigning a keyboard hotkey from this tab
+        // replaces whatever was there (mouse/wheel/controller included).
+        macro.Key = b.Key;
+        macro.Ctrl = b.Ctrl;
+        macro.Shift = b.Shift;
+        macro.Alt = b.Alt;
+        macro.MouseButton = MouseButtonType.None;
+        macro.WheelScroll = false;
+        macro.WheelUp = false;
+        macro.ControllerButtons = null;
+    }
 
-        int row = 1;
-        foreach ((string name, HotkeyBinding binding) in macros)
-        {
-            List<HotKeyEntry> conflicts = HotKeys.FindConflicts(binding);
-
-            string bindingText = binding.Describe();
-            if (conflicts.Count > 0)
-                bindingText += "  ⚠ conflicts: " + string.Join(", ", conflicts.Select(c => c.Name));
-
-            grid.AddWidget(new MyraLabel(name, MyraLabel.TextStyle.P), row, 0);
-            grid.AddWidget(new MyraLabel(bindingText, MyraLabel.TextStyle.P), row, 1);
-            row++;
-        }
-
-        panel.Widgets.Add(grid);
-        return panel;
+    private static void ClearMacroBinding(Macro macro)
+    {
+        macro.Key = SDL.SDL_Keycode.SDLK_UNKNOWN;
+        macro.Ctrl = macro.Shift = macro.Alt = false;
+        macro.MouseButton = MouseButtonType.None;
+        macro.WheelScroll = false;
+        macro.WheelUp = false;
+        macro.ControllerButtons = null;
     }
 
     private static HotkeyBinding MacroBinding(Macro m) => new()
