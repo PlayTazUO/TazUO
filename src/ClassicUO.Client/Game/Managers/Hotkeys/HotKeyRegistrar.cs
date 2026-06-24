@@ -21,6 +21,10 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public const string GridCompareId = "grid.compareequipped";
         #endregion
 
+        #region Chat
+        public const string ChatHistoryModId = "chat.historymodifier";
+        #endregion
+
         #region Gumps
         public const string GumpModifierId = "gump.modifier";
         public const string GumpLockId = "gump.lock";
@@ -50,6 +54,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
             RegisterWorld();
             RegisterWorldMap();
             RegisterGumps();
+            RegisterChat();
+        }
+
+        private static void RegisterChat()
+        {
+            // The keys are fixed (Q = previous, W = next); this rebinds the modifier held with them.
+            HotKeys.Register(ChatHistoryModId, "Chat: message-history modifier (with Q/W)", Modifier(ctrl: true), "Chat");
         }
 
         private static void RegisterGumps()
