@@ -227,6 +227,7 @@ namespace ClassicUO.Game.Scenes
             OrganizerAgent.Load();
             GraphicsReplacement.Load();
             SpellBarManager.Load();
+            HotKeyManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
                 StaticFilters.ApplyCaveTileBorder();
@@ -369,6 +370,7 @@ namespace ClassicUO.Game.Scenes
             JournalFilterManager.Instance.Save();
 
             SpellBarManager.Unload();
+            HotKeyManager.Save();
             SelfHealManager.Unload();
             _autoUnequipActionManager?.Dispose();
             ObjectActionQueue.Instance.Clear();

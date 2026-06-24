@@ -22,6 +22,9 @@ public static class MacrosTabContent
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
 
     private static Action? _cleanupAction;
+    // HotKeyManager.Changed handler (live macro-list refresh). Stored so Cleanup() can
+    // detach it; otherwise reopening the window stacks handlers that fire into disposed widgets.
+    private static Action? _changedHandler;
     /// <summary>Call when the owning window closes to unsubscribe any active hotkey-capture handler and re-enable hotkeys.</summary>
     public static void Cleanup() => _cleanupAction?.Invoke();
 
@@ -125,6 +128,7 @@ public static class MacrosTabContent
 
             CancelCapture();
             MarkDirty();
+            HotKeyManager.OnMacroKeyChanged(selectedMacro);
         }
 
         // ── BuildMacroList ────────────────────────────────────────────────────
@@ -712,7 +716,24 @@ public static class MacrosTabContent
         BuildMacroList();
         BuildEditor();
 
-        _cleanupAction = CancelCapture;
+        // Live-refresh the macro list when HotKey data changes in another context
+        // (e.g. a HotKeys-tab edit writes through to a macro's key). BuildMacroList
+        // only reads macro state and rebuilds widgets, so this is safe to call here.
+        // Detach any handler left over from a prior (uncleaned) window first.
+        if (_changedHandler != null)
+            HotKeyManager.Changed -= _changedHandler;
+        _changedHandler = BuildMacroList;
+        HotKeyManager.Changed += _changedHandler;
+
+        _cleanupAction = () =>
+        {
+            CancelCapture();
+            if (_changedHandler != null)
+            {
+                HotKeyManager.Changed -= _changedHandler;
+                _changedHandler = null;
+            }
+        };
 
         var root = new VerticalStackPanel { Spacing = 2 };
         root.Widgets.Add(toolbar);

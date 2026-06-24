@@ -277,7 +277,7 @@ public class SpellBarManager
         enabled = true;
     }
 
-    public static void Unload()
+    public static void Save()
     {
         try
         {
@@ -288,6 +288,48 @@ public class SpellBarManager
         {
             Log.Error(e.ToString());
         }
+    }
+
+    public static void Unload()
+    {
+        Save();
+    }
+
+    /// <summary>
+    /// Clears any SpellBar slot keyboard hotkey matching the given key+mod (modifiers
+    /// normalized the same way as HotKeyTrigger). Leaves controller bindings untouched.
+    /// Persists and refreshes the on-screen bar when anything changed.
+    /// </summary>
+    public static bool ClearHotKeyForKey(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+    {
+        if (spellBarSettings == null)
+            return false;
+
+        SDL.SDL_Keymod normalizedMod = ClassicUO.Game.Data.HotKeyTrigger.NormalizeMods(mod);
+
+        SDL.SDL_Keycode[] keys = GetHotKeys();
+        SDL.SDL_Keymod[] mods = GetModKeys();
+        if (keys == null || mods == null)
+            return false;
+
+        bool cleared = false;
+        for (int i = 0; i < keys.Length && i < mods.Length; i++)
+        {
+            if (keys[i] == key &&
+                ClassicUO.Game.Data.HotKeyTrigger.NormalizeMods(mods[i]) == normalizedMod)
+            {
+                SetButtons(i, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, null);
+                cleared = true;
+            }
+        }
+
+        if (cleared)
+        {
+            Save();
+            Game.UI.Gumps.SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
+        }
+
+        return cleared;
     }
 
     private static void SetDefaults() => SpellBarRows = [new SpellBarRow()

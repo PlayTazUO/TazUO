@@ -1147,6 +1147,12 @@ namespace ClassicUO.Game.Scenes
         {
             if (CanExecuteMacro())
             {
+                SDL.SDL_Keymod mod = (Keyboard.Ctrl ? SDL.SDL_Keymod.SDL_KMOD_CTRL : SDL.SDL_Keymod.SDL_KMOD_NONE)
+                    | (Keyboard.Shift ? SDL.SDL_Keymod.SDL_KMOD_SHIFT : SDL.SDL_Keymod.SDL_KMOD_NONE)
+                    | (Keyboard.Alt ? SDL.SDL_Keymod.SDL_KMOD_ALT : SDL.SDL_Keymod.SDL_KMOD_NONE);
+                if (HotKeyManager.MousePress(button, mod))
+                    return true;
+
                 Macro macro = _world.Macros.FindMacro(button, Keyboard.Alt, Keyboard.Ctrl, Keyboard.Shift);
 
                 if (macro != null && button != MouseButtonType.None)
@@ -1224,6 +1230,12 @@ namespace ClassicUO.Game.Scenes
             // this check specifically targets the Shop Gump. This is the least invasive, if imperfect solution right now.
             if (CanExecuteMacro() && UIManager.TopMostControl is not ShopGump)
             {
+                SDL.SDL_Keymod mod = (Keyboard.Ctrl ? SDL.SDL_Keymod.SDL_KMOD_CTRL : SDL.SDL_Keymod.SDL_KMOD_NONE)
+                    | (Keyboard.Shift ? SDL.SDL_Keymod.SDL_KMOD_SHIFT : SDL.SDL_Keymod.SDL_KMOD_NONE)
+                    | (Keyboard.Alt ? SDL.SDL_Keymod.SDL_KMOD_ALT : SDL.SDL_Keymod.SDL_KMOD_NONE);
+                if (HotKeyManager.WheelPress(up, mod))
+                    return true;
+
                 Macro macro = _world.Macros.FindMacro(up, Keyboard.Alt, Keyboard.Ctrl, Keyboard.Shift);
 
                 if (macro != null)
@@ -1491,12 +1503,11 @@ namespace ClassicUO.Game.Scenes
                 SpellBarManager.KeyPress(key, e.mod);
                 SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
 
-                Macro macro = _world.Macros.FindMacro(
-                    key,
-                    Keyboard.Alt,
-                    Keyboard.Ctrl,
-                    Keyboard.Shift
-                );
+                bool hotkeyHandled = HotKeyManager.KeyPress(key, e.mod);
+
+                Macro macro = hotkeyHandled
+                    ? null
+                    : _world.Macros.FindMacro(key, Keyboard.Alt, Keyboard.Ctrl, Keyboard.Shift);
 
                 if (macro != null && key != SDL.SDL_Keycode.SDLK_UNKNOWN)
                 {

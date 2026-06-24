@@ -5,6 +5,7 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Agents;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Filters;
+using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.HotKeys;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.ItemDatabase;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 using ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Skills;
@@ -47,6 +48,7 @@ public class AssistantWindow : MyraControl
         base.Dispose();
 
         MacrosTabContent.Cleanup();
+        HotKeysTabContent.Cleanup();
 
         EventSink.SkillValueChangedEvent -= EventSkillUpdated;
         EventSink.SkillBaseChangedEvent -= EventSkillUpdated;
@@ -61,6 +63,7 @@ public class AssistantWindow : MyraControl
         tabs.AddTab("Filters", FiltersTab.Build);
         tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
         tabs.AddTab("Macros", () => MacrosTabContent.Build(this));
+        tabs.AddTab("HotKeys", () => HotKeysTabContent.Build(this));
         tabs.AddTab("Skills", () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);

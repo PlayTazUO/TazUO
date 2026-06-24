@@ -174,6 +174,19 @@ public static class MyraStyle
         grid.RowSpacing = 1;
     }
 
+    /// <summary>
+    /// Wraps a section's content panel in a subtle bordered "card": a 1px border using
+    /// the standard grid border color, a faint dark background, and small padding.
+    /// </summary>
+    public static Panel ApplySectionPanelStyle(Panel p)
+    {
+        p.Padding = new Thickness(6);
+        p.BorderThickness = new Thickness(1);
+        p.Border = new SolidBrush(GridBorderColor);
+        p.Background = new SolidBrush(new Color(0, 0, 0, 25));
+        return p;
+    }
+
     public static Button ApplyButtonDangerStyle(Button button)
     {
         button.Background = _ninePatchButtonDangerUp;
