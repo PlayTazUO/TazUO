@@ -70,11 +70,11 @@ public static class HotkeysTabContent
             List<(HotkeyRow Row, HotkeyBinding Binding)> snapshots =
                 rows.Select(r => (Row: r, Binding: r.GetBinding())).ToList();
 
-            var grid = new MyraGrid { MaxWidth = 600 };
+            var grid = new MyraGrid { MaxWidth = 800 };
             grid.SetupWithHeaders(
-                GridColumnInfo.Fill("Name", 2),
+                GridColumnInfo.Auto("Name"),
                 GridColumnInfo.Auto("Category"),
-                GridColumnInfo.Fill("Binding", 3),
+                GridColumnInfo.Auto("Binding"),
                 GridColumnInfo.Auto(""),
                 GridColumnInfo.Auto(""),
                 GridColumnInfo.Auto(""),
