@@ -3369,7 +3369,14 @@ public class WorldMapGump : ResizableGump
             if (button == MouseButtonType.Left && Keyboard.Ctrl && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
-                GoToMarker(wX, wY, true);
+
+                WMapMarkerFile userFile = _markerFiles.Where(f => f.Name == USER_MARKERS_FILE).FirstOrDefault();
+                if (userFile == null)
+                    return;
+
+                UserMarkersGump existingGump = UIManager.GetGump<UserMarkersGump>();
+                existingGump?.Dispose();
+                UIManager.Add(new UserMarkersGump(World, wX, wY, userFile.Markers));
                 return;
             }
 
