@@ -3376,7 +3376,7 @@ public class WorldMapGump : ResizableGump
 
                 UserMarkersGump existingGump = UIManager.GetGump<UserMarkersGump>();
                 existingGump?.Dispose();
-                UIManager.Add(new UserMarkersGump(World, wX, wY, userFile.Markers));
+                new UserMarkersGump(World, wX, wY, userFile.Markers);
                 return;
             }
 
