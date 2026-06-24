@@ -70,7 +70,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
         /// Register a hotkey. If a saved binding exists for <paramref name="id"/> it is adopted,
         /// otherwise <paramref name="defaults"/> is used. Returns the (possibly pre-existing) entry.
         /// </summary>
-        public static HotKeyEntry Register(string id, string name, HotkeyBinding defaults, string category = null, Action onPressed = null)
+        public static HotKeyEntry Register(string id, string name, HotkeyBinding defaults, string category = null, Action onPressed = null, bool checkConflicts = true)
         {
             if (string.IsNullOrEmpty(id))
                 throw new ArgumentException("Hotkey id cannot be null or empty", nameof(id));
@@ -90,6 +90,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             }
 
             entry.OnPressed = onPressed;
+            entry.CheckConflicts = checkConflicts;
             entry.Registered = true;
             ApplySaved(entry);
             return entry;
@@ -124,7 +125,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
             foreach (HotKeyEntry entry in AllRegistered())
             {
-                if (entry.Id == excludeId)
+                if (entry.Id == excludeId || !entry.CheckConflicts)
                     continue;
                 if (entry.Binding != null && entry.Binding.Matches(binding))
                     result.Add(entry);

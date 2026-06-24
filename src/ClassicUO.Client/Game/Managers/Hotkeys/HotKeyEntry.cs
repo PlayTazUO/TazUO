@@ -22,6 +22,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public bool Enabled { get; set; } = true;
 
         /// <summary>
+        /// When false, this hotkey is excluded from conflict detection in the Hotkeys tab — it neither
+        /// reports conflicts nor counts as a conflict for others. Use for context modifiers where the
+        /// same binding in different situations does not actually clash (e.g. grid / gump modifiers).
+        /// </summary>
+        public bool CheckConflicts { get; set; } = true;
+
+        /// <summary>
         /// Optional edge-triggered callback fired by <see cref="HotKeys.HandleKeyDown"/> when the
         /// bound key is pressed. Hold-style consumers (e.g. SelfHeal) ignore this and poll
         /// <see cref="IsPressed"/> instead.

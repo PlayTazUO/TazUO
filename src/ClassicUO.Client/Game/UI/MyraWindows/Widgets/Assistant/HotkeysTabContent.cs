@@ -36,6 +36,7 @@ public static class HotkeysTabContent
         public bool SupportsEnable;
         public Func<bool> GetEnabled = () => true;
         public Action<bool> SetEnabled = _ => { };
+        public bool CheckConflicts = true;
     }
 
     public static Widget Build()
@@ -87,10 +88,10 @@ public static class HotkeysTabContent
                 HotkeyRow localRow = r;
                 bool isCapturing = capturingSource != null && ReferenceEquals(r.Source, capturingSource);
 
-                List<string> conflicts = binding.IsEmpty
+                List<string> conflicts = (binding.IsEmpty || !r.CheckConflicts)
                     ? new List<string>()
                     : snapshots
-                        .Where(s => !ReferenceEquals(s.Row, r) && binding.Matches(s.Binding))
+                        .Where(s => !ReferenceEquals(s.Row, r) && s.Row.CheckConflicts && binding.Matches(s.Binding))
                         .Select(s => s.Row.Name)
                         .ToList();
 
@@ -220,6 +221,7 @@ public static class HotkeysTabContent
                 SupportsEnable = true,
                 GetEnabled = () => e.Enabled,
                 SetEnabled = v => e.Enabled = v,
+                CheckConflicts = e.CheckConflicts,
             });
         }
 
