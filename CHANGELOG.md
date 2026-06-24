@@ -68,6 +68,7 @@ All notable changes to TazUO will be recorded here.
 * Show a clear, actionable message when graphics shaders fail to compile instead of crashing — points at outdated/unavailable OpenGL (Remote Desktop, a VM without 3D acceleration, or missing/outdated GPU drivers) and suggests updating drivers or switching renderer - [P.R 584](https://github.com/PlayTazUO/TazUO/pull/584) ([bittiez](https://github.com/bittiez))
 * Add option disable gargoyle flying animation - ([Nesci28](https://github.com/Nesci28))
 * Fixed NullReferenceException in ImprovedBuffGump when a buff icon's title cliloc is not found - [P.R 585](https://github.com/PlayTazUO/TazUO/pull/585) ([bittiez](https://github.com/bittiez))
+* Fixed crash when creating a journal tab with a name that already exists - [P.R 589](https://github.com/PlayTazUO/TazUO/pull/589) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
