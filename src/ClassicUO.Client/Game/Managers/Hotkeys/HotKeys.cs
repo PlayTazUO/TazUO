@@ -162,7 +162,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
             SDL.SDL_Keymod n = HotkeyUtil.NormalizeMods(mod);
 
-            foreach (HotKeyEntry entry in _entries.Values)
+            // Snapshot so an OnPressed callback that (re)registers a hotkey can't invalidate the enumerator.
+            foreach (HotKeyEntry entry in _entries.Values.ToArray())
             {
                 if (!entry.Registered || !entry.Enabled || entry.OnPressed == null)
                     continue;

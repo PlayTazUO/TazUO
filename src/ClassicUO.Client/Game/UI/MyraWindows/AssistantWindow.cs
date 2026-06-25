@@ -47,6 +47,7 @@ public class AssistantWindow : MyraControl
         base.Dispose();
 
         MacrosTabContent.Cleanup();
+        HotkeysTabContent.Cleanup();
 
         EventSink.SkillValueChangedEvent -= EventSkillUpdated;
         EventSink.SkillBaseChangedEvent -= EventSkillUpdated;

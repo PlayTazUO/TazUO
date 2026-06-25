@@ -77,7 +77,13 @@ namespace ClassicUO.Input
                     break;
 
                 case MouseButtonType.XButton1:
+                    XButton1Pressed = true;
+                    XButtonPressed = true;
+
+                    break;
+
                 case MouseButtonType.XButton2:
+                    XButton2Pressed = true;
                     XButtonPressed = true;
 
                     break;
@@ -109,8 +115,14 @@ namespace ClassicUO.Input
                     break;
 
                 case MouseButtonType.XButton1:
+                    XButton1Pressed = false;
+                    XButtonPressed = XButton2Pressed;
+
+                    break;
+
                 case MouseButtonType.XButton2:
-                    XButtonPressed = false;
+                    XButton2Pressed = false;
+                    XButtonPressed = XButton1Pressed;
 
                     break;
             }
@@ -157,6 +169,10 @@ namespace ClassicUO.Input
         public static bool MButtonPressed { get; set; }
 
         public static bool XButtonPressed { get; set; }
+
+        public static bool XButton1Pressed { get; set; }
+
+        public static bool XButton2Pressed { get; set; }
 
         public static bool IsDragging { get; set; }
 

@@ -39,6 +39,12 @@ public static class HotkeysTabContent
         public bool CheckConflicts = true;
     }
 
+    private static HotkeyCapture _capture;
+
+    /// <summary>Stop any in-progress capture; called from AssistantWindow.Dispose so static input
+    /// subscriptions don't outlive the window.</summary>
+    public static void Cleanup() => _capture?.Stop();
+
     public static Widget Build()
     {
         var root = new VerticalStackPanel { Spacing = 6 };
@@ -46,12 +52,12 @@ public static class HotkeysTabContent
 
         var listPanel = new VerticalStackPanel { Spacing = 1 };
 
-        var capture = new HotkeyCapture();
+        _capture = new HotkeyCapture();
         object? capturingSource = null;
 
         void StopCapture()
         {
-            capture.Stop();
+            _capture.Stop();
             capturingSource = null;
         }
 
@@ -153,7 +159,7 @@ public static class HotkeysTabContent
             capturingSource = row.Source;
             BuildList();
 
-            capture.Start(
+            _capture.Start(
                 binding =>
                 {
                     row.Apply(binding);

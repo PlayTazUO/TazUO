@@ -155,8 +155,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
             MouseButtonType.Left => Mouse.LButtonPressed,
             MouseButtonType.Right => Mouse.RButtonPressed,
             MouseButtonType.Middle => Mouse.MButtonPressed,
-            MouseButtonType.XButton1 => Mouse.XButtonPressed,
-            MouseButtonType.XButton2 => Mouse.XButtonPressed,
+            MouseButtonType.XButton1 => Mouse.XButton1Pressed,
+            MouseButtonType.XButton2 => Mouse.XButton2Pressed,
             _ => false
         };
 

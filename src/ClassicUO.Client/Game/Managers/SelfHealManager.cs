@@ -56,7 +56,19 @@ namespace ClassicUO.Game.Managers
             _loaded = false;
         }
 
-        public static void Update() => _machine.Tick(_env, _held);
+        public static void Update()
+        {
+            bool held = _held;
+
+            // Keyboard bindings latch _held via the focus-gated key down/up events. Non-key bindings
+            // (mouse button, controller, modifier-only) have no up/down pair to latch, so poll the
+            // registry for them instead. (Wheel bindings are transient and can't be held.)
+            HotKeyEntry entry = HotKeys.Get(SelfHealHotkeyId);
+            if (entry != null && entry.Binding != null && !entry.Binding.HasKey && !entry.Binding.IsEmpty)
+                held = entry.IsPressed();
+
+            _machine.Tick(_env, held);
+        }
 
         /// <summary>Called from GameSceneInputHandler.OnKeyDown (already focus-gated).</summary>
         public static void HandleKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod, bool repeat)

@@ -66,11 +66,12 @@ namespace ClassicUO.Game.Managers.Hotkeys
         private static void RegisterGumps()
         {
             // Context modifiers: the same modifier is fine across these (and other systems), so they
-            // are excluded from conflict checks.
+            // are excluded from conflict checks. They are also exempt from the global hotkey shutoff
+            // so window management (move/detach/lock/opacity) keeps working while hotkeys are off.
             const string category = "Gumps";
-            HotKeys.Register(GumpModifierId, "Move / detach / show lock icon", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(GumpLockId, "Lock or unlock", Modifier(ctrl: true, alt: true), category, checkConflicts: false);
-            HotKeys.Register(GumpOpacityId, "Adjust opacity with wheel", Modifier(alt: true), category, checkConflicts: false);
+            HotKeys.Register(GumpModifierId, "Move / detach / show lock icon", Modifier(alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
+            HotKeys.Register(GumpLockId, "Lock or unlock", Modifier(ctrl: true, alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
+            HotKeys.Register(GumpOpacityId, "Adjust opacity with wheel", Modifier(alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
         }
 
         private static void RegisterWorldMap()

@@ -1612,7 +1612,7 @@ namespace ClassicUO.Game.Scenes
             var key = (SDL.SDL_Keycode)e.key;
 
             if (
-                !Keyboard.Ctrl &&
+                !HotKeys.IsPressed(HotKeyRegistrar.ZoomScrollId) &&
                 ProfileManager.CurrentProfile.EnableMousewheelScaleZoom
                 && ProfileManager.CurrentProfile.RestoreScaleAfterUnpressCtrl
             )
