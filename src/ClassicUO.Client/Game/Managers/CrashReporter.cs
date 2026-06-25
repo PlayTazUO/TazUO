@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Net.Http;
 using ClassicUO.Utility.Logging;
 
@@ -13,27 +14,24 @@ namespace ClassicUO.Game.Managers
         {
         }
 
-        public CrashReporter SendMessage(string msgSend)
+        [Conditional("DEBUG")]
+        public void SendMessage(string msgSend)
         {
-            if (String.IsNullOrEmpty(WebHook))
-                return null;
+            if (string.IsNullOrEmpty(WebHook))
+                return;
 
-            using (var httpClient = new HttpClient())
-            {
-                var form = new MultipartFormDataContent();
-                byte[] file_bytes = System.Text.Encoding.Unicode.GetBytes(msgSend);
-                form.Add(new ByteArrayContent(file_bytes, 0, file_bytes.Length), "Document", "log.txt");
-                httpClient.PostAsync(Obf(WebHook, -21), form).Wait();
-                httpClient.Dispose();
-            }
+            using var httpClient = new HttpClient();
 
-            return this;
+            var form = new MultipartFormDataContent();
+            byte[] fileBytes = System.Text.Encoding.Unicode.GetBytes(msgSend);
+            form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "Document", "log.txt");
+            httpClient.PostAsync(Obf(WebHook, -21), form).Wait();
         }
 
         public static string Obf(string source, int shift)
         {
             // The total number of characters in the UTF-16 space
-            int totalChars = 65536; 
+            int totalChars = 65536;
             char[] buffer = source.ToCharArray();
 
             for (int i = 0; i < buffer.Length; i++)

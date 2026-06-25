@@ -2,6 +2,7 @@ using ClassicUO.Common;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -27,7 +28,8 @@ public static class NameplatesTab
 
         return new OptionTabGroup()
             .AddTab(lang.ButtonGeneral, GetGeneralNameplatesSubTabContent, new SearchMetadata(lang.ButtonGeneral, Keywords: [kw.General]))
-            .AddTab(lang.ButtonProfiles, GetProfilesSubTabContentSource, new SearchMetadata()); // Empty metadata to disable search; Doesn't render well in the results page.
+            .AddTab(lang.ButtonProfiles, GetProfilesSubTabContentSource,
+                new SearchMetadata()); // Empty metadata to disable search; Doesn't render well in the results page.
     }
 
     #region Profiles
@@ -81,7 +83,7 @@ public static class NameplatesTab
         mods |= profile.Ctrl ? SDL.SDL_Keymod.SDL_KMOD_CTRL : 0;
         mods |= profile.Shift ? SDL.SDL_Keymod.SDL_KMOD_SHIFT : 0;
 
-        var currentHotkey = new HotkeySelection(profile.Key, mods);
+        var currentHotkey = new HotkeyBinding(profile.Key, mods);
 
         return OptionTabCommons.StyledVerticalWrapPanel(
             OptionTabCommons.StyledHorizontalSpaceBetween(
@@ -109,7 +111,7 @@ public static class NameplatesTab
 
     private static void OnProfileHotkeyChanged(NameOverheadOption profile, SelectionChangedEventArgs e)
     {
-        HotkeySelection value = e.NewValue;
+        HotkeyBinding value = e.NewValue;
 
         // We have to check for hotkey conflicts first.
         NameOverheadOption option = NameOverHeadManager.FindOptionByHotkey(value.Key, value.Alt, value.Ctrl, value.Shift);

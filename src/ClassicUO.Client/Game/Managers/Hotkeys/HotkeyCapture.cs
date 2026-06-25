@@ -20,6 +20,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         public bool IsActive => _active;
 
+        public bool CapturesMouseEvents { get; set; } = true;
+
         public void Start(Action<HotkeyBinding> onCaptured, Action? onCancelled = null)
         {
             Stop();
@@ -31,8 +33,13 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
             Keyboard.KeyDownEvent += OnKey;
             Keyboard.BareModifierEvent += OnBareModifier;
-            Mouse.ButtonDownEvent += OnMouseButton;
-            Mouse.WheelEvent += OnWheel;
+
+            if (CapturesMouseEvents)
+            {
+                Mouse.ButtonDownEvent += OnMouseButton;
+                Mouse.WheelEvent += OnWheel;
+            }
+
             Controller.ButtonDownEvent += OnController;
         }
 

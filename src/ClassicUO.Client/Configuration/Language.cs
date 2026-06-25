@@ -216,6 +216,7 @@ namespace ClassicUO.Configuration
             public string Character { get; set; } = "Character";
             public string Chat { get; set; } = "Chat";
             public string Circle { get; set; } = "Circle";
+            public string Clear { get; set; } = "Clear";
             public string Click { get; set; } = "Click";
             public string Close { get; set; } = "Close";
             public string Clothing { get; set; } = "Clothing";
@@ -1188,7 +1189,7 @@ namespace ClassicUO.Configuration
             public string NewEntry { get; set; } = "New entry";
             public string NameOverheadEntryName { get; set; } = "Name overhead entry name";
             public string DeleteEntry { get; set; } = "Delete entry";
-            public NamePlatesOptionsTab OptionsTab { get; set; } = new NamePlatesOptionsTab();
+            public NamePlatesOptionsTab OptionsTab { get; set; } = new();
         }
 
         public class NamePlatesOptionsTab
@@ -1218,6 +1219,8 @@ namespace ClassicUO.Configuration
             public string Allied { get; set; } = "Allied";
             public string Criminal { get; set; } = "Criminal";
             public string Murderer { get; set; } = "Murderer";
+
+            public string HotkeyInputTooltip { get; set; } = "Nameplate hotkeys do not support mouse bindings";
         }
 
         public class Cooldowns
@@ -1481,6 +1484,8 @@ namespace ClassicUO.Configuration
         public string Opacity { get; set; } = "Opacity";
         public string Hue { get; set; } = "Hue";
         public string Format { get; set; } = "Format";
+        public string NoHotkeySet { get; set; } = "No hotkey set";
+        public string PressAnyKey { get; set; } = "Press any key...";
         public ProfileEditorLanguage ProfileEditor { get; set; } = new();
     }
 

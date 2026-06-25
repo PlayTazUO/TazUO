@@ -189,5 +189,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             if (Alt) s += (s.Length > 0 ? " + " : string.Empty) + "Alt";
             return s.Length == 0 ? "None" : s;
         }
+
+        public override string ToString() => Describe();
     }
 }
