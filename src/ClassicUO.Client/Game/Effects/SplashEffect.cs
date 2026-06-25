@@ -288,6 +288,17 @@ namespace ClassicUO.Game.Effects
         }
         
         /// <summary>
+        /// Clears all active splash particles.
+        /// </summary>
+        public void Reset()
+        {
+            for (int i = 0; i < _particles.Length; i++)
+            {
+                _particles[i].Active = false;
+            }
+        }
+
+        /// <summary>
         /// Renders all active splash particles.
         /// </summary>
         /// <param name="batcher">Renderer to draw with</param>

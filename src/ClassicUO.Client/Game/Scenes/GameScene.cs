@@ -1288,8 +1288,11 @@ namespace ClassicUO.Game.Scenes
             batcher.SetSampler(null);
             batcher.SetStencil(null);
 
-            // draw weather
-            _world.Weather.Draw(batcher, 0, 0, MAX_LAYER_DEPTH - 1);
+            // draw weather (DisableWeather also checked inside Weather.Draw)
+            if (ProfileManager.CurrentProfile?.DisableWeather != true)
+            {
+                _world.Weather.Draw(batcher, 0, 0, MAX_LAYER_DEPTH - 1);
+            }
 
             //GameController.DrawFlushCounts(batcher, 200, 200);
 

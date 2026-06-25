@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Effects;
@@ -224,6 +224,8 @@ namespace ClassicUO.Game
             }
         }
 
+        private static bool IsWeatherDisabled =>
+            ProfileManager.CurrentProfile?.DisableWeather == true;
 
         public WeatherType? CurrentWeather { get; private set; }
         public WeatherType Type { get; private set; }
@@ -251,10 +253,17 @@ namespace ClassicUO.Game
             _windTimer = _timer = 0;
             CurrentWeather = null;
             StopRainSound();
+            _world.RippleEffect.Reset();
+            _world.SplashEffect.Reset();
         }
 
         public void Generate(WeatherType type, byte count, byte temp)
         {
+            if (IsWeatherDisabled)
+            {
+                return;
+            }
+
             bool extended = CurrentWeather.HasValue && CurrentWeather == type;
 
             if (!extended)
@@ -445,18 +454,18 @@ namespace ClassicUO.Game
 
         private enum RainRenderStyle
         {
-            SmallDots,      
-            LargeDots,      
-            ShortLines,     
-            LongBolts       
+            SmallDots,
+            LargeDots,
+            ShortLines,
+            LongBolts
         }
 
         private enum SnowRenderStyle
         {
-            LightFlakes,    
-            MediumFlakes,   
-            HeavyFlakes,    
-            Blizzard        
+            LightFlakes,
+            MediumFlakes,
+            HeavyFlakes,
+            Blizzard
         }
 
         private enum DepthLayer
@@ -598,6 +607,11 @@ namespace ClassicUO.Game
 
         private void PlayRainSoundLoop(int soundId)
         {
+            if (IsWeatherDisabled)
+            {
+                return;
+            }
+
             if (!_world.InGame || _world.Player == null)
             {
                 return;
@@ -663,6 +677,12 @@ namespace ClassicUO.Game
 
         private void UpdateRainSound()
         {
+            if (IsWeatherDisabled)
+            {
+                StopRainSound();
+                return;
+            }
+
             if (Type != WeatherType.WT_RAIN && Type != WeatherType.WT_STORM_APPROACH)
             {
                 StopRainSound();
@@ -739,6 +759,11 @@ namespace ClassicUO.Game
 
         private void PlaySound(int sound)
         {
+            if (IsWeatherDisabled)
+            {
+                return;
+            }
+
             // randomize the sound of the weather around the player
             int randX = RandomHelper.GetValue(10, 18);
             if (RandomHelper.RandomBool())
@@ -757,6 +782,11 @@ namespace ClassicUO.Game
 
         public void Draw(UltimaBatcher2D batcher, int x, int y, float layerDepth)
         {
+            if (IsWeatherDisabled)
+            {
+                return;
+            }
+
             bool removeEffects = false;
 
             if (_timer < Time.Ticks)
@@ -1658,8 +1688,7 @@ namespace ClassicUO.Game
                 }
             }
 
-            // Only update and render if weather effects are enabled
-            if (ProfileManager.CurrentProfile?.EnableWeatherEffects == true)
+            if (!IsWeatherDisabled)
             {
                 float deltaTime = passed / 1000f; // Convert milliseconds to seconds
                 _world.SplashEffect.Update(deltaTime, viewportOffsetX, viewportOffsetY, visibleRangeX, visibleRangeY);
@@ -1680,7 +1709,7 @@ namespace ClassicUO.Game
         /// <param name="worldY">Absolute isometric Y coordinate.</param>
         /// <returns>True if the position is on a water tile, false otherwise.</returns>
         /// <remarks>
-        /// Thanks to [markdwags](https://github.com/markdwags) for the code 
+        /// Thanks to [markdwags](https://github.com/markdwags) for the code
         /// in [this comment](https://github.com/ClassicUO/ClassicUO/pull/1852#issuecomment-3656749076).
         /// </remarks>
         private bool IsWaterTileAtPosition(float worldX, float worldY)
