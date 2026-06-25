@@ -14,7 +14,7 @@ namespace ClassicUO.Game.Managers
         {
         }
 
-        [Conditional("DEBUG")]
+        [Conditional("RELEASE")]
         public void SendMessage(string msgSend)
         {
             if (string.IsNullOrEmpty(WebHook))
