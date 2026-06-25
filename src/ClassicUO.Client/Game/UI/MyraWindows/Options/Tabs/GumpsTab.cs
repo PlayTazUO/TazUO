@@ -6,8 +6,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for gump interaction settings (anchoring, dragging, closing behavior)</summary>
 internal static class GumpsTab
 {
+    /// <summary>Returns the option fragment for gump interaction settings</summary>
     internal static IOptionSource GetContent() => GetOptionsContent();
 
     private static OptionFragment GetOptionsContent()

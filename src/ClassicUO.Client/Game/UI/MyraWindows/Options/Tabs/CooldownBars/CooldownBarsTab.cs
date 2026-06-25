@@ -9,8 +9,10 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 
+/// <summary>Options tab source for the cooldown-bar rulebase editor (create and manage timed bars triggered by messages)</summary>
 internal static partial class CooldownBarsTab
 {
+    /// <summary>Returns the option fragment containing the cooldown-bars editor and enable toggle</summary>
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;

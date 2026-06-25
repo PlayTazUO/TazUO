@@ -10,8 +10,10 @@ using Label = Myra.Graphics2D.UI.Label;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for the info-bar manager (add, remove, and configure stat readouts)</summary>
 public static class InfoBarsTab
 {
+    /// <summary>Returns the option fragment containing the info-bar editor widget</summary>
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;

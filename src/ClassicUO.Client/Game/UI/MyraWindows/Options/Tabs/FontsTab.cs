@@ -9,8 +9,10 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for font configuration, including per-usage font selectors</summary>
 public static class FontsTab
 {
+    /// <summary>Returns the option fragment for font selectors and wiki link</summary>
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;

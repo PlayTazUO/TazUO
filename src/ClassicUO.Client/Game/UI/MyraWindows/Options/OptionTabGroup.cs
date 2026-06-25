@@ -7,29 +7,54 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
+/// <summary>
+/// An <see cref="IOptionSource"/> that presents its children as named tabs within a
+/// <see cref="MyraTabControl"/>. Each tab is produced on demand by a factory, and all tabs
+/// participate in search as a flat union.
+/// </summary>
 internal sealed class OptionTabGroup : IOptionSource
 {
     private readonly List<OptionTabDefinition> _tabs = [];
     private readonly Func<MyraTabControl> _tabControlFactory;
     private Widget? _cachedWidget;
 
+    /// <inheritdoc/>
     public SearchMetadata? Search { get; init; }
+
+    /// <inheritdoc/>
     public bool InheritsSearch { get; set; } = true;
 
+    /// <param name="tabControlFactory">
+    /// Optional factory for the underlying tab control.
+    /// When <see langword="null"/>, a default <see cref="MyraTabControl"/> is created.
+    /// </param>
+    /// <param name="search">Optional search metadata for this group</param>
     public OptionTabGroup(Func<MyraTabControl>? tabControlFactory = null, SearchMetadata? search = null)
     {
         _tabControlFactory = tabControlFactory ?? (() => new MyraTabControl());
         Search = search;
     }
 
+    /// <summary>Appends a tab and returns this group for fluent chaining</summary>
+    /// <param name="label">The tab header text</param>
+    /// <param name="contentFactory">Factory that produces the tab's option source</param>
+    /// <param name="search">
+    /// Optional search metadata for the tab. Defaults to metadata seeded from <paramref name="label"/>.
+    /// </param>
+    /// <returns>This group</returns>
     public OptionTabGroup AddTab(string label, Func<IOptionSource> contentFactory, SearchMetadata? search = null)
     {
         _tabs.Add(new OptionTabDefinition(label, contentFactory, search ?? new SearchMetadata(label, [label])));
         return this;
     }
 
+    /// <summary>
+    /// Renders the tab control, creating it on first call and caching it for subsequent calls
+    /// </summary>
+    /// <returns>The cached tab control widget</returns>
     public Widget Render() => _cachedWidget ??= BuildTabControl();
 
+    /// <inheritdoc/>
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
         SearchMetadata? selfSearch = GetSearchMeta(search);
@@ -45,6 +70,7 @@ internal sealed class OptionTabGroup : IOptionSource
         }
     }
 
+    /// <inheritdoc/>
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
         SearchMetadata? selfSearch = GetSearchMeta(inheritedSearch);

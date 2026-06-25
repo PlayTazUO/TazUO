@@ -10,8 +10,10 @@ using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for container settings, covering both original and grid-style containers</summary>
 public static class ContainersTab
 {
+    /// <summary>Returns the tab group containing original-containers and grid-containers sub-tabs</summary>
     internal static IOptionSource GetContent() => GetContainerMenuTabs();
 
     private static OptionTabGroup GetContainerMenuTabs()

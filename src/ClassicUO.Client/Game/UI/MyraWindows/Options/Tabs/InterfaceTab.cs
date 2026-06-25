@@ -3,8 +3,13 @@ using ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>
+/// Top-level interface options tab that groups containers, nameplates, tooltips, info bars,
+/// health bars, cooldown bars, gumps, and counter sub-tabs.
+/// </summary>
 public static class InterfaceTab
 {
+    /// <summary>Returns the tab group containing all interface sub-tabs</summary>
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;

@@ -4,8 +4,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for mobile-entity highlighting and hue settings</summary>
 public static class MobilesTab
 {
+    /// <summary>Returns the tab group containing highlighting and hue sub-tabs</summary>
     internal static IOptionSource GetContent() => GetTabs();
 
     private static OptionTabGroup GetTabs()

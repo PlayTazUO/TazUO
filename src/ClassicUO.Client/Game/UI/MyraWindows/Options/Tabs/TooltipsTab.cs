@@ -6,8 +6,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for tooltip appearance and override settings</summary>
 public static class TooltipsTab
 {
+    /// <summary>Returns the option group for tooltip enable/disable, delay, background, font, and override rules</summary>
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;

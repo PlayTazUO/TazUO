@@ -6,8 +6,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for chat and text settings (speech, journal, guild, and party chat)</summary>
 public static class ChatTab
 {
+    /// <summary>Returns the tab group containing speech, journal, guild, and party chat sub-tabs</summary>
     internal static IOptionSource GetContent() => GetChatMenuTabs();
 
     private static OptionTabGroup GetChatMenuTabs()

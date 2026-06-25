@@ -3,8 +3,10 @@ using ClassicUO.Configuration;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for combat and spell settings</summary>
 public static class CombatTab
 {
+    /// <summary>Returns the tab group containing combat and spells sub-tabs</summary>
     internal static IOptionSource GetContent() => GetTabs();
 
     private static OptionTabGroup GetTabs()

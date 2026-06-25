@@ -11,8 +11,10 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for speech text, chat-gradient, and overhead text display settings</summary>
 internal static class SpeechTab
 {
+    /// <summary>Returns the option fragment for speech delay, color, and overhead text options</summary>
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;

@@ -8,8 +8,10 @@ using ClassicUO.Input;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for audio settings (master volume, music, ambient, and footstep sounds)</summary>
 public static class SoundsTab
 {
+    /// <summary>Returns the option fragment for sound enable/disable and volume controls</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()

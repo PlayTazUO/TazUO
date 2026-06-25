@@ -18,6 +18,10 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
+/// <summary>
+/// The top-level options window that hosts category navigation, a search field, and
+/// the paged content area. Replaces any existing <see cref="OptionsWindow"/> when opened.
+/// </summary>
 public class OptionsWindow : MyraControl
 {
     private const int MAX_HEIGHT = 850;
@@ -63,6 +67,11 @@ public class OptionsWindow : MyraControl
     private bool _searchPending;
     private Point? _resultsBudget;
 
+    /// <summary>
+    /// Raised when the active category changes, either via a category button click or when
+    /// a search is cleared and the previous category is restored.
+    /// The event argument is the newly selected category label.
+    /// </summary>
     public event EventHandler<string>? SelectedCategoryChanged;
 
     public OptionsWindow() : base("Options")
@@ -166,6 +175,9 @@ public class OptionsWindow : MyraControl
         _searchPending = true;
     }
 
+    /// <summary>
+    /// Fires the debounced search when the debounce timer has elapsed since the last keystroke
+    /// </summary>
     public override void Update()
     {
         base.Update();

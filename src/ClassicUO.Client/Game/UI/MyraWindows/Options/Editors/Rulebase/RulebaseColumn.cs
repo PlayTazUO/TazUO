@@ -26,5 +26,7 @@ public sealed class RulebaseColumn<TRule> where TRule : IRule
 
     /// <summary>Builds the cell widget displayed for a given rule in this column</summary>
     public Func<TRule, Widget> CellFactory { get; init; } = _ => new Label();
+
+    /// <summary>Horizontal alignment applied to each cell widget within this column</summary>
     public HorizontalAlignment CellContentAlignment { get; init; } = HorizontalAlignment.Stretch;
 }

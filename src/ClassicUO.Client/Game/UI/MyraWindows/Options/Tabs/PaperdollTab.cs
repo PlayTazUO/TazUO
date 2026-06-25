@@ -5,8 +5,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for paperdoll display settings, including modern paperdoll appearance</summary>
 public class PaperdollTab
 {
+    /// <summary>Returns the option fragment for modern-paperdoll enable/disable and styling</summary>
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;

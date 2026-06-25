@@ -4,8 +4,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for movement and pathfinding settings</summary>
 public static class MovementTab
 {
+    /// <summary>Returns the option fragment for pathfinding and run-mode configuration</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()

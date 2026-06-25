@@ -7,28 +7,48 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
+/// <summary>
+/// An <see cref="IOptionSource"/> that presents multiple pages of options using a
+/// <see cref="PageControl"/>, where each page is produced by a separate factory.
+/// All pages participate in search as if they were a flat union.
+/// </summary>
+/// <param name="search">Optional search metadata for this group</param>
 internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSource
 {
     private readonly List<OptionPageDefinition> _pages = [];
     private Widget? _cachedWidget;
 
+    /// <inheritdoc/>
     public SearchMetadata? Search { get; init; } = search;
+
+    /// <inheritdoc/>
     public bool InheritsSearch { get; set; } = true;
 
+    /// <param name="search">Optional search metadata for this group</param>
+    /// <param name="pages">Factories producing the initial set of pages, added in order</param>
     public OptionPageGroup(SearchMetadata? search, params Func<IOptionSource>[] pages) : this(search)
     {
         foreach (Func<IOptionSource> page in pages)
             AddPage(page);
     }
 
+    /// <summary>Appends a page to this group and returns this group for fluent chaining</summary>
+    /// <param name="contentFactory">Factory that produces the page's option source</param>
+    /// <returns>This group</returns>
     public OptionPageGroup AddPage(Func<IOptionSource> contentFactory)
     {
         _pages.Add(new OptionPageDefinition(contentFactory));
         return this;
     }
 
+    /// <summary>
+    /// Renders all pages and wraps them in a <see cref="PageControl"/>,
+    /// caching the result for subsequent calls
+    /// </summary>
+    /// <returns>The cached paged widget</returns>
     public Widget Render() => _cachedWidget ??= BuildPageControl();
 
+    /// <inheritdoc/>
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
     {
         SearchMetadata? finalSearch = GetSearchMeta(search);
@@ -40,6 +60,7 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
                 yield return entry;
     }
 
+    /// <inheritdoc/>
     public IEnumerable<OptionEntry> GetOptions(SearchMetadata? inheritedSearch = null)
     {
         SearchMetadata? search = GetSearchMeta(inheritedSearch);

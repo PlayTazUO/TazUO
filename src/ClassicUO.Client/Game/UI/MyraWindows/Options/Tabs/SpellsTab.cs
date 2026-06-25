@@ -9,8 +9,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for spell overhead format and visual-range display settings</summary>
 public static class SpellsTab
 {
+    /// <summary>Returns the option fragment for spell-format and visual-range configuration</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()

@@ -4,8 +4,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for health-bar display and drag-to-lock settings</summary>
 public static class HealthBarsTab
 {
+    /// <summary>Returns the option fragment for health-bar appearance and drag-lock configuration</summary>
     internal static IOptionSource GetContent()
     {
         ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;

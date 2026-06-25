@@ -14,8 +14,10 @@ using SDL3;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for nameplate display settings and profile-based nameplate configuration</summary>
 public static class NameplatesTab
 {
+    /// <summary>Returns the tab group containing general nameplate settings and profile sub-tabs</summary>
     internal static IOptionSource GetContent() => GetNameplatesMenuTabs();
 
     private static OptionTabGroup GetNameplatesMenuTabs()

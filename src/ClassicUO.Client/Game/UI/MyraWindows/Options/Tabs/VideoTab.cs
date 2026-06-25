@@ -9,8 +9,10 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for video, display, zoom, lighting, and frame-rate settings</summary>
 public static class VideoTab
 {
+    /// <summary>Returns the tab group containing game-window, zoom/scaling, and lighting sub-tabs</summary>
     internal static IOptionSource GetContent() => GetVideoMenuTabs();
 
     private static OptionTabGroup GetVideoMenuTabs()

@@ -6,8 +6,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for miscellaneous settings that don't belong in another category, spread across multiple pages</summary>
 public static class MiscTab
 {
+    /// <summary>Returns the paged option group containing miscellaneous settings pages</summary>
     internal static IOptionSource GetContent() => GetPages();
 
     private static OptionPageGroup GetPages()

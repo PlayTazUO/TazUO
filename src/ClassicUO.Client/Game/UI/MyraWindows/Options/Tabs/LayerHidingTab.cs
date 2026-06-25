@@ -10,8 +10,10 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for the layer-hiding feature (suppresses rendering of specific equipment layers)</summary>
 public static class LayerHidingTab
 {
+    /// <summary>Returns the option fragment for layer-hiding enable/disable and per-layer toggles</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()

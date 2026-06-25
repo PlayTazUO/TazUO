@@ -6,8 +6,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for the counter-bar feature settings</summary>
 public static class CountersTab
 {
+    /// <summary>Returns the option fragment for counter-bar enable/disable and display configuration</summary>
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;

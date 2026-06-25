@@ -7,8 +7,10 @@ using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Options tab source for profile management utilities (copy settings to other character profiles)</summary>
 public static class ProfileTab
 {
+    /// <summary>Returns the option fragment with profile-override buttons and transfer helpers</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()

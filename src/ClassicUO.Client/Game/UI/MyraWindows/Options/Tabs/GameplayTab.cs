@@ -4,8 +4,10 @@ using ClassicUO.Game.Data;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
+/// <summary>Top-level gameplay options tab that groups combat, mobiles, movement, and layer-hiding sub-tabs</summary>
 public static class GameplayTab
 {
+    /// <summary>Returns the tab group containing combat, mobiles, movement, layer-hiding, and paperdoll sub-tabs</summary>
     internal static IOptionSource GetContent() => GetGameplayMenuTabs();
 
     private static OptionTabGroup GetGameplayMenuTabs()
