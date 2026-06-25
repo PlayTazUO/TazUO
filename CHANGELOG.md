@@ -38,6 +38,7 @@ All notable changes to TazUO will be recorded here.
 * Add option to select and copy text in journal - [P.R 575](https://github.com/PlayTazUO/TazUO/pull/575) ([Nesci28](https://github.com/Nesci28))
 * Add Script slot type to the Spell Bar - [P.R 568](https://github.com/PlayTazUO/TazUO/pull/568) ([eddo87](https://github.com/eddo87))
 * Converted the Add/Edit User Marker world map window to a Myra window - [P.R 588](https://github.com/PlayTazUO/TazUO/pull/588) ([bittiez](https://github.com/bittiez))
+* Journal filters now match partial messages (case-insensitive contains) instead of requiring exact matches - [P.R 593](https://github.com/PlayTazUO/TazUO/pull/593) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
