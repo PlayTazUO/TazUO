@@ -38,6 +38,7 @@ namespace ClassicUO.Game.Scenes
         private long _windowResizeStartTime = 0;
         private const int WINDOW_RESIZE_TIMEOUT_MS = 500;
         private const int TOLERANCE = 5;
+        private const float MAX_LAYER_DEPTH = 0x8000;
 
         private static readonly Lazy<BlendState> _darknessBlend = new Lazy<BlendState>(() =>
         {
@@ -1288,10 +1289,7 @@ namespace ClassicUO.Game.Scenes
             batcher.SetStencil(null);
 
             // draw weather
-            if (!ProfileManager.CurrentProfile.DisableWeather)
-            {
-                _world.Weather.Draw(batcher, 0, 0); // TODO: fix the depth
-            }
+            _world.Weather.Draw(batcher, 0, 0, MAX_LAYER_DEPTH - 1);
 
             //GameController.DrawFlushCounts(batcher, 200, 200);
 

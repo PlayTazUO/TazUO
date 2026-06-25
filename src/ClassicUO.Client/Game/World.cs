@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.IO.Audio;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.Effects;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Map;
@@ -48,6 +49,8 @@ namespace ClassicUO.Game
             Macros = new MacroManager(this);
             CommandManager = new CommandManager(this);
             Weather = new Weather(this);
+            RippleEffect = new RippleEffect(this);
+            SplashEffect = new SplashEffect();
             InfoBars = new InfoBarManager(this);
             DurabilityManager = new DurabilityManager(this);
             OPL = new ObjectPropertiesListManager(this);
@@ -107,7 +110,11 @@ namespace ClassicUO.Game
 
         public CommandManager CommandManager { get; }
 
-        public Weather Weather { get; }
+        internal Weather Weather { get; }
+
+        internal RippleEffect RippleEffect { get; }
+
+        internal SplashEffect SplashEffect { get; }
 
         public InfoBarManager InfoBars { get; }
 
