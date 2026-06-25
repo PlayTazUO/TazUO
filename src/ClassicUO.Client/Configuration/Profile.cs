@@ -196,6 +196,7 @@ namespace ClassicUO.Configuration
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
         public bool HideVegetation { get; set => SetProperty(ref field, value); }
+        public bool DisableGargoyleFlyingAnimation { get; set => SetProperty(ref field, value); }
         public int FieldsType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = static, 2 = tile
         public bool NoColorObjectsOutOfRange { get; set => SetProperty(ref field, value); }
         public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }

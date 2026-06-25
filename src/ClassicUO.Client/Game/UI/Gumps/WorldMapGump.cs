@@ -10,6 +10,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.IO;
@@ -928,7 +929,7 @@ public class WorldMapGump : ResizableGump
 
             try
             {
-                stream.ReadExactly(buffer, 0, buffer.Length);
+                stream.ReadExactly(buffer, 0, (int)stream.Length);
 
                 var reader = new StackDataReader(buffer.AsSpan(0, (int)stream.Length));
 
@@ -3366,7 +3367,21 @@ public class WorldMapGump : ResizableGump
     {
         if (!Client.Game.UO.GameCursor.ItemHold.Enabled)
         {
-            if (button == MouseButtonType.Left && Keyboard.Ctrl && !Keyboard.Alt)
+            if (button == MouseButtonType.Left && HotKeys.IsPressed(HotKeyRegistrar.WorldMapMarkerId) && !Keyboard.Alt)
+            {
+                CanvasToWorld(x, y, out int wX, out int wY);
+
+                WMapMarkerFile userFile = _markerFiles.Where(f => f.Name == USER_MARKERS_FILE).FirstOrDefault();
+                if (userFile == null)
+                    return;
+
+                UserMarkersGump existingGump = UIManager.GetGump<UserMarkersGump>();
+                existingGump?.Dispose();
+                new UserMarkersGump(World, wX, wY, userFile.Markers, mapIndex: _map.Index);
+                return;
+            }
+
+            if (button == MouseButtonType.Right && HotKeys.IsPressed(HotKeyRegistrar.WorldMapPathfindId) && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
                 _navDest = new Point(wX, wY);

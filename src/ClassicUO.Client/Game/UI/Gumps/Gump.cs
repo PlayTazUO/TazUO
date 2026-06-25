@@ -7,6 +7,7 @@ using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -47,7 +48,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.OnMouseWheel(delta);
 
-            if (Keyboard.Alt && ProfileManager.CurrentProfile.EnableAlphaScrollingOnGumps)
+            if (HotKeys.IsPressed(HotKeyRegistrar.GumpOpacityId) && ProfileManager.CurrentProfile.EnableAlphaScrollingOnGumps)
             {
                 if (delta == MouseEventType.WheelScrollUp && Alpha < 0.99)
                 {
@@ -123,7 +124,7 @@ namespace ClassicUO.Game.UI.Gumps
         public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
-            if (CanBeLocked && ((Keyboard.Ctrl && Keyboard.Alt) || Controller.Button_LeftTrigger) && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
+            if (CanBeLocked && (HotKeys.IsPressed(HotKeyRegistrar.GumpLockId) || Controller.Button_LeftTrigger) && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
                 IsLocked ^= true;
             }

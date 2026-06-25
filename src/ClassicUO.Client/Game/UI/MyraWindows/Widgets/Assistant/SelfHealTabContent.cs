@@ -2,6 +2,7 @@
 using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Input;
 using Myra.Graphics2D.UI;
@@ -14,6 +15,11 @@ public static class SelfHealTabContent
     public static Widget Build()
     {
         Profile profile = ProfileManager.CurrentProfile;
+
+        // The self-heal hotkey now lives in the central registry; this row edits the same entry
+        // surfaced in the Hotkeys tab. Mirror writes back to the legacy Profile fields so the
+        // import seed stays consistent.
+        HotKeyEntry entry = HotKeys.Get(SelfHealManager.SelfHealHotkeyId) ?? SelfHealManager.RegisterHotkey();
 
         SDL.SDL_Keycode capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
         SDL.SDL_Keymod capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
@@ -53,8 +59,8 @@ public static class SelfHealTabContent
 
         string KeyDisplay()
         {
-            if (profile.SelfHeal_Key == 0) return "None";
-            string s = KeysTranslator.TryGetKey((SDL.SDL_Keycode)profile.SelfHeal_Key, (SDL.SDL_Keymod)profile.SelfHeal_Mod);
+            if (entry.Binding.IsEmpty) return "None";
+            string s = entry.Binding.Describe();
             return string.IsNullOrEmpty(s) ? "None" : s;
         }
 
@@ -86,7 +92,7 @@ public static class SelfHealTabContent
 
             void Handler(string hotkey)
             {
-                (capturedKey, capturedMod) = ParseHotKeyString(hotkey);
+                (capturedKey, capturedMod) = HotkeyUtil.ParseHotKeyString(hotkey);
                 keyLabel.Text = "Press a key... " + KeysTranslator.TryGetKey(capturedKey, capturedMod);
             }
 
@@ -95,6 +101,7 @@ public static class SelfHealTabContent
         }));
         normalPanel.Widgets.Add(new MyraButton("Clear", () =>
         {
+            entry.Binding.Clear();
             profile.SelfHeal_Key = 0;
             profile.SelfHeal_Mod = 0;
             keyLabel.Text = "Hotkey: " + KeyDisplay();
@@ -104,6 +111,7 @@ public static class SelfHealTabContent
         {
             if (capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN)
             {
+                entry.Binding = new HotkeyBinding(capturedKey, capturedMod);
                 profile.SelfHeal_Key = (int)capturedKey;
                 profile.SelfHeal_Mod = (int)capturedMod;
             }
@@ -160,30 +168,5 @@ public static class SelfHealTabContent
             min: 0, max: 1000, value: profile.SelfHeal_InterruptRetryMs));
 
         return root;
-    }
-
-    private static (SDL.SDL_Keycode key, SDL.SDL_Keymod mod) ParseHotKeyString(string hotkey)
-    {
-        SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-        SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-        if (string.IsNullOrEmpty(hotkey))
-            return (key, mod);
-
-        foreach (string part in hotkey.Split('+'))
-        {
-            switch (part.ToUpperInvariant())
-            {
-                case "CTRL":  mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;  break;
-                case "SHIFT": mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT; break;
-                case "ALT":   mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;   break;
-                default:
-                    if (Enum.TryParse<SDL.SDL_Keycode>(part, true, out SDL.SDL_Keycode parsed))
-                        key = parsed;
-                    break;
-            }
-        }
-
-        return (key, mod);
     }
 }

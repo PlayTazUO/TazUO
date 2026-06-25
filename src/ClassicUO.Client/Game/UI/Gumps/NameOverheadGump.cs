@@ -671,7 +671,7 @@ namespace ClassicUO.Game.UI.Gumps
                       + (m.Offset.Y - m.Offset.Z)
                       - (height + centerY + 15) * m.Scale
                       + (
-                          m.IsGargoyle && m.IsFlying
+                          m.IsGargoyle && m.IsFlyingAnimationEnabled
                               ? -22
                               : !m.IsMounted
                                   ? 22

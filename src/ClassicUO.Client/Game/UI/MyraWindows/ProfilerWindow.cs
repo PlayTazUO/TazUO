@@ -46,8 +46,10 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             var scrollViewer = new ScrollViewer
             {
-                Width = 500,
-                Height = 350,
+                MinWidth = 500,
+                MinHeight = 350,
+                MaxWidth = 800,
+                MaxHeight = 600,
                 Content = _dataPanel,
             };
 

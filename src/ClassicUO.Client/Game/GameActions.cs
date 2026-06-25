@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
@@ -875,7 +876,7 @@ internal static class GameActions
 
         if (amount <= -1 && item.Amount > 1 && item.ItemData.IsStackable)
         {
-            if (ProfileManager.CurrentProfile.HoldShiftToSplitStack == Keyboard.Shift)
+            if (ProfileManager.CurrentProfile.HoldShiftToSplitStack == HotKeys.IsPressed(HotKeyRegistrar.SplitStackId))
             {
                 SplitMenuGump gump = UIManager.GetGump<SplitMenuGump>(item);
 

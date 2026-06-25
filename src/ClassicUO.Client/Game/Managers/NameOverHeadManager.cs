@@ -17,6 +17,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using ClassicUO.Common.Enums;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Utility;
 
@@ -90,7 +91,7 @@ namespace ClassicUO.Game.Managers
         public static string Search { get; set; } = string.Empty;
 
         public static bool IsTemporarilyShowing { get; private set; }
-        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || Keyboard.Ctrl && Keyboard.Shift;
+        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || HotKeys.IsPressed(HotKeyRegistrar.ShowNameplatesId);
 
         private static List<NameOverheadOption> Options { get; set; } = new List<NameOverheadOption>();
 

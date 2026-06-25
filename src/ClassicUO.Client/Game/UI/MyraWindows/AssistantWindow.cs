@@ -47,6 +47,7 @@ public class AssistantWindow : MyraControl
         base.Dispose();
 
         MacrosTabContent.Cleanup();
+        HotkeysTabContent.Cleanup();
 
         EventSink.SkillValueChangedEvent -= EventSkillUpdated;
         EventSink.SkillBaseChangedEvent -= EventSkillUpdated;
@@ -61,6 +62,7 @@ public class AssistantWindow : MyraControl
         tabs.AddTab("Filters", FiltersTab.Build);
         tabs.AddTab("Item Database", ItemDatabaseTabContent.Build);
         tabs.AddTab("Macros", () => MacrosTabContent.Build(this));
+        tabs.AddTab("Hotkeys", HotkeysTabContent.Build);
         tabs.AddTab("Skills", () => _skillsTabContent = new());
         tabs.SelectFirst();
         SetRootContent(tabs);

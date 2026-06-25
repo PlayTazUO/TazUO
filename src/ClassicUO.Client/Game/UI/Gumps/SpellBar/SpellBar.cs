@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ClassicUO.Assets;
+using ClassicUO.LegionScripting;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -40,6 +41,8 @@ public class SpellBar : Gump
         Build();
 
         EventSink.SpellCastBegin += EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted += OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped += OnScriptStopped;
     }
 
     private void EventSinkOnSpellCastBegin(object sender, int e)
@@ -47,6 +50,18 @@ public class SpellBar : Gump
         foreach (SpellEntry entry in spellEntries)
             if (entry.CurrentSpellID == e)
                 entry.BeginTrackingCasting();
+    }
+
+    private void OnScriptStarted(object sender, ScriptFile e) => UpdateScriptHighlights(e, true);
+    private void OnScriptStopped(object sender, ScriptFile e) => UpdateScriptHighlights(e, false);
+
+    private void UpdateScriptHighlights(ScriptFile script, bool running)
+    {
+        if (script == null)
+            return;
+
+        foreach (SpellEntry entry in spellEntries)
+            entry.SetScriptRunning(script.RelativePath, running);
     }
 
     public override GumpType GumpType { get; } = GumpType.SpellBar;
@@ -208,6 +223,8 @@ public class SpellBar : Gump
     {
         base.Dispose();
         EventSink.SpellCastBegin -= EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted -= OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped -= OnScriptStopped;
     }
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -251,11 +268,13 @@ public class SpellBar : Gump
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
+        private bool scriptRunning;
         private World World;
         private Gump parentGump;
         private TextBox hotkeyLabel;
         private TextBox macroLabel;
         private ContextMenuItemEntry macroMenu;
+        private ContextMenuItemEntry scriptMenu;
         private Microsoft.Xna.Framework.Graphics.Texture2D castingTexture = SolidColorTextureCache.GetTexture(Color.Black);
         private DateTime savedStateTime;
 
@@ -283,6 +302,10 @@ public class SpellBar : Gump
 
             icon.Hue = 0; // Draw() re-applies the active highlight for ability slots
             SetMacroLabel();
+
+            // Seed the script running-highlight once at assignment (events keep it updated thereafter).
+            scriptRunning = this.slot.IsScriptRunning;
+            ApplyScriptHighlight();
 
             if (!this.slot.IsEmpty)
             {
@@ -313,15 +336,20 @@ public class SpellBar : Gump
             return this;
         }
 
-        /// <summary>Shows an abbreviation (capital letters) of the macro name inside the slot for macro slots, hidden otherwise.</summary>
+        /// <summary>Shows an abbreviation (capital letters) of the macro or script name inside the slot for macro/script slots, hidden otherwise.</summary>
         private void SetMacroLabel()
         {
             if (macroLabel == null)
                 return;
 
-            if (slot != null && slot.Type == SpellBarSlotType.Macro)
+            string name =
+                slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
+                slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
+                null;
+
+            if (!string.IsNullOrEmpty(name))
             {
-                macroLabel.SetText(AbbreviateMacroName(slot.MacroName));
+                macroLabel.SetText(AbbreviateMacroName(name));
                 macroLabel.Y = (Height - macroLabel.Height) >> 1;
                 macroLabel.IsVisible = true;
             }
@@ -389,6 +417,7 @@ public class SpellBar : Gump
             if (button == MouseButtonType.Right)
             {
                 GenMacroList(macroMenu);
+                GenScriptList(scriptMenu);
                 ContextMenu?.Show();
             }
 
@@ -446,6 +475,10 @@ public class SpellBar : Gump
             }));
             ContextMenu.Add(abilityMenu);
 
+            scriptMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setscript"));
+            GenScriptList(scriptMenu);
+            ContextMenu.Add(scriptMenu);
+
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
                 SetSlot(SpellBarSlot.Empty(), row, col);
@@ -464,6 +497,24 @@ public class SpellBar : Gump
                 {
                     SetSlot(SpellBarSlot.FromMacro(macro), row, col);
                 }));
+        }
+
+        private void GenScriptList(ContextMenuItemEntry parent)
+        {
+            if (parent == null)
+                return;
+
+            parent.Items.Clear();
+
+            foreach (ScriptFile s in ClassicUO.LegionScripting.LegionScripting.LoadedScripts)
+            {
+                ScriptFile script = s;
+                // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups are distinguishable.
+                parent.Add(new ContextMenuItemEntry(script.RelativePath, () =>
+                {
+                    SetSlot(SpellBarSlot.FromScript(script), row, col);
+                }));
+            }
         }
 
         private List<ContextMenuItemEntry> GenSpellList()
@@ -544,6 +595,25 @@ public class SpellBar : Gump
             }
 
         private void resetStates() => trackCasting = false;
+
+        /// <summary>
+        /// Updates this slot's running highlight when its script starts/stops. Driven by
+        /// LegionScripting's ScriptStarted/ScriptStopped events, so there is no per-frame scan.
+        /// </summary>
+        public void SetScriptRunning(string scriptId, bool running)
+        {
+            if (slot == null || slot.Type != SpellBarSlotType.Script || slot.ScriptId != scriptId)
+                return;
+
+            scriptRunning = running;
+            ApplyScriptHighlight();
+        }
+
+        private void ApplyScriptHighlight()
+        {
+            const ushort runningHue = 0x0044; // green tint while the script runs
+            background.Hue = scriptRunning ? runningHue : SpellBarManager.SpellBarRows[row].RowHue;
+        }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {

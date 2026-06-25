@@ -2106,6 +2106,14 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.SetZoomLevel:
+                    if (macro is MacroObjectString zoomStr && float.TryParse(zoomStr.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float zoomLevel))
+                    {
+                        Client.Game.Scene.Camera.Zoom = zoomLevel;
+                    }
+
+                    break;
+
                 case MacroType.ToggleChatVisibility:
                     UIManager.SystemChat?.ToggleChatVisibility();
 
@@ -2917,6 +2925,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:
+                case MacroType.SetZoomLevel:
                     obj = new MacroObjectString(code, MacroSubType.MSC_NONE);
 
                     break;
@@ -3114,6 +3123,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.ClientCommand:
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:
+                case MacroType.SetZoomLevel:
                     SubMenuType = 2;
 
                     break;

@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Game.Managers.Hotkeys;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -314,7 +315,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (button == MouseButtonType.Left)
                 {
-                    if (Keyboard.Shift)
+                    if (HotKeys.IsPressed(HotKeyRegistrar.ShopBulkId))
                     {
                         var theItem = new Dictionary<uint, ushort>
                         {

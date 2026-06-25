@@ -10,9 +10,13 @@ using ClassicUO.Utility.Collections;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using ClassicUO.Utility.Logging;
+using Color = Microsoft.Xna.Framework.Color;
 using Point = Microsoft.Xna.Framework.Point;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using SDL = SDL3.SDL;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -120,7 +124,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     new PromptPopupWindow("New Tab", "Enter a tab name", entry =>
                     {
-                        if (!string.IsNullOrEmpty(entry))
+                        if (!string.IsNullOrEmpty(entry) && !ProfileManager.CurrentProfile.JournalTabs.ContainsKey(entry))
                         {
                             ProfileManager.CurrentProfile.JournalTabs.Add(entry, new MessageType[] { MessageType.Regular });
                             ResizableJournal.ReloadTabs = true;
@@ -448,12 +452,20 @@ namespace ClassicUO.Game.UI.Gumps
 
         private class JournalEntriesContainer : Control
         {
+            private const int SelectionAutoScrollMargin = 16;
+            private const int SelectionAutoScrollStep = 12;
+            private static readonly Color SelectionBackgroundColor = new Color(56, 112, 220);
+
             private Deque<JournalData> journalDatas = new Deque<JournalData>();
 
 
             private readonly ScrollBarBase _scrollBar;
             private int lastWidth = 0, lastHeight = 0;
+            private int _nextEntryOrder;
             private ResizableJournal _resizableJournal;
+            private SelectionPoint? _selectionAnchor;
+            private SelectionPoint? _selectionActive;
+            private bool _isSelecting;
 
             public JournalEntriesContainer(int x, int y, int width, int height, ScrollBarBase scrollBarControl, ResizableJournal resizableJournal)
             {
@@ -461,6 +473,8 @@ namespace ClassicUO.Game.UI.Gumps
                 _scrollBar = scrollBarControl;
                 _scrollBar.IsVisible = false;
                 AcceptMouseInput = true;
+                AcceptKeyboardInput = true;
+                HandlesKeyboardFocus = true;
                 CanMove = true;
 
                 X = x;
@@ -489,9 +503,15 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (my + journalEntry.EntryText.Height - y >= _scrollBar.Value && my - y <= _scrollBar.Value + _scrollBar.Height)
                         {
+                            int textX = hideTimestamp ? x : x + journalEntry.TimeStamp.Width + 5;
+                            int textY = my - _scrollBar.Value;
+
+                            DrawSelection(batcher, journalEntry, textX, textY);
+
                             if (!hideTimestamp)
-                                journalEntry.TimeStamp.Draw(batcher, x, my - _scrollBar.Value);
-                            journalEntry.EntryText.Draw(batcher, hideTimestamp ? x : x + (journalEntry.TimeStamp.Width + 5), my - _scrollBar.Value);
+                                journalEntry.TimeStamp.Draw(batcher, x, textY);
+
+                            journalEntry.EntryText.Draw(batcher, textX, textY);
                         }
                         my += journalEntry.EntryText.Height;
                     }
@@ -507,6 +527,19 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (!IsVisible)
                     return;
+
+                if (_isSelecting)
+                {
+                    if (Mouse.LButtonPressed)
+                    {
+                        UpdateSelectionFromMouse(Mouse.Position.X - ScreenCoordinateX, Mouse.Position.Y - ScreenCoordinateY);
+                    }
+                    else
+                    {
+                        _isSelecting = false;
+                        CanMove = true;
+                    }
+                }
 
                 _scrollBar.IsVisible = _scrollBar.MaxValue > _scrollBar.MinValue;
                 if (Width != lastWidth || Height != lastHeight)
@@ -563,16 +596,29 @@ namespace ClassicUO.Game.UI.Gumps
                 bool maxScroll = _scrollBar.Value == _scrollBar.MaxValue;
 
                 while (journalDatas.Count > (ProfileManager.CurrentProfile == null ? 200 : ProfileManager.CurrentProfile.MaxJournalEntries))
-                    journalDatas.RemoveFromFront().Destroy();
+                {
+                    JournalData removed = journalDatas.RemoveFromFront();
 
-                var timeS = TextBox.GetOne($"{time:t}", ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize - 2, 1150, TextBox.RTLOptions.Default());
+                    if (_selectionAnchor?.Entry == removed || _selectionActive?.Entry == removed)
+                    {
+                        ClearSelection();
+                    }
+
+                    removed.Destroy();
+                }
+
+                string timestampText = $"{time:t}";
+                var timeS = TextBox.GetOne(timestampText, ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize - 2, 1150, TextBox.RTLOptions.Default());
                 var je = TextBox.GetOne(text, ProfileManager.CurrentProfile.SelectedTTFJournalFont, ProfileManager.CurrentProfile.SelectedJournalFontSize, hue,
-                    new TextBox.RTLOptions() { Width = Width - (ProfileManager.CurrentProfile.HideJournalTimestamp ? 0 : timeS.Width) });
+                    new TextBox.RTLOptions() { Width = Width - (ProfileManager.CurrentProfile.HideJournalTimestamp ? 0 : timeS.Width), CalculateGlyphs = true });
 
                 journalDatas.AddToBack(
                     new JournalData(
                         je,
                         timeS,
+                        text,
+                        timestampText,
+                        _nextEntryOrder++,
                         text_type,
                         messageType
                     ));
@@ -582,6 +628,389 @@ namespace ClassicUO.Game.UI.Gumps
                     _scrollBar.Value = _scrollBar.MaxValue;
                 }
                 CalculateScrollBarMaxValue();
+            }
+
+            public override void OnMouseDown(int x, int y, MouseButtonType button)
+            {
+                if (button == MouseButtonType.Left)
+                {
+                    if (TryGetSelectionPointFromText(x, y, out SelectionPoint point))
+                    {
+                        SetKeyboardFocus();
+                        CanMove = false;
+                        _isSelecting = true;
+                        _selectionAnchor = point;
+                        _selectionActive = point;
+                        return;
+                    }
+
+                    CanMove = true;
+                }
+
+                base.OnMouseDown(x, y, button);
+            }
+
+            public override void OnMouseOver(int x, int y)
+            {
+                if (_isSelecting && Mouse.LButtonPressed)
+                {
+                    UpdateSelectionFromMouse(x, y);
+                    return;
+                }
+
+                base.OnMouseOver(x, y);
+            }
+
+            public override void OnMouseUp(int x, int y, MouseButtonType button)
+            {
+                if (button == MouseButtonType.Left && _isSelecting)
+                {
+                    UpdateSelectionFromMouse(x, y);
+                    _isSelecting = false;
+                    CanMove = true;
+                    return;
+                }
+
+                base.OnMouseUp(x, y, button);
+            }
+
+            public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
+            {
+                switch (key)
+                {
+                    case SDL.SDL_Keycode.SDLK_C when Keyboard.Ctrl:
+                        CopySelection();
+                        return;
+
+                    case SDL.SDL_Keycode.SDLK_A when Keyboard.Ctrl:
+                        SelectAllVisible();
+                        return;
+
+                    case SDL.SDL_Keycode.SDLK_ESCAPE:
+                        ClearSelection();
+                        return;
+                }
+
+                base.OnKeyDown(key, mod);
+            }
+
+            private void UpdateSelectionFromMouse(int x, int y)
+            {
+                if (y < SelectionAutoScrollMargin)
+                {
+                    _scrollBar.Value = Math.Max(_scrollBar.MinValue, _scrollBar.Value - SelectionAutoScrollStep);
+                }
+                else if (y > Height - SelectionAutoScrollMargin)
+                {
+                    _scrollBar.Value = Math.Min(_scrollBar.MaxValue, _scrollBar.Value + SelectionAutoScrollStep);
+                }
+
+                _selectionActive = GetSelectionPoint(x, y);
+            }
+
+            private bool TryGetSelectionPointFromText(int x, int y, out SelectionPoint point)
+            {
+                point = default;
+
+                int contentY = y + _scrollBar.Value;
+                int rowY = 0;
+                bool hideTimestamp = ProfileManager.CurrentProfile.HideJournalTimestamp;
+
+                foreach (JournalData entry in journalDatas)
+                {
+                    if (entry == null || !CanBeDrawn(entry.TextType, entry.MessageType))
+                    {
+                        continue;
+                    }
+
+                    int rowHeight = entry.EntryText.Height;
+
+                    if (contentY < rowY)
+                    {
+                        return false;
+                    }
+
+                    if (contentY <= rowY + rowHeight)
+                    {
+                        int textX = hideTimestamp ? 0 : entry.TimeStamp.Width + 5;
+                        int localX = x - textX;
+                        int localY = contentY - rowY;
+
+                        if (!IsInsideTextLine(entry, localX, localY))
+                        {
+                            return false;
+                        }
+
+                        point = new SelectionPoint(entry, GetTextIndexAt(entry, localX, localY));
+                        return true;
+                    }
+
+                    rowY += rowHeight;
+                }
+
+                return false;
+            }
+
+            private static bool IsInsideTextLine(JournalData entry, int x, int y)
+            {
+                if (x < 0 || y < 0 || y >= entry.EntryText.Height)
+                {
+                    return false;
+                }
+
+                var line = entry.EntryText.RTL.GetLineByY(y);
+
+                return line != null && line.Count > 0 && x <= line.Size.X;
+            }
+
+            private SelectionPoint GetSelectionPoint(int x, int y)
+            {
+                JournalData nearest = null;
+                int nearestIndex = 0;
+                int contentY = y + _scrollBar.Value;
+                int rowY = 0;
+                bool hideTimestamp = ProfileManager.CurrentProfile.HideJournalTimestamp;
+
+                foreach (JournalData entry in journalDatas)
+                {
+                    if (entry == null || !CanBeDrawn(entry.TextType, entry.MessageType))
+                    {
+                        continue;
+                    }
+
+                    int rowHeight = entry.EntryText.Height;
+
+                    if (contentY < rowY)
+                    {
+                        return new SelectionPoint(entry, 0);
+                    }
+
+                    nearest = entry;
+                    nearestIndex = entry.TextLength;
+
+                    if (contentY <= rowY + rowHeight)
+                    {
+                        int textX = hideTimestamp ? 0 : entry.TimeStamp.Width + 5;
+                        int localX = Math.Max(0, x - textX);
+                        int localY = Math.Clamp(contentY - rowY, 0, Math.Max(0, rowHeight - 1));
+
+                        return new SelectionPoint(entry, GetTextIndexAt(entry, localX, localY));
+                    }
+
+                    rowY += rowHeight;
+                }
+
+                return nearest == null ? default : new SelectionPoint(nearest, nearestIndex);
+            }
+
+            private static int GetTextIndexAt(JournalData entry, int x, int y)
+            {
+                var line = entry.EntryText.RTL.GetLineByY(y);
+
+                if (line == null)
+                {
+                    return y < 0 ? 0 : entry.TextLength;
+                }
+
+                int lineIndex = line.GetGlyphIndexByX(x) ?? (x <= 0 ? 0 : line.Count);
+                int lineStart = entry.GetTextIndexFromRawOffset(line.TextStartIndex);
+
+                return Math.Clamp(lineStart + lineIndex, 0, entry.TextLength);
+            }
+
+            private void DrawSelection(UltimaBatcher2D batcher, JournalData entry, int x, int y)
+            {
+                if (!TryGetSelectionRange(out SelectionPoint start, out SelectionPoint end))
+                {
+                    return;
+                }
+
+                if (entry.Order < start.Entry.Order || entry.Order > end.Entry.Order)
+                {
+                    return;
+                }
+
+                int selectionStart = entry == start.Entry ? start.Index : 0;
+                int selectionEnd = entry == end.Entry ? end.Index : entry.TextLength;
+
+                if (selectionStart >= selectionEnd)
+                {
+                    return;
+                }
+
+                foreach (var line in entry.EntryText.RTL.Lines)
+                {
+                    int lineStart = entry.GetTextIndexFromRawOffset(line.TextStartIndex);
+                    int lineEnd = lineStart + line.Count;
+                    int startIndex = Math.Max(selectionStart, lineStart);
+                    int endIndex = Math.Min(selectionEnd, lineEnd);
+
+                    if (startIndex >= endIndex)
+                    {
+                        continue;
+                    }
+
+                    int startX = GetLineX(entry, line, startIndex);
+                    int endX = GetLineX(entry, line, endIndex);
+
+                    if (endX <= startX)
+                    {
+                        continue;
+                    }
+
+                    batcher.Draw(
+                        SolidColorTextureCache.GetTexture(SelectionBackgroundColor),
+                        new Rectangle(x + startX, y + GetLineY(line), endX - startX, Math.Max(1, line.Size.Y)),
+                        ShaderHueTranslator.GetHueVector(0, false, 0.42f)
+                    );
+                }
+            }
+
+            private static int GetLineX(JournalData entry, FontStashSharp.RichText.TextLine line, int textIndex)
+            {
+                int lineStart = entry.GetTextIndexFromRawOffset(line.TextStartIndex);
+                int lineIndex = Math.Clamp(textIndex - lineStart, 0, line.Count);
+
+                if (lineIndex >= line.Count)
+                {
+                    return line.Size.X;
+                }
+
+                FontStashSharp.RichText.TextChunkGlyph? glyph = line.GetGlyphInfoByIndex(lineIndex);
+                return glyph?.Bounds.X ?? 0;
+            }
+
+            private static int GetLineY(FontStashSharp.RichText.TextLine line)
+            {
+                FontStashSharp.RichText.TextChunkGlyph? glyph = line.GetGlyphInfoByIndex(0);
+                return glyph?.LineTop ?? 0;
+            }
+
+            private bool TryGetSelectionRange(out SelectionPoint start, out SelectionPoint end)
+            {
+                start = default;
+                end = default;
+
+                if (!_selectionAnchor.HasValue || !_selectionActive.HasValue)
+                {
+                    return false;
+                }
+
+                SelectionPoint a = _selectionAnchor.Value;
+                SelectionPoint b = _selectionActive.Value;
+
+                if (a.Entry == null || b.Entry == null || a.Entry == b.Entry && a.Index == b.Index)
+                {
+                    return false;
+                }
+
+                if (a.Entry.Order < b.Entry.Order || a.Entry == b.Entry && a.Index <= b.Index)
+                {
+                    start = a;
+                    end = b;
+                }
+                else
+                {
+                    start = b;
+                    end = a;
+                }
+
+                return true;
+            }
+
+            private void CopySelection()
+            {
+                if (!TryGetSelectionRange(out SelectionPoint start, out SelectionPoint end))
+                {
+                    return;
+                }
+
+                StringBuilder sb = new StringBuilder();
+                bool hideTimestamp = ProfileManager.CurrentProfile.HideJournalTimestamp;
+
+                foreach (JournalData entry in journalDatas)
+                {
+                    if (entry == null || !CanBeDrawn(entry.TextType, entry.MessageType))
+                    {
+                        continue;
+                    }
+
+                    if (entry.Order < start.Entry.Order || entry.Order > end.Entry.Order)
+                    {
+                        continue;
+                    }
+
+                    int selectionStart = entry == start.Entry ? start.Index : 0;
+                    int selectionEnd = entry == end.Entry ? end.Index : entry.TextLength;
+
+                    selectionStart = Math.Clamp(selectionStart, 0, entry.TextLength);
+                    selectionEnd = Math.Clamp(selectionEnd, 0, entry.TextLength);
+
+                    if (selectionStart >= selectionEnd)
+                    {
+                        continue;
+                    }
+
+                    if (sb.Length > 0)
+                    {
+                        sb.AppendLine();
+                    }
+
+                    if (!hideTimestamp)
+                    {
+                        sb.Append(entry.TimestampText);
+                        sb.Append(' ');
+                    }
+
+                    int rawSelectionStart = entry.GetRawTextOffset(selectionStart);
+                    int rawSelectionEnd = entry.GetRawTextOffset(selectionEnd);
+
+                    if (rawSelectionStart >= rawSelectionEnd)
+                    {
+                        continue;
+                    }
+
+                    sb.Append(entry.RawText, rawSelectionStart, rawSelectionEnd - rawSelectionStart);
+                }
+
+                if (sb.Length > 0)
+                {
+                    ClassicUO.Utility.Clipboard.SetClipboardText(sb.ToString());
+                }
+            }
+
+            private void SelectAllVisible()
+            {
+                JournalData first = null;
+                JournalData last = null;
+
+                foreach (JournalData entry in journalDatas)
+                {
+                    if (entry == null || !CanBeDrawn(entry.TextType, entry.MessageType))
+                    {
+                        continue;
+                    }
+
+                    first ??= entry;
+                    last = entry;
+                }
+
+                if (first == null || last == null)
+                {
+                    ClearSelection();
+                    return;
+                }
+
+                _selectionAnchor = new SelectionPoint(first, 0);
+                _selectionActive = new SelectionPoint(last, last.TextLength);
+            }
+
+            private void ClearSelection()
+            {
+                _selectionAnchor = null;
+                _selectionActive = null;
+                _isSelecting = false;
+                CanMove = true;
             }
 
             private bool CanBeDrawn(TextType type, MessageType messageType)
@@ -622,6 +1051,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _.Destroy();
 
                 journalDatas.Clear();
+                ClearSelection();
             }
 
             public override void Dispose()
@@ -631,15 +1061,21 @@ namespace ClassicUO.Game.UI.Gumps
                 base.Dispose();
             }
 
-            public class JournalData
+        public class JournalData
+        {
+            private readonly int[] _textIndexToRawOffset;
+
+            public JournalData(TextBox textBox, TextBox timeStamp, string rawText, string timestampText, int order, TextType textType, MessageType messageType)
             {
-                public JournalData(TextBox textBox, TextBox timeStamp, TextType textType, MessageType messageType)
-                {
-                    EntryText = textBox;
-                    TimeStamp = timeStamp;
-                    TextType = textType;
-                    MessageType = messageType;
-                }
+                EntryText = textBox;
+                TimeStamp = timeStamp;
+                RawText = rawText ?? string.Empty;
+                TimestampText = timestampText;
+                Order = order;
+                TextType = textType;
+                MessageType = messageType;
+                _textIndexToRawOffset = BuildTextIndexToRawOffset(RawText);
+            }
 
                 public void Destroy()
                 {
@@ -649,8 +1085,51 @@ namespace ClassicUO.Game.UI.Gumps
 
                 public TextBox EntryText { get; }
                 public TextBox TimeStamp { get; }
-                public TextType TextType { get; }
-                public MessageType MessageType { get; }
+            public string RawText { get; }
+            public string TimestampText { get; }
+            public int Order { get; }
+            public int TextLength => _textIndexToRawOffset.Length - 1;
+            public TextType TextType { get; }
+            public MessageType MessageType { get; }
+
+            public int GetRawTextOffset(int textIndex)
+            {
+                return _textIndexToRawOffset[Math.Clamp(textIndex, 0, TextLength)];
+            }
+
+            public int GetTextIndexFromRawOffset(int rawOffset)
+            {
+                rawOffset = Math.Clamp(rawOffset, 0, RawText.Length);
+
+                int index = Array.BinarySearch(_textIndexToRawOffset, rawOffset);
+
+                return index >= 0 ? index : ~index;
+            }
+
+            private static int[] BuildTextIndexToRawOffset(string text)
+            {
+                List<int> offsets = new List<int>(text.Length + 1) { 0 };
+
+                for (int i = 0; i < text.Length;)
+                {
+                    i += char.IsSurrogatePair(text, i) ? 2 : 1;
+                    offsets.Add(i);
+                }
+
+                return offsets.ToArray();
+            }
+        }
+
+            private readonly struct SelectionPoint
+            {
+                public SelectionPoint(JournalData entry, int index)
+                {
+                    Entry = entry;
+                    Index = entry == null ? 0 : Math.Clamp(index, 0, entry.TextLength);
+                }
+
+                public JournalData Entry { get; }
+                public int Index { get; }
             }
         }
 

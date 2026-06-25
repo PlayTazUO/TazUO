@@ -115,5 +115,6 @@ public enum MacroType
     SetOrganizerSource,
     LoopContainer,
     ToggleBuyAgent,
-    ToggleSellAgent
+    ToggleSellAgent,
+    SetZoomLevel
 }

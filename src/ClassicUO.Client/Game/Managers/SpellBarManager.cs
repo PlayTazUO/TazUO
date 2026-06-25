@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Input;
+using ClassicUO.LegionScripting;
 using ClassicUO.Utility.Logging;
 using SDL3;
 
@@ -296,7 +297,7 @@ public class SpellBarManager
 }
 
 /// <summary>The kind of action stored in a single spell bar slot.</summary>
-public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3 }
+public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4 }
 
 /// <summary>
 /// A single spell bar slot. Holds one of: nothing, a spell, a macro, or a weapon
@@ -313,6 +314,9 @@ public class SpellBarSlot
     /// <summary>Macro name when <see cref="Type"/> is <see cref="SpellBarSlotType.Macro"/>.</summary>
     public string MacroName { get; set; }           // Type == Macro
 
+    /// <summary>Stable relative id (ScriptFile.RelativePath) when <see cref="Type"/> is <see cref="SpellBarSlotType.Script"/>.</summary>
+    public string ScriptId { get; set; }            // Type == Script
+
     /// <summary>True for the primary ability, false for the secondary, when <see cref="Type"/> is <see cref="SpellBarSlotType.Ability"/>.</summary>
     public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
 
@@ -327,6 +331,24 @@ public class SpellBarSlot
     /// <summary>The spell id for spell slots, or -1 for any other type (used to match cast events).</summary>
     [JsonIgnore]
     public int CurrentSpellID => Type == SpellBarSlotType.Spell ? SpellId : -1;
+
+    /// <summary>The loaded script this slot points at (by RelativePath), or null.</summary>
+    [JsonIgnore]
+    public ScriptFile ResolvedScript =>
+        ClassicUO.LegionScripting.LegionScripting.LoadedScripts.FirstOrDefault(f => f.RelativePath == ScriptId);
+
+    /// <summary>True when this is a script slot whose script is currently running.</summary>
+    [JsonIgnore]
+    public bool IsScriptRunning => Type == SpellBarSlotType.Script && (ResolvedScript?.IsPlaying ?? false);
+
+    /// <summary>Friendly name for a script slot: the resolved file name, else the id's basename.</summary>
+    [JsonIgnore]
+    public string ScriptDisplayName =>
+        ResolvedScript?.FileName ??
+        (string.IsNullOrEmpty(ScriptId) ? string.Empty : System.IO.Path.GetFileName(ScriptId));
+
+    /// <summary>Toggle decision for a script slot: play when not already running.</summary>
+    public static bool ShouldPlay(bool isRunning) => !isRunning;
 
     /// <summary>Creates an empty slot.</summary>
     public static SpellBarSlot Empty() => new SpellBarSlot();
@@ -347,6 +369,15 @@ public class SpellBarSlot
             return Empty();
 
         return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = macro.Name };
+    }
+
+    /// <summary>Creates a script slot, or an empty slot when <paramref name="script"/> is null.</summary>
+    public static SpellBarSlot FromScript(ScriptFile script)
+    {
+        if (script == null)
+            return Empty();
+
+        return new SpellBarSlot { Type = SpellBarSlotType.Script, ScriptId = script.RelativePath };
     }
 
     /// <summary>Creates an ability slot for the primary (<paramref name="primary"/> true) or secondary ability.</summary>
@@ -377,6 +408,17 @@ public class SpellBarSlot
                     GameActions.UsePrimaryAbility(world);
                 else
                     GameActions.UseSecondaryAbility(world);
+                break;
+
+            case SpellBarSlotType.Script:
+                ScriptFile script = ResolvedScript;
+                if (script != null)
+                {
+                    if (ShouldPlay(script.IsPlaying))
+                        ClassicUO.LegionScripting.LegionScripting.PlayScript(script);
+                    else
+                        ClassicUO.LegionScripting.LegionScripting.StopScript(script);
+                }
                 break;
         }
     }
@@ -435,6 +477,10 @@ public class SpellBarSlot
                     return true;
                 }
                 break;
+
+            case SpellBarSlotType.Script:
+                text = ScriptDisplayName;
+                return !string.IsNullOrEmpty(text);
         }
 
         text = string.Empty;
