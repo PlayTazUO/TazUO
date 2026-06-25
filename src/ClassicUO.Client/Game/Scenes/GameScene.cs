@@ -1291,7 +1291,9 @@ namespace ClassicUO.Game.Scenes
             // draw weather (DisableWeather also checked inside Weather.Draw)
             if (ProfileManager.CurrentProfile?.DisableWeather != true)
             {
+                Profiler.EnterContext("Weather");
                 _world.Weather.Draw(batcher, 0, 0, MAX_LAYER_DEPTH - 1);
+                Profiler.ExitContext("Weather");
             }
 
             //GameController.DrawFlushCounts(batcher, 200, 200);

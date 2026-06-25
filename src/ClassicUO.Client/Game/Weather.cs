@@ -805,6 +805,8 @@ namespace ClassicUO.Game
                 return;
             }
 
+            Profiler.EnterContext("Setup");
+
             //Rescale the count if window size has changed
             byte newScaledCount = CalculateScaledCount(Count);
 
@@ -896,6 +898,10 @@ namespace ClassicUO.Game
 
             int visibleRangeX = winsize.X;
             int visibleRangeY = winsize.Y;
+
+            Profiler.ExitContext("Setup");
+
+            Profiler.EnterContext("Particles");
 
             for (int i = 0; i < CurrentCount; i++)
             {
@@ -1688,14 +1694,21 @@ namespace ClassicUO.Game
                 }
             }
 
+            Profiler.ExitContext("Particles");
+
             if (!IsWeatherDisabled)
             {
                 float deltaTime = passed / 1000f; // Convert milliseconds to seconds
+
+                Profiler.EnterContext("Splashes");
                 _world.SplashEffect.Update(deltaTime, viewportOffsetX, viewportOffsetY, visibleRangeX, visibleRangeY);
                 _world.SplashEffect.Draw(batcher, layerDepth);
+                Profiler.ExitContext("Splashes");
 
+                Profiler.EnterContext("Ripples");
                 _world.RippleEffect.Update(deltaTime, viewportOffsetX, viewportOffsetY, visibleRangeX, visibleRangeY);
                 _world.RippleEffect.Draw(batcher, layerDepth);
+                Profiler.ExitContext("Ripples");
             }
 
             _lastTick = Time.Ticks;
