@@ -765,6 +765,9 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST:
+                    // Drop tracked key state so a key held while we lose focus doesn't stick "pressed"
+                    // for polled hotkeys (the key-up may never reach us).
+                    ClassicUO.Game.Managers.Hotkeys.HotKeys.ClearHeldKeys();
                     if (_pluginsInitialized)
                         Plugin.OnFocusLost();
                     break;

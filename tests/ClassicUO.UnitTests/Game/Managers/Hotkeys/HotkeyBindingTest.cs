@@ -46,6 +46,23 @@ namespace ClassicUO.UnitTests.Game.Managers.Hotkeys
         }
 
         [Fact]
+        public void IsPressed_EmptyBinding_IsFalse()
+        {
+            // An unbound hotkey must never report pressed, regardless of the modifier-match mode,
+            // so nothing triggers when no hotkey is set.
+            new HotkeyBinding().IsPressed().Should().BeFalse();
+            new HotkeyBinding().IsPressed(allowAdditionalModifiers: false).Should().BeFalse();
+        }
+
+        [Fact]
+        public void IsPressed_ClearedBinding_IsFalse()
+        {
+            var b = new HotkeyBinding(SDL.SDL_Keycode.SDLK_F1, SDL.SDL_Keymod.SDL_KMOD_CTRL);
+            b.Clear();
+            b.IsPressed().Should().BeFalse();
+        }
+
+        [Fact]
         public void Clone_ProducesIndependentCopy()
         {
             var original = new HotkeyBinding(SDL.SDL_Keycode.SDLK_F1, SDL.SDL_Keymod.SDL_KMOD_CTRL)
