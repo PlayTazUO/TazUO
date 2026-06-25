@@ -73,8 +73,8 @@ public static class HotkeysTabContent
 
             var grid = new MyraGrid { MaxWidth = 800 };
             grid.SetupWithHeaders(
-                GridColumnInfo.Auto("Name"),
                 GridColumnInfo.Auto("Category"),
+                GridColumnInfo.Auto("Name"),
                 GridColumnInfo.Auto("Binding"),
                 GridColumnInfo.Auto("Conflicts"),
                 GridColumnInfo.Auto(""),
@@ -95,8 +95,8 @@ public static class HotkeysTabContent
                         .Select(s => s.Row.Name)
                         .ToList();
 
-                grid.AddWidget(new MyraLabel(r.Name, MyraLabel.TextStyle.P), row, 0);
-                grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 1);
+                grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 0);
+                grid.AddWidget(new MyraLabel(r.Name, MyraLabel.TextStyle.P), row, 1);
 
                 string bindingText = isCapturing
                     ? "Listening… press key / modifier / mouse / wheel / controller (Esc to cancel)"

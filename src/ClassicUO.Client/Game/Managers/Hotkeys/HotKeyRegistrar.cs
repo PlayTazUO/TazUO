@@ -60,7 +60,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
         private static void RegisterChat()
         {
             // The keys are fixed (Q = previous, W = next); this rebinds the modifier held with them.
-            HotKeys.Register(ChatHistoryModId, "Chat: message-history modifier (with Q/W)", Modifier(ctrl: true), "Chat", checkConflicts: false);
+            HotKeys.Register(ChatHistoryModId, "Message-history modifier (with Q/W)", Modifier(ctrl: true), "Chat", checkConflicts: false);
         }
 
         private static void RegisterGumps()
@@ -68,16 +68,16 @@ namespace ClassicUO.Game.Managers.Hotkeys
             // Context modifiers: the same modifier is fine across these (and other systems), so they
             // are excluded from conflict checks.
             const string category = "Gumps";
-            HotKeys.Register(GumpModifierId, "Gump: move / detach / show lock icon", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(GumpLockId, "Gump: lock or unlock", Modifier(ctrl: true, alt: true), category, checkConflicts: false);
-            HotKeys.Register(GumpOpacityId, "Gump: adjust opacity with wheel", Modifier(alt: true), category, checkConflicts: false);
+            HotKeys.Register(GumpModifierId, "Move / detach / show lock icon", Modifier(alt: true), category, checkConflicts: false);
+            HotKeys.Register(GumpLockId, "Lock or unlock", Modifier(ctrl: true, alt: true), category, checkConflicts: false);
+            HotKeys.Register(GumpOpacityId, "Adjust opacity with wheel", Modifier(alt: true), category, checkConflicts: false);
         }
 
         private static void RegisterWorldMap()
         {
             const string category = "World Map";
-            HotKeys.Register(WorldMapMarkerId, "World Map: add marker", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(WorldMapPathfindId, "World Map: pathfind to point", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(WorldMapMarkerId, "Add marker", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(WorldMapPathfindId, "Pathfind to point", Modifier(ctrl: true), category, checkConflicts: false);
         }
 
         private static void RegisterGlobal()
@@ -103,23 +103,23 @@ namespace ClassicUO.Game.Managers.Hotkeys
             // Context modifiers (lock vs compare share Ctrl but differ by click vs hover), excluded
             // from conflict checks.
             const string category = "Grid Container";
-            HotKeys.Register(GridMultiMoveId, "Grid: move multiple items", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(GridAutoLootId, "Grid: add item to autoloot", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(GridLockSlotId, "Grid: lock item in slot", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(GridCompareId, "Grid: compare item to equipped", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(GridMultiMoveId, "Move multiple items", Modifier(alt: true), category, checkConflicts: false);
+            HotKeys.Register(GridAutoLootId, "Add item to autoloot", Modifier(shift: true), category, checkConflicts: false);
+            HotKeys.Register(GridLockSlotId, "Lock item in slot", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(GridCompareId, "Compare item to equipped", Modifier(ctrl: true), category, checkConflicts: false);
         }
 
         private static void RegisterWorld()
         {
             // Context modifiers shared across different situations, excluded from conflict checks.
             const string category = "World";
-            HotKeys.Register(FollowMobileId, "World: click to follow a mobile", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(PathfindId, "World: pathfind modifier", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ItemDragLockId, "World: lock item drag position", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(ZoomScrollId, "World: zoom with mouse wheel", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(SplitStackId, "World: split stack modifier", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ShopBulkId, "Shop: buy/sell entire stack", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ShowNameplatesId, "World: show all nameplates", Modifier(ctrl: true, shift: true), category, checkConflicts: false);
+            HotKeys.Register(FollowMobileId, "Click to follow a mobile", Modifier(alt: true), category, checkConflicts: false);
+            HotKeys.Register(PathfindId, "Pathfind modifier", Modifier(shift: true), category, checkConflicts: false);
+            HotKeys.Register(ItemDragLockId, "Lock item drag position", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(ZoomScrollId, "Zoom with mouse wheel", Modifier(ctrl: true), category, checkConflicts: false);
+            HotKeys.Register(SplitStackId, "Split stack modifier", Modifier(shift: true), category, checkConflicts: false);
+            HotKeys.Register(ShopBulkId, "Buy/sell entire stack", Modifier(shift: true), category, checkConflicts: false);
+            HotKeys.Register(ShowNameplatesId, "Show all nameplates", Modifier(ctrl: true, shift: true), category, checkConflicts: false);
         }
 
         private static HotkeyBinding Modifier(bool ctrl = false, bool shift = false, bool alt = false)
