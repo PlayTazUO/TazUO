@@ -217,6 +217,9 @@ namespace ClassicUO
                         Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "Vulkan");
                         SDL.SDL_SetHint(SDL.SDL_HINT_RENDER_DRIVER, "vulkan");
                         break;
+
+                    case 3: // SDL/FNA auto-select
+                        break;
                 }
 
                 Client.Run(pluginHost);
@@ -481,6 +484,11 @@ namespace ClassicUO
 
                                 case 2: // Vulkan
                                     Settings.GlobalSettings.ForceDriver = 2;
+
+                                    break;
+
+                                case 3: // SDL/FNA auto-select
+                                    Settings.GlobalSettings.ForceDriver = 3;
 
                                     break;
 
