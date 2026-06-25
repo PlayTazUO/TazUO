@@ -60,25 +60,22 @@ namespace ClassicUO.Game.Managers.Hotkeys
         private static void RegisterChat()
         {
             // The keys are fixed (Q = previous, W = next); this rebinds the modifier held with them.
-            HotKeys.Register(ChatHistoryModId, "Message-history modifier (with Q/W)", Modifier(ctrl: true), "Chat", checkConflicts: false);
+            ContextModifier(ChatHistoryModId, "Message-history modifier (with Q/W)", Modifier(ctrl: true), "Chat");
         }
 
         private static void RegisterGumps()
         {
-            // Context modifiers: the same modifier is fine across these (and other systems), so they
-            // are excluded from conflict checks. They are also exempt from the global hotkey shutoff
-            // so window management (move/detach/lock/opacity) keeps working while hotkeys are off.
             const string category = "Gumps";
-            HotKeys.Register(GumpModifierId, "Move / detach / show lock icon", Modifier(alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
-            HotKeys.Register(GumpLockId, "Lock or unlock", Modifier(ctrl: true, alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
-            HotKeys.Register(GumpOpacityId, "Adjust opacity with wheel", Modifier(alt: true), category, checkConflicts: false).IgnoresGlobalDisable = true;
+            ContextModifier(GumpModifierId, "Move / detach / show lock icon", Modifier(alt: true), category);
+            ContextModifier(GumpLockId, "Lock or unlock", Modifier(ctrl: true, alt: true), category);
+            ContextModifier(GumpOpacityId, "Adjust opacity with wheel", Modifier(alt: true), category);
         }
 
         private static void RegisterWorldMap()
         {
             const string category = "World Map";
-            HotKeys.Register(WorldMapMarkerId, "Add marker", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(WorldMapPathfindId, "Pathfind to point", Modifier(ctrl: true), category, checkConflicts: false);
+            ContextModifier(WorldMapMarkerId, "Add marker", Modifier(ctrl: true), category);
+            ContextModifier(WorldMapPathfindId, "Pathfind to point", Modifier(ctrl: true), category);
         }
 
         private static void RegisterGlobal()
@@ -101,27 +98,33 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         private static void RegisterGridContainer()
         {
-            // Context modifiers (lock vs compare share Ctrl but differ by click vs hover), excluded
-            // from conflict checks.
             const string category = "Grid Container";
-            HotKeys.Register(GridMultiMoveId, "Move multiple items", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(GridAutoLootId, "Add item to autoloot", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(GridLockSlotId, "Lock item in slot", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(GridCompareId, "Compare item to equipped", Modifier(ctrl: true), category, checkConflicts: false);
+            ContextModifier(GridMultiMoveId, "Move multiple items", Modifier(alt: true), category);
+            ContextModifier(GridAutoLootId, "Add item to autoloot", Modifier(shift: true), category);
+            ContextModifier(GridLockSlotId, "Lock item in slot", Modifier(ctrl: true), category);
+            ContextModifier(GridCompareId, "Compare item to equipped", Modifier(ctrl: true), category);
         }
 
         private static void RegisterWorld()
         {
-            // Context modifiers shared across different situations, excluded from conflict checks.
             const string category = "World";
-            HotKeys.Register(FollowMobileId, "Click to follow a mobile", Modifier(alt: true), category, checkConflicts: false);
-            HotKeys.Register(PathfindId, "Pathfind modifier", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ItemDragLockId, "Lock item drag position", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(ZoomScrollId, "Zoom with mouse wheel", Modifier(ctrl: true), category, checkConflicts: false);
-            HotKeys.Register(SplitStackId, "Split stack modifier", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ShopBulkId, "Buy/sell entire stack", Modifier(shift: true), category, checkConflicts: false);
-            HotKeys.Register(ShowNameplatesId, "Show all nameplates", Modifier(ctrl: true, shift: true), category, checkConflicts: false);
+            ContextModifier(FollowMobileId, "Click to follow a mobile", Modifier(alt: true), category);
+            ContextModifier(PathfindId, "Pathfind modifier", Modifier(shift: true), category);
+            ContextModifier(ItemDragLockId, "Lock item drag position", Modifier(ctrl: true), category);
+            ContextModifier(ZoomScrollId, "Zoom with mouse wheel", Modifier(ctrl: true), category);
+            ContextModifier(SplitStackId, "Split stack modifier", Modifier(shift: true), category);
+            ContextModifier(ShopBulkId, "Buy/sell entire stack", Modifier(shift: true), category);
+            ContextModifier(ShowNameplatesId, "Show all nameplates", Modifier(ctrl: true, shift: true), category);
         }
+
+        /// <summary>
+        /// Register a context modifier (e.g. Alt-to-move-gumps, Shift-to-pathfind): excluded from
+        /// conflict checks (the same modifier is fine in different situations) and exempt from the
+        /// global hotkey shutoff, since these are UI/interaction conveniences rather than action
+        /// hotkeys and shouldn't stop working when hotkeys are toggled off.
+        /// </summary>
+        private static void ContextModifier(string id, string name, HotkeyBinding binding, string category)
+            => HotKeys.Register(id, name, binding, category, checkConflicts: false).IgnoresGlobalDisable = true;
 
         private static HotkeyBinding Modifier(bool ctrl = false, bool shift = false, bool alt = false)
             => new() { Ctrl = ctrl, Shift = shift, Alt = alt };
