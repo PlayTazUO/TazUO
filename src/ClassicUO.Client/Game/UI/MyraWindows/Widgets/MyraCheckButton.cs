@@ -45,7 +45,8 @@ public class MyraCheckButton : CheckButton
         bool isChecked,
         Action<bool> onChange,
         string? text = null,
-        string? tooltip = null)
+        string? tooltip = null
+    )
     {
         MyraCheckButton cb = text != null ? new MyraCheckButton(text, isChecked) : new MyraCheckButton(isChecked);
 

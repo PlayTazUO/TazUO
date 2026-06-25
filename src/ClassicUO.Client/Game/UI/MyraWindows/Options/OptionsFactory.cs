@@ -143,7 +143,7 @@ public static class OptionsFactory
         return wid;
     });
 
-    internal static OptionItem PropBoundNumericInput(
+    internal static OptionItem PropBoundIntInput(
         string label,
         Accessor<int> backingProp,
         int? min = 0,
@@ -169,6 +169,7 @@ public static class OptionsFactory
     internal static OptionItem PropBoundUIntInput(
         string? label,
         Accessor<uint> backingProp,
+        uint? min = 0,
         uint? max = null,
         string? tooltip = null,
         Action<uint>? onAfterUpdate = null
@@ -184,7 +185,7 @@ public static class OptionsFactory
 
         return new OptionItem(
             label ?? string.Empty,
-            () => new LabeledUIntInput(label, backingProp.Get(), setter) { MaxValue = max, Tooltip = tooltip, InputBoxMinWidth = 60 }
+            () => new LabeledUIntInput(label, backingProp.Get(), setter) { MaxValue = max, MinValue = min, Tooltip = tooltip, InputBoxMinWidth = 60 }
         );
     }
 

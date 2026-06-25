@@ -38,6 +38,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading;
 using ClassicUO.IO.Persistency;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
@@ -85,18 +86,14 @@ public class TrueTypeLoader
 
     private readonly Dictionary<string, FontSystem> _fonts = new();
 
-    private Lazy<(string[], int)> _orderedFontNames;
+    private (string[], int)? _orderedFontNames;
+    private readonly Lock _orderedFontNamesLock = new();
 
     /// <summary>
     ///     Contains the names of all available system fonts.
     ///     This can be used to render a font list without loading the fonts into memory
     /// </summary>
     private HashSet<string> _availableSystemFontFamilyNames = [];
-
-    private TrueTypeLoader()
-    {
-        _orderedFontNames = new Lazy<(string[], int)>(GetOrderedFontNames);
-    }
 
     private static TrueTypeLoader _instance;
     public static TrueTypeLoader Instance => _instance ??= new TrueTypeLoader();
@@ -433,15 +430,19 @@ public class TrueTypeLoader
     /// </summary>
     /// <param name="fresh">
     ///     Whether to re-compute the list or used a cache one.
-    ///     Computation efficientcy is O(3n).
+    ///     Computation efficiently is O(3n).
     /// </param>
     /// <returns></returns>
     public (string[] Names, int MaxNameLength) GetSortedFontNames(bool fresh = false)
     {
-        if (fresh)
-            _orderedFontNames = new Lazy<(string[], int)>(GetOrderedFontNames);
+        // Can be a RW lock if we ever want to eke out a bit more performance
+        lock (_orderedFontNamesLock)
+        {
+            if (!_orderedFontNames.HasValue || fresh)
+                _orderedFontNames = GetOrderedFontNames();
 
-        return _orderedFontNames.Value;
+            return _orderedFontNames.Value;
+        }
     }
 
     /// <summary>

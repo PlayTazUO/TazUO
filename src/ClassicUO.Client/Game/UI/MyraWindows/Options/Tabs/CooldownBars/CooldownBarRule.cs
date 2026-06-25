@@ -25,6 +25,7 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
     public ushort Hue { get; set => SetField(ref field, value); }
     public string TriggerMessage { get; set => SetField(ref field, value); } = string.Empty;
     public CooldownTriggerMessageType TriggerMessageType { get; set => SetField(ref field, value); } = CooldownTriggerMessageType.All;
+    public bool ReplaceExisting { get; set => SetField(ref field, value); } = true;
 
     public static CooldownBarRule FromLegacyCondition(uint order, CoolDownBar.CoolDownConditionData data)
     {

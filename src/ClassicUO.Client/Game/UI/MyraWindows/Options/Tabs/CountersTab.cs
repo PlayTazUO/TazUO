@@ -61,7 +61,7 @@ public static class CountersTab
 
         return OptionsUi.CheckBoxGroup(
             new PropertyBinder(new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount), counterLang.AbbreviatedValues),
-            Option.NumericInput(
+            Option.IntegerInput(
                 counterLang.AbbreviateIfAmountExceeds,
                 new Accessor<int>(() => profile.CounterBarAbbreviatedAmount),
                 min: 999,
@@ -87,7 +87,7 @@ public static class CountersTab
             ),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.CounterBarHighlightOnAmount), counterLang.HighlightRedWhenAmountIsLow),
-                Option.NumericInput(
+                Option.IntegerInput(
                     counterLang.HighlightRedIfAmountIsBelow,
                     new Accessor<int>(() => profile.CounterBarHighlightAmount),
                     min: 1,
@@ -123,7 +123,7 @@ public static class CountersTab
                 }),
                 search: new SearchMetadata(counterLang.GridSize, Keywords: [kw.Grid, kw.Size])
             ),
-            Option.NumericInput(
+            Option.IntegerInput(
                 counterLang.Rows,
                 new Accessor<int>(() => profile.CounterBarRows, v =>
                 {
@@ -139,7 +139,7 @@ public static class CountersTab
                 max: 30,
                 search: new SearchMetadata(counterLang.Rows, Keywords: [kw.Row])
             ),
-            Option.NumericInput(
+            Option.IntegerInput(
                 counterLang.Columns,
                 new Accessor<int>(() => profile.CounterBarColumns, v =>
                 {

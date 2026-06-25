@@ -19,12 +19,14 @@ internal static partial class CooldownBarsTab
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.Name,
+                HeaderTooltip = cdLang.NameTooltip,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.Name))
             },
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.Hue,
+                HeaderTooltip = cdLang.HueTooltip,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule =>
                 {
@@ -47,16 +49,18 @@ internal static partial class CooldownBarsTab
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.Cooldown,
+                HeaderTooltip = cdLang.CooldownTooltip,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundUIntInput(null, new Accessor<uint>(() => rule.Cooldown))
             },
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.TriggerMessageType,
+                HeaderTooltip = cdLang.TriggerMessageTypeTooltip,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule =>
                 {
-                    OptionItem box = OptionsFactory.CreateComboBox(
+                    Widget box = OptionTabCommons.CreateOptionsComboBox(
                         null,
                         rule.TriggerMessageType.ToString(),
                         Enum.GetNames<CooldownTriggerMessageType>(),
@@ -70,12 +74,22 @@ internal static partial class CooldownBarsTab
             new RulebaseColumn<CooldownBarRule>
             {
                 Header = cdLang.TriggerMessage,
+                HeaderTooltip = cdLang.TriggerMessageTooltip,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.TriggerMessage))
             },
             new RulebaseColumn<CooldownBarRule>
             {
+                Header = cdLang.ReplaceExisting,
+                HeaderTooltip = cdLang.ReplaceExistingTooltip,
+                CellContentAlignment = HorizontalAlignment.Center,
+                Proportion = new Proportion(ProportionType.Auto),
+                CellFactory = rule => MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => rule.ReplaceExisting))
+            },
+            new RulebaseColumn<CooldownBarRule>
+            {
                 Header = kwLang.Preview,
+                HeaderTooltip = cdLang.PreviewTooltip,
                 Proportion = new Proportion(ProportionType.Fill),
                 CellFactory = rule => new BasicButton(() =>
                 {

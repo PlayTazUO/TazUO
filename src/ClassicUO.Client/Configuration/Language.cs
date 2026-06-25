@@ -763,6 +763,14 @@ namespace ClassicUO.Configuration
             public string Cooldown { get; set; } = "Cooldown";
             public string TriggerMessageType { get; set; } = "Trigger Message Type";
             public string TriggerMessage { get; set; } = "Trigger Message";
+            public string ReplaceExisting { get; set; } = "Replace Existing";
+            public string ReplaceExistingTooltip { get; set; } = "Replace any existing cooldown bar with the same name when triggered";
+            public string NameTooltip { get; set; } = "Display name shown on the cooldown bar";
+            public string HueTooltip { get; set; } = "Color of the cooldown bar";
+            public string CooldownTooltip { get; set; } = "Duration of the cooldown in seconds";
+            public string TriggerMessageTypeTooltip { get; set; } = "The type of message that triggers this cooldown bar";
+            public string TriggerMessageTooltip { get; set; } = "Text to match in the incoming message to trigger this cooldown bar";
+            public string PreviewTooltip { get; set; } = "Show a preview of this cooldown bar";
         }
 
         public class GumpsTabLang

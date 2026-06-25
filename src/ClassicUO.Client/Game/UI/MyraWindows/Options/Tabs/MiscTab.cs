@@ -234,9 +234,9 @@ public static class MiscTab
                 },
                 search: new SearchMetadata(miscLang.ManageIgnoreListButtonLabel, Keywords: [kw.Ignore, kw.Entity])
             ),
-            Option.NumericInput(
+            Option.UIntegerInput(
                 miscLang.SosGumpId,
-                new Accessor<int>(() => (int)profile.SOSGumpID, i => profile.SOSGumpID = (uint)i),
+                new Accessor<uint>(() => profile.SOSGumpID),
                 tooltip: miscLang.SosGumpIdLabelTooltip,
                 search: new SearchMetadata(miscLang.SosGumpId, Keywords: [kw.SOS, kw.Gump])
             ),

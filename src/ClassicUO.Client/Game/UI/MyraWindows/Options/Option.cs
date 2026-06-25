@@ -71,7 +71,7 @@ internal static class Option
     public static OptionEntry InputField(string label, Accessor<string> backingProperty, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => OptionsFactory.PropBoundInputField(label, backingProperty, tooltip), search ?? new SearchMetadata(label));
 
-    public static OptionEntry NumericInput(
+    public static OptionEntry IntegerInput(
         string label,
         Accessor<int> backingProperty,
         int? min = 0,
@@ -79,7 +79,18 @@ internal static class Option
         string? tooltip = null,
         SearchMetadata? search = null
     ) =>
-        new(() => OptionsFactory.PropBoundNumericInput(label, backingProperty, min, max, tooltip), search ?? new SearchMetadata(label));
+        new(() => OptionsFactory.PropBoundIntInput(label, backingProperty, min, max, tooltip), search ?? new SearchMetadata(label));
+
+    public static OptionEntry UIntegerInput(
+        string label,
+        Accessor<uint> backingProperty,
+        uint? min = 0,
+        uint? max = 1_000_000,
+        string? tooltip = null,
+        SearchMetadata? search = null
+    ) =>
+        new(() => OptionsFactory.PropBoundUIntInput(label, backingProperty, min, max, tooltip), search ?? new SearchMetadata(label));
+
 
     public static OptionEntry Button(string label, Action onClick, SearchMetadata? search = null) =>
         new(() => new MyraButton(label, onClick), search ?? new SearchMetadata(label));

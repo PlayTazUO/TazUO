@@ -303,21 +303,21 @@ public static class NameplatesTab
         return OptionsUi.Vertical(
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = kw.Appearance },
-                Option.NumericInput(
+                Option.IntegerInput(
                     heightLabel,
                     new Accessor<int>(() => profile.NamePlateHeight),
                     0,
                     80,
                     search: new SearchMetadata(heightLabel, Keywords: [kw.Height])
                 ),
-                Option.NumericInput(
+                Option.IntegerInput(
                     nameWidthLabel,
                     new Accessor<int>(() => profile.NamePlateFixedWidth),
                     60,
                     300,
                     search: new SearchMetadata(nameWidthLabel, Keywords: [kw.Width])
                 ),
-                Option.NumericInput(
+                Option.IntegerInput(
                     cornerRadiusLabel,
                     new Accessor<int>(() => profile.NamePlateCornerRadius),
                     0,
@@ -387,7 +387,7 @@ public static class NameplatesTab
                     new Accessor<bool>(() => profile.NamePlateUseFixedHealthBarWidth),
                     search: new SearchMetadata(separateHealthBarWidthLabel, Keywords: [kw.Fixed, kw.Width, kw.HealthBar])
                 ),
-                Option.NumericInput(
+                Option.IntegerInput(
                     healthBarWidthLabel,
                     new Accessor<int>(() => profile.NamePlateHealthBarFixedWidth),
                     60,

@@ -23,7 +23,10 @@ public class MyraArtTexture : Image
     public MyraArtTexture(uint graphic, ushort hue = 0, int maxSize = 36)
     {
         _texture = new HuedTexture(graphic, hue);
-        Renderable = _texture;
+
+        if (_texture.IsValid)
+            Renderable = _texture;
+
         MaxWidth = maxSize;
         MaxHeight = maxSize;
     }
@@ -35,18 +38,28 @@ public class MyraArtTexture : Image
 
 internal class HuedTexture : IImage
 {
-    private TextureRegion _region;
+    private TextureRegion? _region;
 
     public Color RenderColor { get; set; }
 
     public Point Size { get; private set; }
+
+    public bool IsValid => _region != null;
 
     public HuedTexture(uint graphic, ushort hue)
     {
         SpriteInfo artInfo = Client.Game.UO.Arts.GetArt(graphic);
 
         if (artInfo.Texture == null)
+        {
+            // Throw in debug, warn and return empty in release.
+#if DEBUG
             throw new ArgumentException($@"Could not find texture for graphic '{graphic}'", nameof(graphic));
+#else
+            Log.Warn($"Could not find texture for graphic '{graphic}'");
+            return;
+#endif
+        }
 
         // artInfo.UV is the sub-rectangle within the shared atlas texture.
         // Passing just the Texture2D would render the entire atlas page;

@@ -159,14 +159,34 @@ namespace ClassicUO.Game.UI.Gumps
             public int message_type;
             public bool replace_if_exists;
 
-            private CoolDownConditionData(ushort hue = 42, string label = "Label", string trigger = "Text to trigger", int cooldown = 10, int message_type = (int)MESSAGE_TYPE.ALL, bool replace_if_exists = false)
+            /// <summary>
+            /// Represents a cooldown bar condition.
+            /// Each condition is a standalone 'rule' that determines when a cooldown bar should be displayed.
+            /// </summary>
+            /// <param name="hue">The bar's hue</param>
+            /// <param name="label">The text to render inside the bar</param>
+            /// <param name="trigger">The text that triggers the cooldown bar</param>
+            /// <param name="cooldown">The duration, in seconds of the cooldown bar</param>
+            /// <param name="messageType">The message type that should trigger the cooldown bar. See <see cref="MESSAGE_TYPE"/> for more information</param>
+            /// <param name="replaceExisting">
+            /// Whether to replace an existing instance of the cooldown bar when triggered.
+            /// To clarify, this does not refer to the configuration - this refers to the cooldown bar itself, i.e., whether additional calls replace an already-on-screen instance
+            /// </param>
+            private CoolDownConditionData(
+                ushort hue = 42,
+                string label = "Label",
+                string trigger = "Text to trigger",
+                int cooldown = 10,
+                int messageType = (int)MESSAGE_TYPE.ALL,
+                bool replaceExisting = false
+            )
             {
                 this.hue = hue;
                 this.label = label;
                 this.trigger = trigger;
                 this.cooldown = cooldown;
-                this.message_type = message_type;
-                this.replace_if_exists = replace_if_exists;
+                message_type = messageType;
+                replace_if_exists = replaceExisting;
             }
 
             public static CoolDownConditionData[] GetAllRules()

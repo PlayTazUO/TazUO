@@ -12,9 +12,9 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
 /// <summary>
-/// Renders a list of <typeparamref name="TRule"/> rows as a styled grid: header, striped/selected
-/// row backgrounds, and per-column cells produced by <see cref="RulebaseColumn{TRule}.CellFactory"/>.
-/// Cell widgets are cached per rule/column so re-rendering on data changes is cheap.
+///     Renders a list of <typeparamref name="TRule" /> rows as a styled grid: header, striped/selected
+///     row backgrounds, and per-column cells produced by <see cref="RulebaseColumn{TRule}.CellFactory" />.
+///     Cell widgets are cached per rule/column so re-rendering on data changes is cheap.
 /// </summary>
 /// <typeparam name="TRule">The rule type the table displays.</typeparam>
 public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
@@ -23,15 +23,16 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     private readonly List<TRule> _rules = [];
     private readonly List<Panel> _rowBackgrounds = [];
     private readonly Dictionary<TRule, Dictionary<RulebaseColumn<TRule>, Widget>> _cellCache = [];
+    private readonly Dictionary<Widget, Panel> _cellWrappers = [];
     private RulebaseColumn<TRule>[] _lastVisibleColumns = [];
     private Panel? _headerBackground;
     private readonly List<MyraLabel> _headerLabels = [];
     private bool _lastShowHeader;
 
-    /// <summary>Raised when <see cref="SelectedIndex"/> changes via <see cref="SetSelectedIndex"/></summary>
+    /// <summary>Raised when <see cref="SelectedIndex" /> changes via <see cref="SetSelectedIndex" /></summary>
     public event EventHandler? SelectedIndexChanged;
 
-    /// <summary>The columns to render. Mutating this list does not auto-refresh; call <see cref="Refresh"/></summary>
+    /// <summary>The columns to render. Mutating this list does not auto-refresh; call <see cref="Refresh" /></summary>
     public IList<RulebaseColumn<TRule>> Columns { get; }
 
     /// <summary>Visual styling applied to the table; changes auto-trigger a refresh</summary>
@@ -41,7 +42,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     public int? SelectedIndex { get; private set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RulebaseTableView{TRule}"/> class.
+    ///     Initializes a new instance of the <see cref="RulebaseTableView{TRule}" /> class.
     /// </summary>
     /// <param name="columns">The columns to render.</param>
     /// <param name="styleOptions">Visual styling for the table.</param>
@@ -56,7 +57,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     }
 
     /// <summary>
-    /// Sets the selected row index and re-renders to reflect the new selection highlight.
+    ///     Sets the selected row index and re-renders to reflect the new selection highlight.
     /// </summary>
     /// <param name="index">The row index to select, or null to clear selection.</param>
     public void SetSelectedIndex(int? index)
@@ -70,7 +71,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     }
 
     /// <summary>
-    /// Replaces the displayed rules and drops cached cells for any rules no longer present.
+    ///     Replaces the displayed rules and drops cached cells for any rules no longer present.
     /// </summary>
     /// <param name="rules">The new set of rules to display.</param>
     public void SetRules(IEnumerable<TRule> rules)
@@ -82,14 +83,19 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         var rulesToRemove = _cellCache.Keys.Where(r => !currentRules.Contains(r)).ToList();
 
         foreach (TRule r in rulesToRemove)
+        {
+            if (_cellCache.TryGetValue(r, out Dictionary<RulebaseColumn<TRule>, Widget>? cells))
+                foreach (Widget cell in cells.Values)
+                    _cellWrappers.Remove(cell);
             _cellCache.Remove(r);
+        }
 
         Refresh();
     }
 
     /// <summary>
-    /// Rebuilds the underlying grid's structure and cell contents to match the current rules,
-    /// columns, and style options. Reuses cached cell widgets where possible.
+    ///     Rebuilds the underlying grid's structure and cell contents to match the current rules,
+    ///     columns, and style options. Reuses cached cell widgets where possible.
     /// </summary>
     /// <param name="force">When true, skips change-detection and rebuilds the grid structure unconditionally.</param>
     public void Refresh(bool force = false)
@@ -150,11 +156,7 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         if (_grid.RowsProportions.Count == 0)
             _grid.RowsProportions.Add(new Proportion(ProportionType.Auto));
 
-        _headerBackground ??= new Panel
-        {
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            VerticalAlignment = VerticalAlignment.Stretch
-        };
+        _headerBackground ??= new Panel { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
         _headerBackground.Background = new SolidBrush(StyleOptions.HeaderBackground);
 
         if (!_grid.Widgets.Contains(_headerBackground))
@@ -170,14 +172,13 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
         for (int i = 0; i < visibleColumns.Length; i++)
         {
             if (i >= _headerLabels.Count)
-            {
                 _headerLabels.Add(
                     CreateHeaderCell(visibleColumns[i].Header, i < visibleColumns.Length - 1)
                 );
-            }
 
             MyraLabel headerLabel = _headerLabels[i];
             headerLabel.Text = visibleColumns[i].Header;
+            headerLabel.Tooltip = visibleColumns[i].HeaderTooltip;
             headerLabel.Border = i < visibleColumns.Length - 1 ? StyleOptions.HeaderVerticalBorder : null;
             headerLabel.BorderThickness = i < visibleColumns.Length - 1 ? new Thickness(0, 0, 1, 0) : new Thickness(0);
 
@@ -225,15 +226,9 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
     private void RenderRowBackground(int rowIndex, int gridRow, int columnCount, HashSet<Widget> activeWidgets)
     {
         if (rowIndex >= _rowBackgrounds.Count)
-        {
             _rowBackgrounds.Add(
-                new Panel
-                {
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch
-                }
+                new Panel { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch }
             );
-        }
 
         Panel bg = _rowBackgrounds[rowIndex];
         bg.Background = new SolidBrush(GetRowColor(rowIndex));
@@ -274,17 +269,17 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
                 ruleCells[col] = cell;
             }
 
-            UpdateCell(cell, j < visibleColumns.Length - 1);
+            Widget gridWidget = UpdateCell(cell, col.CellContentAlignment, j < visibleColumns.Length - 1);
 
-            if (!_grid.Widgets.Contains(cell))
-                _grid.AddWidget(cell, gridRow, j);
+            if (!_grid.Widgets.Contains(gridWidget))
+                _grid.AddWidget(gridWidget, gridRow, j);
             else
             {
-                Grid.SetRow(cell, gridRow);
-                Grid.SetColumn(cell, j);
+                Grid.SetRow(gridWidget, gridRow);
+                Grid.SetColumn(gridWidget, j);
             }
 
-            activeWidgets.Add(cell);
+            activeWidgets.Add(gridWidget);
         }
     }
 
@@ -311,22 +306,44 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             BorderThickness = withRightBorder ? new Thickness(0, 0, 1, 0) : new Thickness(0)
         };
 
-    /// <summary>Applies cell padding/alignment and the right-hand column border, if any</summary>
+    /// <summary>
+    ///     Applies cell padding/alignment and the right-hand column border, if any.
+    ///     Returns a wrapper Panel for non-stretch alignments so the border spans the full cell width.
+    /// </summary>
     /// <param name="content">The cell widget to style</param>
+    /// <param name="hAlign">The horizontal alignment of the cell's content</param>
     /// <param name="withRightBorder">Whether to draw a vertical separator on the cell's right edge</param>
-    private void UpdateCell(Widget content, bool withRightBorder)
+    private Widget UpdateCell(Widget content, HorizontalAlignment hAlign, bool withRightBorder)
     {
-        content.HorizontalAlignment = HorizontalAlignment.Stretch;
+        content.HorizontalAlignment = hAlign;
         content.VerticalAlignment = VerticalAlignment.Center;
         content.Padding = new Thickness(6, 3);
-        content.Border = StyleOptions.ColumnBorders?.Brush;
+
+        Widget cellWidget;
+
+        if (hAlign != HorizontalAlignment.Stretch)
+        {
+            if (!_cellWrappers.TryGetValue(content, out Panel? wrapper))
+            {
+                wrapper = new Panel { HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+                wrapper.Widgets.Add(content);
+                _cellWrappers[content] = wrapper;
+            }
+
+            cellWidget = wrapper;
+        }
+        else
+            cellWidget = content;
 
         var thickness = new Thickness(0, 0, StyleOptions.ColumnBorders?.Thickness ?? 0, 0);
 
         if (!withRightBorder)
             thickness.Right = 0;
 
-        content.BorderThickness = thickness;
+        cellWidget.Border = StyleOptions.ColumnBorders?.Brush;
+        cellWidget.BorderThickness = thickness;
+
+        return cellWidget;
     }
 
     /// <summary>Determines a row's background color from selection state and striping settings</summary>
@@ -344,12 +361,12 @@ public sealed class RulebaseTableView<TRule> : Panel where TRule : IRule
             : StyleOptions.OddRowBackground;
     }
 
-    /// <summary>Filters <see cref="Columns"/> down to those currently visible</summary>
+    /// <summary>Filters <see cref="Columns" /> down to those currently visible</summary>
     private IEnumerable<RulebaseColumn<TRule>> GetVisibleColumns() =>
         Columns.Where(column => column.Visible);
 
     /// <summary>
-    /// Resolves the rule index of the row located at the given screen position, accounting for the header row.
+    ///     Resolves the rule index of the row located at the given screen position, accounting for the header row.
     /// </summary>
     /// <param name="globalPos">The position to test, in screen coordinates.</param>
     /// <returns>The rule index hit, or null if the position is outside any row.</returns>

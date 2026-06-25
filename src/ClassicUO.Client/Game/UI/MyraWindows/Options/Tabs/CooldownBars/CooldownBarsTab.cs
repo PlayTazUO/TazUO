@@ -28,14 +28,14 @@ internal static partial class CooldownBarsTab
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = cdLang.CustomCooldownBars },
-            Option.NumericInput(
+            Option.IntegerInput(
                 cdLang.PositionX,
                 new Accessor<int>(() => profile.CoolDownX),
                 0,
                 8192,
                 search: new SearchMetadata(cdLang.PositionX, Keywords: [kw.Position, kw.X])
             ),
-            Option.NumericInput(
+            Option.IntegerInput(
                 cdLang.PositionY,
                 new Accessor<int>(() => profile.CoolDownY),
                 0,
@@ -120,7 +120,7 @@ internal static partial class CooldownBarsTab
             (int)rule.Cooldown,
             isNew,
             (int)rule.TriggerMessageType,
-            !isNew
+            rule.ReplaceExisting
         );
     }
 }
