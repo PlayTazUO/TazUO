@@ -276,7 +276,13 @@ namespace ClassicUO
             "support is too old or unavailable - common causes are running over Remote Desktop, running in a " +
             "virtual machine without 3D acceleration, or missing/outdated GPU drivers.\n\n" +
             "Try: update your GPU drivers, run on the local console (not Remote Desktop), or change the renderer " +
-            "in settings (e.g. Vulkan).";
+            "in settings (e.g. Vulkan).\n\n" +
+            "You can also try launching TazUO with a different graphics driver by adding one of the following " +
+            "command-line arguments:\n" +
+            "     -force_driver 1   (OpenGL)\n" +
+            "     -force_driver 2   (Vulkan)\n" +
+            "     -force_driver 3   (SDL/FNA auto-select)\n" +
+            "   Try each one in turn until the client starts successfully.";
 
         /// <summary>
         /// Returns true when the exception was raised while compiling an effect/shader (e.g. the

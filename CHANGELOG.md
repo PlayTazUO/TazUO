@@ -38,6 +38,7 @@ All notable changes to TazUO will be recorded here.
 * Add option to select and copy text in journal - [P.R 575](https://github.com/PlayTazUO/TazUO/pull/575) ([Nesci28](https://github.com/Nesci28))
 * Add Script slot type to the Spell Bar - [P.R 568](https://github.com/PlayTazUO/TazUO/pull/568) ([eddo87](https://github.com/eddo87))
 * Converted the Add/Edit User Marker world map window to a Myra window - [P.R 588](https://github.com/PlayTazUO/TazUO/pull/588) ([bittiez](https://github.com/bittiez))
+* Journal filters now match partial messages (case-insensitive contains) instead of requiring exact matches - [P.R 593](https://github.com/PlayTazUO/TazUO/pull/593) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
@@ -70,6 +71,7 @@ All notable changes to TazUO will be recorded here.
 * Add option disable gargoyle flying animation - ([Nesci28](https://github.com/Nesci28))
 * Fixed NullReferenceException in ImprovedBuffGump when a buff icon's title cliloc is not found - [P.R 585](https://github.com/PlayTazUO/TazUO/pull/585) ([bittiez](https://github.com/bittiez))
 * Fixed crash when creating a journal tab with a name that already exists - [P.R 589](https://github.com/PlayTazUO/TazUO/pull/589) ([bittiez](https://github.com/bittiez))
+* Show a suggested fix for the "OpenGL 2.1 support is required!" graphics device error, advising users to update their drivers or try the `-force_driver 1`, `2`, or `3` launch args - [P.R 595](https://github.com/PlayTazUO/TazUO/pull/595) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
