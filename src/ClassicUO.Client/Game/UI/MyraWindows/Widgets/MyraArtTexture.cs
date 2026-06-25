@@ -56,7 +56,7 @@ internal class HuedTexture : IImage
 #if DEBUG
             throw new ArgumentException($@"Could not find texture for graphic '{graphic}'", nameof(graphic));
 #else
-            Log.Warn($"Could not find texture for graphic '{graphic}'");
+            Utility.Logging.Log.Warn($"Could not find texture for graphic '{graphic}'");
             return;
 #endif
         }
