@@ -3,7 +3,6 @@
 using System;
 using ClassicUO.Game;
 using ClassicUO.IO;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -38,23 +37,8 @@ internal sealed class PacketParser
 
     public int ParsePackets(World world, Span<byte> data)
     {
-        Profiler.EnterContext("APPEND");
         Append(data, false);
-        Profiler.ExitContext("APPEND");
-
-#if DEBUG
-        string packet = _buffer == null || _buffer.Length == 0 ? "0xFF" : _buffer[0].ToString();
-
-        Profiler.EnterContext(packet);
-#endif
-
-        int c = ParsePackets(world, _buffer, true) + ParsePackets(world, _pluginsBuffer, false);
-
-#if DEBUG
-        Profiler.ExitContext(packet);
-#endif
-
-        return c;
+        return ParsePackets(world, _buffer, true) + ParsePackets(world, _pluginsBuffer, false);
     }
 
     public void AddHandler(uint id, PacketHandler handler, bool allowOverride = true)
@@ -125,15 +109,10 @@ internal sealed class PacketParser
 
                 while (packetlength > packetBuffer.Length)
                 {
-                    Profiler.EnterContext("PACKET_BUFFER_RESIZE");
-                    int oldSize = packetBuffer.Length;
                     int newSize = packetBuffer.Length * 2;
-
                     Log.Warn(
-                        $"PacketHandler buffer resize from {oldSize} to {newSize} for packet length {packetlength} (may cause spike)");
-
+                        $"PacketHandler buffer resize from {packetBuffer.Length} to {newSize} for packet length {packetlength} (may cause spike)");
                     Array.Resize(ref packetBuffer, newSize);
-                    Profiler.ExitContext("PACKET_BUFFER_RESIZE");
                 }
 
                 _ = stream.Dequeue(packetBuffer, 0, packetlength);

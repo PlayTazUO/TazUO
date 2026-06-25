@@ -1119,6 +1119,8 @@ Random = None
 LastTargetSerial: int = None
 LastTargetPos: ApiPoint3D = None
 LastTargetGraphic: int = None
+LastSpellIndex: int = None
+LastSpellName: str = None
 Found: int = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
@@ -2538,6 +2540,17 @@ def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
     """
     pass
 
+def PlaySound(index: "int") -> None:
+    """
+     Play a sound effect locally (only audible to you).
+     Example:
+     ```py
+     API.PlaySound(0x13E)
+     ```
+    
+    """
+    pass
+
 def InJournalAny(msgs: "list[str]", clearMatches: "bool" = False) -> "bool":
     """
      Check if the journal contains *any* of the strings in this list.
@@ -3158,6 +3171,22 @@ def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
      Set x or y to a negative value to close existing tracker arrow.
      ```py
      API.TrackingArrow(400, 400)
+     ```
+    
+    """
+    pass
+
+def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
+    """
+     Get the string for a cliloc number.
+     Example:
+     ```py
+     text = API.GetClilocString(1020000)
+     if text:
+       API.SysMsg(text)
+    
+     # Force English regardless of client language setting
+     text = API.GetClilocString(1020000, englishOnly=True)
      ```
     
     """

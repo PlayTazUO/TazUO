@@ -200,7 +200,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(World.Instance.MapIndex);
+            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
             var data = new
             {
@@ -814,6 +814,21 @@ namespace ClassicUO.Game.Managers
         #controls input[type=""checkbox""] {
             margin-right: 8px;
         }
+        #controls .marker-search {
+            display: block;
+            width: 100%;
+            margin: 4px 0 8px 0;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        #controls .marker-search:focus {
+            border-color: #4CAF50;
+        }
         #controls button {
             margin: 5px 5px 5px 0;
             padding: 8px 15px;
@@ -996,6 +1011,7 @@ namespace ClassicUO.Game.Managers
             <label><input type=""checkbox"" id=""showParty"" checked> Show Party</label>
             <label><input type=""checkbox"" id=""showGuild"" checked> Show Guild</label>
             <label><input type=""checkbox"" id=""showMarkers"" checked> Show Markers</label>
+            <input type=""text"" id=""markerSearch"" class=""marker-search"" placeholder=""Search markers..."" autocomplete=""off"" />
             <label><input type=""checkbox"" id=""showMobiles"" checked> Show Mobiles</label>
             <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showEnemies"" checked> Enemies</label>
             <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showOthers"" checked> Other</label>
@@ -1055,6 +1071,7 @@ namespace ClassicUO.Game.Managers
         let journalMinimized = false;
         let controlsMinimized = false;
         let isResizingJournal = false;
+        let markerSearchText = '';
         let resizeStartX = 0;
         let resizeStartY = 0;
         let resizeStartWidth = 0;
@@ -1409,6 +1426,13 @@ namespace ClassicUO.Game.Managers
             }
         });
 
+        // Handle marker search filtering
+        const markerSearchInput = document.getElementById('markerSearch');
+        markerSearchInput.addEventListener('input', () => {
+            markerSearchText = markerSearchInput.value.trim().toLowerCase();
+            draw();
+        });
+
         // Handle journal input
         journalInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -1593,6 +1617,11 @@ namespace ClassicUO.Game.Managers
             // Draw markers
             if (document.getElementById('showMarkers').checked && mapData.markers) {
                 mapData.markers.forEach(marker => {
+                    // Filter out markers that don't match the search text
+                    if (markerSearchText && (!marker.name || !marker.name.toLowerCase().includes(markerSearchText))) {
+                        return;
+                    }
+
                     const markerColor = `rgba(${marker.color.r}, ${marker.color.g}, ${marker.color.b}, ${marker.color.a / 255})`;
 
                     // Save state before drawing marker

@@ -113,5 +113,8 @@ public enum MacroType
     ToggleAutoWalk,
     ToggleBandageAgent,
     SetOrganizerSource,
-    LoopContainer
+    LoopContainer,
+    ToggleBuyAgent,
+    ToggleSellAgent,
+    SetZoomLevel
 }

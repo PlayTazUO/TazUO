@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using ClassicUO.Assets;
+using ClassicUO.LegionScripting;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -39,6 +41,8 @@ public class SpellBar : Gump
         Build();
 
         EventSink.SpellCastBegin += EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted += OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped += OnScriptStopped;
     }
 
     private void EventSinkOnSpellCastBegin(object sender, int e)
@@ -46,6 +50,18 @@ public class SpellBar : Gump
         foreach (SpellEntry entry in spellEntries)
             if (entry.CurrentSpellID == e)
                 entry.BeginTrackingCasting();
+    }
+
+    private void OnScriptStarted(object sender, ScriptFile e) => UpdateScriptHighlights(e, true);
+    private void OnScriptStopped(object sender, ScriptFile e) => UpdateScriptHighlights(e, false);
+
+    private void UpdateScriptHighlights(ScriptFile script, bool running)
+    {
+        if (script == null)
+            return;
+
+        foreach (SpellEntry entry in spellEntries)
+            entry.SetScriptRunning(script.RelativePath, running);
     }
 
     public override GumpType GumpType { get; } = GumpType.SpellBar;
@@ -72,7 +88,7 @@ public class SpellBar : Gump
 
         rowLabel.SetText(SpellBarManager.CurrentRow.ToString());
 
-        for (int s = 0; s < spellEntries.Length; s++) spellEntries[s].SetSpell(SpellBarManager.GetSpell(SpellBarManager.CurrentRow, s), SpellBarManager.CurrentRow, s);
+        for (int s = 0; s < spellEntries.Length; s++) spellEntries[s].SetSlot(SpellBarManager.GetSlot(SpellBarManager.CurrentRow, s), SpellBarManager.CurrentRow, s);
 
         background.Hue = SpellBarManager.SpellBarRows[SpellBarManager.CurrentRow].RowHue;
     }
@@ -100,7 +116,7 @@ public class SpellBar : Gump
 
         for (int i = 0; i < spellEntries.Length; i++)
         {
-            Add(spellEntries[i] = new SpellEntry(World, this).SetSpell(SpellBarManager.GetSpell(SpellBarManager.CurrentRow, i), SpellBarManager.CurrentRow, i));
+            Add(spellEntries[i] = new SpellEntry(World, this).SetSlot(SpellBarManager.GetSlot(SpellBarManager.CurrentRow, i), SpellBarManager.CurrentRow, i));
             spellEntries[i].X = x;
             spellEntries[i].Y = 1;
             x += 46 + 2;
@@ -207,6 +223,8 @@ public class SpellBar : Gump
     {
         base.Dispose();
         EventSink.SpellCastBegin -= EventSinkOnSpellCastBegin;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStarted -= OnScriptStarted;
+        ClassicUO.LegionScripting.LegionScripting.ScriptStopped -= OnScriptStopped;
     }
 
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -242,16 +260,21 @@ public class SpellBar : Gump
 
     public class SpellEntry : Control
     {
-        public int CurrentSpellID => spell?.ID ?? -1;
+        /// <summary>Spell id of this entry's slot for spell slots, or -1 for empty/macro/ability slots.</summary>
+        public int CurrentSpellID => slot?.CurrentSpellID ?? -1;
 
         private GumpPic icon;
-        private SpellDefinition spell;
+        private SpellBarSlot slot;
         private AlphaBlendControl background;
         private int row, col;
         private bool trackCasting;
+        private bool scriptRunning;
         private World World;
         private Gump parentGump;
         private TextBox hotkeyLabel;
+        private TextBox macroLabel;
+        private ContextMenuItemEntry macroMenu;
+        private ContextMenuItemEntry scriptMenu;
         private Microsoft.Xna.Framework.Graphics.Texture2D castingTexture = SolidColorTextureCache.GetTexture(Color.Black);
         private DateTime savedStateTime;
 
@@ -268,22 +291,37 @@ public class SpellBar : Gump
             Build();
         }
 
-        public SpellEntry SetSpell(SpellDefinition spell, int row, int col)
+        /// <summary>Assigns the given slot to this entry at the given row/column and refreshes its icon, tooltip, and hotkey label.</summary>
+        public SpellEntry SetSlot(SpellBarSlot slot, int row, int col)
         {
-            this.spell = spell;
+            this.slot = slot ?? SpellBarSlot.Empty();
             this.row = row;
             this.col = col;
             background.Hue = SpellBarManager.SpellBarRows[row].RowHue;
-            SpellBarManager.SpellBarRows[row].SpellSlot[col] = spell;
-            if (spell != null && spell != SpellDefinition.EmptySpell)
+            SpellBarManager.SpellBarRows[row].Slots[col] = this.slot;
+
+            icon.Hue = 0; // Draw() re-applies the active highlight for ability slots
+            SetMacroLabel();
+
+            // Seed the script running-highlight once at assignment (events keep it updated thereafter).
+            scriptRunning = this.slot.IsScriptRunning;
+            ApplyScriptHighlight();
+
+            if (!this.slot.IsEmpty)
             {
-                icon.Graphic = (ushort)spell.GumpIconSmallID;
-                icon.IsVisible = true;
+                ushort graphic = this.slot.GetIconGraphic(World);
+                if (graphic != 0)
+                {
+                    icon.Graphic = graphic;
+                    icon.IsVisible = true;
+                }
+                else
+                {
+                    icon.IsVisible = false;
+                }
 
-                int cliloc = GetSpellTooltip(spell.ID);
-
-                if (cliloc != 0)
-                    SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(cliloc), 80);
+                if (this.slot.TryGetTooltip(World, out string tip))
+                    SetTooltip(tip, 80);
                 else
                     SetTooltip(string.Empty);
             }
@@ -298,19 +336,62 @@ public class SpellBar : Gump
             return this;
         }
 
-        private void SetHotkeyText(int slot)
+        /// <summary>Shows an abbreviation (capital letters) of the macro or script name inside the slot for macro/script slots, hidden otherwise.</summary>
+        private void SetMacroLabel()
+        {
+            if (macroLabel == null)
+                return;
+
+            string name =
+                slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
+                slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
+                null;
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                macroLabel.SetText(AbbreviateMacroName(name));
+                macroLabel.Y = (Height - macroLabel.Height) >> 1;
+                macroLabel.IsVisible = true;
+            }
+            else
+            {
+                macroLabel.SetText(string.Empty);
+                macroLabel.IsVisible = false;
+            }
+        }
+
+        /// <summary>Builds a short label from a macro name using its capital letters (e.g. "Last Object Macro" -> "LOM").</summary>
+        private static string AbbreviateMacroName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            var sb = new StringBuilder();
+            foreach (char c in name)
+                if (char.IsUpper(c))
+                    sb.Append(c);
+
+            // Fall back to the first letter of each word when the name has no capitals.
+            if (sb.Length == 0)
+                foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
+                    sb.Append(char.ToUpperInvariant(part[0]));
+
+            return sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
+        }
+
+        private void SetHotkeyText(int slotIndex)
         {
             if (!ProfileManager.CurrentProfile.SpellBar_ShowHotkeys) return;
             if (hotkeyLabel == null) return;
-            if (spell == null || spell == SpellDefinition.EmptySpell)
+            if (slot == null || slot.IsEmpty)
             {
                 hotkeyLabel.SetText(string.Empty);
                 return;
             }
 
-            string keys = SpellBarManager.GetKetNames(slot);
+            string keys = SpellBarManager.GetKetNames(slotIndex);
             if (string.IsNullOrEmpty(keys))
-                keys = SpellBarManager.GetControllerButtonsName(slot);
+                keys = SpellBarManager.GetControllerButtonsName(slotIndex);
 
             hotkeyLabel.SetText(keys);
         }
@@ -324,18 +405,23 @@ public class SpellBar : Gump
             trackCasting = true;
         }
 
-        public void Cast()
+        /// <summary>Triggers this entry's slot action (cast spell, run macro, or use ability) when it is not empty.</summary>
+        public void Activate()
         {
-            if (spell != null && spell != SpellDefinition.EmptySpell) GameActions.CastSpell(spell.ID);
+            if (slot != null && !slot.IsEmpty) slot.Activate(World);
         }
 
         public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             base.OnMouseUp(x, y, button);
             if (button == MouseButtonType.Right)
+            {
+                GenMacroList(macroMenu);
+                GenScriptList(scriptMenu);
                 ContextMenu?.Show();
+            }
 
-            if (button == MouseButtonType.Left && !Keyboard.Alt && !Keyboard.Ctrl) Cast();
+            if (button == MouseButtonType.Left && !Keyboard.Alt && !Keyboard.Ctrl) Activate();
         }
 
         public void BuildHotkeyLabel()
@@ -353,6 +439,9 @@ public class SpellBar : Gump
         {
             Add(background = new AlphaBlendControl() { Width = 44, Height = 44, X = 1, Y = 1 });
             Add(icon = new GumpPic(1, 1, 0x5000, 0) { IsVisible = false, AcceptMouseInput = false });
+            Add(macroLabel = TextBox.GetOne(string.Empty, "uo-unicode-1", 18, Color.White, TextBox.RTLOptions.DefaultCenterStroked(44)));
+            macroLabel.AcceptMouseInput = false;
+            macroLabel.IsVisible = false;
             BuildHotkeyLabel();
 
             ContextMenu = new(parentGump);
@@ -365,15 +454,67 @@ public class SpellBar : Gump
                     (World,
                         ScreenCoordinateX - 20, ScreenCoordinateY - 90, (s) =>
                         {
-                            SetSpell(s, row, col);
+                            SetSlot(SpellBarSlot.FromSpell(s), row, col);
                         }, true
                     )
                 );
             }));
+
+            macroMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setmacro"));
+            GenMacroList(macroMenu);
+            ContextMenu.Add(macroMenu);
+
+            var abilityMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setability"));
+            abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_primary"), () =>
+            {
+                SetSlot(SpellBarSlot.FromAbility(true), row, col);
+            }));
+            abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_secondary"), () =>
+            {
+                SetSlot(SpellBarSlot.FromAbility(false), row, col);
+            }));
+            ContextMenu.Add(abilityMenu);
+
+            scriptMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setscript"));
+            GenScriptList(scriptMenu);
+            ContextMenu.Add(scriptMenu);
+
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
-                SetSpell(SpellDefinition.EmptySpell, row, col);
+                SetSlot(SpellBarSlot.Empty(), row, col);
             }));
+        }
+
+        private void GenMacroList(ContextMenuItemEntry parent)
+        {
+            if (parent == null)
+                return;
+
+            parent.Items.Clear();
+
+            foreach (Macro macro in World.Macros.GetAllMacros())
+                parent.Add(new ContextMenuItemEntry(macro.Name, () =>
+                {
+                    SetSlot(SpellBarSlot.FromMacro(macro), row, col);
+                }));
+        }
+
+        private void GenScriptList(ContextMenuItemEntry parent)
+        {
+            if (parent == null)
+                return;
+
+            parent.Items.Clear();
+
+            foreach (ScriptFile s in ClassicUO.LegionScripting.LegionScripting.LoadedScripts)
+            {
+                ScriptFile script = s;
+                // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups are distinguishable.
+                parent.Add(new ContextMenuItemEntry(script.RelativePath, () =>
+                {
+                    SetSlot(SpellBarSlot.FromScript(script), row, col);
+                }));
+            }
         }
 
         private List<ContextMenuItemEntry> GenSpellList()
@@ -384,7 +525,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -393,7 +534,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -402,7 +543,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -411,7 +552,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -420,7 +561,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -429,7 +570,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -438,7 +579,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
 
@@ -447,7 +588,7 @@ public class SpellBar : Gump
                 foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
                     entry.Add(new ContextMenuItemEntry(spell.Name, () =>
                     {
-                        SetSpell(spell, row, col);
+                        SetSlot(SpellBarSlot.FromSpell(spell), row, col);
                     }));
                 list.Add(entry);
                 return list;
@@ -455,8 +596,55 @@ public class SpellBar : Gump
 
         private void resetStates() => trackCasting = false;
 
+        /// <summary>
+        /// Updates this slot's running highlight when its script starts/stops. Driven by
+        /// LegionScripting's ScriptStarted/ScriptStopped events, so there is no per-frame scan.
+        /// </summary>
+        public void SetScriptRunning(string scriptId, bool running)
+        {
+            if (slot == null || slot.Type != SpellBarSlotType.Script || slot.ScriptId != scriptId)
+                return;
+
+            scriptRunning = running;
+            ApplyScriptHighlight();
+        }
+
+        private void ApplyScriptHighlight()
+        {
+            const ushort runningHue = 0x0044; // green tint while the script runs
+            background.Hue = scriptRunning ? runningHue : SpellBarManager.SpellBarRows[row].RowHue;
+        }
+
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
         {
+            if (slot != null && slot.Type == SpellBarSlotType.Ability)
+            {
+                // The active primary/secondary ability follows the equipped weapon, so keep icon/hue/tooltip in sync.
+                ushort graphic = slot.GetIconGraphic(World);
+                if (graphic != 0)
+                {
+                    if (icon.Graphic != graphic)
+                    {
+                        icon.Graphic = graphic;
+                        if (slot.TryGetTooltip(World, out string tip))
+                            SetTooltip(tip, 80);
+                        else
+                            SetTooltip(string.Empty);
+                    }
+                    icon.IsVisible = true;
+
+                    bool active = ((byte)World.Player.Abilities[slot.AbilityPrimary ? 0 : 1] & 0x80) != 0;
+                    ushort wanted = (ushort)(active ? 38 : 0);
+                    if (icon.Hue != wanted)
+                        icon.Hue = wanted;
+                }
+                else if (icon.IsVisible)
+                {
+                    icon.IsVisible = false;
+                    SetTooltip(string.Empty);
+                }
+            }
+
             if (!base.Draw(batcher, x, y))
                 return false;
 
@@ -497,34 +685,6 @@ public class SpellBar : Gump
 
 
             return true;
-        }
-
-        private static int GetSpellTooltip(int id)
-        {
-            if (id >= 1 && id <= 64) // Magery
-                return 3002011 + (id - 1);
-
-            if (id >= 101 && id <= 117) // necro
-                return 1060509 + (id - 101);
-
-            if (id >= 201 && id <= 210) return 1060585 + (id - 201);
-
-            if (id >= 401 && id <= 406) return 1060595 + (id - 401);
-
-            if (id >= 501 && id <= 508) return 1060610 + (id - 501);
-
-            if (id >= 601 && id <= 616) return 1071026 + (id - 601);
-
-            if (id >= 678 && id <= 693) return 1031678 + (id - 678);
-
-            if (id >= 701 && id <= 745)
-            {
-                if (id <= 706) return 1115612 + (id - 701);
-
-                if (id <= 745) return 1155896 + (id - 707);
-            }
-
-            return 0;
         }
     }
 }

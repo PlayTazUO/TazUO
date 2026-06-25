@@ -135,6 +135,12 @@ public static class ObjectHelpers
 
             item.FixHue(hue);
 
+            // FixHue above overwrites the hue with the server-provided value, which clobbers
+            // the looted-corpse hue applied via AddCorpse when the graphic was set. Re-apply it
+            // so previously looted corpses keep their hue when removed and readded due to range.
+            if (graphic == 0x2006)
+                AutoLootManager.ApplyLootedHueIfNeeded(item);
+
             if (count == 0)
                 count = 1;
 

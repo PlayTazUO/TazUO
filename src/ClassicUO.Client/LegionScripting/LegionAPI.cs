@@ -329,6 +329,24 @@ namespace ClassicUO.LegionScripting
         public ushort LastTargetGraphic => OnMain(() => World.TargetManager.LastTargetInfo.Graphic);
 
         /// <summary>
+        /// The index of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
+        /// ```
+        /// </summary>
+        public int LastSpellIndex => OnMain(() => GameActions.LastSpellIndex);
+
+        /// <summary>
+        /// The name of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell: " + API.LastSpellName)
+        /// ```
+        /// </summary>
+        public string LastSpellName => OnMain(() => Game.Data.SpellDefinition.FullIndexGetSpell(GameActions.LastSpellIndex).Name);
+
+        /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
         /// </summary>
         public uint Found { get; set; }
@@ -1783,24 +1801,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
                     return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
 
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
@@ -1846,23 +1856,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });                    return false;
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+                    return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
@@ -1881,7 +1884,7 @@ namespace ClassicUO.LegionScripting
                 if (World == null || World.Player == null)
                     return false;
 
-                return World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding();
+                return World.Player.Pathfinder.AutoWalking || WorldMapPathfinder.IsRunning;
             }
         );
 
@@ -1896,7 +1899,7 @@ namespace ClassicUO.LegionScripting
         public void CancelPathfinding() => OnMain(() =>
         {
             World?.Player?.Pathfinder?.StopAutoWalk();
-            LongDistancePathfinder.StopPathfinding();
+            WorldMapPathfinder.Cancel();
         });
 
         /// <summary>
@@ -3093,6 +3096,16 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Play a sound effect locally (only audible to you).
+        /// Example:
+        /// ```py
+        /// API.PlaySound(0x13E)
+        /// ```
+        /// </summary>
+        /// <param name="index">The sound effect ID to play</param>
+        public void PlaySound(int index) => OnMain(() => Client.Game.Audio.PlaySound(index));
+
+        /// <summary>
         /// Check if the journal contains *any* of the strings in this list.
         /// Can be regex, prepend your msgs with $
         /// Example:
@@ -4175,6 +4188,27 @@ namespace ClassicUO.LegionScripting
                 UIManager.Add(arrow);
             }
         });
+
+        /// <summary>
+        /// Get the string for a cliloc number.
+        /// Example:
+        /// ```py
+        /// text = API.GetClilocString(1020000)
+        /// if text:
+        ///   API.SysMsg(text)
+        ///
+        /// # Force English regardless of client language setting
+        /// text = API.GetClilocString(1020000, englishOnly=True)
+        /// ```
+        /// </summary>
+        /// <param name="cliloc">The cliloc number</param>
+        /// <param name="englishOnly">True to always return the English string, ignoring the client language setting</param>
+        /// <returns>The cliloc string, or null if not found</returns>
+        public string GetClilocString(int cliloc, bool englishOnly = false) => OnMain(() =>
+            englishOnly
+                ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
+                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc)
+        );
 
         #endregion
     }

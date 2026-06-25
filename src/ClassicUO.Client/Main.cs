@@ -76,6 +76,10 @@ namespace ClassicUO
 
                 HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
+                if (!suggestedFix.NotNullNotEmpty())
+                    new CrashReporter().SendMessage(sb.ToString());
+
+
                 if (suggestedFix != null)
                     sb.AppendLine(suggestedFix);
 
@@ -214,6 +218,9 @@ namespace ClassicUO
                         Environment.SetEnvironmentVariable("FNA3D_FORCE_DRIVER", "Vulkan");
                         SDL.SDL_SetHint(SDL.SDL_HINT_RENDER_DRIVER, "vulkan");
                         break;
+
+                    case 3: // SDL/FNA auto-select
+                        break;
                 }
 
                 Client.Run(pluginHost);
@@ -231,6 +238,28 @@ namespace ClassicUO
                 {
                     return "It appears TazUO was unable to find a suitable graphics adapter to use. " +
                            "This can sometimes occur if your operating system shuts down your graphics adapter to preserve power.";
+                }
+
+                if (e is Exception shaderException && Client.IsShaderCompileFailure(shaderException))
+                {
+                    return Client.GraphicsShaderHelpMessage;
+                }
+
+                if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException openGlException &&
+                    openGlException.Message.Contains("OpenGL 2.1 support is required!"))
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("TazUO was unable to find a graphics device with the required OpenGL 2.1 support.");
+                    sb.AppendLine("This usually means your graphics drivers are missing, out of date, or the client fell back to a software renderer (GDI Generic).");
+                    sb.AppendLine();
+                    sb.AppendLine("Suggested fixes:");
+                    sb.AppendLine("1. Update your graphics card drivers to the latest version.");
+                    sb.AppendLine("2. Try launching TazUO with a different graphics driver by adding one of the following command-line arguments:");
+                    sb.AppendLine("     -force_driver 1   (OpenGL)");
+                    sb.AppendLine("     -force_driver 2   (Vulkan)");
+                    sb.AppendLine("     -force_driver 3   (SDL/FNA auto-select)");
+                    sb.AppendLine("   Try each one in turn until the client starts successfully.");
+                    return sb.ToString();
                 }
 
                 if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException graphicsException &&
@@ -473,6 +502,11 @@ namespace ClassicUO
 
                                 case 2: // Vulkan
                                     Settings.GlobalSettings.ForceDriver = 2;
+
+                                    break;
+
+                                case 3: // SDL/FNA auto-select
+                                    Settings.GlobalSettings.ForceDriver = 3;
 
                                     break;
 

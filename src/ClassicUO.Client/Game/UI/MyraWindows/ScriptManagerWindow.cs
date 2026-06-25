@@ -318,19 +318,19 @@ public class ScriptManagerWindow : MyraControl
         {
             items.Add(("Rename",          () => ShowRenameScriptDialog(script)));
             items.Add(("Edit Externally", () => FileSystemHelper.OpenFileWithDefaultApp(script.FullPath)));
-            items.Add((Language.Instance.Scripting.OpenLocation, () =>
+            items.Add((TazLang.Get("scripting_openlocation"), () =>
             {
                 if (!FileSystemHelper.OpenLocation(script.FullPath))
-                    GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, script.FullPath));
+                    GameActions.PrintUserWarn(World.Instance, TazLang.Get("scripting_openlocationfailed", new[] { script.FullPath }));
             }));
         }
         else
         {
-            items.Add((Language.Instance.Scripting.OpenLocation, () =>
+            items.Add((TazLang.Get("scripting_openlocation"), () =>
             {
                 var zipScript = (ZipScriptFile)script;
                 if (!FileSystemHelper.OpenLocation(zipScript.ZipPath))
-                    GameActions.PrintUserWarn(World.Instance, string.Format(Language.Instance.Scripting.OpenLocationFailed, zipScript.ZipPath));
+                    GameActions.PrintUserWarn(World.Instance, TazLang.Get("scripting_openlocationfailed", new[] { zipScript.ZipPath }));
             }));
         }
 

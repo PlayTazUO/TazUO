@@ -158,7 +158,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 CurrentProgressBar = skillProgressBar;
                 skillProgressBar.SetDuration(4000); //Expire in 4 seconds
-                UIManager.Add(skillProgressBar);
+                UIManager.Add(skillProgressBar, false);
             }
 
             public static void Reset()
