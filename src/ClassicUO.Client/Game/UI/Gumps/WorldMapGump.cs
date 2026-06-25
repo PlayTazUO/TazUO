@@ -10,6 +10,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.IO;
@@ -3366,7 +3367,7 @@ public class WorldMapGump : ResizableGump
     {
         if (!Client.Game.UO.GameCursor.ItemHold.Enabled)
         {
-            if (button == MouseButtonType.Left && Keyboard.Ctrl && !Keyboard.Alt)
+            if (button == MouseButtonType.Left && HotKeys.IsPressed(HotKeyRegistrar.WorldMapMarkerId) && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
 
@@ -3380,7 +3381,7 @@ public class WorldMapGump : ResizableGump
                 return;
             }
 
-            if (button == MouseButtonType.Right && Keyboard.Ctrl && !Keyboard.Alt)
+            if (button == MouseButtonType.Right && HotKeys.IsPressed(HotKeyRegistrar.WorldMapPathfindId) && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
                 _navDest = new Point(wX, wY);

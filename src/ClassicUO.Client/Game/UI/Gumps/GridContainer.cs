@@ -35,6 +35,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
@@ -86,6 +87,20 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly GumpPicTiled _backgroundTexture;
         private readonly NiceButton _setLootBag, _searchClearButton;
         private readonly bool _isCorpse;
+        #endregion
+
+        #region hotkeys
+        // Cached refs to the centrally-registered grid hotkeys (registered in HotKeyRegistrar) so the
+        // per-frame IsPressed checks skip the registry dictionary lookup.
+        private HotKeyEntry _hkMultiMove;
+        private HotKeyEntry _hkAutoLoot;
+        private HotKeyEntry _hkLockSlot;
+        private HotKeyEntry _hkCompare;
+
+        private bool IsMultiMove => (_hkMultiMove ??= HotKeys.Get(HotKeyRegistrar.GridMultiMoveId))?.IsPressed() ?? false;
+        private bool IsAutoLoot => (_hkAutoLoot ??= HotKeys.Get(HotKeyRegistrar.GridAutoLootId))?.IsPressed() ?? false;
+        private bool IsLockSlot => (_hkLockSlot ??= HotKeys.Get(HotKeyRegistrar.GridLockSlotId))?.IsPressed() ?? false;
+        private bool IsCompare => (_hkCompare ??= HotKeys.Get(HotKeyRegistrar.GridCompareId))?.IsPressed() ?? false;
         #endregion
 
         #region private vars
@@ -1358,8 +1373,8 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e != MouseButtonType.Left || _world.TargetManager.IsTargeting || _item == null)
                     return false;
 
-                if (!Keyboard.Ctrl &&
-                    !Keyboard.Alt &&
+                if (!_gridContainer.IsLockSlot &&
+                    !_gridContainer.IsMultiMove &&
                     _profile.DoubleClickToLootInsideContainers &&
                     _gridContainer._isCorpse &&
                     !_item.IsDestroyed &&
@@ -1370,7 +1385,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     GameActions.GrabItem(_world, _item, _item.Amount);
                 }
-                else if (Keyboard.Alt && _item != null)
+                else if (_gridContainer.IsMultiMove && _item != null)
                 {
                     if (MultiItemMoveGump.TrySelect(_item))
                         _selectHighlight = true;
@@ -1445,13 +1460,13 @@ namespace ClassicUO.Game.UI.Gumps
                             _world.TargetManager.Target(_container);
                         Mouse.CancelDoubleClick = true;
                     }
-                    else if (Keyboard.Ctrl)
+                    else if (_gridContainer.IsLockSlot)
                     {
                         if (_item != null)
                             _gridContainer.SlotManager.SetLockedSlot(_slot, !ItemGridLocked, _gridContainer._gridContainerEntry.GetSlot(_item.Serial));
                         Mouse.CancelDoubleClick = true;
                     }
-                    else if (Keyboard.Alt && _item != null)
+                    else if (_gridContainer.IsMultiMove && _item != null)
                     {
                         // If no drag occurred, toggle on click to prevent missed quick taps.
                         if (!_altDragActive)
@@ -1468,7 +1483,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                         Mouse.CancelDoubleClick = true;
                     }
-                    else if (Keyboard.Shift && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
+                    else if (_gridContainer.IsAutoLoot && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
                     {
                         AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
                         GameActions.Print(_world, $"Added this item to auto loot.");
@@ -1533,7 +1548,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         if (_item != null)
                         {
-                            if (!Keyboard.Alt)
+                            if (!_gridContainer.IsMultiMove)
                                 GameActions.PickUp(_world, _item, x, y);
                         }
                     }
@@ -2015,7 +2030,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (!_shouldDraw || IsDisposed) return false;
 
-                if (_hasItem && Keyboard.Ctrl && _item.ItemData.Layer > 0 && MouseIsOver && (_toolTipThis == null || _toolTipThis.IsDisposed) && (_toolTipitem1 == null || _toolTipitem1.IsDisposed) && (_toolTipitem2 == null || _toolTipitem2.IsDisposed))
+                if (_hasItem && _gridContainer.IsCompare && _item.ItemData.Layer > 0 && MouseIsOver && (_toolTipThis == null || _toolTipThis.IsDisposed) && (_toolTipitem1 == null || _toolTipitem1.IsDisposed) && (_toolTipitem2 == null || _toolTipitem2.IsDisposed))
                 {
                     var itemLayer = (Layer)_item.ItemData.Layer;
                     Item compItem = _world.Player.FindItemByLayer(itemLayer);
@@ -2162,7 +2177,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 base.PreDraw();
 
-                bool comboActive = Keyboard.Alt && Mouse.LButtonPressed
+                bool comboActive = _gridContainer.IsMultiMove && Mouse.LButtonPressed
                    && !Client.Game.UO.GameCursor.ItemHold.Enabled
                    && !_world.TargetManager.IsTargeting;
 
