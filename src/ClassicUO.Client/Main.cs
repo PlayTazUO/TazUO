@@ -76,7 +76,8 @@ namespace ClassicUO
 
                 HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
-                new CrashReporter().SendMessage(sb.ToString());
+                if (!suggestedFix.NotNullNotEmpty())
+                    new CrashReporter().SendMessage(sb.ToString());
 
 
                 if (suggestedFix != null)
