@@ -244,6 +244,23 @@ namespace ClassicUO
                     return Client.GraphicsShaderHelpMessage;
                 }
 
+                if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException openGlException &&
+                    openGlException.Message.Contains("OpenGL 2.1 support is required!"))
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("TazUO was unable to find a graphics device with the required OpenGL 2.1 support.");
+                    sb.AppendLine("This usually means your graphics drivers are missing, out of date, or the client fell back to a software renderer (GDI Generic).");
+                    sb.AppendLine();
+                    sb.AppendLine("Suggested fixes:");
+                    sb.AppendLine("1. Update your graphics card drivers to the latest version.");
+                    sb.AppendLine("2. Try launching TazUO with a different graphics driver by adding one of the following command-line arguments:");
+                    sb.AppendLine("     -force_driver 1   (OpenGL)");
+                    sb.AppendLine("     -force_driver 2   (Vulkan)");
+                    sb.AppendLine("     -force_driver 3   (SDL/FNA auto-select)");
+                    sb.AppendLine("   Try each one in turn until the client starts successfully.");
+                    return sb.ToString();
+                }
+
                 if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException graphicsException &&
                     graphicsException.Message.Contains("Could not create swapchain!"))
                 {
