@@ -142,7 +142,15 @@ public class PageControl : Container
         if (nonNullWidgets.Length <= 0)
             return;
 
+        bool wasEmpty = _pages.Count == 0;
         _pages.AddRange(nonNullWidgets);
+
+        if (wasEmpty)
+        {
+            _contentPanel.Widgets.Clear();
+            _contentPanel.Widgets.Add(_pages[0]);
+        }
+
         UpdateControlBar();
     }
 

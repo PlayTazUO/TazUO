@@ -3,6 +3,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
@@ -250,9 +251,14 @@ public static class MiscTab
             ),
             Option.Checkbox(
                 miscLang.UseManagedZlib,
-                new Accessor<bool>(() => profile.ForceResyncOnHang),
+                ZLib.ManagedZlibForced,
+                newValue =>
+                {
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, newValue);
+                    ZLib.SetForceManagedZlib(newValue);
+                },
                 miscLang.UseManagedZlibTooltip,
-                search: new SearchMetadata(miscLang.UseManagedZlib, Keywords: [kw.Zlib, kw.Managed])
+                new SearchMetadata(miscLang.UseManagedZlib, Keywords: [kw.Zlib, kw.Managed])
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.HousingTransparency, LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },

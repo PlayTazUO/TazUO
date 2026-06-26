@@ -14,7 +14,7 @@ public class FloatInputBox : NumericInputBox<float>
         float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
 
     protected override bool IsIntermediate(string text) =>
-        string.IsNullOrEmpty(text) || text == "-" || text == "." || text == "," || text == "-." || text == "-,";
+        string.IsNullOrEmpty(text) || text == "-" || text == "." || text == "-.";
 
     public override void OnChar(char c)
     {

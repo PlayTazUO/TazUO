@@ -33,7 +33,7 @@ public class OptionsWindow : MyraControl
 
     private readonly MyraGrid _mainArea = new();
 
-    private readonly WrapPanel _optionsPanel = new()
+    private WrapPanel _optionsPanel = new()
     {
         UniformSizing = false,
         Orientation = Orientation.Vertical,
@@ -335,16 +335,24 @@ public class OptionsWindow : MyraControl
     private void ShowPage(string category)
     {
         _searchField.Text = string.Empty;
-        _optionsStack.Widgets.Clear();
-        _optionsStack.Widgets.Add(_optionsPanel);
 
-        _optionsPanel.Widgets.Clear();
+        _optionsPanel = new WrapPanel
+        {
+            UniformSizing = false,
+            Orientation = Orientation.Vertical,
+            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
+            VerticalSpacing = MyraStyle.STANDARD_SPACING,
+            Padding = new Thickness(3, 0, 0, 10)
+        };
 
         _lastCategory = category;
 
         if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
             return;
+
         foreach (IOptionSource source in sources)
             _optionsPanel.Widgets.Add(source.Render());
+
+        _ = UiEffects.FadeReplace(_optionsStack, 0, _optionsPanel, 2000);
     }
 }

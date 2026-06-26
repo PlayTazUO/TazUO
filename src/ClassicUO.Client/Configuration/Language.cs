@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration
 {
@@ -31,17 +33,32 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         public static Language Instance { get; private set; } = new();
 
-        public static void Load()
+        public static void Load() => Load(false);
+
+        private static void Load(bool isRegenerating)
         {
-            if (File.Exists(LanguageFilePath))
+            if (!File.Exists(LanguageFilePath))
+            {
+                CreateNewLanguageFile();
+                return;
+            }
+
+            try
             {
                 Language f = JsonSerializer.Deserialize(File.ReadAllText(LanguageFilePath), LanguageJsonContext.Default.Language);
                 Instance = f;
                 Save(); //To update language file with new additions as needed
             }
-            else
+            catch (Exception e)
             {
-                CreateNewLanguageFile();
+                if (isRegenerating)
+                {
+                    Log.Error($"Failed to load a regenerated language file {LanguageFilePath}. This is a fatal error. Exception message: {e.Message}");
+                    throw;
+                }
+
+                Log.Error($"Error loading language file: {e.Message}. Will attempt to re-generate and reload");
+                RegenerateLanguageFile();
             }
         }
 
@@ -51,7 +68,7 @@ namespace ClassicUO.Configuration
                 File.Delete(LanguageFilePath);
 
             CreateNewLanguageFile();
-            Load();
+            Load(true);
         }
 
         private static void CreateNewLanguageFile()

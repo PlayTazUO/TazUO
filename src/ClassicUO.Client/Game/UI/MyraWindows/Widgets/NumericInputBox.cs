@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Globalization;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
@@ -11,6 +12,8 @@ public abstract class NumericInputBox<T> : GenericInputBox<T> where T : struct, 
     protected NumericInputBox() : base(null) { }
 
     protected NumericInputBox(Action<T>? valueChangedCallback) : base(valueChangedCallback) { }
+
+    protected override string FormatValue(T value) => value.ToString(null, CultureInfo.InvariantCulture);
 
     protected override bool Validate(T value, out T validatedValue)
     {

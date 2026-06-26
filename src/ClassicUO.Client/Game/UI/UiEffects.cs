@@ -17,14 +17,9 @@ public static class UiEffects
         int transitionTimeMs = 250
     )
     {
-        ArgumentNullException.ThrowIfNull(parent);
-        if (replacedChildIndex < 0 || replacedChildIndex >= parent.Widgets.Count)
-            throw new ArgumentOutOfRangeException(nameof(replacedChildIndex));
+        AssertContainerOperationValid(parent, replacedChildIndex);
 
-        // Roughly try to match monitor refresh rate
-        int iterationTime = 1000 / Math.Min(GameController.SupportedRefreshRate, Settings.GlobalSettings.FPS);
-
-        int transitionIterations = transitionTimeMs / 2 / iterationTime;
+        (int iterationTime, int iterations) = ComputeTransition(transitionTimeMs / 2);
 
         await WidgetRemovalEffect(
             parent,
@@ -32,7 +27,7 @@ public static class UiEffects
             w => new Accessor<float>(() => w.Opacity),
             0,
             1,
-            transitionIterations,
+            iterations,
             false,
             iterationTime
         );
@@ -44,10 +39,52 @@ public static class UiEffects
             w => new Accessor<float>(() => w.Opacity),
             0,
             1,
-            transitionIterations,
+            iterations,
             true,
             iterationTime
         );
+    }
+
+    public static async Task FadeIn(
+        Container parent,
+        Widget widget,
+        int insertAtIndex,
+        int transitionTimeMs = 250
+    )
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+        if (insertAtIndex < 0 || insertAtIndex > parent.Widgets.Count)
+            throw new ArgumentOutOfRangeException(nameof(insertAtIndex));
+
+        (int iterationTime, int iterations) = ComputeTransition(transitionTimeMs);
+        await WidgetInsertEffect(parent, widget, insertAtIndex, w => new Accessor<float>(() => w.Opacity), 0, 1, iterations, true, iterationTime);
+    }
+
+    public static async Task FadeOut(
+        Container parent,
+        int widgetIndex,
+        int transitionTimeMs = 250
+    )
+    {
+        AssertContainerOperationValid(parent, widgetIndex);
+
+        (int iterationTime, int iterations) = ComputeTransition(transitionTimeMs);
+        await WidgetRemovalEffect(parent, widgetIndex, w => new Accessor<float>(() => w.Opacity), 0, 1, iterations, false, iterationTime);
+    }
+
+    private static void AssertContainerOperationValid(Container parent, int widgetIndex)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+        if (widgetIndex < 0 || widgetIndex >= parent.Widgets.Count)
+            throw new ArgumentOutOfRangeException(nameof(widgetIndex));
+    }
+
+    // Roughly try to match monitor refresh rate
+    private static (int iterationTimeMs, int iterations) ComputeTransition(int transitionTimeMs)
+    {
+        int fps = Math.Max(60, Math.Min(GameController.SupportedRefreshRate, Settings.GlobalSettings.FPS));
+        int iterationTime = 1000 / fps;
+        return (iterationTime, transitionTimeMs / iterationTime);
     }
 
     private static async Task WidgetRemovalEffect<TValueType>(
@@ -63,18 +100,21 @@ public static class UiEffects
         struct,
         INumber<TValueType>
     {
+        // These run on the calling thread — safe only when callers are on the main thread (currently always true).
         Widget widget = parent.Widgets[widgetIndex];
 
         Accessor<TValueType> propAccessor = getAffectedProp(widget);
         TValueType oldPropValue = propAccessor.Get();
         await WidgetEffect(propAccessor, minValue, maxValue, effectIterations, isIncrement, iterationTimeMs);
 
-        // Myra is buggy and doesn't actually handle 'Replace' events...
-        parent.Widgets.RemoveAt(widgetIndex);
+        MainThreadQueue.BubblingInvokeOnMainThread(() =>
+        {
+            parent.Widgets.RemoveAt(widgetIndex);
 
-        // Restore the prop's original value. This localizes the changes to our scope and prevents leaking
-        // effect transitions outside to the consumers
-        propAccessor.Set(oldPropValue);
+            // Restore the prop's original value after the effect is done.
+            // This localizes the changes to our scope and prevents leaking property changes done during transitions outside to the consumers
+            propAccessor.Set(oldPropValue);
+        });
     }
 
     private static async Task WidgetInsertEffect<TValueType>(
@@ -93,14 +133,22 @@ public static class UiEffects
     {
         Accessor<TValueType> propAccessor = getAffectedProp(widget);
         TValueType oldPropValue = propAccessor.Get();
+
+        // Update events must be done on the main thread, or we risk crashes
+        MainThreadQueue.BubblingInvokeOnMainThread(() =>
+        {
+            // The effect starts at the minimum and works its way up back to the widget's original value.
+            if (isIncrement && minValue.HasValue)
+                propAccessor.Set(minValue.Value);
+
+            parent.Widgets.Insert(widgetIndex, widget);
+        });
+
         await WidgetEffect(propAccessor, minValue, maxValue, effectIterations, isIncrement, iterationTimeMs);
 
-        // Myra is buggy and doesn't actually handle 'Replace' events...
-        parent.Widgets.Insert(widgetIndex, widget);
-
-        // Restore the prop's original value. This localizes the changes to our scope and prevents leaking
-        // effect transitions outside to the consumers
-        propAccessor.Set(oldPropValue);
+        // Restore the prop's original value after the effect is done.
+        // This localizes the changes to our scope and prevents leaking property changes done during transitions outside to the consumers
+        MainThreadQueue.InvokeOnMainThread(() => propAccessor.Set(oldPropValue));
     }
 
     private static async Task WidgetEffect<TValueType>(
@@ -114,8 +162,13 @@ public static class UiEffects
         struct,
         INumber<TValueType>
     {
+        effectIterations = Math.Max(1, effectIterations);
         TValueType originalPropValue = affectedProp.Get();
-        TValueType propDiffPerIteration = affectedProp.Get() / TValueType.CreateChecked(effectIterations);
+        // For increment step from the current value up to maxValue.
+        // For decrement step from the current value down to zero.
+        TValueType propDiffPerIteration = isIncrement && maxValue.HasValue
+            ? (maxValue.Value - originalPropValue) / TValueType.CreateChecked(effectIterations)
+            : originalPropValue / TValueType.CreateChecked(effectIterations);
 
         for (int i = 1; i < effectIterations + 1; i++)
         {
@@ -137,7 +190,7 @@ public static class UiEffects
             }
 
             MainThreadQueue.InvokeOnMainThread(() => affectedProp.Set(newPropValue));
-            if (breakEarly)
+            if (breakEarly || i >= effectIterations)
                 break;
 
             await Task.Delay(iterationTimeMs);

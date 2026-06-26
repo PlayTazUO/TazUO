@@ -441,7 +441,8 @@ public class TrueTypeLoader
             if (!_orderedFontNames.HasValue || fresh)
                 _orderedFontNames = GetOrderedFontNames();
 
-            return _orderedFontNames.Value;
+            (string[] names, int maxNameLength) = _orderedFontNames.Value;
+            return ([.. names], maxNameLength);
         }
     }
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Text;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers
@@ -14,18 +15,22 @@ namespace ClassicUO.Game.Managers
         {
         }
 
-        [Conditional("RELEASE")]
         public void SendMessage(string msgSend)
         {
+#if DEBUG
+            // Short-circuit in debug
+            return;
+#else
             if (string.IsNullOrEmpty(WebHook))
                 return;
 
             using var httpClient = new HttpClient();
 
             var form = new MultipartFormDataContent();
-            byte[] fileBytes = System.Text.Encoding.Unicode.GetBytes(msgSend);
+            byte[] fileBytes = Encoding.Unicode.GetBytes(msgSend);
             form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "Document", "log.txt");
             httpClient.PostAsync(Obf(WebHook, -21), form).Wait();
+#endif
         }
 
         public static string Obf(string source, int shift)

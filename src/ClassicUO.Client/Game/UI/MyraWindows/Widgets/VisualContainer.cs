@@ -17,7 +17,7 @@ public record struct VisualContainerProps()
 {
     public Orientation Orientation { get; init; } = Orientation.Vertical;
     public string LabelText { get; init; } = null;
-    public HorizontalAlignment LabelHorizontalAlightment { get; init; } = HorizontalAlignment.Left;
+    public HorizontalAlignment LabelHorizontalAlignment { get; init; } = HorizontalAlignment.Left;
     public string LabelLink { get; init; } = null;
     public VisualContainerSpacing? Spacing { get; init; } = VisualContainerSpacing.Comfortable;
 }
@@ -34,7 +34,7 @@ public class VisualContainer : Container
             else
                 label = new LinkLabel(props.LabelText, props.LabelLink);
 
-            label.HorizontalAlignment = props.LabelHorizontalAlightment;
+            label.HorizontalAlignment = props.LabelHorizontalAlignment;
 
             Children.Add(label);
             Children.Add(new MyraSpacer(0, 2));
