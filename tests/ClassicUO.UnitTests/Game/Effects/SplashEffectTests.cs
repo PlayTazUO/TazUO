@@ -449,5 +449,19 @@ namespace ClassicUO.UnitTests.Game.Effects
             activeCount.Should().Be(particleCount, 
                 $"all {particleCount} particles should still be active after second update");
         }
+
+        [Fact]
+        public void Update_WithDefaultVisibleRange_Should_NotCullOnScreenParticles()
+        {
+            var splashEffect = new SplashEffect();
+            var config = SplashConfig.WaterSplash();
+
+            splashEffect.CreateSplash(500f, 400f, config);
+
+            splashEffect.Update(0.01f);
+
+            GetActiveParticleCount(splashEffect).Should().Be(1,
+                "default visibleRange (int.MaxValue) must not overflow and cull on-screen particles");
+        }
     }
 }

@@ -245,6 +245,9 @@ namespace ClassicUO.Game.Effects
         public void Update(float deltaTime, int viewportOffsetX = 0, int viewportOffsetY = 0,
                           int visibleRangeX = int.MaxValue, int visibleRangeY = int.MaxValue)
         {
+            float maxVisibleX = visibleRangeX == int.MaxValue ? float.MaxValue : visibleRangeX * 2f;
+            float maxVisibleY = visibleRangeY == int.MaxValue ? float.MaxValue : visibleRangeY * 2f;
+
             for (int i = 0; i < _particles.Length; i++)
             {
                 ref SplashParticle particle = ref _particles[i];
@@ -276,8 +279,8 @@ namespace ClassicUO.Game.Effects
                 }
 
                 // Check visibility and cull if outside viewport
-                if (particle.X < -visibleRangeX || particle.X > visibleRangeX * 2 ||
-                    particle.Y < -visibleRangeY || particle.Y > visibleRangeY * 2)
+                if (particle.X < -visibleRangeX || particle.X > maxVisibleX ||
+                    particle.Y < -visibleRangeY || particle.Y > maxVisibleY)
                 {
                     particle.Active = false;
                     continue;
