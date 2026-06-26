@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Renderer.Effects;
 using FontStashSharp.Interfaces;
@@ -804,8 +804,14 @@ namespace ClassicUO.Renderer
             float depth
         )
         {
-            var radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
-            Vector2.Distance(ref start, ref end, out var length);
+            // Skip if texture is null or disposed
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
+            float radians = ClassicUO.Utility.MathHelper.AngleBetweenVectors(start, end);
+            Vector2.Distance(ref start, ref end, out float length);
 
             Draw
             (
