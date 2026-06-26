@@ -782,6 +782,10 @@ namespace ClassicUO.Game
         {
             if (IsWeatherDisabled)
             {
+                if (CurrentWeather.HasValue || CurrentCount > 0 || _currentRainSound != null)
+                {
+                    Reset();
+                }
                 return;
             }
 
