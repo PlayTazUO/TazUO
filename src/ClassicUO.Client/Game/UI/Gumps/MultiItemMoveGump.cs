@@ -57,7 +57,7 @@ namespace ClassicUO.Game.UI.Gumps
         private static bool processing = false;
         private static ProcessType processType = ProcessType.None;
         private static uint _lastMoveTick;
-        private static uint tradeId, containerId;
+        private static uint tradeId, containerId, mobileId;
         private static int groundX, groundY, groundZ;
 
         // ===== UI =====
@@ -203,7 +203,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             // Move to (right)
             Add(b = new NiceButton(cx + halfW + GAP, rowY3, halfW, 20, ButtonAction.Activate, "Move to", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Select a container or a ground tile to move these items to.");
+            b.SetTooltip("Select a container, a mobile (or its name plate), or a ground tile to move these items to.");
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -256,6 +256,19 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void OnContainerTarget(World world, uint serial)
         {
+            if (SerialHelper.IsMobile(serial))
+            {
+                Mobile mobile = world.Mobiles.Get(serial);
+                if (mobile == null)
+                {
+                    GameActions.Print(world, "That does not appear to be a valid mobile...");
+                    return;
+                }
+                GameActions.Print(world, "Moving items to the selected mobile..");
+                ProcessItemMovesToMobile(world, mobile.Serial);
+                return;
+            }
+
             if (SerialHelper.IsItem(serial))
             {
                 Item moveToContainer = world.Items.Get(serial);
@@ -302,6 +315,13 @@ namespace ClassicUO.Game.UI.Gumps
             processing = true;
         }
 
+        private static void ProcessItemMovesToMobile(World world, uint mobileSerial)
+        {
+            mobileId = mobileSerial;
+            processType = ProcessType.Mobile;
+            processing = true;
+        }
+
         public override void Update()
         {
             base.Update();
@@ -340,6 +360,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                         case ProcessType.Container:
                             ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, containerId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                            enqueued = true;
+                            break;
+
+                        case ProcessType.Mobile:
+                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, mobileId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
                             enqueued = true;
                             break;
 
@@ -406,6 +431,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             processType = ProcessType.None;
             containerId = 0;
+            mobileId = 0;
             tradeId = 0;
             groundX = groundY = groundZ = 0;
         }
@@ -415,7 +441,8 @@ namespace ClassicUO.Game.UI.Gumps
             None = 0,
             Container,
             Ground,
-            TradeWindow
+            TradeWindow,
+            Mobile
         }
     }
 }
