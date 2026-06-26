@@ -18,8 +18,8 @@ namespace ClassicUO.Game.Map
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static (int tileX, int tileY) IsometricToTile(float worldX, float worldY)
         {
-            int targetTileX = (int)Math.Round((worldX + worldY) / 44f);
-            int targetTileY = (int)Math.Round((worldY - worldX) / 44f);
+            int targetTileX = (int)Math.Round((worldX + worldY) / 44f, MidpointRounding.AwayFromZero);
+            int targetTileY = (int)Math.Round((worldY - worldX) / 44f, MidpointRounding.AwayFromZero);
             return (targetTileX, targetTileY);
         }
     }
