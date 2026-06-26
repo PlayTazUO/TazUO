@@ -110,7 +110,7 @@ namespace ClassicUO.Game
 
         public CommandManager CommandManager { get; }
 
-        internal Weather Weather { get; }
+        public Weather Weather { get; }
 
         internal RippleEffect RippleEffect { get; }
 
