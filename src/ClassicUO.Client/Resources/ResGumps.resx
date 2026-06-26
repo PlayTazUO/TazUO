@@ -396,9 +396,6 @@
   <data name="PlayFootsteps" xml:space="preserve">
     <value>Play Footsteps</value>
   </data>
-  <data name="PlayRainSound" xml:space="preserve">
-    <value>Play Rain Sound</value>
-  </data>
   <data name="CombatMusic" xml:space="preserve">
     <value>Combat music</value>
   </data>

@@ -856,7 +856,7 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            scroll.Add(c = new CheckboxWithLabel(ResGumps.PlayRainSound, 0, profile.EnableRainSound,
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("sound_play_rain", "Play rain sound"), 0, profile.EnableRainSound,
                 (b) => { profile.EnableRainSound = b; }));
             PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();

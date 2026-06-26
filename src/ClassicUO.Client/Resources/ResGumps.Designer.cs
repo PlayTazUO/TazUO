@@ -3080,15 +3080,6 @@ namespace ClassicUO.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Play Rain Sound.
-        /// </summary>
-        public static string PlayRainSound {
-            get {
-                return ResourceManager.GetString("PlayRainSound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Poisoned Color.
         /// </summary>
         public static string PoisonedColor {

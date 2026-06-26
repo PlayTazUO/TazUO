@@ -96,7 +96,8 @@ public static class GeneralTabContent
             b => {
                 profile.DisableWeather = b;
                 if (b) World.Instance?.Weather.Reset();
-            }, lang.DisableWeather, lang.DisableWeatherTooltip));
+            }, TazLang.Get("disable_weather", "Disable weather"),
+                TazLang.Get("disable_weather_tooltip", "Disable weather effects (rain, snow, storms).")));
 
         var healLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell)?.Name ??
                                       profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };

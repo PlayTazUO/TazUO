@@ -662,8 +662,6 @@ namespace ClassicUO.Configuration
         public string AutoOpenOwnCorpseTooltip { get; set; } = "Automatically open your own corpse when you die, even if auto open corpses is disabled.";
         public string AutoUnequipForActions { get; set; } = "Auto unequip for actions";
         public string AutoUnequipForActionsTooltip { get; set; } = "Automatically unequip weapons for spells & potions, then reequip them after.";
-        public string DisableWeather { get; set; } = "Disable weather";
-        public string DisableWeatherTooltip { get; set; } = "Disable weather effects (rain, snow, storms).";
         public string SetQuickHealSpell { get; set; } = "Set heal spell";
         public string SetQuickCureSpell { get; set; } = "Set cure spell";
         public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
