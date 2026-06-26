@@ -700,7 +700,7 @@ namespace ClassicUO.Game
             // Determine if rain is minor or heavy based on density
             // Minor: Count <= DENSITY_LARGE_DOTS (SmallDots + LargeDots)
             // Heavy: Count > DENSITY_LARGE_DOTS (ShortLines + LongBolts)
-            bool shouldPlayHeavyRain = Count > DENSITY_SHORT_LINES;
+            bool shouldPlayHeavyRain = Count > DENSITY_LARGE_DOTS;
 
             // Determine what sound should be playing
             int expectedSoundId = shouldPlayHeavyRain ? HEAVY_RAIN_SOUND_ID : MINOR_RAIN_SOUND_ID;
