@@ -42,6 +42,7 @@ All notable changes to TazUO will be recorded here.
 * Added a centralized hotkey system with a Hotkeys tab in the Assistant window for viewing, rebinding, and conflict-checking hotkeys (including macros), plus a global hotkey shutoff - [P.R 591](https://github.com/PlayTazUO/TazUO/pull/591) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fix rapid right-clicks interrupting character movement - [P.R 600](https://github.com/PlayTazUO/TazUO/pull/600) ([bittiez](https://github.com/bittiez))
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
 * Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
