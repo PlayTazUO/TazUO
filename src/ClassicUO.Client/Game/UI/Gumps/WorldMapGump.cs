@@ -177,7 +177,7 @@ public class WorldMapGump : ResizableGump
                 SaveSettings();
             }
 
-            ShowBorder = !_isTopMost;
+            ShowBorder = _isTopMost;
 
             LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
         }
@@ -3646,7 +3646,8 @@ public class WorldMapGump : ResizableGump
 
             case WorldMapDoubleClickAction.ToggleLock:
             default:
-                TopMost = !TopMost;
+                IsLocked = !IsLocked;
+                TopMost = !IsLocked;
                 break;
         }
 
@@ -3666,7 +3667,9 @@ public class WorldMapGump : ResizableGump
     }
 
     private void ToggleFullscreen()
-    {
+    {        
+        TopMost = true;
+
         if (!_isFullscreen)
         {
             // Remember the current windowed bounds so we can restore them later.
