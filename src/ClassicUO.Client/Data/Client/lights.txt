@@ -1,0 +1,9 @@
+# FORMAT
+# ITEM_ID LIGHT_SHADER_OR_HUE
+#
+# Example for shader
+# 0xE31 35
+#
+# Example for hue
+# 0xE31 H1234
+

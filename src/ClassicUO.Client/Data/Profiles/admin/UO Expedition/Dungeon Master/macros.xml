@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<macros>
+	<macro name="Paperdoll" key="112" mousebutton="0" wheelscroll="False" wheelup="False" alt="True" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="8" subcode="10" submenutype="1" />
+		</actions>
+	</macro>
+	<macro name="Options" key="111" mousebutton="0" wheelscroll="False" wheelup="False" alt="True" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="8" subcode="9" submenutype="1" />
+		</actions>
+	</macro>
+	<macro name="Journal" key="106" mousebutton="0" wheelscroll="False" wheelup="False" alt="True" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="8" subcode="12" submenutype="1" />
+		</actions>
+	</macro>
+	<macro name="Backpack" key="105" mousebutton="0" wheelscroll="False" wheelup="False" alt="True" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="8" subcode="16" submenutype="1" />
+		</actions>
+	</macro>
+	<macro name="Use last object" key="1073741886" mousebutton="0" wheelscroll="False" wheelup="False" alt="False" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="17" subcode="17" submenutype="0" />
+		</actions>
+	</macro>
+	<macro name="Last target" key="1073741887" mousebutton="0" wheelscroll="False" wheelup="False" alt="False" ctrl="False" shift="False" hidelabel="False" hue="0" graphic="" scale="100">
+		<actions>
+			<action code="22" subcode="17" submenutype="0" />
+		</actions>
+	</macro>
+</macros>

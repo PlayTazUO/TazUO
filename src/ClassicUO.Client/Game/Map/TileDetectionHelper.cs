@@ -36,8 +36,6 @@ namespace ClassicUO.Game.Map
                     continue;
                 }
 
-                ref StaticTiles itemData = ref Client.Game.UO.FileManager.TileData.StaticData[obj.Graphic];
-
                 // Check if tile is above the player and it's not rendering
                 if ((sbyte)obj.PriorityZ > pz14 && obj.AlphaHue == 0)
                 {
