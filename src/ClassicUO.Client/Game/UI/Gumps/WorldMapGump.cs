@@ -102,6 +102,7 @@ public class WorldMapGump : ResizableGump
     private WorldMapDoubleClickAction _doubleClickAction = WorldMapDoubleClickAction.ToggleLock;
     private bool _isFullscreen;
     private Rectangle _preFullscreenBounds;
+    private bool _preFullscreenTopMost;
 
     private GumpPic _northIcon;
 
@@ -168,19 +169,24 @@ public class WorldMapGump : ResizableGump
     public bool TopMost
     {
         get => _isTopMost;
-        set
-        {
-            if (_isTopMost != value)
-            {
-                _isTopMost = value;
+        set => SetTopMost(value, true);
+    }
 
+    private void SetTopMost(bool value, bool save)
+    {
+        if (_isTopMost != value)
+        {
+            _isTopMost = value;
+
+            if (save)
+            {
                 SaveSettings();
             }
-
-            ShowBorder = _isTopMost;
-
-            LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
         }
+
+        ShowBorder = _isTopMost;
+
+        LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
     }
 
     public bool FreeView
@@ -674,6 +680,20 @@ public class WorldMapGump : ResizableGump
 
         if (_map.Index != World.MapIndex && !_freeView)
             ChangeMap(World.MapIndex);
+
+        if (_isFullscreen)
+        {
+            // Keep the map filling the client window if it gets resized while fullscreen.
+            int targetW = Client.Game.Window.ClientBounds.Width;
+            int targetH = Client.Game.Window.ClientBounds.Height;
+
+            if (Width != targetW || Height != targetH || X != 0 || Y != 0)
+            {
+                X = 0;
+                Y = 0;
+                ApplySize(targetW, targetH);
+            }
+        }
 
         World.WMapManager.RequestServerPartyGuildInfo();
     }
@@ -3646,7 +3666,7 @@ public class WorldMapGump : ResizableGump
 
             case WorldMapDoubleClickAction.ToggleLock:
             default:
-                IsLocked = !IsLocked;
+                SetLockStatus(!IsLocked);
                 TopMost = !IsLocked;
                 break;
         }
@@ -3667,14 +3687,15 @@ public class WorldMapGump : ResizableGump
     }
 
     private void ToggleFullscreen()
-    {        
-        TopMost = true;
-
+    {
         if (!_isFullscreen)
         {
-            // Remember the current windowed bounds so we can restore them later.
+            // Remember the current windowed bounds and top-most state so we can restore them later.
             _preFullscreenBounds = new Rectangle(X, Y, Width, Height);
+            _preFullscreenTopMost = _isTopMost;
             _isFullscreen = true;
+
+            SetTopMost(true, false);
 
             X = 0;
             Y = 0;
@@ -3683,6 +3704,8 @@ public class WorldMapGump : ResizableGump
         else
         {
             _isFullscreen = false;
+
+            SetTopMost(_preFullscreenTopMost, false);
 
             X = _preFullscreenBounds.X;
             Y = _preFullscreenBounds.Y;
