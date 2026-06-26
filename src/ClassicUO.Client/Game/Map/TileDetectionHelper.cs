@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using ClassicUO.Assets;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Utility;
@@ -60,7 +58,7 @@ namespace ClassicUO.Game.Map
         /// <param name="targetTileY">Tile Y coordinate</param>
         /// <returns>True if the position is on a water tile, false otherwise.</returns>
         /// <remarks>
-        /// Thanks to [markdwags](https://github.com/markdwags) for the code 
+        /// Thanks to [markdwags](https://github.com/markdwags) for the code
         /// in [this comment](https://github.com/ClassicUO/ClassicUO/pull/1852#issuecomment-3656749076).
         /// </remarks>
         public static bool IsWaterTile(Map map, int targetTileX, int targetTileY)

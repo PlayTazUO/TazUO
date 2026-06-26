@@ -1,5 +1,3 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
-
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Effects;
 using ClassicUO.Renderer;

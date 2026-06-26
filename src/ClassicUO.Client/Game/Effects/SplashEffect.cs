@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using ClassicUO;
@@ -17,32 +15,32 @@ namespace ClassicUO.Game.Effects
         // Timing
         public float Duration;              // Animation duration in seconds
         public float RiseSpeed;            // Vertical velocity (negative = up, 0 = no movement)
-        
+
         // Particle Count
         public int DropletCount;           // Number of droplets per splash
-        
+
         // Spread Pattern
         public float SpreadMultiplier;     // How far droplets spread from impact point
         public float EllipseX;             // Horizontal ellipse factor (1.0 = circle, >1.0 = wider horizontally)
         public float EllipseY;             // Vertical ellipse factor (<1.0 = flatter)
         public float AngleRangeMin;         // Minimum angle in degrees (0-360)
         public float AngleRangeMax;         // Maximum angle in degrees (0-360)
-        
+
         // Droplet Size
         public float BaseSize;             // Base size multiplier
         public int MinDropletSize;         // Minimum droplet size in pixels
         public int MaxDropletSize;         // Maximum droplet size in pixels
         public float SizeScaleMultiplier;  // Size animation scale (grow/shrink effect)
-        
+
         // Color
         public Color BaseColor;             // Base splash color
         public float AlphaMultiplier;       // Overall alpha multiplier (0.0-1.0)
         public float AlphaVariationMin;     // Minimum alpha variation per droplet
         public float AlphaVariationMax;     // Maximum alpha variation per droplet
-        
+
         // Coordinate Mode
         public bool UseWorldCoordinates;    // true = world coords, false = viewport coords
-        
+
         /// <summary>
         /// Creates a water splash configuration (default rain splash settings).
         /// Light blue-white color, upward spread (0-180 degrees), moderate animation.
@@ -70,7 +68,7 @@ namespace ClassicUO.Game.Effects
                 UseWorldCoordinates = true
             };
         }
-        
+
         /// <summary>
         /// Creates a fire splash configuration.
         /// Orange-red color, wider spread, faster animation.
@@ -98,7 +96,7 @@ namespace ClassicUO.Game.Effects
                 UseWorldCoordinates = true
             };
         }
-        
+
         /// <summary>
         /// Creates an explosion splash configuration.
         /// Yellow-white color, very wide spread, many particles, fast animation.
@@ -126,7 +124,7 @@ namespace ClassicUO.Game.Effects
                 UseWorldCoordinates = true
             };
         }
-        
+
         /// <summary>
         /// Creates a metal conflict/spark configuration.
         /// Gray-white sparks, tight spread, quick fade.
@@ -155,7 +153,7 @@ namespace ClassicUO.Game.Effects
             };
         }
     }
-    
+
     /// <summary>
     /// Independent splash effect system that can be used by any game system.
     /// Manages a pool of splash particles with configurable visual parameters.
@@ -176,10 +174,10 @@ namespace ClassicUO.Game.Effects
             public bool Active;                 // Is active
             public SplashConfig Config;         // Configuration snapshot (for this particle)
         }
-        
+
         private readonly SplashParticle[] _particles;
         private const int MAX_PARTICLES = byte.MaxValue; // 255 particles
-        
+
         /// <summary>
         /// Initializes a new instance of the SplashEffect.
         /// </summary>
@@ -187,7 +185,7 @@ namespace ClassicUO.Game.Effects
         {
             _particles = new SplashParticle[MAX_PARTICLES];
         }
-        
+
         /// <summary>
         /// Creates a new splash effect at the specified position.
         /// </summary>
@@ -205,7 +203,7 @@ namespace ClassicUO.Game.Effects
                     particle.Active = true;
                     particle.LifeTime = 0f;
                     particle.SeedID = (uint)Time.Ticks + (uint)i; // Unique seed for random pattern
-                    
+
                     // Store position based on coordinate mode
                     if (config.UseWorldCoordinates)
                     {
@@ -220,22 +218,22 @@ namespace ClassicUO.Game.Effects
                         particle.WorldX = 0f; // Not used in viewport mode
                         particle.WorldY = 0f;
                     }
-                    
+
                     // Initial velocity
                     particle.VelocityY = config.RiseSpeed;
 
                     // Base size with some variation
                     float sizeVariation = RandomHelper.GetValue(0, 5) * 0.1f;
                     particle.Size = config.BaseSize + sizeVariation;
-                    
+
                     // Store configuration snapshot
                     particle.Config = config;
-                    
+
                     break; // Found a slot, exit
                 }
             }
         }
-        
+
         /// <summary>
         /// Updates all active splash particles.
         /// </summary>
@@ -251,17 +249,17 @@ namespace ClassicUO.Game.Effects
             {
                 ref SplashParticle particle = ref _particles[i];
                 if (!particle.Active) continue;
-                
+
                 // Update lifetime
                 particle.LifeTime += deltaTime / particle.Config.Duration;
-                
+
                 // Deactivate if splash animation complete
                 if (particle.LifeTime >= 1.0f)
                 {
                     particle.Active = false;
                     continue;
                 }
-                
+
                 // Apply upward movement physics
                 if (particle.VelocityY != 0.0f && particle.Config.UseWorldCoordinates)
                 {
@@ -269,14 +267,14 @@ namespace ClassicUO.Game.Effects
                     float speedOffset = deltaTime * 37.0f; // Same as SIMULATION_TIME scaling
                     particle.WorldY += particle.VelocityY * speedOffset;
                 }
-                
+
                 // Convert to viewport-relative coordinates if using world coordinates
                 if (particle.Config.UseWorldCoordinates)
                 {
                     particle.X = particle.WorldX - viewportOffsetX;
                     particle.Y = particle.WorldY - viewportOffsetY;
                 }
-                
+
                 // Check visibility and cull if outside viewport
                 if (particle.X < -visibleRangeX || particle.X > visibleRangeX * 2 ||
                     particle.Y < -visibleRangeY || particle.Y > visibleRangeY * 2)
@@ -286,7 +284,7 @@ namespace ClassicUO.Game.Effects
                 }
             }
         }
-        
+
         /// <summary>
         /// Clears all active splash particles.
         /// </summary>
@@ -309,58 +307,58 @@ namespace ClassicUO.Game.Effects
             {
                 ref SplashParticle particle = ref _particles[i];
                 if (!particle.Active) continue;
-                
+
                 SplashConfig config = particle.Config;
                 float progress = particle.LifeTime;
-                
+
                 // Size animation: grows then shrinks (parabolic curve using sine)
                 float sizeScale = 1f + (float)Math.Sin(progress * Math.PI) * config.SizeScaleMultiplier;
                 float currentSize = particle.Size * sizeScale;
-                
+
                 // Ensure minimum size to prevent invisible droplets
                 currentSize = Math.Max(2f, currentSize);
-                
+
                 // Alpha fades out linearly over animation duration
                 float alpha = (1f - progress) * config.AlphaMultiplier;
-                
+
                 // Splash center position
                 int splashX = (int)particle.X;
                 int splashY = (int)particle.Y;
-                
+
                 // Base splash color with alpha
                 Color baseSplashColor = config.BaseColor * alpha;
-                
+
                 // Draw scattered splash droplets
                 for (int p = 0; p < config.DropletCount; p++)
                 {
                     // Generate truly random pattern using hash function (prevents sequential angles)
                     uint particleSeed = (particle.SeedID * 73856093u) ^ ((uint)p * 19349663u);
-                    
+
                     // Random angle within configured range
                     float angleRange = config.AngleRangeMax - config.AngleRangeMin;
                     float randomAngle = config.AngleRangeMin + (float)(particleSeed % (uint)angleRange);
                     float angle = randomAngle * 0.017453f; // Convert to radians
-                    
+
                     // Random spread distance per droplet (0.5-1.0 variation)
                     float randomSpread = ((particleSeed % 100) / 100f) * 0.5f + 0.5f;
-                    
+
                     // Calculate final position (where droplet will end up)
                     float finalSpreadRadius = currentSize * randomSpread * config.SpreadMultiplier;
-                    
+
                     // Animated spreading: droplet position interpolates from center to final position
                     // progress = 0.0: droplet at impact point (center)
                     // progress = 1.0: droplet at final position
                     float currentSpreadRadius = finalSpreadRadius * progress;
-                    
+
                     // Elliptical spread pattern
                     int offsetX = (int)(Math.Cos(angle) * currentSpreadRadius * config.EllipseX);
                     // Negate Y to make upward motion (screen Y increases downward)
                     int offsetY = -(int)(Math.Sin(angle) * currentSpreadRadius * config.EllipseY);
-                    
+
                     // Random droplet size using configured min/max range
                     int dropletSizeRange = config.MaxDropletSize - config.MinDropletSize + 1;
                     int dropletSize = config.MinDropletSize + (int)(particleSeed % (uint)dropletSizeRange);
-                    
+
                     // Position droplet - animates from center outward as progress increases
                     Rectangle dropletRect = new Rectangle(
                         splashX + offsetX - dropletSize / 2,
@@ -368,12 +366,12 @@ namespace ClassicUO.Game.Effects
                         dropletSize,
                         dropletSize
                     );
-                    
+
                     // Random alpha variation per droplet using configured range
                     float alphaRange = config.AlphaVariationMax - config.AlphaVariationMin;
                     float alphaVariation = config.AlphaVariationMin + ((particleSeed % 100) / 100f) * alphaRange;
                     Color dropletColor = baseSplashColor * alphaVariation;
-                    
+
                     batcher.Draw(
                         SolidColorTextureCache.GetTexture(dropletColor),
                         dropletRect,
