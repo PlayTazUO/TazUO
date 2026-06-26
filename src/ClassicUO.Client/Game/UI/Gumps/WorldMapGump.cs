@@ -33,6 +33,12 @@ using ClassicUO.Assets;
 
 namespace ClassicUO.Game.UI.Gumps;
 
+public enum WorldMapDoubleClickAction
+{
+    ToggleLock,
+    ToggleFullscreen
+}
+
 [JsonSourceGenerationOptions(WriteIndented = true, GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(ZonesFile), GenerationMode = JsonSourceGenerationMode.Metadata)]
 [JsonSerializable(typeof(ZonesFileZoneData), GenerationMode = JsonSourceGenerationMode.Metadata)]
@@ -93,6 +99,10 @@ public class WorldMapGump : ResizableGump
     private int _zoomIndex = 4;
     private bool _showGridIfZoomed = true;
     private bool _allowPositionalTarget = false;
+    private WorldMapDoubleClickAction _doubleClickAction = WorldMapDoubleClickAction.ToggleLock;
+    private bool _isFullscreen;
+    private Rectangle _preFullscreenBounds;
+    private bool _preFullscreenTopMost;
 
     private GumpPic _northIcon;
 
@@ -159,19 +169,24 @@ public class WorldMapGump : ResizableGump
     public bool TopMost
     {
         get => _isTopMost;
-        set
-        {
-            if (_isTopMost != value)
-            {
-                _isTopMost = value;
+        set => SetTopMost(value, true);
+    }
 
+    private void SetTopMost(bool value, bool save)
+    {
+        if (_isTopMost != value)
+        {
+            _isTopMost = value;
+
+            if (save)
+            {
                 SaveSettings();
             }
-
-            ShowBorder = !_isTopMost;
-
-            LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
         }
+
+        ShowBorder = _isTopMost;
+
+        LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
     }
 
     public bool FreeView
@@ -240,6 +255,7 @@ public class WorldMapGump : ResizableGump
 
         _showGridIfZoomed = ProfileManager.CurrentProfile.WorldMapShowGridIfZoomed;
         _allowPositionalTarget = ProfileManager.CurrentProfile.WorldMapAllowPositionalTarget;
+        _doubleClickAction = ProfileManager.CurrentProfile.WorldMapDoubleClickAction;
         TopMost = ProfileManager.CurrentProfile.WorldMapTopMost;
         FreeView = ProfileManager.CurrentProfile.WorldMapFreeView;
     }
@@ -252,8 +268,10 @@ public class WorldMapGump : ResizableGump
         }
 
 
-        ProfileManager.CurrentProfile.WorldMapWidth = Width;
-        ProfileManager.CurrentProfile.WorldMapHeight = Height;
+        // While in fullscreen mode, persist the windowed (pre-fullscreen) bounds so the
+        // map restores to its previous size/position rather than staying fullscreen.
+        ProfileManager.CurrentProfile.WorldMapWidth = _isFullscreen ? _preFullscreenBounds.Width : Width;
+        ProfileManager.CurrentProfile.WorldMapHeight = _isFullscreen ? _preFullscreenBounds.Height : Height;
 
         ProfileManager.CurrentProfile.WorldMapFlipMap = _flipMap;
         ProfileManager.CurrentProfile.WorldMapTopMost = TopMost;
@@ -280,8 +298,9 @@ public class WorldMapGump : ResizableGump
         ProfileManager.CurrentProfile.WorldMapHiddenZoneFiles = string.Join(",", _hiddenZoneFiles);
 
         ProfileManager.CurrentProfile.WorldMapShowGridIfZoomed = _showGridIfZoomed;
-        ProfileManager.CurrentProfile.WorldMapPosition = new Point(X, Y);
+        ProfileManager.CurrentProfile.WorldMapPosition = _isFullscreen ? new Point(_preFullscreenBounds.X, _preFullscreenBounds.Y) : new Point(X, Y);
         ProfileManager.CurrentProfile.WorldMapAllowPositionalTarget = _allowPositionalTarget;
+        ProfileManager.CurrentProfile.WorldMapDoubleClickAction = _doubleClickAction;
     }
 
     private bool ParseBool(string boolStr) => bool.TryParse(boolStr, out bool value) && value;
@@ -611,6 +630,15 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["flip_map"]);
         ContextMenu.Add(_options["top_most"]);
 
+        var doubleClickEntry = new ContextMenuItemEntry(TazLang.Get("map_doubleclick_action", "Double click action"));
+        doubleClickEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_doubleclick_toggle_lock", "Toggle lock state"),
+            () => { SetDoubleClickAction(WorldMapDoubleClickAction.ToggleLock); }, true,
+            _doubleClickAction == WorldMapDoubleClickAction.ToggleLock));
+        doubleClickEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_doubleclick_toggle_fullscreen", "Toggle fullscreen"),
+            () => { SetDoubleClickAction(WorldMapDoubleClickAction.ToggleFullscreen); }, true,
+            _doubleClickAction == WorldMapDoubleClickAction.ToggleFullscreen));
+        ContextMenu.Add(doubleClickEntry);
+
         var freeView = new ContextMenuItemEntry(ResGumps.FreeView);
         freeView.Add(_options["free_view"]);
 
@@ -652,6 +680,20 @@ public class WorldMapGump : ResizableGump
 
         if (_map.Index != World.MapIndex && !_freeView)
             ChangeMap(World.MapIndex);
+
+        if (_isFullscreen)
+        {
+            // Keep the map filling the client window if it gets resized while fullscreen.
+            int targetW = Client.Game.Window.ClientBounds.Width;
+            int targetH = Client.Game.Window.ClientBounds.Height;
+
+            if (Width != targetW || Height != targetH || X != 0 || Y != 0)
+            {
+                X = 0;
+                Y = 0;
+                ApplySize(targetW, targetH);
+            }
+        }
 
         World.WMapManager.RequestServerPartyGuildInfo();
     }
@@ -3616,9 +3658,69 @@ public class WorldMapGump : ResizableGump
             return base.OnMouseDoubleClick(x, y, button);
         }
 
-        TopMost = !TopMost;
+        switch (_doubleClickAction)
+        {
+            case WorldMapDoubleClickAction.ToggleFullscreen:
+                ToggleFullscreen();
+                break;
+
+            case WorldMapDoubleClickAction.ToggleLock:
+            default:
+                SetLockStatus(!IsLocked);
+                TopMost = !IsLocked;
+                break;
+        }
 
         return true;
+    }
+
+    private void SetDoubleClickAction(WorldMapDoubleClickAction action)
+    {
+        if (_doubleClickAction == action)
+        {
+            return;
+        }
+
+        _doubleClickAction = action;
+        SaveSettings();
+        BuildContextMenu();
+    }
+
+    private void ToggleFullscreen()
+    {
+        if (!_isFullscreen)
+        {
+            // Remember the current windowed bounds and top-most state so we can restore them later.
+            _preFullscreenBounds = new Rectangle(X, Y, Width, Height);
+            _preFullscreenTopMost = _isTopMost;
+            _isFullscreen = true;
+
+            SetTopMost(true, false);
+
+            X = 0;
+            Y = 0;
+            ApplySize(Client.Game.Window.ClientBounds.Width, Client.Game.Window.ClientBounds.Height);
+        }
+        else
+        {
+            _isFullscreen = false;
+
+            SetTopMost(_preFullscreenTopMost, false);
+
+            X = _preFullscreenBounds.X;
+            Y = _preFullscreenBounds.Y;
+            ApplySize(_preFullscreenBounds.Width, _preFullscreenBounds.Height);
+        }
+
+        SaveSettings();
+    }
+
+    private void ApplySize(int width, int height)
+    {
+        Width = width;
+        Height = height;
+        ResizeWindow(new Point(Width, Height));
+        OnResize();
     }
 
     protected override void OnMouseExit(int x, int y)

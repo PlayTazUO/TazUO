@@ -40,6 +40,7 @@ All notable changes to TazUO will be recorded here.
 * Converted the Add/Edit User Marker world map window to a Myra window - [P.R 588](https://github.com/PlayTazUO/TazUO/pull/588) ([bittiez](https://github.com/bittiez))
 * Journal filters now match partial messages (case-insensitive contains) instead of requiring exact matches - [P.R 593](https://github.com/PlayTazUO/TazUO/pull/593) ([bittiez](https://github.com/bittiez))
 * Added a centralized hotkey system with a Hotkeys tab in the Assistant window for viewing, rebinding, and conflict-checking hotkeys (including macros), plus a global hotkey shutoff - [P.R 591](https://github.com/PlayTazUO/TazUO/pull/591) ([bittiez](https://github.com/bittiez))
+* Added a world map context menu option to choose the double click action between toggling the lock state and toggling fullscreen - [P.R 602](https://github.com/PlayTazUO/TazUO/pull/602) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fix rapid right-clicks interrupting character movement - [P.R 600](https://github.com/PlayTazUO/TazUO/pull/600) ([bittiez](https://github.com/bittiez))
