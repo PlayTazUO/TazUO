@@ -1092,6 +1092,10 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
+            _rightMousePressed = true;
+            _continueRunning = false;
+            StopFollowing();
+
             if (ProfileManager.CurrentProfile.EnablePathfind && !_world.Player.Pathfinder.AutoWalking)
             {
                 if ((ProfileManager.CurrentProfile.UseShiftToPathfind && !HotKeys.IsPressed(HotKeyRegistrar.PathfindId)) || ProfileManager.CurrentProfile.PathfindSingleClick)
