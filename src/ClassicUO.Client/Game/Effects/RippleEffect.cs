@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: BSD-2-Clause
-
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using System;
