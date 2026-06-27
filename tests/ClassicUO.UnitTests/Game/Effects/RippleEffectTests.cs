@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using ClassicUO.Game;
 using ClassicUO.Game.Effects;
 using FluentAssertions;
@@ -85,6 +86,22 @@ namespace ClassicUO.UnitTests.Game.Effects
             array.SetValue(ripple, index);
         }
 
+        /// <summary>
+        /// CreateRipple requires World.Map to be non-null. Unit tests use an uninitialized
+        /// Map instance so CreateRipple runs without loading UO map assets.
+        /// </summary>
+        private static void EnsureWorldHasMap(World world)
+        {
+            if (world.Map != null)
+                return;
+
+            var mapProperty = typeof(World).GetProperty("Map", BindingFlags.Public | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("World.Map property not found.");
+
+            var map = (ClassicUO.Game.Map.Map)RuntimeHelpers.GetUninitializedObject(typeof(ClassicUO.Game.Map.Map));
+            mapProperty.SetValue(world, map);
+        }
+
         [Fact]
         public void CreateRipple_Should_NotCreateRipple_When_MapIsNull()
         {
@@ -137,6 +154,7 @@ namespace ClassicUO.UnitTests.Game.Effects
         public void CreateRipple_Should_HandleFullPool_Gracefully()
         {
             var world = new World();
+            EnsureWorldHasMap(world);
             var rippleEffect = new RippleEffect(world);
 
             // Fill all slots (64 ripples) directly
@@ -149,14 +167,23 @@ namespace ClassicUO.UnitTests.Game.Effects
             int activeCount = GetActiveRippleCount(rippleEffect);
             activeCount.Should().Be(64, "all 64 ripple slots should be filled");
 
-            // Try to create one more (pool is full)
-            // Since we're using direct creation, we'll verify the pool is full
-            // In real usage, CreateRipple would find no available slot and not create a ripple
-            CreateRippleDirectly(rippleEffect, 1000.0f, 1000.0f, 0); // Overwrite first slot
+            // Capture slot 0 before CreateRipple on a full pool
+            var array = GetRipplesArray(rippleEffect);
+            var slot0 = array.GetValue(0);
+            float slot0WorldX = (float)GetRippleField(slot0, "WorldX").GetValue(slot0);
+            float slot0WorldY = (float)GetRippleField(slot0, "WorldY").GetValue(slot0);
 
-            // Count should still be 64 (overwrote existing, didn't create new)
+            // CreateRipple should find no inactive slot and leave the pool unchanged
+            rippleEffect.CreateRipple(1000.0f, 1000.0f);
+
             activeCount = GetActiveRippleCount(rippleEffect);
-            activeCount.Should().Be(64, "pool should remain full");
+            activeCount.Should().Be(64, "CreateRipple should not add a ripple when pool is full");
+
+            slot0 = array.GetValue(0);
+            ((float)GetRippleField(slot0, "WorldX").GetValue(slot0)).Should().BeApproximately(slot0WorldX, 0.01f,
+                "CreateRipple should not overwrite existing ripples when pool is full");
+            ((float)GetRippleField(slot0, "WorldY").GetValue(slot0)).Should().BeApproximately(slot0WorldY, 0.01f,
+                "CreateRipple should not overwrite existing ripples when pool is full");
         }
 
         [Theory]
