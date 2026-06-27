@@ -605,12 +605,12 @@ namespace ClassicUO.Configuration
 
         public bool EnableAlphaScrollingOnGumps { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonConverter(typeof(ClampedPointConverter))] public Point WorldMapPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
-        [JsonConverter(typeof(ClampedPointConverter))] public Point PaperdollPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
-        [JsonConverter(typeof(ClampedPointConverter))] public Point JournalPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
-        [JsonConverter(typeof(ClampedPointConverter))] public Point StatusGumpPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
-        [JsonConverter(typeof(ClampedPointConverter))] public Point BackpackGridPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
-        [JsonConverter(typeof(ClampedPointConverter))] public Point BackpackGridSize { get; set => SetProperty(ref field, value); } = new(300, 300);
+        [JsonConverter(typeof(Point2Converter))] public Point WorldMapPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point PaperdollPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point JournalPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point StatusGumpPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridSize { get; set => SetProperty(ref field, value); } = new(300, 300);
         public bool WorldMapLocked { get; set => SetProperty(ref field, value); } = false;
         public bool PaperdollLocked { get; set => SetProperty(ref field, value); } = false;
         public bool JournalLocked { get; set => SetProperty(ref field, value); } = false;
