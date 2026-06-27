@@ -99,7 +99,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
                 else if (MouseIsOver)
                 {
-                    SelectedObject.Object = SelectedObject.Hovered = _gump.World.Get(LocalSerial);
+                    SelectedObject.Object = _gump.World.Get(LocalSerial);
                 }
             }
         }
@@ -109,11 +109,6 @@ namespace ClassicUO.Game.UI.Controls
             if (IsDisposed)
             {
                 return false;
-            }
-
-            if (MouseIsOver)
-            {
-                SelectedObject.Hovered = _gump?.World?.Get(LocalSerial);
             }
 
             base.Draw(batcher, x, y);
@@ -224,11 +219,11 @@ namespace ClassicUO.Game.UI.Controls
 
         public override void OnMouseUp(int x, int y, MouseButtonType button)
         {
-            SelectedObject.Object = SelectedObject.Hovered = _gump.World.Get(LocalSerial);
+            SelectedObject.Object = _gump.World.Get(LocalSerial);
             base.OnMouseUp(x, y, button);
         }
 
-        public override void OnMouseOver(int x, int y) => SelectedObject.Object = SelectedObject.Hovered = _gump.World.Get(LocalSerial);
+        public override void OnMouseOver(int x, int y) => SelectedObject.Object = _gump.World.Get(LocalSerial);
 
         private bool CanPickup()
         {

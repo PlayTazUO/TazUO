@@ -638,12 +638,12 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (obj.CalculateDepthZ() >= prev.CalculateDepthZ())
                     {
-                        SelectedObject.Object = SelectedObject.Hovered = obj;
+                        SelectedObject.Object = obj;
                     }
                 }
                 else
                 {
-                    SelectedObject.Object = SelectedObject.Hovered = obj;
+                    SelectedObject.Object = obj;
                 }
             }
 

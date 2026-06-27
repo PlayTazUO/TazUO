@@ -59,7 +59,7 @@ namespace ClassicUO.Game.Managers
 
                 if (o.TextBox.PixelCheck(mouseX - pos.X - startX, mouseY - pos.Y - startY))
                 {
-                    SelectedObject.Object = SelectedObject.Hovered = o;
+                    SelectedObject.Object = o;
                 }
                 bool highlight = false;
                 if (!isGump)

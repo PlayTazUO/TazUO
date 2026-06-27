@@ -977,8 +977,6 @@ namespace ClassicUO.Game.Scenes
 
             _world.Macros.Update();
 
-            SelectedObject.Hovered = null;
-
             if (Time.Ticks > _nextProfileSave)
             {
                 ProfileManager.CurrentProfile.Save(_world, ProfileManager.ProfilePath);
