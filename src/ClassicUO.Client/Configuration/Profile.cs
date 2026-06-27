@@ -422,6 +422,7 @@ namespace ClassicUO.Configuration
         public bool WorldMapFlipMap { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapTopMost { get; set => SetProperty(ref field, value); }
         public bool WorldMapFreeView { get; set => SetProperty(ref field, value); }
+        public WorldMapDoubleClickAction WorldMapDoubleClickAction { get; set => SetProperty(ref field, value); } = WorldMapDoubleClickAction.ToggleLock;
         public bool WorldMapShowParty { get; set => SetProperty(ref field, value); } = true;
         public int WorldMapZoomIndex { get; set => SetProperty(ref field, value); } = 4;
         public bool WorldMapShowCoordinates { get; set => SetProperty(ref field, value); } = true;
