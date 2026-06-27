@@ -1036,7 +1036,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (UIManager.MouseOverControl != null &&
                 (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
-                SelectedObject.Object = SelectedObject.Hovered = item;
+                SelectedObject.Object = item;
                 if (item.IsCorpse)
                     SelectedObject.CorpseObject = item;
             }
