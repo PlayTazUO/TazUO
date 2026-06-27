@@ -4,7 +4,13 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+---
+
+## V5.3.0
+
 ### Features
+* Overhauled the options window with a new, modern UI (use command `old-options-window` to open legacy window) - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Added reorder support to CoolDown Bars - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Pet support for the bandage agent - [P.R 485](https://github.com/PlayTazUO/TazUO/pull/485) ([yuval-po](https://github.com/yuval-po))
 * Allow dropping of items onto minimized grid containers - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
 * Auto focus and enter to submit support added to prompt input window - [P.R 486](https://github.com/PlayTazUO/TazUO/pull/486) ([bittiez](https://github.com/bittiez))
@@ -44,6 +50,10 @@ All notable changes to TazUO will be recorded here.
 * Added a "Loot Hovered Item" macro that grabs whatever item the mouse is hovering over — grid containers, regular containers, paperdoll, modern paperdoll, items on the ground, and item nameplates - [P.R 603](https://github.com/PlayTazUO/TazUO/pull/603) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Fixed reset/min/max size buttons in resizable windows not updating correctly or causing crashes - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Fixed mouse clicks passing through Myra windows in certain cases - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Render scale is now clamped to 0.1–1.75 to prevent crashes from out-of-range values - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Fix rapid right-clicks interrupting character movement - [P.R 600](https://github.com/PlayTazUO/TazUO/pull/600) ([bittiez](https://github.com/bittiez))
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
 * Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
