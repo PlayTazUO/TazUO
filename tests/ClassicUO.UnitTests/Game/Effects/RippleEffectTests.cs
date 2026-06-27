@@ -1,3 +1,4 @@
+using System;
 using ClassicUO.Game;
 using ClassicUO.Game.Effects;
 using FluentAssertions;
@@ -8,25 +9,36 @@ namespace ClassicUO.UnitTests.Game.Effects
 {
     public class RippleEffectTests
     {
+        private static Array GetRipplesArray(RippleEffect rippleEffect)
+        {
+            var field = typeof(RippleEffect).GetField("_ripples", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("RippleEffect._ripples field not found.");
+
+            var ripples = field.GetValue(rippleEffect)
+                ?? throw new InvalidOperationException("RippleEffect._ripples is null.");
+
+            if (ripples is not Array array)
+                throw new InvalidOperationException("RippleEffect._ripples is not an array.");
+
+            return array;
+        }
+
+        private static FieldInfo GetRippleField(object ripple, string fieldName)
+        {
+            return ripple.GetType().GetField(fieldName)
+                ?? throw new InvalidOperationException($"Ripple.{fieldName} field not found.");
+        }
+
         private int GetActiveRippleCount(RippleEffect rippleEffect)
         {
-            var field = typeof(RippleEffect).GetField("_ripples", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return 0;
-
-            var ripples = field.GetValue(rippleEffect);
-            if (ripples == null) return 0;
-
-            var array = ripples as System.Array;
-            if (array == null) return 0;
+            var array = GetRipplesArray(rippleEffect);
 
             int count = 0;
             for (int i = 0; i < array.Length; i++)
             {
                 var ripple = array.GetValue(i);
-                if (ripple == null) continue;
-
-                var activeField = ripple.GetType().GetField("Active");
-                if (activeField != null && (bool)activeField.GetValue(ripple))
+                var activeField = GetRippleField(ripple, "Active");
+                if ((bool)activeField.GetValue(ripple))
                 {
                     count++;
                 }
@@ -36,22 +48,13 @@ namespace ClassicUO.UnitTests.Game.Effects
 
         private object GetFirstActiveRipple(RippleEffect rippleEffect)
         {
-            var field = typeof(RippleEffect).GetField("_ripples", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return null;
-
-            var ripples = field.GetValue(rippleEffect);
-            if (ripples == null) return null;
-
-            var array = ripples as System.Array;
-            if (array == null) return null;
+            var array = GetRipplesArray(rippleEffect);
 
             for (int i = 0; i < array.Length; i++)
             {
                 var ripple = array.GetValue(i);
-                if (ripple == null) continue;
-
-                var activeField = ripple.GetType().GetField("Active");
-                if (activeField != null && (bool)activeField.GetValue(ripple))
+                var activeField = GetRippleField(ripple, "Active");
+                if ((bool)activeField.GetValue(ripple))
                 {
                     return ripple;
                 }
@@ -65,24 +68,19 @@ namespace ClassicUO.UnitTests.Game.Effects
         /// </summary>
         private void CreateRippleDirectly(RippleEffect rippleEffect, float worldX, float worldY, int index = 0)
         {
-            var field = typeof(RippleEffect).GetField("_ripples", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return;
+            var array = GetRipplesArray(rippleEffect);
+            if (index >= array.Length)
+                throw new ArgumentOutOfRangeException(nameof(index), index, $"Index must be less than {array.Length}.");
 
-            var ripples = field.GetValue(rippleEffect);
-            if (ripples == null) return;
+            object ripple = array.GetValue(index)
+                ?? throw new InvalidOperationException($"Ripple at index {index} is null.");
 
-            var array = ripples as System.Array;
-            if (array == null || index >= array.Length) return;
-
-            object ripple = array.GetValue(index);
-            if (ripple == null) return;
-
-            ripple.GetType().GetField("Active").SetValue(ripple, true);
-            ripple.GetType().GetField("WorldX").SetValue(ripple, worldX);
-            ripple.GetType().GetField("WorldY").SetValue(ripple, worldY);
-            ripple.GetType().GetField("LifeTime").SetValue(ripple, 0.0f);
-            ripple.GetType().GetField("MaxRadius").SetValue(ripple, 20.0f);
-            ripple.GetType().GetField("SeedID").SetValue(ripple, (uint)(1000 + index));
+            GetRippleField(ripple, "Active").SetValue(ripple, true);
+            GetRippleField(ripple, "WorldX").SetValue(ripple, worldX);
+            GetRippleField(ripple, "WorldY").SetValue(ripple, worldY);
+            GetRippleField(ripple, "LifeTime").SetValue(ripple, 0.0f);
+            GetRippleField(ripple, "MaxRadius").SetValue(ripple, 20.0f);
+            GetRippleField(ripple, "SeedID").SetValue(ripple, (uint)(1000 + index));
 
             array.SetValue(ripple, index);
         }
@@ -218,28 +216,22 @@ namespace ClassicUO.UnitTests.Game.Effects
             activeCount.Should().Be(0, "ripple should be deactivated after exceeding duration");
 
             // Verify lifetime is >= 1.0 by checking all ripples
-            var field = typeof(RippleEffect).GetField("_ripples", BindingFlags.NonPublic | BindingFlags.Instance);
-            var ripples = field.GetValue(rippleEffect) as System.Array;
+            var ripples = GetRipplesArray(rippleEffect);
 
             bool foundExpiredRipple = false;
             for (int i = 0; i < ripples.Length; i++)
             {
                 var ripple = ripples.GetValue(i);
-                if (ripple == null) continue;
+                var activeField = GetRippleField(ripple, "Active");
+                var lifetimeField = GetRippleField(ripple, "LifeTime");
 
-                var activeField = ripple.GetType().GetField("Active");
-                var lifetimeField = ripple.GetType().GetField("LifeTime");
+                bool isActive = (bool)activeField.GetValue(ripple);
+                float lifetime = (float)lifetimeField.GetValue(ripple);
 
-                if (activeField != null && lifetimeField != null)
+                if (!isActive && lifetime >= 1.0f)
                 {
-                    bool isActive = (bool)activeField.GetValue(ripple);
-                    float lifetime = (float)lifetimeField.GetValue(ripple);
-
-                    if (!isActive && lifetime >= 1.0f)
-                    {
-                        foundExpiredRipple = true;
-                        break;
-                    }
+                    foundExpiredRipple = true;
+                    break;
                 }
             }
 
