@@ -49,6 +49,18 @@ namespace ClassicUO.UnitTests.Game
             field?.SetValue(null, false);
         }
 
+        private static bool GetWarningLogged()
+        {
+            var field = typeof(Weather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
+            return field != null && (bool)field.GetValue(null);
+        }
+
+        private static void InvokeLogWarning(string message)
+        {
+            var method = typeof(Weather).GetMethod("LogWarning", BindingFlags.NonPublic | BindingFlags.Static);
+            method.Invoke(null, new object[] { message });
+        }
+
         private static Vector3 InvokeColorToVector3(Color color)
         {
             var method = typeof(Weather).GetMethod("ColorToVector3", BindingFlags.NonPublic | BindingFlags.Static);
@@ -271,11 +283,33 @@ namespace ClassicUO.UnitTests.Game
         public void LogWarning_Should_OnlyLogOnce()
         {
             ResetWarningState();
+            GetWarningLogged().Should().BeFalse("warning state should be reset initially");
 
-            var warningLoggedField = typeof(Weather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
-            bool initialState = (bool)warningLoggedField.GetValue(null);
+            var originalOut = Console.Out;
+            try
+            {
+                using var captured = new StringWriter();
+                Console.SetOut(captured);
 
-            initialState.Should().BeFalse("Warning state should be reset initially");
+                InvokeLogWarning("test warning");
+                InvokeLogWarning("second warning should not appear");
+
+                string output = captured.ToString();
+                output.Should().Contain("test warning");
+                output.Should().NotContain("second warning should not appear");
+
+                int firstWarningIndex = output.IndexOf("[Weather] WARNING:", StringComparison.Ordinal);
+                firstWarningIndex.Should().BeGreaterOrEqualTo(0, "first LogWarning call should write to console");
+                output.IndexOf("[Weather] WARNING:", firstWarningIndex + 1, StringComparison.Ordinal)
+                    .Should().Be(-1, "second LogWarning call should not write again");
+
+                GetWarningLogged().Should().BeTrue("LogWarning should set the logged flag on first call");
+            }
+            finally
+            {
+                Console.SetOut(originalOut);
+                ResetWarningState();
+            }
         }
 
         #endregion
