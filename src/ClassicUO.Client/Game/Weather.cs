@@ -302,9 +302,7 @@ namespace ClassicUO.Game
                         CurrentWeather = type;
                     }
 
-                    // Start looping rain sound
-                    UpdateRainSound();
-
+                    // Start looping rain sound after particle count is initialized (see end of Generate).
                     break;
 
                 case WeatherType.WT_STORM_APPROACH:
@@ -373,6 +371,11 @@ namespace ClassicUO.Game
 
             ScaledCount = CalculateScaledCount(Count);
             CurrentCount = ScaledCount;
+
+            if (Type == WeatherType.WT_RAIN || Type == WeatherType.WT_STORM_APPROACH)
+            {
+                UpdateRainSound();
+            }
 
             // Calculate player's absolute isometric pixel coordinates from tile coordinates
             // This follows the formula: isoX = (tileX - tileY) * 22, isoY = (tileX + tileY) * 22
@@ -672,9 +675,10 @@ namespace ClassicUO.Game
             // Determine what sound should be playing
             int expectedSoundId = shouldPlayHeavyRain ? HEAVY_RAIN_SOUND_ID : MINOR_RAIN_SOUND_ID;
 
-            // Only restart if we need to switch between minor/heavy, or if sound is not currently playing
-            // When looping is enabled, sound will continue automatically, so we only need to check for type changes
-            bool needsRestart = Client.Game.Audio.CurrentAmbientIndex != expectedSoundId;
+            // Only restart if we need to switch between minor/heavy, or if ambient playback stopped
+            bool needsRestart =
+                !Client.Game.Audio.HasAmbientSound
+                || Client.Game.Audio.CurrentAmbientIndex != expectedSoundId;
 
             if (needsRestart)
             {
@@ -744,6 +748,32 @@ namespace ClassicUO.Game
             Client.Game.Audio.PlaySoundWithDistance(_world, sound, _world.Player.X + randX, _world.Player.Y + randY);
         }
 
+        /// <summary>
+        /// Updates rain ambient audio once per frame.
+        /// </summary>
+        public void UpdateAudio()
+        {
+            if (IsWeatherDisabled)
+            {
+                if (CurrentWeather.HasValue || CurrentCount > 0 || Client.Game.Audio.HasAmbientSound)
+                {
+                    Reset();
+                }
+
+                return;
+            }
+
+            if (!_world.InGame || _world.Player == null)
+            {
+                return;
+            }
+
+            if (Type == WeatherType.WT_RAIN || Type == WeatherType.WT_STORM_APPROACH)
+            {
+                UpdateRainSound();
+            }
+        }
+
         public void Draw(UltimaBatcher2D batcher, int x, int y, float layerDepth)
         {
             if (IsWeatherDisabled)
@@ -790,12 +820,6 @@ namespace ClassicUO.Game
             {
                 _lastTick = Time.Ticks;
                 passed = 25;
-            }
-
-            // Update rain sound looping for rain weather types
-            if (Type == WeatherType.WT_RAIN || Type == WeatherType.WT_STORM_APPROACH)
-            {
-                UpdateRainSound();
             }
 
             bool windChanged = false;
