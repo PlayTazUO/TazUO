@@ -7,6 +7,11 @@ namespace ClassicUO.Game.Managers;
 public static class MainThreadQueue
 {
     private static int _threadId;
+
+    /// <summary>
+    ///     Indicates whether the current thread is the main thread.
+    ///     Note that this value will only be valid after the first call to <see cref="MainThreadQueue.Load" />.
+    /// </summary>
     public static bool IsMainThread => Environment.CurrentManagedThreadId == _threadId;
 
     private static ConcurrentQueue<(Action Action, CancellationToken? Token)> QueuedActions { get; } = new();

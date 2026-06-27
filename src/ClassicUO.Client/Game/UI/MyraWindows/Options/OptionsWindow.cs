@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -74,7 +75,7 @@ public class OptionsWindow : MyraControl
     /// </summary>
     public event EventHandler<string>? SelectedCategoryChanged;
 
-    public OptionsWindow() : base("Options")
+    public OptionsWindow() : base(Language.Instance.GetModernOptionsGumpLanguage.Kw.Options)
     {
         UIManager.ForEach<OptionsWindow>(w =>
         {
@@ -90,6 +91,8 @@ public class OptionsWindow : MyraControl
         _rootWindow.Props.Resize.MaxWidth = MAX_WIDTH;
         _rootWindow.MaxHeight = MAX_HEIGHT;
         _rootWindow.MaxWidth = MAX_WIDTH;
+
+        _rootWindow.SizeChanged += (_, _) => _resultsBudget = null;
     }
 
     private void SetupOptions()
@@ -140,7 +143,9 @@ public class OptionsWindow : MyraControl
 
         WrapPanel categoryPanel = new()
         {
-            Orientation = Orientation.Vertical, HorizontalSpacing = MyraStyle.STANDARD_SPACING, VerticalSpacing = MyraStyle.STANDARD_SPACING
+            Orientation = Orientation.Vertical,
+            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
+            VerticalSpacing = MyraStyle.STANDARD_SPACING
         };
 
         _mainArea.AddWidget(categoryPanel.WrapInScroll(MAX_HEIGHT), 1, 0);
@@ -156,17 +161,10 @@ public class OptionsWindow : MyraControl
 
     private ButtonBase2 GetCategoryButton(string category)
     {
-        var unstyledButton = new ToggleTextButton(category, sender =>
-        {
-            if (_lastCategory == category)
-                return;
-
-            ShowPage(category);
-            SelectedCategoryChanged?.Invoke(sender, category);
-        });
+        var unstyledButton = new ToggleTextButton(category, _ => ShowPage(category)) { SpringLoaded = true };
 
         // Each button listens to the category selection event and updates its pressed state accordingly
-        SelectedCategoryChanged += (sender, _) => unstyledButton.IsPressed = sender == unstyledButton;
+        SelectedCategoryChanged += (_, _) => unstyledButton.IsPressed = _lastCategory == category;
 
         return ApplyTabStyleToButton(unstyledButton);
     }
@@ -326,7 +324,7 @@ public class OptionsWindow : MyraControl
                 LabelStyle = { Font = MyraStyle.UiFont },
                 OverBackground = new SolidBrush(new Color(0, 0, 0, 55)),
                 PressedBackground = new SolidBrush(new Color(0, 0, 0, 155)),
-                MinWidth = 150
+                MinWidth = 125
             };
         }
 
@@ -337,6 +335,9 @@ public class OptionsWindow : MyraControl
 
     private void ShowPage(string category)
     {
+        if (_lastCategory == category)
+            return;
+
         _searchField.Text = string.Empty;
         _optionsStack.Widgets.Clear();
         _optionsStack.Widgets.Add(_optionsPanel);
@@ -349,5 +350,7 @@ public class OptionsWindow : MyraControl
             return;
         foreach (IOptionSource source in sources)
             _optionsPanel.Widgets.Add(source.Render());
+
+        SelectedCategoryChanged?.Invoke(this, category);
     }
 }

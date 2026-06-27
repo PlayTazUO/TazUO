@@ -7,6 +7,12 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
 public class ToggleTextButton : ToggleButton
 {
+    /// <summary>
+    /// Determines whether the button should remain pressed when clicked.
+    /// If true, once pressed, the button will remain pressed until manually released via the <see cref="ToggleButton.IsToggled"/>  property.
+    /// </summary>
+    public bool SpringLoaded { get; set; }
+
     private readonly Action<ToggleTextButton>? _onClick;
 
     public ToggleTextButton(string text, Action<ToggleTextButton>? onClick = null)
@@ -19,6 +25,12 @@ public class ToggleTextButton : ToggleButton
 
     public override void OnTouchDown()
     {
+        if (!Enabled)
+            return;
+
+        if (SpringLoaded && IsToggled)
+            return;
+
         base.OnTouchDown();
         _onClick?.Invoke(this);
     }

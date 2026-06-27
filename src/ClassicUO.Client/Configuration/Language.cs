@@ -373,6 +373,7 @@ namespace ClassicUO.Configuration
             public string Obstacle { get; set; } = "Obstacle";
             public string Old { get; set; } = "Old";
             public string Opacity { get; set; } = "Opacity";
+            public string Options { get; set; } = "Options";
             public string Original { get; set; } = "Original";
             public string Other { get; set; } = "Other";
             public string Over { get; set; } = "Over";

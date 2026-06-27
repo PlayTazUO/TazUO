@@ -260,9 +260,16 @@ public static class UiEffects
         struct,
         INumber<TValueType>
     {
-        Widget widget = parent.Widgets[widgetIndex];
-        Accessor<TValueType> propAccessor = getAffectedProp(widget);
-        TValueType oldPropValue = propAccessor.Get();
+        Widget widget = null;
+        Accessor<TValueType> propAccessor = null;
+        TValueType oldPropValue = default;
+
+        MainThreadQueue.BubblingInvokeOnMainThread(() =>
+        {
+            widget = parent.Widgets[widgetIndex];
+            propAccessor = getAffectedProp(widget);
+            oldPropValue = propAccessor.Get();
+        });
 
         try
         {
@@ -312,7 +319,7 @@ public static class UiEffects
         INumber<TValueType>
     {
         Accessor<TValueType> propAccessor = getAffectedProp(widget);
-        TValueType oldPropValue = propAccessor.Get();
+        TValueType oldPropValue = MainThreadQueue.BubblingInvokeOnMainThread(propAccessor.Get);
 
         // Passing ct: if a newer transition has already started (CTS cancelled), skip the insert entirely.
         MainThreadQueue.BubblingInvokeOnMainThread(() =>
@@ -359,7 +366,7 @@ public static class UiEffects
         INumber<TValueType>
     {
         effectIterations = Math.Max(1, effectIterations);
-        TValueType originalPropValue = affectedProp.Get();
+        TValueType originalPropValue = MainThreadQueue.BubblingInvokeOnMainThread(affectedProp.Get);
         // For increment step from the current value up to maxValue.
         // For decrement step from the current value down to zero.
         TValueType propDiffPerIteration = isIncrement && maxValue.HasValue
@@ -385,7 +392,7 @@ public static class UiEffects
                 breakEarly = true;
             }
 
-            MainThreadQueue.InvokeOnMainThread(() => affectedProp.Set(newPropValue));
+            MainThreadQueue.InvokeOnMainThread(() => affectedProp.Set(newPropValue), ct);
             if (breakEarly || i >= effectIterations)
                 break;
 
