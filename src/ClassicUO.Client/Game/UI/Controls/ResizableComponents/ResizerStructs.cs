@@ -21,9 +21,9 @@ public class ResizeEventArgs : EventArgs
 
 public class ResizerProperties : MyraCommonProps
 {
-    public ResizeEdges Placements { get; set; } = ResizeEdges.All;
-    public uint CornerTriggerRadiusPx { get; set; } = 18;
-    public uint EdgeTriggerBandWidthPx { get; set; } = 8;
+    public ResizeEdges Placements { get; set => SetField(ref field, value);} = ResizeEdges.All;
+    public uint CornerTriggerRadiusPx { get; set => SetField(ref field, value);} = 18;
+    public uint EdgeTriggerBandWidthPx { get; set => SetField(ref field, value);} = 8;
 }
 
 [Flags]
@@ -37,6 +37,6 @@ public enum ScrollViewerMode
 
 public class ResizeBehavior : ResizerProperties
 {
-    public bool Enabled { get; set; } = true;
-    public ScrollViewerMode ScrollerMode { get; set; } = ScrollViewerMode.Both;
+    public bool Enabled { get; set => SetField(ref field, value); } = true;
+    public ScrollViewerMode ScrollerMode { get; set => SetField(ref field, value); } = ScrollViewerMode.Both;
 }

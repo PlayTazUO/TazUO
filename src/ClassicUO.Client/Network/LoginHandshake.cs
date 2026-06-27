@@ -393,7 +393,7 @@ namespace ClassicUO.Network
 
         private void OnNetClientDisconnected(object sender, SocketError e)
         {
-            Log.Warn("[HandShake] Disconnected");
+            Log.Warn($"Socket disconnected - {e.ToString()}");
 
             if (CurrentLoginStep == LoginSteps.CharacterCreation)
             {

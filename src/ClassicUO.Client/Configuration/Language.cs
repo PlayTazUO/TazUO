@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text.Json;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration
 {
@@ -13,7 +15,12 @@ namespace ClassicUO.Configuration
     public class Language
     {
         public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
+        public ErrorsLanguage ErrorsLanguage { get; set; } = new();
+        public MapLanguage MapLanguage { get; set; } = new();
+        public TopBarGumpLanguage TopBarGump { get; set; } = new();
+        public ScriptingLanguage Scripting { get; set; } = new();
         public AssistantLanguage Assistant { get; set; } = new();
+        public UiCommonsLanguage UiCommons { get; set; } = new();
 
         public string TazuoVersionHistory { get; set; } = "TazUO Version History";
         public string CurrentVersion { get; set; } = "Current Version: ";
@@ -21,45 +28,69 @@ namespace ClassicUO.Configuration
         public string TazUODiscord { get; set; } = "TazUO Discord";
         public string CommandGump { get; set; } = "Available Client Commands";
 
+        private static string LanguageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
+
         [JsonIgnore]
         public static Language Instance { get; private set; } = new();
 
-        public static void Load()
+        public static void Load() => Load(false);
+
+        private static void Load(bool isRegenerating)
         {
-            if (File.Exists(languageFilePath))
+            if (!File.Exists(LanguageFilePath))
             {
-                Language f = JsonSerializer.Deserialize(File.ReadAllText(languageFilePath), LanguageJsonContext.Default.Language);
+                CreateNewLanguageFile();
+                return;
+            }
+
+            try
+            {
+                Language f = JsonSerializer.Deserialize(File.ReadAllText(LanguageFilePath), LanguageJsonContext.Default.Language);
                 Instance = f;
                 Save(); //To update language file with new additions as needed
             }
-            else
+            catch (Exception e)
             {
-                CreateNewLanguageFile();
+                if (isRegenerating)
+                {
+                    Log.Error($"Failed to load a regenerated language file {LanguageFilePath}. This is a fatal error. Exception message: {e.Message}");
+                    throw;
+                }
+
+                Log.Error($"Error loading language file: {e.Message}. Will attempt to re-generate and reload");
+                RegenerateLanguageFile();
             }
+        }
+
+        public static void RegenerateLanguageFile()
+        {
+            if (File.Exists(LanguageFilePath))
+                File.Delete(LanguageFilePath);
+
+            CreateNewLanguageFile();
+            Load(true);
         }
 
         private static void CreateNewLanguageFile()
         {
             Directory.CreateDirectory(Path.Combine(CUOEnviroment.ExecutablePath, "Data"));
-
             string defaultLanguage = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, defaultLanguage);
+            File.WriteAllText(LanguageFilePath, defaultLanguage);
         }
 
         private static void Save()
         {
             string language = JsonSerializer.Serialize(Instance, LanguageJsonContext.Default.Language);
-            File.WriteAllText(languageFilePath, language);
+            File.WriteAllText(LanguageFilePath, language);
         }
-
-        private static string languageFilePath => Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Language.json");
     }
 
     public class ModernOptionsGumpLanguage
     {
         public string OptionsTitle { get; set; } = "Options";
         public string Search { get; set; } = "Search";
-
+        public string SearchEllipses { get; set; } = "Search...";
+        public string Apply { get; set; } = "Apply";
         public string ButtonGeneral { get; set; } = "General";
         public string ButtonSound { get; set; } = "Sound";
         public string ButtonVideo { get; set; } = "Video";
@@ -68,21 +99,37 @@ namespace ClassicUO.Configuration
         public string ButtonSpeech { get; set; } = "Speech";
         public string ButtonCombatSpells { get; set; } = "Combat & Spells";
         public string ButtonCounters { get; set; } = "Counters";
-        public string ButtonInfobar { get; set; } = "Infobar";
+        public string ButtonInfoBar { get; set; } = "Info Bar";
         public string ButtonContainers { get; set; } = "Containers";
         public string ButtonExperimental { get; set; } = "Experimental";
         public string ButtonIgnoreList { get; set; } = "Ignore List";
-        public string ButtonNameplates { get; set; } = "Nameplate Options";
+        public string ButtonNameplates { get; set; } = "Nameplates";
+        public string ButtonProfiles { get; set; } = "Profiles";
         public string ButtonCooldowns { get; set; } = "Cooldown bars";
         public string ButtonTazUO { get; set; } = "TazUO Specific";
         public string ButtonMobiles { get; set; } = "Mobiles";
         public string ButtonGumpContext { get; set; } = "Gumps & Context";
         public string ButtonMisc { get; set; } = "Misc";
         public string ButtonTerrainStatics { get; set; } = "Terrain & Statics";
+        public string ButtonHealthBars { get; set; } = "Health Bars";
+        public string ButtonGumps { get; set; } = "Gumps";
         public string ButtonGameWindow { get; set; } = "Game window";
+        public string ButtonGameplay { get; set; } = "Gameplay";
+        public string ButtonPaperdoll { get; set; } = "Paperdoll";
         public string ButtonZoom { get; set; } = "Zoom";
         public string ButtonLighting { get; set; } = "Lighting";
         public string ButtonShadows { get; set; } = "Shadows";
+        public string ButtonScaling { get; set; } = "Scaling";
+
+        public string LabelVideo { get; set; } = "Video";
+        public string LabelViewport { get; set; } = "Viewport";
+        public string LabelSpells { get; set; } = "Spells";
+        public string LabelSpeech { get; set; } = "Speech";
+        public string LabelChatAndText { get; set; } = "Chat & Text";
+        public string LabelHue { get; set; } = "Hue";
+        public string LabelTooltips { get; set; } = "Tooltips";
+        public string LabelCounters { get; set; } = "Counters";
+        public string LabelContainers { get; set; } = "Containers";
 
         public General GetGeneral { get; set; } = new();
         public Video GetVideo { get; set; } = new();
@@ -99,12 +146,728 @@ namespace ClassicUO.Configuration
         public Cooldowns GetCooldowns { get; set; } = new();
         public TazUO GetTazUO { get; set; } = new();
 
+        public MobilesTabLang MobilesTab { get; set; } = new();
+
+        public MovementTabLang MovementTab { get; set; } = new();
+
+        public MiscTabLang MiscTab { get; set; } = new();
+
+        public VideoTabLang VideoTab { get; set; } = new();
+
+        public SoundTabLang SoundTab { get; set; } = new();
+
+        public ChatTabLang ChatTab { get; set; } = new();
+
+        public CooldownsTabLang CooldownsTab { get; set; } = new();
+
+        public GumpsTabLang GumpsTab { get; set; } = new();
+
+        public LayerHidingTabLang LayerHidingTab { get; set; } = new();
+
+        public SpellsTabLang SpellsTab { get; set; } = new();
+
+        public CombatTabLang CombatTab { get; set; } = new();
+
+        public GameplayTabLang GameplayTab { get; set; } = new();
+
+        public KeywordsLang Kw { get; set; } = new();
+
+        public class GameplayTabLang
+        {
+            public string GameplayLabel { get; set; } = "Gameplay";
+
+            public TerrainSection Terrain { get; set; } = new();
+
+            public class TerrainSection
+            {
+                public string Label { get; set; } = "Terrain & Statics";
+
+                public string HideRoof { get; set; } = "Hide roof";
+                public string TreesToStump { get; set; } = "Vegetation to stumps";
+                public string HideVegetation { get; set; } = "Hide vegetation";
+                public string MagicFieldType { get; set; } = "Magic field type";
+                public string ApplyBorderCaveTiles { get; set; } = "Apply border to cave tiles";
+            }
+        }
+
+        public class KeywordsLang
+        {
+            public string Abbreviate { get; set; } = "Abbreviate";
+            public string Advanced { get; set; } = "Advanced";
+            public string Align { get; set; } = "Align";
+            public string Alpha { get; set; } = "Alpha";
+            public string Alt { get; set; } = "Alt";
+            public string AltScroll { get; set; } = "Alt Scroll";
+            public string Amount { get; set; } = "Amount";
+            public string Anchor { get; set; } = "Anchor";
+            public string Anim { get; set; } = "Anim";
+            public string Appearance { get; set; } = "Appearance";
+            public string Arrow { get; set; } = "Arrow";
+            public string Assign { get; set; } = "Assign";
+            public string Attack { get; set; } = "Attack";
+            public string Audio { get; set; } = "Audio";
+            public string Aura { get; set; } = "Aura";
+            public string Auto { get; set; } = "Auto";
+            public string AutoMove { get; set; } = "AutoMove";
+            public string Avoid { get; set; } = "Avoid";
+            public string Bw { get; set; } = "BW";
+            public string Background { get; set; } = "Background";
+            public string Bar { get; set; } = "Bar";
+            public string Battle { get; set; } = "Battle";
+            public string Below { get; set; } = "Below";
+            public string Beneficial { get; set; } = "Beneficial";
+            public string Beta { get; set; } = "Beta";
+            public string Black { get; set; } = "Black";
+            public string Blue { get; set; } = "Blue";
+            public string Boat { get; set; } = "Boat";
+            public string Border { get; set; } = "Border";
+            public string Borderless { get; set; } = "Borderless";
+            public string Buff { get; set; } = "Buff";
+            public string BuffBar { get; set; } = "Buff Bar";
+            public string BuffGump { get; set; } = "Buff Gump";
+            public string Cot { get; set; } = "COT";
+            public string Cast { get; set; } = "Cast";
+            public string Cave { get; set; } = "Cave";
+            public string Center { get; set; } = "Center";
+            public string Changed { get; set; } = "Changed";
+            public string Character { get; set; } = "Character";
+            public string Chat { get; set; } = "Chat";
+            public string Circle { get; set; } = "Circle";
+            public string Clear { get; set; } = "Clear";
+            public string Click { get; set; } = "Click";
+            public string Close { get; set; } = "Close";
+            public string Clothing { get; set; } = "Clothing";
+            public string Color { get; set; } = "Color";
+            public string Colour { get; set; } = "Colour";
+            public string Column { get; set; } = "Column";
+            public string Combat { get; set; } = "Combat";
+            public string Condition { get; set; } = "Condition";
+            public string Config { get; set; } = "Config";
+            public string Container { get; set; } = "Container";
+            public string Content { get; set; } = "Content";
+            public string Context { get; set; } = "Context";
+            public string Contrast { get; set; } = "Contrast";
+            public string Controller { get; set; } = "Controller";
+            public string Cooldown { get; set; } = "Cooldown";
+            public string Corner { get; set; } = "Corner";
+            public string Corpse { get; set; } = "Corpse";
+            public string Counter { get; set; } = "Counter";
+            public string Criminal { get; set; } = "Criminal";
+            public string Ctrl { get; set; } = "Ctrl";
+            public string Cursor { get; set; } = "Cursor";
+            public string Custom { get; set; } = "Custom";
+            public string Dps { get; set; } = "DPS";
+            public string Damage { get; set; } = "Damage";
+            public string Dark { get; set; } = "Dark";
+            public string Darkness { get; set; } = "Darkness";
+            public string Dead { get; set; } = "Dead";
+            public string Death { get; set; } = "Death";
+            public string Delay { get; set; } = "Delay";
+            public string Disable { get; set; } = "Disable";
+            public string Display { get; set; } = "Display";
+            public string Distance { get; set; } = "Distance";
+            public string Door { get; set; } = "Door";
+            public string Double { get; set; } = "Double";
+            public string Download { get; set; } = "Download";
+            public string Drag { get; set; } = "Drag";
+            public string Drop { get; set; } = "Drop";
+            public string Durability { get; set; } = "Durability";
+            public string Duration { get; set; } = "Duration";
+            public string Empty { get; set; } = "Empty";
+            public string Enable { get; set; } = "Enable";
+            public string Enemy { get; set; } = "Enemy";
+            public string Entity { get; set; } = "Entity";
+            public string Equipment { get; set; } = "Equipment";
+            public string Exceed { get; set; } = "Exceed";
+            public string Experimental { get; set; } = "Experimental";
+            public string Fps { get; set; } = "FPS";
+            public string Fade { get; set; } = "Fade";
+            public string Field { get; set; } = "Field";
+            public string Fixed { get; set; } = "Fixed";
+            public string Font { get; set; } = "Font";
+            public string Footstep { get; set; } = "Footstep";
+            public string Force { get; set; } = "Force";
+            public string Format { get; set; } = "Format";
+            public string Friend { get; set; } = "Friend";
+            public string Full { get; set; } = "Full";
+            public string Fullscreen { get; set; } = "Fullscreen";
+            public string Game { get; set; } = "Game";
+            public string Gamepad { get; set; } = "Gamepad";
+            public string Gameplay { get; set; } = "Gameplay";
+            public string General { get; set; } = "General";
+            public string Global { get; set; } = "Global";
+            public string Grab { get; set; } = "Grab";
+            public string Graphic { get; set; } = "Graphic";
+            public string Green { get; set; } = "Green";
+            public string Grid { get; set; } = "Grid";
+            public string Ground { get; set; } = "Ground";
+            public string Group { get; set; } = "Group";
+            public string Gump { get; set; } = "Gump";
+            public string HP { get; set; } = "HP";
+            public string Hang { get; set; } = "Hang";
+            public string Harmful { get; set; } = "Harmful";
+            public string Health { get; set; } = "Health";
+            public string HealthBar { get; set; } = "Health Bar";
+            public string Height { get; set; } = "Height";
+            public string Help { get; set; } = "Help";
+            public string Hidden { get; set; } = "Hidden";
+            public string Hide { get; set; } = "Hide";
+            public string Highlight { get; set; } = "Highlight";
+            public string History { get; set; } = "History";
+            public string Hotkey { get; set; } = "Hotkey";
+            public string House { get; set; } = "House";
+            public string Hover { get; set; } = "Hover";
+            public string Hue { get; set; } = "Hue";
+            public string Humanoid { get; set; } = "Humanoid";
+            public string Icon { get; set; } = "Icon";
+            public string Ignore { get; set; } = "Ignore";
+            public string Import { get; set; } = "Import";
+            public string Improved { get; set; } = "Improved";
+            public string Incoming { get; set; } = "Incoming";
+            public string Indicator { get; set; } = "Indicator";
+            public string InfoBar { get; set; } = "InfoBar";
+            public string InfoBarSpaced { get; set; } = "Info Bar";
+            public string Innocent { get; set; } = "Innocent";
+            public string Interface { get; set; } = "Interface";
+            public string Invite { get; set; } = "Invite";
+            public string Invulnerable { get; set; } = "Invulnerable";
+            public string Item { get; set; } = "Item";
+            public string Journal { get; set; } = "Journal";
+            public string Joystick { get; set; } = "Joystick";
+            public string Keyboard { get; set; } = "Keyboard";
+            public string Last { get; set; } = "Last";
+            public string Layer { get; set; } = "Layer";
+            public string Left { get; set; } = "Left";
+            public string Level { get; set; } = "Level";
+            public string Light { get; set; } = "Light";
+            public string Location { get; set; } = "Location";
+            public string Lock { get; set; } = "Lock";
+            public string Log { get; set; } = "Log";
+            public string Login { get; set; } = "Login";
+            public string Loot { get; set; } = "Loot";
+            public string Low { get; set; } = "Low";
+            public string Magic { get; set; } = "Magic";
+            public string Managed { get; set; } = "Managed";
+            public string Mechanics { get; set; } = "Mechanics";
+            public string Message { get; set; } = "Message";
+            public string Misc { get; set; } = "Misc";
+            public string Miscellaneous { get; set; } = "Miscellaneous";
+            public string Mobile { get; set; } = "Mobile";
+            public string Mode { get; set; } = "Mode";
+            public string Model { get; set; } = "Model";
+            public string Modern { get; set; } = "Modern";
+            public string Modifier { get; set; } = "Modifier";
+            public string Monster { get; set; } = "Monster";
+            public string Mouse { get; set; } = "Mouse";
+            public string Move { get; set; } = "Move";
+            public string Moved { get; set; } = "Moved";
+            public string Movement { get; set; } = "Movement";
+            public string Murderer { get; set; } = "Murderer";
+            public string Music { get; set; } = "Music";
+            public string Name { get; set; } = "Name";
+            public string Nameplate { get; set; } = "Nameplate";
+            public string Neutral { get; set; } = "Neutral";
+            public string Night { get; set; } = "Night";
+            public string Notoriety { get; set; } = "Notoriety";
+            public string Object { get; set; } = "Object";
+            public string Obstacle { get; set; } = "Obstacle";
+            public string Old { get; set; } = "Old";
+            public string Opacity { get; set; } = "Opacity";
+            public string Options { get; set; } = "Options";
+            public string Original { get; set; } = "Original";
+            public string Other { get; set; } = "Other";
+            public string Over { get; set; } = "Over";
+            public string Overlap { get; set; } = "Overlap";
+            public string Override { get; set; } = "Override";
+            public string Paperdoll { get; set; } = "Paperdoll";
+            public string Paralyze { get; set; } = "Paralyze";
+            public string Party { get; set; } = "Party";
+            public string Pathfinding { get; set; } = "Pathfinding";
+            public string Perspective { get; set; } = "Perspective";
+            public string Player { get; set; } = "Player";
+            public string Poison { get; set; } = "Poison";
+            public string Position { get; set; } = "Position";
+            public string Post { get; set; } = "Post";
+            public string PostProcessing { get; set; } = "Post Processing";
+            public string Preset { get; set; } = "Preset";
+            public string Preview { get; set; } = "Preview";
+            public string Process { get; set; } = "Process";
+            public string Profile { get; set; } = "Profile";
+            public string Progress { get; set; } = "Progress";
+            public string Property { get; set; } = "Property";
+            public string Query { get; set; } = "Query";
+            public string Radius { get; set; } = "Radius";
+            public string Range { get; set; } = "Range";
+            public string Reagent { get; set; } = "Reagent";
+            public string Recolor { get; set; } = "Recolor";
+            public string Red { get; set; } = "Red";
+            public string Refresh { get; set; } = "Refresh";
+            public string Relative { get; set; } = "Relative";
+            public string Resolution { get; set; } = "Resolution";
+            public string Restore { get; set; } = "Restore";
+            public string Resync { get; set; } = "Resync";
+            public string Right { get; set; } = "Right";
+            public string RightClick { get; set; } = "Right Click";
+            public string Rock { get; set; } = "Rock";
+            public string Roof { get; set; } = "Roof";
+            public string Row { get; set; } = "Row";
+            public string Rule { get; set; } = "Rule";
+            public string Run { get; set; } = "Run";
+            public string SOS { get; set; } = "SOS";
+            public string Sallos { get; set; } = "Sallos";
+            public string Save { get; set; } = "Save";
+            public string Scale { get; set; } = "Scale";
+            public string Scaling { get; set; } = "Scaling";
+            public string Screenshot { get; set; } = "Screenshot";
+            public string Scroll { get; set; } = "Scroll";
+            public string Search { get; set; } = "Search";
+            public string Select { get; set; } = "Select";
+            public string Self { get; set; } = "Self";
+            public string Sensitivity { get; set; } = "Sensitivity";
+            public string Setting { get; set; } = "Setting";
+            public string Shadow { get; set; } = "Shadow";
+            public string Shift { get; set; } = "Shift";
+            public string Shop { get; set; } = "Shop";
+            public string Show { get; set; } = "Show";
+            public string Size { get; set; } = "Size";
+            public string Skill { get; set; } = "Skill";
+            public string Skills { get; set; } = "Skills";
+            public string Smooth { get; set; } = "Smooth";
+            public string Sound { get; set; } = "Sound";
+            public string Speech { get; set; } = "Speech";
+            public string Spell { get; set; } = "Spell";
+            public string Split { get; set; } = "Split";
+            public string Standard { get; set; } = "Standard";
+            public string Stat { get; set; } = "Stat";
+            public string Static { get; set; } = "Static";
+            public string Stats { get; set; } = "Stats";
+            public string Status { get; set; } = "Status";
+            public string Stump { get; set; } = "Stump";
+            public string Style { get; set; } = "Style";
+            public string Tab { get; set; } = "Tab";
+            public string Talk { get; set; } = "Talk";
+            public string Target { get; set; } = "Target";
+            public string Targeting { get; set; } = "Targeting";
+            public string Terrain { get; set; } = "Terrain";
+            public string Test { get; set; } = "Test";
+            public string Text { get; set; } = "Text";
+            public string Thread { get; set; } = "Thread";
+            public string Time { get; set; } = "Time";
+            public string Timer { get; set; } = "Timer";
+            public string Tooltip { get; set; } = "Tooltip";
+            public string Transparency { get; set; } = "Transparency";
+            public string Tree { get; set; } = "Tree";
+            public string Type { get; set; } = "Type";
+            public string Use { get; set; } = "Use";
+            public string VSync { get; set; } = "VSync";
+            public string Vegetation { get; set; } = "Vegetation";
+            public string Vendor { get; set; } = "Vendor";
+            public string Video { get; set; } = "Video";
+            public string View { get; set; } = "View";
+            public string Viewport { get; set; } = "Viewport";
+            public string Voice { get; set; } = "Voice";
+            public string Volume { get; set; } = "Volume";
+            public string WASD { get; set; } = "WASD";
+            public string War { get; set; } = "War";
+            public string Warmode { get; set; } = "Warmode";
+            public string Water { get; set; } = "Water";
+            public string Wheel { get; set; } = "Wheel";
+            public string Width { get; set; } = "Width";
+            public string Wiki { get; set; } = "Wiki";
+            public string Window { get; set; } = "Window";
+            public string X { get; set; } = "X";
+            public string Y { get; set; } = "Y";
+            public string Zlib { get; set; } = "Zlib";
+            public string Zoom { get; set; } = "Zoom";
+        }
+
+        public class MovementTabLang
+        {
+            public string Label { get; set; } = "Movement";
+
+            public PathfindingSection Pathfinding { get; set; } = new();
+            public RunningSection Running { get; set; } = new();
+            public DoorsSection Doors { get; set; } = new();
+            public ControllerSection Controller { get; set; } = new();
+
+            public string AutoAvoidObstacles { get; set; } = "Auto Avoid Obstacles";
+            public string UseWasdMovement { get; set; } = "Use WASD movement instead of arrow keys";
+
+            public class PathfindingSection
+            {
+                public string EnablePathfinding { get; set; } = "Enable pathfinding";
+                public string ShiftPathfinding { get; set; } = "Use shift for pathfinding";
+                public string SingleClickPathfind { get; set; } = "Single click for pathfinding";
+            }
+
+            public class RunningSection
+            {
+                public string AlwaysRun { get; set; } = "Always run";
+                public string RunUnlessHidden { get; set; } = "Unless hidden";
+            }
+
+            public class DoorsSection
+            {
+                public string AutoOpenDoors { get; set; } = "Automatically open doors";
+                public string AutoOpenPathfinding { get; set; } = "While pathfinding";
+                public string AutoOpenHidden { get; set; } = "While hidden";
+            }
+
+            public class ControllerSection
+            {
+                public string Label { get; set; } = "Controller support";
+                public string EnableController { get; set; } = "Enable controller input";
+                public string MouseSensitivity { get; set; } = "Mouse Sensitivity";
+            }
+        }
+
+        public class MobilesTabLang
+        {
+            public string Label { get; set; } = "Mobiles";
+
+            public HighlightingSection Highlighting { get; set; } = new();
+            public HuesSection Hues { get; set; } = new();
+
+            public class HighlightingSection
+            {
+                public string Label { get; set; } = "Highlighting";
+                public string ShowMobileHP { get; set; } = "Show mobile's HP";
+                public string MobileHPType { get; set; } = "Type";
+                public string HPShowWhen { get; set; } = "Show when";
+                public string HighlightPoisoned { get; set; } = "Highlight poisoned mobiles";
+                public string HighlightPara { get; set; } = "Highlight paralyzed mobiles";
+                public string HighlightInvul { get; set; } = "Highlight invulnerable mobiles";
+                public string IncomingMobiles { get; set; } = "Show incoming mobile names";
+                public string IncomingCorpses { get; set; } = "Show incoming corpse names";
+                public string AuraUnderFeet { get; set; } = "Show aura under feet";
+                public string AuraForParty { get; set; } = "Use a custom color for party members";
+            }
+
+            public class HuesSection
+            {
+                public string Label { get; set; } = "Hues";
+                public string HueMobileByNotoriety { get; set; } = "Hue mobiles by notoriety";
+            }
+        }
+
+        public class MiscTabLang
+        {
+            public string Label { get; set; } = "Misc";
+
+            public string GeneralLabel { get; set; } = "General";
+            public string InteractionLabel { get; set; } = "Interaction";
+            public string AdvancedLabel { get; set; } = "Advanced";
+            public string LabelScreenshot { get; set; } = "Screenshot";
+
+            public class ExperimentalSection
+            {
+                public string Label { get; set; } = "Experimental";
+                public string DisableDefaultUoHotkeys { get; set; } = "Disable default UO hotkeys";
+                public string DisableArrowsNumlockArrowsPlayerMovement { get; set; } = "Disable arrows & numlock arrows(player movement)";
+                public string DisableTabToggleWarmode { get; set; } = "Disable tab (toggle warmode)";
+                public string DisableCtrlQWMessageHistory { get; set; } = "Disable Ctrl+Q/W message history";
+                public string DisableRightLeftClickAutoMove { get; set; } = "Disable Right+Left click auto-move";
+            }
+
+            public ExperimentalSection Experimental { get; set; } = new();
+
+            public string ManageIgnoreListButtonLabel { get; set; } = "Manage Entity Ignore List";
+            public string SosGumpId { get; set; } = "SOS Gump ID";
+            public string SosGumpIdLabelTooltip { get; set; } = "Responsible for determining whether a gump is an S.O.S and displaying it correctly";
+            public string EnableAutoResyncOnHangDetection { get; set; } = "Enable Auto-Resync hang detection";
+            public string EnableAutoResyncOnHangDetectionTooltip { get; set; } = "Automatically send a RESYNC packet if server did not send a PING in the last 5 seconds";
+            public string EnableASyncMapLoading { get; set; } = "Enable asynchronous map loading";
+            public string UseManagedZlib { get; set; } = "Use a managed zLib";
+            public string UseManagedZlibTooltip { get; set; } = "Improve UNIX/Linux compatibility at the expense of slightly lesser performance";
+            public string HousingTransparency { get; set; } = "House Transparency";
+            public string EnableHouseTransparency { get; set; } = "Enable house transparency";
+            public string DisplayProgressBarOnSkillChanges { get; set; } = "Display progress bar on skill changes";
+            public string SkillProgressBarFormatTooltip { get; set; } = "The text format with which to display the progress bar.\nUse {0} for skill name, {1} for the current value and {2} for the cap";
+        }
+
+        public class VideoTabLang
+        {
+            public string Label { get; set; } = "Video";
+
+            public GameWindowSection GameWindow { get; set; } = new();
+            public ZoomSection Zoom { get; set; } = new();
+            public LightingSection Lighting { get; set; } = new();
+            public ShadowsSection Shadows { get; set; } = new();
+            public MiscSection Misc { get; set; } = new();
+
+            public class GameWindowSection
+            {
+                public string Label { get; set; } = "Game window";
+
+                public string RendererLabel { get; set; } = "Renderer";
+                public string FPSCap { get; set; } = "FPS Cap";
+                public string BackgroundFPS { get; set; } = "Reduce FPS when inactive";
+                public string EnableVSync { get; set; } = "Enable VSync";
+
+                public string ViewportLabel { get; set; } = "Viewport";
+                public string FullsizeViewport { get; set; } = "Fullsize viewport";
+                public string FullScreen { get; set; } = "Fullscreen (borderless)";
+                public string LockViewport { get; set; } = "Lock viewport";
+                public string ViewportX { get; set; } = "Viewport X";
+                public string ViewportY { get; set; } = "Viewport Y";
+                public string ViewportW { get; set; } = "Viewport Width";
+                public string ViewportH { get; set; } = "Viewport Height";
+            }
+
+            public class ZoomSection
+            {
+                public string Label { get; set; } = "Zoom & Scaling";
+
+                public string ZoomLabel { get; set; } = "Zoom";
+                public string DefaultZoom { get; set; } = "Default zoom";
+                public string ZoomWheel { get; set; } = "Enable mousewheel zoom";
+                public string ReturnDefaultZoom { get; set; } = "Return to default zoom after unpressing Ctrl";
+
+                public string ScalingLabel { get; set; } = "Scaling";
+                public string PaperdollScaling { get; set; } = "Paperdoll scaling";
+                public string GlobalScaling { get; set; } = "Global scaling";
+            }
+
+            public class LightingSection
+            {
+                public string Label { get; set; } = "Lighting";
+
+                public string AltLights { get; set; } = "Alternative lights";
+                public string CustomLLevel { get; set; } = "Custom light level";
+                public string Level { get; set; } = "Level";
+                public string LightType { get; set; } = "Light type";
+                public string LightType_Absolute { get; set; } = "Absolute";
+                public string LightType_Minimum { get; set; } = "Minimum";
+                public string DarkNight { get; set; } = "Dark nights";
+                public string ColoredLight { get; set; } = "Colored lights";
+            }
+
+            public class ShadowsSection
+            {
+                public string Label { get; set; } = "Shadows";
+
+                public string EnableShadows { get; set; } = "Enable shadows";
+                public string RockTreeShadows { get; set; } = "Rock and tree shadows";
+                public string TerrainShadowLevel { get; set; } = "Terrain shadow level";
+            }
+
+            public class MiscSection
+            {
+                public string Label { get; set; } = "Misc";
+
+                public string EnableDeathScreen { get; set; } = "Enable death screen";
+                public string BWDead { get; set; } = "Black and white when dead";
+                public string MouseThread { get; set; } = "Run mouse in a separate thread";
+                public string TargetAura { get; set; } = "Target aura on mouse";
+                public string AnimWater { get; set; } = "Animated water";
+                public string EnablePostProcessing { get; set; } = "Enable post-processing effects";
+                public string PostProcessingEffectType { get; set; } = "Effect type";
+                public string Perspective { get; set; } = "Perspective";
+                public string PlayerPositionOffsetX { get; set; } = "Player position offset X";
+                public string PlayerPositionOffsetY { get; set; } = "Player position offset Y";
+            }
+        }
+
+        public class SoundTabLang
+        {
+            public string Label { get; set; } = "Sound";
+            public string Keywords { get; set; } = "Sound, Audio, Music, Volume";
+            public string Tags { get; set; } = "Sound, Audio";
+
+            public string VoiceToText { get; set; } = "Voice to text";
+            public string CreateVoiceButton { get; set; } = "Create voice toggle button";
+        }
+
+        public class ChatTabLang
+        {
+            public string ChatAndText { get; set; } = "Chat & Text";
+
+            public SpeechSection Speech { get; set; } = new();
+            public JournalSection Journal { get; set; } = new();
+            public FontTabLang FontTab { get; set; } = new();
+
+            public class SpeechSection
+            {
+                public string Label { get; set; } = "Speech";
+
+                public string ChatGradient { get; set; } = "Hide chat gradient";
+                public string HideGuildChat { get; set; } = "Hide guild chat";
+                public string HideAllianceChat { get; set; } = "Hide alliance chat";
+                public string DisableSystemChat { get; set; } = "Disable system chat";
+
+                public string DelaySection { get; set; } = "Delay";
+                public string ScaleSpeechDelay { get; set; } = "Scale speech delay";
+                public string SpeechDelay { get; set; } = "Speech delay";
+
+                public string ActivationSection { get; set; } = "Activation";
+                public string ChatEnterActivation { get; set; } = "Activate chat by pressing Enter";
+                public string ChatEnterSpecial { get; set; } = "Also activate with common keys";
+                public string ShiftEnterChat { get; set; } = "Use Shift + Enter to send message without closing chat";
+
+                public string ColorsSection { get; set; } = "Colors";
+                public string SpeechColor { get; set; } = "Speech color";
+                public string YellColor { get; set; } = "Yell color";
+                public string PartyColor { get; set; } = "Party color";
+                public string AllianceColor { get; set; } = "Alliance color";
+                public string EmoteColor { get; set; } = "Emote color";
+                public string WhisperColor { get; set; } = "Whisper color";
+                public string GuildColor { get; set; } = "Guild color";
+                public string CharColor { get; set; } = "Chat color";
+
+                public string DisableOverheadMessages { get; set; } = "Disable Overhead Messages";
+                public string MessageTypeRegular { get; set; } = "Regular";
+                public string MessageTypeSystem { get; set; } = "System";
+                public string MessageTypeEmote { get; set; } = "Emote";
+                public string MessageTypeLimit3Spell { get; set; } = "Limit-3-Spell";
+                public string MessageTypeLabel { get; set; } = "Label";
+                public string MessageTypeFocus { get; set; } = "Focus";
+                public string MessageTypeWhisper { get; set; } = "Whisper";
+                public string MessageTypeYell { get; set; } = "Yell";
+                public string MessageTypeSpell { get; set; } = "Spell";
+                public string MessageTypeGuild { get; set; } = "Guild";
+                public string MessageTypeAlliance { get; set; } = "Alliance";
+                public string MessageTypeCommand { get; set; } = "Command";
+                public string MessageTypeEncoded { get; set; } = "Encoded";
+                public string MessageTypeChatSystem { get; set; } = "Chat System";
+                public string MessageTypeDamage { get; set; } = "Damage";
+                public string MessageTypeDiscord { get; set; } = "Discord";
+                public string MessageTypeParty { get; set; } = "Party";
+            }
+
+
+            public class JournalSection
+            {
+                public string Label { get; set; } = "Journal";
+
+                public string MaxJournalEntries { get; set; } = "Max journal entries";
+                public string JournalOpacity { get; set; } = "Journal opacity";
+                public string JournalStyle { get; set; } = "Journal style";
+                public string JournalBackgroundColor { get; set; } = "Journal background color";
+                public string JournalHideBorders { get; set; } = "Journal hide borders";
+                public string HideTimestamp { get; set; } = "Hide timestamp";
+                public string JournalHideSystemPrefix { get; set; } = "Journal hide system prefix";
+                public string MakeAnchorable { get; set; } = "Make anchorable";
+                public string SaveJournalToFile { get; set; } = "Save journal to file";
+            }
+        }
+
+        public class FontTabLang
+        {
+            public string FontsLabel { get; set; } = "Fonts";
+            public string FontLabel { get; set; } = "Font";
+            public string FontsWikiLabel { get; set; } = "TTF Fonts Wiki";
+            public string FontSettings { get; set; } = "Font settings";
+            public string TtfFontBorder { get; set; } = "TTF Font border";
+            public string InfoBarFont { get; set; } = "Info-Bar";
+            public string Size { get; set; } = "Size";
+            public string SystemChatFont { get; set; } = "System chat";
+            public string TooltipFont { get; set; } = "Tooltip";
+            public string OverheadFont { get; set; } = "Overhead";
+            public string JournalFont { get; set; } = "Journal";
+            public string NameplateFont { get; set; } = "Nameplate";
+            public string OptionsFont { get; set; } = "Options menu";
+        }
+
+        public class CooldownsTabLang
+        {
+            public string CooldownBarsLabel { get; set; } = "Cooldown Bars";
+            public string CustomCooldownBars { get; set; } = "Custom Cooldown Bars";
+            public string PositionX { get; set; } = "Position X";
+            public string PositionY { get; set; } = "Position Y";
+            public string UseLastMovedBarPosition { get; set; } = "Use last moved bar position";
+            public string Conditions { get; set; } = "Conditions";
+            public string AddCondition { get; set; } = "+ Add condition";
+            public string Name { get; set; } = "Name";
+            public string Hue { get; set; } = "Hue";
+            public string Cooldown { get; set; } = "Cooldown";
+            public string TriggerMessageType { get; set; } = "Trigger Message Type";
+            public string TriggerMessage { get; set; } = "Trigger Message";
+            public string ReplaceExisting { get; set; } = "Replace Existing";
+            public string ReplaceExistingTooltip { get; set; } = "Replace any existing cooldown bar with the same name when triggered";
+            public string NameTooltip { get; set; } = "Display name shown on the cooldown bar";
+            public string HueTooltip { get; set; } = "Color of the cooldown bar";
+            public string CooldownTooltip { get; set; } = "Duration of the cooldown in seconds";
+            public string TriggerMessageTypeTooltip { get; set; } = "The type of message that triggers this cooldown bar";
+            public string TriggerMessageTooltip { get; set; } = "Text to match in the incoming message to trigger this cooldown bar";
+            public string PreviewTooltip { get; set; } = "Show a preview of this cooldown bar";
+        }
+
+        public class GumpsTabLang
+        {
+            public string GumpsLabel { get; set; } = "Gumps";
+            public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
+            public string BuffGumpHue { get; set; } = "Buff gump hue";
+            public string EnableAdvancedShopGump { get; set; } = "Enable advanced shop gump";
+            public string EnableGumpOpacityAdjustViaAltScroll { get; set; } = "Enable gump opacity adjust via Alt + Scroll";
+            public string AltForAnchorsGumps { get; set; } = "Require alt to close anchored gumps";
+            public string AltToMoveGumps { get; set; } = "Require alt to move gumps";
+            public string CloseEntireAnchorWithRClick { get; set; } = "Close entire group of anchored gumps with right click";
+            public string OriginalSkillsGump { get; set; } = "Use original skills gump";
+            public string OldStatusGump { get; set; } = "Use old status gump";
+            public string PartyInviteGump { get; set; } = "Show party invite gump";
+        }
+
+        public class LayerHidingTabLang
+        {
+            public string Label { get; set; } = "Layer Hiding";
+
+            public string EnableLayerHiding { get; set; } = "Enable Layer Hiding";
+            public string OnlyForYourself { get; set; } = "Only for yourself";
+            public string OnlyForYourselfTooltip { get; set; } = "Hide layers only on your own character";
+            public string HideFollowingLayers { get; set; } = "Hide the following layers on in-game mobiles:";
+        }
+
+        public class CombatTabLang
+        {
+            public CombatSection Combat { get; set; } = new();
+            public SpellsTabLang Spells { get; set; } = new();
+
+            public class CombatSection
+            {
+                public string Label { get; set; } = "Combat";
+
+                public string HoldTabForCombat { get; set; } = "Hold tab for combat";
+                public string QueryBeforeAttack { get; set; } = "Query before attack";
+                public string QueryBeforeBeneficial { get; set; } = "Query before beneficial acts on murderers/criminals/gray";
+                public string ShowBuffDurationOnOldStyleBuffBar { get; set; } = "Show buff duration on old style buff bar";
+                public string EnableDPSCounter { get; set; } = "Enable damage-taken DPS counter with damage numbers";
+            }
+        }
+
+        public class SpellsTabLang
+        {
+            public string SpellLabel { get; set; } = "Spells";
+            public string SpellIndicators { get; set; } = "Spell Indicators";
+            public string EnableSpellIndicators { get; set; } = "Enable Spell Indicators";
+            public string ImportIndicatorsFromUrl { get; set; } = "Import indicators from URL";
+            public string SpellIndicatorsDownloadPrompt { get; set; } = "Enter the URL for the spell config. \n/c[red]This will override your current config.";
+            public string EnableOverheadSpellFormat { get; set; } = "Enable overhead spell format";
+            public string EnableOverheadSpellHue { get; set; } = "Enable overhead spell hue";
+            public string SingleClickForSpellIcons { get; set; } = "Single click for spell icons";
+            public string EnableFastSpellHotkeyAssigning { get; set; } = "Enable fast spell hotkey assigning";
+            public string SpellOverheadFormat { get; set; } = "Spell overhead format";
+            public string DisplayMatchingHotkeysOnSpellIcons { get; set; } = "Display matching hotkeys on spell icons";
+            public string SpellIconScale { get; set; } = "Spell icon scale";
+            public string HotkeyTextHue { get; set; } = "Hotkey text hue";
+
+            public string InnocentColor { get; set; } = "Innocent color";
+            public string BeneficialSpell { get; set; } = "Beneficial spell";
+            public string FriendColor { get; set; } = "Friend color";
+            public string HarmfulSpell { get; set; } = "Harmful spell";
+            public string Criminal { get; set; } = "Criminal";
+            public string NeutralSpell { get; set; } = "Neutral spell";
+            public string CanBeAttackedHue { get; set; } = "Can be attacked hue";
+            public string Murderer { get; set; } = "Murderer";
+            public string Enemy { get; set; } = "Enemy";
+        }
+
         public class General
         {
             public string SharedNone { get; set; } = "None";
             public string SharedShift { get; set; } = "Shift";
             public string SharedCtrl { get; set; } = "Ctrl";
             public string SharedAlt { get; set; } = "Alt";
+            public string DraggingSectionLabel { get; set; } = "Dragging";
 
             #region General->General
             public string HighlightObjects { get; set; } = "Highlight objects under cursor";
@@ -118,6 +881,7 @@ namespace ClassicUO.Configuration
             public string AutoOpenCorpse { get; set; } = "Automatically open corpses";
             public string CorpseOpenDistance { get; set; } = "Corpse open distance";
             public string CorpseSkipEmpty { get; set; } = "Skip empty corpses";
+            public string CorpseSkipEmptyTooltip { get; set; } = "Most servers don't send corpse contents until it's opened.\nEnabling this will make this feature not work on most servers.";
             public string CorpseOpenOptions { get; set; } = "Corpse open options";
             public string CorpseOptNone { get; set; } = "None";
             public string CorpseOptNotTarg { get; set; } = "Not targeting";
@@ -128,6 +892,7 @@ namespace ClassicUO.Configuration
             public string SallosTooltip { get; set; } = "Sallos easy grab is not recommended with grid containers enabled.";
             public string ShowHouseContent { get; set; } = "Show house content";
             public string SmoothBoat { get; set; } = "Smooth boat movements";
+            public string ClientVersionLimitedTooltip { get; set; } = "Not all client versions support this feature";
             #endregion
 
             #region General->Mobiles
@@ -163,6 +928,7 @@ namespace ClassicUO.Configuration
 
             #region General->Gumps
             public string DisableTopMenu { get; set; } = "Disable top menu bar";
+            public string DisableTopMenuTooltip { get; set; } = "The top menu is pretty vital in TazUO, we recommend leaving this unchecked.";
             public string AltForAnchorsGumps { get; set; } = "Require alt to close anchored gumps";
             public string AltToMoveGumps { get; set; } = "Require alt to move gumps";
             public string CloseEntireAnchorWithRClick { get; set; } = "Close entire group of anchored gumps with right click";
@@ -180,6 +946,7 @@ namespace ClassicUO.Configuration
             public string GridLoot { get; set; } = "Grid Loot";
             public string GridLootOptDisable { get; set; } = "Disabled";
             public string GridLootOptOnly { get; set; } = "Grid loot only";
+            public string GridLootOptOnlyTooltip { get; set; } = "This is not the same as grid containers.";
             public string GridLootOptBoth { get; set; } = "Grid loot and normal container";
             public string GridLootTooltip { get; set; } = "This is not the same as Grid Containers, this is a simple grid gump used for looting corpses.";
             public string ShiftContext { get; set; } = "Require shift to open context menus";
@@ -239,6 +1006,10 @@ namespace ClassicUO.Configuration
         public class Video
         {
             #region GameWindow
+
+            public string EnablePostProcessing { get; set; } = "Enable post processing effects";
+            public string PostProcessingEffectType { get; set; } = "Processing type";
+            public string LabelRenderer { get; set; } = "Renderer";
             public string FPSCap { get; set; } = "FPS Cap";
             public string BackgroundFPS { get; set; } = "Reduce FPS when game is not in focus";
             public string EnableVSync { get; set; } = "Enable VSync";
@@ -249,23 +1020,33 @@ namespace ClassicUO.Configuration
             public string ViewportY { get; set; } = "Viewport position Y";
             public string ViewportW { get; set; } = "Viewport width";
             public string ViewportH { get; set; } = "Viewport height";
+
             #endregion
 
-            #region Zoom
+            #region Zoom & Scaling
+
+            public string ZoomAndScaling { get; set; } = "Zoom & Scaling";
+            public string Zoom { get; set; } = "Zoom";
             public string DefaultZoom { get; set; } = "Default zoom";
             public string ZoomWheel { get; set; } = "Enable zooming with ctrl + mousewheel";
             public string ReturnDefaultZoom { get; set; } = "Return to default zoom after ctrl is released";
+            public string PaperdollScaling { get; set; } = "Paperdoll scaling";
+            public string GlobalScaling { get; set; } = "Global scaling";
+
             #endregion
 
             #region Lighting
+
             public string AltLights { get; set; } = "Alternative lights";
             public string CustomLLevel { get; set; } = "Custom light level";
             public string Level { get; set; } = "Light level";
+            public string LabelLighting { get; set; } = "Lighting";
             public string LightType { get; set; } = "Light level type";
             public string LightType_Absolute { get; set; } = "Absolute";
             public string LightType_Minimum { get; set; } = "Minimum";
             public string DarkNight { get; set; } = "Dark nights";
             public string ColoredLight { get; set; } = "Colored lighting";
+
             #endregion
 
             #region Misc
@@ -274,6 +1055,10 @@ namespace ClassicUO.Configuration
             public string MouseThread { get; set; } = "Run mouse in seperate thread";
             public string TargetAura { get; set; } = "Aura on mouse target";
             public string AnimWater { get; set; } = "Animated water effect";
+            public string Perspective { get; set; } = "Perspective";
+            public string PlayerPositionOffsetX { get; set; } = "Player Position Offset X";
+            public string PlayerPositionOffsetY { get; set; } = "Player Position Offset Y";
+
             #endregion
 
             #region Shadows
@@ -291,6 +1076,8 @@ namespace ClassicUO.Configuration
 
         public class ToolTips
         {
+            public string LabelTooltipOverrides { get; set; } = "Tooltip Overrides";
+            public string LabelOpenOverridesConfig { get; set; } = "Open Overrides Config";
             public string EnableToolTips { get; set; } = "Enable tooltips";
             public string ToolTipDelay { get; set; } = "Tooltip delay";
             public string ToolTipBG { get; set; } = "Tooltip background opacity";
@@ -320,6 +1107,8 @@ namespace ClassicUO.Configuration
 
         public class CombatSpells
         {
+            public string Combat { get; set; } = "Combat";
+            public string Spells { get; set; } = "Spells";
             public string HoldTabForCombat { get; set; } = "Hold tab for combat";
             public string QueryBeforeAttack { get; set; } = "Query before attack";
             public string QueryBeforeBeneficial { get; set; } = "Query before beneficial acts on murderers/criminals/gray";
@@ -347,8 +1136,9 @@ namespace ClassicUO.Configuration
         {
             public string EnableCounters { get; set; } = "Enable counters";
             public string HighlightItemsOnUse { get; set; } = "Highlight items on use";
-            public string AbbreviatedValues { get; set; } = "Abbreviated values";
-            public string AbbreviateIfAmountExceeds { get; set; } = "Abbreviate if amount exceeds";
+            public string AbbreviatedValues { get; set; } = "Use abbreviated values";
+            public string AbbreviateIfAmountExceeds { get; set; } = "When amount exceeds";
+            public string SectionHighlightingLabel { get; set; } = "Counter Highlighting";
             public string HighlightRedWhenAmountIsLow { get; set; } = "Highlight red when amount is low";
             public string HighlightRedIfAmountIsBelow { get; set; } = "Highlight red if amount is below";
             public string CounterLayout { get; set; } = "Counter layout";
@@ -359,6 +1149,8 @@ namespace ClassicUO.Configuration
 
         public class InfoBars
         {
+            public string InfoBar { get; set; } = "Info bar";
+            public string InfoBarFont { get; set; } = "Info bar font";
             public string ShowInfoBar { get; set; } = "Show info bar";
             public string HighlightType { get; set; } = "Highlight type";
             public string HighLightOpt_TextColor { get; set; } = "Text color";
@@ -368,10 +1160,17 @@ namespace ClassicUO.Configuration
             public string Label { get; set; } = "Label";
             public string Color { get; set; } = "Color";
             public string Data { get; set; } = "Data";
+            public string DeleteButtonLabel { get; set; } = "X";
+            public string HueTooltipFormat { get; set; } = "Hue: 0x{0:X}";
         }
 
         public class Containers
         {
+            public string LabelGridContainerStyling { get; set; } = "Grid Container Styling";
+            public string LabelGridContainerHighlighting { get; set; } = "Grid Container Highlighting";
+            public string LabelOriginalContainers { get; set; } = "Original";
+            public string LabelGridContainers { get; set; } = "Grid";
+            public string LabelGridContainersWiki { get; set; } = "Grid Containers";
             public string Description { get; set; } = "These settings are for original container gumps, for grid container settings visit the TazUO section";
             public string CharacterBackpackStyle { get; set; } = "Character backpack style";
             public string BackpackOpt_Default { get; set; } = "Default";
@@ -408,6 +1207,38 @@ namespace ClassicUO.Configuration
             public string NewEntry { get; set; } = "New entry";
             public string NameOverheadEntryName { get; set; } = "Name overhead entry name";
             public string DeleteEntry { get; set; } = "Delete entry";
+            public NamePlatesOptionsTab OptionsTab { get; set; } = new();
+        }
+
+        public class NamePlatesOptionsTab
+        {
+            public string CheckAll { get; set; } = "Check All";
+            public string UncheckAll { get; set; } = "Uncheck All";
+            public string Items { get; set; } = "Items";
+            public string Containers { get; set; } = "Containers";
+            public string Stackable { get; set; } = "Stackable";
+            public string Moveable { get; set; } = "Moveable";
+            public string OtherItems { get; set; } = "Other items";
+            public string Gold { get; set; } = "Gold";
+            public string LockedDown { get; set; } = "Locked down";
+            public string Immovable { get; set; } = "Immovable";
+            public string Corpses { get; set; } = "Corpses";
+            public string Monster { get; set; } = "Monster";
+            public string Humanoid { get; set; } = "Humanoid";
+            public string MobilesByType { get; set; } = "Mobiles by type";
+            public string YourFollowers { get; set; } = "Your followers";
+            public string ExcludeYourself { get; set; } = "Exclude yourself";
+            public string Yourself { get; set; } = "Yourself";
+            public string MobilesByNotoriety { get; set; } = "Mobiles by notoriety";
+            public string Innocent { get; set; } = "Innocent";
+            public string Attackable { get; set; } = "Attackable";
+            public string Enemy { get; set; } = "Enemy";
+            public string Invulnerable { get; set; } = "Invulnerable";
+            public string Allied { get; set; } = "Allied";
+            public string Criminal { get; set; } = "Criminal";
+            public string Murderer { get; set; } = "Murderer";
+
+            public string HotkeyInputTooltip { get; set; } = "Nameplate hotkeys do not support mouse bindings";
         }
 
         public class Cooldowns
@@ -482,6 +1313,16 @@ namespace ClassicUO.Configuration
             public string OnlyInWarmode { get; set; } = "Only in warmode";
             public string BorderOpacity { get; set; } = "Border opacity";
             public string BackgroundOpacity { get; set; } = "Background opacity";
+            public string AvoidOverlap { get; set; } = "Avoid overlap";
+            public string NameWidth { get; set; } = "Name width";
+            public string NameplateHeight { get; set; } = "Height";
+            public string CornerRadius { get; set; } = "Corner radius";
+            public string SeparateHealthBarWidth { get; set; } = "Separate health bar width";
+            public string HealthBarWidth { get; set; } = "Health bar width";
+            public string SplitHealthBar { get; set; } = "Split health bar";
+            public string FixedWidth { get; set; } = "Fixed width";
+            public string ShowWordOfDeathIcon { get; set; } = "Show Word of Death icon at 30% health";
+            public string Preset { get; set; } = "Preset";
             #endregion
 
             #region Mobile
@@ -514,7 +1355,7 @@ namespace ClassicUO.Configuration
             public string EnableImprovedBuffGump { get; set; } = "Enable improved buff gump";
             public string BuffGumpHue { get; set; } = "Buff gump hue";
             public string MainGameWindowBackground { get; set; } = "Main game window background";
-            public string EnableHealthIndicatorBorder { get; set; } = "Enable health indicator border";
+            public string HealthBarIndicator { get; set; } = "Health bar indicator";
             public string OnlyShowBelowHp { get; set; } = "Only show below hp %";
             public string Size { get; set; } = "Size";
             public string SpellIconScale { get; set; } = "Spell icon scale";
@@ -532,6 +1373,7 @@ namespace ClassicUO.Configuration
             public string AttemptingToDownloadSpellConfig { get; set; } = "Attempting to download spell config..";
             public string SuccesfullyDownloadedNewSpellConfig { get; set; } = "Succesfully downloaded new spell config.";
             public string FailedToDownloadTheSpellConfigExMessage { get; set; } = "Failed to download the spell config. ({0})";
+            public string FailedToLoadSpellConfigMessage { get; set; } = "The configuration was successfully downloaded but could not be loaded";
             public string AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars { get; set; } = "Also close anchored healthbars when auto closing healthbars";
             public string EnableAutoResyncOnHangDetection { get; set; } = "Enable auto resync on hang detection";
             public string PlayerOffsetX { get; set; } = "Player Offset X";
@@ -560,14 +1402,14 @@ namespace ClassicUO.Configuration
             #region Fontsettings
             public string FontSettings { get; set; } = "Font settings";
             public string TtfFontBorder { get; set; } = "TTF Font border";
-            public string InfobarFont { get; set; } = "Infobar font";
+            public string InfoBarFont { get; set; } = "Infobar font";
             public string SharedSize { get; set; } = "Size";
             public string SystemChatFont { get; set; } = "System chat font";
             public string TooltipFont { get; set; } = "Tooltip font";
             public string OverheadFont { get; set; } = "Overhead font";
             public string JournalFont { get; set; } = "Journal font";
             public string NameplateFont { get; set; } = "Nameplate font";
-            public string Optionsfont { get; set; } = "Options menu font";
+            public string OptionsFont { get; set; } = "Options menu font";
             #endregion
 
             #region Controller
@@ -608,6 +1450,15 @@ namespace ClassicUO.Configuration
             public string AutoLootProgessBarEnable { get; set; } = "Show progress bar while looting";
             public string AutoLootHumanCorpses { get; set; } = "Loot human corpses? (Potentially player corpses)";
 
+            public string AutoSellMenu { get; set; } = "Auto Sell";
+            public string AutoSellEnable { get; set; } = "Enable auto sell feature";
+            public string AutoSellMaxUniques { get; set; } = "Maximum unique items per transaction";
+            public string AutoSellMaxUniquesTooltip { get; set; } = "This is the maximum number of unique items that will be sold at once. A value of 0 means unlimited. A stack of items counts as one towards this limit. Some servers block transactions that sell too many unique items.";
+            public string AutoSellMaxItems { get; set; } = "Maximum total items per transaction";
+            public string AutoSellMaxItemsTooltip { get; set; } = "This is the maximum number of items that will be sold at once. A value of 0 means unlimited. Some servers block transactions that sell too many items.";
+
+            public string AutoBuyMenu { get; set; } = "Auto Buy";
+            public string AutoBuyEnable { get; set; } = "Enable auto buy feature";
             public string GraphicChangeFilter { get; set; } = "Graphic Filter";
             public string Hotkeys { get; set; } = "Hotkeys";
 
@@ -615,6 +1466,7 @@ namespace ClassicUO.Configuration
             #region VoiceRecognition
             public string VoiceRecognition { get; set; } = "Voice Recognition";
             public string VoiceRecognitionEnable { get; set; } = "Enable voice recognition";
+            public string VoiceToggle { get; set; } = "Toggle Voice";
             public string VoiceModelPath { get; set; } = "Vosk model path";
             public string VoiceModelPathTooltip { get; set; } = "Path to a Vosk speech model directory or .zip file. Download models from alphacephei.com/vosk/models - zip files will be auto-extracted to the vosk/ folder.";
             public string VoiceRecognitionStatus { get; set; } = "Status: {0}";
@@ -632,6 +1484,57 @@ namespace ClassicUO.Configuration
             public string HiddenLayersEnabled { get; set; } = "Enable visible layer system";
             #endregion
         }
+    }
+
+    public class ScriptingLanguage
+    {
+        public string OpenLocation { get; set; } = "Open Location";
+        public string OpenLocationFailed { get; set; } = "Failed to open location '{0}'";
+    }
+
+    public class UiCommonsLanguage
+    {
+        public string DragToResize { get; set; } = "Drag to resize";
+        public string MinMaxWindowButtonTooltip { get; set; } = "Minimize or maximize this window";
+        public string ResetWindowSizeButtonTooltip { get; set; } = "Reset window size";
+        public string Download { get; set; } = "Download";
+        public string Cancel { get; set; } = "Cancel";
+        public string Opacity { get; set; } = "Opacity";
+        public string Hue { get; set; } = "Hue";
+        public string Format { get; set; } = "Format";
+        public string NoHotkeySet { get; set; } = "No hotkey set";
+        public string PressAnyKey { get; set; } = "Press any key...";
+        public ProfileEditorLanguage ProfileEditor { get; set; } = new();
+    }
+
+    public class ProfileEditorLanguage
+    {
+        public string Add { get; set; } = "Add";
+        public string Rename { get; set; } = "Rename";
+        public string Delete { get; set; } = "Delete";
+        public string Save { get; set; } = "Save";
+        public string Cancel { get; set; } = "Cancel";
+        public string Profile { get; set; } = "Profile";
+        public string DeleteProfile { get; set; } = "Delete profile?";
+        public string DeleteProfileX { get; set; } = "Delete profile \"{0}\"?";
+        public string CannotRenameBuiltInProfile { get; set; } = "This profile is a built-in one and cannot be renamed";
+        public string CannotDeleteBuiltInProfile { get; set; } = "This profile is a built-in one and cannot be deleted";
+    }
+
+    public class ErrorsLanguage
+    {
+        public string CommandNotFound { get; set; } = "Command was not found: {0}";
+    }
+
+    public class MapLanguage
+    {
+        public string Follow { get; set; } = "Follow";
+        public string Yourself { get; set; } = "Yourself";
+    }
+
+    public class TopBarGumpLanguage
+    {
+        public string CommandsEntry { get; set; } = "Client Commands";
     }
 
     public class AssistantLanguage
@@ -668,5 +1571,49 @@ namespace ClassicUO.Configuration
         public string SetQuickCureSpell { get; set; } = "Set cure spell";
         public string QuickSpellTooltip { get; set; } = "These are used on health-bars for party members/pets.";
         public string SingleClickLastTarg { get; set; } = "Single clicking a mobile will set it as last target.";
+
+        public AgentsLanguage Agents { get; set; } = new();
+    }
+
+    public class AgentsLanguage
+    {
+        public BandageAgentLanguage Bandage { get; set; } = new();
+    }
+
+    public class BandageAgentLanguage
+    {
+        public string ProfileNotLoaded { get; set; } = "Profile not loaded";
+        public string AutoHealWhenHpBelowThreshold { get; set; } = "Automatically use bandages to heal when HP drops below threshold.";
+        public string EnableBandageAgent { get; set; } = "Enable bandage agent";
+
+        public string BandageFriendsCheckbox { get; set; } = "Bandage friends";
+        public string BandageFriendsTooltip { get; set; } = "Bandage mobiles in Friends list";
+
+        public string BandageAlliesCheckbox { get; set; } = "Bandage allies";
+        public string BandageAlliesTooltip { get; set; } = "Bandage nearby guild/alliance members (notoriety: ally)";
+
+        public string BandagePetsCheckbox { get; set; } = "Bandage pets";
+        public string BandagePetsTooltip { get; set; } = "Bandage nearby owned pets";
+
+        public string DisableSelfHealCheckbox { get; set; } = "Disable self heal";
+        public string DisableSelfHealTooltip { get; set; } = "When enabled, bandage agent will only heal friends and not yourself";
+
+        public string BandageDelayTooltip { get; set; } = "Delay between bandage attempts in milliseconds (50-30000)";
+
+        public string BandageDelayMsLabel { get; set; } = "Delay (ms)";
+
+        public string UseDexFormulaCheckbox { get; set; } = "Use dex formula";
+        public string UseDexFormulaTooltip { get; set; } = "Use the dex formula instead of a set delay";
+
+        public string UseBandageBuffCheckbox { get; set; } = "Use bandaging buff";
+        public string UseBandageBuffTooltip { get; set; } = "Use bandaging buff instead of delay";
+
+        public string HealthThresholdSliderLabel { get; set; } = "HP percentage threshold";
+        public string UseNewPacketCheckbox { get; set; } = "Use new bandage packet";
+        public string BandageIfPoisonedCheckbox { get; set; } = "Bandage if poisoned";
+        public string SkipIfHidden { get; set; } = "Skip bandage if hidden";
+        public string SkipIfYellowHits { get; set; } = "Skip bandage if yellow hits";
+        public string BandageGraphicIdTooltip { get; set; } = "Graphic ID of bandages to use (default: 0x0E21). Accepts hex (0x0E21) or decimal (3617)";
+        public string BandageGraphicIdLabel { get; set; } = "Bandage graphic ID:";
     }
 }

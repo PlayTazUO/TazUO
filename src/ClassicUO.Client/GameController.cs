@@ -90,12 +90,15 @@ namespace ClassicUO
             SDL.SDL_StartTextInput(Window.Handle);
         }
 
-        private float _renderScale = 1f;
+        public readonly float MinRenderScale = 0.1f;
+        public readonly float MaxRenderScale = 1.75f;
+
         public float RenderScale
         {
-            get => _renderScale;
-            set => _renderScale = Math.Max(value, 0.1f);
-        }
+            get;
+            set => field = Math.Clamp(value, MinRenderScale, MaxRenderScale);
+        } = 1f;
+
         public Scene Scene { get; private set; }
         public AudioManager Audio { get; private set; }
         public UltimaOnline UO { get; } = new UltimaOnline();
@@ -207,6 +210,7 @@ namespace ClassicUO
             MyraEnvironment.Game = this;
             MyraEnvironment.SetMouseCursorFromWidget = false;
             MyraEnvironment.MouseInfoGetter = Mouse.GetMyraMouseInfo;
+            MyraEnvironment.DefaultDebugFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.ROBOTO, 16);
             MyraStyle.SetDefault(); //Must occur after png loading
 
             Audio.Initialize();

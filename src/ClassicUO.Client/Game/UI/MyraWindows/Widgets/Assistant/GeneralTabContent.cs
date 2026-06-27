@@ -26,10 +26,10 @@ public static class GeneralTabContent
         mainContent.Widgets.Add(rightSide);
 
 
-        leftSide.Widgets.Add(new MyraLabel(lang.VisualConfig, MyraLabel.TextStyle.H1));
-        rightSide.Widgets.Add(new MyraLabel(lang.DelayConfig, MyraLabel.TextStyle.H1));
+        leftSide.Widgets.Add(new MyraLabel(lang.VisualConfig, MyraLabel.TextStyle.H2));
+        rightSide.Widgets.Add(new MyraLabel(lang.DelayConfig, MyraLabel.TextStyle.H2));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.CameraSmoothing, out MyraHSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(lang.CameraSmoothing, out LabeledHorizontalSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
         _cSmoothSlider.RoundValues = false;
         _cSmoothSlider.WheelStep = 0.1f;
 
@@ -49,9 +49,9 @@ public static class GeneralTabContent
 
         leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b, lang.OutlineMobiles));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.MinGumpDragDist, out _, v => profile.MinGumpMoveDistance = (int)v, 0, 20, profile.MinGumpMoveDistance));
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(lang.MinGumpDragDist, out _, v => profile.MinGumpMoveDistance = (int)v, 0, 20, profile.MinGumpMoveDistance));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.GameScale, out MyraHSlider gsSlider, v =>
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(lang.GameScale, out LabeledHorizontalSlider gsSlider, v =>
         {
             gameScale = Math.Clamp(v / 100, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
         }, Constants.MIN_GAME_SCALE * 100, Constants.MAX_GAME_SCALE * 100, Client.Game.RenderScale * 100));
@@ -65,9 +65,9 @@ public static class GeneralTabContent
 
 
         //Right side
-        rightSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.TurnDelay, out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay));
+        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(lang.TurnDelay, out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay));
 
-        rightSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.ObjectDelay, out MyraHSlider obDelaySlider,
+        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(lang.ObjectDelay, out LabeledHorizontalSlider obDelaySlider,
             v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay));
 
         rightSide.Widgets.Add(new MyraButton(lang.AutoDelayChecker, () => AutomatedObjectDelay.Begin(() =>
@@ -78,7 +78,7 @@ public static class GeneralTabContent
         // Right side: Misc
         rightSide.Widgets.Add(new MyraSpacer(20, 15));
 
-        rightSide.Widgets.Add(new MyraLabel(lang.Misc, MyraLabel.TextStyle.H1));
+        rightSide.Widgets.Add(new MyraLabel(lang.Misc, MyraLabel.TextStyle.H2));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.QueueManualItemMoves,
             b => profile.QueueManualItemMoves = b, lang.QueueItemMoves, lang.QueueItemMovesTooltip));

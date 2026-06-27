@@ -31,10 +31,7 @@ public class MyraControl : IGui
     public MyraControl(string title)
     {
         _rootWindow = new ResizableWindow(
-            new ResizableWindowProps
-            {
-                Resize = { Placements = ResizeEdges.Bottom | ResizeEdges.Left | ResizeEdges.Right }
-            }
+            new ResizableWindowProps { Resize = { Placements = ResizeEdges.All } }
         ) { Title = title };
 
         _rootWindow.Closed += OnRootWindowOnClosed;
@@ -385,7 +382,11 @@ public class MyraControl : IGui
         if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput)
             return;
 
-        if (Bounds.Contains(position.X, position.Y) || Contains(position.X, position.Y))
+        if (
+            _rootWindow?.HitTest(position) != null ||
+            Bounds.Contains(position.X, position.Y) ||
+            Contains(position.X, position.Y)
+        )
         {
             res = this;
             OnHitTestSuccess(position.X, position.Y, ref res);

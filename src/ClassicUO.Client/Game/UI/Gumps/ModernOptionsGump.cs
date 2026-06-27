@@ -84,7 +84,7 @@ namespace ClassicUO.Game.UI.Gumps
             MainContent.AddToLeft(
                 CategoryButton(lang.ButtonCombatSpells, (int)PAGE.CombatSpells, MainContent.LeftWidth));
             MainContent.AddToLeft(CategoryButton(lang.ButtonCounters, (int)PAGE.Counters, MainContent.LeftWidth));
-            MainContent.AddToLeft(CategoryButton(lang.ButtonInfobar, (int)PAGE.InfoBar, MainContent.LeftWidth));
+            MainContent.AddToLeft(CategoryButton(lang.ButtonInfoBar, (int)PAGE.InfoBar, MainContent.LeftWidth));
             MainContent.AddToLeft(CategoryButton(lang.ButtonContainers, (int)PAGE.Containers, MainContent.LeftWidth));
             MainContent.AddToLeft(
                 CategoryButton(lang.ButtonExperimental, (int)PAGE.Experimental, MainContent.LeftWidth));
@@ -4067,7 +4067,7 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
-            (new CheckboxWithLabel(lang.GetTazUO.EnableHealthIndicatorBorder, 0, profile.EnableHealthIndicator, (b) => { profile.EnableHealthIndicator = b; }),
+            (new CheckboxWithLabel(lang.GetTazUO.HealthBarIndicator, 0, profile.EnableHealthIndicator, (b) => { profile.EnableHealthIndicator = b; }),
                 true, page);
 
             content.Indent();
@@ -4367,7 +4367,7 @@ namespace ClassicUO.Game.UI.Gumps
                     "Disable overhead messages of these types:",
                     ThemeSettings.FONT,
                     ThemeSettings.STANDARD_TEXT_SIZE,
-                    ThemeSettings.TEXT_FONT_COLOR, 
+                    ThemeSettings.TEXT_FONT_COLOR,
                     TextBox.RTLOptions.Default()),
                 true, page);
 
@@ -4471,7 +4471,7 @@ namespace ClassicUO.Game.UI.Gumps
             page = ((int)PAGE.TUOOptions + 1007);
 
             // Enumerate once to save a bit of compute
-            (string[] availableFonts, int maxFontNameLength) = GetOrderedFontNames();
+            (string[] availableFonts, int maxFontNameLength) = TrueTypeLoader.Instance.GetSortedFontNames(true);
 
             content.AddToLeft(SubCategoryButton(lang.GetTazUO.FontSettings, page, content.LeftWidth));
             content.ResetRightSide();
@@ -4494,7 +4494,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     availableFonts,
                     maxFontNameLength,
-                    lang.GetTazUO.InfobarFont,
+                    lang.GetTazUO.InfoBarFont,
                     CurrentProfile.InfoBarFont,
                     (i, s) =>
                     {
@@ -4651,7 +4651,7 @@ namespace ClassicUO.Game.UI.Gumps
                 GenerateFontSelector(
                     availableFonts,
                     maxFontNameLength,
-                    lang.GetTazUO.Optionsfont,
+                    lang.GetTazUO.OptionsFont,
                     CurrentProfile.OptionsFont,
                     (i, s) => { CurrentProfile.OptionsFont = s; }
                 ),
@@ -5093,35 +5093,6 @@ namespace ClassicUO.Game.UI.Gumps
 
 
             _options.Add(new SettingsOption("", content, MainContent.RightWidth, (int)PAGE.TUOOptions));
-        }
-
-        /// <summary>
-        ///     Retrieves an ordered collection of font names along with the maximum length of all font names.
-        ///     The font names are sorted to prioritize embedded fonts, followed by alphabetical order.
-        /// </summary>
-        /// <returns>
-        ///     A tuple containing:
-        ///     <ul>
-        ///         <li> An array of ordered font names.</li>
-        ///         <li>The maximum length of any font name in the collection.</li>
-        ///     </ul>
-        /// </returns>
-        private static (string[] Names, int MaxNameLength) GetOrderedFontNames()
-        {
-            int maxLength = 0;
-
-            string[] availableFonts = TrueTypeLoader.Instance.Fonts
-                .Select(font =>
-                {
-                    // Keep track of the max name length
-                    maxLength = Math.Max(maxLength, font.Length);
-                    return font;
-                })
-                .OrderBy(font => EmbeddedFontNames.Names.Contains(font) ? 0 : 1) // Embedded fonts should be first in line, ordered by name
-                .ThenBy(font => font) // Then, dynamically loaded fonts, ordered by name as well
-                .ToArray();
-
-            return (availableFonts, maxLength);
         }
 
         public override void Dispose()
@@ -6281,9 +6252,9 @@ namespace ClassicUO.Game.UI.Gumps
                     checkboxName, 0, true, (b) =>
                     {
                         if (b)
-                            Option.NameOverheadOptionFlags |= (int)optionFlag;
+                            Option.NameOverheadOptionFlags |= optionFlag;
                         else
-                            Option.NameOverheadOptionFlags &= ~(int)optionFlag;
+                            Option.NameOverheadOptionFlags &= ~optionFlag;
 
                         if (NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == Option.Name)
                             NameOverHeadManager.ActiveOverheadOptions =
@@ -6370,7 +6341,7 @@ namespace ClassicUO.Game.UI.Gumps
                 switch ((ButtonType)buttonID)
                 {
                     case ButtonType.CheckAll:
-                        Option.NameOverheadOptionFlags = int.MaxValue;
+                        Option.NameOverheadOptionFlags = ByteFlagHelper.AllBits<NameOverheadOptions>();
                         UpdateCheckboxesByCurrentOptionFlags();
 
                         break;

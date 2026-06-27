@@ -78,7 +78,7 @@ public static class BandageAgentTabContent
         delayRow.Widgets.Add(delayBox);
         delayRow.Widgets.Add(new MyraLabel(TazLang.Get("bandageagent_delay_label"), MyraLabel.TextStyle.P));
         delayRow.Widgets.Add(new MyraSpacer(15, 1));
-        delayRow.Widgets.Add(MyraHSlider.SliderWithLabel(
+        delayRow.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             TazLang.Get("bandageagent_hpthreshold"),
             out _,
             v => profile.BandageAgentHPPercentage = (int)v,

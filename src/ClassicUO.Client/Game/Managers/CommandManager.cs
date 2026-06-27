@@ -12,7 +12,9 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI;
+using ClassicUO.Game.UI.MyraWindows.Options;
 using ClassicUO.LegionScripting;
+using Myra;
 
 namespace ClassicUO.Game.Managers
 {
@@ -84,7 +86,7 @@ namespace ClassicUO.Game.Managers
                 s =>
                 {
                     CUOEnviroment.Debug = !CUOEnviroment.Debug;
-
+                    MyraEnvironment.DrawWidgetsFrames = !MyraEnvironment.DrawWidgetsFrames;
                 }
             );
 
@@ -277,10 +279,45 @@ namespace ClassicUO.Game.Managers
                 GameActions.Print($"FPS Limit updated to: {Settings.GlobalSettings.FPS}", Constants.HUE_SUCCESS);
             });
 
-            Register("dressagent", (s) => DressAgentManager.Instance?.DressAgentCommand(s));
-            Register("organize", (s) => OrganizerAgent.Instance?.OrganizerCommand(s));
-            Register("organizer", (s) => OrganizerAgent.Instance?.OrganizerCommand(s));
-            Register("organizerlist", (s) => OrganizerAgent.Instance?.ListOrganizers());
+            Register("dressagent", s => DressAgentManager.Instance?.DressAgentCommand(s));
+            Register("organize", s => OrganizerAgent.Instance?.OrganizerCommand(s));
+            Register("organizer", s => OrganizerAgent.Instance?.OrganizerCommand(s));
+            Register("organizerlist", s => OrganizerAgent.Instance?.ListOrganizers());
+            Register("old-options-window", s => GameActions.ShowLegacyOptionsGump(_world));
+            Register("myra-draw-widget-frames", args => MyraEnvironment.DrawWidgetsFrames = ParseBooleanCommandArgs(args));
+            Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
+            Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
+
+            // Regenerate the `Language` instance, loading any changes that have been made without having to restart the game
+            Register("language-regenerate", _ => Language.RegenerateLanguageFile());
+        }
+
+        /// <summary>
+        ///     Parses a command and returns a boolean indicating whether the first argument is 'truthy'
+        ///     using lax semantics.
+        ///     <br />
+        ///     A truthy value is defined as one of the following:
+        ///     <list type="bullet">
+        ///         <item>true</item>
+        ///         <item>on</item>
+        ///         <item>yes</item>
+        ///         <item>1</item>
+        ///     </list>
+        /// </summary>
+        /// <param name="args">The command's arguments</param>
+        /// <returns><c>true</c> if the first argument is 'truthy', <c>false</c> otherwise</returns>
+        /// <remarks>
+        ///     // Like in process envs, the first argument is the command itself
+        /// </remarks>
+        private static bool ParseBooleanCommandArgs(string[] args) => args?.Length > 1 && ParseTruthyValue(args[1]);
+
+        private static bool ParseTruthyValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            string loweredArg = value.ToLowerInvariant();
+            return new[] { "on", "true", "yes", "1" }.Contains(loweredArg);
         }
 
 
