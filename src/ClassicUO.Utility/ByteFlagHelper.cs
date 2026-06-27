@@ -12,14 +12,14 @@ public static class ByteFlagHelper
 
     public static byte RemoveFlag(byte origin, byte flag) => (byte)(origin & ~flag);
 
-    public static ulong AddFlag(ulong origin, ulong flag) => (ulong)(origin | flag);
+    public static ulong AddFlag(ulong origin, ulong flag) => origin | flag;
 
     public static bool HasFlag(ulong origin, ulong flag) => (origin & flag) == flag;
 
-    public static ulong RemoveFlag(ulong origin, ulong flag) => (ulong)(origin & ~flag);
+    public static ulong RemoveFlag(ulong origin, ulong flag) => origin & ~flag;
 
 
-        public static TEnum AllBits<TEnum>() where TEnum : struct, Enum =>
+    public static TEnum AllBits<TEnum>() where TEnum : struct, Enum =>
         Enum.GetValues<TEnum>().Aggregate(default(TEnum), AddFlag);
 
     public static bool HasFlag<TEnum>(TEnum value, TEnum flag) where TEnum : struct, Enum

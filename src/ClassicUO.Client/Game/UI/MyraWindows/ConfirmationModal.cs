@@ -8,12 +8,31 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
+/// <summary>
+/// A modal dialog that asks the user to confirm or cancel an action. The result is delivered
+/// via a callback: <see langword="true"/> when the user confirms, <see langword="false"/> when
+/// they cancel. The window has no close button and cannot be minimized or resized.
+/// </summary>
 public class ConfirmationModal : MyraControl
 {
     private readonly Action<bool> _onClose;
     private readonly string _confirmButtonLabel;
     private readonly string _cancelButtonLabel;
 
+    /// <summary>
+    /// Initializes a new <see cref="ConfirmationModal"/> with a plain-text question.
+    /// </summary>
+    /// <param name="title">Window title bar text.</param>
+    /// <param name="question">
+    /// Question displayed as the modal body. Defaults to "Are you sure you wish to continue?"
+    /// when <see langword="null"/>.
+    /// </param>
+    /// <param name="onClose">
+    /// Callback invoked when the dialog closes. Receives <see langword="true"/> on confirm,
+    /// <see langword="false"/> on cancel.
+    /// </param>
+    /// <param name="confirmButtonLabel">Label for the confirm button; defaults to "Confirm".</param>
+    /// <param name="cancelButtonLabel">Label for the cancel button; defaults to "Cancel".</param>
     public ConfirmationModal(
         string title,
         string question,
@@ -30,6 +49,18 @@ public class ConfirmationModal : MyraControl
     {
     }
 
+    /// <summary>
+    /// Initializes a new <see cref="ConfirmationModal"/> with an arbitrary widget as the body.
+    /// </summary>
+    /// <param name="title">Window title bar text; defaults to "Confirm Action" when <see langword="null"/>.</param>
+    /// <param name="modalContent">Widget rendered as the dialog body above the button row.</param>
+    /// <param name="onClose">
+    /// Callback invoked when the dialog closes. Receives <see langword="true"/> on confirm,
+    /// <see langword="false"/> on cancel.
+    /// </param>
+    /// <param name="confirmButtonLabel">Label for the confirm button; defaults to "Confirm".</param>
+    /// <param name="cancelButtonLabel">Label for the cancel button; defaults to "Cancel".</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="onClose"/> is <see langword="null"/>.</exception>
     public ConfirmationModal(
         string title,
         Widget modalContent,
@@ -48,6 +79,10 @@ public class ConfirmationModal : MyraControl
         _rootWindow.Content = GetContent(modalContent);
     }
 
+    /// <summary>
+    /// Applies modal-specific window settings: centered title, fixed minimum width, hidden close
+    /// button, and disabled minimize/resize.
+    /// </summary>
     private void ConfigureRootWindow()
     {
         _rootWindow.TitlePanel.HorizontalAlignment = HorizontalAlignment.Center;
@@ -60,6 +95,10 @@ public class ConfirmationModal : MyraControl
         _rootWindow.Props.Resize.Enabled = false;
     }
 
+    /// <summary>
+    /// Assembles the full dialog content: the caller-supplied body widget stacked above the
+    /// confirm/cancel button row.
+    /// </summary>
     private VerticalStackPanel GetContent(Widget modalContent)
     {
         var content = new VerticalStackPanel { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -68,6 +107,10 @@ public class ConfirmationModal : MyraControl
         return content;
     }
 
+    /// <summary>
+    /// Builds a three-column grid containing the cancel button (left), a flex spacer (center),
+    /// and the confirm button (right, styled with a red accent).
+    /// </summary>
     private Grid GetButtonGrid()
     {
         var buttonGrid = new Grid { HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -107,6 +150,11 @@ public class ConfirmationModal : MyraControl
         return buttonGrid;
     }
 
+    /// <summary>
+    /// Creates a centered <see cref="MyraLabel"/> from a plain-text question string, used when
+    /// the text-only constructor overload is called.
+    /// </summary>
+    /// <param name="question">Question text; defaults to "Are you sure you wish to continue?".</param>
     private static MyraLabel GetContentByText(string question) =>
         new(question ?? "Are you sure you wish to continue?", MyraLabel.TextStyle.H2)
         {

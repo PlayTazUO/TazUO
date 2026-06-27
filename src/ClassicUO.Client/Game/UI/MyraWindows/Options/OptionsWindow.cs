@@ -382,7 +382,10 @@ public class OptionsWindow : MyraControl
         if (_lastCategory == category)
             return;
 
-        _searchField.Text = string.Empty;
+        _searchField.Text = null;
+        // This internally calls some setters that render the hint again. Without this, and even though the property hasn't changes, hint will be lost.
+        _searchField.HintText = Language.Instance.GetModernOptionsGumpLanguage.SearchEllipses;
+
         _optionsStack.Widgets.Clear();
         _optionsStack.Widgets.Add(_optionsPanel);
 

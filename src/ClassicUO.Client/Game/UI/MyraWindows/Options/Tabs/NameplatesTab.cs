@@ -8,6 +8,7 @@ using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Game.UI.MyraWindows.Widgets.HotkeyInput;
 using ClassicUO.Resources;
+using ClassicUO.Utility;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
 using Myra.Graphics2D.UI.WrapPanel;
@@ -90,14 +91,15 @@ public static class NameplatesTab
                 [
                     new HotkeyInput(
                         existingSelection: currentHotkey,
-                        onSelectionChanged: e => OnProfileHotkeyChanged(profile, e)
+                        onSelectionChanged: e => OnProfileHotkeyChanged(profile, e),
+                        capturesMouseEvents: false
                     ) { Padding = new Thickness(MyraStyle.STANDARD_SPACING, 0, 0, 0) }
                 ],
                 [
                     OptionTabCommons.StyledVerticalSeparator(),
                     new MyraButton(
                         npLang.CheckAll,
-                        () => profile.NameOverheadOptionFlags = Utility.ByteFlagHelper.AllBits<NameOverheadOptions>()
+                        () => profile.NameOverheadOptionFlags = ByteFlagHelper.AllBits<NameOverheadOptions>()
                     ),
                     new MyraButton(
                         npLang.UncheckAll,

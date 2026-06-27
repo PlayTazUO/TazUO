@@ -276,6 +276,12 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
+            /// <summary>
+            /// Moves a cooldown condition from one position to another, reordering all associated
+            /// profile lists (hue, label, trigger, duration, type, replace-if-exists) atomically.
+            /// </summary>
+            /// <param name="oldOrder">Current zero-based index of the condition to move.</param>
+            /// <param name="newOrder">Target zero-based index the condition should occupy after the move.</param>
             public static void ReorderCondition(int oldOrder, int newOrder)
             {
                 Profile profile = ProfileManager.CurrentProfile;
@@ -299,6 +305,14 @@ namespace ClassicUO.Game.UI.Gumps
                 MoveListItem(profile.Condition_ReplaceIfExists, oldOrder, newOrder);
             }
 
+            /// <summary>
+            /// Relocates the element at <paramref name="oldIndex"/> to <paramref name="newIndex"/>
+            /// by removing it and re-inserting it, shifting intermediate elements accordingly.
+            /// </summary>
+            /// <typeparam name="T">Element type of the list.</typeparam>
+            /// <param name="list">List to mutate in place.</param>
+            /// <param name="oldIndex">Zero-based source index.</param>
+            /// <param name="newIndex">Zero-based destination index.</param>
             private static void MoveListItem<T>(IList<T> list, int oldIndex, int newIndex)
             {
                 T item = list[oldIndex];

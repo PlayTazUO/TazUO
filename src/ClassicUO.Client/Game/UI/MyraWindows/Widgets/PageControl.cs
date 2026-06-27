@@ -12,6 +12,11 @@ using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
+/// <summary>
+/// A Myra <see cref="Container"/> that displays one widget at a time from an ordered list of
+/// pages, together with a navigation bar (first / previous / page indicator / next / last).
+/// Pages can be supplied at construction time or added later via <see cref="Add"/>.
+/// </summary>
 public class PageControl : Container
 {
     private readonly List<Widget> _pages = [];
@@ -55,8 +60,16 @@ public class PageControl : Container
         }
     }
 
+    /// <summary>
+    /// When <see langword="true"/>, the content panel's width and height are locked to the size
+    /// measured on page 0 so the control does not resize as the user navigates between pages.
+    /// </summary>
     public bool RetainSizeWhenPaging { get; set; }
 
+    /// <summary>
+    /// Initializes a new <see cref="PageControl"/> and optionally pre-populates it with pages.
+    /// </summary>
+    /// <param name="widgets">Zero or more widgets to register as initial pages.</param>
     public PageControl(params Widget[] widgets)
     {
         Margin = new Thickness(4);
@@ -78,6 +91,10 @@ public class PageControl : Container
         CreateControlBar();
     }
 
+    /// <summary>
+    /// Builds the navigation bar (first/prev/indicator/next/last) and appends it to
+    /// <see cref="_mainPanel"/>.
+    /// </summary>
     private void CreateControlBar()
     {
         SpriteFontBase font = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24);
@@ -103,6 +120,10 @@ public class PageControl : Container
         _mainPanel.Widgets.Add(bar);
     }
 
+    /// <summary>
+    /// Refreshes navigation button enabled states and the page indicator label to reflect
+    /// <see cref="CurrentPage"/> and the total page count.
+    /// </summary>
     private void UpdateControlBar()
     {
         bool backEnabled = CurrentPage > 0;
@@ -115,26 +136,36 @@ public class PageControl : Container
         _lastButton.Enabled = forwardEnabled;
     }
 
+    /// <summary>Navigates to the first page.</summary>
     private void OnFirstPage() => CurrentPage = 0;
 
+    /// <summary>Navigates to the previous page if one exists.</summary>
     private void OnPrevPage()
     {
         if (CurrentPage > 0)
             CurrentPage--;
     }
 
+    /// <summary>Navigates to the next page if one exists.</summary>
     private void OnNextPage()
     {
         if (CurrentPage < _pages.Count - 1)
             CurrentPage++;
     }
 
+    /// <summary>Navigates to the last page.</summary>
     private void OnLastPage()
     {
         if (_pages.Count > 0)
             CurrentPage = _pages.Count - 1;
     }
 
+    /// <summary>
+    /// Appends one or more widgets as new pages. <see langword="null"/> entries are silently
+    /// ignored. If the control was empty before this call, the first added widget becomes the
+    /// visible page.
+    /// </summary>
+    /// <param name="pageWidgets">Widgets to add as pages.</param>
     public void Add(params Widget[] pageWidgets)
     {
         Widget[] nonNullWidgets = pageWidgets.Where(w => w != null).ToArray();
@@ -154,6 +185,12 @@ public class PageControl : Container
         UpdateControlBar();
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// On page 0, if <see cref="RetainSizeWhenPaging"/> is enabled and the content panel has no
+    /// explicit size yet, measures and locks the panel dimensions so subsequent page changes do
+    /// not cause layout reflows.
+    /// </remarks>
     protected override Point InternalMeasure(Point availableSize)
     {
         if (CurrentPage != 0)
