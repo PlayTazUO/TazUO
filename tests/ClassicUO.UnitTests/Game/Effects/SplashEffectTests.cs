@@ -1,3 +1,4 @@
+using System;
 using ClassicUO.Game.Effects;
 using FluentAssertions;
 using Microsoft.Xna.Framework;
@@ -8,28 +9,39 @@ namespace ClassicUO.UnitTests.Game.Effects
 {
     public class SplashEffectTests
     {
+        private static Array GetParticlesArray(SplashEffect splashEffect)
+        {
+            var field = typeof(SplashEffect).GetField("_particles", BindingFlags.NonPublic | BindingFlags.Instance)
+                ?? throw new InvalidOperationException("SplashEffect._particles field not found.");
+
+            var particles = field.GetValue(splashEffect)
+                ?? throw new InvalidOperationException("SplashEffect._particles is null.");
+
+            if (particles is not Array array)
+                throw new InvalidOperationException("SplashEffect._particles is not an array.");
+
+            return array;
+        }
+
+        private static FieldInfo GetParticleField(object particle, string fieldName)
+        {
+            return particle.GetType().GetField(fieldName)
+                ?? throw new InvalidOperationException($"Particle.{fieldName} field not found.");
+        }
+
         /// <summary>
         /// Helper method to get the active particle count using reflection.
         /// </summary>
         private int GetActiveParticleCount(SplashEffect splashEffect)
         {
-            var field = typeof(SplashEffect).GetField("_particles", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return 0;
-
-            var particles = field.GetValue(splashEffect);
-            if (particles == null) return 0;
-
-            var array = particles as System.Array;
-            if (array == null) return 0;
+            var array = GetParticlesArray(splashEffect);
 
             int count = 0;
             for (int i = 0; i < array.Length; i++)
             {
                 var particle = array.GetValue(i);
-                if (particle == null) continue;
-
-                var activeField = particle.GetType().GetField("Active");
-                if (activeField != null && (bool)activeField.GetValue(particle))
+                var activeField = GetParticleField(particle, "Active");
+                if ((bool)activeField.GetValue(particle))
                 {
                     count++;
                 }
@@ -42,14 +54,12 @@ namespace ClassicUO.UnitTests.Game.Effects
         /// </summary>
         private object GetParticle(SplashEffect splashEffect, int index)
         {
-            var field = typeof(SplashEffect).GetField("_particles", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return null;
+            var array = GetParticlesArray(splashEffect);
+            if (index >= array.Length)
+                throw new ArgumentOutOfRangeException(nameof(index), index, $"Index must be less than {array.Length}.");
 
-            var particles = field.GetValue(splashEffect);
-            if (particles == null) return null;
-
-            var array = particles as System.Array;
-            return array?.GetValue(index);
+            return array.GetValue(index)
+                ?? throw new InvalidOperationException($"Particle at index {index} is null.");
         }
 
         /// <summary>
@@ -57,22 +67,13 @@ namespace ClassicUO.UnitTests.Game.Effects
         /// </summary>
         private object GetFirstActiveParticle(SplashEffect splashEffect)
         {
-            var field = typeof(SplashEffect).GetField("_particles", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field == null) return null;
-
-            var particles = field.GetValue(splashEffect);
-            if (particles == null) return null;
-
-            var array = particles as System.Array;
-            if (array == null) return null;
+            var array = GetParticlesArray(splashEffect);
 
             for (int i = 0; i < array.Length; i++)
             {
                 var particle = array.GetValue(i);
-                if (particle == null) continue;
-
-                var activeField = particle.GetType().GetField("Active");
-                if (activeField != null && (bool)activeField.GetValue(particle))
+                var activeField = GetParticleField(particle, "Active");
+                if ((bool)activeField.GetValue(particle))
                 {
                     return particle;
                 }
@@ -256,28 +257,22 @@ namespace ClassicUO.UnitTests.Game.Effects
             activeCount.Should().Be(0, "particle should be deactivated after exceeding duration");
 
             // Verify lifetime is >= 1.0 by checking all particles
-            var field = typeof(SplashEffect).GetField("_particles", BindingFlags.NonPublic | BindingFlags.Instance);
-            var particles = field.GetValue(splashEffect) as System.Array;
-            
+            var particles = GetParticlesArray(splashEffect);
+
             bool foundExpiredParticle = false;
             for (int i = 0; i < particles.Length; i++)
             {
                 var particle = particles.GetValue(i);
-                if (particle == null) continue;
-                
-                var activeField = particle.GetType().GetField("Active");
-                var lifetimeField = particle.GetType().GetField("LifeTime");
-                
-                if (activeField != null && lifetimeField != null)
+                var activeField = GetParticleField(particle, "Active");
+                var lifetimeField = GetParticleField(particle, "LifeTime");
+
+                bool isActive = (bool)activeField.GetValue(particle);
+                float lifetime = (float)lifetimeField.GetValue(particle);
+
+                if (!isActive && lifetime >= 1.0f)
                 {
-                    bool isActive = (bool)activeField.GetValue(particle);
-                    float lifetime = (float)lifetimeField.GetValue(particle);
-                    
-                    if (!isActive && lifetime >= 1.0f)
-                    {
-                        foundExpiredParticle = true;
-                        break;
-                    }
+                    foundExpiredParticle = true;
+                    break;
                 }
             }
             
