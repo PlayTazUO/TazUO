@@ -116,5 +116,6 @@ public enum MacroType
     LoopContainer,
     ToggleBuyAgent,
     ToggleSellAgent,
-    SetZoomLevel
+    SetZoomLevel,
+    LootHoveredItem
 }

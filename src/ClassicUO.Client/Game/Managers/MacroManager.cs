@@ -2134,6 +2134,18 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.LootHoveredItem:
+                    BaseGameObject hovered = SelectedObject.Object;
+                    Item lootItem = hovered as Item;
+
+                    if (lootItem == null && hovered is TextObject textObj)
+                        lootItem = textObj.Owner as Item; // item nameplate
+
+                    if (lootItem != null && !lootItem.IsDestroyed)
+                        GameActions.GrabItem(_world, lootItem.Serial, lootItem.Amount);
+
+                    break;
+
                 case MacroType.SetGrabBag:
                     GameActions.Print(_world, ResGumps.TargetContainerToGrabItemsInto);
                     _world.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
