@@ -61,7 +61,7 @@ public static class ChatTab
                 journalLang.MaxJournalEntries,
                 100,
                 2000,
-                new Accessor<float>(() => profile.MaxJournalEntries, newValue => profile.MaxJournalEntries = (int)newValue),
+                new Accessor<int>(() => profile.MaxJournalEntries),
                 search: new SearchMetadata(journalLang.MaxJournalEntries)
             ),
             Option.Slider(

@@ -19,6 +19,27 @@ public class Accessor<T>
         _setter = setter;
     }
 
+    /// <summary>
+    /// Represents a strongly typed property or field accessor.
+    /// Note that this constructor <b>will throw at runtime</b> if any of the following is true:
+    /// <li>The given expression is invalid</li>
+    /// <li>The given expression is missing a getter or a setter</li>
+    /// <li>The given expression is for a different type than the underlying field</li>
+    ///
+    /// <example>
+    /// <code>new Accessor&lt;int&gt;(() => profile.MaxJournalEntries)</code>
+    /// </example>
+    /// </summary>
+    /// <param name="expr">The property expression e.g., <code>() => profile.MaxJournalEntries</code></param>
+    /// <param name="exprName">The expression parameter name. Supplied by the compiler.</param>
+    /// <exception cref="ArgumentNullException">Thrown if the expression itself is null</exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown if the expression is invalid; An expression must be a <see cref="MemberExpression"/> and its type must be correct.
+    /// <p>
+    /// For example, passing a <see langword="float"/> accessor for a <see langword="bool"/> property will result in this exception.
+    /// </p>
+    /// </exception>
+    /// <exception cref="InvalidOperationException">Thrown if the expression is mossing a getter or setter method implementation (e.g., get/set-only properties)</exception>
     public Accessor(Expression<Func<T>> expr, [CallerArgumentExpression(nameof(expr))] string exprName = null)
     {
         ArgumentNullException.ThrowIfNull(expr);
