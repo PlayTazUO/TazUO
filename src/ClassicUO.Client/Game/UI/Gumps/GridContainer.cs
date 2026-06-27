@@ -1036,7 +1036,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (UIManager.MouseOverControl != null &&
                 (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
-                SelectedObject.Object = item;
+                SelectedObject.Object = SelectedObject.Hovered = item;
                 if (item.IsCorpse)
                     SelectedObject.CorpseObject = item;
             }
@@ -1567,7 +1567,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 base.OnMouseEnter(x, y);
 
-                SelectedObject.Object = _world.Get(LocalSerial);
+                SelectedObject.Object = SelectedObject.Hovered = _world.Get(LocalSerial);
                 _mousePressedWhenEntered = Mouse.LButtonPressed;
 
                 if (_item != null)

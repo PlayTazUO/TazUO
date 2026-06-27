@@ -2135,7 +2135,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.LootHoveredItem:
-                    BaseGameObject hovered = SelectedObject.Object;
+                    BaseGameObject hovered = SelectedObject.Hovered;
                     Item lootItem = hovered as Item;
 
                     if (lootItem == null && hovered is TextObject textObj)
