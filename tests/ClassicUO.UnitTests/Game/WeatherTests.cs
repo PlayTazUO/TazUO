@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Game
@@ -66,6 +67,15 @@ namespace ClassicUO.UnitTests.Game
             return (bool)method.Invoke(null, new object[] { batcher, texture, start, end, color, width, depth });
         }
 
+        /// <summary>
+        /// Non-null stand-ins for null-guard tests. SafeDraw returns before using these instances.
+        /// </summary>
+        private static UltimaBatcher2D CreateStubBatcher() =>
+            (UltimaBatcher2D)RuntimeHelpers.GetUninitializedObject(typeof(UltimaBatcher2D));
+
+        private static Texture2D CreateStubTexture() =>
+            (Texture2D)RuntimeHelpers.GetUninitializedObject(typeof(Texture2D));
+
         #endregion
 
         #region ColorToVector3 Tests
@@ -122,7 +132,7 @@ namespace ClassicUO.UnitTests.Game
         [Fact]
         public void SafeDraw_Should_ReturnFalse_When_TextureIsNull()
         {
-            UltimaBatcher2D batcher = null; 
+            UltimaBatcher2D batcher = CreateStubBatcher();
             Texture2D texture = null;
             Rectangle rect = new Rectangle(0, 0, 10, 10);
             Vector3 color = Vector3.One;
@@ -137,7 +147,7 @@ namespace ClassicUO.UnitTests.Game
         public void SafeDraw_Should_ReturnFalse_When_BatcherIsNull()
         {
             UltimaBatcher2D batcher = null;
-            Texture2D texture = null;
+            Texture2D texture = CreateStubTexture();
             Rectangle rect = new Rectangle(0, 0, 10, 10);
             Vector3 color = Vector3.One;
             float depth = 0.5f;
@@ -154,7 +164,7 @@ namespace ClassicUO.UnitTests.Game
         [Fact]
         public void SafeDrawLine_Should_ReturnFalse_When_TextureIsNull()
         {
-            UltimaBatcher2D batcher = null;
+            UltimaBatcher2D batcher = CreateStubBatcher();
             Texture2D texture = null;
             Vector2 start = new Vector2(0, 0);
             Vector2 end = new Vector2(10, 10);
@@ -171,7 +181,7 @@ namespace ClassicUO.UnitTests.Game
         public void SafeDrawLine_Should_ReturnFalse_When_BatcherIsNull()
         {
             UltimaBatcher2D batcher = null;
-            Texture2D texture = null;
+            Texture2D texture = CreateStubTexture();
             Vector2 start = new Vector2(0, 0);
             Vector2 end = new Vector2(10, 10);
             Vector3 color = Vector3.One;
