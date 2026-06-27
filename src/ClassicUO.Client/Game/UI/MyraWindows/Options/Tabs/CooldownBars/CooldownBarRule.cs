@@ -79,7 +79,8 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
             TriggerMessage = data.trigger,
             TriggerMessageType = trigger,
             Hue = data.hue,
-            Cooldown = (uint)data.cooldown
+            Cooldown = (uint)data.cooldown,
+            ReplaceExisting = data.replace_if_exists
         };
     }
 

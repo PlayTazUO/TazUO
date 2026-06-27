@@ -44,12 +44,12 @@ public static class OptionsFactory
 
         return CreateCheckboxOption(
             label,
-            EnumUtils.HasFlag(backingProperty.Get(), relevantFragment),
+            Utility.ByteFlagHelper.HasFlag(backingProperty.Get(), relevantFragment),
             enabled =>
             {
                 backingProperty.Set(enabled
-                    ? EnumUtils.AddFlag(backingProperty.Get(), relevantFragment)
-                    : EnumUtils.RemoveFlag(backingProperty.Get(), relevantFragment)
+                    ? Utility.ByteFlagHelper.AddFlag(backingProperty.Get(), relevantFragment)
+                    : Utility.ByteFlagHelper.RemoveFlag(backingProperty.Get(), relevantFragment)
                 );
             }
         );

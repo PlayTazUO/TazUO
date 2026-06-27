@@ -276,7 +276,7 @@ namespace ClassicUO.Game.UI.Controls
             {
                 case ButtonType.CheckAll:
                     // Dynamically set all flags
-                    Option.NameOverheadOptionFlags = EnumUtils.AllBits<NameOverheadOptions>();
+                    Option.NameOverheadOptionFlags = Utility.ByteFlagHelper.AllBits<NameOverheadOptions>();
                     UpdateCheckboxesByCurrentOptionFlags();
 
                     break;

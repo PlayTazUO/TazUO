@@ -6341,7 +6341,7 @@ namespace ClassicUO.Game.UI.Gumps
                 switch ((ButtonType)buttonID)
                 {
                     case ButtonType.CheckAll:
-                        Option.NameOverheadOptionFlags = EnumUtils.AllBits<NameOverheadOptions>();
+                        Option.NameOverheadOptionFlags = ByteFlagHelper.AllBits<NameOverheadOptions>();
                         UpdateCheckboxesByCurrentOptionFlags();
 
                         break;

@@ -97,7 +97,7 @@ public static class NameplatesTab
                     OptionTabCommons.StyledVerticalSeparator(),
                     new MyraButton(
                         npLang.CheckAll,
-                        () => profile.NameOverheadOptionFlags = EnumUtils.AllBits<NameOverheadOptions>()
+                        () => profile.NameOverheadOptionFlags = Utility.ByteFlagHelper.AllBits<NameOverheadOptions>()
                     ),
                     new MyraButton(
                         npLang.UncheckAll,

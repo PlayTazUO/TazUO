@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -25,14 +24,37 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// </summary>
 public class OptionsWindow : MyraControl
 {
+    #region Members
+
+    #region Consts/Readonly
+
     private const int MAX_HEIGHT = 850;
     private const int MAX_WIDTH = 1200;
     private const int SEARCH_DEBOUNCE_MS = 500;
 
     private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
     private readonly Dictionary<string, List<OptionEntry>> _searchIndex = new();
-
     private readonly MyraGrid _mainArea = new();
+
+    #endregion
+
+    #region Statics
+
+    private static Point? _pageControlOverhead;
+
+    #endregion
+
+    #region Mutables
+
+    private string _lastCategory = string.Empty;
+    private string _pendingSearchText = string.Empty;
+    private double _searchDebounceTimer;
+    private bool _searchPending;
+    private Point? _resultsBudget;
+
+    #endregion
+
+    #region Widgets
 
     private readonly WrapPanel _optionsPanel = new()
     {
@@ -62,11 +84,11 @@ public class OptionsWindow : MyraControl
         )
     };
 
-    private string _lastCategory = string.Empty;
-    private string _pendingSearchText = string.Empty;
-    private double _searchDebounceTimer;
-    private bool _searchPending;
-    private Point? _resultsBudget;
+    #endregion
+
+    #endregion
+
+    #region Events
 
     /// <summary>
     ///     Raised when the active category changes, either via a category button click or when
@@ -74,6 +96,10 @@ public class OptionsWindow : MyraControl
     ///     The event argument is the newly selected category label.
     /// </summary>
     public event EventHandler<string>? SelectedCategoryChanged;
+
+    #endregion
+
+    #region Constructors
 
     public OptionsWindow() : base(Language.Instance.GetModernOptionsGumpLanguage.Kw.Options)
     {
@@ -94,6 +120,28 @@ public class OptionsWindow : MyraControl
 
         _rootWindow.SizeChanged += (_, _) => _resultsBudget = null;
     }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    ///     Fires the debounced search when the debounce timer has elapsed since the last keystroke
+    /// </summary>
+    public override void Update()
+    {
+        base.Update();
+
+        if (_searchPending && Environment.TickCount - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
+        {
+            _searchPending = false;
+            ApplySearch(_pendingSearchText);
+        }
+    }
+
+    #endregion
+
+    #region Private Methods
 
     private void SetupOptions()
     {
@@ -143,9 +191,7 @@ public class OptionsWindow : MyraControl
 
         WrapPanel categoryPanel = new()
         {
-            Orientation = Orientation.Vertical,
-            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalSpacing = MyraStyle.STANDARD_SPACING
+            Orientation = Orientation.Vertical, HorizontalSpacing = MyraStyle.STANDARD_SPACING, VerticalSpacing = MyraStyle.STANDARD_SPACING
         };
 
         _mainArea.AddWidget(categoryPanel.WrapInScroll(MAX_HEIGHT), 1, 0);
@@ -174,20 +220,6 @@ public class OptionsWindow : MyraControl
         _pendingSearchText = e.NewValue?.Trim() ?? string.Empty;
         _searchDebounceTimer = Environment.TickCount;
         _searchPending = true;
-    }
-
-    /// <summary>
-    ///     Fires the debounced search when the debounce timer has elapsed since the last keystroke
-    /// </summary>
-    public override void Update()
-    {
-        base.Update();
-
-        if (_searchPending && Environment.TickCount - _searchDebounceTimer >= SEARCH_DEBOUNCE_MS)
-        {
-            _searchPending = false;
-            ApplySearch(_pendingSearchText);
-        }
     }
 
     private void ApplySearch(string searchText)
@@ -221,10 +253,22 @@ public class OptionsWindow : MyraControl
         return matches;
     }
 
+    /// <summary>
+    ///     Builds a page control with the given search matches. Each page is sized to fit the available space.
+    /// </summary>
+    /// <param name="matches">The search results to display</param>
+    /// <returns>A ready to use, sized page control with the search results</returns>
     private PageControl BuildPagedResults(List<Widget> matches)
     {
-        Point budget = _resultsBudget ??= ComputeResultsBudget();
-        budget.X = Math.Max(budget.X, Math.Min(WidestMatchWidth(matches), MAX_WIDTH));
+        Point stackBounds = _resultsBudget ??= ComputeResultsBudget();
+        Point overhead = GetPageControlOverhead();
+
+        Point budget = new(
+            Math.Max(stackBounds.X - overhead.X, 1),
+            Math.Max(stackBounds.Y - overhead.Y, 1)
+        );
+
+        budget.X = Math.Max(budget.X, Math.Min(WidestMatchWidth(matches), MAX_WIDTH - overhead.X));
 
         return new PageControl(PackIntoPages(matches, budget).ToArray());
     }
@@ -353,4 +397,22 @@ public class OptionsWindow : MyraControl
 
         SelectedCategoryChanged?.Invoke(this, category);
     }
+
+    #region Static Methods
+
+    private static Point GetPageControlOverhead()
+    {
+        if (_pageControlOverhead.HasValue)
+            return _pageControlOverhead.Value;
+
+        // Measure an empty PageControl to determine the total space its frame + control bar consume.
+        // Content size is zero, so the entire measured size is overhead the host must reserve.
+        var dummy = new PageControl();
+        _pageControlOverhead = dummy.Measure(new Point(MAX_WIDTH, MAX_HEIGHT));
+        return _pageControlOverhead.Value;
+    }
+
+    #endregion
+
+    #endregion
 }

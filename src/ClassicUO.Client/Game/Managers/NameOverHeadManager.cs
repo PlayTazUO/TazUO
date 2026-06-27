@@ -353,7 +353,7 @@ namespace ClassicUO.Game.Managers
         private static void CreateDefaultEntries() => Options.AddRange
             (
                 [
-                    new NameOverheadOption("All", EnumUtils.AllBits<NameOverheadOptions>()) { Deletable = false },
+                    new NameOverheadOption("All", Utility.ByteFlagHelper.AllBits<NameOverheadOptions>()) { Deletable = false },
                     new NameOverheadOption("Mobiles only", NameOverheadOptions.AllMobiles) { Deletable = false },
                     new NameOverheadOption("Items only", NameOverheadOptions.AllItems) { Deletable = false },
                     new NameOverheadOption("Mobiles & Corpses only", NameOverheadOptions.MobilesAndCorpses) { Deletable = false }
