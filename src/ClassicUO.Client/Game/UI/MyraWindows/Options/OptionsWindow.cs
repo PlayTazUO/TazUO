@@ -19,8 +19,8 @@ using Myra.Graphics2D.UI.WrapPanel;
 namespace ClassicUO.Game.UI.MyraWindows.Options;
 
 /// <summary>
-/// The top-level options window that hosts category navigation, a search field, and
-/// the paged content area. Replaces any existing <see cref="OptionsWindow"/> when opened.
+///     The top-level options window that hosts category navigation, a search field, and
+///     the paged content area. Replaces any existing <see cref="OptionsWindow" /> when opened.
 /// </summary>
 public class OptionsWindow : MyraControl
 {
@@ -33,7 +33,7 @@ public class OptionsWindow : MyraControl
 
     private readonly MyraGrid _mainArea = new();
 
-    private WrapPanel _optionsPanel = new()
+    private readonly WrapPanel _optionsPanel = new()
     {
         UniformSizing = false,
         Orientation = Orientation.Vertical,
@@ -68,9 +68,9 @@ public class OptionsWindow : MyraControl
     private Point? _resultsBudget;
 
     /// <summary>
-    /// Raised when the active category changes, either via a category button click or when
-    /// a search is cleared and the previous category is restored.
-    /// The event argument is the newly selected category label.
+    ///     Raised when the active category changes, either via a category button click or when
+    ///     a search is cleared and the previous category is restored.
+    ///     The event argument is the newly selected category label.
     /// </summary>
     public event EventHandler<string>? SelectedCategoryChanged;
 
@@ -158,6 +158,9 @@ public class OptionsWindow : MyraControl
     {
         var unstyledButton = new ToggleTextButton(category, sender =>
         {
+            if (_lastCategory == category)
+                return;
+
             ShowPage(category);
             SelectedCategoryChanged?.Invoke(sender, category);
         });
@@ -176,7 +179,7 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    /// Fires the debounced search when the debounce timer has elapsed since the last keystroke
+    ///     Fires the debounced search when the debounce timer has elapsed since the last keystroke
     /// </summary>
     public override void Update()
     {
@@ -229,8 +232,8 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    /// The cached budget can be narrower than an individual match (e.g., a long option row),
-    /// which would otherwise overflow the page's width. Widen to fit, capped at MAX_WIDTH.
+    ///     The cached budget can be narrower than an individual match (e.g., a long option row),
+    ///     which would otherwise overflow the page's width. Widen to fit, capped at MAX_WIDTH.
     /// </summary>
     private static int WidestMatchWidth(List<Widget> matches)
     {
@@ -243,9 +246,9 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    /// Captured once from the default (unpaged) category view. Reading this live while a
-    /// PageControl is showing would include its own control-bar/padding overhead, compounding
-    /// the budget larger on every search.
+    ///     Captured once from the default (unpaged) category view. Reading this live while a
+    ///     PageControl is showing would include its own control-bar/padding overhead, compounding
+    ///     the budget larger on every search.
     /// </summary>
     private Point ComputeResultsBudget()
     {
@@ -257,8 +260,8 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    /// Mirrors WrapPanel's vertical-bias column packing (fill height, wrap column), then adds
-    /// the width-based page break WrapPanel itself doesn't have, since it grows columns unbounded.
+    ///     Mirrors WrapPanel's vertical-bias column packing (fill height, wrap column), then adds
+    ///     the width-based page break WrapPanel itself doesn't have, since it grows columns unbounded.
     /// </summary>
     private static List<Widget> PackIntoPages(List<Widget> matches, Point budget)
     {
@@ -335,24 +338,16 @@ public class OptionsWindow : MyraControl
     private void ShowPage(string category)
     {
         _searchField.Text = string.Empty;
+        _optionsStack.Widgets.Clear();
+        _optionsStack.Widgets.Add(_optionsPanel);
 
-        _optionsPanel = new WrapPanel
-        {
-            UniformSizing = false,
-            Orientation = Orientation.Vertical,
-            HorizontalSpacing = MyraStyle.STANDARD_SPACING,
-            VerticalSpacing = MyraStyle.STANDARD_SPACING,
-            Padding = new Thickness(3, 0, 0, 10)
-        };
+        _optionsPanel.Widgets.Clear();
 
         _lastCategory = category;
 
         if (!_optionSources.TryGetValue(category, out List<IOptionSource>? sources))
             return;
-
         foreach (IOptionSource source in sources)
             _optionsPanel.Widgets.Add(source.Render());
-
-        _ = UiEffects.FadeReplace(_optionsStack, 0, _optionsPanel, 2000);
     }
 }

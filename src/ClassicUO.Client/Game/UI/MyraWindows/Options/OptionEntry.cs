@@ -14,16 +14,13 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// <param name="Search">Search metadata that controls when this entry appears in search results</param>
 internal sealed record OptionEntry(Func<Widget> RenderFactory, SearchMetadata? Search = null) : IOptionSource
 {
-    private Widget? _cachedWidget;
-
     /// <inheritdoc/>
     public bool InheritsSearch { get; set; } = true;
 
     /// <summary>
-    /// Renders the option widget, creating it on first call and caching it for subsequent calls
+    /// Renders the option widget by invoking the factory. Each call returns a new widget instance.
     /// </summary>
-    /// <returns>The cached widget</returns>
-    public Widget Render() => _cachedWidget ??= RenderFactory();
+    public Widget Render() => RenderFactory();
 
     /// <summary>
     /// Yields this entry if its own <see cref="Search"/> metadata matches <paramref name="search"/>

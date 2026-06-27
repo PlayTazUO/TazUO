@@ -16,7 +16,6 @@ internal sealed class OptionTabGroup : IOptionSource
 {
     private readonly List<OptionTabDefinition> _tabs = [];
     private readonly Func<MyraTabControl> _tabControlFactory;
-    private Widget? _cachedWidget;
 
     /// <inheritdoc/>
     public SearchMetadata? Search { get; init; }
@@ -49,10 +48,9 @@ internal sealed class OptionTabGroup : IOptionSource
     }
 
     /// <summary>
-    /// Renders the tab control, creating it on first call and caching it for subsequent calls
+    /// Renders the tab control. Each call returns a new widget instance.
     /// </summary>
-    /// <returns>The cached tab control widget</returns>
-    public Widget Render() => _cachedWidget ??= BuildTabControl();
+    public Widget Render() => BuildTabControl();
 
     /// <inheritdoc/>
     public IEnumerable<OptionEntry> Match(SearchMetadata search)

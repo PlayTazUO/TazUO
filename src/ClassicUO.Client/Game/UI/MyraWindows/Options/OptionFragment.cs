@@ -15,8 +15,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// <param name="children">The child option slots contained within this fragment</param>
 internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<OptionContent> children) : IOptionSource
 {
-    private Widget? _cachedWidget;
-
     /// <inheritdoc/>
     public SearchMetadata? Search { get; set; }
 
@@ -24,10 +22,9 @@ internal sealed class OptionFragment(Func<Widget> renderFactory, IEnumerable<Opt
     public bool InheritsSearch { get; set; } = true;
 
     /// <summary>
-    /// Renders the fragment's container widget, creating it on first call and caching it for subsequent calls
+    /// Renders the fragment's container widget. Each call returns a new widget instance.
     /// </summary>
-    /// <returns>The cached container widget</returns>
-    public Widget Render() => _cachedWidget ??= renderFactory();
+    public Widget Render() => renderFactory();
 
     /// <inheritdoc/>
     public IEnumerable<OptionEntry> Match(SearchMetadata search)

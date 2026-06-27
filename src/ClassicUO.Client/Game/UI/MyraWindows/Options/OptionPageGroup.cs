@@ -16,7 +16,6 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSource
 {
     private readonly List<OptionPageDefinition> _pages = [];
-    private Widget? _cachedWidget;
 
     /// <inheritdoc/>
     public SearchMetadata? Search { get; init; } = search;
@@ -42,11 +41,10 @@ internal sealed class OptionPageGroup(SearchMetadata? search = null) : IOptionSo
     }
 
     /// <summary>
-    /// Renders all pages and wraps them in a <see cref="PageControl"/>,
-    /// caching the result for subsequent calls
+    /// Renders all pages and wraps them in a <see cref="PageControl"/>.
+    /// Each call returns a new widget instance.
     /// </summary>
-    /// <returns>The cached paged widget</returns>
-    public Widget Render() => _cachedWidget ??= BuildPageControl();
+    public Widget Render() => BuildPageControl();
 
     /// <inheritdoc/>
     public IEnumerable<OptionEntry> Match(SearchMetadata search)
