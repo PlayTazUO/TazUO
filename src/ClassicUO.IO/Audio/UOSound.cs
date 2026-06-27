@@ -61,7 +61,7 @@ namespace ClassicUO.IO.Audio
             // If looping is enabled, resubmit the buffer to create seamless loop
             if (IsLooping && SoundInstance != null && !SoundInstance.IsDisposed)
             {
-                var buffer = GetBuffer();
+                ArraySegment<byte> buffer = GetBuffer();
                 if (buffer.Count > 0)
                 {
                     SoundInstance.SubmitBuffer(buffer.Array, buffer.Offset, buffer.Count);
@@ -69,9 +69,26 @@ namespace ClassicUO.IO.Audio
             }
         }
 
-        protected override ArraySegment<byte> GetBuffer()
+        public void MaintainLoopBuffers(int targetCount = 3)
         {
-            return new ArraySegment<byte>(_waveBuffer);
+            if (!IsLooping || SoundInstance == null || SoundInstance.IsDisposed)
+            {
+                return;
+            }
+
+            while (SoundInstance.PendingBufferCount < targetCount)
+            {
+                ArraySegment<byte> buffer = GetBuffer();
+
+                if (buffer.Count == 0)
+                {
+                    break;
+                }
+
+                SoundInstance.SubmitBuffer(buffer.Array, buffer.Offset, buffer.Count);
+            }
         }
+
+        protected override ArraySegment<byte> GetBuffer() => new ArraySegment<byte>(_waveBuffer);
     }
 }
