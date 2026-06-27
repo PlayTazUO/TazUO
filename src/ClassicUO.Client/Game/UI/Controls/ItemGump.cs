@@ -111,6 +111,11 @@ namespace ClassicUO.Game.UI.Controls
                 return false;
             }
 
+            if (MouseIsOver)
+            {
+                SelectedObject.Hovered = _gump?.World?.Get(LocalSerial);
+            }
+
             base.Draw(batcher, x, y);
 
             bool partialHue = IsPartialHue;

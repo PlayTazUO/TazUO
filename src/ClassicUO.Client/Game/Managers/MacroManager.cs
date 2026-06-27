@@ -2136,7 +2136,7 @@ namespace ClassicUO.Game.Managers
 
                 case MacroType.LootHoveredItem:
                     BaseGameObject hovered = SelectedObject.Hovered;
-                    Item lootItem = hovered as Item;
+                    var lootItem = hovered as Item;
 
                     if (lootItem == null && hovered is TextObject textObj)
                         lootItem = textObj.Owner as Item; // item nameplate

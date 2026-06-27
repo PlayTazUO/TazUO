@@ -9,6 +9,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
+using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
@@ -666,6 +667,16 @@ namespace ClassicUO.Game.UI.Controls
                         SelectedObject.Object = SelectedObject.Hovered = _gump?.World?.Get(LocalSerial);
                     }
                 }
+            }
+
+            public override bool Draw(UltimaBatcher2D batcher, int x, int y)
+            {
+                if (MouseIsOver)
+                {
+                    SelectedObject.Hovered = _gump?.World?.Get(LocalSerial);
+                }
+                
+                return base.Draw(batcher, x, y);
             }
 
             public override void OnMouseOver(int x, int y) => SelectedObject.Object = SelectedObject.Hovered = _gump?.World?.Get(LocalSerial);

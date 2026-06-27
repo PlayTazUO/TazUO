@@ -1567,7 +1567,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 base.OnMouseEnter(x, y);
 
-                SelectedObject.Object = SelectedObject.Hovered = _world.Get(LocalSerial);
+                SelectedObject.Object = SelectedObject.Hovered = _item;
                 _mousePressedWhenEntered = Mouse.LButtonPressed;
 
                 if (_item != null)
@@ -2127,6 +2127,8 @@ namespace ClassicUO.Game.UI.Gumps
                         ),
                         hueVector
                     );
+
+                    SelectedObject.Hovered = _item;
                 }
 
                 if (_texture == null) return true;
