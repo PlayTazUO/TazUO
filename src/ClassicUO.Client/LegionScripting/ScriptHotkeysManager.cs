@@ -125,9 +125,13 @@ namespace ClassicUO.LegionScripting
             _subscribed = true;
         }
 
-        private static void OnMouseButtonDown(MouseButtonType button) => TogglePressed(b => b.HasMouseButton);
+        // Match the specific button that fired so an unrelated click/press can't retrigger a script
+        // whose (different) bound button merely happens to still be held.
+        private static void OnMouseButtonDown(MouseButtonType button)
+            => TogglePressed(b => b.HasMouseButton && b.MouseButton == button);
 
-        private static void OnControllerButtonDown(SDL.SDL_GamepadButton button) => TogglePressed(b => b.HasController);
+        private static void OnControllerButtonDown(SDL.SDL_GamepadButton button)
+            => TogglePressed(b => b.HasController && b.ControllerButtons != null && b.ControllerButtons.Contains(button));
 
         private static void TogglePressed(Func<HotkeyBinding, bool> isKind)
         {
