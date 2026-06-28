@@ -71,8 +71,8 @@ internal static class OptionsUi
         PropertyBinder controlProp,
         params OptionContent[] children
     ) =>
-        new(
+        new OptionFragment(
             () => new CheckBoxGroup(controlProp, children.Select(c => c.Render()).ToArray()),
             children
-        );
+        ).AsSearchGroup();
 }
