@@ -512,7 +512,7 @@ namespace ClassicUO.Game.Managers
 
             if (count > SAME_TYPE_GUMP_WARN_THRESHOLD)
             {
-                GameActions.PrintUserWarn(World.Instance, $"You have {count} '{t.Name}' gumps open. This may cause performance issues.");
+                GameActions.PrintUserWarn(World.Instance, TazLang.Get("uimanager_toomanygumps", new[] { count.ToString(), t.Name }));
             }
         }
 
