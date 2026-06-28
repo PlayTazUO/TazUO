@@ -404,7 +404,7 @@ namespace ClassicUO.Game.Managers
 
         public void StopWarMusic() => PlayMusic(_currentMusicIndices[0]);
 
-        public void PlayAmbientSound(int index, float volume, bool skipFilter = true)
+        public void PlayAmbientSound(int index, float volume, bool skipFilter = false)
         {
             if (!_canReproduceAudio || _audioDeviceDisconnected)
             {
@@ -488,6 +488,7 @@ namespace ClassicUO.Game.Managers
             {
                 Log.Warn($"Failed to set ambient volume: {ex.Message}");
                 _audioDeviceDisconnected = true;
+                StopAmbientPlayback(clearState: false);
             }
         }
 
@@ -570,7 +571,16 @@ namespace ClassicUO.Game.Managers
                 _currentMusic[i]?.Update();
             }
 
-            _currentAmbient?.MaintainLoopBuffers();
+            try
+            {
+                _currentAmbient?.MaintainLoopBuffers();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"Failed to maintain ambient buffers: {ex.Message}");
+                _audioDeviceDisconnected = true;
+                StopAmbientPlayback(clearState: false);
+            }
 
             LinkedListNode<UOSound> first = _currentSounds.First;
 
