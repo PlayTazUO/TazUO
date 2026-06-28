@@ -52,11 +52,11 @@ public class MyraControl : IGui
 
         _rootWindow.CloseKey = null;
 
-        UIManager.TopMostChanged += UIManagerOnTopMostChanged;
+        //UIManager.TopMostChanged += UIManagerOnTopMostChanged;
     }
 
     #region Event Handlers
-    private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
+    //private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
 
     private void OnRootWindowOnClosed(object s, EventArgs a)
     {
@@ -315,7 +315,7 @@ public class MyraControl : IGui
             return;
 
         _desktop.WidgetGotKeyboardFocus -= DesktopOnWidgetGotKeyboardFocus;
-        UIManager.TopMostChanged -= UIManagerOnTopMostChanged;
+        //UIManager.TopMostChanged -= UIManagerOnTopMostChanged;
 
         if (_rootWindow is not null)
         {
@@ -337,6 +337,7 @@ public class MyraControl : IGui
     {
         IsFocused = false;
         _desktop.FocusedKeyboardWidget = null;
+        _desktop.HideContextMenu();
     }
 
     #region Invokations
@@ -366,8 +367,7 @@ public class MyraControl : IGui
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseEnter(Point position) { }
 
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void InvokeMouseExit(Point position) { }
+    public void InvokeMouseExit(Point position) => _rootWindow.OnMouseLeft();
 
     public bool InvokeMouseDoubleClick(Point position, MouseButtonType button) =>
         OnMouseDoubleClick(position.X, position.Y, button);
@@ -534,7 +534,7 @@ public class MyraControl : IGui
     public void ShowContextMenu(params (string Label, Action Action)[] items)
     {
         var menu = new VerticalMenu();
-        foreach (var (label, action) in items)
+        foreach ((string label, Action action) in items)
         {
             var item = new MenuItem { Text = label };
             if (action != null)
