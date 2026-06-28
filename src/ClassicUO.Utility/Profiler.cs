@@ -36,7 +36,7 @@ namespace ClassicUO.Utility
 
         public static bool Enabled = false;
 
-        [Conditional("DEBUG")]
+        //[Conditional("DEBUG")]
         public static void BeginFrame()
         {
             if (!Enabled)
@@ -73,7 +73,7 @@ namespace ClassicUO.Utility
             m_BeginFrameTicks = _timer.ElapsedTicks;
         }
 
-        [Conditional("DEBUG")]
+        //[Conditional("DEBUG")]
         public static void EndFrame()
         {
             if (!Enabled)
@@ -85,7 +85,7 @@ namespace ClassicUO.Utility
             m_TotalTimeData.AddNewHitLength(LastFrameTimeMS);
         }
 
-        [Conditional("DEBUG")]
+        //[Conditional("DEBUG")]
         public static void EnterContext(string context_name)
         {
             if (!Enabled)
@@ -96,7 +96,7 @@ namespace ClassicUO.Utility
             m_Context.Add(new ContextAndTick(context_name, _timer.ElapsedTicks));
         }
 
-        [Conditional("DEBUG")]
+        //[Conditional("DEBUG")]
         public static void ExitContext(string context_name, bool errorNotInContext = false)
         {
             if (!Enabled)

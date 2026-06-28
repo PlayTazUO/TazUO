@@ -25,7 +25,7 @@ namespace ClassicUO.Game.UI.MyraWindows
         private uint _lastUpdate;
 
         private readonly CancellationTokenSource _cpuCts = new();
-        private volatile float _cpuPercent;
+        private static volatile float _cpuPercent;
 
         public static void Show()
         {
@@ -92,16 +92,16 @@ namespace ClassicUO.Game.UI.MyraWindows
             {
                 try
                 {
-                    var startSnapshot = Environment.CpuUsage;
-                    var startTime = DateTime.UtcNow;
+                    Environment.ProcessCpuUsage startSnapshot = Environment.CpuUsage;
+                    DateTime startTime = DateTime.UtcNow;
 
                     await Task.Delay(sampleWindowMs, token);
 
-                    var endSnapshot = Environment.CpuUsage;
-                    var endTime = DateTime.UtcNow;
+                    Environment.ProcessCpuUsage endSnapshot = Environment.CpuUsage;
+                    DateTime endTime = DateTime.UtcNow;
 
-                    var cpuTimeUsed = endSnapshot.TotalTime - startSnapshot.TotalTime;
-                    var realTimeElapsed = endTime - startTime;
+                    TimeSpan cpuTimeUsed = endSnapshot.TotalTime - startSnapshot.TotalTime;
+                    TimeSpan realTimeElapsed = endTime - startTime;
 
                     double cpuPercent = realTimeElapsed.TotalMilliseconds > 0
                         ? (cpuTimeUsed.TotalMilliseconds / realTimeElapsed.TotalMilliseconds) / Environment.ProcessorCount * 100
@@ -116,7 +116,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             }
         }
 
-        private string GetStatsLabel()
+        private static string GetStatsLabel()
         {
             double memoryMb = Environment.WorkingSet / (1024.0 * 1024.0);
             return $"Memory: {memoryMb:F1} MB    CPU: {_cpuPercent:F2}%";
@@ -135,7 +135,7 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         private static void CopyToClipboard()
         {
-            List<Profiler.ProfileData> data = Profiler.AllFrameData
+            var data = Profiler.AllFrameData
                 .OrderByDescending(pd => pd.AverageTime)
                 .ToList();
 
@@ -149,6 +149,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             double totalAvg = data.Sum(pd => pd.AverageTime);
             var sb = new StringBuilder();
             sb.AppendLine("TazUO Profiler Output");
+            sb.AppendLine(GetStatsLabel());
             sb.AppendLine($"{"Context",-40}  {"Avg(ms)",7}  {"Peak(ms)",8}  {"Last(ms)",8}  {"% Total",7}");
             sb.AppendLine(new string('-', 76));
 
@@ -210,7 +211,7 @@ namespace ClassicUO.Game.UI.MyraWindows
                 return;
             }
 
-            List<Profiler.ProfileData> data = Profiler.AllFrameData
+            var data = Profiler.AllFrameData
                 .OrderByDescending(pd => pd.AverageTime)
                 .ToList();
 
