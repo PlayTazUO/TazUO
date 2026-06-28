@@ -4,13 +4,6 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
-### Fixes
-* Pass the first click through to a Myra window so clicking a control on an unfocused window works in one click instead of requiring a focus click first - [P.R 604](https://github.com/PlayTazUO/TazUO/pull/604) ([bittiez](https://github.com/bittiez))
-
----
-
-## V5.3.0
-
 ### Features
 * Overhauled the options window with a new, modern UI (use command `old-options-window` to open legacy window) - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Added reorder support to CoolDown Bars - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
@@ -89,6 +82,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed NullReferenceException in ImprovedBuffGump when a buff icon's title cliloc is not found - [P.R 585](https://github.com/PlayTazUO/TazUO/pull/585) ([bittiez](https://github.com/bittiez))
 * Fixed crash when creating a journal tab with a name that already exists - [P.R 589](https://github.com/PlayTazUO/TazUO/pull/589) ([bittiez](https://github.com/bittiez))
 * Show a suggested fix for the "OpenGL 2.1 support is required!" graphics device error, advising users to update their drivers or try the `-force_driver 1`, `2`, or `3` launch args - [P.R 595](https://github.com/PlayTazUO/TazUO/pull/595) ([bittiez](https://github.com/bittiez))
+* Pass the first click through to a Myra window so clicking a control on an unfocused window works in one click instead of requiring a focus click first - [P.R 604](https://github.com/PlayTazUO/TazUO/pull/604) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
