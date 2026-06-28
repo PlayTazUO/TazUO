@@ -249,7 +249,15 @@ public class MyraControl : IGui
 
         batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
 
-        if (IsTopMost)
+        // Myra processes its own mouse/keyboard input inside Desktop.Render(). If we only ran
+        // that for the top-most window, the very first click on a background window would be spent
+        // by the UIManager promoting it to top-most (see UIManager.OnMouseButtonDown) and Myra would
+        // never see the click as a widget press. By also running the input pass while this is the
+        // window under the cursor (MouseOverControl, set during UIManager.Update() before Draw()),
+        // the click is passed through to Myra on the same frame, and hover frames keep Myra's mouse
+        // baseline fresh so the down-edge is detected. Only one window is ever MouseOverControl
+        // (front-most hit), so this does not cause click-through to overlapped windows.
+        if (IsTopMost || ReferenceEquals(UIManager.MouseOverControl, this))
         {
             _desktop.Render();
         }
