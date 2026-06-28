@@ -10,26 +10,12 @@ namespace ClassicUO.LegionScripting
         public bool DisableModuleCache { get; set; }
 
         /// <summary>
-        /// Hotkeys bound to scripts, keyed by the script's <see cref="ScriptFile.RelativePath"/> so
-        /// scripts that share a file name in different groups don't collide. Persisted globally (not
-        /// per-profile) alongside the rest of the Legion script settings.
+        /// Relative paths (<see cref="ScriptFile.RelativePath"/>) of scripts that have a hotkey
+        /// assigned. The actual key binding lives in the central hotkey system (hotkeys.json); this
+        /// list only records which scripts to re-register on load so the central system can re-apply
+        /// their saved bindings. The relative path is used so identically named scripts in different
+        /// groups don't collide. Entries whose script no longer exists are pruned on load.
         /// </summary>
-        public Dictionary<string, ScriptHotkeyData> ScriptHotkeys { get; set; } = new Dictionary<string, ScriptHotkeyData>();
-    }
-
-    /// <summary>
-    /// Serializable on-disk shape of a single script hotkey binding. Mirrors the fields of the
-    /// central <c>HotkeyBinding</c>; conversion happens in <see cref="ScriptHotkeysManager"/>.
-    /// </summary>
-    public class ScriptHotkeyData
-    {
-        public int Key { get; set; }
-        public bool Ctrl { get; set; }
-        public bool Shift { get; set; }
-        public bool Alt { get; set; }
-        public int MouseButton { get; set; }
-        public bool WheelScroll { get; set; }
-        public bool WheelUp { get; set; }
-        public int[] ControllerButtons { get; set; }
+        public List<string> ScriptHotkeys { get; set; } = new List<string>();
     }
 }

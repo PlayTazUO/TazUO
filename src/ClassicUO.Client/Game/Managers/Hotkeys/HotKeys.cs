@@ -104,6 +104,17 @@ namespace ClassicUO.Game.Managers.Hotkeys
         }
 
         /// <summary>
+        /// Remove a hotkey entry entirely. Used when a consumer permanently drops a binding (e.g. a
+        /// script hotkey is cleared), so it disappears from the registry immediately and is not
+        /// written back on the next <see cref="Save"/>.
+        /// </summary>
+        public static void Unregister(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+                _entries.Remove(id);
+        }
+
+        /// <summary>
         /// Convenience poll: true when the hotkey <paramref name="id"/> is registered and currently
         /// pressed. Honors the entry's Enabled flag and the global disable. Unknown ids return false.
         /// </summary>

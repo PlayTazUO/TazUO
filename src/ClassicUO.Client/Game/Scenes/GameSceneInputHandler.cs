@@ -1496,7 +1496,6 @@ namespace ClassicUO.Game.Scenes
                 SpellBarManager.KeyPress(key, e.mod);
                 SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
                 ClassicUO.Game.Managers.Hotkeys.HotKeys.HandleKeyDown(key, e.mod, e.repeat);
-                ClassicUO.LegionScripting.ScriptHotkeysManager.HandleKeyDown(key, e.mod, e.repeat);
 
                 Macro macro = _world.Macros.FindMacro(
                     key,

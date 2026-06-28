@@ -229,6 +229,7 @@ namespace ClassicUO.Game.Scenes
             GraphicsReplacement.Load();
             HotKeys.Load();
             HotKeyRegistrar.RegisterAll();
+            LegionScripting.ScriptHotkeysManager.RegisterAll();
             SpellBarManager.Load();
             SelfHealManager.Load();
             if(ProfileManager.CurrentProfile.EnableCaveBorder)

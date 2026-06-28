@@ -25,7 +25,6 @@ using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 namespace ClassicUO.LegionScripting
 {
     [JsonSerializable(typeof(LScriptSettings))]
-    [JsonSerializable(typeof(ScriptHotkeyData))]
     public partial class LScriptJsonContext : JsonSerializerContext
     {
     }
@@ -59,7 +58,6 @@ namespace ClassicUO.LegionScripting
 
             LoadScriptsFromFile();
             LoadLScriptSettings();
-            ScriptHotkeysManager.Load();
             AutoPlayGlobal();
             AutoPlayChar();
             _enabled = true;
