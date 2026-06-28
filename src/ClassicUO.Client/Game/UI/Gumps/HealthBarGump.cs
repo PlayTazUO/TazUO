@@ -17,6 +17,18 @@ using ClassicUO.Assets;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    /// <summary>
+    /// Controls when a health bar gump automatically closes.
+    /// Stored on the profile as an int (see Profile.CloseHealthBarType).
+    /// </summary>
+    public enum CloseHealthBarType
+    {
+        None = 0,        // Never auto-close
+        OutOfRange = 1,  // Close when the mobile no longer exists / is out of range
+        Dead = 2,        // Close when the mobile is dead (a corpse exists)
+        Both = 3         // Close when out of range or dead
+    }
+
     public abstract class BaseHealthBarGump : AnchorableGump
     {
         private bool _targetBroke;
@@ -561,7 +573,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (entity == null || entity.IsDestroyed)
             {
                 bool hasCorpse = World.CorpseManager.Exists(0, LocalSerial | 0x8000_0000);
-                if (LocalSerial != World.Player && (ProfileManager.CurrentProfile.CloseHealthBarType == 1 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) || ((ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) && hasCorpse))
+
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenOutOfRange = closeType == CloseHealthBarType.OutOfRange || closeType == CloseHealthBarType.Both;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                bool shouldCloseForOutOfRange = LocalSerial != World.Player && closeWhenOutOfRange;
+                bool shouldCloseForDeath = closeWhenDead && hasCorpse;
+
+                if (shouldCloseForOutOfRange || shouldCloseForDeath)
                 {
                     //### KEEPS PARTY BAR ACTIVE WHEN PARTY MEMBER DIES & MOBILEBAR CLOSE SELECTED ###//
                     if (!inparty && CheckIfAnchoredElseDispose())
@@ -655,7 +675,10 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var mobile = entity as Mobile;
 
-                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && closeWhenDead) // is dead
                 {
                     if (!inparty && CheckIfAnchoredElseDispose())
                     {
@@ -1904,7 +1927,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (entity == null || entity.IsDestroyed)
             {
                 bool hasCorpse = World.CorpseManager.Exists(0, LocalSerial | 0x8000_0000);
-                if (LocalSerial != World.Player && (ProfileManager.CurrentProfile.CloseHealthBarType == 1 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) || ((ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) && hasCorpse))
+
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenOutOfRange = closeType == CloseHealthBarType.OutOfRange || closeType == CloseHealthBarType.Both;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                bool shouldCloseForOutOfRange = LocalSerial != World.Player && closeWhenOutOfRange;
+                bool shouldCloseForDeath = closeWhenDead && hasCorpse;
+
+                if (shouldCloseForOutOfRange || shouldCloseForDeath)
                 {
                     if (CheckIfAnchoredElseDispose())
                     {
@@ -1980,7 +2011,10 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var mobile = entity as Mobile;
 
-                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && !inparty && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && !inparty && closeWhenDead) // is dead
                 {
                     if (CheckIfAnchoredElseDispose())
                     {

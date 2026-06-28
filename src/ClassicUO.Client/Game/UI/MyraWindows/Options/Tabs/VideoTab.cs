@@ -256,10 +256,13 @@ public static class VideoTab
                     videoLang.GlobalScaling,
                     50,
                     Client.Game.MaxRenderScale * 100,
-                    new Accessor<float>(() => Client.Game.RenderScale * 100, newValue =>
-                    {
-                        scale = Math.Clamp(newValue / 100, 0.5f, Client.Game.MaxRenderScale);
-                    }),
+                    new Accessor<float>(
+                        () => Client.Game.RenderScale * 100,
+                        newValue =>
+                        {
+                            scale = Math.Clamp(newValue / 100, 0.5f, Client.Game.MaxRenderScale);
+                        }
+                    ),
                     search: new SearchMetadata(videoLang.GlobalScaling, Keywords: [kw.Global, kw.Scale])
                 ),
                 Option.Button(
@@ -275,7 +278,7 @@ public static class VideoTab
                     search: new SearchMetadata(lang.Apply)
                 )
             )
-        );
+        ).AsSearchGroup();
     }
 
     private static IOptionSource GetLightningSubTabContent()
@@ -284,22 +287,6 @@ public static class VideoTab
         ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
         ModernOptionsGumpLanguage.VideoTabLang.LightingSection lightLang = lang.Lighting;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
-
-        void UpdateLight()
-        {
-            if (profile.UseCustomLightLevel)
-            {
-                World.Instance.Light.Overall = profile.LightLevelType == 1
-                    ? Math.Min(World.Instance.Light.RealOverall, profile.LightLevel)
-                    : profile.LightLevel;
-                World.Instance.Light.Personal = 0;
-            }
-            else
-            {
-                World.Instance.Light.Overall = World.Instance.Light.RealOverall;
-                World.Instance.Light.Personal = World.Instance.Light.RealPersonal;
-            }
-        }
 
         return OptionsUi.Vertical(
             Option.Checkbox(
@@ -346,6 +333,22 @@ public static class VideoTab
                 search: new SearchMetadata(lightLang.ColoredLight, Keywords: [kw.Color, kw.Light])
             )
         ).WithSearch(new SearchMetadata(lightLang.Label, Tags: [kw.Light]));
+
+        void UpdateLight()
+        {
+            if (profile.UseCustomLightLevel)
+            {
+                World.Instance.Light.Overall = profile.LightLevelType == 1
+                    ? Math.Min(World.Instance.Light.RealOverall, profile.LightLevel)
+                    : profile.LightLevel;
+                World.Instance.Light.Personal = 0;
+            }
+            else
+            {
+                World.Instance.Light.Overall = World.Instance.Light.RealOverall;
+                World.Instance.Light.Personal = World.Instance.Light.RealPersonal;
+            }
+        }
     }
 
     private static IOptionSource GetShadowSubTabContent()

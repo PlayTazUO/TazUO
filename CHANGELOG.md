@@ -44,6 +44,7 @@ All notable changes to TazUO will be recorded here.
 * Added a centralized hotkey system with a Hotkeys tab in the Assistant window for viewing, rebinding, and conflict-checking hotkeys (including macros), plus a global hotkey shutoff - [P.R 591](https://github.com/PlayTazUO/TazUO/pull/591) ([bittiez](https://github.com/bittiez))
 * Added a world map context menu option to choose the double click action between toggling the lock state and toggling fullscreen - [P.R 602](https://github.com/PlayTazUO/TazUO/pull/602) ([bittiez](https://github.com/bittiez))
 * Added a "Loot Hovered Item" macro that grabs whatever item the mouse is hovering over — grid containers, regular containers, paperdoll, modern paperdoll, items on the ground, and item nameplates - [P.R 603](https://github.com/PlayTazUO/TazUO/pull/603) ([bittiez](https://github.com/bittiez))
+* Added a warning when more than 100 gumps of the same type are open at once - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
