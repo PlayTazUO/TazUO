@@ -40,6 +40,9 @@ namespace ClassicUO.Game.Managers
         private const int AXIS_LOCK_THRESHOLD_PIXELS = 10;
         private const float CTRL_DRAG_SPEED_MULTIPLIER = 0.5f;
 
+        // Warn the user when too many gumps of the same type are open at once
+        private const int SAME_TYPE_GUMP_WARN_THRESHOLD = 100;
+
         private static void ResetCtrlDragState()
         {
             _ctrlDragAxisDetermined = false;
@@ -489,6 +492,28 @@ namespace ClassicUO.Game.Managers
             _needSort = Gumps.Count > 1;
 
             RegisterGump(gump);
+
+            WarnIfTooManySameType(gump);
+        }
+
+        /// <summary>
+        /// Warn the user when they have more than <see cref="SAME_TYPE_GUMP_WARN_THRESHOLD"/>
+        /// gumps of the same type open at once. Only the count of the added gump's exact
+        /// type is reported, not the total number of gumps.
+        /// </summary>
+        private static void WarnIfTooManySameType(IGui gump)
+        {
+            Type t = gump.GetType();
+
+            if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
+                return;
+
+            int count = list.Count;
+
+            if (count > SAME_TYPE_GUMP_WARN_THRESHOLD)
+            {
+                GameActions.PrintUserWarn(World.Instance, $"You have {count} '{t.Name}' gumps open. This may cause performance issues.");
+            }
         }
 
         public static void Clear()
