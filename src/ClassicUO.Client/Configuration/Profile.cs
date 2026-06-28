@@ -234,6 +234,11 @@ namespace ClassicUO.Configuration
         public int SelfHeal_CureVerifyMs { get; set => SetProperty(ref field, value); } = 600; // wait for poison to clear before recasting Cure
         public int SelfHeal_InterruptRetryMs { get; set => SetProperty(ref field, value); } = 100; // delay before recasting after an interrupted cast
 
+        // RelativePaths of Legion scripts that have a hotkey assigned. The key binding itself lives in
+        // the central hotkey system (hotkeys.json); this per-profile list records which scripts to
+        // re-register on load. Entries whose script no longer exists are pruned on load.
+        public List<string> ScriptHotkeys { get; set => SetProperty(ref field, value); } = new List<string>();
+
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
         public partial bool BandageAgentUseJournalTrigger { get; set; }

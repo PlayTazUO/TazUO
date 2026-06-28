@@ -834,6 +834,7 @@ namespace ClassicUO.Game.Scenes
 
             base.Update();
             SelfHealManager.Update();
+            LegionScripting.ScriptHotkeysManager.Update();
 
             if (_waitingForWindowResize)
             {
