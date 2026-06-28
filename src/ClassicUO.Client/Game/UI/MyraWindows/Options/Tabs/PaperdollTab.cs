@@ -15,7 +15,7 @@ public class PaperdollTab
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
         return OptionsUi.Vertical(
             GetModernPaperdollSection()
-        ).WithSearch(new SearchMetadata(lang.ButtonPaperdoll, Tags: [kw.Paperdoll, kw.Character, kw.Equipment]));
+        ).WithSearch(new SearchMetadata(lang.ButtonPaperdoll, [kw.Paperdoll, kw.Character, kw.Equipment]));
     }
 
     private static OptionFragment GetModernPaperdollSection()
@@ -36,7 +36,7 @@ public class PaperdollTab
                         profile.ModernPaperDollHue = newHue;
                         ModernPaperdoll.UpdateAllOptions();
                     }),
-                    search: new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
+                    new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
                 ),
                 Option.HuePicker(
                     tuoLang.DurabilityBarHue,
@@ -45,7 +45,7 @@ public class PaperdollTab
                         profile.ModernPaperDollDurabilityHue = newHue;
                         ModernPaperdoll.UpdateAllOptions();
                     }),
-                    search: new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
+                    new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
                 ),
                 Option.Slider(
                     tuoLang.ShowDurabilityBarBelow,
