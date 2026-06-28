@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Configuration;
@@ -35,6 +36,17 @@ namespace ClassicUO.LegionScripting
         {
             _wasPressed.Clear();
 
+            // Registrations live for the process lifetime, so drop the previous profile's script
+            // hotkeys before re-applying the active one — otherwise they keep participating in
+            // conflicts and get written into the next profile's hotkeys.json.
+            foreach (string id in HotKeys.AllRegistered()
+                         .Where(e => e.Id.StartsWith(IdPrefix, StringComparison.Ordinal))
+                         .Select(e => e.Id)
+                         .ToArray())
+            {
+                HotKeys.Unregister(id);
+            }
+
             Profile profile = ProfileManager.CurrentProfile;
             if (profile?.ScriptHotkeys == null)
                 return;
@@ -65,9 +77,12 @@ namespace ClassicUO.LegionScripting
                 string id = IdPrefix + rel;
                 HotKeyEntry entry = HotKeys.Get(id);
 
-                // Skip empty and key bindings (the latter toggle via OnPressed); wheel bindings are
-                // transient and IsPressed always reports them as not held.
-                bool eligible = entry?.Binding != null && !entry.Binding.HasKey && !entry.Binding.IsEmpty;
+                // Only mouse/controller bindings are poll-toggled here. Key bindings toggle via the
+                // focus-gated OnPressed dispatch; wheel bindings are transient (IsPressed never reports
+                // them held) and modifier-only bindings would fire just from holding Ctrl/Shift/Alt.
+                HotkeyBinding binding = entry?.Binding;
+                bool eligible = binding != null && !binding.HasKey && !binding.WheelScroll
+                                && (binding.HasMouseButton || binding.HasController);
                 bool pressed = eligible && entry.IsPressed();
 
                 bool was = _wasPressed.TryGetValue(id, out bool w) && w;
@@ -89,7 +104,7 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
-        /// Set (or, when <paramref name="binding"/> is empty/null, clear) the hotkey for a script.
+        /// Set the hotkey for a script (or clear it when <paramref name="binding"/> isn't toggleable).
         /// Registers the entry with the central hotkey system and records the script in the profile.
         /// </summary>
         public static void SetBinding(ScriptFile script, HotkeyBinding binding)
@@ -97,7 +112,10 @@ namespace ClassicUO.LegionScripting
             if (script == null)
                 return;
 
-            if (binding == null || binding.IsEmpty)
+            // Only bindings we can actually toggle on are accepted: a key (OnPressed dispatch) or a
+            // mouse button / controller button (Update poll). Empty, wheel and modifier-only bindings
+            // can't reliably toggle a script, so treat them as a clear.
+            if (!IsToggleable(binding))
             {
                 ClearBinding(script);
                 return;
@@ -132,6 +150,11 @@ namespace ClassicUO.LegionScripting
             string rel = script.RelativePath;
             return HotKeys.Register(IdPrefix + rel, script.FileName, new HotkeyBinding(), Category, () => Toggle(rel));
         }
+
+        // A binding can toggle a script only when it has a key (OnPressed dispatch) or a mouse/
+        // controller button (Update poll). Wheel and modifier-only bindings can't, so they're rejected.
+        private static bool IsToggleable(HotkeyBinding binding)
+            => binding != null && (binding.HasKey || binding.HasMouseButton || binding.HasController);
 
         private static void Toggle(string relativePath)
         {

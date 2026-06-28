@@ -32,11 +32,12 @@ public class ScriptHotkeyWindow : MyraControl
         layout.Widgets.Add(new MyraLabel(script.RelativePath, MyraLabel.TextStyle.P) { TextColor = Color.Gray });
         layout.Widgets.Add(new MyraLabel("Pressing this hotkey toggles the script on/off.", MyraLabel.TextStyle.P));
 
-        // Only keyboard bindings are dispatched for scripts, so don't capture mouse input.
+        // Key, mouse-button and controller bindings can all toggle the script; wheel and
+        // modifier-only captures are rejected by SetBinding since they can't reliably toggle.
         var input = new HotkeyInput(
             existingSelection: ScriptHotkeysManager.GetBinding(script),
             onSelectionChanged: e => ScriptHotkeysManager.SetBinding(_script, e.NewValue),
-            capturesMouseEvents: false);
+            capturesMouseEvents: true);
         layout.Widgets.Add(input);
 
         var btnRow = new HorizontalStackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
