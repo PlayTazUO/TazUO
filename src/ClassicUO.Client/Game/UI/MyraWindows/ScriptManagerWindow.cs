@@ -344,6 +344,9 @@ public class ScriptManagerWindow : MyraControl
             LegionScripting.LegionScripting.SetAutoPlay(script, false, !charAuto);
             RebuildScriptList();
         }));
+        var scriptHotkey = ScriptHotkeysManager.GetBinding(script);
+        string hotkeyLabel = scriptHotkey.IsEmpty ? "Set Hotkey" : $"Set Hotkey ({scriptHotkey.Describe()})";
+        items.Add((hotkeyLabel, () => new ScriptHotkeyWindow(script)));
         items.Add(("Create Macro Button", () =>
         {
             var mm = MacroManager.TryGetMacroManager(World.Instance);
