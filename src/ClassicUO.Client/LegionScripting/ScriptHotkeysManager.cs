@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using SDL3;
 
@@ -93,7 +95,7 @@ namespace ClassicUO.LegionScripting
 
             string rel = script.RelativePath;
             Profile profile = ProfileManager.CurrentProfile;
-            if (profile != null && !profile.ScriptHotkeys.Contains(rel))
+            if (profile?.ScriptHotkeys != null && !profile.ScriptHotkeys.Contains(rel))
                 profile.ScriptHotkeys.Add(rel);
 
             HotKeyEntry entry = Register(script);
@@ -108,7 +110,7 @@ namespace ClassicUO.LegionScripting
                 return;
 
             string rel = script.RelativePath;
-            ProfileManager.CurrentProfile?.ScriptHotkeys.Remove(rel);
+            ProfileManager.CurrentProfile?.ScriptHotkeys?.Remove(rel);
             HotKeys.Unregister(IdPrefix + rel);
         }
 
@@ -135,6 +137,12 @@ namespace ClassicUO.LegionScripting
 
         private static void TogglePressed(Func<HotkeyBinding, bool> isKind)
         {
+            // Mirror the keyboard path's gate: only dispatch while the game world owns input. This
+            // stops a button from toggling the script while it's being (re)bound in the capture box,
+            // or while a window/textbox otherwise has focus.
+            if (!WorldHasInputFocus())
+                return;
+
             Profile profile = ProfileManager.CurrentProfile;
             if (profile?.ScriptHotkeys == null || profile.ScriptHotkeys.Count == 0)
                 return;
@@ -142,9 +150,22 @@ namespace ClassicUO.LegionScripting
             foreach (string rel in profile.ScriptHotkeys.ToArray())
             {
                 HotKeyEntry entry = HotKeys.Get(IdPrefix + rel);
-                if (entry?.Binding != null && isKind(entry.Binding) && entry.IsPressed())
+                // Exact modifier match (like HotKeys.HandleKeyDown) so a no-modifier button binding
+                // doesn't also fire while modifiers are held, and a plain + modified binding on the
+                // same button don't both toggle.
+                if (entry?.Binding != null && isKind(entry.Binding) && entry.IsPressed(allowAdditionalModifiers: false))
                     Toggle(rel);
             }
+        }
+
+        // Equivalent to GameSceneInputHandler.CanExecuteMacro: input belongs to the world (the system
+        // chat box holds focus and isn't mid-compose), not to a gump/window such as the capture box.
+        private static bool WorldHasInputFocus()
+        {
+            SystemChatControl chat = UIManager.SystemChat;
+            return chat != null
+                   && UIManager.KeyboardFocusControl == chat.TextBoxControl
+                   && chat.Mode >= ChatMode.Default;
         }
 
         private static HotKeyEntry Register(ScriptFile script)
