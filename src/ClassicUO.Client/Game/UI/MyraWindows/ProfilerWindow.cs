@@ -1,7 +1,9 @@
-#if DEBUG
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -18,7 +20,11 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         private readonly VerticalStackPanel _dataPanel;
         private readonly MyraButton _toggleButton;
+        private readonly MyraLabel _statsLabel;
         private uint _lastUpdate;
+
+        private readonly CancellationTokenSource _cpuCts = new();
+        private static volatile float _cpuPercent;
 
         public static void Show()
         {
@@ -44,6 +50,8 @@ namespace ClassicUO.Game.UI.MyraWindows
             buttons.Widgets.Add(new MyraButton("Reset", () => Profiler.Reset()));
             buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
 
+            _statsLabel = new MyraLabel(GetStatsLabel(), MyraLabel.TextStyle.P);
+
             var scrollViewer = new ScrollViewer
             {
                 MinWidth = 500,
@@ -59,12 +67,58 @@ namespace ClassicUO.Game.UI.MyraWindows
                 Padding = new Thickness(4),
             };
             root.Widgets.Add(buttons);
+            root.Widgets.Add(_statsLabel);
             root.Widgets.Add(scrollViewer);
 
             SetRootContent(root);
             CenterInViewPort();
 
+            _ = MonitorCpuAsync(_cpuCts.Token);
+
             UpdateDisplay();
+        }
+
+        /// <summary>
+        /// Continuously samples CPU usage in the background. The loop ends when the
+        /// window is disposed and its <see cref="CancellationTokenSource"/> is cancelled,
+        /// so no task is left running after the window closes.
+        /// </summary>
+        private async Task MonitorCpuAsync(CancellationToken token)
+        {
+            const int sampleWindowMs = 500;
+
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    Environment.ProcessCpuUsage startSnapshot = Environment.CpuUsage;
+                    DateTime startTime = DateTime.UtcNow;
+
+                    await Task.Delay(sampleWindowMs, token);
+
+                    Environment.ProcessCpuUsage endSnapshot = Environment.CpuUsage;
+                    DateTime endTime = DateTime.UtcNow;
+
+                    TimeSpan cpuTimeUsed = endSnapshot.TotalTime - startSnapshot.TotalTime;
+                    TimeSpan realTimeElapsed = endTime - startTime;
+
+                    double cpuPercent = realTimeElapsed.TotalMilliseconds > 0
+                        ? (cpuTimeUsed.TotalMilliseconds / realTimeElapsed.TotalMilliseconds) / Environment.ProcessorCount * 100
+                        : 0.0;
+
+                    _cpuPercent = (float)Math.Clamp(Math.Round(cpuPercent, 2), 0.0, 100.0);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+        }
+
+        private static string GetStatsLabel()
+        {
+            double memoryMb = Environment.WorkingSet / (1024.0 * 1024.0);
+            return $"Memory: {memoryMb:F1} MB    CPU: {_cpuPercent:F2}%";
         }
 
         private void OnToggle()
@@ -80,7 +134,7 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         private static void CopyToClipboard()
         {
-            List<Profiler.ProfileData> data = Profiler.AllFrameData
+            var data = Profiler.AllFrameData
                 .OrderByDescending(pd => pd.AverageTime)
                 .ToList();
 
@@ -94,6 +148,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             double totalAvg = data.Sum(pd => pd.AverageTime);
             var sb = new StringBuilder();
             sb.AppendLine("TazUO Profiler Output");
+            sb.AppendLine(GetStatsLabel());
             sb.AppendLine($"{"Context",-40}  {"Avg(ms)",7}  {"Peak(ms)",8}  {"Last(ms)",8}  {"% Total",7}");
             sb.AppendLine(new string('-', 76));
 
@@ -114,11 +169,35 @@ namespace ClassicUO.Game.UI.MyraWindows
         {
             base.Update();
 
+            // The close button (X) disposes through the base class without routing
+            // through Dispose(), so stop the CPU monitor here too once disposed.
+            if (IsDisposed)
+            {
+                StopCpuMonitor();
+                return;
+            }
+
             if (Time.Ticks - _lastUpdate > UPDATE_INTERVAL)
             {
                 _lastUpdate = Time.Ticks;
+                _statsLabel.Text = GetStatsLabel();
                 UpdateDisplay();
             }
+        }
+
+        public override void Dispose()
+        {
+            StopCpuMonitor();
+            base.Dispose();
+        }
+
+        private void StopCpuMonitor()
+        {
+            if (_cpuCts.IsCancellationRequested)
+                return;
+
+            _cpuCts.Cancel();
+            _cpuCts.Dispose();
         }
 
         private void UpdateDisplay()
@@ -131,7 +210,7 @@ namespace ClassicUO.Game.UI.MyraWindows
                 return;
             }
 
-            List<Profiler.ProfileData> data = Profiler.AllFrameData
+            var data = Profiler.AllFrameData
                 .OrderByDescending(pd => pd.AverageTime)
                 .ToList();
 
@@ -188,4 +267,3 @@ namespace ClassicUO.Game.UI.MyraWindows
         }
     }
 }
-#endif
