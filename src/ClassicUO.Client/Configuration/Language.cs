@@ -625,7 +625,6 @@ namespace ClassicUO.Configuration
 
                 public string ScalingLabel { get; set; } = "Scaling";
                 public string PaperdollScaling { get; set; } = "Paperdoll scaling";
-                public string StatusGumpScaling { get; set; } = "Status gump scaling";
                 public string GlobalScaling { get; set; } = "Global scaling";
             }
 
@@ -1441,7 +1440,6 @@ namespace ClassicUO.Configuration
             public string GumpScaling { get; set; } = "Gump scaling";
             public string ScalingInfo { get; set; } = "Some of these settings may only take effect after closing and reopening. Visual bugs may occur until the gump is closed and reopened.";
             public string PaperdollGump { get; set; } = "Paperdoll Gump";
-            public string StatusGump { get; set; } = "Status Gump";
             public string GlobalScaling { get; set; } = "Global scale";
             public string GlobalScale { get; set; } = "Scale";
             #endregion

@@ -4892,7 +4892,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
-                    lang.GetTazUO.StatusGump, 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
+                    TazLang.Get("gumpscaling_statusgump", "Status Gump"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
                     (int)(profile.StatusGumpScale * 100), (i) =>
                     {
                         //Must be cast even though VS thinks it's redundant.
