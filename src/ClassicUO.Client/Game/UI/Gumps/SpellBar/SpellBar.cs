@@ -345,6 +345,7 @@ public class SpellBar : Gump
             string name =
                 slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
                 slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
+                slot != null && slot.Type == SpellBarSlotType.Skill ? slot.SkillDisplayName :
                 null;
 
             if (!string.IsNullOrEmpty(name))
@@ -479,6 +480,10 @@ public class SpellBar : Gump
             GenScriptList(scriptMenu);
             ContextMenu.Add(scriptMenu);
 
+            var skillMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setskill"));
+            GenSkillList(skillMenu);
+            ContextMenu.Add(skillMenu);
+
             ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_clear"), () =>
             {
                 SetSlot(SpellBarSlot.Empty(), row, col);
@@ -513,6 +518,27 @@ public class SpellBar : Gump
                 parent.Add(new ContextMenuItemEntry(script.RelativePath, () =>
                 {
                     SetSlot(SpellBarSlot.FromScript(script), row, col);
+                }));
+            }
+        }
+
+        private void GenSkillList(ContextMenuItemEntry parent)
+        {
+            if (parent == null)
+                return;
+
+            parent.Items.Clear();
+
+            // Only skills that have a usable action (HasAction) can be invoked from the spell bar.
+            foreach (var skill in Client.Game.UO.FileManager.Skills.SortedSkills)
+            {
+                if (!skill.HasAction)
+                    continue;
+
+                int index = skill.Index;
+                parent.Add(new ContextMenuItemEntry(skill.Name, () =>
+                {
+                    SetSlot(SpellBarSlot.FromSkill(index), row, col);
                 }));
             }
         }
