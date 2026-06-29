@@ -508,7 +508,16 @@ namespace ClassicUO.Game.Managers
             if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
                 return;
 
-            int count = list.Count;
+            // The type list bucket also contains subclass instances (RegisterGump registers
+            // each gump under every type in its inheritance chain). Count only instances whose
+            // exact runtime type matches so the warning reflects the real number of this gump.
+            int count = 0;
+
+            foreach (IGui g in list)
+            {
+                if (g.GetType() == t)
+                    count++;
+            }
 
             if (count > SAME_TYPE_GUMP_WARN_THRESHOLD)
             {
