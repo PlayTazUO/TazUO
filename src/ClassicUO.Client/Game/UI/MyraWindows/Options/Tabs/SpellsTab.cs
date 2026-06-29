@@ -75,7 +75,6 @@ public static class SpellsTab
 
     private static void OpenConfigDownloadModal()
     {
-        UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.SpellsTab;
         UIManager.Add
         (
@@ -84,8 +83,8 @@ public static class SpellsTab
                 lang.ImportIndicatorsFromUrl,
                 lang.SpellIndicatorsDownloadPrompt,
                 url => _ = OnDownloadConfirmed(url),
-                uiLang.Download,
-                uiLang.Cancel,
+                TazLang.Get("uicommons_download"),
+                TazLang.Get("uicommons_cancel"),
                 null,
                 "https://github.com/PlayTazUO/TazUO/raw/refs/heads/dev/src/ClassicUO.Client/Game/Managers/DefaultSpellIndicatorConfig.json"
             ) { X = (Client.Game.Window.ClientBounds.Width >> 1) - 50, Y = (Client.Game.Window.ClientBounds.Height >> 1) - 50 }

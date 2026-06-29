@@ -31,7 +31,6 @@ public static class MiscTab
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
-        UiCommonsLanguage uiLang = Language.Instance.UiCommons;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
@@ -89,10 +88,10 @@ public static class MiscTab
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), miscLang.DisplayProgressBarOnSkillChanges),
                 Option.InputField(
-                    uiLang.Format,
+                    TazLang.Get("uicommons_format"),
                     new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
                     miscLang.SkillProgressBarFormatTooltip,
-                    search: new SearchMetadata(uiLang.Format, Keywords: [kw.Skill, kw.Format])
+                    search: new SearchMetadata(TazLang.Get("uicommons_format"), Keywords: [kw.Skill, kw.Format])
                 )
             ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Skill])),
             Option.Checkbox(
@@ -223,7 +222,6 @@ public static class MiscTab
     private static IOptionSource GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        UiCommonsLanguage uiLang = Language.Instance.UiCommons;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
@@ -265,16 +263,16 @@ public static class MiscTab
                 OptionsUi.CheckBoxGroup(
                     new PropertyBinder(new Accessor<bool>(() => profile.ForceHouseTransparency), miscLang.EnableHouseTransparency),
                     Option.Slider(
-                        uiLang.Opacity,
+                        TazLang.Get("uicommons_opacity"),
                         0,
                         255,
                         new Accessor<float>(() => profile.ForcedHouseTransparency, newValue => { profile.ForcedHouseTransparency = (byte)newValue; }),
-                        search: new SearchMetadata(uiLang.Opacity, Keywords: [kw.House, kw.Opacity])
+                        search: new SearchMetadata(TazLang.Get("uicommons_opacity"), Keywords: [kw.House, kw.Opacity])
                     ),
                     Option.HuePicker(
-                        uiLang.Hue,
+                        TazLang.Get("uicommons_hue"),
                         new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue, h => profile.ForcedTransparencyHouseTileHue = h),
-                        search: new SearchMetadata(uiLang.Hue, Keywords: [kw.House, kw.Hue])
+                        search: new SearchMetadata(TazLang.Get("uicommons_hue"), Keywords: [kw.House, kw.Hue])
                     )
                 ).WithSearch(new SearchMetadata(miscLang.HousingTransparency, Tags: [kw.Misc], Keywords: [kw.House, kw.Transparency]))
             )
