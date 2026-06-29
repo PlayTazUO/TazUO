@@ -594,6 +594,55 @@ namespace ClassicUO.Game
             return true;
         }
 
+        public bool Draw(UltimaBatcher2D batcher, int x, int y, double scale, float alpha = 1, ushort hue = 0)
+        {
+            if (string.IsNullOrEmpty(Text) || Texture == null || IsDestroyed || Texture.IsDisposed)
+            {
+                return false;
+            }
+
+            if (scale == 1.0)
+            {
+                return Draw(batcher, x, y, alpha, hue);
+            }
+
+            if (!IsUnicode && SaveHitMap && hue == 0)
+            {
+                hue = Hue;
+            }
+
+            if (hue > 0)
+            {
+                --hue;
+            }
+
+            var hueVector = new Vector3(hue, 0, alpha);
+
+            if (hue != 0)
+            {
+                if (IsUnicode)
+                {
+                    hueVector.Y = ShaderHueTranslator.SHADER_TEXT_HUE_NO_BLACK;
+                }
+                else if (Font != 5 && Font != 8)
+                {
+                    hueVector.Y = ShaderHueTranslator.SHADER_PARTIAL_HUED;
+                }
+                else
+                {
+                    hueVector.Y = ShaderHueTranslator.SHADER_HUED;
+                }
+            }
+            else
+            {
+                hueVector.Y = 0;
+            }
+
+            batcher.Draw(Texture, new Rectangle(x, y, (int)(Width * scale), (int)(Height * scale)), hueVector);
+
+            return true;
+        }
+
         public unsafe void CreateTexture()
         {
             if (Texture != null && !Texture.IsDisposed)

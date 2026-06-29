@@ -516,7 +516,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = p;
+            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
         }
 
         public override void Update()
@@ -1381,7 +1381,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = p;
+            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
         }
 
         private void AddStatTextLabel
