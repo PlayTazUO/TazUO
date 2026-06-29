@@ -503,6 +503,11 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private static void WarnIfTooManySameType(IGui gump)
         {
+            // NameOverheadGumps are legitimately created in large numbers (one per
+            // entity name shown), so they should never trigger this warning.
+            if (gump is NameOverheadGump)
+                return;
+
             Type t = gump.GetType();
 
             if (!_gumpTypeList.TryGetValue(t, out List<IGui> list))
