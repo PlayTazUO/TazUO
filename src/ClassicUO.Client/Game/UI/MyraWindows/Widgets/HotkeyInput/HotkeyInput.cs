@@ -173,7 +173,7 @@ public class HotkeyInput : Panel
     {
         if (_capturer.IsActive)
         {
-            _input.Text = Language.Instance.UiCommons.PressAnyKey;
+            _input.Text = TazLang.Get("uicommons_pressanykey");
             _input.TextColor = Color.DarkGoldenrod;
             return;
         }
@@ -182,7 +182,7 @@ public class HotkeyInput : Panel
 
         if (Selection.IsEmpty)
         {
-            _input.Text = Language.Instance.UiCommons.NoHotkeySet;
+            _input.Text = TazLang.Get("uicommons_nohotkeyset");
             return;
         }
 

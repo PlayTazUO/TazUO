@@ -160,14 +160,12 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         if (_selectedProfile?.Deletable != true)
             return;
 
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
-
         IGui prevTopmost = UIManager.TopMostControl;
 
         _confirmationModal?.Dispose();
         _confirmationModal = new ConfirmationModal(
-            lang.DeleteProfile,
-            string.Format(lang.DeleteProfileX, _selectedProfile.Name),
+            TazLang.Get("profileeditor_deleteprofile"),
+            TazLang.Get("profileeditor_deleteprofilex", new[] { _selectedProfile.Name }),
             confirmed =>
             {
                 if (!confirmed)
@@ -256,15 +254,13 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <returns>The normal toolbar stack panel.</returns>
     private StackPanel GetNormalToolbar()
     {
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
-
         bool canEdit = _selectedProfile is { Deletable: true };
         StackPanel panel = OptionTabCommons.StyledStackPanel(
             Orientation.Horizontal,
             GetProfilesCombo(),
-            new MyraButton(lang.Add, OnAdd),
-            new MyraButton(lang.Rename, OnRename) { Enabled = canEdit, Tooltip = lang.CannotRenameBuiltInProfile },
-            new MyraButton(lang.Delete, OnDelete) { Enabled = canEdit, Tooltip = lang.CannotDeleteBuiltInProfile }
+            new MyraButton(TazLang.Get("profileeditor_add"), OnAdd),
+            new MyraButton(TazLang.Get("profileeditor_rename"), OnRename) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotrenamebuiltinprofile") },
+            new MyraButton(TazLang.Get("profileeditor_delete"), OnDelete) { Enabled = canEdit, Tooltip = TazLang.Get("profileeditor_cannotdeletebuiltinprofile") }
         );
 
         panel.Margin = new Thickness(0, 0, 0, 10);
@@ -282,13 +278,11 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <returns>The renaming toolbar stack panel.</returns>
     private StackPanel GetRenamingToolbar()
     {
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
-
         StackPanel panel = OptionTabCommons.StyledStackPanel(
             Orientation.Horizontal,
             GetRenameProfileInput(),
-            new MyraButton(lang.Save, OnRenameSave),
-            new MyraButton(lang.Cancel, OnRenameCancel)
+            new MyraButton(TazLang.Get("profileeditor_save"), OnRenameSave),
+            new MyraButton(TazLang.Get("profileeditor_cancel"), OnRenameCancel)
         );
 
         panel.Margin = new Thickness(0, 0, 0, 10);
@@ -306,11 +300,9 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <returns>The profiles combo box stack panel.</returns>
     private Widget GetProfilesCombo()
     {
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
-
         string selectedProfileName = _selectedProfile?.Name ?? Profiles.FirstOrDefault()?.Name ?? string.Empty;
 
-        Widget combo = OptionTabCommons.CreateOptionsComboBox(lang.Profile,
+        Widget combo = OptionTabCommons.CreateOptionsComboBox(TazLang.Get("profileeditor_profile"),
             selectedProfileName,
             Profiles?.Select(p => p.Name) ?? [],
             OnProfileSelected
@@ -328,9 +320,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <returns>The rename profile input stack panel.</returns>
     private StackPanel GetRenameProfileInput()
     {
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
-
-        var panelLabel = new MyraLabel(lang.Profile, MyraLabel.TextStyle.P);
+        var panelLabel = new MyraLabel(TazLang.Get("profileeditor_profile"), MyraLabel.TextStyle.P);
         _renameInputBox.Text = _selectedProfile?.Name;
 
         // Ultimately this should always yield 200, but we keep this for the dynamic calculation
@@ -502,12 +492,12 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <returns>The next profile name.</returns>
     private string GetNextProfileName()
     {
-        ProfileEditorLanguage lang = Language.Instance.UiCommons.ProfileEditor;
+        string profileWord = TazLang.Get("profileeditor_profile");
 
         int index = 1;
-        while (Profiles.Any(p => p.Name == $"{lang.Profile} {index}"))
+        while (Profiles.Any(p => p.Name == $"{profileWord} {index}"))
             index++;
-        return $"{lang.Profile} {index}";
+        return $"{profileWord} {index}";
     }
 
     #endregion Profile Management Logic
