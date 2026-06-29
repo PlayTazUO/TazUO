@@ -63,6 +63,9 @@ internal static class Option
     public static OptionEntry Slider(string label, float min, float max, Accessor<float> backingProperty, bool labelOnLeft = false, SearchMetadata? search = null) =>
         new(() => OptionsFactory.PropBoundSliderOption(label, backingProperty, min, max, labelOnLeft), search ?? new SearchMetadata(label));
 
+    public static OptionEntry Slider(string label, ushort min, ushort max, Accessor<ushort> backingProperty, bool labelOnLeft = false, SearchMetadata? search = null) =>
+        new(() => OptionsFactory.CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((ushort)value), labelOnLeft));
+
     /// <summary>
     /// Creates a labeled horizontal slider entry bound to an <see cref="int"/> property
     /// </summary>

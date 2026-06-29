@@ -47,6 +47,7 @@ internal static class SpeechTab
                 )
             ),
             GetActivationSection(),
+            GetOverheadDisplaySection(),
             OptionsUi.Horizontal(
                 GetColorSection(),
                 GetOverheadSuppressionSection()
@@ -115,6 +116,37 @@ internal static class SpeechTab
             Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue), new SearchMetadata(speechLang.GuildColor)),
             Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue), new SearchMetadata(speechLang.CharColor))
         );
+    }
+
+    private static OptionFragment GetOverheadDisplaySection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = speechLang.OverheadText },
+            Option.Checkbox(
+                tuoLang.DisplayPartyChatOverPlayerHeads,
+                new Accessor<bool>(() => profile.DisplayPartyChatOverhead),
+                tuoLang.TooltipPartyChat,
+                new SearchMetadata(tuoLang.DisplayPartyChatOverPlayerHeads, Keywords: [kw.Party])
+            ),
+            Option.Slider(
+                tuoLang.OverheadTextWidth,
+                0,
+                600,
+                new Accessor<int>(() => profile.OverheadChatWidth)
+            ),
+            Option.Checkbox(
+                tuoLang.DisableMouseInteractionsForOverheadText,
+                new Accessor<bool>(() => profile.DisableMouseInteractionOverheadText),
+                search: new SearchMetadata(tuoLang.DisableMouseInteractionsForOverheadText, Keywords: [kw.Mouse])
+            )
+        ).AsSearchGroup()
+         .WithSearch(new SearchMetadata(Keywords: [kw.Overhead]));
     }
 
     private static OptionFragment GetOverheadSuppressionSection()

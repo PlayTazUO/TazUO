@@ -13,8 +13,10 @@ public static class MovementTab
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.MovementTabLang moveLang = Language.Instance.GetModernOptionsGumpLanguage.MovementTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.MovementTabLang moveLang = lang.MovementTab;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
@@ -60,6 +62,29 @@ public static class MovementTab
                 moveLang.UseWasdMovement,
                 new Accessor<bool>(() => profile.UseWASDInsteadArrowKeys),
                 search: new SearchMetadata(moveLang.UseWasdMovement, Keywords: [kw.WASD, kw.Keyboard])
+            ),
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = moveLang.AutoFollow },
+                Option.Slider(
+                    tuoLang.AutoFollowDistance,
+                    1,
+                    10,
+                    new Accessor<int>(() => profile.AutoFollowDistance),
+                    search: new SearchMetadata(tuoLang.AutoFollowDistance, Keywords: [kw.Distance])
+                ),
+                Option.Checkbox(
+                    tuoLang.DisableAutoFollow,
+                    new Accessor<bool>(() => profile.DisableAutoFollowAlt),
+                    search: new SearchMetadata(tuoLang.DisableAutoFollow, Keywords: [kw.Disable, kw.Alt])
+                )
+            ).AsSearchGroup()
+             .WithSearch(new SearchMetadata(Keywords: [kw.Auto, kw.Follow])),
+            Option.Slider(
+                tuoLang.TurnDelay,
+                45,
+                120,
+                new Accessor<ushort>(() => profile.TurnDelay),
+                search: new SearchMetadata(tuoLang.TurnDelay, Keywords: [kw.Turn, kw.Delay])
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = moveLang.Controller.Label, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
