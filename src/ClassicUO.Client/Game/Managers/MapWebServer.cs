@@ -304,30 +304,69 @@ namespace ClassicUO.Game.Managers
 
             try
             {
-                // Keep connection alive and send updates
-                while (_isRunning && World.Instance != null && World.Instance.InGame)
+                // Keep the connection alive for as long as the server is running.
+                //
+                // We intentionally do NOT break out of this loop when the player is
+                // briefly out of the world (e.g. while recalling/changing facets). The
+                // map index setter momentarily sets Map = null, so World.InGame flips to
+                // false for a frame. Previously that exited the loop and tore down the
+                // SSE connection on every facet change, and the browser did not reliably
+                // reconnect - leaving the web map frozen with stale live data. The most
+                // visible symptom was that markers from the previous facet would never
+                // refresh again ("markers gone forever" after recalling back). Instead we
+                // simply skip sending updates until the player is back in the world.
+                while (_isRunning)
                 {
-                    var data = new
+                    if (World.Instance == null || !World.Instance.InGame)
                     {
-                        mapIndex = World.Instance.MapIndex,
-                        player = new
+                        // Emit an SSE comment heartbeat so a client that disconnected
+                        // while we are out of the world surfaces as a broken pipe and
+                        // gets cleaned up promptly, instead of lingering until the next
+                        // successful data write.
+                        SendHeartbeat(response, "waiting-for-world");
+                        Thread.Sleep(500);
+                        continue;
+                    }
+
+                    string message;
+
+                    try
+                    {
+                        var data = new
                         {
-                            x = World.Instance.Player?.X ?? 0,
-                            y = World.Instance.Player?.Y ?? 0,
-                            name = World.Instance.Player?.Name ?? ""
-                        },
-                        party = GetPartyData(),
-                        guild = GetGuildData(),
-                        markers = GetMarkersData(),
-                        mobiles = GetMobilesData(),
-                        journal = MainThreadQueue.InvokeOnMainThread(() => GetNewJournalEntries(clientState))
-                    };
+                            mapIndex = World.Instance.MapIndex,
+                            player = new
+                            {
+                                x = World.Instance.Player?.X ?? 0,
+                                y = World.Instance.Player?.Y ?? 0,
+                                name = World.Instance.Player?.Name ?? ""
+                            },
+                            party = GetPartyData(),
+                            guild = GetGuildData(),
+                            markers = GetMarkersData(),
+                            mobiles = GetMobilesData(),
+                            journal = MainThreadQueue.InvokeOnMainThread(() => GetNewJournalEntries(clientState))
+                        };
 
-                    string json = JsonSerializer.Serialize(data);
+                        message = $"data: {JsonSerializer.Serialize(data)}\n\n";
+                    }
+                    catch (Exception ex)
+                    {
+                        // Gathering data can transiently fail while the world is being
+                        // rebuilt during a map change (collections such as the party,
+                        // guild and mobile lists get cleared/repopulated on another
+                        // thread). Skip this update but keep the connection alive so the
+                        // client keeps receiving fresh data once the world has settled.
+                        Log.Warn($"Map Web Server: failed to build event update: {ex.Message}");
+                        SendHeartbeat(response, "skipped-transient-update");
+                        Thread.Sleep(500);
+                        continue;
+                    }
 
-                    string message = $"data: {json}\n\n";
                     byte[] buffer = Encoding.UTF8.GetBytes(message);
 
+                    // A failure writing to the stream means the client really
+                    // disconnected; let it propagate to exit the loop and clean up.
                     response.OutputStream.Write(buffer, 0, buffer.Length);
                     response.OutputStream.Flush();
 
@@ -346,6 +385,16 @@ namespace ClassicUO.Game.Managers
                 }
                 try { response.Close(); } catch { }
             }
+        }
+
+        // Writes an SSE comment line (": ...") which carries no data event but keeps the
+        // stream active. A failed write throws, which lets the caller's loop tear the
+        // connection down and remove the stale client.
+        private static void SendHeartbeat(HttpListenerResponse response, string note)
+        {
+            byte[] heartbeat = Encoding.UTF8.GetBytes($": {note}\n\n");
+            response.OutputStream.Write(heartbeat, 0, heartbeat.Length);
+            response.OutputStream.Flush();
         }
 
         private object GetPartyData()
@@ -1494,9 +1543,13 @@ namespace ClassicUO.Game.Managers
 
                     if (document.getElementById('followPlayer').checked) {
                         centerOnPlayer();
-                    } else {
-                        draw();
                     }
+
+                    // Always redraw after applying fresh live data. centerOnPlayer() only
+                    // updates the target offset and relies on the animation loop to redraw,
+                    // which is skipped when the player is stationary - so without this the
+                    // newly received markers/mobiles would not appear until the player moved.
+                    draw();
                 }
             };
 
