@@ -319,6 +319,11 @@ namespace ClassicUO.Game.Managers
                 {
                     if (World.Instance == null || !World.Instance.InGame)
                     {
+                        // Emit an SSE comment heartbeat so a client that disconnected
+                        // while we are out of the world surfaces as a broken pipe and
+                        // gets cleaned up promptly, instead of lingering until the next
+                        // successful data write.
+                        SendHeartbeat(response, "waiting-for-world");
                         Thread.Sleep(500);
                         continue;
                     }
@@ -353,6 +358,7 @@ namespace ClassicUO.Game.Managers
                         // thread). Skip this update but keep the connection alive so the
                         // client keeps receiving fresh data once the world has settled.
                         Log.Warn($"Map Web Server: failed to build event update: {ex.Message}");
+                        SendHeartbeat(response, "skipped-transient-update");
                         Thread.Sleep(500);
                         continue;
                     }
@@ -379,6 +385,16 @@ namespace ClassicUO.Game.Managers
                 }
                 try { response.Close(); } catch { }
             }
+        }
+
+        // Writes an SSE comment line (": ...") which carries no data event but keeps the
+        // stream active. A failed write throws, which lets the caller's loop tear the
+        // connection down and remove the stale client.
+        private static void SendHeartbeat(HttpListenerResponse response, string note)
+        {
+            byte[] heartbeat = Encoding.UTF8.GetBytes($": {note}\n\n");
+            response.OutputStream.Write(heartbeat, 0, heartbeat.Length);
+            response.OutputStream.Flush();
         }
 
         private object GetPartyData()
