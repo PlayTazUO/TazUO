@@ -251,6 +251,16 @@ public static class VideoTab
                 }),
                 search: new SearchMetadata(videoLang.PaperdollScaling, Keywords: [kw.Paperdoll, kw.Scale])
             ),
+            Option.Slider(
+                TazLang.Get("gumpscaling_statusgumpscaling", "Status gump scaling"),
+                50,
+                300,
+                new Accessor<float>(() => (int)(profile.StatusGumpScale * 100), newValue =>
+                {
+                    profile.StatusGumpScale = Math.Clamp(newValue / 100, 0.5f, 3.0f);
+                }),
+                search: new SearchMetadata(TazLang.Get("gumpscaling_statusgumpscaling", "Status gump scaling"), Keywords: [kw.Scale])
+            ),
             OptionsUi.Horizontal(
                 Option.Slider(
                     videoLang.GlobalScaling,
