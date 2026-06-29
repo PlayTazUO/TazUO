@@ -780,6 +780,8 @@ namespace ClassicUO.Configuration
 
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
+        public double StatusGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
         public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
 
         public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
