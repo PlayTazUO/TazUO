@@ -189,6 +189,7 @@ namespace ClassicUO.Configuration
             public string Abbreviate { get; set; } = "Abbreviate";
             public string Advanced { get; set; } = "Advanced";
             public string Align { get; set; } = "Align";
+            public string Ally { get; set; } = "Ally";
             public string Alpha { get; set; } = "Alpha";
             public string Alt { get; set; } = "Alt";
             public string AltScroll { get; set; } = "Alt Scroll";
@@ -259,6 +260,7 @@ namespace ClassicUO.Configuration
             public string Delay { get; set; } = "Delay";
             public string Disable { get; set; } = "Disable";
             public string Display { get; set; } = "Display";
+            public string Dismount { get; set; } = "Dismount";
             public string Distance { get; set; } = "Distance";
             public string Door { get; set; } = "Door";
             public string Double { get; set; } = "Double";
@@ -280,6 +282,7 @@ namespace ClassicUO.Configuration
             public string Fixed { get; set; } = "Fixed";
             public string Font { get; set; } = "Font";
             public string Footstep { get; set; } = "Footstep";
+            public string Follow { get; set; } = "Follow";
             public string Force { get; set; } = "Force";
             public string Format { get; set; } = "Format";
             public string Friend { get; set; } = "Friend";
@@ -371,12 +374,14 @@ namespace ClassicUO.Configuration
             public string Original { get; set; } = "Original";
             public string Other { get; set; } = "Other";
             public string Over { get; set; } = "Over";
+            public string Overhead { get; set; } = "Overhead";
             public string Overlap { get; set; } = "Overlap";
             public string Override { get; set; } = "Override";
             public string Paperdoll { get; set; } = "Paperdoll";
             public string Paralyze { get; set; } = "Paralyze";
             public string Party { get; set; } = "Party";
             public string Pathfinding { get; set; } = "Pathfinding";
+            public string Pet { get; set; } = "Pet";
             public string Perspective { get; set; } = "Perspective";
             public string Player { get; set; } = "Player";
             public string Poison { get; set; } = "Poison";
@@ -431,6 +436,7 @@ namespace ClassicUO.Configuration
             public string Speech { get; set; } = "Speech";
             public string Spell { get; set; } = "Spell";
             public string Split { get; set; } = "Split";
+            public string Stamina { get; set; } = "Stamina";
             public string Standard { get; set; } = "Standard";
             public string Stat { get; set; } = "Stat";
             public string Static { get; set; } = "Static";
@@ -451,6 +457,7 @@ namespace ClassicUO.Configuration
             public string Tooltip { get; set; } = "Tooltip";
             public string Transparency { get; set; } = "Transparency";
             public string Tree { get; set; } = "Tree";
+            public string Turn { get; set; } = "Turn";
             public string Type { get; set; } = "Type";
             public string Use { get; set; } = "Use";
             public string VSync { get; set; } = "VSync";
@@ -485,6 +492,7 @@ namespace ClassicUO.Configuration
             public ControllerSection Controller { get; set; } = new();
 
             public string AutoAvoidObstacles { get; set; } = "Auto Avoid Obstacles";
+            public string AutoFollow { get; set; } = "Auto follow";
             public string UseWasdMovement { get; set; } = "Use WASD movement instead of arrow keys";
 
             public class PathfindingSection
@@ -541,6 +549,8 @@ namespace ClassicUO.Configuration
             {
                 public string Label { get; set; } = "Hues";
                 public string HueMobileByNotoriety { get; set; } = "Hue mobiles by notoriety";
+                public string DamageHuesTooltip { get; set; } = "Select hues for different damage types";
+                public string PlayerVisibility { get; set; } = "Player Visibility";
             }
         }
 
@@ -708,6 +718,7 @@ namespace ClassicUO.Configuration
                 public string GuildColor { get; set; } = "Guild color";
                 public string CharColor { get; set; } = "Chat color";
 
+                public string OverheadText { get; set; } = "Overhead Text";
                 public string DisableOverheadMessages { get; set; } = "Disable Overhead Messages";
                 public string MessageTypeRegular { get; set; } = "Regular";
                 public string MessageTypeSystem { get; set; } = "System";

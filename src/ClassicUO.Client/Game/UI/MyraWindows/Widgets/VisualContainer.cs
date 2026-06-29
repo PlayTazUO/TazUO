@@ -35,6 +35,11 @@ public record struct VisualContainerProps()
     /// </summary>
     public string LabelText { get; init; } = null;
 
+    /// <summary>
+    /// A tooltip to be displayed on the label, if one is present
+    /// </summary>
+    public string LabelTooltip { get; init; } = null;
+
     /// <summary>Gets the horizontal alignment applied to the label widget.</summary>
     public HorizontalAlignment LabelHorizontalAlignment { get; init; } = HorizontalAlignment.Left;
 
@@ -68,9 +73,9 @@ public class VisualContainer : Container
         {
             Widget label;
             if (string.IsNullOrWhiteSpace(props.LabelLink))
-                label = new MyraLabel(props.LabelText, MyraLabel.TextStyle.P);
+                label = new MyraLabel(props.LabelText, MyraLabel.TextStyle.P) { Tooltip = props.LabelTooltip};
             else
-                label = new LinkLabel(props.LabelText, props.LabelLink);
+                label = new LinkLabel(props.LabelText, props.LabelLink) { Tooltip = props.LabelTooltip};
 
             label.HorizontalAlignment = props.LabelHorizontalAlignment;
 
