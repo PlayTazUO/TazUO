@@ -567,6 +567,17 @@ internal static class GumpHelpers
 
         gump.PacketGumpText = gumpTextBuilder.ToString();
 
+        // Apply the single server gump scale option to every control on this server created gump.
+        double serverGumpScale = ProfileManager.CurrentProfile?.ServerGumpScale ?? 1.0;
+
+        if (serverGumpScale != 1.0)
+        {
+            for (int i = 0; i < gump.Children.Count; i++)
+            {
+                gump.Children[i].ApplyScale(serverGumpScale);
+            }
+        }
+
         if (mustBeAdded)
             UIManager.Add(gump);
 

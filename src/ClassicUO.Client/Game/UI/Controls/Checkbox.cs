@@ -91,14 +91,16 @@ namespace ClassicUO.Game.UI.Controls
                 IsChecked ? _active : _inactive
             );
 
+            double scale = InternalScale;
+
             batcher.Draw(
                 gumpInfo.Texture,
-                new Vector2(x, y),
+                new Rectangle(x, y, (int)(gumpInfo.UV.Width * scale), (int)(gumpInfo.UV.Height * scale)),
                 gumpInfo.UV,
                 ShaderHueTranslator.GetHueVector(0)
             );
 
-            _text.Draw(batcher, x + gumpInfo.UV.Width + 2, y);
+            _text.Draw(batcher, x + (int)((gumpInfo.UV.Width + 2) * scale), y, scale);
 
             return ok;
         }

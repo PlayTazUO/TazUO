@@ -50,9 +50,12 @@ namespace ClassicUO.Game.UI.Controls
 
             if (artInfo.Texture != null)
             {
+                double scale = InternalScale;
+
                 batcher.Draw(
                     artInfo.Texture,
-                    new Vector2(x + _tileX, y + _tileY),
+                    new Rectangle(x + (int)(_tileX * scale), y + (int)(_tileY * scale),
+                        (int)(artInfo.UV.Width * scale), (int)(artInfo.UV.Height * scale)),
                     artInfo.UV,
                     hueVector
                 );

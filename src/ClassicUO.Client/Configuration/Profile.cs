@@ -782,6 +782,11 @@ namespace ClassicUO.Configuration
 
         public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
+        /// <summary>
+        /// Scale applied to every server created gump (and all of its controls).
+        /// </summary>
+        public double ServerGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
+
         public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
 
         public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }

@@ -903,12 +903,12 @@ namespace ClassicUO.Game.UI.Controls
                 base.Draw(batcher, x, y);
                 if (!IsFocused && string.IsNullOrEmpty(_rendererText.Text) && _rendererPlaceholder != null)
                 {
-                    _rendererPlaceholder.Draw(batcher, x, y, 0.7f);
+                    _rendererPlaceholder.Draw(batcher, x, y, InternalScale, 0.7f);
                 }
                 else
                 {
                     DrawSelection(batcher, x, y);
-                    _rendererText.Draw(batcher, x, y);
+                    _rendererText.Draw(batcher, x, y, InternalScale);
                     DrawCaret(batcher, x, y);
                 }
                 batcher.ClipEnd();
@@ -928,6 +928,8 @@ namespace ClassicUO.Game.UI.Controls
 
             int selectStart = Math.Min(Stb.SelectStart, Stb.SelectEnd);
             int selectEnd = Math.Max(Stb.SelectStart, Stb.SelectEnd);
+
+            double scale = InternalScale;
 
             if (selectStart < selectEnd)
             {
@@ -970,10 +972,10 @@ namespace ClassicUO.Game.UI.Controls
                                 SolidColorTextureCache.GetTexture(SELECTION_COLOR),
                                 new Rectangle
                                 (
-                                    x + drawX + diffX,
-                                    y + drawY,
-                                    endX,
-                                    info.MaxHeight + 1
+                                    x + (int)((drawX + diffX) * scale),
+                                    y + (int)(drawY * scale),
+                                    (int)(endX * scale),
+                                    (int)((info.MaxHeight + 1) * scale)
                                 ),
                                 hueVector
                             );
@@ -988,10 +990,10 @@ namespace ClassicUO.Game.UI.Controls
                             SolidColorTextureCache.GetTexture(SELECTION_COLOR),
                             new Rectangle
                             (
-                                x + drawX + diffX,
-                                y + drawY,
-                                info.Width - drawX,
-                                info.MaxHeight + 1
+                                x + (int)((drawX + diffX) * scale),
+                                y + (int)(drawY * scale),
+                                (int)((info.Width - drawX) * scale),
+                                (int)((info.MaxHeight + 1) * scale)
                             ),
                             hueVector
                         );
@@ -1011,7 +1013,8 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (HasKeyboardFocus)
             {
-                _rendererCaret.Draw(batcher, x + _caretScreenPosition.X, y + _caretScreenPosition.Y);
+                double scale = InternalScale;
+                _rendererCaret.Draw(batcher, x + (int)(_caretScreenPosition.X * scale), y + (int)(_caretScreenPosition.Y * scale), scale);
             }
         }
 
