@@ -47,6 +47,7 @@ All notable changes to TazUO will be recorded here.
 * Added a warning when more than 100 gumps of the same type are open at once - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
 * Add Skill slot type to the Spell Bar - [P.R 613](https://github.com/PlayTazUO/TazUO/pull/613) ([bittiez](https://github.com/bittiez))
 * Added individual scaling support for the Status Gump - [P.R 614](https://github.com/PlayTazUO/TazUO/pull/614) ([bittiez](https://github.com/bittiez))
+* Added a single scaling option for all server-created gumps - [P.R 615](https://github.com/PlayTazUO/TazUO/pull/615) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))

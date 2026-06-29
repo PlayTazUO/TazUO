@@ -4902,6 +4902,20 @@ namespace ClassicUO.Game.UI.Gumps
                 ), true, page
             );
 
+            content.AddToRight
+            (
+                new SliderWithLabel
+                (
+                    TazLang.Get("gumpscaling_servergump", "Server Gumps"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
+                    (int)(profile.ServerGumpScale * 100), (i) =>
+                    {
+                        //Must be cast even though VS thinks it's redundant.
+                        double v = (double)i / (double)100;
+                        profile.ServerGumpScale = v > 0 ? v : 1f;
+                    }
+                ), true, page
+            );
+
             SliderWithLabel s;
             content.AddToRight(
                 s = new SliderWithLabel(lang.GetTazUO.GlobalScale, 0, ThemeSettings.SLIDER_WIDTH, 50, 175,
