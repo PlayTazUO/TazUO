@@ -95,7 +95,7 @@ namespace ClassicUO.Game.UI.Gumps
                     World.TargetManager.Target(World.Player);
                     Mouse.LastLeftButtonClickTime = 0;
                 }
-                else if (x >= _point.X && x <= Width + 16 && y >= _point.Y && y <= Height + 16)
+                else if (x >= _point.X && x <= Width + (int)(16 * GumpScale) && y >= _point.Y && y <= Height + (int)(16 * GumpScale))
                 {
                     Point offset = Mouse.LDragOffset;
 
