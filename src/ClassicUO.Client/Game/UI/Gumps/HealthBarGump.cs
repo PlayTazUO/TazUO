@@ -546,6 +546,10 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             Children.Clear();
 
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
+
             _background = null;
             _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
@@ -1641,6 +1645,11 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Clear();
             Children.Clear();
+
+            _oldHits = _oldMana = _oldStam = -1;
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
 
             _background = _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
