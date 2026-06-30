@@ -267,7 +267,7 @@ public static class VideoTab
                 300,
                 new Accessor<float>(() => (int)(profile.ContextMenuScale * 100), newValue =>
                 {
-                    profile.ContextMenuScale = Math.Clamp(newValue / 100, 0.5f, 3.0f);
+                    profile.ContextMenuScale = newValue / 100;
                 }),
                 search: new SearchMetadata(TazLang.Get("gumpscaling_contextmenuscaling", "Context menu scaling"), Keywords: [kw.Scale])
             ),
