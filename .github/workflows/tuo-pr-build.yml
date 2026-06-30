@@ -8,6 +8,10 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+  pull-requests: read
+
 env:
   CUO_OUTPUT_PATH: 'build/dist'
   CUO_PROJECT_PATH: "src/ClassicUO.Client/ClassicUO.Client.csproj"
@@ -31,11 +35,14 @@ jobs:
             rid: osx-arm64
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Checkout PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr checkout ${{ github.event.inputs.pr_number }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+        run: gh pr checkout "$PR_NUMBER"
 
       - name: Get submodules
         run: |
