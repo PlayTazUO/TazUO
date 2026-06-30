@@ -4855,6 +4855,20 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
+                    TazLang.Get("gumpscaling_contextmenu", "Context Menus"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
+                    (int)(profile.ContextMenuScale * 100), (i) =>
+                    {
+                        //Must be cast even though VS thinks it's redundant.
+                        double v = (double)i / (double)100;
+                        profile.ContextMenuScale = v > 0 ? v : 1f;
+                    }
+                ), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel
+                (
                     TazLang.Get("gumpscaling_servergump", "Server Gumps"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
                     (int)(profile.ServerGumpScale * 100), (i) =>
                     {

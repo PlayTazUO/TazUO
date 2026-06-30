@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -27,15 +28,17 @@ namespace ClassicUO.Game.UI.Gumps
             CanCloseWithRightClick = true;
             _data = data;
 
+            double scale = ProfileManager.CurrentProfile?.ContextMenuScale ?? 1.0;
+
             var pic = new ResizePic(0x0A3C)
             {
                 Alpha = 0.75f
             };
 
             Add(pic);
-            int offsetY = 10;
+            int offsetY = (int)(10 * scale);
             bool arrowAdded = false;
-            int width = 0, height = 20;
+            int width = 0, height = (int)(20 * scale);
 
             for (int i = 0; i < data.Items.Length; i++)
             {
@@ -52,15 +55,14 @@ namespace ClassicUO.Game.UI.Gumps
                     Client.Game.UO.FileManager.Fonts.SetUseHTML(true, h);
                 }
 
-                var label = new Label(text, true, hue, font: 1)
-                {
-                    X = 10,
-                    Y = offsetY
-                };
+                var label = new Label(text, true, hue, font: 1);
+                label.ApplyScale(scale, scalePosition: false);
+                label.X = (int)(10 * scale);
+                label.Y = offsetY;
 
                 Client.Game.UO.FileManager.Fonts.SetUseHTML(false);
 
-                var box = new HitBox(10, offsetY, label.Width, label.Height)
+                var box = new HitBox((int)(10 * scale), offsetY, label.Width, label.Height)
                 {
                     Tag = item.Index
                 };
@@ -78,16 +80,16 @@ namespace ClassicUO.Game.UI.Gumps
                     arrowAdded = true;
 
                     // TODO: wat?
-                    Add
-                    (
-                        new Button(0, 0x15E6, 0x15E2, 0x15E2)
-                        {
-                            X = 20,
-                            Y = offsetY
-                        }
-                    );
+                    var arrow = new Button(0, 0x15E6, 0x15E2, 0x15E2)
+                    {
+                        X = (int)(20 * scale),
+                        Y = offsetY
+                    };
+                    arrow.ApplyScale(scale, scalePosition: false);
 
-                    height += 20;
+                    Add(arrow);
+
+                    height += (int)(20 * scale);
                 }
 
                 offsetY += label.Height;
@@ -103,9 +105,9 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            width += 20;
+            width += (int)(20 * scale);
 
-            if (height <= 10 || width <= 20)
+            if (height <= (int)(10 * scale) || width <= (int)(20 * scale))
             {
                 Dispose();
             }
@@ -116,7 +118,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 foreach (HitBox box in FindControls<HitBox>())
                 {
-                    box.Width = width - 20;
+                    box.Width = width - (int)(20 * scale);
                 }
             }
         }

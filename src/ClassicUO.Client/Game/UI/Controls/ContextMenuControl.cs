@@ -1,5 +1,6 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -79,6 +80,7 @@ namespace ClassicUO.Game.UI.Controls
     {
         private readonly AlphaBlendControl _background;
         private List<ContextMenuShowMenu> _subMenus;
+        private readonly double _scale;
 
 
         public ContextMenuShowMenu(World world, List<ContextMenuItemEntry> list) : base(world, 0, 0)
@@ -91,6 +93,8 @@ namespace ClassicUO.Game.UI.Controls
             CanMove = false;
             AcceptMouseInput = true;
 
+            _scale = ProfileManager.CurrentProfile?.ContextMenuScale ?? 1.0;
+
 
             _background = new AlphaBlendControl(0.7f);
             Add(_background);
@@ -102,7 +106,7 @@ namespace ClassicUO.Game.UI.Controls
 
             for (int i = 0; i < list.Count; i++)
             {
-                var item = new ContextMenuItem(this, list[i]);
+                var item = new ContextMenuItem(this, list[i], _scale);
 
                 if (i > 0)
                 {
@@ -209,11 +213,13 @@ namespace ClassicUO.Game.UI.Controls
             private readonly GumpPic _selectedPic;
             private readonly ContextMenuShowMenu _subMenu;
             private readonly ContextMenuShowMenu _gump;
+            private readonly double _scale;
 
 
-            public ContextMenuItem(ContextMenuShowMenu parent, ContextMenuItemEntry entry)
+            public ContextMenuItem(ContextMenuShowMenu parent, ContextMenuItemEntry entry, double scale = 1.0)
             {
                 _gump = parent;
+                _scale = scale;
                 CanCloseWithRightClick = false;
                 _entry = entry;
 
@@ -229,6 +235,8 @@ namespace ClassicUO.Game.UI.Controls
                     X = 25
                 };
 
+                _label.ApplyScale(_scale);
+
                 Add(_label);
 
 
@@ -238,9 +246,11 @@ namespace ClassicUO.Game.UI.Controls
                     IsEnabled = false
                 };
 
+                _selectedPic.ApplyScale(_scale);
+
                 Add(_selectedPic);
 
-                Height = 25;
+                Height = (int)(25 * _scale);
 
 
                 _label.Y = (Height >> 1) - (_label.Height >> 1);
@@ -251,11 +261,11 @@ namespace ClassicUO.Game.UI.Controls
                     _selectedPic.Y = (Height >> 1) - (_selectedPic.Height >> 1);
                 }
 
-                Width = _label.X + _label.Width + 20;
+                Width = _label.X + _label.Width + (int)(25 * _scale);
 
-                if (Width < 100)
+                if (Width < (int)(100 * _scale))
                 {
-                    Width = 100;
+                    Width = (int)(100 * _scale);
                 }
 
                 // it is a bit tricky, but works :D
@@ -362,7 +372,7 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
-                    _moreMenuLabel.Draw(batcher, x + Width - _moreMenuLabel.Width, y + (Height >> 1) - (_moreMenuLabel.Height >> 1) - 1);
+                    _moreMenuLabel.Draw(batcher, x + Width - (int)((_moreMenuLabel.Width + 5) * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
                 }
 
                 return true;
