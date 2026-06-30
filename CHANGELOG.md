@@ -91,6 +91,7 @@ All notable changes to TazUO will be recorded here.
 * Pass the first click through to a Myra window so clicking a control on an unfocused window works in one click instead of requiring a focus click first - [P.R 604](https://github.com/PlayTazUO/TazUO/pull/604) ([bittiez](https://github.com/bittiez))
 * Fixed percent-type "Show Mobiles HP" text drifting in a radius around the mobile based on zoom level instead of staying centered on top - [P.R 608](https://github.com/PlayTazUO/TazUO/pull/608) ([bittiez](https://github.com/bittiez))
 * Fixed web map markers disappearing after changing facets - the live event stream is now kept alive across map changes so markers refresh correctly when recalling between facets - [P.R 619](https://github.com/PlayTazUO/TazUO/pull/619) ([bittiez](https://github.com/bittiez))
+* Game cursor now uses a consistent style across all maps instead of changing on non-zero maps - [P.R 622](https://github.com/PlayTazUO/TazUO/pull/622) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
