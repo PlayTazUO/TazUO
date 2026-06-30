@@ -230,21 +230,23 @@ namespace ClassicUO.Game.UI.Controls
                     0xFFFF,
                     0,
                     style: FontStyle.BlackBorder
-                );
+                )
+                {
+                    X = 25
+                };
 
-                _label.ApplyScale(_scale, scalePosition: false);
-                _label.X = (int)(25 * _scale);
+                _label.ApplyScale(_scale);
 
                 Add(_label);
 
 
-                _selectedPic = new GumpPic((int)(3 * _scale), 0, 0x838, 0)
+                _selectedPic = new GumpPic(3, 0, 0x838, 0)
                 {
                     IsVisible = entry.IsSelected,
                     IsEnabled = false
                 };
 
-                _selectedPic.ApplyScale(_scale, scalePosition: false);
+                _selectedPic.ApplyScale(_scale);
 
                 Add(_selectedPic);
 
