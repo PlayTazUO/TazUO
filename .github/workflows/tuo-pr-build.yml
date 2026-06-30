@@ -9,7 +9,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: read
 
 env:
@@ -96,6 +96,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write
+      pull-requests: read
     steps:
       - uses: actions/checkout@v6
         with:
@@ -107,8 +110,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
         run: |
-          TITLE=$(gh pr view "$PR_NUMBER" --json title -q .title)
+          PR_JSON=$(gh pr view "$PR_NUMBER" --json title,state)
+          TITLE=$(jq -r .title <<< "$PR_JSON")
+          STATE=$(jq -r .state <<< "$PR_JSON")
           echo "Pull request title: $TITLE"
+          echo "Pull request state: $STATE"
+
+          # If the PR was closed/merged while the build was running, skip
+          # publishing so we don't recreate an orphaned release/tag that the
+          # cleanup workflow has already removed (or will not run again for).
+          if [[ "$STATE" != "OPEN" ]]; then
+            echo "PR is no longer open; skipping pre-release publish."
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "create=true" >> "$GITHUB_OUTPUT"
 
           # The release name is the PR title verbatim.
           echo "title=$TITLE" >> "$GITHUB_OUTPUT"
@@ -119,19 +135,23 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Download all artifacts
+        if: steps.pr.outputs.create == 'true'
         uses: actions/download-artifact@v8
         with:
           path: all-zips
 
       - name: Flatten artifact structure
+        if: steps.pr.outputs.create == 'true'
         run: |
           mkdir -p zips
           find all-zips -name "*.zip" -type f -exec mv {} zips/ \;
 
       - name: List downloaded zips
+        if: steps.pr.outputs.create == 'true'
         run: ls -R zips
 
       - name: Remove old Release
+        if: steps.pr.outputs.create == 'true'
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -142,6 +162,7 @@ jobs:
           sleep 15
 
       - name: Create pre-release
+        if: steps.pr.outputs.create == 'true'
         uses: ncipollo/release-action@v1.20.0
         with:
           artifacts: "zips/*.zip"
