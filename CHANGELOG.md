@@ -49,6 +49,7 @@ All notable changes to TazUO will be recorded here.
 * Added individual scaling support for the Status Gump - [P.R 614](https://github.com/PlayTazUO/TazUO/pull/614) ([bittiez](https://github.com/bittiez))
 * Added a single scaling option for all server-created gumps - [P.R 615](https://github.com/PlayTazUO/TazUO/pull/615) ([bittiez](https://github.com/bittiez))
 * Add option to disable the party-style health bar for party members - [P.R 620](https://github.com/PlayTazUO/TazUO/pull/620) ([bittiez](https://github.com/bittiez))
+* Added a clear (X) button to the nameplate manager search field - [P.R 621](https://github.com/PlayTazUO/TazUO/pull/621) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
