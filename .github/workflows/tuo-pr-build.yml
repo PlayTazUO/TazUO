@@ -113,12 +113,8 @@ jobs:
           # The release name is the PR title verbatim.
           echo "title=$TITLE" >> "$GITHUB_OUTPUT"
 
-          # Git tags cannot contain spaces or many special characters,
-          # so derive a safe tag from the title.
-          TAG=$(echo "$TITLE" | tr '[:space:]' '-' | tr -cs '[:alnum:]._-' '-' | sed 's/-\+/-/g; s/^-//; s/-$//')
-          if [ -z "$TAG" ]; then
-            TAG="pr-${PR_NUMBER}"
-          fi
+          # Tag is derived from the PR number so each PR gets its own stable tag.
+          TAG="pr-${PR_NUMBER}-test-build"
           echo "Release tag: $TAG"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
