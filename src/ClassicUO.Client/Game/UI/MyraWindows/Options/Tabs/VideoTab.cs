@@ -44,7 +44,7 @@ public static class VideoTab
             .AddTab(
                 lang.Misc.Label,
                 GetMiscSubTabContent,
-                new SearchMetadata(lang.Misc.Label, Keywords: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective])
+                new SearchMetadata(lang.Misc.Label, Keywords: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective, "Weather", "Rain", "Snow"])
             );
     }
 
@@ -434,6 +434,23 @@ public static class VideoTab
             ),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(
+                    new Accessor<bool>(() => profile.EnableEnhancedWeather, b =>
+                    {
+                        profile.EnableEnhancedWeather = b;
+                        World.Instance?.SwitchWeather(b);
+                    }),
+                    TazLang.Get("enhanced_weather")
+                ),
+                Option.Checkbox(
+                    TazLang.Get("enhanced_weather_particle_effects"),
+                    new Accessor<bool>(() => profile.EnableWeatherEffects),
+                    search: new SearchMetadata(
+                        TazLang.Get("enhanced_weather_particle_effects"),
+                        Keywords: ["Weather", "Splash", "Ripple"])
+                )
+            ).WithSearch(new SearchMetadata(TazLang.Get("enhanced_weather"), Tags: ["Weather"], Keywords: ["Weather", "Rain", "Snow"])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(
                     new Accessor<bool>(() => profile.EnablePostProcessingEffects, b =>
                     {
                         profile.EnablePostProcessingEffects = b;
@@ -478,6 +495,6 @@ public static class VideoTab
                     search: new SearchMetadata(miscLang.PlayerPositionOffsetY, Keywords: [kw.Y])
                 )
             )
-        ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective]));
+        ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective, "Weather"]));
     }
 }
