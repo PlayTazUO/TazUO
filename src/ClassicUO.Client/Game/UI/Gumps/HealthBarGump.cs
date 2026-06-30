@@ -36,6 +36,9 @@ namespace ClassicUO.Game.UI.Gumps
         public bool IsLastAttackBar { get; set; }
         public static BaseHealthBarGump LastAttackBar { get; set; }
         protected bool HasBeenBuilt { get; set; }
+
+        /// <summary>Tracks whether the gump was last built with the compact party style, so a live toggle of <see cref="Profile.UsePartyHealthBars"/> can trigger a rebuild.</summary>
+        protected bool BuiltAsPartyBar { get; set; }
         protected World _world;
 
         protected BaseHealthBarGump(World world, Entity entity) : this(world, 0, 0)
@@ -479,6 +482,15 @@ namespace ClassicUO.Game.UI.Gumps
             && mobile.IsRenamable
             && entity != World.Player
             && !World.Party.Contains(LocalSerial);
+
+        /// <summary>
+        /// Whether this bar should be drawn using the special compact party style.
+        /// Returns true only when the entity is in the party and the user has not
+        /// disabled the party health bar style via <see cref="Profile.UsePartyHealthBars"/>.
+        /// </summary>
+        protected bool ShowPartyStyleBar =>
+            World.Party.Contains(LocalSerial)
+            && (ProfileManager.CurrentProfile?.UsePartyHealthBars ?? true);
     }
 
     public class HealthBarGumpCustom : BaseHealthBarGump
@@ -534,6 +546,10 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             Children.Clear();
 
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
+
             _background = null;
             _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
@@ -558,7 +574,14 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            bool inparty = World.Party.Contains(LocalSerial);
+            if (BuiltAsPartyBar != ShowPartyStyleBar)
+            {
+                RequestUpdateContents();
+
+                return;
+            }
+
+            bool inparty = ShowPartyStyleBar;
 
 
             ushort textColor = 0x0386;
@@ -937,8 +960,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             Entity entity = World.Get(LocalSerial);
 
+            BuiltAsPartyBar = ShowPartyStyleBar;
 
-            if (World.Party.Contains(LocalSerial))
+            if (ShowPartyStyleBar)
             {
                 Height = HPB_HEIGHT_MULTILINE;
                 Width = HPB_WIDTH;
@@ -1622,6 +1646,11 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             Children.Clear();
 
+            _oldHits = _oldMana = _oldStam = -1;
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
+
             _background = _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
 
@@ -1642,7 +1671,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             Entity entity = World.Get(LocalSerial);
 
-            if (World.Party.Contains(LocalSerial))
+            BuiltAsPartyBar = ShowPartyStyleBar;
+
+            if (ShowPartyStyleBar)
             {
                 Add
                 (
@@ -1909,7 +1940,14 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            bool inparty = World.Party.Contains(LocalSerial);
+            if (BuiltAsPartyBar != ShowPartyStyleBar)
+            {
+                RequestUpdateContents();
+
+                return;
+            }
+
+            bool inparty = ShowPartyStyleBar;
 
 
             ushort textColor = Settings.Hue_Text;
