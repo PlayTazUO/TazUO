@@ -805,160 +805,89 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildSound()
         {
-            SettingsOption s;
-
             PositionHelper.Reset();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                ("",
-                    new CheckboxWithLabel(lang.GetSound.EnableSound, 0, profile.EnableSound,
-                        (b) => { profile.EnableSound = b; }), MainContent.RightWidth, (int)PAGE.Sound)
-            );
+            var scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height)
+            {
+                CanMove = true,
+                AcceptMouseInput = true
+            };
+            _options.Add(new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.Sound));
 
-            PositionHelper.PositionControl(s.FullControl);
+            Control c;
+
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.EnableSound, 0, profile.EnableSound,
+                (b) => { profile.EnableSound = b; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.Indent();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new SliderWithLabel(lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
-                        profile.SoundVolume, (i) => { profile.SoundVolume = i; }),
-                    MainContent.RightWidth, (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new SliderWithLabel(lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
+                profile.SoundVolume, (i) => { profile.SoundVolume = i; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
 
-
-            _options.Add
-            (
-                s = new SettingsOption
-                ("",
-                    new CheckboxWithLabel(lang.GetSound.EnableMusic, 0, profile.EnableMusic,
-                        (b) => { profile.EnableMusic = b; }), MainContent.RightWidth, (int)PAGE.Sound)
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.EnableMusic, 0, profile.EnableMusic,
+                (b) => { profile.EnableMusic = b; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.Indent();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new SliderWithLabel(lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
-                        profile.MusicVolume, (i) => { profile.MusicVolume = i; }),
-                    MainContent.RightWidth, (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new SliderWithLabel(lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
+                profile.MusicVolume, (i) => { profile.MusicVolume = i; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
 
-
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new CheckboxWithLabel(lang.GetSound.LoginMusic, 0, Settings.GlobalSettings.LoginMusic,
-                        (b) => { Settings.GlobalSettings.LoginMusic = b; }),
-                    MainContent.RightWidth, (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.LoginMusic, 0, Settings.GlobalSettings.LoginMusic,
+                (b) => { Settings.GlobalSettings.LoginMusic = b; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.Indent();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new SliderWithLabel
-                    (
-                        lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
-                        Settings.GlobalSettings.LoginMusicVolume,
-                        (i) => { Settings.GlobalSettings.LoginMusicVolume = i; }
-                    ), MainContent.RightWidth, (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new SliderWithLabel(
+                lang.GetSound.SharedVolume, 0, ThemeSettings.SLIDER_WIDTH, 0, 100,
+                Settings.GlobalSettings.LoginMusicVolume,
+                (i) => { Settings.GlobalSettings.LoginMusicVolume = i; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.RemoveIndent();
             PositionHelper.BlankLine();
 
-
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new CheckboxWithLabel(lang.GetSound.PlayFootsteps, 0, profile.EnableFootstepsSound,
-                        (b) => { profile.EnableFootstepsSound = b; }), MainContent.RightWidth,
-                    (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.PlayFootsteps, 0, profile.EnableFootstepsSound,
+                (b) => { profile.EnableFootstepsSound = b; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new CheckboxWithLabel(lang.GetSound.CombatMusic, 0, profile.EnableCombatMusic,
-                        (b) => { profile.EnableCombatMusic = b; }), MainContent.RightWidth,
-                    (int)PAGE.Sound
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = new CheckboxWithLabel(TazLang.Get("sound_play_rain", "Play rain sound"), 0, profile.EnableRainSound,
+                (b) => { profile.EnableRainSound = b; }));
+            PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.CombatMusic, 0, profile.EnableCombatMusic,
+                (b) => { profile.EnableCombatMusic = b; }));
+            PositionHelper.PositionControl(c);
+            PositionHelper.BlankLine();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    "",
-                    new CheckboxWithLabel(lang.GetSound.BackgroundMusic, 0, profile.ReproduceSoundsInBackground,
-                        (b) => { profile.ReproduceSoundsInBackground = b; }),
-                    MainContent.RightWidth, (int)PAGE.Sound
-                )
-            );
+            scroll.Add(c = new CheckboxWithLabel(lang.GetSound.BackgroundMusic, 0, profile.ReproduceSoundsInBackground,
+                (b) => { profile.ReproduceSoundsInBackground = b; }));
+            PositionHelper.PositionControl(c);
 
-            PositionHelper.PositionControl(s.FullControl);
-
-            BuildVoiceRecognition();
+            BuildVoiceRecognition(scroll);
         }
 
-        private void BuildVoiceRecognition()
+        private void BuildVoiceRecognition(ScrollArea scroll)
         {
-            SettingsOption s;
             ModernOptionsGumpLanguage.TazUO voiceLang = lang.GetTazUO;
             VoiceRecognitionManager voiceManager = VoiceRecognitionManager.Instance;
 
             PositionHelper.BlankLine();
             PositionHelper.BlankLine();
 
-            // Section header
-            var header = TextBox.GetOne(voiceLang.VoiceRecognition, ThemeSettings.FONT,
-                ThemeSettings.STANDARD_TEXT_SIZE + 2, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default());
-            _options.Add(s = new SettingsOption("", header, MainContent.RightWidth, (int)PAGE.Sound));
-            PositionHelper.PositionControl(s.FullControl);
+            Control c;
+
+            scroll.Add(c = TextBox.GetOne(voiceLang.VoiceRecognition, ThemeSettings.FONT,
+                ThemeSettings.STANDARD_TEXT_SIZE + 2, ThemeSettings.TEXT_FONT_COLOR, TextBox.RTLOptions.Default()));
+            PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            // Create macro button
             var createMacroBtn = new ModernButton(0, 0, 160, 30, ButtonAction.Activate, voiceLang.VoiceCreateMacro,
                 ThemeSettings.BUTTON_FONT_COLOR);
             createMacroBtn.MouseUp += (sender, e) =>
@@ -970,30 +899,28 @@ namespace ClassicUO.Game.UI.Gumps
                 macroManager.PushToBack(macro);
                 UIManager.Add(new MacroButtonGump(World, macro, Mouse.Position.X, Mouse.Position.Y));
             };
-            _options.Add(s = new SettingsOption("", createMacroBtn, MainContent.RightWidth, (int)PAGE.Sound));
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = createMacroBtn);
+            PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            // Model path input
             var modelPathInput = new InputFieldWithLabel(voiceLang.VoiceModelPath, 300, profile.VoiceModelPath,
                 onTextChange: (sender, e) =>
                 {
                     profile.VoiceModelPath = ((InputField.StbTextBox)sender).Text;
                 });
             modelPathInput.SetTooltip(voiceLang.VoiceModelPathTooltip);
-            _options.Add(s = new SettingsOption("", modelPathInput, MainContent.RightWidth, (int)PAGE.Sound));
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = modelPathInput);
+            PositionHelper.PositionControl(c);
             PositionHelper.BlankLine();
 
-            // Apply button
             var applyBtn = new ModernButton(0, 0, 160, 30, ButtonAction.Activate, voiceLang.VoiceApplyModel,
                 ThemeSettings.BUTTON_FONT_COLOR);
             applyBtn.MouseUp += (sender, e) =>
             {
                 voiceManager.Reinitialize();
             };
-            _options.Add(s = new SettingsOption("", applyBtn, MainContent.RightWidth, (int)PAGE.Sound));
-            PositionHelper.PositionControl(s.FullControl);
+            scroll.Add(c = applyBtn);
+            PositionHelper.PositionControl(c);
         }
 
         private void BuildVideo()
@@ -1330,6 +1257,28 @@ namespace ClassicUO.Game.UI.Gumps
             content.AddToRight
             (new CheckboxWithLabel(lang.GetVideo.AnimWater, isChecked: profile.AnimatedWaterEffect, valueChanged: (b) => { profile.AnimatedWaterEffect = b; }),
                 true, page);
+
+            content.BlankLine();
+
+            content.AddToRight(
+                new CheckboxWithLabel(
+                    TazLang.Get("enhanced_weather"),
+                    isChecked: profile.EnableEnhancedWeather,
+                    valueChanged: (b) =>
+                    {
+                        profile.EnableEnhancedWeather = b;
+                        World.Instance?.SwitchWeather(b);
+                    }), true, page);
+
+            content.Indent();
+
+            content.AddToRight(
+                new CheckboxWithLabel(
+                    TazLang.Get("enhanced_weather_particle_effects"),
+                    isChecked: profile.EnableWeatherEffects,
+                    valueChanged: (b) => { profile.EnableWeatherEffects = b; }), true, page);
+
+            content.RemoveIndent();
 
             content.BlankLine();
 

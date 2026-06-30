@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Renderer.Effects;
 using FontStashSharp.Interfaces;
@@ -800,7 +800,8 @@ namespace ClassicUO.Renderer
             Vector2 start,
             Vector2 end,
             Vector3 color,
-            float stroke
+            float stroke,
+            float depth
         )
         {
             // Skip if texture is null or disposed
@@ -822,12 +823,37 @@ namespace ClassicUO.Renderer
                 Vector2.Zero,
                 new Vector2(length, stroke),
                 SpriteEffects.None,
-                0
+                depth
             );
         }
 
-
-
+        public void Draw
+        (
+            Texture2D texture,
+            Rectangle destinationRectangle,
+            Vector3 color,
+            float layerDepth
+        )
+        {
+            AddSprite(
+                texture,
+                0.0f,
+                0.0f,
+                1.0f,
+                1.0f,
+                destinationRectangle.X,
+                destinationRectangle.Y,
+                destinationRectangle.Width,
+                destinationRectangle.Height,
+                color,
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f,
+                layerDepth,
+                0
+            );
+        }
 
         public void Draw
         (

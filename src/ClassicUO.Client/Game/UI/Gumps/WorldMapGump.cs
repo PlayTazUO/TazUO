@@ -2293,7 +2293,8 @@ public class WorldMapGump : ResizableGump
                    new Vector2(pdrot.X - 2, pdrot.Y - 2),
                    new Vector2(prot.X, prot.Y),
                    ShaderHueTranslator.GetHueVector(0),
-                   1
+                   1,
+                   0f
                 );
             }
         }
@@ -2478,7 +2479,8 @@ public class WorldMapGump : ResizableGump
                    new Vector2(pdrot.X - 2, pdrot.Y - 2),
                    new Vector2(prot.X, prot.Y),
                    ShaderHueTranslator.GetHueVector(0),
-                   1
+                   1,
+                   0f
                 );
             }
 
@@ -2498,7 +2500,8 @@ public class WorldMapGump : ResizableGump
                 new Vector2(end.X - 2, end.Y - 2),
                 new Vector2(start.X, start.Y),
                 ShaderHueTranslator.GetHueVector(0),
-                1
+                1,
+                0f
                 );
         }
 
@@ -3104,7 +3107,7 @@ public class WorldMapGump : ResizableGump
             //}
             ////Handle drawing a label here
 
-            batcher.DrawLine(texture, start, end, hueVector, 1);
+            batcher.DrawLine(texture, start, end, hueVector, 1, 0f);
         }
     }
 
@@ -3130,7 +3133,7 @@ public class WorldMapGump : ResizableGump
             Vector2 start = WorldPointToGumpPoint(srcRect.X, worldY, x, y, width, height, zoom);
             Vector2 end = WorldPointToGumpPoint(srcRect.X + srcRect.Width, worldY, x, y, width, height, zoom);
 
-            batcher.DrawLine(colorTexture, start, end, hueVector, 1);
+            batcher.DrawLine(colorTexture, start, end, hueVector, 1, 0f);
         }
 
         for (int worldX = (srcRect.X / GRID_SKIP) * GRID_SKIP; worldX < srcRect.X + srcRect.Width; worldX += GRID_SKIP)
@@ -3138,7 +3141,7 @@ public class WorldMapGump : ResizableGump
             Vector2 start = WorldPointToGumpPoint(worldX, srcRect.Y, x, y, width, height, zoom);
             Vector2 end = WorldPointToGumpPoint(worldX, srcRect.Y + srcRect.Height, x, y, width, height, zoom);
 
-            batcher.DrawLine(colorTexture, start, end, hueVector, 1);
+            batcher.DrawLine(colorTexture, start, end, hueVector, 1, 0f);
         }
 
         batcher.SetBlendState(null);

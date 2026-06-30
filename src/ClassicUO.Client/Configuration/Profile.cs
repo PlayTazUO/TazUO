@@ -136,6 +136,7 @@ namespace ClassicUO.Configuration
         public bool EnableMusic { get; set => SetProperty(ref field, value); } = true;
         public int MusicVolume { get; set => SetProperty(ref field, value); } = 50;
         public bool EnableFootstepsSound { get; set => SetProperty(ref field, value); } = true;
+        public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
         public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
         public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
 
@@ -367,6 +368,8 @@ namespace ClassicUO.Configuration
         public int AuraUnderFeetType { get; set => SetProperty(ref field, value); } // 0 = NO, 1 = in warmode, 2 = ctrl+shift, 3 = always
         public bool AuraOnMouse { get; set => SetProperty(ref field, value); } = true;
         public bool AnimatedWaterEffect { get; set => SetProperty(ref field, value); } = false;
+        public bool EnableWeatherEffects { get; set => SetProperty(ref field, value); } = false;
+        public bool EnableEnhancedWeather { get; set => SetProperty(ref field, value); } = false;
 
         public bool PartyAura { get; set => SetProperty(ref field, value); }
 
