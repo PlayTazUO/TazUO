@@ -36,6 +36,11 @@ public static class HealthBarsTab
                 )
             ).WithSearch(new SearchMetadata(genLang.ModernHealthBars, Keywords: [kw.Modern])),
             Option.Checkbox(
+                genLang.UsePartyHealthBars,
+                new Accessor<bool>(() => profile.UsePartyHealthBars),
+                search: new SearchMetadata(genLang.UsePartyHealthBars, Keywords: [kw.Party, kw.HealthBar])
+            ),
+            Option.Checkbox(
                 genLang.SaveHPBars,
                 new Accessor<bool>(() => profile.SaveHealthbars),
                 search: new SearchMetadata(genLang.SaveHPBars, Keywords: [kw.Save])
