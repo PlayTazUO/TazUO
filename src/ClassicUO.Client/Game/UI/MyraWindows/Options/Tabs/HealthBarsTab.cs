@@ -26,6 +26,8 @@ public static class HealthBarsTab
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        string usePartyHealthBarsLabel = TazLang.Get("healthbar_usepartystyle", "Use party health bar style for party members");
+
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.CustomBarsToggled), genLang.ModernHealthBars),
@@ -36,9 +38,9 @@ public static class HealthBarsTab
                 )
             ).WithSearch(new SearchMetadata(genLang.ModernHealthBars, Keywords: [kw.Modern])),
             Option.Checkbox(
-                genLang.UsePartyHealthBars,
+                usePartyHealthBarsLabel,
                 new Accessor<bool>(() => profile.UsePartyHealthBars),
-                search: new SearchMetadata(genLang.UsePartyHealthBars, Keywords: [kw.Party, kw.HealthBar])
+                search: new SearchMetadata(usePartyHealthBarsLabel, Keywords: [kw.Party, kw.HealthBar])
             ),
             Option.Checkbox(
                 genLang.SaveHPBars,

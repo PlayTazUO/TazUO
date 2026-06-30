@@ -930,7 +930,6 @@ namespace ClassicUO.Configuration
             public string OldStatusGump { get; set; } = "Use old status gump";
             public string PartyInviteGump { get; set; } = "Show party invite gump";
             public string ModernHealthBars { get; set; } = "Use modern health bar gumps";
-            public string UsePartyHealthBars { get; set; } = "Use party health bar style for party members";
             public string ModernHPBlackBG { get; set; } = "Use black background";
             public string SaveHPBars { get; set; } = "Save health bars on logout";
             public string CloseHPGumpsWhen { get; set; } = "Close health bars when";
