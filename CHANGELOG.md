@@ -5,6 +5,8 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Overhauled the options window with a new, modern UI (use command `old-options-window` to open legacy window) - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Added reorder support to CoolDown Bars - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Pet support for the bandage agent - [P.R 485](https://github.com/PlayTazUO/TazUO/pull/485) ([yuval-po](https://github.com/yuval-po))
 * Allow dropping of items onto minimized grid containers - [P.R 487](https://github.com/PlayTazUO/TazUO/pull/487) ([yuval-po](https://github.com/yuval-po))
 * Auto focus and enter to submit support added to prompt input window - [P.R 486](https://github.com/PlayTazUO/TazUO/pull/486) ([bittiez](https://github.com/bittiez))
@@ -38,8 +40,21 @@ All notable changes to TazUO will be recorded here.
 * Add option to select and copy text in journal - [P.R 575](https://github.com/PlayTazUO/TazUO/pull/575) ([Nesci28](https://github.com/Nesci28))
 * Add Script slot type to the Spell Bar - [P.R 568](https://github.com/PlayTazUO/TazUO/pull/568) ([eddo87](https://github.com/eddo87))
 * Converted the Add/Edit User Marker world map window to a Myra window - [P.R 588](https://github.com/PlayTazUO/TazUO/pull/588) ([bittiez](https://github.com/bittiez))
+* Journal filters now match partial messages (case-insensitive contains) instead of requiring exact matches - [P.R 593](https://github.com/PlayTazUO/TazUO/pull/593) ([bittiez](https://github.com/bittiez))
+* Added a centralized hotkey system with a Hotkeys tab in the Assistant window for viewing, rebinding, and conflict-checking hotkeys (including macros), plus a global hotkey shutoff - [P.R 591](https://github.com/PlayTazUO/TazUO/pull/591) ([bittiez](https://github.com/bittiez))
+* Added a world map context menu option to choose the double click action between toggling the lock state and toggling fullscreen - [P.R 602](https://github.com/PlayTazUO/TazUO/pull/602) ([bittiez](https://github.com/bittiez))
+* Added a "Loot Hovered Item" macro that grabs whatever item the mouse is hovering over — grid containers, regular containers, paperdoll, modern paperdoll, items on the ground, and item nameplates - [P.R 603](https://github.com/PlayTazUO/TazUO/pull/603) ([bittiez](https://github.com/bittiez))
+* Added a warning when more than 100 gumps of the same type are open at once - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
+* Add Skill slot type to the Spell Bar - [P.R 613](https://github.com/PlayTazUO/TazUO/pull/613) ([bittiez](https://github.com/bittiez))
+* Added individual scaling support for the Status Gump - [P.R 614](https://github.com/PlayTazUO/TazUO/pull/614) ([bittiez](https://github.com/bittiez))
+* Added a single scaling option for all server-created gumps - [P.R 615](https://github.com/PlayTazUO/TazUO/pull/615) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Fixed reset/min/max size buttons in resizable windows not updating correctly or causing crashes - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Fixed mouse clicks passing through Myra windows in certain cases - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Render scale is now clamped to 0.1–1.75 to prevent crashes from out-of-range values - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
+* Fix rapid right-clicks interrupting character movement - [P.R 600](https://github.com/PlayTazUO/TazUO/pull/600) ([bittiez](https://github.com/bittiez))
 * Fixed crash reading BWT-compressed UOP animations caused by returning a non-pooled buffer to the array pool - [P.R 532](https://github.com/PlayTazUO/TazUO/pull/532) ([bittiez](https://github.com/bittiez))
 * Fixed WorldMap crash when a marker has a null/empty name - [P.R 530](https://github.com/PlayTazUO/TazUO/pull/530) ([bittiez](https://github.com/bittiez))
 * Fixed reconnect getting stuck when the server is unavailable or restarting during a reconnect attempt - [P.R 517](https://github.com/PlayTazUO/TazUO/pull/517) ([bittiez](https://github.com/bittiez))
@@ -70,12 +85,17 @@ All notable changes to TazUO will be recorded here.
 * Add option disable gargoyle flying animation - ([Nesci28](https://github.com/Nesci28))
 * Fixed NullReferenceException in ImprovedBuffGump when a buff icon's title cliloc is not found - [P.R 585](https://github.com/PlayTazUO/TazUO/pull/585) ([bittiez](https://github.com/bittiez))
 * Fixed crash when creating a journal tab with a name that already exists - [P.R 589](https://github.com/PlayTazUO/TazUO/pull/589) ([bittiez](https://github.com/bittiez))
+* Show a suggested fix for the "OpenGL 2.1 support is required!" graphics device error, advising users to update their drivers or try the `-force_driver 1`, `2`, or `3` launch args - [P.R 595](https://github.com/PlayTazUO/TazUO/pull/595) ([bittiez](https://github.com/bittiez))
+* Pass the first click through to a Myra window so clicking a control on an unfocused window works in one click instead of requiring a focus click first - [P.R 604](https://github.com/PlayTazUO/TazUO/pull/604) ([bittiez](https://github.com/bittiez))
+* Fixed percent-type "Show Mobiles HP" text drifting in a radius around the mobile based on zoom level instead of staying centered on top - [P.R 608](https://github.com/PlayTazUO/TazUO/pull/608) ([bittiez](https://github.com/bittiez))
+* Fixed web map markers disappearing after changing facets - the live event stream is now kept alive across map changes so markers refresh correctly when recalling between facets - [P.R 619](https://github.com/PlayTazUO/TazUO/pull/619) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
 * Fixed a legion bug where control/gump `.IsDisposed` was not reported correctly. - ([bittiez](https://github.com/bittiez))
 * Added `API.GetClilocString(cliloc, englishOnly=False)` to retrieve cliloc strings from scripts - [P.R 546](https://github.com/PlayTazUO/TazUO/pull/546) ([bittiez](https://github.com/bittiez))
 * Added `API.PlaySound(index)` to play a sound effect locally, `API.LastSpellIndex` to get the index of the last spell cast, and `API.LastSpellName` to get the name of the last spell cast - [P.R 561](https://github.com/PlayTazUO/TazUO/pull/561) ([bittiez](https://github.com/bittiez))
+* Added the ability to bind a hotkey (keyboard, mouse, or controller) to a Legion script from the script manager to toggle it on/off - [P.R 609](https://github.com/PlayTazUO/TazUO/pull/609) ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))
@@ -84,6 +104,7 @@ All notable changes to TazUO will be recorded here.
 * Managed zlib is now a global setting, defaults to enabled on Linux and disabled on Windows/Mac, and the `-zlib` arg now persists the setting - [P.R 514](https://github.com/PlayTazUO/TazUO/pull/514) ([bittiez](https://github.com/bittiez))
 * Add option to disable corpse retry in autoloot - [P.R 525](https://github.com/PlayTazUO/TazUO/pull/525) ([bittiez](https://github.com/bittiez))
 * Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 557](https://github.com/PlayTazUO/TazUO/pull/557) ([bittiez](https://github.com/bittiez))
+* Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 607](https://github.com/PlayTazUO/TazUO/pull/607) ([bittiez](https://github.com/bittiez))
 
 ---
 

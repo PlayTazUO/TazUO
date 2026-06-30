@@ -22,6 +22,19 @@ namespace ClassicUO.Input
         /// </summary>
         public static event EventHandler<MouseLeftButtonClickStateChangedEventArgs> LeftButtonClickStateChanged;
 
+        /// <summary>
+        /// Invoked whenever any mouse button is pressed. Used by hotkey capture in the UI.
+        /// </summary>
+        public static event Action<MouseButtonType> ButtonDownEvent;
+
+        /// <summary>
+        /// Invoked on mouse wheel scroll; the argument is true when scrolled up. Used by hotkey capture.
+        /// </summary>
+        public static event Action<bool> WheelEvent;
+
+        /// <summary>Raise <see cref="WheelEvent"/>. Called from the SDL wheel dispatch.</summary>
+        public static void RaiseWheelEvent(bool up) => WheelEvent?.Invoke(up);
+
         public static MouseInfo GetMyraMouseInfo()
         {
             var info = new MouseInfo();
@@ -64,11 +77,19 @@ namespace ClassicUO.Input
                     break;
 
                 case MouseButtonType.XButton1:
+                    XButton1Pressed = true;
+                    XButtonPressed = true;
+
+                    break;
+
                 case MouseButtonType.XButton2:
+                    XButton2Pressed = true;
                     XButtonPressed = true;
 
                     break;
             }
+
+            ButtonDownEvent?.Invoke(type);
 
             SDL.SDL_CaptureMouse(true);
         }
@@ -94,8 +115,14 @@ namespace ClassicUO.Input
                     break;
 
                 case MouseButtonType.XButton1:
+                    XButton1Pressed = false;
+                    XButtonPressed = XButton2Pressed;
+
+                    break;
+
                 case MouseButtonType.XButton2:
-                    XButtonPressed = false;
+                    XButton2Pressed = false;
+                    XButtonPressed = XButton1Pressed;
 
                     break;
             }
@@ -142,6 +169,10 @@ namespace ClassicUO.Input
         public static bool MButtonPressed { get; set; }
 
         public static bool XButtonPressed { get; set; }
+
+        public static bool XButton1Pressed { get; set; }
+
+        public static bool XButton2Pressed { get; set; }
 
         public static bool IsDragging { get; set; }
 

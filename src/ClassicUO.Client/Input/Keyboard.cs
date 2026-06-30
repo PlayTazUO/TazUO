@@ -16,6 +16,14 @@ namespace ClassicUO.Input
         public static event Action<string> KeyDownEvent;
         public static event Action<string> KeyUpEvent;
 
+        /// <summary>
+        /// Fired when a lone modifier key is pressed or released, carrying the current generic
+        /// CTRL/SHIFT/ALT mask. Bare modifiers are intentionally not broadcast via
+        /// <see cref="KeyDownEvent"/> (so tapping Ctrl doesn't trigger hotkeys), so hotkey capture
+        /// uses this to let a modifier-only binding be recorded.
+        /// </summary>
+        public static event Action<SDL.SDL_Keymod> BareModifierEvent;
+
         public static string NormalizeKeyString(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -76,11 +84,27 @@ namespace ClassicUO.Input
         private static void OnKeyEvent(SDL.SDL_KeyboardEvent e, Action<string> keyboardEvent)
         {
             UpdateModifiers(e.mod);
-            if (IgnoreBareModifierKey(e) || keyboardEvent == null)
+
+            if (IgnoreBareModifierKey(e))
+            {
+                BareModifierEvent?.Invoke(CurrentMods());
+                return;
+            }
+
+            if (keyboardEvent == null)
                 return;
 
             string hotkey = BuildHotKeyString(e);
             keyboardEvent?.Invoke(hotkey);
+        }
+
+        private static SDL.SDL_Keymod CurrentMods()
+        {
+            SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
+            if (Ctrl) mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
+            if (Shift) mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
+            if (Alt) mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
+            return mod;
         }
 
         private static void UpdateModifiers(SDL.SDL_Keymod e)

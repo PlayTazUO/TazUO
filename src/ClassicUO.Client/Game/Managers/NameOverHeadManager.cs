@@ -10,15 +10,21 @@ using ClassicUO.Utility.Logging;
 using SDL3;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using ClassicUO.Common.Enums;
+using ClassicUO.Game.Managers.Hotkeys;
+using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.Managers
 {
     [Flags]
-    public enum NameOverheadOptions
+    public enum NameOverheadOptions : int
     {
         None = 0,
 
@@ -85,7 +91,7 @@ namespace ClassicUO.Game.Managers
         public static string Search { get; set; } = string.Empty;
 
         public static bool IsTemporarilyShowing { get; private set; }
-        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || Keyboard.Ctrl && Keyboard.Shift;
+        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || HotKeys.IsPressed(HotKeyRegistrar.ShowNameplatesId);
 
         private static List<NameOverheadOption> Options { get; set; } = new List<NameOverheadOption>();
 
@@ -346,13 +352,12 @@ namespace ClassicUO.Game.Managers
 
         private static void CreateDefaultEntries() => Options.AddRange
             (
-                new[]
-                {
-                    new NameOverheadOption("All", int.MaxValue),
-                    new NameOverheadOption("Mobiles only", (int)NameOverheadOptions.AllMobiles),
-                    new NameOverheadOption("Items only", (int)NameOverheadOptions.AllItems),
-                    new NameOverheadOption("Mobiles & Corpses only", (int)NameOverheadOptions.MobilesAndCorpses),
-                }
+                [
+                    new NameOverheadOption("All", Utility.ByteFlagHelper.AllBits<NameOverheadOptions>()) { Deletable = false },
+                    new NameOverheadOption("Mobiles only", NameOverheadOptions.AllMobiles) { Deletable = false },
+                    new NameOverheadOption("Items only", NameOverheadOptions.AllItems) { Deletable = false },
+                    new NameOverheadOption("Mobiles & Corpses only", NameOverheadOptions.MobilesAndCorpses) { Deletable = false }
+                ]
             );
 
         public static NameOverheadOption FindOption(string name) => Options.Find(o => o.Name == name);
@@ -421,15 +426,28 @@ namespace ClassicUO.Game.Managers
         }
     }
 
-    public class NameOverheadOption
+    public class NameOverheadOption : IProfile
     {
-        public NameOverheadOption(string name, SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift, int optionflagscode) : this(name)
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #region Accessors
+
+        public string Name { get; set => SetField(ref field, value); }
+        public bool Alt { get; set => SetField(ref field, value); }
+        public bool Ctrl { get; set => SetField(ref field, value); }
+        public bool Shift { get; set => SetField(ref field, value); }
+        public bool Deletable { get; set => SetField(ref field, value); } = true;
+        public SDL.SDL_Keycode Key { get; set => SetField(ref field, value); }
+
+        #endregion
+
+        public NameOverheadOption(string name, SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift, int optionFlagsCode) : this(name)
         {
             Key = key;
             Alt = alt;
             Ctrl = ctrl;
             Shift = shift;
-            NameOverheadOptionFlags = optionflagscode;
+            NameOverheadOptionFlags = (NameOverheadOptions)optionFlagsCode;
         }
 
         public NameOverheadOption(string name)
@@ -437,19 +455,17 @@ namespace ClassicUO.Game.Managers
             Name = name;
         }
 
-        public NameOverheadOption(string name, int optionflagcode)
+        public NameOverheadOption(string name, NameOverheadOptions optionFlagCode)
         {
             Name = name;
-            NameOverheadOptionFlags = optionflagcode;
+            NameOverheadOptionFlags = optionFlagCode;
         }
 
-        public string Name { get; }
-
-        public SDL.SDL_Keycode Key { get; set; }
-        public bool Alt { get; set; }
-        public bool Ctrl { get; set; }
-        public bool Shift { get; set; }
-        public int NameOverheadOptionFlags { get; set; }
+        public NameOverheadOptions NameOverheadOptionFlags
+        {
+            get;
+            set => SetField(ref field, value);
+        }
 
         public bool Equals(NameOverheadOption other)
         {
@@ -465,11 +481,12 @@ namespace ClassicUO.Game.Managers
         {
             writer.WriteStartElement("nameoverheadoption");
             writer.WriteAttributeString("name", Name);
+            writer.WriteAttributeString("deleteable", Deletable.ToString());
             writer.WriteAttributeString("key", ((int)Key).ToString());
             writer.WriteAttributeString("alt", Alt.ToString());
             writer.WriteAttributeString("ctrl", Ctrl.ToString());
             writer.WriteAttributeString("shift", Shift.ToString());
-            writer.WriteAttributeString("optionflagscode", NameOverheadOptionFlags.ToString());
+            writer.WriteAttributeString("optionflagscode", NameOverheadOptionFlags.ToInt().ToString());
 
             writer.WriteEndElement();
         }
@@ -485,7 +502,21 @@ namespace ClassicUO.Game.Managers
             Alt = bool.Parse(xml.GetAttribute("alt"));
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));
-            NameOverheadOptionFlags = int.Parse(xml.GetAttribute("optionflagscode"));
+
+            NameOverheadOptionFlags = (NameOverheadOptions)int.Parse(xml.GetAttribute("optionflagscode"));
+            Deletable = !bool.TryParse(xml.GetAttribute("deleteable"), out bool deletable) || deletable;
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
         }
     }
 }

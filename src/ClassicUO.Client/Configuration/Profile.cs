@@ -235,6 +235,11 @@ namespace ClassicUO.Configuration
         public int SelfHeal_CureVerifyMs { get; set => SetProperty(ref field, value); } = 600; // wait for poison to clear before recasting Cure
         public int SelfHeal_InterruptRetryMs { get; set => SetProperty(ref field, value); } = 100; // delay before recasting after an interrupted cast
 
+        // RelativePaths of Legion scripts that have a hotkey assigned. The key binding itself lives in
+        // the central hotkey system (hotkeys.json); this per-profile list records which scripts to
+        // re-register on load. Entries whose script no longer exists are pruned on load.
+        public List<string> ScriptHotkeys { get; set => SetProperty(ref field, value); } = new List<string>();
+
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
         public partial bool BandageAgentUseJournalTrigger { get; set; }
@@ -425,6 +430,7 @@ namespace ClassicUO.Configuration
         public bool WorldMapFlipMap { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapTopMost { get; set => SetProperty(ref field, value); }
         public bool WorldMapFreeView { get; set => SetProperty(ref field, value); }
+        public WorldMapDoubleClickAction WorldMapDoubleClickAction { get; set => SetProperty(ref field, value); } = WorldMapDoubleClickAction.ToggleLock;
         public bool WorldMapShowParty { get; set => SetProperty(ref field, value); } = true;
         public int WorldMapZoomIndex { get; set => SetProperty(ref field, value); } = 4;
         public bool WorldMapShowCoordinates { get; set => SetProperty(ref field, value); } = true;
@@ -607,12 +613,12 @@ namespace ClassicUO.Configuration
 
         public bool EnableAlphaScrollingOnGumps { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonConverter(typeof(Point2Converter))] public Point WorldMapPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
-        [JsonConverter(typeof(Point2Converter))] public Point PaperdollPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
-        [JsonConverter(typeof(Point2Converter))] public Point JournalPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
-        [JsonConverter(typeof(Point2Converter))] public Point StatusGumpPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
-        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
-        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridSize { get; set => SetProperty(ref field, value); } = new Point(300, 300);
+        [JsonConverter(typeof(Point2Converter))] public Point WorldMapPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point PaperdollPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point JournalPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point StatusGumpPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
+        [JsonConverter(typeof(Point2Converter))] public Point BackpackGridSize { get; set => SetProperty(ref field, value); } = new(300, 300);
         public bool WorldMapLocked { get; set => SetProperty(ref field, value); } = false;
         public bool PaperdollLocked { get; set => SetProperty(ref field, value); } = false;
         public bool JournalLocked { get; set => SetProperty(ref field, value); } = false;
@@ -637,6 +643,7 @@ namespace ClassicUO.Configuration
         public string NamePlateFont { get; set => SetProperty(ref field, value); } = "avadonian";
         public int NamePlateFontSize { get; set => SetProperty(ref field, value); } = 20;
 
+        public bool UseNewOptionsWindow { get; set => SetProperty(ref field, value); } = true;
         public string OptionsFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
         public int OptionsFontSize { get; set => SetProperty(ref field, value); } = 18;
 
@@ -775,6 +782,13 @@ namespace ClassicUO.Configuration
         public float CameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
 
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
+
+        /// <summary>
+        /// Scale applied to every server created gump (and all of its controls).
+        /// </summary>
+        public double ServerGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
         public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
 

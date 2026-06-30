@@ -6,6 +6,7 @@ using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
@@ -499,7 +500,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             switch (key)
             {
-                case SDL.SDL_Keycode.SDLK_Q when Keyboard.Ctrl && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
+                case SDL.SDL_Keycode.SDLK_Q when HotKeys.IsPressed(HotKeyRegistrar.ChatHistoryModId) && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
 
                     GameScene scene = Client.Game.GetScene<GameScene>();
 
@@ -533,7 +534,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     break;
 
-                case SDL.SDL_Keycode.SDLK_W when Keyboard.Ctrl && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
+                case SDL.SDL_Keycode.SDLK_W when HotKeys.IsPressed(HotKeyRegistrar.ChatHistoryModId) && !ProfileManager.CurrentProfile.DisableCtrlQWBtn:
 
                     scene = Client.Game.GetScene<GameScene>();
 

@@ -10,9 +10,9 @@ public static class PathfindingTabContent
     {
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
-        HorizontalStackPanel zLevelSliderWidget = MyraHSlider.SliderWithLabel(
+        HorizontalStackPanel zLevelSliderWidget = LabeledHorizontalSlider.SliderWithLabel(
             "Pathfinding Z level difference",
-            out MyraHSlider zLevelSlider,
+            out LabeledHorizontalSlider zLevelSlider,
             v => { ProfileManager.CurrentProfile?.PathfindingZLevelDiff = (int)v; },
             min: 1,
             max: 50,
@@ -51,9 +51,9 @@ public static class PathfindingTabContent
 
         root.Widgets.Add(wmTimeoutWidget);
 
-        HorizontalStackPanel wmRetriesSliderWidget = MyraHSlider.SliderWithLabel(
+        HorizontalStackPanel wmRetriesSliderWidget = LabeledHorizontalSlider.SliderWithLabel(
             "World map pathfinding retry attempts",
-            out MyraHSlider wmRetriesSlider,
+            out LabeledHorizontalSlider wmRetriesSlider,
             v => { ProfileManager.CurrentProfile?.WorldMapPathfindingMaxRetries = (int)v; },
             min: 0,
             max: 10,

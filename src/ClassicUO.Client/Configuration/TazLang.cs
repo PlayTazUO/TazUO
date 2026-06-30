@@ -24,8 +24,18 @@ namespace ClassicUO.Configuration
         {
             if(!_strings.TryGetValue(key, out string v))
                 return string.Empty;
-            
-            return string.Format(v, replace);
+
+            try
+            {
+                return string.Format(v, replace);
+            }
+            catch (FormatException ex)
+            {
+                // A malformed localization template (stray braces or a placeholder
+                // index beyond the supplied args) must never crash the client.
+                Log.Warn($"TazLang: invalid format string for key '{key}': {ex.Message}");
+                return v;
+            }
         }
 
         /// <summary>

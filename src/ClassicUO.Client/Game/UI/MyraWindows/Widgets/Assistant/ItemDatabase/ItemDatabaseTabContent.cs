@@ -46,7 +46,7 @@ public static class ItemDatabaseTabContent
         TextBox hueBox = null!;
         TextBox layerBox = null!;
         TextBox containerBox = null!;
-        MyraHSlider? maxResultsSlider = null;
+        LabeledHorizontalSlider? maxResultsSlider = null;
 
         var resultsPanel = new VerticalStackPanel { Spacing = 2 };
         var statusLabel = new MyraLabel("Ready to search", MyraLabel.TextStyle.P);
@@ -270,9 +270,9 @@ public static class ItemDatabaseTabContent
             MyraCheckButton.CreateWithCallback(false, b => currentCharOnly = b, "Current character only"));
         advancedPanel.Widgets.Add(locationCheckRow);
 
-        HorizontalStackPanel sliderWidget = MyraHSlider.SliderWithLabel(
+        HorizontalStackPanel sliderWidget = LabeledHorizontalSlider.SliderWithLabel(
             "Max results",
-            out MyraHSlider ms,
+            out LabeledHorizontalSlider ms,
             v => maxResults = (int)v,
             10, 1000, 100);
         maxResultsSlider = ms;

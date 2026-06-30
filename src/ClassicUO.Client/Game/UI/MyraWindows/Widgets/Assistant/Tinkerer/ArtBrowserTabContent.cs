@@ -39,7 +39,7 @@ public static class ArtBrowserTabContent
         // Upper bound on browsable item graphics. Static art is indexed by item
         // graphic id; cap to the available TileData / 0x10000 range.
         int maxGraphic = 0x10000;
-        var tileData = Client.Game.UO.FileManager?.TileData;
+        TileDataLoader? tileData = Client.Game.UO.FileManager?.TileData;
         if (tileData?.StaticData != null && tileData.StaticData.Length < maxGraphic)
             maxGraphic = tileData.StaticData.Length;
 
@@ -77,7 +77,7 @@ public static class ArtBrowserTabContent
             // Preview, scaled to the requested zoom while preserving aspect ratio.
             if (hasArt)
             {
-                var preview = new MyraArtTexture(id, zoomSize);
+                var preview = new MyraArtTexture(id, hue: 0, maxSize: zoomSize);
                 int natW = art.UV.Width;
                 int natH = art.UV.Height;
                 if (natW > 0 && natH > 0)
@@ -129,7 +129,7 @@ public static class ArtBrowserTabContent
                     : TazLang.Get("tinkerer_art_dimensions_noart", "Dimensions: No art"),
                 MyraLabel.TextStyle.P));
 
-            var sd = Client.Game.UO.FileManager?.TileData?.StaticData;
+            StaticTiles[]? sd = Client.Game.UO.FileManager?.TileData?.StaticData;
             if (sd != null && id < sd.Length)
             {
                 StaticTiles st = sd[id];
@@ -250,7 +250,7 @@ public static class ArtBrowserTabContent
         if (id == selectedGraphic)
             cell.Border = SelectedBorder;
 
-        var art = new MyraArtTexture((uint)id, CELL - 4)
+        var art = new MyraArtTexture((uint)id, maxSize: CELL - 4)
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center
@@ -263,7 +263,7 @@ public static class ArtBrowserTabContent
 
     private static string BuildCellTooltip(int id)
     {
-        var sd = Client.Game.UO.FileManager?.TileData?.StaticData;
+        StaticTiles[]? sd = Client.Game.UO.FileManager?.TileData?.StaticData;
         if (sd != null && id < sd.Length && !string.IsNullOrEmpty(sd[id].Name))
             return TazLang.Get("tinkerer_art_tooltip_named", new[] { id.ToString(), $"0x{id:X4}", sd[id].Name });
         return TazLang.Get("tinkerer_art_tooltip", new[] { id.ToString(), $"0x{id:X4}" });

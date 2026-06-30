@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -32,11 +32,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Resources;
+using ClassicUO.Common.Enums;
 using SDL3;
 
 namespace ClassicUO.Game.UI.Controls
@@ -189,9 +191,9 @@ namespace ClassicUO.Game.UI.Controls
                 bool isChecked = ((Checkbox)sender).IsChecked;
 
                 if (isChecked)
-                    Option.NameOverheadOptionFlags |= (int)optionFlag;
+                    Option.NameOverheadOptionFlags |= optionFlag;
                 else
-                    Option.NameOverheadOptionFlags &= ~(int)optionFlag;
+                    Option.NameOverheadOptionFlags &= ~optionFlag;
 
                 if (NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == Option.Name)
                     NameOverHeadManager.ActiveOverheadOptions = (NameOverheadOptions)Option.NameOverheadOptionFlags;
@@ -273,7 +275,8 @@ namespace ClassicUO.Game.UI.Controls
             switch ((ButtonType)buttonID)
             {
                 case ButtonType.CheckAll:
-                    Option.NameOverheadOptionFlags = int.MaxValue;
+                    // Dynamically set all flags
+                    Option.NameOverheadOptionFlags = Utility.ByteFlagHelper.AllBits<NameOverheadOptions>();
                     UpdateCheckboxesByCurrentOptionFlags();
 
                     break;

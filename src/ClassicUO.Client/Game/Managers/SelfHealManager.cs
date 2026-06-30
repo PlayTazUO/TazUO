@@ -1,5 +1,6 @@
 using System;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Input;
 using ClassicUO.Network;
@@ -13,6 +14,9 @@ namespace ClassicUO.Game.Managers
     /// </summary>
     public static class SelfHealManager
     {
+        /// <summary>Id this manager's hotkey is registered under in the central <see cref="HotKeys"/> registry.</summary>
+        public const string SelfHealHotkeyId = "selfheal";
+
         private static readonly SelfHealStateMachine _machine = new();
         private static readonly LiveEnv _env = new();
         private static bool _held;
@@ -20,9 +24,28 @@ namespace ClassicUO.Game.Managers
 
         public static void Load()
         {
-            if (_loaded) return;
-            Keyboard.KeyUpEvent += OnKeyUp;
-            _loaded = true;
+            if (!_loaded)
+            {
+                Keyboard.KeyUpEvent += OnKeyUp;
+                _loaded = true;
+            }
+
+            RegisterHotkey();
+        }
+
+        /// <summary>
+        /// (Re)register the self-heal hotkey with the central registry. The default is imported from
+        /// the legacy <c>Profile.SelfHeal_Key/Mod</c> so existing binds survive the migration; the
+        /// registry adopts the saved hotkeys.json binding when one exists.
+        /// </summary>
+        internal static HotKeyEntry RegisterHotkey()
+        {
+            Profile p = ProfileManager.CurrentProfile;
+            var imported = new HotkeyBinding(
+                (SDL.SDL_Keycode)(p?.SelfHeal_Key ?? 0),
+                (SDL.SDL_Keymod)(p?.SelfHeal_Mod ?? 0));
+
+            return HotKeys.Register(SelfHealHotkeyId, "Self Heal", imported, "Self Heal");
         }
 
         public static void Unload()
@@ -33,7 +56,19 @@ namespace ClassicUO.Game.Managers
             _loaded = false;
         }
 
-        public static void Update() => _machine.Tick(_env, _held);
+        public static void Update()
+        {
+            bool held = _held;
+
+            // Keyboard bindings latch _held via the focus-gated key down/up events. Non-key bindings
+            // (mouse button, controller, modifier-only) have no up/down pair to latch, so poll the
+            // registry for them instead. (Wheel bindings are transient and can't be held.)
+            HotKeyEntry entry = HotKeys.Get(SelfHealHotkeyId);
+            if (entry != null && entry.Binding != null && !entry.Binding.HasKey && !entry.Binding.IsEmpty)
+                held = entry.IsPressed();
+
+            _machine.Tick(_env, held);
+        }
 
         /// <summary>Called from GameSceneInputHandler.OnKeyDown (already focus-gated).</summary>
         public static void HandleKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod, bool repeat)
@@ -41,13 +76,17 @@ namespace ClassicUO.Game.Managers
             if (repeat) return;
 
             Profile p = ProfileManager.CurrentProfile;
-            if (p == null || !p.SelfHeal_Enabled || p.SelfHeal_Key == 0 || p.DisableHotkeys)
+            if (p == null || !p.SelfHeal_Enabled || p.DisableHotkeys)
                 return;
 
-            if ((int)key != p.SelfHeal_Key)
+            HotKeyEntry entry = HotKeys.Get(SelfHealHotkeyId);
+            if (entry == null || !entry.Enabled || entry.Binding.IsEmpty || !entry.Binding.HasKey)
                 return;
 
-            if (NormalizeMods(mod) != (SDL.SDL_Keymod)p.SelfHeal_Mod)
+            if (key != entry.Binding.Key)
+                return;
+
+            if (HotkeyUtil.NormalizeMods(mod) != entry.Binding.Mod)
                 return;
 
             _held = true;
@@ -56,57 +95,12 @@ namespace ClassicUO.Game.Managers
         // Key-up via the raw keyboard event so release is caught even if focus changed.
         private static void OnKeyUp(string hotkey)
         {
-            Profile p = ProfileManager.CurrentProfile;
-            if (p == null || p.SelfHeal_Key == 0)
+            HotKeyEntry entry = HotKeys.Get(SelfHealHotkeyId);
+            if (entry == null || entry.Binding.IsEmpty || !entry.Binding.HasKey)
                 return;
 
-            if (TryParseKeycode(hotkey, out SDL.SDL_Keycode key) && (int)key == p.SelfHeal_Key)
+            if (HotkeyUtil.TryParseKeycode(hotkey, out SDL.SDL_Keycode key) && key == entry.Binding.Key)
                 _held = false;
-        }
-
-        // Strip lock keys and normalize left/right modifiers, matching SpellBarManager.
-        private static SDL.SDL_Keymod NormalizeMods(SDL.SDL_Keymod mod)
-        {
-            mod &= ~SDL.SDL_Keymod.SDL_KMOD_NUM;
-            mod &= ~SDL.SDL_Keymod.SDL_KMOD_CAPS;
-            mod &= ~SDL.SDL_Keymod.SDL_KMOD_SCROLL;
-            mod &= ~SDL.SDL_Keymod.SDL_KMOD_MODE;
-
-            if ((mod & (SDL.SDL_Keymod.SDL_KMOD_LCTRL | SDL.SDL_Keymod.SDL_KMOD_RCTRL)) != 0)
-            {
-                mod &= ~(SDL.SDL_Keymod.SDL_KMOD_LCTRL | SDL.SDL_Keymod.SDL_KMOD_RCTRL);
-                mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
-            }
-            if ((mod & (SDL.SDL_Keymod.SDL_KMOD_LSHIFT | SDL.SDL_Keymod.SDL_KMOD_RSHIFT)) != 0)
-            {
-                mod &= ~(SDL.SDL_Keymod.SDL_KMOD_LSHIFT | SDL.SDL_Keymod.SDL_KMOD_RSHIFT);
-                mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
-            }
-            if ((mod & (SDL.SDL_Keymod.SDL_KMOD_LALT | SDL.SDL_Keymod.SDL_KMOD_RALT)) != 0)
-            {
-                mod &= ~(SDL.SDL_Keymod.SDL_KMOD_LALT | SDL.SDL_Keymod.SDL_KMOD_RALT);
-                mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
-            }
-            return mod;
-        }
-
-        // Keyboard event strings look like "CTRL+SHIFT+SDLK_F1". Extract the SDLK_ token.
-        private static bool TryParseKeycode(string hotkey, out SDL.SDL_Keycode key)
-        {
-            key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-            if (string.IsNullOrEmpty(hotkey))
-                return false;
-
-            foreach (string part in hotkey.Split('+'))
-            {
-                if (part.StartsWith("SDLK_", StringComparison.OrdinalIgnoreCase) &&
-                    Enum.TryParse(part, true, out SDL.SDL_Keycode parsed))
-                {
-                    key = parsed;
-                    return true;
-                }
-            }
-            return false;
         }
 
         private sealed class LiveEnv : ISelfHealEnv

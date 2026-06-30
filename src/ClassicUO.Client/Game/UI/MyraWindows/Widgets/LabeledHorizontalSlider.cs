@@ -1,19 +1,21 @@
 #nullable enable
 using System;
 using ClassicUO.Assets;
+using Microsoft.Xna.Framework;
 using Myra.Events;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets;
 
-public class MyraHSlider : Grid
+public class LabeledHorizontalSlider : Grid
 {
-    private OverlayLabel _valueLabel = new();
-    private HorizontalSlider _slider = new();
+    private readonly OverlayLabel _valueLabel = new();
+    private readonly MyraHorizontalSlider _slider = new();
 
     public bool RoundValues { get; set; } = true;
+
     /// <summary>
-    /// This is only used when RoundValues is true
+    ///     This is only used when RoundValues is true
     /// </summary>
     public int DecimalPlaces { get; set; } = 0;
 
@@ -42,14 +44,8 @@ public class MyraHSlider : Grid
 
     public float WheelStep
     {
-        get
-        {
-            return _slider.WheelStep;
-        }
-        set
-        {
-            _slider.WheelStep = value;
-        }
+        get => _slider.WheelStep;
+        set => _slider.WheelStep = value;
     }
 
     public event EventHandler<ValueChangedEventArgs<float>> ValueChangedByUser
@@ -58,7 +54,7 @@ public class MyraHSlider : Grid
         remove => _slider.ValueChangedByUser -= value;
     }
 
-    public MyraHSlider()
+    public LabeledHorizontalSlider()
     {
         Build();
     }
@@ -88,7 +84,8 @@ public class MyraHSlider : Grid
         _slider.ValueChangedByUser += (_, _) => _valueLabel.Text = FormatValue(_slider.Value);
         _slider.ValueChanged += (sender, args) =>
         {
-            Value = ValidateValues(args.NewValue); //This may get called twice: Value updated -> Event fired -> Value changes -> Event fired -> Value changes but the value is the same this time so this event isn't called again
+            Value = ValidateValues(args
+                .NewValue); //This may get called twice: Value updated -> Event fired -> Value changes -> Event fired -> Value changes but the value is the same this time so this event isn't called again
         };
 
         Widgets.Add(_slider);
@@ -100,24 +97,44 @@ public class MyraHSlider : Grid
         SetColumn(_valueLabel, 0);
     }
 
-    public static MyraHSlider CreateSliderWithCallback(float min, float max, float value, Action<float>? onChanged)
+    public static LabeledHorizontalSlider CreateSliderWithCallback(float min, float max, float value, Action<float>? onChanged)
     {
-        var slider = new MyraHSlider { Minimum = min, Maximum = max, Value = value };
+        var slider = new LabeledHorizontalSlider
+        {
+            Minimum = min,
+            Maximum = max,
+            Value = value,
+            VerticalAlignment = VerticalAlignment.Center
+        };
 
-        if(onChanged != null)
+        if (onChanged != null)
             slider.ValueChangedByUser += (_, _) => onChanged(Math.Clamp(slider.Value, min, max));
 
         return slider;
     }
 
-    public static HorizontalStackPanel SliderWithLabel(string label, out MyraHSlider slider, Action<float>? onChanged = null, float min = 0f, float max = 100f, float value = 0f)
+    public static HorizontalStackPanel SliderWithLabel(
+        string label,
+        out LabeledHorizontalSlider slider,
+        Action<float>? onChanged = null,
+        float min = 0f,
+        float max = 100f,
+        float value = 0f,
+        bool labelOnLeft = false
+    )
     {
-        HorizontalStackPanel stack = new();
-
-        MyraHSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
-        stack.Widgets.Add(s);
-
-        stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+        HorizontalStackPanel stack = new() { VerticalAlignment = VerticalAlignment.Center };
+        LabeledHorizontalSlider s = slider = CreateSliderWithCallback(min, max, value, onChanged);
+        if (labelOnLeft)
+        {
+            stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+            stack.Widgets.Add(s);
+        }
+        else
+        {
+            stack.Widgets.Add(s);
+            stack.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+        }
 
         return stack;
     }
@@ -127,6 +144,6 @@ public class MyraHSlider : Grid
 
     private sealed class OverlayLabel : Label
     {
-        public override bool InputFallsThrough(Microsoft.Xna.Framework.Point localPos) => true;
+        public override bool InputFallsThrough(Point localPos) => true;
     }
 }

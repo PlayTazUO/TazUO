@@ -27,13 +27,13 @@ public static class AutoBuyAgentTabContent
             TazLang.Get("autobuy_subcontainers_tooltip")));
 
         root.Widgets.Add(new MyraLabel(TazLang.Get("autobuy_options"), MyraLabel.TextStyle.H3));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             TazLang.Get("autobuy_maxitems"),
             out _,
             v => profile.BuyAgentMaxItems = (int)v,
             0, 1000,
             profile.BuyAgentMaxItems));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             TazLang.Get("autobuy_maxuniques"),
             out _,
             v => profile.BuyAgentMaxUniques = (int)v,

@@ -4,6 +4,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -158,14 +159,43 @@ namespace ClassicUO.Game.UI.Gumps
             public int message_type;
             public bool replace_if_exists;
 
-            private CoolDownConditionData(ushort hue = 42, string label = "Label", string trigger = "Text to trigger", int cooldown = 10, int message_type = (int)MESSAGE_TYPE.ALL, bool replace_if_exists = false)
+            /// <summary>
+            /// Represents a cooldown bar condition.
+            /// Each condition is a standalone 'rule' that determines when a cooldown bar should be displayed.
+            /// </summary>
+            /// <param name="hue">The bar's hue</param>
+            /// <param name="label">The text to render inside the bar</param>
+            /// <param name="trigger">The text that triggers the cooldown bar</param>
+            /// <param name="cooldown">The duration, in seconds of the cooldown bar</param>
+            /// <param name="messageType">The message type that should trigger the cooldown bar. See <see cref="MESSAGE_TYPE"/> for more information</param>
+            /// <param name="replaceExisting">
+            /// Whether to replace an existing instance of the cooldown bar when triggered.
+            /// To clarify, this does not refer to the configuration - this refers to the cooldown bar itself, i.e., whether additional calls replace an already-on-screen instance
+            /// </param>
+            private CoolDownConditionData(
+                ushort hue = 42,
+                string label = "Label",
+                string trigger = "Text to trigger",
+                int cooldown = 10,
+                int messageType = (int)MESSAGE_TYPE.ALL,
+                bool replaceExisting = false
+            )
             {
                 this.hue = hue;
                 this.label = label;
                 this.trigger = trigger;
                 this.cooldown = cooldown;
-                this.message_type = message_type;
-                this.replace_if_exists = replace_if_exists;
+                message_type = messageType;
+                replace_if_exists = replaceExisting;
+            }
+
+            public static CoolDownConditionData[] GetAllRules()
+            {
+                var data = new CoolDownConditionData[ProfileManager.CurrentProfile.CoolDownConditionCount];
+                for (int i = 0; i < ProfileManager.CurrentProfile.CoolDownConditionCount; i++)
+                    data[i] = GetConditionData(i, false);
+
+                return data;
             }
 
             public static CoolDownConditionData GetConditionData(int key, bool createIfNotExist)
@@ -244,6 +274,50 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.Condition_Type.RemoveAt(key);
                     ProfileManager.CurrentProfile.Condition_ReplaceIfExists.RemoveAt(key);
                 }
+            }
+
+            /// <summary>
+            /// Moves a cooldown condition from one position to another, reordering all associated
+            /// profile lists (hue, label, trigger, duration, type, replace-if-exists) atomically.
+            /// </summary>
+            /// <param name="oldOrder">Current zero-based index of the condition to move.</param>
+            /// <param name="newOrder">Target zero-based index the condition should occupy after the move.</param>
+            public static void ReorderCondition(int oldOrder, int newOrder)
+            {
+                Profile profile = ProfileManager.CurrentProfile;
+                int count = profile.CoolDownConditionCount;
+
+                if (oldOrder == newOrder)
+                    return;
+
+                if (oldOrder < 0 || oldOrder >= count || newOrder < 0 || newOrder >= count)
+                    return;
+
+                MoveListItem(profile.Condition_Hue, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Label, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Trigger, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Duration, oldOrder, newOrder);
+                MoveListItem(profile.Condition_Type, oldOrder, newOrder);
+
+                while (profile.Condition_ReplaceIfExists.Count < count)
+                    profile.Condition_ReplaceIfExists.Add(false);
+
+                MoveListItem(profile.Condition_ReplaceIfExists, oldOrder, newOrder);
+            }
+
+            /// <summary>
+            /// Relocates the element at <paramref name="oldIndex"/> to <paramref name="newIndex"/>
+            /// by removing it and re-inserting it, shifting intermediate elements accordingly.
+            /// </summary>
+            /// <typeparam name="T">Element type of the list.</typeparam>
+            /// <param name="list">List to mutate in place.</param>
+            /// <param name="oldIndex">Zero-based source index.</param>
+            /// <param name="newIndex">Zero-based destination index.</param>
+            private static void MoveListItem<T>(IList<T> list, int oldIndex, int newIndex)
+            {
+                T item = list[oldIndex];
+                list.RemoveAt(oldIndex);
+                list.Insert(newIndex, item);
             }
 
             public enum MESSAGE_TYPE

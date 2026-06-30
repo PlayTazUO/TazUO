@@ -15,13 +15,14 @@ public static class MyraStyle
     public const int STANDARD_SPACING = 3;
     public const int STANDARD_BORDER_ALPHA = 125;
     public static Color GridBorderColor { get; } = new Color(0, 0, 0, STANDARD_BORDER_ALPHA);
+    public static SpriteFontBase UiFont => _uiFont;
 
     private static Color TazUO_Orange = new(0.667f, 0.412f, 0.051f, 1f);
 
     private static SpriteFontBase _uiFont;
     private static NinePatchRegion _ninePatchPanel;
-    private static NinePatchRegion _ninePatchButtonUp;
-    private static NinePatchRegion _ninePatchButtonDown;
+    public static NinePatchRegion NinePatchButtonUp;
+    public static NinePatchRegion NinePatchButtonDown;
     private static NinePatchRegion _ninePatchButtonDangerUp;
     private static NinePatchRegion _ninePatchButtonDangerDown;
     private static TextureRegion _skillUpButton;
@@ -35,12 +36,12 @@ public static class MyraStyle
             ModernUIConstants.ModernUIPanel.Bounds,
             new Thickness(ModernUIConstants.ModernUIPanel_BorderSize)
         );
-        _ninePatchButtonUp = new NinePatchRegion(
+        NinePatchButtonUp = new NinePatchRegion(
             ModernUIConstants.ModernUIButtonUp,
             ModernUIConstants.ModernUIButtonUp.Bounds,
             new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
         );
-        _ninePatchButtonDown = new NinePatchRegion(
+        NinePatchButtonDown = new NinePatchRegion(
             ModernUIConstants.ModernUIButtonDown,
             ModernUIConstants.ModernUIButtonUp.Bounds,
             new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
@@ -105,9 +106,9 @@ public static class MyraStyle
         //Button
         ButtonStyle s = Stylesheet.Current.ButtonStyle;
         //s.Background = new SolidBrush(TazUO_Orange);
-        s.Background = _ninePatchButtonUp;
-        s.OverBackground = _ninePatchButtonDown;
-        s.PressedBackground = _ninePatchButtonDown;
+        s.Background = NinePatchButtonUp;
+        s.OverBackground = NinePatchButtonDown;
+        s.PressedBackground = NinePatchButtonDown;
         s.MinWidth = 1;
         s.MinHeight = 1;
         s.Padding = new Thickness(5);

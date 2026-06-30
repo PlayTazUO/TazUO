@@ -297,7 +297,7 @@ public class SpellBarManager
 }
 
 /// <summary>The kind of action stored in a single spell bar slot.</summary>
-public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4 }
+public enum SpellBarSlotType { Empty = 0, Spell = 1, Macro = 2, Ability = 3, Script = 4, Skill = 5 }
 
 /// <summary>
 /// A single spell bar slot. Holds one of: nothing, a spell, a macro, or a weapon
@@ -316,6 +316,9 @@ public class SpellBarSlot
 
     /// <summary>Stable relative id (ScriptFile.RelativePath) when <see cref="Type"/> is <see cref="SpellBarSlotType.Script"/>.</summary>
     public string ScriptId { get; set; }            // Type == Script
+
+    /// <summary>Skill index (matches <see cref="GameActions.UseSkill"/>) when <see cref="Type"/> is <see cref="SpellBarSlotType.Skill"/>.</summary>
+    public int SkillIndex { get; set; } = -1;       // Type == Skill
 
     /// <summary>True for the primary ability, false for the secondary, when <see cref="Type"/> is <see cref="SpellBarSlotType.Ability"/>.</summary>
     public bool AbilityPrimary { get; set; }        // Type == Ability (true = primary, false = secondary)
@@ -346,6 +349,24 @@ public class SpellBarSlot
     public string ScriptDisplayName =>
         ResolvedScript?.FileName ??
         (string.IsNullOrEmpty(ScriptId) ? string.Empty : System.IO.Path.GetFileName(ScriptId));
+
+    /// <summary>Friendly name for a skill slot, resolved from the skill data files, or empty.</summary>
+    [JsonIgnore]
+    public string SkillDisplayName
+    {
+        get
+        {
+            var skills = Client.Game?.UO?.FileManager?.Skills?.Skills;
+            if (skills == null)
+                return string.Empty;
+
+            foreach (var s in skills)
+                if (s.Index == SkillIndex)
+                    return s.Name;
+
+            return string.Empty;
+        }
+    }
 
     /// <summary>Toggle decision for a script slot: play when not already running.</summary>
     public static bool ShouldPlay(bool isRunning) => !isRunning;
@@ -383,6 +404,15 @@ public class SpellBarSlot
     /// <summary>Creates an ability slot for the primary (<paramref name="primary"/> true) or secondary ability.</summary>
     public static SpellBarSlot FromAbility(bool primary) => new SpellBarSlot { Type = SpellBarSlotType.Ability, AbilityPrimary = primary };
 
+    /// <summary>Creates a skill slot, or an empty slot when <paramref name="skillIndex"/> is negative.</summary>
+    public static SpellBarSlot FromSkill(int skillIndex)
+    {
+        if (skillIndex < 0)
+            return Empty();
+
+        return new SpellBarSlot { Type = SpellBarSlotType.Skill, SkillIndex = skillIndex };
+    }
+
     /// <summary>Performs the slot's action: casts the spell, runs the macro, or triggers the ability.</summary>
     public void Activate(World world)
     {
@@ -419,6 +449,11 @@ public class SpellBarSlot
                     else
                         ClassicUO.LegionScripting.LegionScripting.StopScript(script);
                 }
+                break;
+
+            case SpellBarSlotType.Skill:
+                if (SkillIndex >= 0)
+                    GameActions.UseSkill(SkillIndex);
                 break;
         }
     }
@@ -480,6 +515,10 @@ public class SpellBarSlot
 
             case SpellBarSlotType.Script:
                 text = ScriptDisplayName;
+                return !string.IsNullOrEmpty(text);
+
+            case SpellBarSlotType.Skill:
+                text = SkillDisplayName;
                 return !string.IsNullOrEmpty(text);
         }
 

@@ -220,19 +220,22 @@ namespace ClassicUO.Game.UI.Controls
             {
                 RenderedText textTexture = _fontTexture[_entered ? 1 : 0];
 
+                double scale = InternalScale;
+
                 if (FontCenter)
                 {
                     int yoffset = IsClicked ? 1 : 0;
 
                     textTexture.Draw(
                         batcher,
-                        x + ((Width - textTexture.Width) >> 1),
-                        y + yoffset + ((Height - textTexture.Height) >> 1)
+                        x + ((Width - (int)(textTexture.Width * scale)) >> 1),
+                        y + yoffset + ((Height - (int)(textTexture.Height * scale)) >> 1),
+                        scale
                     );
                 }
                 else
                 {
-                    textTexture.Draw(batcher, x, y);
+                    textTexture.Draw(batcher, x, y, scale);
                 }
             }
 

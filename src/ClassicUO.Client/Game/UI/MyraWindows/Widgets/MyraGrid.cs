@@ -14,6 +14,15 @@ public class MyraGrid : Grid
         ColumnSpacing = 2;
     }
 
+    public MyraGrid(Proportion[] columns, Proportion[] rows)
+    {
+        foreach (Proportion proportion in columns ?? [])
+            AddColumn(proportion);
+
+        foreach (Proportion proportion in rows ?? [])
+            AddRow(proportion);
+    }
+
     /// <param name="proportion">Leave proportion empty to default to auto proportions</param>
     internal void AddColumn(Proportion? proportion = null, uint count = 1)
     {

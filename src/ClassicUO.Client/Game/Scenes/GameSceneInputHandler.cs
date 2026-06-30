@@ -6,6 +6,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
@@ -897,7 +898,7 @@ namespace ClassicUO.Game.Scenes
 
                     case Entity ent:
 
-                        if (Keyboard.Alt && !ProfileManager.CurrentProfile.DisableAutoFollowAlt && ent is Mobile)
+                        if (HotKeys.IsPressed(HotKeyRegistrar.FollowMobileId) && !ProfileManager.CurrentProfile.DisableAutoFollowAlt && ent is Mobile)
                         {
                             _world.MessageManager.HandleMessage(
                                 _world.Player,
@@ -1040,7 +1041,7 @@ namespace ClassicUO.Game.Scenes
 
             if (ProfileManager.CurrentProfile.EnablePathfind && ProfileManager.CurrentProfile.PathfindSingleClick)
             {
-                if (ProfileManager.CurrentProfile.UseShiftToPathfind && !Keyboard.Shift)
+                if (ProfileManager.CurrentProfile.UseShiftToPathfind && !HotKeys.IsPressed(HotKeyRegistrar.PathfindId))
                 {
                     return false;
                 }
@@ -1091,9 +1092,13 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
+            _rightMousePressed = true;
+            _continueRunning = false;
+            StopFollowing();
+
             if (ProfileManager.CurrentProfile.EnablePathfind && !_world.Player.Pathfinder.AutoWalking)
             {
-                if ((ProfileManager.CurrentProfile.UseShiftToPathfind && !Keyboard.Shift) || ProfileManager.CurrentProfile.PathfindSingleClick)
+                if ((ProfileManager.CurrentProfile.UseShiftToPathfind && !HotKeys.IsPressed(HotKeyRegistrar.PathfindId)) || ProfileManager.CurrentProfile.PathfindSingleClick)
                 {
                     return false;
                 }
@@ -1202,7 +1207,7 @@ namespace ClassicUO.Game.Scenes
 
         internal override bool OnMouseWheel(bool up)
         {
-            if (Keyboard.Ctrl && Client.Game.UO.GameCursor.ItemHold.Enabled)
+            if (HotKeys.IsPressed(HotKeyRegistrar.ItemDragLockId) && Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
                 if (!up && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
                 {
@@ -1247,7 +1252,7 @@ namespace ClassicUO.Game.Scenes
                 return false;
             }
 
-            if (Keyboard.Ctrl && ProfileManager.CurrentProfile.EnableMousewheelScaleZoom)
+            if (HotKeys.IsPressed(HotKeyRegistrar.ZoomScrollId) && ProfileManager.CurrentProfile.EnableMousewheelScaleZoom)
             {
                 if (up)
                 {
@@ -1490,6 +1495,7 @@ namespace ClassicUO.Game.Scenes
             {
                 SpellBarManager.KeyPress(key, e.mod);
                 SelfHealManager.HandleKeyDown(key, e.mod, e.repeat);
+                ClassicUO.Game.Managers.Hotkeys.HotKeys.HandleKeyDown(key, e.mod, e.repeat);
 
                 Macro macro = _world.Macros.FindMacro(
                     key,
@@ -1610,7 +1616,7 @@ namespace ClassicUO.Game.Scenes
             var key = (SDL.SDL_Keycode)e.key;
 
             if (
-                !Keyboard.Ctrl &&
+                !HotKeys.IsPressed(HotKeyRegistrar.ZoomScrollId) &&
                 ProfileManager.CurrentProfile.EnableMousewheelScaleZoom
                 && ProfileManager.CurrentProfile.RestoreScaleAfterUnpressCtrl
             )

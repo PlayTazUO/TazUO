@@ -22,13 +22,13 @@ public static class AutoSellAgentTabContent
             profile.SellAgentEnabled, b => profile.SellAgentEnabled = b, TazLang.Get("autosell_enable")));
 
         root.Widgets.Add(new MyraLabel(TazLang.Get("autosell_options"), MyraLabel.TextStyle.H3));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             TazLang.Get("autosell_maxitems"),
             out _,
             v => profile.SellAgentMaxItems = (int)v,
             0, 1000,
             profile.SellAgentMaxItems));
-        root.Widgets.Add(MyraHSlider.SliderWithLabel(
+        root.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(
             TazLang.Get("autosell_maxuniques"),
             out _,
             v => profile.SellAgentMaxUniques = (int)v,

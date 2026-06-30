@@ -567,6 +567,17 @@ internal static class GumpHelpers
 
         gump.PacketGumpText = gumpTextBuilder.ToString();
 
+        // Apply the single server gump scale option to every control on this server created gump.
+        double serverGumpScale = ProfileManager.CurrentProfile?.ServerGumpScale ?? 1.0;
+
+        if (serverGumpScale != 1.0)
+        {
+            for (int i = 0; i < gump.Children.Count; i++)
+            {
+                gump.Children[i].ApplyScale(serverGumpScale);
+            }
+        }
+
         if (mustBeAdded)
             UIManager.Add(gump);
 
@@ -660,6 +671,12 @@ internal static class GumpHelpers
                             gump.Dispose();
                         }));
                         gump.Add(menu);
+
+                        // The SOS menu is added after the scale pass above, so scale it here too.
+                        // Its X/Y are already derived from the scaled gump size, so don't scale the
+                        // menu's own position - only its size and the layout of its child controls.
+                        if (serverGumpScale != 1.0)
+                            ScaleControlTree(menu, serverGumpScale, scaleRootPosition: false);
                     }
 
         if (world.Player != null)
@@ -674,6 +691,21 @@ internal static class GumpHelpers
         NextGumpConfig.Apply(gump);
 
         return gump;
+    }
+
+    /// <summary>
+    /// Recursively applies the server gump scale to a control and all of its descendants.
+    /// Used for composite controls (whose visuals live in child controls) that are not handled
+    /// by the single top-level scale pass in <see cref="CreateGump"/>.
+    /// </summary>
+    private static void ScaleControlTree(IGui control, double scale, bool scaleRootPosition)
+    {
+        control.ApplyScale(scale, scalePosition: scaleRootPosition);
+
+        for (int i = 0; i < control.Children.Count; i++)
+        {
+            ScaleControlTree(control.Children[i], scale, scaleRootPosition: true);
+        }
     }
 
     public static void ApplyTrans(Gump gump, int current_page, int x, int y, int width, int height)

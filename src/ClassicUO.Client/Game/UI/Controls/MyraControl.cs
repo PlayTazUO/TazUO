@@ -31,10 +31,7 @@ public class MyraControl : IGui
     public MyraControl(string title)
     {
         _rootWindow = new ResizableWindow(
-            new ResizableWindowProps
-            {
-                Resize = { Placements = ResizeEdges.Bottom | ResizeEdges.Left | ResizeEdges.Right }
-            }
+            new ResizableWindowProps { Resize = { Placements = ResizeEdges.All } }
         ) { Title = title };
 
         _rootWindow.Closed += OnRootWindowOnClosed;
@@ -55,11 +52,11 @@ public class MyraControl : IGui
 
         _rootWindow.CloseKey = null;
 
-        UIManager.TopMostChanged += UIManagerOnTopMostChanged;
+        //UIManager.TopMostChanged += UIManagerOnTopMostChanged;
     }
 
     #region Event Handlers
-    private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
+    //private void UIManagerOnTopMostChanged(object sender, EventArgs e) => _desktop.Opacity = UIManager.TopMostControl == this ? 1f : 0.8f;
 
     private void OnRootWindowOnClosed(object s, EventArgs a)
     {
@@ -252,7 +249,15 @@ public class MyraControl : IGui
 
         batcher.FlushBatch(); //Required to draw myra on top of already drawn gumps
 
-        if (IsTopMost)
+        // Myra processes its own mouse/keyboard input inside Desktop.Render(). If we only ran
+        // that for the top-most window, the very first click on a background window would be spent
+        // by the UIManager promoting it to top-most (see UIManager.OnMouseButtonDown) and Myra would
+        // never see the click as a widget press. By also running the input pass while this is the
+        // window under the cursor (MouseOverControl, set during UIManager.Update() before Draw()),
+        // the click is passed through to Myra on the same frame, and hover frames keep Myra's mouse
+        // baseline fresh so the down-edge is detected. Only one window is ever MouseOverControl
+        // (front-most hit), so this does not cause click-through to overlapped windows.
+        if (IsTopMost || ReferenceEquals(UIManager.MouseOverControl, this))
         {
             _desktop.Render();
         }
@@ -310,7 +315,7 @@ public class MyraControl : IGui
             return;
 
         _desktop.WidgetGotKeyboardFocus -= DesktopOnWidgetGotKeyboardFocus;
-        UIManager.TopMostChanged -= UIManagerOnTopMostChanged;
+        //UIManager.TopMostChanged -= UIManagerOnTopMostChanged;
 
         if (_rootWindow is not null)
         {
@@ -332,6 +337,7 @@ public class MyraControl : IGui
     {
         IsFocused = false;
         _desktop.FocusedKeyboardWidget = null;
+        _desktop.HideContextMenu();
     }
 
     #region Invokations
@@ -361,8 +367,7 @@ public class MyraControl : IGui
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void InvokeMouseEnter(Point position) { }
 
-    /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
-    public void InvokeMouseExit(Point position) { }
+    public void InvokeMouseExit(Point position) => _rootWindow.OnMouseLeft();
 
     public bool InvokeMouseDoubleClick(Point position, MouseButtonType button) =>
         OnMouseDoubleClick(position.X, position.Y, button);
@@ -385,7 +390,11 @@ public class MyraControl : IGui
         if (!IsVisible || !IsEnabled || IsDisposed || !AcceptMouseInput)
             return;
 
-        if (Bounds.Contains(position.X, position.Y) || Contains(position.X, position.Y))
+        if (
+            _rootWindow?.HitTest(position) != null ||
+            Bounds.Contains(position.X, position.Y) ||
+            Contains(position.X, position.Y)
+        )
         {
             res = this;
             OnHitTestSuccess(position.X, position.Y, ref res);
@@ -525,7 +534,7 @@ public class MyraControl : IGui
     public void ShowContextMenu(params (string Label, Action Action)[] items)
     {
         var menu = new VerticalMenu();
-        foreach (var (label, action) in items)
+        foreach ((string label, Action action) in items)
         {
             var item = new MenuItem { Text = label };
             if (action != null)

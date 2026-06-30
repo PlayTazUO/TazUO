@@ -13,7 +13,7 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public abstract class StatusGumpBase : Gump
+    public abstract class StatusGumpBase : ScalableGump
     {
         protected const ushort LOCK_UP_GRAPHIC = 0x0984;
         protected const ushort LOCK_DOWN_GRAPHIC = 0x0986;
@@ -34,6 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Location = ProfileManager.CurrentProfile.StatusGumpPosition;
                 IsLocked = ProfileManager.CurrentProfile.StatusGumpLocked;
+                GumpScale = ProfileManager.CurrentProfile.StatusGumpScale;
             }
 
         }
@@ -94,7 +95,7 @@ namespace ClassicUO.Game.UI.Gumps
                     World.TargetManager.Target(World.Player);
                     Mouse.LastLeftButtonClickTime = 0;
                 }
-                else if (x >= _point.X && x <= Width + 16 && y >= _point.Y && y <= Height + 16)
+                else if (x >= _point.X && x <= Width + (int)(16 * GumpScale) && y >= _point.Y && y <= Height + (int)(16 * GumpScale))
                 {
                     Point offset = Mouse.LDragOffset;
 
@@ -515,7 +516,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = p;
+            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
         }
 
         public override void Update()
@@ -1380,7 +1381,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = p;
+            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
         }
 
         private void AddStatTextLabel

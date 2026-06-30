@@ -5,6 +5,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.MyraWindows;
 
@@ -74,7 +75,7 @@ public class OptionsWindow : MyraControl
         Func<char, bool>? inputFilter = null
     )
     {
-        var row = MyraInputBox.WithLabel(label, out MyraInputBox input, width, value, tooltip: tooltip);
+        WrapPanel row = MyraInputBox.LabeledHorizontalStackPanel(label, out MyraInputBox input, width, value, tooltip: tooltip);
 
         if (inputFilter != null)
             input.InputFilter = inputFilter;
@@ -101,7 +102,7 @@ public class OptionsWindow : MyraControl
         if (tooltip != null)
             combo.Tooltip = tooltip;
 
-        foreach (var item in items)
+        foreach (string item in items)
             combo.Items.Add(new ListItem(item));
 
         if (selectedIndex >= 0 && selectedIndex < items.Length)
