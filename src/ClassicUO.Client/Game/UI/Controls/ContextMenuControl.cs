@@ -261,7 +261,7 @@ namespace ClassicUO.Game.UI.Controls
                     _selectedPic.Y = (Height >> 1) - (_selectedPic.Height >> 1);
                 }
 
-                Width = _label.X + _label.Width + (int)(20 * _scale);
+                Width = _label.X + _label.Width + (int)(25 * _scale);
 
                 if (Width < (int)(100 * _scale))
                 {
@@ -372,7 +372,7 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
-                    _moreMenuLabel.Draw(batcher, x + Width - (int)(_moreMenuLabel.Width * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
+                    _moreMenuLabel.Draw(batcher, x + Width - (int)((_moreMenuLabel.Width + 5) * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
                 }
 
                 return true;
