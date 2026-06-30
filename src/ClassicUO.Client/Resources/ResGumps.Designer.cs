@@ -286,15 +286,6 @@ namespace ClassicUO.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Weather effects (Splash & Ripples).
-        /// </summary>
-        public static string WeatherEffects {
-            get {
-                return ResourceManager.GetString("WeatherEffects", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Anisotropic Clamp.
         /// </summary>
         public static string AnisotropicClamp {

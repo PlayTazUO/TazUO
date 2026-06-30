@@ -55,6 +55,22 @@ namespace ClassicUO.Game
             DurabilityManager = new DurabilityManager(this);
             OPL = new ObjectPropertiesListManager(this);
             CoolDownBarManager = new CoolDownBarManager(this);
+
+            ProfileManager.CurrentProfileChanged += OnCurrentProfileChanged;
+            ApplyWeatherFromProfile();
+        }
+
+        private void OnCurrentProfileChanged(object sender, EventArgs e) => ApplyWeatherFromProfile();
+
+        private void ApplyWeatherFromProfile()
+        {
+            bool wantsEnhanced = ProfileManager.CurrentProfile?.EnableEnhancedWeather == true;
+            bool hasEnhanced = Weather is EnhancedWeather;
+
+            if (wantsEnhanced != hasEnhanced)
+            {
+                SwitchWeather(wantsEnhanced);
+            }
         }
 
         public Point RangeSize;
@@ -110,11 +126,19 @@ namespace ClassicUO.Game
 
         public CommandManager CommandManager { get; }
 
-        public Weather Weather { get; }
+        public WeatherBase Weather { get; private set; }
 
         internal RippleEffect RippleEffect { get; }
 
         internal SplashEffect SplashEffect { get; }
+
+        public void SwitchWeather(bool enhanced)
+        {
+            Weather?.Reset();
+            RippleEffect?.Reset();
+            SplashEffect?.Reset();
+            Weather = enhanced ? new EnhancedWeather(this) : new Weather(this);
+        }
 
         public InfoBarManager InfoBars { get; }
 

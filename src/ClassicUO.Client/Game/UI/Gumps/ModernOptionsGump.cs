@@ -1261,8 +1261,24 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight(
-                new CheckboxWithLabel(ResGumps.WeatherEffects, isChecked: profile.EnableWeatherEffects,
+                new CheckboxWithLabel(
+                    TazLang.Get("enhanced_weather"),
+                    isChecked: profile.EnableEnhancedWeather,
+                    valueChanged: (b) =>
+                    {
+                        profile.EnableEnhancedWeather = b;
+                        World.Instance?.SwitchWeather(b);
+                    }), true, page);
+
+            content.Indent();
+
+            content.AddToRight(
+                new CheckboxWithLabel(
+                    TazLang.Get("enhanced_weather_particle_effects"),
+                    isChecked: profile.EnableWeatherEffects,
                     valueChanged: (b) => { profile.EnableWeatherEffects = b; }), true, page);
+
+            content.RemoveIndent();
 
             content.BlankLine();
 

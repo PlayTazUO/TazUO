@@ -21,61 +21,61 @@ namespace ClassicUO.UnitTests.Game
 
         private static Texture2D GetWhiteTexture()
         {
-            var property = typeof(Weather).GetProperty("WhiteTexture", BindingFlags.NonPublic | BindingFlags.Static);
+            var property = typeof(EnhancedWeather).GetProperty("WhiteTexture", BindingFlags.NonPublic | BindingFlags.Static);
             return property?.GetValue(null) as Texture2D;
         }
 
         private static bool GetWhiteTextureInitFailed()
         {
-            var field = typeof(Weather).GetField("_whiteTextureInitFailed", BindingFlags.NonPublic | BindingFlags.Static);
+            var field = typeof(EnhancedWeather).GetField("_whiteTextureInitFailed", BindingFlags.NonPublic | BindingFlags.Static);
             return field != null && (bool)field.GetValue(null);
         }
 
         private static void SetWhiteTextureInitFailed(bool value)
         {
-            var field = typeof(Weather).GetField("_whiteTextureInitFailed", BindingFlags.NonPublic | BindingFlags.Static);
+            var field = typeof(EnhancedWeather).GetField("_whiteTextureInitFailed", BindingFlags.NonPublic | BindingFlags.Static);
             field?.SetValue(null, value);
         }
 
         private static void SetWhiteTexture(Texture2D texture)
         {
-            var field = typeof(Weather).GetField("_whiteTexture", BindingFlags.NonPublic | BindingFlags.Static);
+            var field = typeof(EnhancedWeather).GetField("_whiteTexture", BindingFlags.NonPublic | BindingFlags.Static);
             field?.SetValue(null, texture);
         }
 
         private static void ResetWarningState()
         {
-            var field = typeof(Weather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
+            var field = typeof(EnhancedWeather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
             field?.SetValue(null, false);
         }
 
         private static bool GetWarningLogged()
         {
-            var field = typeof(Weather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
+            var field = typeof(EnhancedWeather).GetField("_whiteTextureWarningLogged", BindingFlags.NonPublic | BindingFlags.Static);
             return field != null && (bool)field.GetValue(null);
         }
 
         private static void InvokeLogWarning(string message)
         {
-            var method = typeof(Weather).GetMethod("LogWarning", BindingFlags.NonPublic | BindingFlags.Static);
+            var method = typeof(EnhancedWeather).GetMethod("LogWarning", BindingFlags.NonPublic | BindingFlags.Static);
             method.Invoke(null, new object[] { message });
         }
 
         private static Vector3 InvokeColorToVector3(Color color)
         {
-            var method = typeof(Weather).GetMethod("ColorToVector3", BindingFlags.NonPublic | BindingFlags.Static);
+            var method = typeof(EnhancedWeather).GetMethod("ColorToVector3", BindingFlags.NonPublic | BindingFlags.Static);
             return (Vector3)method.Invoke(null, new object[] { color });
         }
 
         private static bool InvokeSafeDraw(UltimaBatcher2D batcher, Texture2D texture, Rectangle rect, Vector3 color, float depth)
         {
-            var method = typeof(Weather).GetMethod("SafeDraw", BindingFlags.NonPublic | BindingFlags.Static);
+            var method = typeof(EnhancedWeather).GetMethod("SafeDraw", BindingFlags.NonPublic | BindingFlags.Static);
             return (bool)method.Invoke(null, new object[] { batcher, texture, rect, color, depth });
         }
 
         private static bool InvokeSafeDrawLine(UltimaBatcher2D batcher, Texture2D texture, Vector2 start, Vector2 end, Vector3 color, int width, float depth)
         {
-            var method = typeof(Weather).GetMethod("SafeDrawLine", BindingFlags.NonPublic | BindingFlags.Static);
+            var method = typeof(EnhancedWeather).GetMethod("SafeDrawLine", BindingFlags.NonPublic | BindingFlags.Static);
             return (bool)method.Invoke(null, new object[] { batcher, texture, start, end, color, width, depth });
         }
 
