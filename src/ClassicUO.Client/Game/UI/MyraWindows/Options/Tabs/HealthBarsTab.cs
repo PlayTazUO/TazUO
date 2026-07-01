@@ -58,6 +58,13 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.CloseHealthBarIfAnchored),
                 search: new SearchMetadata(tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars, Keywords: [kw.Close, kw.Anchor])
             ),
+            Option.Slider(
+                tuoLang.BelowMobileHealthBarScale,
+                1,
+                5,
+                new Accessor<int>(() => profile.HealthLineSizeMultiplier),
+                search: new SearchMetadata(tuoLang.BelowMobileHealthBarScale, Keywords: [kw.Below, kw.Scale])
+            ),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), tuoLang.HealthBarIndicator),
                 Option.Slider(
@@ -74,7 +81,14 @@ public static class HealthBarsTab
                     new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
                     search: new SearchMetadata(tuoLang.Size, Keywords: [kw.Size])
                 )
-            ).WithSearch(new SearchMetadata(tuoLang.HealthBarIndicator, Keywords: [kw.Indicator, kw.Border]))
+            ).WithSearch(new SearchMetadata(tuoLang.HealthBarIndicator, Keywords: [kw.Indicator, kw.Border])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), tuoLang.AutomaticallyOpenHealthBarsForLastAttack),
+                Option.Checkbox(
+                    tuoLang.UpdateOneBarAsLastAttack,
+                    new Accessor<bool>(() => profile.UseOneHPBarForLastAttack)
+                )
+            ).WithSearch(new SearchMetadata(tuoLang.AutomaticallyOpenHealthBarsForLastAttack, Keywords: [kw.Last, kw.Attack]))
         );
     }
 

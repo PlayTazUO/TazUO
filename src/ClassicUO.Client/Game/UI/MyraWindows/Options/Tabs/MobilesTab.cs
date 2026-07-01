@@ -59,7 +59,7 @@ public static class MobilesTab
                 Option.HuePicker(
                     genLang.PoisonHighlightColor,
                     new Accessor<ushort>(() => profile.PoisonHue, h => profile.PoisonHue = h),
-                    search: new SearchMetadata(genLang.PoisonHighlightColor, Keywords: [kw.Poison, kw.Hue])
+                    new SearchMetadata(genLang.PoisonHighlightColor, Keywords: [kw.Poison, kw.Hue])
                 )
             ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Poison])),
             OptionsUi.CheckBoxGroup(
@@ -67,7 +67,7 @@ public static class MobilesTab
                 Option.HuePicker(
                     genLang.ParaHighlightColor,
                     new Accessor<ushort>(() => profile.ParalyzedHue, h => profile.ParalyzedHue = h),
-                    search: new SearchMetadata(genLang.ParaHighlightColor, Keywords: [kw.Paralyze, kw.Hue])
+                    new SearchMetadata(genLang.ParaHighlightColor, Keywords: [kw.Paralyze, kw.Hue])
                 )
             ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Paralyze])),
             OptionsUi.CheckBoxGroup(
@@ -75,7 +75,7 @@ public static class MobilesTab
                 Option.HuePicker(
                     genLang.InvulHighlightColor,
                     new Accessor<ushort>(() => profile.InvulnerableHue, h => profile.InvulnerableHue = h),
-                    search: new SearchMetadata(genLang.InvulHighlightColor, Keywords: [kw.Invulnerable, kw.Hue])
+                    new SearchMetadata(genLang.InvulHighlightColor, Keywords: [kw.Invulnerable, kw.Hue])
                 )
             ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Invulnerable])),
             Option.Checkbox(
@@ -105,10 +105,15 @@ public static class MobilesTab
                 Option.HuePicker(
                     genLang.AuraPartyColor,
                     new Accessor<ushort>(() => profile.PartyAuraHue, h => profile.PartyAuraHue = h),
-                    search: new SearchMetadata(genLang.AuraPartyColor, Keywords: [kw.Aura, kw.Party, kw.Hue])
+                    new SearchMetadata(genLang.AuraPartyColor, Keywords: [kw.Aura, kw.Party, kw.Hue])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Aura, kw.Party]))
-        ).WithSearch(new SearchMetadata(lang.Label, Tags: [kw.Mobile, kw.Health]));
+            ).WithSearch(new SearchMetadata(Keywords: [kw.Aura, kw.Party])),
+            Option.Checkbox(
+                genLang.DisableGrayEnemies,
+                new Accessor<bool>(() => profile.DisableGrayEnemies),
+                search: new SearchMetadata(genLang.DisableGrayEnemies, Keywords: [kw.Enemy, kw.Disable])
+            )
+        ).WithSearch(new SearchMetadata(lang.Label, [kw.Mobile, kw.Health]));
     }
 
     private static IOptionSource GetEntityHueSettingSection()
@@ -119,53 +124,133 @@ public static class MobilesTab
         ModernOptionsGumpLanguage.MobilesTabLang mobLang = lang.MobilesTab;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        return OptionsUi.Vertical(
+            OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = mobLang.Hues.HueMobileByNotoriety },
+                Option.HuePicker(
+                    combatLang.Spells.InnocentColor,
+                    new Accessor<ushort>(() => profile.InnocentHue),
+                    new SearchMetadata(combatLang.Spells.InnocentColor, Keywords: [kw.Notoriety, kw.Innocent])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.BeneficialSpell,
+                    new Accessor<ushort>(() => profile.BeneficHue),
+                    new SearchMetadata(combatLang.Spells.BeneficialSpell, Keywords: [kw.Notoriety, kw.Beneficial])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.FriendColor,
+                    new Accessor<ushort>(() => profile.FriendHue),
+                    new SearchMetadata(combatLang.Spells.FriendColor, Keywords: [kw.Notoriety, kw.Friend])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.HarmfulSpell,
+                    new Accessor<ushort>(() => profile.HarmfulHue),
+                    new SearchMetadata(combatLang.Spells.HarmfulSpell, Keywords: [kw.Notoriety, kw.Harmful])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.Criminal,
+                    new Accessor<ushort>(() => profile.CriminalHue),
+                    new SearchMetadata(combatLang.Spells.Criminal, Keywords: [kw.Notoriety, kw.Criminal])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.NeutralSpell,
+                    new Accessor<ushort>(() => profile.NeutralHue),
+                    new SearchMetadata(combatLang.Spells.NeutralSpell, Keywords: [kw.Notoriety, kw.Neutral])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.CanBeAttackedHue,
+                    new Accessor<ushort>(() => profile.CanAttackHue),
+                    new SearchMetadata(combatLang.Spells.CanBeAttackedHue, Keywords: [kw.Notoriety, kw.Attack])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.Murderer,
+                    new Accessor<ushort>(() => profile.MurdererHue),
+                    new SearchMetadata(combatLang.Spells.Murderer, Keywords: [kw.Notoriety, kw.Murderer])
+                ),
+                Option.HuePicker(
+                    combatLang.Spells.Enemy,
+                    new Accessor<ushort>(() => profile.EnemyHue),
+                    new SearchMetadata(combatLang.Spells.Enemy, Keywords: [kw.Notoriety, kw.Enemy])
+                )
+            ).WithSearch(new SearchMetadata(Tags: [kw.Mobile, kw.Notoriety])),
+            GetDamageHuesSection(),
+            GetPlayerVisibilitySection()
+        );
+    }
+
+    private static OptionFragment GetPlayerVisibilitySection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.MobilesTabLang.HuesSection hueLang = lang.MobilesTab.Hues;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = mobLang.Hues.HueMobileByNotoriety },
-            Option.HuePicker(
-                combatLang.Spells.InnocentColor,
-                new Accessor<ushort>(() => profile.InnocentHue, b => profile.InnocentHue = b),
-                search: new SearchMetadata(combatLang.Spells.InnocentColor, Keywords: [kw.Notoriety, kw.Innocent])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.BeneficialSpell,
-                new Accessor<ushort>(() => profile.BeneficHue, b => profile.BeneficHue = b),
-                search: new SearchMetadata(combatLang.Spells.BeneficialSpell, Keywords: [kw.Notoriety, kw.Beneficial])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.FriendColor,
-                new Accessor<ushort>(() => profile.FriendHue, b => profile.FriendHue = b),
-                search: new SearchMetadata(combatLang.Spells.FriendColor, Keywords: [kw.Notoriety, kw.Friend])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.HarmfulSpell,
-                new Accessor<ushort>(() => profile.HarmfulHue, b => profile.HarmfulHue = b),
-                search: new SearchMetadata(combatLang.Spells.HarmfulSpell, Keywords: [kw.Notoriety, kw.Harmful])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.Criminal,
-                new Accessor<ushort>(() => profile.CriminalHue, b => profile.CriminalHue = b),
-                search: new SearchMetadata(combatLang.Spells.Criminal, Keywords: [kw.Notoriety, kw.Criminal])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.NeutralSpell,
-                new Accessor<ushort>(() => profile.NeutralHue, b => profile.NeutralHue = b),
-                search: new SearchMetadata(combatLang.Spells.NeutralSpell, Keywords: [kw.Notoriety, kw.Neutral])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.CanBeAttackedHue,
-                new Accessor<ushort>(() => profile.CanAttackHue, b => profile.CanAttackHue = b),
-                search: new SearchMetadata(combatLang.Spells.CanBeAttackedHue, Keywords: [kw.Notoriety, kw.Attack])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.Murderer,
-                new Accessor<ushort>(() => profile.MurdererHue, b => profile.MurdererHue = b),
-                search: new SearchMetadata(combatLang.Spells.Murderer, Keywords: [kw.Notoriety, kw.Murderer])
-            ),
-            Option.HuePicker(
-                combatLang.Spells.Enemy,
-                new Accessor<ushort>(() => profile.EnemyHue, b => profile.EnemyHue = b),
-                search: new SearchMetadata(combatLang.Spells.Enemy, Keywords: [kw.Notoriety, kw.Enemy])
-            )
-        ).WithSearch(new SearchMetadata(mobLang.Hues.Label, Tags: [kw.Mobile, kw.Notoriety]));
+                new VisualContainerProps { LabelText = hueLang.PlayerVisibility },
+                Option.Slider(
+                    tuoLang.HiddenPlayerOpacity,
+                    0,
+                    100,
+                    new Accessor<byte>(() => profile.HiddenBodyAlpha),
+                    search: new SearchMetadata(tuoLang.HiddenPlayerOpacity, Keywords: [kw.Hidden])
+                ),
+                Option.Slider(
+                    tuoLang.RegularPlayerOpacity,
+                    0,
+                    100,
+                    new Accessor<int>(() => profile.PlayerConstantAlpha)
+                ),
+                Option.HuePicker(
+                    tuoLang.HiddenPlayerHue,
+                    new Accessor<ushort>(() => profile.HiddenBodyHue),
+                    new SearchMetadata(tuoLang.HiddenPlayerHue, Keywords: [kw.Hue])
+                ),
+                Option.Checkbox(
+                    tuoLang.OverridePartyMemberHues,
+                    new Accessor<bool>(() => profile.OverridePartyAndGuildHue),
+                    search: new SearchMetadata(tuoLang.OverridePartyMemberHues, Keywords: [kw.Party])
+                )
+            ).AsSearchGroup()
+            .WithSearch(new SearchMetadata(Keywords: [kw.Player, kw.Opacity, kw.Hidden]));
+    }
+
+    private static OptionFragment GetDamageHuesSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
+        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
+        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
+        ModernOptionsGumpLanguage.MobilesTabLang.HuesSection hueLang = lang.MobilesTab.Hues;
+
+        return OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = kw.Damage, LabelTooltip = hueLang.DamageHuesTooltip },
+                Option.HuePicker(
+                    tuoLang.DamageToSelf,
+                    new Accessor<ushort>(() => profile.DamageHueSelf),
+                    new SearchMetadata(tuoLang.DamageToSelf, Keywords: [kw.Self])
+                ),
+                Option.HuePicker(
+                    tuoLang.DamageToOthers,
+                    new Accessor<ushort>(() => profile.DamageHueOther),
+                    new SearchMetadata(tuoLang.DamageToOthers, Keywords: [kw.Other])
+                ),
+                Option.HuePicker(
+                    tuoLang.DamageToPets,
+                    new Accessor<ushort>(() => profile.DamageHuePet),
+                    new SearchMetadata(tuoLang.DamageToPets, Keywords: [kw.Pet])
+                ),
+                Option.HuePicker(
+                    tuoLang.DamageToAllies,
+                    new Accessor<ushort>(() => profile.DamageHueAlly),
+                    new SearchMetadata(tuoLang.DamageToAllies, Keywords: [kw.Ally])
+                ),
+                Option.HuePicker(
+                    tuoLang.DamageToLastAttack,
+                    new Accessor<ushort>(() => profile.DamageHueLastAttck),
+                    new SearchMetadata(tuoLang.DamageToLastAttack, Keywords: [kw.Last, kw.Attack])
+                )
+            ).AsSearchGroup()
+            .WithSearch(new SearchMetadata(Keywords: [kw.Damage]));
     }
 }

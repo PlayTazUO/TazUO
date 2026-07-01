@@ -31,6 +31,7 @@ public static class CombatTab
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.CombatTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab;
+        ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
@@ -58,6 +59,21 @@ public static class CombatTab
                 lang.Combat.EnableDPSCounter,
                 new Accessor<bool>(() => profile.ShowDPS),
                 search: new SearchMetadata(lang.Combat.EnableDPSCounter, Keywords: [kw.Dps, kw.Damage])
+            ),
+            Option.Checkbox(
+                genLang.ShowTargetIndicator,
+                new Accessor<bool>(() => profile.ShowTargetIndicator),
+                search: new SearchMetadata(genLang.ShowTargetIndicator, Keywords: [kw.Target, kw.Indicator])
+            ),
+            Option.Checkbox(
+                genLang.IgnoreStaminaCheck,
+                new Accessor<bool>(() => profile.IgnoreStaminaCheck),
+                search: new SearchMetadata(genLang.IgnoreStaminaCheck, Keywords: [kw.Stamina, kw.Disable])
+            ),
+            Option.Checkbox(
+                genLang.DisableDismountWarmode,
+                new Accessor<bool>(() => profile.DisableDismountInWarMode),
+                search: new SearchMetadata(genLang.DisableDismountWarmode, Keywords: [kw.Dismount, kw.Warmode])
             )
         ).WithSearch(new SearchMetadata(lang.Combat.Label, [kw.Combat, kw.Battle]));
     }

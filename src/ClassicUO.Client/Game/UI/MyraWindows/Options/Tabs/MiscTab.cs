@@ -1,6 +1,7 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
@@ -25,7 +26,7 @@ public static class MiscTab
         );
     }
 
-    private static IOptionSource GetPage1()
+    private static OptionFragment GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
@@ -33,23 +34,6 @@ public static class MiscTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), genLang.EnableCOT),
-                Option.Slider(
-                    genLang.COTDistance,
-                    Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                    Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
-                    new Accessor<float>(() => profile.CircleOfTransparencyRadius, f => profile.CircleOfTransparencyRadius = (int)f),
-                    search: new SearchMetadata(genLang.COTDistance, Keywords: [kw.Cot, kw.Distance])
-                ),
-                Option.ComboBox(
-                    genLang.COTType,
-                    profile.CircleOfTransparencyType,
-                    [genLang.COTTypeOptFull, genLang.COTTypeOptGrad, genLang.COTTypeOptModern],
-                    i => profile.CircleOfTransparencyType = i,
-                    search: new SearchMetadata(genLang.COTType, Keywords: [kw.Cot, kw.Type])
-                )
-            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Misc], Keywords: [kw.Cot, kw.Circle])),
             Option.Checkbox(
                 genLang.HideScreenshotMessage,
                 new Accessor<bool>(() => profile.HideScreenshotStoredInMessage),
@@ -107,7 +91,7 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(miscLang.Label, Keywords: [kw.Misc, kw.Miscellaneous, kw.Other], Tags: [kw.Misc]));
     }
 
-    private static IOptionSource GetPage2()
+    private static OptionFragment GetPage2()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
@@ -219,10 +203,11 @@ public static class MiscTab
         ).WithSearch(new SearchMetadata(expLang.Label, Keywords: [kw.Experimental, kw.Beta, kw.Test], Tags: [kw.Experimental]));
     }
 
-    private static IOptionSource GetPage3()
+    private static OptionFragment GetPage3()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.MiscTabLang miscLang = Language.Instance.GetModernOptionsGumpLanguage.MiscTab;
+        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
@@ -257,6 +242,15 @@ public static class MiscTab
                 },
                 miscLang.UseManagedZlibTooltip,
                 new SearchMetadata(miscLang.UseManagedZlib, Keywords: [kw.Zlib, kw.Managed])
+            ),
+            Option.Checkbox(
+                tuoLang.EnableASyncMapLoading,
+                profile.EnableASyncMapLoading,
+                newValue =>
+                {
+                    profile.EnableASyncMapLoading = newValue;
+                    GameScene.Instance?.ASyncMapLoading = newValue;
+                }
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.HousingTransparency, LabelLink = "https://tazuo.org/wiki/tazuotrasparenthouses/" },

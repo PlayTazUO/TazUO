@@ -67,6 +67,19 @@ public class PageControl : Container
     public bool RetainSizeWhenPaging { get; set; }
 
     /// <summary>
+    /// Pins the content panel to an explicit size so the control does not jump on navigation.
+    /// The caller should pass the maximum effective page size so no page overflows.
+    /// </summary>
+    public Point? ContentSize
+    {
+        set
+        {
+            _contentPanel.Width = value?.X;
+            _contentPanel.Height = value?.Y;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new <see cref="PageControl"/> and optionally pre-populates it with pages.
     /// </summary>
     /// <param name="widgets">Zero or more widgets to register as initial pages.</param>

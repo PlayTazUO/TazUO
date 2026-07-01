@@ -51,6 +51,17 @@ internal static class Option
         new(() => OptionsFactory.PropBoundHuePicker(label, backingProperty), search ?? new SearchMetadata(label));
 
     /// <summary>
+    /// Creates a hue-picker entry
+    /// </summary>
+    /// <param name="label">The label displayed beside the color swatch</param>
+    /// <param name="value">The current hue value</param>
+    /// <param name="onChanged">An action to invoke when a hue is selected</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the hue-picker widget</returns>
+    public static OptionEntry HuePicker(string label, ushort value, Action<ushort> onChanged, SearchMetadata? search = null) =>
+        new(() => OptionsFactory.CreateHuePicker(label, value, onChanged, 20), search ?? new SearchMetadata(label));
+
+    /// <summary>
     /// Creates a labeled horizontal slider entry bound to a <see cref="float"/> property
     /// </summary>
     /// <param name="label">The slider label text</param>
@@ -62,6 +73,36 @@ internal static class Option
     /// <returns>An <see cref="OptionEntry"/> wrapping the slider widget</returns>
     public static OptionEntry Slider(string label, float min, float max, Accessor<float> backingProperty, bool labelOnLeft = false, SearchMetadata? search = null) =>
         new(() => OptionsFactory.PropBoundSliderOption(label, backingProperty, min, max, labelOnLeft), search ?? new SearchMetadata(label));
+
+    /// <summary>
+    /// Creates a labeled horizontal slider entry bound to a <see cref="ushort"/> property
+    /// </summary>
+    /// <param name="label">The slider label</param>
+    /// <param name="min">The minimum slider value</param>
+    /// <param name="max">The maximum slider value</param>
+    /// <param name="backingProperty">Accessor for the underlying float value</param>
+    /// <param name="labelOnLeft">When <see langword="true"/>, the label is placed to the left of the slider</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the slider widget</returns>
+    public static OptionEntry Slider(
+        string label,
+        ushort min,
+        ushort max,
+        Accessor<ushort> backingProperty,
+        bool labelOnLeft = false,
+        SearchMetadata? search = null
+    ) =>
+        new(
+            () => OptionsFactory.CreateSliderOption(
+                label,
+                min,
+                max,
+                backingProperty.Get(),
+                value => backingProperty.Set((ushort)value),
+                labelOnLeft
+            ),
+            search ?? new SearchMetadata(label)
+        );
 
     /// <summary>
     /// Creates a labeled horizontal slider entry bound to an <see cref="int"/> property

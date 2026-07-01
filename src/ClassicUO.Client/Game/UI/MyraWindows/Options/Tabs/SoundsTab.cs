@@ -22,6 +22,8 @@ public static class SoundsTab
         ModernOptionsGumpLanguage.Sound soundSubLang = lang.GetSound;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        string playRainSound = TazLang.Get("sound_play_rain", "Play rain sound");
+
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.EnableSound), soundSubLang.EnableSound),
@@ -62,6 +64,11 @@ public static class SoundsTab
                 search: new SearchMetadata(soundSubLang.PlayFootsteps, Keywords: [kw.Footstep])
             ),
             Option.Checkbox(
+                playRainSound,
+                new Accessor<bool>(() => profile.EnableRainSound),
+                search: new SearchMetadata(playRainSound, Keywords: [kw.Rain])
+            ),
+            Option.Checkbox(
                 soundSubLang.CombatMusic,
                 new Accessor<bool>(() => profile.EnableCombatMusic),
                 search: new SearchMetadata(soundSubLang.CombatMusic, Keywords: [kw.Combat, kw.Music])
@@ -86,7 +93,11 @@ public static class SoundsTab
                     new SearchMetadata(lang.GetTazUO.VoiceModelPath, Keywords: [kw.Voice, kw.Model])
                 )
             )
-        ).WithSearch(new SearchMetadata(soundLang.Label, [soundLang.Tags], [soundLang.Keywords]));
+        ).WithSearch(new SearchMetadata(
+            soundLang.Label,
+            [kw.Sound, kw.Audio],
+            [kw.Sound, kw.Audio, kw.Music, kw.Volume])
+        );
     }
 
     private static void OnCreateVoiceButtonClick()
