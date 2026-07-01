@@ -645,7 +645,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_autolootthis", "Autoloot this container"), () =>
                 {
-                    AutoLootManager.Instance.ForceLootContainer(LocalSerial);
+                    AutoLootManager.Instance.ForceLootContainer(LocalSerial, true);
                 }));
             }
 

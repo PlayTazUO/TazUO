@@ -1,4 +1,6 @@
 using ClassicUO.Configuration;
+using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility;
@@ -94,21 +96,45 @@ namespace ClassicUO.Game.Managers
             _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         }
 
-        public void ForceLootContainer(uint serial)
+        public void ForceLootContainer(uint serial, bool ignorePlayerEquippedSourceGuard = false)
         {
             Item cont = _world.Items.Get(serial);
 
-            if (cont == null) return;
+            if (cont == null || (!ignorePlayerEquippedSourceGuard && IsPlayerEquippedLootSource(cont))) return;
 
-            for (LinkedObject i = cont.Items; i != null; i = i.Next) CheckAndLoot((Item)i);
+            for (LinkedObject i = cont.Items; i != null; i = i.Next) CheckAndLoot((Item)i, ignorePlayerEquippedSourceGuard);
+        }
+
+        private bool IsPlayerEquippedLootSource(Item item)
+        {
+            if (item == null || _world.Player == null) return false;
+
+            uint backpackSerial = _world.Player.Backpack?.Serial ?? 0;
+            return item.Container == _world.Player.Serial && item.Serial != backpackSerial && item.Layer != Layer.Bank;
+        }
+
+        private bool IsFromPlayerEquippedLootSource(Item item)
+        {
+            if (IsPlayerEquippedLootSource(item)) return true;
+
+            while (item != null && SerialHelper.IsItem(item.Container))
+            {
+                Item container = _world.Items.Get(item.Container);
+
+                if (IsPlayerEquippedLootSource(container)) return true;
+
+                item = container;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// Check an item against the loot list, if it needs to be auto looted it will be.
         /// </summary>
-        private void CheckAndLoot(Item i)
+        private void CheckAndLoot(Item i, bool ignorePlayerEquippedSourceGuard = false)
         {
-            if (!_loaded || i == null || _quickContainsLookup.Contains(i.Serial)) return;
+            if (!_loaded || i == null || _quickContainsLookup.Contains(i.Serial) || (!ignorePlayerEquippedSourceGuard && IsFromPlayerEquippedLootSource(i))) return;
 
             if(i.IsCorpse)
             {
