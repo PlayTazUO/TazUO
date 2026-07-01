@@ -44,7 +44,7 @@ public static class VideoTab
             .AddTab(
                 lang.Misc.Label,
                 GetMiscSubTabContent,
-                new SearchMetadata(lang.Misc.Label, Keywords: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective, "Weather", "Rain", "Snow"])
+                new SearchMetadata(lang.Misc.Label, Keywords: [kw.Misc, kw.Miscellaneous])
             );
     }
 

@@ -399,6 +399,7 @@ namespace ClassicUO.Configuration
             public string Property { get; set; } = "Property";
             public string Query { get; set; } = "Query";
             public string Radius { get; set; } = "Radius";
+            public string Rain { get; set; } = "Rain";
             public string Range { get; set; } = "Range";
             public string Reagent { get; set; } = "Reagent";
             public string Recolor { get; set; } = "Recolor";
@@ -435,6 +436,7 @@ namespace ClassicUO.Configuration
             public string Skill { get; set; } = "Skill";
             public string Skills { get; set; } = "Skills";
             public string Smooth { get; set; } = "Smooth";
+            public string Snow { get; set; } = "Snow";
             public string Sound { get; set; } = "Sound";
             public string Speech { get; set; } = "Speech";
             public string Spell { get; set; } = "Spell";
@@ -475,6 +477,7 @@ namespace ClassicUO.Configuration
             public string War { get; set; } = "War";
             public string Warmode { get; set; } = "Warmode";
             public string Water { get; set; } = "Water";
+            public string Weather { get; set; } = "Weather";
             public string Wheel { get; set; } = "Wheel";
             public string Width { get; set; } = "Width";
             public string Wiki { get; set; } = "Wiki";
@@ -678,9 +681,6 @@ namespace ClassicUO.Configuration
         public class SoundTabLang
         {
             public string Label { get; set; } = "Sound";
-            public string Keywords { get; set; } = "Sound, Audio, Music, Volume";
-            public string Tags { get; set; } = "Sound, Audio";
-
             public string VoiceToText { get; set; } = "Voice to text";
             public string CreateVoiceButton { get; set; } = "Create voice toggle button";
         }
