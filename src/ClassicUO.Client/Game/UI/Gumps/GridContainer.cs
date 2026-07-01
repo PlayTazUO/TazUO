@@ -959,7 +959,7 @@ public partial class GridContainer : ResizableGump
                 }
             }
 
-            if (SlotManager != null && !_skipSave && SlotManager.ItemPositions.Count > 0 && !_isCorpse)
+            if (SlotManager != null && !_skipSave && !_isCorpse && (SlotManager.ItemPositions.Count > 0 || IsListView))
                 _gridContainerEntry.UpdateSaveDataEntry(this);
 
             // Dispose of the event handlers

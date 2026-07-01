@@ -223,6 +223,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Highlight = highlight;
                 _listIndex = listIndex;
                 LocalSerial = item?.Serial ?? 0;
+                _selectHighlight = item != null && MultiItemMoveGump.IsSelected(item.Serial);
 
                 if (item == null)
                 {
@@ -502,6 +503,9 @@ namespace ClassicUO.Game.UI.Gumps
             public override void Update()
             {
                 base.Update();
+
+                if (_selectHighlight && (_item == null || !MultiItemMoveGump.IsSelected(_item.Serial)))
+                    _selectHighlight = false;
 
                 ushort hue = 0;
 
