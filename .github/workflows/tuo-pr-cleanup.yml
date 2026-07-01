@@ -1,0 +1,39 @@
+name: TUO-PR-Cleanup
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Delete PR pre-release and tag
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          TAG="pr-${PR_NUMBER}-test-build"
+          echo "Cleaning up release/tag for closed PR #${PR_NUMBER}: $TAG"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Deleting release and tag $TAG"
+            gh release delete "$TAG" --yes --cleanup-tag || true
+          else
+            echo "No release found for $TAG"
+            # Still attempt to delete a dangling tag if one exists.
+            if git ls-remote --tags origin "refs/tags/$TAG" | grep -q "$TAG"; then
+              echo "Deleting dangling tag $TAG"
+              git push origin --delete "$TAG" || true
+            else
+              echo "No tag found for $TAG, nothing to clean up."
+            fi
+          fi
