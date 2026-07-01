@@ -192,7 +192,8 @@ namespace ClassicUO.Game.UI.Gumps
                 _icon = new ResizableStaticPic(0, LIST_ICON_SIZE, LIST_ICON_SIZE)
                 {
                     X = 0,
-                    Y = 0
+                    Y = 0,
+                    AcceptMouseInput = false
                 };
 
                 _label = new Label(string.Empty, true, 43, ishtml: true)
