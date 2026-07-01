@@ -273,6 +273,7 @@ namespace ClassicUO.Configuration
             public string Empty { get; set; } = "Empty";
             public string Enable { get; set; } = "Enable";
             public string Enemy { get; set; } = "Enemy";
+            public string Enhanced { get; set; } = "Enhanced";
             public string Entity { get; set; } = "Entity";
             public string Equipment { get; set; } = "Equipment";
             public string Exceed { get; set; } = "Exceed";
@@ -347,6 +348,7 @@ namespace ClassicUO.Configuration
             public string Loot { get; set; } = "Loot";
             public string Low { get; set; } = "Low";
             public string Magic { get; set; } = "Magic";
+            public string Main { get; set; } = "Main";
             public string Managed { get; set; } = "Managed";
             public string Mechanics { get; set; } = "Mechanics";
             public string Message { get; set; } = "Message";
@@ -411,6 +413,7 @@ namespace ClassicUO.Configuration
             public string Resync { get; set; } = "Resync";
             public string Right { get; set; } = "Right";
             public string RightClick { get; set; } = "Right Click";
+            public string Ripple { get; set; } = "Ripple";
             public string Rock { get; set; } = "Rock";
             public string Roof { get; set; } = "Roof";
             public string Row { get; set; } = "Row";
@@ -440,6 +443,7 @@ namespace ClassicUO.Configuration
             public string Sound { get; set; } = "Sound";
             public string Speech { get; set; } = "Speech";
             public string Spell { get; set; } = "Spell";
+            public string Splash { get; set; } = "Splash";
             public string Split { get; set; } = "Split";
             public string Stamina { get; set; } = "Stamina";
             public string Standard { get; set; } = "Standard";

@@ -84,8 +84,25 @@ internal static class Option
     /// <param name="labelOnLeft">When <see langword="true"/>, the label is placed to the left of the slider</param>
     /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
     /// <returns>An <see cref="OptionEntry"/> wrapping the slider widget</returns>
-    public static OptionEntry Slider(string label, ushort min, ushort max, Accessor<ushort> backingProperty, bool labelOnLeft = false, SearchMetadata? search = null) =>
-        new(() => OptionsFactory.CreateSliderOption(label, min, max, backingProperty.Get(), value => backingProperty.Set((ushort)value), labelOnLeft));
+    public static OptionEntry Slider(
+        string label,
+        ushort min,
+        ushort max,
+        Accessor<ushort> backingProperty,
+        bool labelOnLeft = false,
+        SearchMetadata? search = null
+    ) =>
+        new(
+            () => OptionsFactory.CreateSliderOption(
+                label,
+                min,
+                max,
+                backingProperty.Get(),
+                value => backingProperty.Set((ushort)value),
+                labelOnLeft
+            ),
+            search ?? new SearchMetadata(label)
+        );
 
     /// <summary>
     /// Creates a labeled horizontal slider entry bound to an <see cref="int"/> property

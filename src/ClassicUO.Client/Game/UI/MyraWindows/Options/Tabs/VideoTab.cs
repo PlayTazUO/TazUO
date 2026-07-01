@@ -99,7 +99,8 @@ public static class VideoTab
                 {
                     profile.MainWindowBackgroundHue = newValue;
                     GameController.UpdateBackgroundHueShader();
-                }
+                },
+                new SearchMetadata(tuoLang.MainGameWindowBackground, Keywords: [kw.Main, kw.Window, kw.Background, kw.Hue])
             )
         );
     }
@@ -478,9 +479,9 @@ public static class VideoTab
                     new Accessor<bool>(() => profile.EnableWeatherEffects),
                     search: new SearchMetadata(
                         TazLang.Get("enhanced_weather_particle_effects"),
-                        Keywords: ["Weather", "Splash", "Ripple"])
+                        Keywords: [kw.Splash, kw.Ripple])
                 )
-            ).WithSearch(new SearchMetadata(TazLang.Get("enhanced_weather"), Tags: ["Weather"], Keywords: ["Weather", "Rain", "Snow"])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("enhanced_weather"), [kw.Enhanced, kw.Weather], [kw.Weather])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(
                     new Accessor<bool>(() => profile.EnablePostProcessingEffects, b =>
