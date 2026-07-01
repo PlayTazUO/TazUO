@@ -48,6 +48,9 @@ All notable changes to TazUO will be recorded here.
 * Add Skill slot type to the Spell Bar - [P.R 613](https://github.com/PlayTazUO/TazUO/pull/613) ([bittiez](https://github.com/bittiez))
 * Added individual scaling support for the Status Gump - [P.R 614](https://github.com/PlayTazUO/TazUO/pull/614) ([bittiez](https://github.com/bittiez))
 * Added a single scaling option for all server-created gumps - [P.R 615](https://github.com/PlayTazUO/TazUO/pull/615) ([bittiez](https://github.com/bittiez))
+* Add option to disable the party-style health bar for party members - [P.R 620](https://github.com/PlayTazUO/TazUO/pull/620) ([bittiez](https://github.com/bittiez))
+* Added a clear (X) button to the nameplate manager search field - [P.R 621](https://github.com/PlayTazUO/TazUO/pull/621) ([bittiez](https://github.com/bittiez))
+* Added a scaling option for context menus - [P.R 623](https://github.com/PlayTazUO/TazUO/pull/623) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
@@ -89,6 +92,7 @@ All notable changes to TazUO will be recorded here.
 * Pass the first click through to a Myra window so clicking a control on an unfocused window works in one click instead of requiring a focus click first - [P.R 604](https://github.com/PlayTazUO/TazUO/pull/604) ([bittiez](https://github.com/bittiez))
 * Fixed percent-type "Show Mobiles HP" text drifting in a radius around the mobile based on zoom level instead of staying centered on top - [P.R 608](https://github.com/PlayTazUO/TazUO/pull/608) ([bittiez](https://github.com/bittiez))
 * Fixed web map markers disappearing after changing facets - the live event stream is now kept alive across map changes so markers refresh correctly when recalling between facets - [P.R 619](https://github.com/PlayTazUO/TazUO/pull/619) ([bittiez](https://github.com/bittiez))
+* Game cursor now uses a consistent style across all maps instead of changing on non-zero maps - [P.R 622](https://github.com/PlayTazUO/TazUO/pull/622) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

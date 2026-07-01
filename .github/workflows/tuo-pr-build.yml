@@ -1,0 +1,180 @@
+name: TUO-PR-Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull request number to build'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  CUO_OUTPUT_PATH: 'build/dist'
+  CUO_PROJECT_PATH: "src/ClassicUO.Client/ClassicUO.Client.csproj"
+
+  DOTNET_NOLOGO: false
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-latest
+            rid: osx-arm64
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Checkout PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+        run: gh pr checkout "$PR_NUMBER"
+
+      - name: Get submodules
+        run: |
+          git config --global url."https://".insteadOf git://
+          git submodule update --init --recursive
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10
+
+      - name: Build executable
+        run: dotnet publish ${{ env.CUO_PROJECT_PATH }} -c Release -o ${{ env.CUO_OUTPUT_PATH }} -r ${{ matrix.rid }}
+
+      - name: Zip all builds
+        shell: bash
+        run: |
+          mkdir -p flat
+
+          # Copy files excluding *.dSYM (folders or files), preserving subfolders
+          for d in "${{ env.CUO_OUTPUT_PATH }}" "${{ env.CUO_OUTPUT_PATH }}-Lib"; do
+            [ -d "$d" ] || continue
+
+            find "$d" \( -name '*.dSYM' -o -name '*.dSYM/' \) -prune -o -type f -print |
+            while IFS= read -r file; do
+              dest="flat/${file#$d/}"
+              mkdir -p "$(dirname "$dest")"
+              cp "$file" "$dest"
+            done
+          done
+
+          cd flat
+
+          echo "Runner OS: $RUNNER_OS"
+
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            # Use PowerShell Compress-Archive for Windows
+            pwsh -Command "Compress-Archive -Path * -DestinationPath ../${{ matrix.rid }}.zip -Force"
+          else
+            # Linux and macOS
+            zip -r ../${{ matrix.rid }}.zip .
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}.zip
+          path: ${{ matrix.rid }}.zip
+          retention-days: 3
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Get PR title
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+        run: |
+          PR_JSON=$(gh pr view "$PR_NUMBER" --json title,state)
+          TITLE=$(jq -r .title <<< "$PR_JSON")
+          STATE=$(jq -r .state <<< "$PR_JSON")
+          echo "Pull request title: $TITLE"
+          echo "Pull request state: $STATE"
+
+          # If the PR was closed/merged while the build was running, skip
+          # publishing so we don't recreate an orphaned release/tag that the
+          # cleanup workflow has already removed (or will not run again for).
+          if [[ "$STATE" != "OPEN" ]]; then
+            echo "PR is no longer open; skipping pre-release publish."
+            echo "create=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "create=true" >> "$GITHUB_OUTPUT"
+
+          # The release name is the PR title verbatim.
+          echo "title=$TITLE" >> "$GITHUB_OUTPUT"
+
+          # Tag is derived from the PR number so each PR gets its own stable tag.
+          TAG="pr-${PR_NUMBER}-test-build"
+          echo "Release tag: $TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        if: steps.pr.outputs.create == 'true'
+        uses: actions/download-artifact@v8
+        with:
+          path: all-zips
+
+      - name: Flatten artifact structure
+        if: steps.pr.outputs.create == 'true'
+        run: |
+          mkdir -p zips
+          find all-zips -name "*.zip" -type f -exec mv {} zips/ \;
+
+      - name: List downloaded zips
+        if: steps.pr.outputs.create == 'true'
+        run: ls -R zips
+
+      - name: Remove old Release
+        if: steps.pr.outputs.create == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.pr.outputs.tag }}
+        run: |
+          gh release delete "$TAG" --yes --cleanup-tag || true
+          echo "Waiting for GitHub API to propagate deletion..."
+          sleep 15
+
+      - name: Create pre-release
+        if: steps.pr.outputs.create == 'true'
+        uses: ncipollo/release-action@v1.20.0
+        with:
+          artifacts: "zips/*.zip"
+          name: ${{ steps.pr.outputs.title }}
+          tag: ${{ steps.pr.outputs.tag }}
+          body: |
+            Automated pre-release build for PR #${{ github.event.inputs.pr_number }}: ${{ steps.pr.outputs.title }}
+
+            This is a standalone build of the pull request for testing purposes.
+            These are modern dotnet builds of TazUO, they do not support plugins. For plugin support see the Legacy releases.
+          makeLatest: false
+          prerelease: true
+          allowUpdates: true
+          draft: false
+          token: ${{ secrets.GITHUB_TOKEN }}

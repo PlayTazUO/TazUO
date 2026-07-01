@@ -101,10 +101,29 @@ namespace ClassicUO.Game.UI.Gumps
 
 
 
-            Add(new AlphaBlendControl() { Y = stayActive.Height + stayActive.Y, Width = 150, Height = 20, Hue = 0x0481 });
-            Add(searchBox = new StbTextBox(0, -1, 150, hue: 0xFFFF) { Y = stayActive.Height + stayActive.Y, Width = 150, Height = 20 });
+            int searchY = stayActive.Height + stayActive.Y;
+            Add(new AlphaBlendControl() { Y = searchY, Width = 150, Height = 20, Hue = 0x0481 });
+            Add(searchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = searchY, Width = 134, Height = 20 });
             searchBox.Text = NameOverHeadManager.Search;
             searchBox.TextChanged += (s, e) => { NameOverHeadManager.Search = searchBox.Text; };
+
+            Label clearSearch;
+            Add
+            (
+                clearSearch = new Label("X", true, 0xFFFF, font: 1)
+                {
+                    AcceptMouseInput = true,
+                    X = 138
+                }
+            );
+            clearSearch.Y = searchY + ((20 - clearSearch.Height) >> 1);
+            clearSearch.SetTooltip("Clear search");
+            clearSearch.MouseUp += (s, e) =>
+            {
+                searchBox.Text = "";
+                NameOverHeadManager.Search = "";
+                UIManager.KeyboardFocusControl = searchBox; //Return focus to the input in case clicking the X moved it
+            };
 
             DrawChoiceButtons();
         }

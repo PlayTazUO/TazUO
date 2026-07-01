@@ -39,6 +39,7 @@ namespace ClassicUO.Game.Scenes
         private long _windowResizeStartTime = 0;
         private const int WINDOW_RESIZE_TIMEOUT_MS = 500;
         private const int TOLERANCE = 5;
+        private const float MAX_LAYER_DEPTH = 0x8000;
 
         private static readonly Lazy<BlendState> _darknessBlend = new Lazy<BlendState>(() =>
         {
@@ -911,6 +912,7 @@ namespace ClassicUO.Game.Scenes
 
             Profiler.EnterContext("WorldUpdate");
             _world.Update();
+            _world.Weather.UpdateAudio();
             _animatedStaticsManager.Process();
             _world.BoatMovingManager.Update();
             _world.Player.Pathfinder.ProcessAutoWalk();
@@ -1292,10 +1294,12 @@ namespace ClassicUO.Game.Scenes
             batcher.SetSampler(null);
             batcher.SetStencil(null);
 
-            // draw weather
-            if (!ProfileManager.CurrentProfile.DisableWeather)
+            // draw weather (DisableWeather also checked inside Weather.Draw)
+            if (ProfileManager.CurrentProfile?.DisableWeather != true)
             {
-                _world.Weather.Draw(batcher, 0, 0); // TODO: fix the depth
+                Profiler.EnterContext("Weather");
+                _world.Weather.Draw(batcher, 0, 0, MAX_LAYER_DEPTH - 1);
+                Profiler.ExitContext("Weather");
             }
 
             //GameController.DrawFlushCounts(batcher, 200, 200);

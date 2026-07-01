@@ -1,6 +1,3 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
-
-using System;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -9,54 +6,25 @@ using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using MathHelper = Microsoft.Xna.Framework.MathHelper;
 
 namespace ClassicUO.Game
 {
-    public enum WeatherType
-    {
-        WT_RAIN = 0,
-        WT_STORM_APPROACH,
-        WT_SNOW,
-        WT_STORM_BREWING,
-
-        WT_INVALID_0 = 0xFE,
-        WT_INVALID_1 = 0xFF
-    }
-
-    public sealed class Weather
+    public sealed class Weather : WeatherBase
     {
         private const int MAX_WEATHER_EFFECT = 70;
         private const float SIMULATION_TIME = 37.0f;
 
         private readonly WeatherEffect[] _effects = new WeatherEffect[MAX_WEATHER_EFFECT];
-        private uint _timer, _windTimer, _lastTick;
-        private readonly World _world;
+        private readonly Texture2D _rainImage = PNGLoader.Instance.GetImageTexture(
+            System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "rain.png"));
 
-        public Weather(World world)
+        public Weather(World world) : base(world)
         {
-            _world = world;
         }
 
-
-        public WeatherType? CurrentWeather { get; private set; }
-        public WeatherType Type { get; private set; }
-        public byte Count { get; private set; }
-        public byte CurrentCount { get; private set; }
-        public byte Temperature{ get; private set; }
-        public sbyte Wind { get; private set; }
-        private Texture2D rainImage = PNGLoader.Instance.GetImageTexture(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "rain.png"));
-
-
-        private static float SinOscillate(float freq, int range, uint current_tick)
-        {
-            float anglef = (int) (current_tick / 2.7777f * freq) % 360;
-
-            return Math.Sign(MathHelper.ToRadians(anglef)) * range;
-        }
-
-
-        public void Reset()
+        public override void Reset()
         {
             Type = 0;
             Count = CurrentCount = Temperature = 0;
@@ -65,7 +33,7 @@ namespace ClassicUO.Game
             CurrentWeather = null;
         }
 
-        public void Generate(WeatherType type, byte count, byte temp)
+        public override void Generate(WeatherType type, byte count, byte temp)
         {
             if (CurrentWeather.HasValue && CurrentWeather == type)
             {
@@ -75,7 +43,7 @@ namespace ClassicUO.Game
             Reset();
 
             Type = type;
-            Count = (byte) Math.Min(MAX_WEATHER_EFFECT, (int) count);
+            Count = (byte)Math.Min(MAX_WEATHER_EFFECT, (int)count);
             Temperature = temp;
             _timer = Time.Ticks + Constants.WEATHER_TIMER;
 
@@ -172,7 +140,6 @@ namespace ClassicUO.Game
                     break;
             }
 
-
             _windTimer = 0;
 
             while (CurrentCount < Count)
@@ -183,30 +150,29 @@ namespace ClassicUO.Game
             }
         }
 
-        private void PlayWind() => PlaySound(RandomHelper.RandomList(0x014, 0x015, 0x016));
-
-        private void PlayThunder() => PlaySound(RandomHelper.RandomList(0x028, 0x206));
-
-        private void PlaySound(int sound)
+        public override void UpdateAudio()
         {
-            // randomize the sound of the weather around the player
-            int randX = RandomHelper.GetValue(10, 18);
-            if (RandomHelper.RandomBool())
+            if (IsWeatherDisabled)
             {
-                randX *= -1;
+                if (CurrentWeather.HasValue || CurrentCount > 0)
+                {
+                    Reset();
+                }
             }
-
-            int randY = RandomHelper.GetValue(10, 18);
-            if (RandomHelper.RandomBool())
-            {
-                randY *= -1;
-            }
-
-            Client.Game.Audio.PlaySoundWithDistance(_world, sound, _world.Player.X + randX, _world.Player.Y + randY);
         }
 
-        public void Draw(UltimaBatcher2D batcher, int x, int y)
+        public override void Draw(UltimaBatcher2D batcher, int x, int y, float layerDepth)
         {
+            if (IsWeatherDisabled)
+            {
+                if (CurrentWeather.HasValue || CurrentCount > 0)
+                {
+                    Reset();
+                }
+
+                return;
+            }
+
             bool removeEffects = false;
 
             if (_timer < Time.Ticks)
@@ -240,11 +206,11 @@ namespace ClassicUO.Game
                     windChanged = true;
                 }
 
-                _windTimer = Time.Ticks + (uint) (RandomHelper.GetValue(13, 19) * 1000);
+                _windTimer = Time.Ticks + (uint)(RandomHelper.GetValue(13, 19) * 1000);
 
                 sbyte lastWind = Wind;
 
-                Wind = (sbyte) RandomHelper.GetValue(0, 4);
+                Wind = (sbyte)RandomHelper.GetValue(0, 4);
 
                 if (RandomHelper.GetValue(0, 2) != 0)
                 {
@@ -266,24 +232,9 @@ namespace ClassicUO.Game
                 }
             }
 
-            //switch ((WEATHER_TYPE) Type)
-            //{
-            //    case WEATHER_TYPE.WT_RAIN:
-            //    case WEATHER_TYPE.WT_FIERCE_STORM:
-            //        // TODO: set color
-            //        break;
-            //    case WEATHER_TYPE.WT_SNOW:
-            //    case WEATHER_TYPE.WT_STORM:
-            //        // TODO: set color
-            //        break;
-            //    default:
-            //        break;
-            //}
+            Point winsize = new Point(Client.Game.Scene.Camera.Bounds.Width, Client.Game.Scene.Camera.Bounds.Height);
 
-            //Point winpos = ProfileManager.CurrentProfile.GameWindowPosition;
-            var winsize = new Point(Client.Game.Scene.Camera.Bounds.Width, Client.Game.Scene.Camera.Bounds.Height);
-
-            var snowRect = new Rectangle(0, 0, 2, 2);
+            Rectangle snowRect = new Rectangle(0, 0, 2, 2);
 
             for (int i = 0; i < CurrentCount; i++)
             {
@@ -308,7 +259,6 @@ namespace ClassicUO.Game
                     effect.X = x + RandomHelper.GetValue(0, winsize.X);
                     effect.Y = y + RandomHelper.GetValue(0, winsize.Y);
                 }
-
 
                 switch (Type)
                 {
@@ -346,9 +296,9 @@ namespace ClassicUO.Game
 
                         if (windChanged)
                         {
-                            effect.SpeedAngle = MathHelper.ToDegrees((float) Math.Atan2(effect.SpeedX, effect.SpeedY));
+                            effect.SpeedAngle = MathHelper.ToDegrees((float)Math.Atan2(effect.SpeedX, effect.SpeedY));
 
-                            effect.SpeedMagnitude = (float) Math.Sqrt(Math.Pow(effect.SpeedX, 2) + Math.Pow(effect.SpeedY, 2));
+                            effect.SpeedMagnitude = (float)Math.Sqrt(Math.Pow(effect.SpeedX, 2) + Math.Pow(effect.SpeedY, 2));
 
                             if (Type == WeatherType.WT_SNOW)
                             {
@@ -368,8 +318,8 @@ namespace ClassicUO.Game
                         speedAngle += SinOscillate(0.4f, 20, Time.Ticks + effect.ID);
 
                         float rad = MathHelper.ToRadians(speedAngle);
-                        effect.SpeedX = speedMagnitude * (float) Math.Sin(rad);
-                        effect.SpeedY = speedMagnitude * (float) Math.Cos(rad);
+                        effect.SpeedX = speedMagnitude * (float)Math.Sin(rad);
+                        effect.SpeedY = speedMagnitude * (float)Math.Cos(rad);
 
                         break;
                 }
@@ -381,8 +331,8 @@ namespace ClassicUO.Game
                     case WeatherType.WT_RAIN:
                     case WeatherType.WT_STORM_APPROACH:
 
-                        int oldX = (int) effect.X;
-                        int oldY = (int) effect.Y;
+                        int oldX = (int)effect.X;
+                        int oldY = (int)effect.Y;
 
                         float ofsx = effect.SpeedX * speedOffset;
                         float ofsy = effect.SpeedY * speedOffset;
@@ -394,40 +344,40 @@ namespace ClassicUO.Game
 
                         if (ofsx >= MAX_OFFSET_XY)
                         {
-                            oldX = (int) (effect.X - MAX_OFFSET_XY);
+                            oldX = (int)(effect.X - MAX_OFFSET_XY);
                         }
                         else if (ofsx <= -MAX_OFFSET_XY)
                         {
-                            oldX = (int) (effect.X + MAX_OFFSET_XY);
+                            oldX = (int)(effect.X + MAX_OFFSET_XY);
                         }
 
                         if (ofsy >= MAX_OFFSET_XY)
                         {
-                            oldY = (int) (effect.Y - MAX_OFFSET_XY);
+                            oldY = (int)(effect.Y - MAX_OFFSET_XY);
                         }
                         else if (oldY <= -MAX_OFFSET_XY)
                         {
-                            oldY = (int) (effect.Y + MAX_OFFSET_XY);
+                            oldY = (int)(effect.Y + MAX_OFFSET_XY);
                         }
 
-                        if (rainImage != null)
+                        if (_rainImage != null)
                         {
                             Vector3 hue = ShaderHueTranslator.GetHueVector(0);
-                            batcher.Draw(rainImage, new Rectangle(x + oldX, y + oldY, 80, 80), new Rectangle(x, y, 1000, 1000), hue);
+                            batcher.Draw(_rainImage, new Rectangle(x + oldX, y + oldY, 80, 80), new Rectangle(x, y, 1000, 1000), hue);
                         }
                         else
                         {
-
                             var start = new Vector2(x + oldX, y + oldY);
                             var end = new Vector2(x + effect.X, y + effect.Y);
 
                             batcher.DrawLine
                             (
-                               SolidColorTextureCache.GetTexture(Color.Blue),
-                               start,
-                               end,
-                               Vector3.UnitZ,
-                               2
+                                SolidColorTextureCache.GetTexture(Color.Blue),
+                                start,
+                                end,
+                                Vector3.UnitZ,
+                                2,
+                                layerDepth
                             );
                         }
 
@@ -438,14 +388,15 @@ namespace ClassicUO.Game
                         effect.X += effect.SpeedX * speedOffset;
                         effect.Y += effect.SpeedY * speedOffset;
 
-                        snowRect.X = x + (int) effect.X;
-                        snowRect.Y = y + (int) effect.Y;
+                        snowRect.X = x + (int)effect.X;
+                        snowRect.Y = y + (int)effect.Y;
 
                         batcher.Draw
                         (
                             SolidColorTextureCache.GetTexture(Color.White),
                             snowRect,
-                            Vector3.UnitZ
+                            Vector3.UnitZ,
+                            layerDepth
                         );
 
                         break;
@@ -454,7 +405,6 @@ namespace ClassicUO.Game
 
             _lastTick = Time.Ticks;
         }
-
 
         private struct WeatherEffect
         {
