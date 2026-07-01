@@ -12,6 +12,7 @@ namespace ClassicUO.Configuration
     {
     }
 
+    [Obsolete("This system is being replaced with TazLang and language.ini, please use that instead.")]
     public class Language
     {
         public ModernOptionsGumpLanguage GetModernOptionsGumpLanguage { get; set; } = new();
@@ -79,6 +80,7 @@ namespace ClassicUO.Configuration
         }
     }
 
+    [Obsolete("This system is being replaced with TazLang and language.ini, please use that instead.")]
     public class ModernOptionsGumpLanguage
     {
         public string OptionsTitle { get; set; } = "Options";
