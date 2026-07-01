@@ -52,7 +52,7 @@ using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public class GridContainer : ResizableGump
+public partial class GridContainer : ResizableGump
     {
         #region CONSTANTS
         private const int X_SPACING = 1, Y_SPACING = 1;
@@ -490,7 +490,8 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_setLootBag);
             #endregion
 
-            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
+            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea, !IsListView); //Must come after scroll area
+            InitializeListView();
 
             UpdateContainerNameLabel();
 
@@ -628,6 +629,18 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView = !ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
                     _openRegularGump.ContextMenu = GenContextMenu();
                 }, true, ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView
+            ));
+
+            control.Add(new ContextMenuItemEntry(
+                TazLang.Get("gridcontainer_view_label", "View:"),
+                new[]
+                {
+                    TazLang.Get("gridcontainer_view_default", "Default"),
+                    TazLang.Get("gridcontainer_view_grid_short", "Grid"),
+                    TazLang.Get("gridcontainer_view_list_short", "List")
+                },
+                GetContainerViewModeOverrideIndex(),
+                SetContainerViewModeOverrideIndex
             ));
 
             control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_stacksimilar", "Stack Similar Items in the Original View"), () =>
@@ -830,7 +843,13 @@ namespace ClassicUO.Game.UI.Gumps
                 ? SlotManager.SearchResults(_searchBox.Text)
                 : GridSlotManager.GetItemsInContainer(World, Container, _sortMode, overrideSort);
 
-            SlotManager.RebuildContainer(sortedContents, _searchBox.Text, overrideSort);
+            if (IsListView)
+                RebuildListContainer(sortedContents, _searchBox.Text);
+            else
+            {
+                HideListRows();
+                SlotManager.RebuildContainer(sortedContents, _searchBox.Text, overrideSort);
+            }
 
             // Update name AFTER slot manager rebuild, or we get stale data
             UpdateContainerNameLabel();
@@ -956,6 +975,7 @@ namespace ClassicUO.Game.UI.Gumps
             if (_containerNameLabel != null)
                 _containerNameLabel.MouseUp -= OnBackgroundMouseUp;
 
+            DisposeListView();
             base.Dispose();
         }
 
@@ -1105,6 +1125,7 @@ namespace ClassicUO.Game.UI.Gumps
                 : ANCHOR_TYPE.DISABLED;
 
             BuildBorder();
+            RequestUpdateContents();
         }
 
         public static void UpdateAllGridContainers() => UIManager.ForEach<GridContainer>(c => c.OptionsUpdated());
@@ -1112,7 +1133,12 @@ namespace ClassicUO.Game.UI.Gumps
         public void HandleObjectMessage(Entity parent, string text, ushort hue)
         {
             if (parent != null)
-                SlotManager.FindItem(parent.Serial)?.AddText(text, hue);
+            {
+                if (IsListView)
+                    FindListItem(parent.Serial)?.AddText(text, hue);
+                else
+                    SlotManager.FindItem(parent.Serial)?.AddText(text, hue);
+            }
         }
 
         public void BuildBorder()
@@ -2216,12 +2242,12 @@ namespace ClassicUO.Game.UI.Gumps
             private int _amount = 125;
             private Control _area;
             private Dictionary<int, uint> _itemPositions = new Dictionary<int, uint>();
-            private List<uint> _itemLocks = new List<uint>();
+            private HashSet<uint> _itemLocks = new HashSet<uint>();
             private World _world;
             private GridContainer _gridContainer;
 
             public Dictionary<int, GridItem> GridSlots => _gridSlots;
-            public List<Item> ContainerContents => _containerContents;
+            public List<Item> ContainerContents => _containerContents ??= new List<Item>();
             public Dictionary<int, uint> ItemPositions => _itemPositions;
 
             /// <summary>
@@ -2229,7 +2255,7 @@ namespace ClassicUO.Game.UI.Gumps
             /// </summary>
             public Dictionary<uint, GridItem> GridItems { get; } = new();
 
-            public GridSlotManager(World world, uint thisContainer, GridContainer gridContainer, Control controlArea)
+            public GridSlotManager(World world, uint thisContainer, GridContainer gridContainer, Control controlArea, bool setupGridControls = true)
             {
                 #region VARS
                 this._world = world;
@@ -2246,7 +2272,8 @@ namespace ClassicUO.Game.UI.Gumps
                 _container = world.Items.Get(thisContainer);
                 #endregion
 
-                SetupGridItemControls();
+                if (setupGridControls)
+                    SetupGridItemControls();
             }
 
             /// <summary>
@@ -2298,6 +2325,105 @@ namespace ClassicUO.Game.UI.Gumps
             /// <param name="filteredItems">List of items to display (may be filtered by search)</param>
             /// <param name="searchText">Search query for filtering/highlighting items</param>
             /// <param name="overrideSort">If true, only locked items maintain their positions</param>
+            public void HideGridSlots()
+            {
+                foreach (GridItem item in _gridSlots.Values)
+                    item.IsVisible = false;
+            }
+
+            public bool MatchesSearch(string search, Item item) => SearchItemNameAndProps(search, item);
+
+            public void SetContainerContents(List<Item> contents) => _containerContents = contents;
+
+            public bool IsItemLocked(uint serial) => _itemLocks.Contains(serial);
+
+            public bool ToggleItemLock(Item item, int preferredSlot)
+            {
+                if (item == null)
+                    return false;
+
+                uint serial = item.Serial;
+                GridContainerSlotEntry saveEntry = _gridContainer._gridContainerEntry.GetSlot(serial);
+                bool locked = !_itemLocks.Contains(serial);
+                saveEntry.Locked = locked;
+
+                if (!locked)
+                {
+                    _itemLocks.Remove(serial);
+                    return false;
+                }
+
+                if (!_itemLocks.Contains(serial))
+                    _itemLocks.Add(serial);
+
+                AddItemSlot(serial, GetAvailableSlot(serial, preferredSlot));
+                return true;
+            }
+
+            public List<Item> ApplyLockedPositions(List<Item> items)
+            {
+                if (_itemLocks.Count == 0 || items.Count < 2)
+                    return items;
+
+                Item[] arranged = new Item[items.Count];
+                List<Item> remaining = new(items.Count);
+
+                foreach (Item item in items)
+                {
+                    if (item != null && IsItemLocked(item.Serial) && TryGetItemSlot(item.Serial, out int slot) && slot >= 0 && slot < arranged.Length && arranged[slot] == null)
+                        arranged[slot] = item;
+                    else
+                        remaining.Add(item);
+                }
+
+                int next = 0;
+
+                foreach (Item item in remaining)
+                {
+                    while (next < arranged.Length && arranged[next] != null)
+                        next++;
+
+                    if (next < arranged.Length)
+                        arranged[next] = item;
+                }
+
+                return arranged.Where(item => item != null).ToList();
+            }
+
+            private int GetAvailableSlot(uint serial, int preferredSlot)
+            {
+                if (TryGetItemSlot(serial, out int currentSlot))
+                    return currentSlot;
+
+                if (preferredSlot >= 0)
+                {
+                    if (!ItemPositions.TryGetValue(preferredSlot, out uint occupyingSerial) || occupyingSerial == serial || !_itemLocks.Contains(occupyingSerial))
+                        return preferredSlot;
+                }
+
+                int slot = 0;
+
+                while (ItemPositions.ContainsKey(slot))
+                    slot++;
+
+                return slot;
+            }
+
+            private bool TryGetItemSlot(uint serial, out int slot)
+            {
+                foreach (KeyValuePair<int, uint> kvp in ItemPositions)
+                {
+                    if (kvp.Value == serial)
+                    {
+                        slot = kvp.Key;
+                        return true;
+                    }
+                }
+
+                slot = -1;
+                return false;
+            }
+
             public void RebuildContainer(List<Item> filteredItems, string searchText = "", bool overrideSort = false)
             {
                 // Ensure we have enough grid slots for all items

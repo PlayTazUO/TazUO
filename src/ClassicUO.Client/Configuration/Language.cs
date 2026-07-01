@@ -1280,6 +1280,9 @@ namespace ClassicUO.Configuration
             public string ContainerOpacity { get; set; } = "Container opacity";
             public string BackgroundColor { get; set; } = "Background color";
             public string UseContainersHue { get; set; } = "Use container's hue";
+            public string DefaultGridContainerView { get; set; } = "Default container view";
+            public string GridView { get; set; } = "Grid";
+            public string ListView { get; set; } = "List";
             public string SearchStyle { get; set; } = "Search style";
             public string OnlyShow { get; set; } = "Only show";
             public string Highlight { get; set; } = "Highlight";
