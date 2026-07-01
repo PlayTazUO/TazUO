@@ -153,12 +153,138 @@ namespace ClassicUO.Game.UI.Gumps
             return null;
         }
 
+        private sealed class ListLowContrastHighlight : Control
+        {
+            private readonly Item _container;
+            private readonly Profile _profile;
+            private readonly Texture2D _whiteTexture = SolidColorTextureCache.GetTexture(Color.White);
+            private Item _item;
+            private uint _graphic;
+            private Texture2D _texture;
+            private Rectangle _artBounds = Rectangle.Empty;
+            private Rectangle _textureBounds;
+
+            public ListLowContrastHighlight(Item container, Profile profile)
+            {
+                _container = container;
+                _profile = profile;
+                WantUpdateSize = false;
+            }
+
+            public void SetItem(Item item)
+            {
+                _item = item;
+                RefreshArt();
+            }
+
+            public override bool Draw(UltimaBatcher2D batcher, int x, int y)
+            {
+                if (IsDisposed)
+                    return false;
+
+                if (_item == null || _profile?.GridHighlightLowContrastItems != true)
+                    return true;
+
+                if (_graphic != _item.DisplayedGraphic)
+                    RefreshArt();
+
+                if (!TryGetDrawRectangles(x, y, out Rectangle destination, out Rectangle source))
+                    return true;
+
+                if (!GridItem.IsLowContrastItem(
+                    _item,
+                    _container,
+                    _profile,
+                    _texture,
+                    _artBounds
+                ))
+                {
+                    return true;
+                }
+
+                if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
+                    GridItem.DrawLowContrastSpotlight(batcher, _whiteTexture, destination, new Rectangle(x, y, Width, Height));
+                else
+                    GridItem.DrawLowContrastSpriteBorder(batcher, _texture, _textureBounds, destination, source);
+
+                return true;
+            }
+
+            private void RefreshArt()
+            {
+                _graphic = _item?.DisplayedGraphic ?? 0;
+                _texture = null;
+                _artBounds = Rectangle.Empty;
+                _textureBounds = Rectangle.Empty;
+
+                if (_item == null)
+                    return;
+
+                ref readonly SpriteInfo sprite = ref Client.Game.UO.Arts.GetArt(_graphic);
+                _texture = sprite.Texture;
+                _textureBounds = sprite.UV;
+                _artBounds = Client.Game.UO.Arts.GetRealArtBounds(_graphic);
+            }
+
+            private bool TryGetDrawRectangles(int x, int y, out Rectangle destination, out Rectangle source)
+            {
+                destination = Rectangle.Empty;
+                source = Rectangle.Empty;
+
+                if (_texture == null || _texture.IsDisposed || _artBounds.Width <= 0 || _artBounds.Height <= 0)
+                    return false;
+
+                Point originalSize = new(Width, Height);
+                Point point = new((Width >> 1) - (originalSize.X >> 1), (Height >> 1) - (originalSize.Y >> 1));
+
+                if (_artBounds.Width < Width)
+                {
+                    originalSize.X = _artBounds.Width;
+                    point.X = (Width >> 1) - (originalSize.X >> 1);
+                }
+
+                if (_artBounds.Height < Height)
+                {
+                    originalSize.Y = _artBounds.Height;
+                    point.Y = (Height >> 1) - (originalSize.Y >> 1);
+                }
+
+                if (_artBounds.Width > Width)
+                {
+                    originalSize.X = Width;
+                    point.X = 0;
+                }
+
+                if (_artBounds.Height > Height)
+                {
+                    originalSize.Y = Height;
+                    point.Y = 0;
+                }
+
+                destination = new Rectangle(
+                    x + point.X,
+                    y + point.Y,
+                    originalSize.X,
+                    originalSize.Y
+                );
+                source = new Rectangle(
+                    _textureBounds.X + _artBounds.X,
+                    _textureBounds.Y + _artBounds.Y,
+                    _artBounds.Width,
+                    _artBounds.Height
+                );
+
+                return destination.Width > 0 && destination.Height > 0 && source.Width > 0 && source.Height > 0;
+            }
+        }
+
         private sealed class GridListItem : Control
         {
             private readonly World _world;
             private readonly Item _container;
             private readonly GridContainer _gridContainer;
             private readonly AlphaBlendControl _background;
+            private readonly ListLowContrastHighlight _lowContrastHighlight;
             private readonly ResizableStaticPic _icon;
             private readonly Label _label;
             private readonly List<SimpleTimedTextGump> _timedTexts = new();
@@ -189,6 +315,13 @@ namespace ClassicUO.Game.UI.Gumps
                     Height = Height
                 };
 
+                _lowContrastHighlight = new ListLowContrastHighlight(container, _profile)
+                {
+                    Width = LIST_ICON_SIZE,
+                    Height = LIST_ICON_SIZE,
+                    AcceptMouseInput = false
+                };
+
                 _icon = new ResizableStaticPic(0, LIST_ICON_SIZE, LIST_ICON_SIZE)
                 {
                     X = 0,
@@ -202,6 +335,7 @@ namespace ClassicUO.Game.UI.Gumps
                 };
 
                 Add(_background);
+                Add(_lowContrastHighlight);
                 Add(_icon);
                 Add(_label);
             }
@@ -213,6 +347,8 @@ namespace ClassicUO.Game.UI.Gumps
                 _maxNameChars = maxNameChars;
                 _background.Width = width;
                 _background.Height = Height;
+                _lowContrastHighlight.Width = LIST_ICON_SIZE;
+                _lowContrastHighlight.Height = LIST_ICON_SIZE;
                 _label.X = LIST_ICON_SIZE + 4;
                 _label.Y = Math.Max(0, (Height - _label.Height) >> 1);
             }
@@ -229,11 +365,13 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     IsVisible = false;
                     ClearTooltip();
+                    _lowContrastHighlight.SetItem(null);
                     return;
                 }
 
                 _icon.Graphic = item.DisplayedGraphic;
                 _icon.Hue = item.Hue;
+                _lowContrastHighlight.SetItem(item);
 
                 _world.OPL.Contains(item);
                 RefreshName();
