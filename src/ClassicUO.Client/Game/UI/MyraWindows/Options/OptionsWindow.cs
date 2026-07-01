@@ -263,34 +263,54 @@ public class OptionsWindow : MyraControl
         Point stackBounds = _resultsBudget ??= ComputeResultsBudget();
         Point overhead = GetPageControlOverhead();
 
-        Point budget = new(
+        // The 'ideal' budget is the current available space; We CAN exceed it, up to MAX_WIDTH/MAX_HEIGHT, but we aim not to.
+        Point idealBudget = new(
             Math.Max(stackBounds.X - overhead.X, 1),
             Math.Max(stackBounds.Y - overhead.Y, 1)
         );
 
-        budget.X = Math.Max(budget.X, Math.Min(WidestMatchWidth(matches), MAX_WIDTH - overhead.X));
+        // The max budget is the absolute maximum we can grow to
+        Point maxBudget = new(
+            Math.Max(MAX_WIDTH - overhead.X, idealBudget.X),
+            Math.Max(MAX_HEIGHT - overhead.Y, idealBudget.Y)
+        );
 
-        return new PageControl(PackIntoPages(matches, budget).ToArray());
+        // The max width/height of all the search results; We use this to asses optimal page size
+        Point maxMatchSize = MaxMatchSize(matches, maxBudget);
+
+        // Widen X to fit any item that exceeds the ideal width, capped at maxBudget.
+        idealBudget.X = Math.Max(idealBudget.X, Math.Min(maxMatchSize.X, maxBudget.X));
+
+        // All pages use this height so the control doesn't jump on navigation.
+        // Outlier items (taller than ideal) expand it, capped at maxBudget.Y.
+        int uniformHeight = Math.Min(Math.Max(idealBudget.Y, maxMatchSize.Y), maxBudget.Y);
+
+        return new PageControl(PackIntoPages(matches, idealBudget, maxBudget).ToArray()) { ContentSize = new Point(idealBudget.X, uniformHeight) };
     }
 
     /// <summary>
-    ///     The cached budget can be narrower than an individual match (e.g., a long option row),
-    ///     which would otherwise overflow the page's width. Widen to fit, capped at MAX_WIDTH.
+    ///     Returns the widest and tallest natural sizes across all matches, measured against
+    ///     <paramref name="maxBudget" />. Used to widen <c>idealBudget</c> and compute
+    ///     <c>uniformHeight</c> before packing, so the content panel is sized to fit every item.
     /// </summary>
-    private static int WidestMatchWidth(List<Widget> matches)
+    private static Point MaxMatchSize(List<Widget> matches, Point maxBudget)
     {
-        int widest = 0;
+        int widest = 0, tallest = 0;
 
         foreach (Widget widget in matches)
-            widest = Math.Max(widest, widget.Measure(new Point(MAX_WIDTH, MAX_HEIGHT)).X);
+        {
+            Point size = widget.Measure(maxBudget);
+            widest = Math.Max(widest, size.X);
+            tallest = Math.Max(tallest, size.Y);
+        }
 
-        return widest;
+        return new Point(widest, tallest);
     }
 
     /// <summary>
-    ///     Derived from the main area and search bar bounds so the budget reflects the actual
+    ///     Derived from the main area and search bar bounds, so the budget reflects the actual
     ///     fill-row height regardless of how much content the current category renders.
-    ///     Using <see cref="_optionsStack"/> ActualBounds instead would give the current tab's
+    ///     Using <see cref="_optionsStack" /> ActualBounds instead would give the current tab's
     ///     rendered content height, which can be shorter than the window on sparse tabs.
     /// </summary>
     private Point ComputeResultsBudget()
@@ -307,46 +327,81 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    ///     Mirrors WrapPanel's vertical-bias column packing (fill height, wrap column), then adds
-    ///     the width-based page break WrapPanel itself doesn't have, since it grows columns unbounded.
+    ///     Packs <paramref name="matches" /> into pages using vertical-bias column packing
+    ///     (fill column height first, then wrap to a new column), matching WrapPanel's own layout
+    ///     strategy. Adds the page-break logic WrapPanel lacks: when accumulated column widths
+    ///     exceed <c>idealBudget.X</c>, the current page is finalized and a new one begins.
+    ///     <para>
+    ///         Each page starts with an effective height of <c>idealBudget.Y</c>. If the first item
+    ///         in a fresh column is taller than that, the page's effective height grows to fit it,
+    ///         up to <c>maxBudget.Y</c>. <see cref="SetPanelMaxSize" /> records this on the WrapPanel
+    ///         so Myra lays out the page at the correct size.
+    ///     </para>
     /// </summary>
-    private static List<Widget> PackIntoPages(List<Widget> matches, Point budget)
+    private static List<Widget> PackIntoPages(List<Widget> matches, Point idealBudget, Point maxBudget)
     {
         List<Widget> pages = [];
-        WrapPanel page = NewResultsPage(budget);
+        WrapPanel page = NewResultsPage(maxBudget);
 
         int columnHeight = 0;
         int columnWidth = 0;
         int pageWidth = 0;
+        int pageEffectiveHeight = idealBudget.Y;
 
         foreach (Widget widget in matches)
         {
-            Point size = widget.Measure(budget);
+            Point size = widget.Measure(maxBudget);
 
-            if (columnHeight > 0 && columnHeight + MyraStyle.STANDARD_SPACING + size.Y > budget.Y)
+            // Item doesn't fit in the current column → close column, start a new one.
+            if (columnHeight > 0 && columnHeight + MyraStyle.STANDARD_SPACING + size.Y > pageEffectiveHeight)
             {
                 pageWidth += columnWidth + MyraStyle.STANDARD_SPACING;
                 columnHeight = 0;
                 columnWidth = 0;
             }
 
-            if (pageWidth > 0 && pageWidth + size.X > budget.X)
+            // Adding another column would exceed the page width → emit page, start fresh.
+            if (pageWidth > 0 && pageWidth + size.X > idealBudget.X)
             {
+                SetPanelMaxSize(page, idealBudget.X, pageEffectiveHeight);
                 pages.Add(page);
-                page = NewResultsPage(budget);
+                page = NewResultsPage(maxBudget);
+                pageEffectiveHeight = idealBudget.Y;
                 pageWidth = 0;
             }
+
+            // Single item taller than current effective height → expand this page to fit it.
+            if (columnHeight == 0 && size.Y > pageEffectiveHeight)
+                pageEffectiveHeight = Math.Min(size.Y, maxBudget.Y);
 
             page.Widgets.Add(widget);
             columnHeight += (columnHeight > 0 ? MyraStyle.STANDARD_SPACING : 0) + size.Y;
             columnWidth = Math.Max(columnWidth, size.X);
         }
 
+        SetPanelMaxSize(page, idealBudget.X, pageEffectiveHeight);
         pages.Add(page);
 
         return pages;
     }
 
+    /// <summary>
+    ///     Sets the given panels max width and height
+    /// </summary>
+    /// <param name="page">The panel to update the max width/height of</param>
+    /// <param name="width">The panel's max width</param>
+    /// <param name="height">The panel's max height</param>
+    private static void SetPanelMaxSize(WrapPanel page, int width, int height)
+    {
+        page.MaxWidth = width;
+        page.MaxHeight = height;
+    }
+
+    /// <summary>
+    ///     Creates a new search results page panel
+    /// </summary>
+    /// <param name="budget">The sizing 'budget' for the page, ergo, max height/width</param>
+    /// <returns></returns>
     private static WrapPanel NewResultsPage(Point budget) => new()
     {
         UniformSizing = false,
