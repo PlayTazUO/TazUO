@@ -288,16 +288,21 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    ///     Captured once from the default (unpaged) category view. Reading this live while a
-    ///     PageControl is showing would include its own control-bar/padding overhead, compounding
-    ///     the budget larger on every search.
+    ///     Derived from the main area and search bar bounds so the budget reflects the actual
+    ///     fill-row height regardless of how much content the current category renders.
+    ///     Using <see cref="_optionsStack"/> ActualBounds instead would give the current tab's
+    ///     rendered content height, which can be shorter than the window on sparse tabs.
     /// </summary>
     private Point ComputeResultsBudget()
     {
-        Rectangle contentBounds = _optionsStack.ActualBounds;
+        Rectangle mainBounds = _mainArea.ActualBounds;
+        Rectangle searchBounds = _searchField.ActualBounds;
+        int width = _optionsStack.ActualBounds.Width;
 
-        return contentBounds is { Width: > 0, Height: > 0 }
-            ? new Point(contentBounds.Width, contentBounds.Height)
+        int height = mainBounds.Height - searchBounds.Height;
+
+        return height > 0 && width > 0
+            ? new Point(width, height)
             : new Point(MAX_WIDTH, MAX_HEIGHT);
     }
 
@@ -345,6 +350,7 @@ public class OptionsWindow : MyraControl
     private static WrapPanel NewResultsPage(Point budget) => new()
     {
         UniformSizing = false,
+        Aligned = false,
         Orientation = Orientation.Vertical,
         HorizontalSpacing = MyraStyle.STANDARD_SPACING,
         VerticalSpacing = MyraStyle.STANDARD_SPACING,

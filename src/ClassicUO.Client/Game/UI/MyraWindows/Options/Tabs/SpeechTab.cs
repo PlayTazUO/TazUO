@@ -22,6 +22,8 @@ internal static class SpeechTab
         ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        string disableSysChatWhileJournal = TazLang.Get("disablesystemchat_journalopen", "Disable system chat while Resizable Journal is open");
+
         return OptionsUi.Vertical(
             GetDelaySection(),
             OptionsUi.Vertical(
@@ -44,6 +46,11 @@ internal static class SpeechTab
                     speechLang.DisableSystemChat,
                     new Accessor<bool>(() => profile.DisableSystemChat),
                     search: new SearchMetadata(speechLang.DisableSystemChat)
+                ),
+                Option.Checkbox(
+                    disableSysChatWhileJournal,
+                    new Accessor<bool>(() => profile.DisableSystemChatWhileJournalOpen),
+                    search: new SearchMetadata(disableSysChatWhileJournal)
                 )
             ),
             GetActivationSection(),

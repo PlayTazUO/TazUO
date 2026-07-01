@@ -55,13 +55,14 @@ public static class VideoTab
         return OptionsUi.Vertical(
             GetRendererSection(),
             GetViewportSettingsGroup()
-        ).WithSearch(new SearchMetadata(lang.GameWindow.Label, Tags: [kw.Window, kw.Viewport]));
+        ).WithSearch(new SearchMetadata(lang.GameWindow.Label, [kw.Window, kw.Viewport]));
     }
 
     private static OptionFragment GetRendererSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.VideoTabLang.GameWindowSection lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab.GameWindow;
+        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.VisualContainer(
@@ -84,8 +85,21 @@ public static class VideoTab
             ),
             Option.Checkbox(
                 lang.EnableVSync,
-                new Accessor<bool>(() => profile.EnableVSync, b => { profile.EnableVSync = b; Client.Game?.SetVSync(b); }),
+                new Accessor<bool>(() => profile.EnableVSync, b =>
+                {
+                    profile.EnableVSync = b;
+                    Client.Game?.SetVSync(b);
+                }),
                 search: new SearchMetadata(lang.EnableVSync, Keywords: [kw.VSync])
+            ),
+            Option.HuePicker(
+                tuoLang.MainGameWindowBackground,
+                profile.MainWindowBackgroundHue,
+                newValue =>
+                {
+                    profile.MainWindowBackgroundHue = newValue;
+                    GameController.UpdateBackgroundHueShader();
+                }
             )
         );
     }
@@ -119,13 +133,19 @@ public static class VideoTab
                         viewport.SetGameWindowPosition(new Point(25, 25));
                         profile.GameWindowPosition = new Point(25, 25);
                     }
+
                     viewport.OnWindowResized();
                 }),
                 search: new SearchMetadata(lang.FullsizeViewport, Keywords: [kw.Full, kw.Size])
             ),
             Option.Checkbox(
                 lang.FullScreen,
-                new Accessor<bool>(() => profile.WindowBorderless, b => { profile.WindowBorderless = b; Client.Game.SetWindowBorderless(b); }),
+                profile.WindowBorderless,
+                newValue =>
+                {
+                    profile.WindowBorderless = newValue;
+                    Client.Game.SetWindowBorderless(newValue);
+                },
                 search: new SearchMetadata(lang.FullScreen, Keywords: [kw.Fullscreen, kw.Borderless])
             ),
             Option.Checkbox(
@@ -187,7 +207,7 @@ public static class VideoTab
         return OptionsUi.Vertical(
             GetZoomSection(),
             GetScalingSection()
-        ).WithSearch(new SearchMetadata(lang.Zoom.Label, Tags: [kw.Zoom, kw.Scale]));
+        ).WithSearch(new SearchMetadata(lang.Zoom.Label, [kw.Zoom, kw.Scale]));
     }
 
     private static OptionFragment GetZoomSection()
@@ -237,9 +257,7 @@ public static class VideoTab
         return OptionsUi.VisualContainer(
             new VisualContainerProps
             {
-                LabelText = lang.ButtonScaling,
-                LabelLink = "https://tazuo.org/wiki/tazuoglobal-scaling/",
-                Spacing = VisualContainerSpacing.Comfortable
+                LabelText = lang.ButtonScaling, LabelLink = "https://tazuo.org/wiki/tazuoglobal-scaling/", Spacing = VisualContainerSpacing.Comfortable
             },
             Option.Slider(
                 videoLang.PaperdollScaling,
@@ -295,7 +313,7 @@ public static class VideoTab
                             _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.GAME_SCALE, scale);
                         }
                     },
-                    search: new SearchMetadata(lang.Apply)
+                    new SearchMetadata(lang.Apply)
                 )
             )
         ).AsSearchGroup();
@@ -341,7 +359,7 @@ public static class VideoTab
                     i => profile.LightLevelType = i,
                     search: new SearchMetadata(lightLang.LightType, Keywords: [kw.Type])
                 )
-            ).WithSearch(new SearchMetadata(lightLang.Label, Tags: [kw.Light], Keywords: [kw.Custom])),
+            ).WithSearch(new SearchMetadata(lightLang.Label, [kw.Light], [kw.Custom])),
             Option.Checkbox(
                 lightLang.DarkNight,
                 new Accessor<bool>(() => profile.UseDarkNights),
@@ -352,7 +370,7 @@ public static class VideoTab
                 new Accessor<bool>(() => profile.UseColoredLights),
                 search: new SearchMetadata(lightLang.ColoredLight, Keywords: [kw.Color, kw.Light])
             )
-        ).WithSearch(new SearchMetadata(lightLang.Label, Tags: [kw.Light]));
+        ).WithSearch(new SearchMetadata(lightLang.Label, [kw.Light]));
 
         void UpdateLight()
         {
@@ -396,7 +414,7 @@ public static class VideoTab
                 new Accessor<float>(() => profile.TerrainShadowsLevel, f => profile.TerrainShadowsLevel = (int)f),
                 search: new SearchMetadata(shadowLang.TerrainShadowLevel, Keywords: [kw.Terrain])
             )
-        ).WithSearch(new SearchMetadata(shadowLang.Label, Tags: [kw.Shadow]));
+        ).WithSearch(new SearchMetadata(shadowLang.Label, [kw.Shadow]));
     }
 
     private static IOptionSource GetMiscSubTabContent()
@@ -404,7 +422,10 @@ public static class VideoTab
         Profile profile = ProfileManager.CurrentProfile;
         ModernOptionsGumpLanguage.VideoTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.VideoTab;
         ModernOptionsGumpLanguage.VideoTabLang.MiscSection miscLang = lang.Misc;
+        ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
+
+        string disableGargAnim = TazLang.Get("disable_gargoyle_flying_animation", "Disable gargoyle flying animation");
 
         return OptionsUi.Vertical(
             Option.Checkbox(
@@ -452,7 +473,29 @@ public static class VideoTab
                     },
                     search: new SearchMetadata(miscLang.PostProcessingEffectType, Keywords: [kw.Type])
                 )
-            ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.PostProcessing], Keywords: [kw.Post, kw.Process])),
+            ).WithSearch(new SearchMetadata(miscLang.Label, [kw.PostProcessing], [kw.Post, kw.Process])),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.UseCircleOfTransparency), genLang.EnableCOT),
+                Option.Slider(
+                    genLang.COTDistance,
+                    Constants.MIN_CIRCLE_OF_TRANSPARENCY_RADIUS,
+                    Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS,
+                    new Accessor<float>(() => profile.CircleOfTransparencyRadius, f => profile.CircleOfTransparencyRadius = (int)f),
+                    search: new SearchMetadata(genLang.COTDistance, Keywords: [kw.Cot, kw.Distance])
+                ),
+                Option.ComboBox(
+                    genLang.COTType,
+                    profile.CircleOfTransparencyType,
+                    [genLang.COTTypeOptFull, genLang.COTTypeOptGrad, genLang.COTTypeOptModern],
+                    i => profile.CircleOfTransparencyType = i,
+                    search: new SearchMetadata(genLang.COTType, Keywords: [kw.Cot, kw.Type])
+                )
+            ).WithSearch(new SearchMetadata(miscLang.Label, [kw.Misc], [kw.Cot, kw.Circle])),
+            Option.Checkbox(
+                disableGargAnim,
+                new Accessor<bool>(() => profile.DisableGargoyleFlyingAnimation),
+                search: new SearchMetadata(disableGargAnim, Keywords: [kw.Gargoyle, kw.Flying, kw.Animation])
+            ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.Perspective },
                 Option.Slider(
@@ -464,7 +507,7 @@ public static class VideoTab
                         profile.PlayerOffset = new Point((int)newValue, profile.PlayerOffset.Y);
                     }),
                     true,
-                    search: new SearchMetadata(miscLang.PlayerPositionOffsetX, Keywords: [kw.X])
+                    new SearchMetadata(miscLang.PlayerPositionOffsetX, Keywords: [kw.X])
                 ),
                 Option.Slider(
                     miscLang.PlayerPositionOffsetY,
@@ -475,9 +518,9 @@ public static class VideoTab
                         profile.PlayerOffset = new Point(profile.PlayerOffset.X, (int)newValue);
                     }),
                     true,
-                    search: new SearchMetadata(miscLang.PlayerPositionOffsetY, Keywords: [kw.Y])
+                    new SearchMetadata(miscLang.PlayerPositionOffsetY, Keywords: [kw.Y])
                 )
             )
-        ).WithSearch(new SearchMetadata(miscLang.Label, Tags: [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective]));
+        ).WithSearch(new SearchMetadata(miscLang.Label, [kw.Death, kw.Water, kw.Aura, kw.PostProcessing, kw.Perspective]));
     }
 }

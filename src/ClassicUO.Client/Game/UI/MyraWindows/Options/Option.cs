@@ -51,6 +51,17 @@ internal static class Option
         new(() => OptionsFactory.PropBoundHuePicker(label, backingProperty), search ?? new SearchMetadata(label));
 
     /// <summary>
+    /// Creates a hue-picker entry
+    /// </summary>
+    /// <param name="label">The label displayed beside the color swatch</param>
+    /// <param name="value">The current hue value</param>
+    /// <param name="onChanged">An action to invoke when a hue is selected</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the hue-picker widget</returns>
+    public static OptionEntry HuePicker(string label, ushort value, Action<ushort> onChanged, SearchMetadata? search = null) =>
+        new(() => OptionsFactory.CreateHuePicker(label, value, onChanged, 20), search ?? new SearchMetadata(label));
+
+    /// <summary>
     /// Creates a labeled horizontal slider entry bound to a <see cref="float"/> property
     /// </summary>
     /// <param name="label">The slider label text</param>

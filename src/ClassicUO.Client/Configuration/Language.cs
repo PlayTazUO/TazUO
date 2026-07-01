@@ -196,6 +196,7 @@ namespace ClassicUO.Configuration
             public string Amount { get; set; } = "Amount";
             public string Anchor { get; set; } = "Anchor";
             public string Anim { get; set; } = "Anim";
+            public string Animation { get; set; } = "Animation";
             public string Appearance { get; set; } = "Appearance";
             public string Arrow { get; set; } = "Arrow";
             public string Assign { get; set; } = "Assign";
@@ -280,6 +281,7 @@ namespace ClassicUO.Configuration
             public string Fade { get; set; } = "Fade";
             public string Field { get; set; } = "Field";
             public string Fixed { get; set; } = "Fixed";
+            public string Flying { get; set; } = "Flying";
             public string Font { get; set; } = "Font";
             public string Footstep { get; set; } = "Footstep";
             public string Follow { get; set; } = "Follow";
@@ -291,6 +293,7 @@ namespace ClassicUO.Configuration
             public string Game { get; set; } = "Game";
             public string Gamepad { get; set; } = "Gamepad";
             public string Gameplay { get; set; } = "Gameplay";
+            public string Gargoyle { get; set; } = "Gargoyle";
             public string General { get; set; } = "General";
             public string Global { get; set; } = "Global";
             public string Grab { get; set; } = "Grab";
