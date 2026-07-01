@@ -10,6 +10,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Map;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Network;
 using Microsoft.Xna.Framework;
 using MathHelper = ClassicUO.Utility.MathHelper;
 using ClassicUO.Configuration;
@@ -249,6 +250,9 @@ namespace ClassicUO.Game
 
             int index = Map.Index;
 
+            if (index < 0 || index >= MapLoader.MAPS_COUNT)
+                index = 0;
+
             InternalMapChangeClear(true);
 
             ushort x = Player.X;
@@ -258,14 +262,13 @@ namespace ClassicUO.Game
             Map.Destroy();
             Map = null;
 
-            if (index < 0 || index >= MapLoader.MAPS_COUNT)
-                index = 0;
-
             Client.Game.UO.FileManager.Maps.LoadMap(index, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
             Map = new Map.Map(this, index);
 
             Player.SetInWorldTile(x, y, z);
             Player.ClearSteps();
+
+            AsyncNetClient.Socket.Send_Resync();
 
             if (Client.Game.UO.GameCursor != null)
             {
