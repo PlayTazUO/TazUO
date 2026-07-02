@@ -134,6 +134,9 @@ namespace ClassicUO.Game.Managers
                     case "/api/maptexture":
                         ServeMapTexture(context.Response);
                         break;
+                    case "/api/markericon":
+                        ServeMarkerIcon(context.Request, context.Response);
+                        break;
                     case "/api/events":
                         ServeEventStream(context.Response);
                         break;
@@ -282,6 +285,65 @@ namespace ClassicUO.Game.Managers
             {
                 _cachedMapPng = null;
                 _lastMapIndex = -1;
+            }
+        }
+
+        // Serves a marker icon by name. Rather than streaming a rendered GPU texture, we look up the
+        // original icon file's path on disk and send the file bytes directly. The browser references
+        // the icon via a stable URL (/api/markericon?name=...) which it can cache between requests.
+        private void ServeMarkerIcon(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                string name = request.QueryString["name"];
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    response.StatusCode = 400;
+                    response.Close();
+                    return;
+                }
+
+                string iconPath = null;
+                UI.Gumps.WorldMapGump._markerIconPaths.TryGetValue(name.ToLower(), out iconPath);
+
+                if (string.IsNullOrEmpty(iconPath) || !File.Exists(iconPath))
+                {
+                    response.StatusCode = 404;
+                    response.Close();
+                    return;
+                }
+
+                byte[] iconData = File.ReadAllBytes(iconPath);
+
+                response.ContentType = GetIconContentType(iconPath);
+                response.Headers.Add("Cache-Control", "public, max-age=86400");
+                response.ContentLength64 = iconData.Length;
+                response.OutputStream.Write(iconData, 0, iconData.Length);
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error serving marker icon: {ex.Message}");
+                try
+                {
+                    response.StatusCode = 500;
+                    response.Close();
+                }
+                catch { }
+            }
+        }
+
+        private static string GetIconContentType(string path)
+        {
+            switch (Path.GetExtension(path).ToLowerInvariant())
+            {
+                case ".png": return "image/png";
+                case ".jpg":
+                case ".jpeg": return "image/jpeg";
+                case ".ico":
+                case ".cur": return "image/x-icon";
+                default: return "application/octet-stream";
             }
         }
 
@@ -1060,6 +1122,7 @@ namespace ClassicUO.Game.Managers
             <label><input type=""checkbox"" id=""showParty"" checked> Show Party</label>
             <label><input type=""checkbox"" id=""showGuild"" checked> Show Guild</label>
             <label><input type=""checkbox"" id=""showMarkers"" checked> Show Markers</label>
+            <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showMarkerIcons"" checked> Icons</label>
             <input type=""text"" id=""markerSearch"" class=""marker-search"" placeholder=""Search markers..."" autocomplete=""off"" />
             <label><input type=""checkbox"" id=""showMobiles"" checked> Show Mobiles</label>
             <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showEnemies"" checked> Enemies</label>
@@ -1614,6 +1677,30 @@ namespace ClassicUO.Game.Managers
             ctx.fillText(text, labelX, labelY);
         }
 
+        // Cache of marker icon images keyed by icon name. Icons are fetched once from the server by
+        // their file (via /api/markericon?name=...) and reused; the browser also caches the HTTP
+        // response so switching maps/markers doesn't re-download them.
+        const markerIconCache = {};
+
+        function getMarkerIcon(name) {
+            if (!name) return null;
+
+            const key = name.toLowerCase();
+            let entry = markerIconCache[key];
+
+            if (entry === undefined) {
+                const img = new Image();
+                entry = { img: img, loaded: false, failed: false };
+                markerIconCache[key] = entry;
+
+                img.onload = () => { entry.loaded = true; draw(); };
+                img.onerror = () => { entry.failed = true; };
+                img.src = '/api/markericon?name=' + encodeURIComponent(name);
+            }
+
+            return (entry.loaded && !entry.failed) ? entry.img : null;
+        }
+
         function draw() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1691,14 +1778,24 @@ namespace ClassicUO.Game.Managers
                     // Scale for proper sizing
                     ctx.scale(1 / zoom, 1 / zoom);
 
-                    // Draw marker circle
-                    ctx.fillStyle = markerColor;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
+                    // Prefer the marker's icon (served from its file on disk) when available;
+                    // fall back to a colored circle when there's no icon or it hasn't loaded yet.
+                    const markerIcon = document.getElementById('showMarkerIcons').checked
+                        ? getMarkerIcon(marker.iconName)
+                        : null;
+
+                    if (markerIcon) {
+                        ctx.drawImage(markerIcon, -markerIcon.width / 2, -markerIcon.height / 2);
+                    } else {
+                        // Draw marker circle
+                        ctx.fillStyle = markerColor;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
 
                     // Draw label
                     if (marker.name) {
