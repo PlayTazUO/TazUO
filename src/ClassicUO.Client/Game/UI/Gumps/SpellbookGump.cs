@@ -397,6 +397,18 @@ namespace ClassicUO.Game.UI.Gumps
                                 };
 
                                 _dataBox.Add(text, page);
+
+                                int toolTipCliloc = SpellsMastery.GetSpellTooltipCliloc(id);
+
+                                if (toolTipCliloc > 0)
+                                {
+                                    string tooltip =
+                                        Client.Game.UO.FileManager.Clilocs.GetString(
+                                            toolTipCliloc
+                                        );
+
+                                    icon.SetTooltip(tooltip, 250);
+                                }
                             }
                         }
 
