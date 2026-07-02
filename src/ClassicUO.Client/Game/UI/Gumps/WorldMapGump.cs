@@ -57,6 +57,10 @@ public class WorldMapGump : ResizableGump
     private static readonly string UserMarkersFilePath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Client", $"{USER_MARKERS_FILE}.usr");
     public static readonly List<WMapMarkerFile> _markerFiles = new List<WMapMarkerFile>();
     public static readonly Dictionary<string, Texture2D> _markerIcons = new Dictionary<string, Texture2D>();
+    // Maps a marker icon name (file name without extension, lowercased) to the full path of the
+    // source icon file on disk. Used by the web map so it can serve the original icon file by its
+    // path instead of streaming rendered GPU textures.
+    public static readonly Dictionary<string, string> _markerIconPaths = new Dictionary<string, string>();
     private static readonly float[] _zooms = new float[10] { 0.125f, 0.25f, 0.5f, 0.75f, 1f, 1.5f, 2f, 4f, 6f, 8f };
     private static readonly Color _semiTransparentWhiteForGrid = new Color(255, 255, 255, 56);
     private static Point _last_position = new Point(100, 100);
@@ -1590,6 +1594,7 @@ public class WorldMapGump : ResizableGump
                 }
 
                 _markerIcons.Clear();
+                _markerIconPaths.Clear();
 
                     List<string> mapIconPaths = new();
                     List<string> mapIconPathsPngJpg = new();
@@ -1624,7 +1629,9 @@ public class WorldMapGump : ResizableGump
                     {
                         Texture2D texture = CurLoader.CreateTextureFromICO_Cur(ms);
 
-                        _markerIcons.Add(Path.GetFileNameWithoutExtension(icon).ToLower(), texture);
+                        string iconKey = Path.GetFileNameWithoutExtension(icon).ToLower();
+                        _markerIcons.Add(iconKey, texture);
+                        _markerIconPaths[iconKey] = icon;
                     }
                     catch (Exception ee)
                     {
@@ -1648,7 +1655,9 @@ public class WorldMapGump : ResizableGump
                     {
                         var texture = Texture2D.FromStream(Client.Game.GraphicsDevice, ms);
 
-                        _markerIcons.Add(Path.GetFileNameWithoutExtension(icon).ToLower(), texture);
+                        string iconKey = Path.GetFileNameWithoutExtension(icon).ToLower();
+                        _markerIcons.Add(iconKey, texture);
+                        _markerIconPaths[iconKey] = icon;
                     }
                     catch (Exception ee)
                     {
