@@ -45,7 +45,6 @@ namespace ClassicUO.Game.Managers
             }
 
             int showWhen = ProfileManager.CurrentProfile.MobileHPShowWhen;
-            bool useNewTargetSystem = ProfileManager.CurrentProfile.UseNewTargetSystem;
             Renderer.Animations.Animations animations = Client.Game.UO.Animations;
             bool isEnabled = IsEnabled;
 
@@ -65,7 +64,7 @@ namespace ClassicUO.Game.Managers
                     _world.TargetManager.SelectedTarget == mobile ||
                     _world.TargetManager.NewTargetSystemSerial == mobile)
                 {
-                    newTargSystem = (useNewTargetSystem || showTargetIndicator) && _world.TargetManager.NewTargetSystemSerial == mobile;
+                    newTargSystem = showTargetIndicator && _world.TargetManager.NewTargetSystemSerial == mobile;
                     passive = false;
                     forceDraw = true;
                 }
