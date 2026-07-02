@@ -1825,24 +1825,22 @@ public partial class GridContainer : ResizableGump
                 batcher.Draw(borderTexture, new Rectangle(bx, by + innerHeight - bsize, innerWidth, bsize), borderHueVec);
             }
 
-            private LowContrastCacheKey CreateLowContrastCacheKey() => CreateLowContrastCacheKey(_item, _container, _profile);
-
-            private static LowContrastCacheKey CreateLowContrastCacheKey(Item item, Item container, Profile profile)
+            private LowContrastCacheKey CreateLowContrastCacheKey()
             {
-                ushort backgroundHue = profile.Grid_UseContainerHue && container != null
-                    ? container.Hue
-                    : profile.AltGridContainerBackgroundHue;
-                ushort itemHue = item?.Hue ?? 0;
-                bool partialHue = item?.ItemData.IsPartialHue ?? false;
+                ushort backgroundHue = _profile.Grid_UseContainerHue && _container != null
+                    ? _container.Hue
+                    : _profile.AltGridContainerBackgroundHue;
+                ushort itemHue = _item?.Hue ?? 0;
+                bool partialHue = _item?.ItemData.IsPartialHue ?? false;
                 bool spectralHue = NormalizeItemHueForRendering(ref itemHue, ref partialHue);
 
                 return new LowContrastCacheKey(
-                    item?.DisplayedGraphic ?? 0,
+                    _item?.DisplayedGraphic ?? 0,
                     itemHue,
                     partialHue,
                     spectralHue,
                     backgroundHue,
-                    profile.ContainerOpacity
+                    _profile.ContainerOpacity
                 );
             }
 
@@ -1900,38 +1898,6 @@ public partial class GridContainer : ResizableGump
                 _lastLowContrastCacheKey = key;
                 _lastLowContrastResult = result;
                 _hasLastLowContrastCacheKey = true;
-
-                return result;
-            }
-
-            internal static bool IsLowContrastItem(Item item, Item container, Profile profile, Texture2D texture, Rectangle sourceArtBounds)
-            {
-                if (item == null || profile == null || texture == null || texture.IsDisposed || sourceArtBounds.Width <= 0 || sourceArtBounds.Height <= 0)
-                    return false;
-
-                LowContrastCacheKey key = CreateLowContrastCacheKey(item, container, profile);
-
-                if (!_lowContrastCache.TryGetValue(key, out bool result))
-                {
-                    double backgroundLuminance = GetBackgroundLuminance(key.BackgroundHue, key.BackgroundAlpha);
-                    ArtInfo artInfo = Client.Game.UO.Arts.GetArtPixels(key.Graphic);
-                    LowContrastSample sample = GetItemContrastSample(
-                        artInfo.Pixels,
-                        artInfo.Width,
-                        artInfo.Height,
-                        sourceArtBounds,
-                        key.Hue,
-                        key.PartialHue,
-                        key.SpectralHue,
-                        backgroundLuminance
-                    );
-
-                    double contrastRatio = GetContrastRatio(sample.AverageLuminance, backgroundLuminance);
-
-                    result = contrastRatio < LOW_CONTRAST_AVERAGE_RATIO_THRESHOLD
-                        && sample.LowContrastPixelFraction >= LOW_CONTRAST_PIXEL_FRACTION_THRESHOLD;
-                    AddLowContrastCacheResult(key, result);
-                }
 
                 return result;
             }
@@ -2148,52 +2114,10 @@ public partial class GridContainer : ResizableGump
                 );
             }
 
-            internal static void DrawLowContrastSpriteBorder(UltimaBatcher2D batcher, Texture2D texture, Rectangle textureBounds, Rectangle destination, Rectangle source)
-            {
-                if (texture == null || source.Width <= 0 || source.Height <= 0 || destination.Width <= 0 || destination.Height <= 0)
-                    return;
-
-                Rectangle outlineSource = InflateRectangleWithinBounds(
-                    source,
-                    LOW_CONTRAST_OUTLINE_PADDING,
-                    0,
-                    LOW_CONTRAST_OUTLINE_PADDING,
-                    LOW_CONTRAST_OUTLINE_PADDING,
-                    textureBounds
-                );
-                Vector2 scale = new(
-                    destination.Width / (float)source.Width,
-                    destination.Height / (float)source.Height
-                );
-                Vector2 position = new(
-                    destination.X - ((source.X - outlineSource.X) * scale.X),
-                    destination.Y - ((source.Y - outlineSource.Y) * scale.Y)
-                );
-
-                batcher.DrawOutlined(
-                    texture,
-                    position,
-                    outlineSource,
-                    _lowContrastOutlineHue,
-                    _whiteOutlineColor,
-                    0f,
-                    Vector2.Zero,
-                    scale,
-                    SpriteEffects.None,
-                    0f
-                );
-            }
-
             private void DrawLowContrastSpotlight(UltimaBatcher2D batcher, Rectangle destination, Rectangle cellBounds)
             {
                 DrawSpotlightRectangle(batcher, InflateRectangle(destination, 4), cellBounds, _lowContrastSpotlightOuterHue);
                 DrawSpotlightRectangle(batcher, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
-            }
-
-            internal static void DrawLowContrastSpotlight(UltimaBatcher2D batcher, Texture2D whiteTexture, Rectangle destination, Rectangle cellBounds)
-            {
-                DrawSpotlightRectangle(batcher, whiteTexture, InflateRectangle(destination, 4), cellBounds, _lowContrastSpotlightOuterHue);
-                DrawSpotlightRectangle(batcher, whiteTexture, InflateRectangle(destination, 2), cellBounds, _lowContrastSpotlightInnerHue);
             }
 
             private void DrawSpotlightRectangle(UltimaBatcher2D batcher, Rectangle rectangle, Rectangle cellBounds, Vector3 hueVector)
@@ -2206,24 +2130,11 @@ public partial class GridContainer : ResizableGump
                 if (right <= left || bottom <= top)
                     return;
 
-            batcher.Draw(_whiteTexture, new Rectangle(left, top, right - left, bottom - top), hueVector);
-        }
-
-            private static void DrawSpotlightRectangle(UltimaBatcher2D batcher, Texture2D whiteTexture, Rectangle rectangle, Rectangle cellBounds, Vector3 hueVector)
-            {
-                int left = Math.Max(rectangle.Left, cellBounds.Left);
-                int top = Math.Max(rectangle.Top, cellBounds.Top);
-                int right = Math.Min(rectangle.Right, cellBounds.Right);
-                int bottom = Math.Min(rectangle.Bottom, cellBounds.Bottom);
-
-                if (right <= left || bottom <= top)
-                    return;
-
-                batcher.Draw(whiteTexture, new Rectangle(left, top, right - left, bottom - top), hueVector);
+                batcher.Draw(_whiteTexture, new Rectangle(left, top, right - left, bottom - top), hueVector);
             }
 
             private static Rectangle InflateRectangle(Rectangle rectangle, int padding) =>
-            new(
+                new(
                     rectangle.X - padding,
                     rectangle.Y - padding,
                     rectangle.Width + (padding * 2),
