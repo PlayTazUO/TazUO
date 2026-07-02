@@ -66,6 +66,10 @@ namespace ClassicUO.Game.UI.Controls
             IsSelected = defaultValue;
         }
 
+        /// <summary>
+        /// Creates an entry rendered as a row of mutually exclusive segment buttons.
+        /// Selecting a segment invokes <paramref name="segmentAction"/> with the selected segment index.
+        /// </summary>
         public ContextMenuItemEntry(string[] segmentLabels, int selectedSegment, Action<int> segmentAction)
         {
             SegmentLabels = segmentLabels;
@@ -73,6 +77,9 @@ namespace ClassicUO.Game.UI.Controls
             SegmentAction = segmentAction;
         }
 
+        /// <summary>
+        /// Creates a titled entry rendered as a row of mutually exclusive segment buttons.
+        /// </summary>
         public ContextMenuItemEntry(string text, string[] segmentLabels, int selectedSegment, Action<int> segmentAction)
             : this(segmentLabels, selectedSegment, segmentAction)
         {

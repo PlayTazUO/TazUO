@@ -189,15 +189,15 @@ public static class ContainersTab
                     search: new SearchMetadata(tuoLang.GridContainersDefaultToOldStyleView, Keywords: [kw.Old, kw.Style, kw.View])
                 ),
                 Option.ComboBox(
-                    tuoLang.DefaultGridContainerView,
+                    TazLang.Get("gridcontainer_defaultview", "Default container view"),
                     profile.GridContainerViewMode,
-                    [tuoLang.GridView, tuoLang.ListView],
+                    [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
                     i =>
                     {
                         profile.GridContainerViewMode = i;
                         GridContainer.UpdateAllGridContainers();
                     },
-                    search: new SearchMetadata(tuoLang.DefaultGridContainerView, Keywords: [kw.View, kw.Grid])
+                    search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [kw.View, kw.Grid])
                 ),
                 Option.ComboBox(
                     tuoLang.SearchStyle,

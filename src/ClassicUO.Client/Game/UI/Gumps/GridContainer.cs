@@ -490,7 +490,7 @@ public partial class GridContainer : ResizableGump
             Add(_setLootBag);
             #endregion
 
-            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea, !IsListView); //Must come after scroll area
+            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
             InitializeListView();
 
             UpdateContainerNameLabel();
@@ -843,13 +843,7 @@ public partial class GridContainer : ResizableGump
                 ? SlotManager.SearchResults(_searchBox.Text)
                 : GridSlotManager.GetItemsInContainer(World, Container, _sortMode, overrideSort);
 
-            if (IsListView)
-                RebuildListContainer(sortedContents, _searchBox.Text);
-            else
-            {
-                HideListRows();
-                SlotManager.RebuildContainer(sortedContents, _searchBox.Text, overrideSort);
-            }
+            SlotManager.RebuildContainer(sortedContents, _searchBox.Text, overrideSort);
 
             // Update name AFTER slot manager rebuild, or we get stale data
             UpdateContainerNameLabel();
@@ -959,7 +953,7 @@ public partial class GridContainer : ResizableGump
                 }
             }
 
-            if (SlotManager != null && !_skipSave && !_isCorpse && (SlotManager.ItemPositions.Count > 0 || IsListView))
+            if (SlotManager != null && !_skipSave && SlotManager.ItemPositions.Count > 0 && !_isCorpse)
                 _gridContainerEntry.UpdateSaveDataEntry(this);
 
             // Dispose of the event handlers
@@ -1134,10 +1128,7 @@ public partial class GridContainer : ResizableGump
         {
             if (parent != null)
             {
-                if (IsListView)
-                    FindListItem(parent.Serial)?.AddText(text, hue);
-                else
-                    SlotManager.FindItem(parent.Serial)?.AddText(text, hue);
+                SlotManager.FindItem(parent.Serial)?.AddText(text, hue);
             }
         }
 
@@ -1264,12 +1255,14 @@ public partial class GridContainer : ResizableGump
             private GridContainerPreview _preview;
             private Label _count;
             private readonly AlphaBlendControl _background;
+            private readonly Label _listLabel;
             private CustomToolTip _toolTipThis, _toolTipitem1, _toolTipitem2;
             private readonly List<SimpleTimedTextGump> _timedTexts = new();
             private readonly World _world;
             private static readonly HashSet<uint> _toggledThisAltDrag = new HashSet<uint>();
             private static bool _altDragActive;
             private bool _selectHighlight;
+            private bool _isListLayout;
 
             public bool ItemGridLocked { get; set; }
             public bool Highlight { get; set; }
@@ -1309,6 +1302,15 @@ public partial class GridContainer : ResizableGump
 
                 Add(_background);
 
+                _listLabel = new Label(string.Empty, true, 43, ishtml: true)
+                {
+                    X = LIST_ICON_SIZE + 4,
+                    AcceptMouseInput = false,
+                    IsVisible = false
+                };
+
+                Add(_listLabel);
+
                 SetGridItem(_item);
             }
 
@@ -1333,10 +1335,109 @@ public partial class GridContainer : ResizableGump
 
             public void Resize()
             {
+                _isListLayout = false;
                 Width = GridItemSize;
                 Height = GridItemSize;
                 _background.Width = GridItemSize;
                 _background.Height = GridItemSize;
+                _listLabel.IsVisible = false;
+            }
+
+            public void ResizeList(int width)
+            {
+                _isListLayout = true;
+                Width = width;
+                Height = LIST_ROW_HEIGHT;
+                _background.Width = width;
+                _background.Height = Height;
+                _listLabel.X = LIST_ICON_SIZE + 4;
+                _listLabel.IsVisible = _item != null;
+                RefreshListName();
+            }
+
+            public void RefreshListName()
+            {
+                if (!_isListLayout || _item == null)
+                    return;
+
+                string name = GetDisplayName(_world, _item);
+                int widthChars = Math.Max(8, (Width - LIST_ICON_SIZE - 8) / 7);
+                _listLabel.Text = name.Truncate(Math.Min(LIST_NAME_MAX_CHARS, widthChars));
+                _listLabel.Y = Math.Max(0, (Height - _listLabel.Height) >> 1);
+                _listLabel.IsVisible = true;
+            }
+
+            private static string GetDisplayName(World world, Item item)
+            {
+                bool showAmount = item.ItemData.IsStackable && item.Amount > 1;
+
+                if (world.OPL.TryGetNameAndData(item.Serial, out string oplName, out string _))
+                {
+                    string tooltipName = oplName?.Trim();
+
+                    if (!string.IsNullOrWhiteSpace(tooltipName))
+                        return tooltipName;
+                }
+
+                string name = NormalizeFallbackDisplayName(item.Name, item, showAmount);
+
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = StringHelper.CapitalizeAllWords(
+                        StringHelper.GetPluralAdjustedString(item.ItemData.Name, showAmount)
+                    );
+                }
+
+                if (showAmount && !HasAmountPrefix(name, item.Amount))
+                    return $"{item.Amount} {name}";
+
+                return name;
+            }
+
+            private static string NormalizeFallbackDisplayName(string name, Item item, bool showAmount)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    return name;
+
+                name = name.Trim();
+
+                if (showAmount)
+                    return StripAmountPrefix(name, item.Amount);
+
+                return item.ItemData.IsStackable ? name : StripLeadingNumberPrefix(name);
+            }
+
+            private static string StripAmountPrefix(string name, int amount)
+            {
+                if (string.IsNullOrWhiteSpace(name) || amount <= 1)
+                    return name;
+
+                string amountPrefix = $"{amount} ";
+                return HasAmountPrefix(name, amount) ? name[amountPrefix.Length..] : name;
+            }
+
+            private static bool HasAmountPrefix(string name, int amount)
+            {
+                if (string.IsNullOrWhiteSpace(name) || amount <= 1)
+                    return false;
+
+                return name.StartsWith($"{amount} ", StringComparison.Ordinal);
+            }
+
+            private static string StripLeadingNumberPrefix(string name)
+            {
+                int separatorIndex = name.IndexOf(' ');
+
+                if (separatorIndex <= 0 || separatorIndex >= name.Length - 1)
+                    return name;
+
+                for (int i = 0; i < separatorIndex; i++)
+                {
+                    if (!char.IsDigit(name[i]))
+                        return name;
+                }
+
+                return name[(separatorIndex + 1)..];
             }
 
             /// <summary>
@@ -1353,6 +1454,8 @@ public partial class GridContainer : ResizableGump
                     Highlight = false;
                     _count?.Dispose();
                     _count = null;
+                    _listLabel.Text = string.Empty;
+                    _listLabel.IsVisible = false;
                     ItemGridLocked = false;
                     CanMove = true;
                     _hasItem = false;
@@ -1384,6 +1487,7 @@ public partial class GridContainer : ResizableGump
                     Y = Height - _count.Height;
                 }
 
+                RefreshListName();
                 SetTooltip(_item);
             }
 
@@ -1700,13 +1804,13 @@ public partial class GridContainer : ResizableGump
             /// <summary>
             /// Draws a highlighted border around the grid item
             /// </summary>
-            private void DrawHighlightBorder(UltimaBatcher2D batcher, int x, int y, Texture2D borderTexture, Vector3 borderHueVec)
+            private void DrawHighlightBorder(UltimaBatcher2D batcher, Rectangle cellBounds, Texture2D borderTexture, Vector3 borderHueVec)
             {
                 int bsize = _profile.GridHighlightSize;
-                int bx = x + 6;
-                int by = y + 6;
-                int innerWidth = Width - 12;
-                int innerHeight = Height - 12;
+                int bx = cellBounds.X + 6;
+                int by = cellBounds.Y + 6;
+                int innerWidth = cellBounds.Width - 12;
+                int innerHeight = cellBounds.Height - 12;
 
                 // Top border
                 batcher.Draw(borderTexture, new Rectangle(bx, by, innerWidth, bsize), borderHueVec);
@@ -2214,72 +2318,76 @@ public partial class GridContainer : ResizableGump
                     Width,
                     Height,
                     hueVector
-                );
+            );
 
-                if (!_hasItem) return true;
+            if (!_hasItem) return true;
 
-                if (_item.MatchesHighlightData)
-                {
-                    Texture2D borderTexture = SolidColorTextureCache.GetTexture(_item.HighlightColor);
-                    var borderHueVec = new Vector3(1, 0, 1);
+            int itemCellWidth = _isListLayout ? LIST_ICON_SIZE : Width;
+            int itemCellHeight = _isListLayout ? LIST_ICON_SIZE : Height;
+            Rectangle itemCellBounds = new(x, y, itemCellWidth, itemCellHeight);
 
-                    DrawHighlightBorder(batcher, x, y, borderTexture, borderHueVec);
-                }
+            if (_item.MatchesHighlightData)
+            {
+                Texture2D borderTexture = SolidColorTextureCache.GetTexture(_item.HighlightColor);
+                var borderHueVec = new Vector3(1, 0, 1);
 
-                if (MouseIsOver)
-                {
-                    hueVector.Z = 0.3f;
+                DrawHighlightBorder(batcher, itemCellBounds, borderTexture, borderHueVec);
+            }
 
-                    batcher.Draw
+            if (MouseIsOver)
+            {
+                hueVector.Z = 0.3f;
+
+                batcher.Draw
+                (
+                    _whiteTexture,
+                    new Rectangle
                     (
-                        _whiteTexture,
-                        new Rectangle
-                        (
-                            x + 1,
-                            y,
-                            Width - 1,
-                            Height
-                        ),
-                        hueVector
-                    );
-                }
-
-                if (_texture == null) return true;
-
-                hueVector = ShaderHueTranslator.GetHueVector(_item.Hue, _item.ItemData.IsPartialHue, 1f);
-
-                Point originalSize = new(Width, Height);
-                Point point = new();
-                float scale = (_profile.GridContainersScale / 100f);
-                bool scaleItems = _profile.GridContainerScaleItems;
-
-                // Calculate centered X dimension
-                (originalSize.X, point.X) = CalculateCenteredDimension(_rect.Width, Width, scaleItems, scale);
-
-                // Calculate centered Y dimension
-                (originalSize.Y, point.Y) = CalculateCenteredDimension(_rect.Height, Height, scaleItems, scale);
-
-                Rectangle destination = new(
-                    x + point.X,
-                    y + point.Y,
-                    originalSize.X,
-                    originalSize.Y
+                        x + 1,
+                        y,
+                        Width - 1,
+                        Height
+                    ),
+                    hueVector
                 );
+            }
 
-                Rectangle source = new(
-                    _bounds.X + _rect.X,
-                    _bounds.Y + _rect.Y,
-                    _rect.Width,
-                    _rect.Height
-                );
+            if (_texture == null) return true;
 
-                if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
-                {
-                    if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
-                        DrawLowContrastSpotlight(batcher, destination, new Rectangle(x, y, Width, Height));
-                    else
-                        DrawLowContrastSpriteBorder(batcher, destination, source);
-                }
+            hueVector = ShaderHueTranslator.GetHueVector(_item.Hue, _item.ItemData.IsPartialHue, 1f);
+
+            Point originalSize = new(itemCellWidth, itemCellHeight);
+            Point point = new();
+            float scale = (_profile.GridContainersScale / 100f);
+            bool scaleItems = _profile.GridContainerScaleItems;
+
+            // Calculate centered X dimension
+            (originalSize.X, point.X) = CalculateCenteredDimension(_rect.Width, itemCellWidth, scaleItems, scale);
+
+            // Calculate centered Y dimension
+            (originalSize.Y, point.Y) = CalculateCenteredDimension(_rect.Height, itemCellHeight, scaleItems, scale);
+
+            Rectangle destination = new(
+                itemCellBounds.X + point.X,
+                itemCellBounds.Y + point.Y,
+                originalSize.X,
+                originalSize.Y
+            );
+
+            Rectangle source = new(
+                _bounds.X + _rect.X,
+                _bounds.Y + _rect.Y,
+                _rect.Width,
+                _rect.Height
+            );
+
+            if (_profile.GridHighlightLowContrastItems && IsLowContrastItem())
+            {
+                if ((LowContrastHighlightStyle)_profile.GridHighlightLowContrastItemsStyle == LowContrastHighlightStyle.Spotlight)
+                    DrawLowContrastSpotlight(batcher, destination, itemCellBounds);
+                else
+                    DrawLowContrastSpriteBorder(batcher, destination, source);
+            }
 
                 batcher.Draw(_texture, destination, source, hueVector);
 
@@ -2344,7 +2452,7 @@ public partial class GridContainer : ResizableGump
             /// </summary>
             public Dictionary<uint, GridItem> GridItems { get; } = new();
 
-            public GridSlotManager(World world, uint thisContainer, GridContainer gridContainer, Control controlArea, bool setupGridControls = true)
+            public GridSlotManager(World world, uint thisContainer, GridContainer gridContainer, Control controlArea)
             {
                 #region VARS
                 this._world = world;
@@ -2361,8 +2469,7 @@ public partial class GridContainer : ResizableGump
                 _container = world.Items.Get(thisContainer);
                 #endregion
 
-                if (setupGridControls)
-                    SetupGridItemControls();
+                SetupGridItemControls();
             }
 
             /// <summary>
@@ -2408,111 +2515,14 @@ public partial class GridContainer : ResizableGump
                 return null;
             }
 
+            public bool IsItemLocked(uint serial) => _itemLocks.Contains(serial);
+
             /// <summary>
-            /// Rebuilds the container's visual layout by placing items in grid slots
+            /// Rebuilds the container's visual layout by placing items in grid slots.
             /// </summary>
             /// <param name="filteredItems">List of items to display (may be filtered by search)</param>
             /// <param name="searchText">Search query for filtering/highlighting items</param>
             /// <param name="overrideSort">If true, only locked items maintain their positions</param>
-            public void HideGridSlots()
-            {
-                foreach (GridItem item in _gridSlots.Values)
-                    item.IsVisible = false;
-            }
-
-            public bool MatchesSearch(string search, Item item) => SearchItemNameAndProps(search, item);
-
-            public void SetContainerContents(List<Item> contents) => _containerContents = contents;
-
-            public bool IsItemLocked(uint serial) => _itemLocks.Contains(serial);
-
-            public bool ToggleItemLock(Item item, int preferredSlot)
-            {
-                if (item == null)
-                    return false;
-
-                uint serial = item.Serial;
-                GridContainerSlotEntry saveEntry = _gridContainer._gridContainerEntry.GetSlot(serial);
-                bool locked = !_itemLocks.Contains(serial);
-                saveEntry.Locked = locked;
-
-                if (!locked)
-                {
-                    _itemLocks.Remove(serial);
-                    return false;
-                }
-
-                if (!_itemLocks.Contains(serial))
-                    _itemLocks.Add(serial);
-
-                AddItemSlot(serial, GetAvailableSlot(serial, preferredSlot));
-                return true;
-            }
-
-            public List<Item> ApplyLockedPositions(List<Item> items)
-            {
-                if (_itemLocks.Count == 0 || items.Count < 2)
-                    return items;
-
-                Item[] arranged = new Item[items.Count];
-                List<Item> remaining = new(items.Count);
-
-                foreach (Item item in items)
-                {
-                    if (item != null && IsItemLocked(item.Serial) && TryGetItemSlot(item.Serial, out int slot) && slot >= 0 && slot < arranged.Length && arranged[slot] == null)
-                        arranged[slot] = item;
-                    else
-                        remaining.Add(item);
-                }
-
-                int next = 0;
-
-                foreach (Item item in remaining)
-                {
-                    while (next < arranged.Length && arranged[next] != null)
-                        next++;
-
-                    if (next < arranged.Length)
-                        arranged[next] = item;
-                }
-
-                return arranged.Where(item => item != null).ToList();
-            }
-
-            private int GetAvailableSlot(uint serial, int preferredSlot)
-            {
-                if (TryGetItemSlot(serial, out int currentSlot))
-                    return currentSlot;
-
-                if (preferredSlot >= 0)
-                {
-                    if (!ItemPositions.TryGetValue(preferredSlot, out uint occupyingSerial) || occupyingSerial == serial || !_itemLocks.Contains(occupyingSerial))
-                        return preferredSlot;
-                }
-
-                int slot = 0;
-
-                while (ItemPositions.ContainsKey(slot))
-                    slot++;
-
-                return slot;
-            }
-
-            private bool TryGetItemSlot(uint serial, out int slot)
-            {
-                foreach (KeyValuePair<int, uint> kvp in ItemPositions)
-                {
-                    if (kvp.Value == serial)
-                    {
-                        slot = kvp.Key;
-                        return true;
-                    }
-                }
-
-                slot = -1;
-                return false;
-            }
-
             public void RebuildContainer(List<Item> filteredItems, string searchText = "", bool overrideSort = false)
             {
                 // Ensure we have enough grid slots for all items
@@ -2628,6 +2638,30 @@ public partial class GridContainer : ResizableGump
             /// </summary>
             public void SetGridPositions()
             {
+                if (_gridContainer.IsListView)
+                {
+                    int rowWidth = Math.Max(0, _area.Width - 14);
+                    int columns = Math.Max(1, rowWidth / LIST_COLUMN_WIDTH);
+                    int columnWidth = columns > 1 ? rowWidth / columns : rowWidth;
+                    int itemWidth = Math.Max(0, columnWidth - (columns > 1 ? LIST_COLUMN_GAP : 0));
+                    int visibleIndex = 0;
+
+                    foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
+                    {
+                        if (!slot.Value.IsVisible)
+                            continue;
+
+                        int column = visibleIndex % columns;
+                        int row = visibleIndex / columns;
+                        slot.Value.X = column * columnWidth;
+                        slot.Value.Y = row * LIST_ROW_HEIGHT;
+                        slot.Value.ResizeList(itemWidth);
+                        visibleIndex++;
+                    }
+
+                    return;
+                }
+
                 int x = X_SPACING, y = 0;
                 foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
                 {

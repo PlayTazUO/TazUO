@@ -3302,8 +3302,8 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new ComboBoxWithLabel
                 (World,
-                    lang.GetTazUO.DefaultGridContainerView, 0, ThemeSettings.COMBO_BOX_WIDTH,
-                    new string[] { lang.GetTazUO.GridView, lang.GetTazUO.ListView }, profile.GridContainerViewMode,
+                    TazLang.Get("gridcontainer_defaultview", "Default container view"), 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[] { TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List") }, profile.GridContainerViewMode,
                     (i, s) =>
                     {
                         profile.GridContainerViewMode = i;
