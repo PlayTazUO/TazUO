@@ -59,7 +59,7 @@ namespace ClassicUO.Game.Data
                 { 3, 1115691 },  // Resilience
                 { 4, 1115692 },  // Perseverance
                 { 5, 1115693 },  // Tribulation
-                { 6, 1155937 },  // Despair
+                { 6, 1115694 },  // Despair
                 { 7, 1155938 },  // Death Ray
                 { 8, 1155939 },  // Ethereal Burst
                 { 9, 1155940 },  // Nether Blast
