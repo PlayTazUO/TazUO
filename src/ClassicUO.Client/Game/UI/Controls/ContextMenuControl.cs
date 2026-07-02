@@ -285,6 +285,12 @@ namespace ClassicUO.Game.UI.Controls
                     Width = (int)(100 * _scale);
                 }
 
+                // The parent ScrollArea always clips the right edge by its scrollbar
+                // gutter, so reserve that space here; otherwise the submenu arrow (and
+                // any right-aligned content) gets clipped away - which is especially
+                // visible once global scaling forces the menu to scroll.
+                Width += ScrollArea.SCROLLBAR_WIDTH;
+
                 // it is a bit tricky, but works :D
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
@@ -417,7 +423,9 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
-                    _moreMenuLabel.Draw(batcher, x + Width - (int)((_moreMenuLabel.Width + 5) * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
+                    // Keep the arrow left of the ScrollArea's clipped scrollbar gutter
+                    // so it stays visible at any global/context menu scale.
+                    _moreMenuLabel.Draw(batcher, x + Width - ScrollArea.SCROLLBAR_WIDTH - (int)((_moreMenuLabel.Width + 5) * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
                 }
 
                 return true;
