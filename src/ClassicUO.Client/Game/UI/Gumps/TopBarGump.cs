@@ -259,9 +259,17 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     IGui c = last.Value;
 
-                    if (!c.IsDisposed && c is Gump g)
+                    if (c.IsDisposed)
+                        continue;
+
+                    switch (c)
                     {
-                        g.SetInScreen();
+                        case Gump g:
+                            g.SetInScreen();
+                            break;
+                        case MyraControl m:
+                            m.SetInScreen();
+                            break;
                     }
                 }
             }));
