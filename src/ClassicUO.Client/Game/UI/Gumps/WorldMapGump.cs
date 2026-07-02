@@ -113,6 +113,13 @@ public class WorldMapGump : ResizableGump
     private List<Point> _navPath;
     private Action<int, int> _navStepFailedHandler;
 
+    // End of the currently planned route (world coords + Z). Shift+Ctrl right-click extends
+    // the path by searching from here to the new point, so multi-segment routes chain
+    // A->B->C. _navSegments tracks how many segments make up the active route.
+    private Point _navPlannedEnd;
+    private sbyte _navPlannedEndZ;
+    private int _navSegments;
+
     private const int MAX_NAV_REPLANS = 3;
     private int _navReplansLeft;
 
@@ -877,6 +884,7 @@ public class WorldMapGump : ResizableGump
         _navStepFailedHandler = null;
         _navDest = null;
         _navPath = null;
+        _navSegments = 0;
 
         base.Dispose();
     }
@@ -3429,9 +3437,28 @@ public class WorldMapGump : ResizableGump
             if (button == MouseButtonType.Right && HotKeys.IsPressed(HotKeyRegistrar.WorldMapPathfindId) && !Keyboard.Alt)
             {
                 CanvasToWorld(x, y, out int wX, out int wY);
+                int mapIndex = _world.Map.Index;
+
+                // Shift extends the active route: search from the end of the current path to the
+                // new point and append the result (A->B->C) instead of restarting from the player.
+                bool append = Keyboard.Shift
+                              && _navDest.HasValue
+                              && _world.Player?.Pathfinder != null
+                              && _world.Player.Pathfinder.AutoWalking;
+
+                if (append)
+                {
+                    StartNavPath(mapIndex, _navPlannedEnd.X, _navPlannedEnd.Y, _navPlannedEndZ, wX, wY,
+                                 firstAttempt: true, append: true);
+                    return;
+                }
+
                 _navDest = new Point(wX, wY);
                 _navDestSetTime = Environment.TickCount64;
                 _navPath = null;
+                _navPlannedEnd = new Point(wX, wY);
+                _navPlannedEndZ = _world.Player.Z;
+                _navSegments = 1;
                 ClearGoToMarker();
 
                 // Fresh nav session: clear any dynamic-block memory from a previous run,
@@ -3447,8 +3474,8 @@ public class WorldMapGump : ResizableGump
                 }
                 _navReplansLeft = MaxNavReplans;
 
-                int mapIndex = _world.Map.Index;
-                StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY, firstAttempt: true);
+                StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY,
+                             firstAttempt: true, append: false);
                 return;
             }
 
@@ -3480,10 +3507,12 @@ public class WorldMapGump : ResizableGump
 
     /// <summary>
     /// Dispatches a WorldMapPathfinder search and hands the result to the walker.
-    /// Registers an on-step-failed hook so dynamic obstacles get added to the dynamic-block
-    /// set and the search retried up to MAX_NAV_REPLANS times.
+    /// When <paramref name="append"/> is set the result is chained onto the route currently
+    /// being walked (multi-segment A-&gt;B-&gt;C) instead of replacing it. For fresh (non-append)
+    /// paths it registers an on-step-failed hook so dynamic obstacles get added to the
+    /// dynamic-block set and the search retried up to MAX_NAV_REPLANS times.
     /// </summary>
-    private void StartNavPath(int mapIndex, int startX, int startY, sbyte startZ, int destX, int destY, bool firstAttempt)
+    private void StartNavPath(int mapIndex, int startX, int startY, sbyte startZ, int destX, int destY, bool firstAttempt, bool append)
     {
         var houseMultis = BuildHouseMultiSnapshot();
 
@@ -3491,10 +3520,18 @@ public class WorldMapGump : ResizableGump
         {
             if (path == null || path.Count == 0)
             {
+                if (append)
+                {
+                    // Couldn't extend the route — leave the existing path intact.
+                    GameActions.Print("Can't extend the path there.");
+                    return;
+                }
+
                 if (firstAttempt)
                     GameActions.Print("Can't find a path there.");
                 _navDest = null;
                 _navPath = null;
+                _navSegments = 0;
                 return;
             }
 
@@ -3505,7 +3542,33 @@ public class WorldMapGump : ResizableGump
                 pathPoints.Add((p.X, p.Y, p.Z, p.Direction));
                 navRender.Add(new Point(p.X, p.Y));
             }
+
+            var last = path[path.Count - 1];
+
+            // Extend the active route without restarting the walk.
+            if (append && _world.Player.Pathfinder.AppendComputedPath(pathPoints))
+            {
+                if (_navPath == null)
+                    _navPath = navRender;
+                else
+                    _navPath.AddRange(navRender);
+
+                _navDest = new Point(last.X, last.Y);
+                _navDestSetTime = Environment.TickCount64;
+                _navPlannedEnd = new Point(last.X, last.Y);
+                _navPlannedEndZ = (sbyte)last.Z;
+                _navSegments++;
+                return;
+            }
+
+            // Fresh path (or an append that found nothing to attach to because the previous
+            // route had already finished): replace whatever was there.
             _navPath = navRender;
+            _navDest = new Point(last.X, last.Y);
+            _navDestSetTime = Environment.TickCount64;
+            _navPlannedEnd = new Point(last.X, last.Y);
+            _navPlannedEndZ = (sbyte)last.Z;
+            _navSegments = 1;
 
             // Unsubscribe any stale handler from a previous plan before registering the new one.
             if (_navStepFailedHandler != null)
@@ -3513,10 +3576,24 @@ public class WorldMapGump : ResizableGump
 
             _navStepFailedHandler = (blockX, blockY) =>
             {
+                // Multi-segment routes can't be locally replanned around a block without
+                // skipping waypoints, so a blocked step clears the entire route.
+                if (_navSegments > 1)
+                {
+                    if (_navStepFailedHandler != null)
+                        _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
+                    _navStepFailedHandler = null;
+                    _navDest = null;
+                    _navPath = null;
+                    _navSegments = 0;
+                    return;
+                }
+
                 if (_navReplansLeft <= 0 || !_navDest.HasValue)
                 {
                     _navDest = null;
                     _navPath = null;
+                    _navSegments = 0;
                     return;
                 }
 
@@ -3525,7 +3602,7 @@ public class WorldMapGump : ResizableGump
 
                 var dest = _navDest.Value;
                 StartNavPath(_world.Map.Index, _world.Player.X, _world.Player.Y, _world.Player.Z,
-                             dest.X, dest.Y, firstAttempt: false);
+                             dest.X, dest.Y, firstAttempt: false, append: false);
             };
             _world.Player.Pathfinder.OnComputedPathStepFailed += _navStepFailedHandler;
 
