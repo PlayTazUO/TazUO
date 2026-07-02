@@ -2359,7 +2359,7 @@ public partial class GridContainer : ResizableGump
             Point originalSize = new(itemCellWidth, itemCellHeight);
             Point point = new();
             float scale = (_profile.GridContainersScale / 100f);
-            bool scaleItems = _profile.GridContainerScaleItems;
+            bool scaleItems = !_isListLayout && _profile.GridContainerScaleItems;
 
             // Calculate centered X dimension
             (originalSize.X, point.X) = CalculateCenteredDimension(_rect.Width, itemCellWidth, scaleItems, scale);
@@ -2512,6 +2512,15 @@ public partial class GridContainer : ResizableGump
                 if (GridItems.TryGetValue(serial, out GridItem item))
                     return item;
 
+                foreach (GridItem slot in _gridSlots.Values)
+                {
+                    if (slot.SlotItem?.Serial == serial)
+                    {
+                        GridItems[serial] = slot;
+                        return slot;
+                    }
+                }
+
                 return null;
             }
 
@@ -2582,12 +2591,12 @@ public partial class GridContainer : ResizableGump
                 foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
                 {
                     // In "hide" search mode, hide all slots by default (they'll be shown if they match)
-                    slot.Value.IsVisible = !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
-                    if (slot.Value.SlotItem != null && !searchTextEmpty)
+                slot.Value.IsVisible = (!_gridContainer.IsListView || slot.Value.SlotItem != null) && !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
+                if (slot.Value.SlotItem != null)
                     {
-                        // Add to GridItems lookup for items that need search processing
+                        // Keep serial lookup populated for OPL/list-name refreshes.
                         GridItems[slot.Value.SlotItem.Serial] = slot.Value;
-                        if (SearchItemNameAndProps(searchText, slot.Value.SlotItem))
+                    if (!searchTextEmpty && SearchItemNameAndProps(searchText, slot.Value.SlotItem))
                         {
                             // In "highlight" mode (1), highlight matching items. In "hide" mode (0), show them
                             slot.Value.Highlight = ProfileManager.CurrentProfile.GridContainerSearchMode == 1;
@@ -2648,7 +2657,7 @@ public partial class GridContainer : ResizableGump
 
                     foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
                     {
-                        if (!slot.Value.IsVisible)
+                        if (!slot.Value.IsVisible || slot.Value.SlotItem == null)
                             continue;
 
                         int column = visibleIndex % columns;
