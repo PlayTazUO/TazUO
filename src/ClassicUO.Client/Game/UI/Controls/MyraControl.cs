@@ -222,13 +222,19 @@ public class MyraControl : IGui
     /// </summary>
     public void SetInScreen()
     {
-        Rectangle windowBounds = Client.Game.Window.ClientBounds;
+        // The window's client bounds are in physical pixels, but this window's
+        // coordinates and size live in logical UI space, which the global
+        // RenderScale maps onto the screen. Convert the bounds into that same
+        // logical space so clamping stays correct at any game scale.
+        float scale = Client.Game.RenderScale;
+        int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / scale);
+        int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / scale);
 
         int halfWidth = Width / 2;
         int halfHeight = Height / 2;
 
-        int newX = (int)MathHelper.Clamp(X, -halfWidth, windowBounds.Width - halfWidth);
-        int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowBounds.Height - halfHeight);
+        int newX = (int)MathHelper.Clamp(X, -halfWidth, windowWidth - halfWidth);
+        int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowHeight - halfHeight);
 
         SetPosition(newX, newY);
     }
