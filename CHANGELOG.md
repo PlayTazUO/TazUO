@@ -99,6 +99,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed the Show Target Indicator option not hiding the target bracket graphics while the new target system was enabled; the option now solely controls the brackets - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
 * Restored tooltips for mastery spell abilities that were dropped in the mastery spellbook rework - [P.R 635](https://github.com/PlayTazUO/TazUO/pull/635) ([bittiez](https://github.com/bittiez))
 * Fixed context menus rendering outside the window bounds when global or context menu scaling was active, and fixed submenu arrows being clipped out of view at higher scales - [P.R 640](https://github.com/PlayTazUO/TazUO/pull/640) ([bittiez](https://github.com/bittiez))
+* Retrieve Gumps now also brings Myra (iGui) windows such as the Script Manager back on screen, and accounts for game scale - [P.R 641](https://github.com/PlayTazUO/TazUO/pull/641) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

@@ -216,6 +216,29 @@ public class MyraControl : IGui
         UpdateBoundsToContents();
     }
 
+    /// <summary>
+    /// Ensure this window is at least partially within the game window bounds,
+    /// clamping its position so it can be retrieved when it ends up off-screen.
+    /// </summary>
+    public void SetInScreen()
+    {
+        // The window's client bounds are in physical pixels, but this window's
+        // coordinates and size live in logical UI space, which the global
+        // RenderScale maps onto the screen. Convert the bounds into that same
+        // logical space so clamping stays correct at any game scale.
+        float scale = Client.Game.RenderScale;
+        int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / scale);
+        int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / scale);
+
+        int halfWidth = Width / 2;
+        int halfHeight = Height / 2;
+
+        int newX = (int)MathHelper.Clamp(X, -halfWidth, windowWidth - halfWidth);
+        int newY = (int)MathHelper.Clamp(Y, -halfHeight, windowHeight - halfHeight);
+
+        SetPosition(newX, newY);
+    }
+
     public virtual void Update()
     {
         if (IsDisposed)
