@@ -82,6 +82,9 @@ namespace ClassicUO.Game.UI.Controls
         private List<ContextMenuShowMenu> _subMenus;
         private readonly double _scale;
 
+        internal int MenuWidth => _background.Width;
+        internal int MenuHeight => _background.Height;
+
 
         public ContextMenuShowMenu(World world, List<ContextMenuItemEntry> list) : base(world, 0, 0)
         {
@@ -125,9 +128,18 @@ namespace ClassicUO.Game.UI.Controls
                 y += item.Height;
             }
 
-            if(y >= Client.Game.Window.ClientBounds.Height >> 1)
+            // The window's client bounds are in physical pixels, but the menu's
+            // coordinates and size (and Mouse.Position) live in logical UI space,
+            // which the global RenderScale maps onto the screen. The context menu
+            // scale is already baked into _background.Width/Height. Convert the
+            // window bounds into that same logical space so the menu stays on
+            // screen regardless of global or context menu scaling.
+            int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale);
+            int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale);
+
+            if (y >= windowHeight >> 1)
             {
-                y = Client.Game.Window.ClientBounds.Height >> 1;
+                y = windowHeight >> 1;
             }
 
             _scroll.Height = Height = _background.Height = y;
@@ -136,14 +148,19 @@ namespace ClassicUO.Game.UI.Controls
             X = Mouse.Position.X + 5;
             Y = Mouse.Position.Y - 20;
 
-            if (X + _background.Width > Client.Game.Window.ClientBounds.Width)
+            if (X + _background.Width > windowWidth)
             {
-                X = Client.Game.Window.ClientBounds.Width - _background.Width;
+                X = windowWidth - _background.Width;
             }
 
-            if (Y + _background.Height > Client.Game.Window.ClientBounds.Height)
+            if (X < 0)
             {
-                Y = Client.Game.Window.ClientBounds.Height - _background.Height;
+                X = 0;
+            }
+
+            if (Y + _background.Height > windowHeight)
+            {
+                Y = windowHeight - _background.Height;
             }
 
             if (Y < 0)
@@ -302,8 +319,36 @@ namespace ClassicUO.Game.UI.Controls
 
                 if (_subMenu != null)
                 {
-                    _subMenu.X = Width;
-                    _subMenu.Y = Y;
+                    // Bounds are in physical pixels; submenu coordinates live in the
+                    // same logical UI space as the parent, so scale by RenderScale.
+                    int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale);
+                    int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale);
+
+                    // Open to the right by default, but flip to the left of the parent
+                    // menu if the submenu would run off the right edge of the window.
+                    if (_gump.X + Width + _subMenu.MenuWidth > windowWidth && _gump.X - _subMenu.MenuWidth >= 0)
+                    {
+                        _subMenu.X = -_subMenu.MenuWidth;
+                    }
+                    else
+                    {
+                        _subMenu.X = Width;
+                    }
+
+                    // Keep the submenu inside the window vertically.
+                    int subMenuY = Y;
+
+                    if (_gump.Y + subMenuY + _subMenu.MenuHeight > windowHeight)
+                    {
+                        subMenuY = windowHeight - _subMenu.MenuHeight - _gump.Y;
+                    }
+
+                    if (_gump.Y + subMenuY < 0)
+                    {
+                        subMenuY = -_gump.Y;
+                    }
+
+                    _subMenu.Y = subMenuY;
 
                     if (MouseIsOver)
                     {
