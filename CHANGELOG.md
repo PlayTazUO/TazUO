@@ -52,7 +52,7 @@ All notable changes to TazUO will be recorded here.
 * Added a clear (X) button to the nameplate manager search field - [P.R 621](https://github.com/PlayTazUO/TazUO/pull/621) ([bittiez](https://github.com/bittiez))
 * Added a scaling option for context menus - [P.R 623](https://github.com/PlayTazUO/TazUO/pull/623) ([bittiez](https://github.com/bittiez))
 * Added marker icons to the web map, served from their source file on disk instead of streaming rendered textures, with a toggle to switch between icons and circles - [P.R 637](https://github.com/PlayTazUO/TazUO/pull/637) ([bittiez](https://github.com/bittiez))
-* World map pathfinding now supports multi-segment routes — hold the append modifier (Shift by default, rebindable) while Ctrl right-clicking to chain a new path segment onto the current route (A→B→C) instead of restarting - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
+* World map pathfinding now supports multi-segment routes — hold the append modifier (Shift by default, rebindable) while Ctrl right-clicking to chain a new path segment onto the current route (A→B→C) instead of restarting - [P.R 638](https://github.com/PlayTazUO/TazUO/pull/638) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
