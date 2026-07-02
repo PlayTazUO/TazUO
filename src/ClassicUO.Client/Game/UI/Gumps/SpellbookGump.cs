@@ -397,6 +397,18 @@ namespace ClassicUO.Game.UI.Gumps
                                 };
 
                                 _dataBox.Add(text, page);
+
+                                int toolTipCliloc = id >= 0 && id < 6 ? 1115689 : 1155938 - 6;
+
+                                if (toolTipCliloc > 0)
+                                {
+                                    string tooltip =
+                                        Client.Game.UO.FileManager.Clilocs.GetString(
+                                            toolTipCliloc + id
+                                        );
+
+                                    icon.SetTooltip(tooltip, 250);
+                                }
                             }
                         }
 
