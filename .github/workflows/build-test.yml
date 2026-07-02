@@ -12,6 +12,7 @@ on:
   pull_request:
     branches:
       - dev
+    types: [opened, synchronize, labeled]
     paths-ignore:
       - '**/build-release.yml'
       - 'appveyor.yml'
@@ -25,6 +26,7 @@ env:
 
 jobs:
   build:
+    if: contains( github.event.pull_request.labels.*.name, 'run-ci') || github.event_name == 'push'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
