@@ -44,6 +44,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout PR
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number || github.event.pull_request.number }}
