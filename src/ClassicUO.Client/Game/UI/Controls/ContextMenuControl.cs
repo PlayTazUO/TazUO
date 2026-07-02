@@ -182,6 +182,51 @@ namespace ClassicUO.Game.UI.Controls
         {
             base.Update();
             WantUpdateSize = true;
+
+            // Submenus that have no room to the right open to the left of this menu and
+            // therefore live at a negative X (and, near the bottom of the screen, can sit
+            // above it at a negative Y). base.Update only ever grows the bounds rectangle
+            // right/down, and Control.HitTest gates on that rectangle before descending
+            // into children, so those left/up regions are unreachable: moving the mouse
+            // onto a left-opening submenu is treated as leaving the menu and closes it.
+            // Extend the hit-test bounds to cover any negative-offset children without
+            // moving anything that is drawn (this gump is drawn at its raw X/Y, so the
+            // offset only affects hit testing).
+            int left = 0, top = 0;
+
+            for (int i = 0; i < Children.Count; i++)
+            {
+                IGui c = Children[i];
+
+                if (c == null || c.IsDisposed || !c.IsVisible)
+                {
+                    continue;
+                }
+
+                if (c.X < left)
+                {
+                    left = c.X;
+                }
+
+                if (c.Y < top)
+                {
+                    top = c.Y;
+                }
+            }
+
+            SetHitTestOffset(left, top);
+
+            // Keep the right/bottom edges where base.Update put them while pushing the
+            // left/top edges out to include the negative-offset children.
+            if (left < 0)
+            {
+                Width -= left;
+            }
+
+            if (top < 0)
+            {
+                Height -= top;
+            }
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
