@@ -1016,6 +1016,40 @@ namespace ClassicUO.Game
             }
         }
 
+        /// <summary>
+        /// Appends additional pre-computed steps onto the path currently being walked by
+        /// <see cref="StartComputedPath"/>, without restarting the walk. Used by the WorldMap
+        /// to chain pathfinding segments (A-&gt;B-&gt;C). Must be called on the main thread.
+        /// Returns <c>false</c> when there is no active computed path to extend (the caller
+        /// should then start a fresh path instead).
+        /// </summary>
+        public bool AppendComputedPath(IReadOnlyList<(int X, int Y, int Z, int Direction)> points)
+        {
+            if (!_computedPathActive || !AutoWalking || points == null || points.Count == 0)
+                return false;
+
+            foreach (var p in points)
+            {
+                var node = PathNode.Get();
+                node.X = p.X;
+                node.Y = p.Y;
+                node.Z = p.Z;
+                node.Direction = p.Direction;
+                node.IsValid = true;
+                _path.Add(node);
+            }
+
+            // The appended nodes are owned by _path just like the originals (StartComputedPath
+            // already set _ownsPathNodes), so CleanupPathfinding will return them to the pool.
+            _endPoint.X = _path[_path.Count - 1].X;
+            _endPoint.Y = _path[_path.Count - 1].Y;
+            _endPointZ = _path[_path.Count - 1].Z;
+
+            // Nudge the walker in case it had already caught up to the previous end and idled.
+            ProcessAutoWalk();
+            return true;
+        }
+
         public List<(int X, int Y, int Z)> GetPathTo(int x, int y, int z, int distance)
         {
             _zLevelDiff = ProfileManager.CurrentProfile.PathfindingZLevelDiff;
