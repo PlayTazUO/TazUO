@@ -398,13 +398,13 @@ namespace ClassicUO.Game.UI.Gumps
 
                                 _dataBox.Add(text, page);
 
-                                int toolTipCliloc = id >= 0 && id < 6 ? 1115689 : 1155938 - 6;
+                                int toolTipCliloc = SpellsMastery.GetSpellTooltipCliloc(id);
 
                                 if (toolTipCliloc > 0)
                                 {
                                     string tooltip =
                                         Client.Game.UO.FileManager.Clilocs.GetString(
-                                            toolTipCliloc + id
+                                            toolTipCliloc
                                         );
 
                                     icon.SetTooltip(tooltip, 250);
