@@ -34,6 +34,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
         #region World map
         public const string WorldMapMarkerId = "worldmap.addmarker";
         public const string WorldMapPathfindId = "worldmap.pathfind";
+        public const string WorldMapPathfindAppendId = "worldmap.pathfind.append";
         #endregion
 
         #region World interaction
@@ -76,6 +77,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
             const string category = "World Map";
             ContextModifier(WorldMapMarkerId, "Add marker", Modifier(ctrl: true), category);
             ContextModifier(WorldMapPathfindId, "Pathfind to point", Modifier(ctrl: true), category);
+            // Held together with the pathfind modifier to append a new segment onto the current route.
+            ContextModifier(WorldMapPathfindAppendId, "Append to current path (with pathfind)", Modifier(shift: true), category);
         }
 
         private static void RegisterGlobal()

@@ -3439,9 +3439,10 @@ public class WorldMapGump : ResizableGump
                 CanvasToWorld(x, y, out int wX, out int wY);
                 int mapIndex = _world.Map.Index;
 
-                // Shift extends the active route: search from the end of the current path to the
-                // new point and append the result (A->B->C) instead of restarting from the player.
-                bool append = Keyboard.Shift
+                // The append modifier (Shift by default, rebindable) extends the active route:
+                // search from the end of the current path to the new point and append the result
+                // (A->B->C) instead of restarting from the player.
+                bool append = HotKeys.IsPressed(HotKeyRegistrar.WorldMapPathfindAppendId)
                               && _navDest.HasValue
                               && _world.Player?.Pathfinder != null
                               && _world.Player.Pathfinder.AutoWalking;
