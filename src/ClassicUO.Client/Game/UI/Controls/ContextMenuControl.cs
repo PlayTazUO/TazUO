@@ -135,8 +135,8 @@ namespace ClassicUO.Game.UI.Controls
             // scale is already baked into _background.Width/Height. Convert the
             // window bounds into that same logical space so the menu stays on
             // screen regardless of global or context menu scaling.
-            int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale);
-            int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale);
+            int windowWidth = ScaleHelper.LogicalWindowWidth;
+            int windowHeight = ScaleHelper.LogicalWindowHeight;
 
             if (y >= windowHeight >> 1)
             {
@@ -333,7 +333,7 @@ namespace ClassicUO.Game.UI.Controls
 
                 Add(_selectedPic);
 
-                Height = (int)(25 * _scale);
+                Height = ScaleHelper.Scaled(25, _scale);
 
 
                 _label.Y = (Height >> 1) - (_label.Height >> 1);
@@ -344,11 +344,11 @@ namespace ClassicUO.Game.UI.Controls
                     _selectedPic.Y = (Height >> 1) - (_selectedPic.Height >> 1);
                 }
 
-                Width = _label.X + _label.Width + (int)(25 * _scale);
+                Width = _label.X + _label.Width + ScaleHelper.Scaled(25, _scale);
 
-                if (Width < (int)(100 * _scale))
+                if (Width < ScaleHelper.Scaled(100, _scale))
                 {
-                    Width = (int)(100 * _scale);
+                    Width = ScaleHelper.Scaled(100, _scale);
                 }
 
                 // The parent ScrollArea always clips the right edge by its scrollbar
@@ -393,8 +393,8 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     // Bounds are in physical pixels; submenu coordinates live in the
                     // same logical UI space as the parent, so scale by RenderScale.
-                    int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale);
-                    int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale);
+                    int windowWidth = ScaleHelper.LogicalWindowWidth;
+                    int windowHeight = ScaleHelper.LogicalWindowHeight;
 
                     // The submenu is a child of _gump, so its X/Y are relative to _gump.
                     // Clamp against the parent menu's absolute on-screen position instead
@@ -506,7 +506,7 @@ namespace ClassicUO.Game.UI.Controls
                 {
                     // Keep the arrow left of the ScrollArea's clipped scrollbar gutter
                     // so it stays visible at any global/context menu scale.
-                    _moreMenuLabel.Draw(batcher, x + Width - ScrollArea.SCROLLBAR_WIDTH - (int)((_moreMenuLabel.Width + 5) * _scale), y + (Height >> 1) - ((int)(_moreMenuLabel.Height * _scale) >> 1) - 1, _scale);
+                    _moreMenuLabel.Draw(batcher, x + Width - ScrollArea.SCROLLBAR_WIDTH - ScaleHelper.Scaled(_moreMenuLabel.Width + 5, _scale), y + (Height >> 1) - (ScaleHelper.Scaled(_moreMenuLabel.Height, _scale) >> 1) - 1, _scale);
                 }
 
                 return true;

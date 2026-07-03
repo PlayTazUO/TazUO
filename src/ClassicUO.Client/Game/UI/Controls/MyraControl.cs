@@ -197,9 +197,11 @@ public class MyraControl : IGui
 
     public MyraControl CenterInScreen()
     {
-        Rectangle bounds = Client.Game.Window.ClientBounds;
-        X = (int)(((bounds.Width / Client.Game.RenderScale) - (Width * Client.Game.RenderScale)) / 2);
-        Y = (int)(((bounds.Height / Client.Game.RenderScale) - (Height * Client.Game.RenderScale)) / 2);
+        // Width/Height are already in logical UI space, so only the window bounds need converting.
+        // (The previous form multiplied Width/Height by RenderScale, double-counting it and
+        // mis-centering whenever the game scale was not 1.0.)
+        X = (ScaleHelper.LogicalWindowWidth - Width) / 2;
+        Y = (ScaleHelper.LogicalWindowHeight - Height) / 2;
 
         if (X < 0)
             X = 0;
@@ -226,9 +228,8 @@ public class MyraControl : IGui
         // coordinates and size live in logical UI space, which the global
         // RenderScale maps onto the screen. Convert the bounds into that same
         // logical space so clamping stays correct at any game scale.
-        float scale = Client.Game.RenderScale;
-        int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / scale);
-        int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / scale);
+        int windowWidth = ScaleHelper.LogicalWindowWidth;
+        int windowHeight = ScaleHelper.LogicalWindowHeight;
 
         int halfWidth = Width / 2;
         int halfHeight = Height / 2;

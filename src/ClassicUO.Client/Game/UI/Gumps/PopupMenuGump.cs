@@ -36,9 +36,9 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             Add(pic);
-            int offsetY = (int)(10 * scale);
+            int offsetY = ScaleHelper.Scaled(10, scale);
             bool arrowAdded = false;
-            int width = 0, height = (int)(20 * scale);
+            int width = 0, height = ScaleHelper.Scaled(20, scale);
 
             for (int i = 0; i < data.Items.Length; i++)
             {
@@ -57,12 +57,12 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var label = new Label(text, true, hue, font: 1);
                 label.ApplyScale(scale, scalePosition: false);
-                label.X = (int)(10 * scale);
+                label.X = ScaleHelper.Scaled(10, scale);
                 label.Y = offsetY;
 
                 Client.Game.UO.FileManager.Fonts.SetUseHTML(false);
 
-                var box = new HitBox((int)(10 * scale), offsetY, label.Width, label.Height)
+                var box = new HitBox(ScaleHelper.Scaled(10, scale), offsetY, label.Width, label.Height)
                 {
                     Tag = item.Index
                 };
@@ -82,14 +82,14 @@ namespace ClassicUO.Game.UI.Gumps
                     // TODO: wat?
                     var arrow = new Button(0, 0x15E6, 0x15E2, 0x15E2)
                     {
-                        X = (int)(20 * scale),
+                        X = ScaleHelper.Scaled(20, scale),
                         Y = offsetY
                     };
                     arrow.ApplyScale(scale, scalePosition: false);
 
                     Add(arrow);
 
-                    height += (int)(20 * scale);
+                    height += ScaleHelper.Scaled(20, scale);
                 }
 
                 offsetY += label.Height;
@@ -105,9 +105,9 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            width += (int)(20 * scale);
+            width += ScaleHelper.Scaled(20, scale);
 
-            if (height <= (int)(10 * scale) || width <= (int)(20 * scale))
+            if (height <= ScaleHelper.Scaled(10, scale) || width <= ScaleHelper.Scaled(20, scale))
             {
                 Dispose();
             }
@@ -118,7 +118,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 foreach (HitBox box in FindControls<HitBox>())
                 {
-                    box.Width = width - (int)(20 * scale);
+                    box.Width = width - ScaleHelper.Scaled(20, scale);
                 }
             }
         }

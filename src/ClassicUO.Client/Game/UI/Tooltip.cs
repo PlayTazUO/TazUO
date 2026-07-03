@@ -154,18 +154,18 @@ namespace ClassicUO.Game.UI
             {
                 x = 0;
             }
-            else if (x > (Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale)- z_width)
+            else if (x > ScaleHelper.LogicalWindowWidth - z_width)
             {
-                x = (int)((Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale) - z_width);
+                x = ScaleHelper.LogicalWindowWidth - z_width;
             }
 
             if (y < 0)
             {
                 y = 0;
             }
-            else if (y > (Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale) - z_height)
+            else if (y > ScaleHelper.LogicalWindowHeight - z_height)
             {
-                y = (int)((Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale) - z_height);
+                y = ScaleHelper.LogicalWindowHeight - z_height;
             }
 
             X = x - 4;
