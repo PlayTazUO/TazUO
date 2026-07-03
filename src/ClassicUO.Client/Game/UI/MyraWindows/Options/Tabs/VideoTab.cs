@@ -292,6 +292,16 @@ public static class VideoTab
                 search: new SearchMetadata(TazLang.Get("gumpscaling_contextmenuscaling", "Context menu scaling"), Keywords: [kw.Scale])
             ),
             Option.Slider(
+                TazLang.Get("gumpscaling_tradegumpscaling", "Trade gump scaling"),
+                50,
+                300,
+                new Accessor<float>(() => (int)(profile.TradeGumpScale * 100), newValue =>
+                {
+                    profile.TradeGumpScale = Math.Clamp(newValue / 100, 0.5f, 3.0f);
+                }),
+                search: new SearchMetadata(TazLang.Get("gumpscaling_tradegumpscaling", "Trade gump scaling"), Keywords: [kw.Scale])
+            ),
+            Option.Slider(
                 TazLang.Get("gumpscaling_servergumpscaling", "Server gump scaling"),
                 50,
                 300,
