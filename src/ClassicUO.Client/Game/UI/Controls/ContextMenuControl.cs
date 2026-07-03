@@ -79,6 +79,7 @@ namespace ClassicUO.Game.UI.Controls
     public class ContextMenuShowMenu : Gump
     {
         private readonly AlphaBlendControl _background;
+        private readonly ScrollArea _scroll;
         private List<ContextMenuShowMenu> _subMenus;
         private readonly double _scale;
 
@@ -102,7 +103,7 @@ namespace ClassicUO.Game.UI.Controls
             _background = new AlphaBlendControl(0.7f);
             Add(_background);
 
-            var _scroll = new ScrollArea(0, 0, 0, 0, true);
+            _scroll = new ScrollArea(0, 0, 0, 0, true);
             Add(_scroll);
 
             int y = 0;
@@ -177,6 +178,26 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
+
+        // The height cap applied in the constructor is frozen against the window
+        // size at that moment. If the game scale (RenderScale) or the window is
+        // changed while the menu is open, that stale cap can be taller than the
+        // current logical window and the menu spills off screen. Re-clamp against
+        // the live logical window height so it can only ever shrink to fit; the
+        // context menu scale is already baked into these heights, so both scales
+        // are accounted for. Only shrinks, never grows past the constructor cap.
+        internal void ClampHeightToWindow(int windowHeight)
+        {
+            if (windowHeight < 0)
+            {
+                windowHeight = 0;
+            }
+
+            if (_background.Height > windowHeight)
+            {
+                _scroll.Height = Height = _background.Height = windowHeight;
+            }
+        }
 
         public override void Update()
         {
@@ -384,6 +405,11 @@ namespace ClassicUO.Game.UI.Controls
                     // window edges. ScreenCoordinate* accumulates every ancestor offset.
                     int parentScreenX = _gump.ScreenCoordinateX;
                     int parentScreenY = _gump.ScreenCoordinateY;
+
+                    // Keep the submenu no taller than the current logical window so a
+                    // game-scale or window-size change after it was built cannot leave
+                    // it overflowing. MenuHeight below then reflects the clamped size.
+                    _subMenu.ClampHeightToWindow(windowHeight);
 
                     // Open to the right by default, but flip to the left of the parent
                     // menu if the submenu would run off the right edge of the window.
