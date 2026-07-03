@@ -16,35 +16,6 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.Controls.ResizableComponents;
 
-#region Auxiliary Classes
-
-public class ResizableWindowProps : MyraCommonProps
-{
-    public ResizeBehavior Resize
-    {
-        get;
-        set
-        {
-            ResizeBehavior oldValue = field;
-            if (SetField(ref field, value))
-            {
-                oldValue?.PropertyChanged -= OnResizePropertyChanged;
-                field?.PropertyChanged += OnResizePropertyChanged;
-            }
-        }
-    } = new();
-    public bool Minimizable { get; set => SetField(ref field, value); } = true;
-
-    public ResizableWindowProps()
-    {
-        Resize?.PropertyChanged += OnResizePropertyChanged;
-    }
-
-    private void OnResizePropertyChanged(object sender, PropertyChangedEventArgs e) => OnPropertyChanged(nameof(Resize));
-}
-
-#endregion
-
 public class ResizableWindow : Window, IDisposable
 {
     #region Events
@@ -77,7 +48,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <remarks>
     ///     A window is considered resizable if resizing is enabled via the configuration
-    ///     properties and the window is not minimized.
+    ///     properties, and the window is not minimized.
     /// </remarks>
     public bool IsCurrentlyResizable => Props.Resize.Enabled && !IsMinimized;
 
@@ -154,7 +125,8 @@ public class ResizableWindow : Window, IDisposable
     {
         Props = props ?? new ResizableWindowProps();
         Props.PropertyChanged += OnPropsChanged;
-        Configure();
+
+        Configure(null);
     }
 
     #endregion
@@ -357,8 +329,19 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Configures the window UI components.
     /// </summary>
-    private void Configure()
+    /// <param name="e">An optional property changed event arguments, if the call was triggered by property changes</param>
+    private void Configure(PropertyChangedEventArgs e)
     {
+        if (e == null || e.PropertyName == nameof(Props.InitialSizeStore))
+        {
+            Point? initialSize = Props.InitialSizeStore?.Get();
+            if (initialSize.HasValue)
+            {
+                Width = initialSize.Value.X;
+                Height = initialSize.Value.Y;
+            }
+        }
+
         // The close button is kinda ugly, so we center it manually during construction.
         CloseButton?.VerticalAlignment = VerticalAlignment.Center;
         CloseButton?.Margin = new Thickness(2, 0);
@@ -406,6 +389,9 @@ public class ResizableWindow : Window, IDisposable
     {
         Width = null;
         Height = null;
+
+        // Reset stored size, if one is defined
+        Props?.InitialSizeStore?.Set(null);
     }
 
     /// <summary>
@@ -733,6 +719,7 @@ public class ResizableWindow : Window, IDisposable
 
         UpdateTitleLabelVisibility();
 
+        Props?.InitialSizeStore?.Set(new Point(newBounds.Width, newBounds.Height));
         Resized?.Invoke(this, new ResizeEventArgs { NewWidth = newBounds.Width, NewHeight = newBounds.Height });
     }
 
@@ -838,7 +825,7 @@ public class ResizableWindow : Window, IDisposable
         _isOverridingCursorStyle = false;
     }
 
-    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure();
+    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure(e);
 
     #endregion
 }
