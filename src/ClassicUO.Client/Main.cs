@@ -72,7 +72,7 @@ namespace ClassicUO
                 sb.AppendFormat("Exception:\n{0}\n", e.ExceptionObject);
                 sb.AppendLine();
 
-                string suggestedFix = GetSuggestedFix(e.ExceptionObject);
+                string suggestedFix = CrashSuggestedFix.Get(e.ExceptionObject);
 
                 HtmlCrashLogGen.Generate(sb.ToString(), additional_notes: suggestedFix.NotNullNotEmpty() ? suggestedFix : string.Empty);
 
@@ -229,61 +229,6 @@ namespace ClassicUO
             }
 
             Log.Trace("Closing...");
-        }
-
-        private static string GetSuggestedFix(object e)
-        {
-            try
-            {
-                if (e is ArgumentOutOfRangeException argumentOutOfRangeException &&
-                    argumentOutOfRangeException.StackTrace?.Contains("Microsoft.Xna.Framework.Graphics.GraphicsAdapter.get_DefaultAdapter()") == true)
-                {
-                    return "It appears TazUO was unable to find a suitable graphics adapter to use. " +
-                           "This can sometimes occur if your operating system shuts down your graphics adapter to preserve power.";
-                }
-
-                if (e is Exception shaderException && Client.IsShaderCompileFailure(shaderException))
-                {
-                    return Client.GraphicsShaderHelpMessage;
-                }
-
-                if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException openGlException &&
-                    openGlException.Message.Contains("OpenGL 2.1 support is required!"))
-                {
-                    var sb = new StringBuilder();
-                    sb.AppendLine("TazUO was unable to find a graphics device with the required OpenGL 2.1 support.");
-                    sb.AppendLine("This usually means your graphics drivers are missing, out of date, or the client fell back to a software renderer (GDI Generic).");
-                    sb.AppendLine();
-                    sb.AppendLine("Suggested fixes:");
-                    sb.AppendLine("1. Update your graphics card drivers to the latest version.");
-                    sb.AppendLine("2. Try launching TazUO with a different graphics driver by adding one of the following command-line arguments:");
-                    sb.AppendLine("     -force_driver 1   (OpenGL)");
-                    sb.AppendLine("     -force_driver 2   (Vulkan)");
-                    sb.AppendLine("     -force_driver 3   (SDL/FNA auto-select)");
-                    sb.AppendLine("   Try each one in turn until the client starts successfully.");
-                    return sb.ToString();
-                }
-
-                if (e is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException graphicsException &&
-                    graphicsException.Message.Contains("Could not create swapchain!"))
-                {
-                    string dataPath = Path.Join(CUOEnviroment.ExecutablePath, "Data");
-                    string scriptsPath = Path.Join(CUOEnviroment.ExecutablePath, "LegionScripts");
-                    var sb = new StringBuilder();
-                    sb.AppendLine("Issue analysis indicates a potential conflict with your TazUO installation.");
-                    sb.AppendLine("The client does not support side-by-side installation of both legacy and modern builds.");
-                    sb.AppendLine($"Please backup your data ('{dataPath}') and script ('{scriptsPath}') folders and delete everything else.");
-                    sb.AppendLine("Re-download *only* your selected channel (Legacy or Modern) from the launcher.");
-                    sb.AppendLine("Copy your backed up Data and LegionScripts folders back to where they were.");
-                    return sb.ToString();
-                }
-            }
-            catch
-            {
-                Log.Error("Failed to obtain a suggested fix for error");
-            }
-
-            return null;
         }
 
         private static void ReadSettingsFromArgs(string[] args)
