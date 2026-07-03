@@ -39,6 +39,12 @@ namespace ClassicUO.Game.UI
         /// </summary>
         public static Point Scaled(Point p, double scale) => new Point((int)(p.X * scale), (int)(p.Y * scale));
 
+        /// <summary>
+        /// Remove a gump/context-menu scale from a logical-space value to get its design-space value.
+        /// The inverse of <see cref="Scaled(int, double)"/>.
+        /// </summary>
+        public static int Unscaled(int value, double scale) => scale == 0 ? value : (int)(value / scale);
+
         // --- Physical window -> Logical space (the live "game scale" divide) ---------------------
 
         /// <summary>The global game/render scale that maps logical UI space onto the physical window.</summary>

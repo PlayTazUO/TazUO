@@ -292,8 +292,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (GumpScale != 1.0)
                         {
-                            x = (int)(x / GumpScale);
-                            y = (int)(y / GumpScale);
+                            x = ScaleHelper.Unscaled(x, GumpScale);
+                            y = ScaleHelper.Unscaled(y, GumpScale);
                         }
 
                         if (artInfo.Texture != null)
