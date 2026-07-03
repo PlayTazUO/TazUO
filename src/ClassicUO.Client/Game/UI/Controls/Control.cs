@@ -258,6 +258,18 @@ namespace ClassicUO.Game.UI.Controls
         }
     }
 
+    /// <summary>
+    /// Sets this control's own hit-test offset without propagating it to children,
+    /// unlike <see cref="UpdateOffset"/>. Used by controls (e.g. context menus) whose
+    /// sub-content is drawn outside the normal bounds rectangle and would otherwise be
+    /// unreachable by the mouse.
+    /// </summary>
+    protected void SetHitTestOffset(int x, int y)
+    {
+        _offset.X = x;
+        _offset.Y = y;
+    }
+
     public virtual bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
         if (IsDisposed)
