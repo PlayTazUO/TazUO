@@ -277,6 +277,11 @@ namespace ClassicUO
                     sb.AppendLine("Copy your backed up Data and LegionScripts folders back to where they were.");
                     return sb.ToString();
                 }
+
+                if (e is Exception pluginException && TryGetPluginCrashFix(pluginException, out string pluginFix))
+                {
+                    return pluginFix;
+                }
             }
             catch
             {
@@ -284,6 +289,45 @@ namespace ClassicUO
             }
 
             return null;
+        }
+
+        private static bool TryGetPluginCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // ToString() on the top-level exception includes the stack traces of any inner
+            // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            // These frames only appear when the crash happened while TazUO was loading a
+            // third-party plugin (assistant/copilot, e.g. Razor or a UO "copilot"). Such
+            // plugins run their own initialization code - and often bundle their own copy of
+            // the UO file loaders - so a crash originating here comes from the plugin, not
+            // from TazUO itself.
+            bool crashedInPluginLoad =
+                details.Contains("ClassicUO.Network.Plugin.Load") ||
+                details.Contains("ClassicUO.Network.Plugin.Create") ||
+                details.Contains("GameController.LoadPlugins");
+
+            if (!crashedInPluginLoad)
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("A plugin (assistant/copilot) failed to start and crashed TazUO.");
+            sb.AppendLine("The error above was thrown by a third-party plugin's own code while it was being loaded, not by TazUO itself.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Update the plugin to its latest version, or temporarily remove/disable it to confirm it is the cause.");
+            sb.AppendLine("2. Make sure the plugin is pointed at the same valid Ultima Online data directory that TazUO uses.");
+            sb.AppendLine("   Many assistants load the UO art/map files themselves and will crash if that path is wrong or the files are missing.");
+            sb.AppendLine("3. Verify the plugin supports your client version and this build of TazUO.");
+            sb.AppendLine("4. If it keeps crashing, send this crash log to the plugin's author.");
+
+            fix = sb.ToString();
+            return true;
         }
 
         private static void ReadSettingsFromArgs(string[] args)
