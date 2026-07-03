@@ -375,9 +375,19 @@ namespace ClassicUO.Game.UI.Controls
                     int windowWidth = (int)(Client.Game.Window.ClientBounds.Width / Client.Game.RenderScale);
                     int windowHeight = (int)(Client.Game.Window.ClientBounds.Height / Client.Game.RenderScale);
 
+                    // The submenu is a child of _gump, so its X/Y are relative to _gump.
+                    // Clamp against the parent menu's absolute on-screen position instead
+                    // of its raw X/Y: for the root menu these are identical, but for a
+                    // nested submenu (a submenu opened from another submenu) _gump.X/Y are
+                    // only relative to that submenu's own parent, so using them would
+                    // under-count the real offset and let deep submenus spill off the
+                    // window edges. ScreenCoordinate* accumulates every ancestor offset.
+                    int parentScreenX = _gump.ScreenCoordinateX;
+                    int parentScreenY = _gump.ScreenCoordinateY;
+
                     // Open to the right by default, but flip to the left of the parent
                     // menu if the submenu would run off the right edge of the window.
-                    if (_gump.X + Width + _subMenu.MenuWidth > windowWidth && _gump.X - _subMenu.MenuWidth >= 0)
+                    if (parentScreenX + Width + _subMenu.MenuWidth > windowWidth && parentScreenX - _subMenu.MenuWidth >= 0)
                     {
                         _subMenu.X = -_subMenu.MenuWidth;
                     }
@@ -389,14 +399,14 @@ namespace ClassicUO.Game.UI.Controls
                     // Keep the submenu inside the window vertically.
                     int subMenuY = Y;
 
-                    if (_gump.Y + subMenuY + _subMenu.MenuHeight > windowHeight)
+                    if (parentScreenY + subMenuY + _subMenu.MenuHeight > windowHeight)
                     {
-                        subMenuY = windowHeight - _subMenu.MenuHeight - _gump.Y;
+                        subMenuY = windowHeight - _subMenu.MenuHeight - parentScreenY;
                     }
 
-                    if (_gump.Y + subMenuY < 0)
+                    if (parentScreenY + subMenuY < 0)
                     {
-                        subMenuY = -_gump.Y;
+                        subMenuY = -parentScreenY;
                     }
 
                     _subMenu.Y = subMenuY;
