@@ -410,11 +410,11 @@ namespace ClassicUO.Game.UI.Controls
 
             private void BuildSegments()
             {
-                int leftPadding = Math.Max(25, (int)(25 * _scale));
-                int topPadding = Math.Max(2, (int)(2 * _scale));
-                int segmentPadding = Math.Max(10, (int)(10 * _scale));
-                int segmentGap = Math.Max(2, (int)(2 * _scale));
-                int segmentHeight = Math.Max(22, (int)(22 * _scale));
+                int leftPadding = Math.Max(1, (int)(25 * _scale));
+                int topPadding = Math.Max(1, (int)(2 * _scale));
+                int segmentPadding = Math.Max(1, (int)(10 * _scale));
+                int segmentGap = Math.Max(1, (int)(2 * _scale));
+                int segmentHeight = Math.Max(1, (int)(22 * _scale));
                 int x = leftPadding;
 
                 if (!string.IsNullOrWhiteSpace(_entry.Text))
@@ -433,7 +433,7 @@ namespace ClassicUO.Game.UI.Controls
                     titleLabel.Y = topPadding + ((segmentHeight - titleLabel.Height) >> 1);
                     Add(titleLabel);
 
-                    x += titleLabel.Width + Math.Max(6, (int)(6 * _scale));
+                    x += titleLabel.Width + Math.Max(1, (int)(6 * _scale));
                 }
 
                 _segmentX = new int[_entry.SegmentLabels.Length];

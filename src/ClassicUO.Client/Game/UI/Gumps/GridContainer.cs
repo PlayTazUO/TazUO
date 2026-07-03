@@ -302,6 +302,7 @@ public partial class GridContainer : ResizableGump
                 {
                     IsVisible = false;
                     Dispose();
+            return;
                 }
             }
 
@@ -1245,6 +1246,26 @@ public partial class GridContainer : ResizableGump
             Spotlight
         }
 
+/// <summary>
+/// Resolves the base item name from OPL tooltip data, falling back to the item's own name.
+/// When <paramref name="fromOPL" /> is true the returned value is the raw (untrimmed) OPL
+/// name; callers apply their own trimming and formatting.
+/// </summary>
+private static string ResolveItemBaseName(World world, Item item, out bool fromOPL)
+{
+    fromOPL = false;
+
+    if (world?.OPL?.TryGetNameAndData(item.Serial, out string oplName, out string _) == true
+        && !string.IsNullOrWhiteSpace(oplName))
+    {
+        fromOPL = true;
+        return oplName;
+    }
+
+    return item.Name;
+}
+
+
         public class GridItem : Control
         {
             private bool _mousePressedWhenEntered;
@@ -1367,32 +1388,30 @@ public partial class GridContainer : ResizableGump
                 _listLabel.IsVisible = true;
             }
 
-            private static string GetDisplayName(World world, Item item)
-            {
-                bool showAmount = item.ItemData.IsStackable && item.Amount > 1;
+private static string GetDisplayName(World world, Item item)
+{
+    bool showAmount = item.ItemData.IsStackable && item.Amount > 1;
 
-                if (world.OPL.TryGetNameAndData(item.Serial, out string oplName, out string _))
-                {
-                    string tooltipName = oplName?.Trim();
+    string name = ResolveItemBaseName(world, item, out bool fromOPL);
 
-                    if (!string.IsNullOrWhiteSpace(tooltipName))
-                        return tooltipName;
-                }
+    // OPL hit: return trimmed tooltip name directly (no further normalization).
+    if (fromOPL)
+        return name.Trim();
 
-                string name = NormalizeFallbackDisplayName(item.Name, item, showAmount);
+    name = NormalizeFallbackDisplayName(name, item, showAmount);
 
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    name = StringHelper.CapitalizeAllWords(
-                        StringHelper.GetPluralAdjustedString(item.ItemData.Name, showAmount)
-                    );
-                }
+    if (string.IsNullOrWhiteSpace(name))
+    {
+        name = StringHelper.CapitalizeAllWords(
+            StringHelper.GetPluralAdjustedString(item.ItemData.Name, showAmount)
+        );
+    }
 
-                if (showAmount && !HasAmountPrefix(name, item.Amount))
-                    return $"{item.Amount} {name}";
+    if (showAmount && !HasAmountPrefix(name, item.Amount))
+        return $"{item.Amount} {name}";
 
-                return name;
-            }
+    return name;
+}
 
             private static string NormalizeFallbackDisplayName(string name, Item item, bool showAmount)
             {
@@ -2691,17 +2710,15 @@ public partial class GridContainer : ResizableGump
 
             private static string GetItemName(Item item)
             {
-                if (World.Instance?.OPL?.TryGetNameAndData(item.Serial, out string name, out string _) != true)
-                    return !string.IsNullOrEmpty(item.Name) ? item.Name : item.ItemData.Name;
+                string name = ResolveItemBaseName(World.Instance, item, out bool fromOPL);
 
-                // OPL has a cached name for the item
-                if (string.IsNullOrEmpty(name))
-                    return item.ItemData.Name;
+                if (!fromOPL)
+                    return !string.IsNullOrEmpty(name) ? name : item.ItemData.Name;
 
-                // The stack-size, including a space
+                // stack-size, including space
                 string itemAmountStr = $"{item.Amount.ToString(CultureInfo.InvariantCulture)} ";
                 return name.StartsWith(itemAmountStr, StringComparison.Ordinal)
-                    ? name[itemAmountStr.Length..] // Trim the stack-size and trailing space
+                    ? name[itemAmountStr.Length..] // Trim stack-size trailing space
                     : name;
             }
 

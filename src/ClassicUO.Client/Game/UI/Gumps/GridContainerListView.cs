@@ -11,7 +11,7 @@ namespace ClassicUO.Game.UI.Gumps
         private const int LIST_COLUMN_WIDTH = 200;
         private const int LIST_COLUMN_GAP = 8;
 
-        public enum GridContainerViewMode
+        private enum GridContainerViewMode
         {
             Grid = 0,
             List = 1
