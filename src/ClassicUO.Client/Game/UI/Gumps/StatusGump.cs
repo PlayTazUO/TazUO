@@ -95,7 +95,7 @@ namespace ClassicUO.Game.UI.Gumps
                     World.TargetManager.Target(World.Player);
                     Mouse.LastLeftButtonClickTime = 0;
                 }
-                else if (x >= _point.X && x <= Width + (int)(16 * GumpScale) && y >= _point.Y && y <= Height + (int)(16 * GumpScale))
+                else if (x >= _point.X && x <= Width + ScaleHelper.Scaled(16, GumpScale) && y >= _point.Y && y <= Height + ScaleHelper.Scaled(16, GumpScale))
                 {
                     Point offset = Mouse.LDragOffset;
 
@@ -516,7 +516,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
+            _point = ScaleHelper.Scaled(p, GumpScale);
         }
 
         public override void Update()
@@ -1381,7 +1381,7 @@ namespace ClassicUO.Game.UI.Gumps
                 { CanMove = true }
             );
 
-            _point = new Point((int)(p.X * GumpScale), (int)(p.Y * GumpScale));
+            _point = ScaleHelper.Scaled(p, GumpScale);
         }
 
         private void AddStatTextLabel
