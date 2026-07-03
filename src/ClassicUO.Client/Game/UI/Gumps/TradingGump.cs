@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -13,8 +14,11 @@ using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.UI.Gumps
 {
-    public sealed class TradingGump : TextContainerGump
+    public sealed class TradingGump : ScalableTextContainerGump
     {
+        private const int BOX_WIDTH = 110;
+        private const int BOX_HEIGHT = 80;
+
         private uint _gold,
             _platinum,
             _hisGold,
@@ -42,6 +46,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             ID1 = id1;
             ID2 = id2;
+
+            if (ProfileManager.CurrentProfile != null)
+                GumpScale = ProfileManager.CurrentProfile.TradeGumpScale;
 
             BuildGump();
         }
@@ -175,14 +182,14 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (artInfo.Texture != null)
                 {
-                    if (x + artInfo.UV.Width > _myBox.Width)
+                    if (x + artInfo.UV.Width > BOX_WIDTH)
                     {
-                        x = _myBox.Width - artInfo.UV.Width;
+                        x = BOX_WIDTH - artInfo.UV.Width;
                     }
 
-                    if (y + artInfo.UV.Height > _myBox.Height)
+                    if (y + artInfo.UV.Height > BOX_HEIGHT)
                     {
-                        y = _myBox.Height - artInfo.UV.Height;
+                        y = BOX_HEIGHT - artInfo.UV.Height;
                     }
                 }
 
@@ -198,6 +205,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                 g.X = x;
                 g.Y = y;
+
+                if (GumpScale != 1.0)
+                {
+                    g.ApplyScale(GumpScale);
+                }
 
                 _myBox.Add(g);
             }
@@ -230,14 +242,14 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (artInfo.Texture != null)
                 {
-                    if (x + artInfo.UV.Width > _myBox.Width)
+                    if (x + artInfo.UV.Width > BOX_WIDTH)
                     {
-                        x = _myBox.Width - artInfo.UV.Width;
+                        x = BOX_WIDTH - artInfo.UV.Width;
                     }
 
-                    if (y + artInfo.UV.Height > _myBox.Height)
+                    if (y + artInfo.UV.Height > BOX_HEIGHT)
                     {
-                        y = _myBox.Height - artInfo.UV.Height;
+                        y = BOX_HEIGHT - artInfo.UV.Height;
                     }
                 }
 
@@ -253,6 +265,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                 g.X = x;
                 g.Y = y;
+
+                if (GumpScale != 1.0)
+                {
+                    g.ApplyScale(GumpScale);
+                }
 
                 _hisBox.Add(g);
             }
@@ -273,19 +290,25 @@ namespace ClassicUO.Game.UI.Gumps
                         x -= _myBox.X;
                         y -= _myBox.Y;
 
+                        if (GumpScale != 1.0)
+                        {
+                            x = (int)(x / GumpScale);
+                            y = (int)(y / GumpScale);
+                        }
+
                         if (artInfo.Texture != null)
                         {
                             x -= artInfo.UV.Width >> 1;
                             y -= artInfo.UV.Height >> 1;
 
-                            if (x + artInfo.UV.Width > _myBox.Width)
+                            if (x + artInfo.UV.Width > BOX_WIDTH)
                             {
-                                x = _myBox.Width - artInfo.UV.Width;
+                                x = BOX_WIDTH - artInfo.UV.Width;
                             }
 
-                            if (y + artInfo.UV.Height > _myBox.Height)
+                            if (y + artInfo.UV.Height > BOX_HEIGHT)
                             {
-                                y = _myBox.Height - artInfo.UV.Height;
+                                y = BOX_HEIGHT - artInfo.UV.Height;
                             }
                         }
 
