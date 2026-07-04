@@ -31,6 +31,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         private DataBox _myBox,
             _hisBox;
+        private VBoxContainer _myListBox,
+            _hisListBox;
         private Checkbox _myCheckbox;
         private readonly Label[] _myCoins = new Label[2];
         private readonly StbTextBox[] _myCoinsEntries = new StbTextBox[2];
@@ -164,11 +166,15 @@ namespace ClassicUO.Game.UI.Gumps
                 v.Dispose();
             }
 
+            _myListBox?.Clear();
+
             ArtLoader loader = Client.Game.UO.FileManager.Arts;
 
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
                 var it = (Item)i;
+
+                _myListBox?.Add(new TradeItemListEntry(it, _myListBox.Width));
 
                 var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
@@ -226,9 +232,13 @@ namespace ClassicUO.Game.UI.Gumps
                 v.Dispose();
             }
 
+            _hisListBox?.Clear();
+
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
                 var it = (Item)i;
+
+                _hisListBox?.Add(new TradeItemListEntry(it, _hisListBox.Width));
 
                 var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
@@ -421,9 +431,15 @@ namespace ClassicUO.Game.UI.Gumps
                 opdbX,
                 opdbY;
 
+            int gumpWidth,
+                gumpHeight;
+
             if (Client.Game.UO.Version >= ClientVersion.CV_704565)
             {
-                Add(new GumpPic(0, 0, 0x088A, 0));
+                var background = new GumpPic(0, 0, 0x088A, 0);
+                gumpWidth = background.Width;
+                gumpHeight = background.Height;
+                Add(background);
 
                 Add(new Label(World.Player.Name, false, 0x0481, font: 3) { X = 73, Y = 32 });
 
@@ -567,7 +583,10 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                Add(new GumpPic(0, 0, 0x0866, 0));
+                var background = new GumpPic(0, 0, 0x0866, 0);
+                gumpWidth = background.Width;
+                gumpHeight = background.Height;
+                Add(background);
 
                 Add(new Label(World.Player.Name, false, 0x0386, font: 1) { X = 84, Y = 40 });
 
@@ -610,13 +629,143 @@ namespace ClassicUO.Game.UI.Gumps
 
             SetCheckboxes();
 
+            BuildItemLists(gumpWidth, gumpHeight);
+
             RequestUpdateContents();
+        }
+
+        private void BuildItemLists(int gumpWidth, int gumpHeight)
+        {
+            const int LIST_HEIGHT = 100;
+
+            int listTop = gumpHeight + 2;
+            int halfWidth = gumpWidth >> 1;
+
+            _myListBox = AddItemListView(0, listTop, halfWidth, LIST_HEIGHT);
+            _hisListBox = AddItemListView(halfWidth, listTop, gumpWidth - halfWidth, LIST_HEIGHT);
+        }
+
+        private VBoxContainer AddItemListView(int x, int y, int width, int height)
+        {
+            var scroll = new ModernScrollArea(x, y, width, height, height)
+            {
+                ScrollbarBehaviour = ScrollbarBehaviour.ShowWhenDataExceedFromView
+            };
+
+            // ModernScrollArea reserves 12px on the right for its scrollbar.
+            var vbox = new VBoxContainer(width - 12);
+            scroll.Add(vbox);
+
+            Add(scroll);
+
+            return vbox;
         }
 
         private void MyCheckboxOnValueChanged(object sender, EventArgs e)
         {
             ImAccepting = !ImAccepting;
             GameActions.AcceptTrade(ID1, ImAccepting);
+        }
+    }
+
+    /// <summary>
+    /// A single row in the trade gump item list view: item graphic on the left, the item name to
+    /// the right, and (when the item stacks) the amount underneath the name.
+    /// </summary>
+    internal sealed class TradeItemListEntry : Control
+    {
+        private const int ITEM_SIZE = 40;
+
+        private readonly Item _item;
+
+        public TradeItemListEntry(Item item, int width)
+        {
+            _item = item;
+
+            CanMove = true;
+            AcceptMouseInput = true;
+            WantUpdateSize = false;
+            Width = width;
+            Height = ITEM_SIZE;
+
+            Add(new AlphaBlendControl(0.15f) { Width = width, Height = Height });
+
+            if (item == null)
+            {
+                return;
+            }
+
+            string name = item.Name;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                name = StringHelper.CapitalizeAllWords(
+                    StringHelper.GetPluralAdjustedString(item.ItemData.Name, item.Amount > 1)
+                );
+            }
+
+            int textX = ITEM_SIZE + 4;
+
+            var nameLabel = new Label(name, true, 0x0481, maxwidth: Math.Max(1, width - textX - 2), font: 1)
+            {
+                X = textX,
+                Y = 3
+            };
+
+            Add(nameLabel);
+
+            if (item.Amount > 1)
+            {
+                Add(new Label($"x{item.Amount}", true, 0x0481, font: 1)
+                {
+                    X = textX,
+                    Y = nameLabel.Y + nameLabel.Height + 1
+                });
+            }
+
+            SetTooltip(item);
+        }
+
+        public override bool Draw(UltimaBatcher2D batcher, int x, int y)
+        {
+            base.Draw(batcher, x, y);
+
+            if (_item == null || _item.IsDestroyed)
+            {
+                return true;
+            }
+
+            Vector3 hueVector = ShaderHueTranslator.GetHueVector(_item.Hue, _item.ItemData.IsPartialHue, 1, true);
+
+            ref readonly SpriteInfo texture = ref Client.Game.UO.Arts.GetArt(_item.DisplayedGraphic);
+            Rectangle rect = Client.Game.UO.Arts.GetRealArtBounds(_item.DisplayedGraphic);
+
+            if (texture.Texture != null)
+            {
+                var size = new Point(rect.Width, rect.Height);
+                var point = new Point((ITEM_SIZE >> 1) - (size.X >> 1), (ITEM_SIZE >> 1) - (size.Y >> 1));
+
+                if (rect.Width > ITEM_SIZE)
+                {
+                    size.X = ITEM_SIZE;
+                    point.X = 0;
+                }
+
+                if (rect.Height > ITEM_SIZE)
+                {
+                    size.Y = ITEM_SIZE;
+                    point.Y = 0;
+                }
+
+                batcher.Draw(
+                    texture.Texture,
+                    new Rectangle(x + point.X, y + point.Y, size.X, size.Y),
+                    new Rectangle(texture.UV.X + rect.X, texture.UV.Y + rect.Y, rect.Width, rect.Height),
+                    hueVector
+                );
+            }
+
+            return true;
         }
     }
 }
