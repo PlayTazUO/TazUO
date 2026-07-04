@@ -143,14 +143,16 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void CenterXInScreen()
         {
-            Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            X = (int)(((windowBounds.Width / Client.Game.RenderScale) - (Width * Client.Game.RenderScale)) / 2);
+            // Width is already in logical UI space, so only the window bounds need converting.
+            // (The previous form multiplied Width by RenderScale, double-counting it and
+            // mis-centering whenever the game scale was not 1.0.)
+            X = (ScaleHelper.LogicalWindowWidth - Width) / 2;
         }
 
         public void CenterYInScreen()
         {
-            Rectangle windowBounds = Client.Game.Window.ClientBounds;
-            Y = (int)(((windowBounds.Height / Client.Game.RenderScale) - (Height * Client.Game.RenderScale)) / 2);
+            // Height is already in logical UI space; see CenterXInScreen for the double-count fix.
+            Y = (ScaleHelper.LogicalWindowHeight - Height) / 2;
         }
 
         public void CenterXInViewPort()
