@@ -131,7 +131,13 @@ public class OptionsWindow : MyraControl
         _rootWindow.MaxHeight = MAX_HEIGHT;
         _rootWindow.MaxWidth = MAX_WIDTH;
 
-        _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(() => ProfileManager.CurrentProfile.OptionsWindowsSize);
+        // The accessor cannot verify whether the underlying singleton has a value so we provide
+        // explicit getter/setter which use conditional logic to make sure we don't throw in the incredibly unlikely case
+        // the profile is not ready.
+        _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(
+            () => ProfileManager.CurrentProfile?.OptionsWindowsSize,
+            (newValue) => ProfileManager.CurrentProfile?.OptionsWindowsSize = newValue
+            );
 
         _rootWindow.SizeChanged += (_, _) => _resultsBudget = null;
     }
