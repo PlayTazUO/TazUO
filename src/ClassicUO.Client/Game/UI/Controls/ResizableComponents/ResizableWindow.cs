@@ -16,39 +16,17 @@ using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.Controls.ResizableComponents;
 
-#region Auxiliary Classes
-
-public class ResizableWindowProps : MyraCommonProps
-{
-    public ResizeBehavior Resize
-    {
-        get;
-        set
-        {
-            ResizeBehavior oldValue = field;
-            if (SetField(ref field, value))
-            {
-                oldValue?.PropertyChanged -= OnResizePropertyChanged;
-                field?.PropertyChanged += OnResizePropertyChanged;
-            }
-        }
-    } = new();
-    public bool Minimizable { get; set => SetField(ref field, value); } = true;
-
-    public ResizableWindowProps()
-    {
-        Resize?.PropertyChanged += OnResizePropertyChanged;
-    }
-
-    private void OnResizePropertyChanged(object sender, PropertyChangedEventArgs e) => OnPropertyChanged(nameof(Resize));
-}
-
-#endregion
-
+/// <summary>
+///     A Myra <see cref="Window" /> that supports edge/corner drag-resizing, minimizing to its title bar,
+///     and persisting its size, based on the behavior configured via <see cref="Props" />.
+/// </summary>
 public class ResizableWindow : Window, IDisposable
 {
     #region Events
 
+    /// <summary>
+    ///     Raised after the window's size has changed as a result of a drag-resize operation.
+    /// </summary>
     public event EventHandler<ResizeEventArgs> Resized;
 
     #endregion
@@ -77,7 +55,7 @@ public class ResizableWindow : Window, IDisposable
     /// </summary>
     /// <remarks>
     ///     A window is considered resizable if resizing is enabled via the configuration
-    ///     properties and the window is not minimized.
+    ///     properties, and the window is not minimized.
     /// </remarks>
     public bool IsCurrentlyResizable => Props.Resize.Enabled && !IsMinimized;
 
@@ -97,14 +75,23 @@ public class ResizableWindow : Window, IDisposable
         }
     }
 
+    /// <summary>
+    ///     Gets or sets the horizontal alignment of the title label within the title panel.
+    /// </summary>
     public HorizontalAlignment TitleLabelAlignment
     {
         get => _titleLabel.HorizontalAlignment;
         set => _titleLabel.HorizontalAlignment = value;
     }
 
+    /// <summary>
+    ///     Gets the glyph displayed on the minimize/maximize button for the current <see cref="IsMinimized" /> state.
+    /// </summary>
     private string MinMaxButtonText => IsMinimized ? "□" : "−";
 
+    /// <summary>
+    ///     Gets the font used to render the minimize/maximize button glyph for the current <see cref="IsMinimized" /> state.
+    /// </summary>
     private SpriteFontBase MinMaxButtonFont => IsMinimized
         ? TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 24)
         : TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.NOTO_SANS_2_SYMBOLS, 32);
@@ -122,6 +109,8 @@ public class ResizableWindow : Window, IDisposable
     private int _resizeStartWidth;
     private int _resizeStartHeight;
 
+    private int? _restoreMinWidth;
+    private int? _restoreMinHeight;
     private int? _restoreWidth;
     private int? _restoreHeight;
     private bool _restoreAutoWidth;
@@ -154,7 +143,8 @@ public class ResizableWindow : Window, IDisposable
     {
         Props = props ?? new ResizableWindowProps();
         Props.PropertyChanged += OnPropsChanged;
-        Configure();
+
+        Configure(null);
     }
 
     #endregion
@@ -169,10 +159,18 @@ public class ResizableWindow : Window, IDisposable
         if (IsMinimized)
             return;
 
+        // Store the min width/height - we'll need to reset them
+        // to make sure the window does indeed shrink properly
+        _restoreMinWidth = MinWidth;
+        _restoreMinHeight = MinHeight;
+
         _restoreAutoWidth = !Width.HasValue;
         _restoreAutoHeight = !Height.HasValue;
         _restoreWidth = Width ?? Bounds.Width;
         _restoreHeight = Height ?? Bounds.Height;
+
+        MinWidth = null;
+        MinHeight = null;
         Width = null;
         Height = null;
 
@@ -193,6 +191,8 @@ public class ResizableWindow : Window, IDisposable
             return;
 
         IsMinimized = false;
+        MinWidth = _restoreMinWidth;
+        MinHeight = _restoreMinHeight;
         Width = _restoreAutoWidth ? null : _restoreWidth;
         Height = _restoreAutoHeight ? null : _restoreHeight;
 
@@ -357,8 +357,19 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Configures the window UI components.
     /// </summary>
-    private void Configure()
+    /// <param name="e">An optional property changed event arguments, if the call was triggered by property changes</param>
+    private void Configure(PropertyChangedEventArgs e)
     {
+        if (e == null || e.PropertyName == nameof(Props.InitialSizeStore))
+        {
+            Point? initialSize = Props.InitialSizeStore?.Get();
+            if (initialSize.HasValue)
+            {
+                Width = initialSize.Value.X;
+                Height = initialSize.Value.Y;
+            }
+        }
+
         // The close button is kinda ugly, so we center it manually during construction.
         CloseButton?.VerticalAlignment = VerticalAlignment.Center;
         CloseButton?.Margin = new Thickness(2, 0);
@@ -388,6 +399,8 @@ public class ResizableWindow : Window, IDisposable
     ///     Event handler for the minimize/maximize button click.
     ///     Minimizes or maximizes the window
     /// </summary>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="_1">Unused event arguments.</param>
     private void OnMinMaxButtonClick(object _, EventArgs _1)
     {
         if (IsMinimized)
@@ -400,17 +413,21 @@ public class ResizableWindow : Window, IDisposable
     ///     Event handler for the reset-window-size button click.
     ///     Resets the window's width/height which causes the window to size itself to fit its current content.
     /// </summary>
-    /// <param name="_"></param>
-    /// <param name="_1"></param>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="_1">Unused event arguments.</param>
     private void OnResetSizeButtonClick(object _, EventArgs _1)
     {
         Width = null;
         Height = null;
+
+        // Reset stored size, if one is defined
+        Props?.InitialSizeStore?.Set(null);
     }
 
     /// <summary>
     ///     Initializes and adds the minimize/maximize button to the title panel.
     /// </summary>
+    /// <param name="index">The position within the title panel's widget list at which to insert the button.</param>
     private void ConfigureMinMaxButton(int index = 0)
     {
         if (_minMaxButton != null)
@@ -443,6 +460,9 @@ public class ResizableWindow : Window, IDisposable
         TitlePanel.TouchDoubleClick += OnMinMaxButtonClick;
     }
 
+    /// <summary>
+    ///     Removes the minimize/maximize button from the title panel, if present.
+    /// </summary>
     private void RemoveMinMaxButton()
     {
         if (_minMaxButton == null)
@@ -458,6 +478,7 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Initializes and adds the reset-window-size button to the title panel.
     /// </summary>
+    /// <param name="index">The position within the title panel's widget list at which to insert the button.</param>
     private void ConfigureResizeResetButton(int index = 1)
     {
         if (_resetSizeButton != null)
@@ -488,6 +509,9 @@ public class ResizableWindow : Window, IDisposable
         TitlePanel.Widgets.Insert(index, _resetSizeButton);
     }
 
+    /// <summary>
+    ///     Removes the reset-window-size button from the title panel, if present.
+    /// </summary>
     private void RemoveResizeResetButton()
     {
         if (_resetSizeButton == null)
@@ -687,6 +711,8 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Updates the cursor style as it moves within the window based on whether it is over a resize handle.
     /// </summary>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="e">Unused mouse-moved event data.</param>
     private void OnMouseMovedWhileInWindow(object _, MouseMovedEventArgs e)
     {
         // Resize is disabled when the window is minimized, so no need to even check the cursor position.
@@ -709,6 +735,8 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Processes window resizing as the mouse moves.
     /// </summary>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="e">Unused mouse-moved event data.</param>
     private void OnMouseMovedWhileResizing(object _, MouseMovedEventArgs e)
     {
         if (!_activeResizeEdge.HasValue || !Mouse.LButtonPressed)
@@ -733,9 +761,14 @@ public class ResizableWindow : Window, IDisposable
 
         UpdateTitleLabelVisibility();
 
+        Props?.InitialSizeStore?.Set(new Point(newBounds.Width, newBounds.Height));
         Resized?.Invoke(this, new ResizeEventArgs { NewWidth = newBounds.Width, NewHeight = newBounds.Height });
     }
 
+    /// <summary>
+    ///     Shows or hides the title label based on whether it would overflow the space available
+    ///     next to the close button at the window's current width.
+    /// </summary>
     private void UpdateTitleLabelVisibility()
     {
         if (!Width.HasValue && Bounds.Width <= 0)
@@ -801,6 +834,8 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Handles left mouse button click state changes during a drag/resize operation.
     /// </summary>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="e">Event data indicating the new left-button press state.</param>
     private void LeftClickChangedHandler(object _, MouseLeftButtonClickStateChangedEventArgs e)
     {
         if (!e.Current && _activeResizeEdge.HasValue)
@@ -810,6 +845,8 @@ public class ResizableWindow : Window, IDisposable
     /// <summary>
     ///     Stops the current drag/resize operation.
     /// </summary>
+    /// <param name="_">Unused event sender.</param>
+    /// <param name="_1">Unused event arguments.</param>
     private void OnDragStop(object _, EventArgs _1)
     {
         _activeResizeEdge = null;
@@ -838,7 +875,12 @@ public class ResizableWindow : Window, IDisposable
         _isOverridingCursorStyle = false;
     }
 
-    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure();
+    /// <summary>
+    ///     Reconfigures the window's UI components when a property on <see cref="Props" /> changes.
+    /// </summary>
+    /// <param name="sender">Unused event sender.</param>
+    /// <param name="e">Event data identifying which property changed.</param>
+    private void OnPropsChanged(object sender, PropertyChangedEventArgs e) => Configure(e);
 
     #endregion
 }

@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
@@ -28,8 +29,12 @@ public class OptionsWindow : MyraControl
 
     #region Consts/Readonly
 
+    private const int MIN_HEIGHT = 250;
+    private const int MIN_WIDTH = 350;
+
     private const int MAX_HEIGHT = 850;
     private const int MAX_WIDTH = 1200;
+
     private const int SEARCH_DEBOUNCE_MS = 500;
 
     private readonly Dictionary<string, List<IOptionSource>> _optionSources = new();
@@ -105,7 +110,8 @@ public class OptionsWindow : MyraControl
     {
         UIManager.ForEach<OptionsWindow>(w =>
         {
-            if (w != this) w.Dispose();
+            if (w != this)
+                w.Dispose();
         });
 
         SetupOptions();
@@ -113,10 +119,25 @@ public class OptionsWindow : MyraControl
 
         CenterInViewPort();
 
+        _rootWindow.Props.Resize.MinHeight = MIN_HEIGHT;
+        _rootWindow.Props.Resize.MinWidth = MIN_WIDTH;
+
         _rootWindow.Props.Resize.MaxHeight = MAX_HEIGHT;
         _rootWindow.Props.Resize.MaxWidth = MAX_WIDTH;
+
+        _rootWindow.MinHeight = MIN_HEIGHT;
+        _rootWindow.MinWidth = MIN_WIDTH;
+
         _rootWindow.MaxHeight = MAX_HEIGHT;
         _rootWindow.MaxWidth = MAX_WIDTH;
+
+        // The accessor cannot verify whether the underlying singleton has a value so we provide
+        // explicit getter/setter which use conditional logic to make sure we don't throw in the incredibly unlikely case
+        // the profile is not ready.
+        _rootWindow.Props.InitialSizeStore = new Accessor<Point?>(
+            () => ProfileManager.CurrentProfile?.OptionsWindowsSize,
+            (newValue) => ProfileManager.CurrentProfile?.OptionsWindowsSize = newValue
+            );
 
         _rootWindow.SizeChanged += (_, _) => _resultsBudget = null;
     }
