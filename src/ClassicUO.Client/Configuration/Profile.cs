@@ -476,7 +476,7 @@ namespace ClassicUO.Configuration
         public int AutoFollowDistance { get; set => SetProperty(ref field, value); } = 1;
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
         [JsonConverter(typeof(Point2Converter))] public Point ResizeJournalSize { get; set => SetProperty(ref field, value); } = new(410, 350);
-        [JsonConverter(typeof(Point2Converter))] public Point? OptionsWindowsSize { get; set => SetProperty(ref field, value); }
+        [JsonConverter(typeof(NullablePoint2Converter))] public Point? OptionsWindowsSize { get; set => SetProperty(ref field, value); }
         public bool FollowingMode { get; set => SetProperty(ref field, value); } = false;
         public uint FollowingTarget { get; set => SetProperty(ref field, value); }
         public bool NamePlateHealthBar { get; set => SetProperty(ref field, value); } = true;
