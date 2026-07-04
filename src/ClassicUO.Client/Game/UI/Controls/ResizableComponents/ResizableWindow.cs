@@ -109,6 +109,8 @@ public class ResizableWindow : Window, IDisposable
     private int _resizeStartWidth;
     private int _resizeStartHeight;
 
+    private int? _restoreMinWidth;
+    private int? _restoreMinHeight;
     private int? _restoreWidth;
     private int? _restoreHeight;
     private bool _restoreAutoWidth;
@@ -157,10 +159,18 @@ public class ResizableWindow : Window, IDisposable
         if (IsMinimized)
             return;
 
+        // Store the min width/height - we'll need to reset them
+        // to make sure the window does indeed shrink properly
+        _restoreMinWidth = MinWidth;
+        _restoreMinHeight = MinHeight;
+
         _restoreAutoWidth = !Width.HasValue;
         _restoreAutoHeight = !Height.HasValue;
         _restoreWidth = Width ?? Bounds.Width;
         _restoreHeight = Height ?? Bounds.Height;
+
+        MinWidth = null;
+        MinHeight = null;
         Width = null;
         Height = null;
 
@@ -181,6 +191,8 @@ public class ResizableWindow : Window, IDisposable
             return;
 
         IsMinimized = false;
+        MinWidth = _restoreMinWidth;
+        MinHeight = _restoreMinHeight;
         Width = _restoreAutoWidth ? null : _restoreWidth;
         Height = _restoreAutoHeight ? null : _restoreHeight;
 
