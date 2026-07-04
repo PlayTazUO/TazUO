@@ -3,6 +3,7 @@
 using System;
 using ClassicUO.Game;
 using ClassicUO.IO;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Network.PacketHandlers;
@@ -121,8 +122,10 @@ internal sealed class PacketParser
 
                 if (!allowPlugins || Plugin.ProcessRecvPacket(packetBuffer, ref packetlength))
                 {
+                    Profiler.EnterContext($"PACKET {packetID:X2}");
                     AnalyzePacket(world, packetBuffer.AsSpan(0, packetlength), offset);
-
+                    Profiler.ExitContext($"PACKET {packetID:X2}");
+                    
                     ++packetsCount;
                 }
             }
