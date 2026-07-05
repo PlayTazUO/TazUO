@@ -112,6 +112,7 @@ All notable changes to TazUO will be recorded here.
 * Added `API.GetClilocString(cliloc, englishOnly=False)` to retrieve cliloc strings from scripts - [P.R 546](https://github.com/PlayTazUO/TazUO/pull/546) ([bittiez](https://github.com/bittiez))
 * Added `API.PlaySound(index)` to play a sound effect locally, `API.LastSpellIndex` to get the index of the last spell cast, and `API.LastSpellName` to get the name of the last spell cast - [P.R 561](https://github.com/PlayTazUO/TazUO/pull/561) ([bittiez](https://github.com/bittiez))
 * Added the ability to bind a hotkey (keyboard, mouse, or controller) to a Legion script from the script manager to toggle it on/off - [P.R 609](https://github.com/PlayTazUO/TazUO/pull/609) ([bittiez](https://github.com/bittiez))
+* Added an optional `API.OnStop(callback)` hook — when set, stopping a script is delayed until the callback is processed via `API.ProcessCallbacks` or a maximum of 5 seconds has elapsed - [P.R 652](https://github.com/PlayTazUO/TazUO/pull/652) ([bittiez](https://github.com/bittiez))
 
 ### Misc
 * Remove tab completion and command history tracking - [P.R 489](https://github.com/PlayTazUO/TazUO/pull/489) ([Jascen](https://github.com/Jascen))

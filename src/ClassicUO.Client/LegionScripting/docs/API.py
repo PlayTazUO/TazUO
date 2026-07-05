@@ -2613,6 +2613,33 @@ def Stop() -> None:
     """
     pass
 
+def OnStop(callback: "Any" = None) -> None:
+    """
+     Register an optional callback to run when this script is being stopped.
+     When set, stopping the script will be delayed until this callback has been
+     processed, or until a maximum of 5 seconds have passed.
+    
+     Callbacks only run while the script is calling `API.ProcessCallbacks`,
+     so make sure your script keeps calling it (for example in its main loop) for
+     the OnStop callback to actually run before the timeout elapses.
+    
+     Example:
+     ```py
+     def on_stop():
+       API.SysMsg("Cleaning up before stopping...")
+     API.OnStop(on_stop)
+     while True:
+       API.ProcessCallbacks()
+       API.Pause(0.1)
+     ```
+     To unregister, call with no callback:
+     ```py
+     API.OnStop()
+     ```
+    
+    """
+    pass
+
 def ToggleAutoLoot() -> None:
     """
      Toggle autolooting on or off.

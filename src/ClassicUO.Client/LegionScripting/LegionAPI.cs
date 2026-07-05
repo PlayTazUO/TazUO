@@ -43,6 +43,10 @@ namespace ClassicUO.LegionScripting
 
         private uint _timedCallbackCurrentId;
         private readonly ConcurrentDictionary<uint, TimedCallback> _timedCallbacks = new();
+
+        private volatile object _onStopCallback;
+        private volatile bool _onStopScheduled;
+        private volatile bool _onStopCompleted;
         private readonly ConcurrentDictionary<string, bool> _pressedKeys = new();
         private readonly ConcurrentDictionary<string, string> _keyToHotkeyMap = new();
 
@@ -164,6 +168,60 @@ namespace ClassicUO.LegionScripting
                     break;
             }
         }
+
+        #endregion
+
+        #region OnStop Callback
+
+        /// <summary>
+        /// Returns true if an OnStop callback is registered that still needs to run.
+        /// </summary>
+        internal bool HasPendingStopCallback => !_disposed && _onStopCallback != null && !_onStopCompleted;
+
+        /// <summary>
+        /// Returns true once a registered OnStop callback has finished running (or no callback was set).
+        /// </summary>
+        internal bool OnStopCompleted => _onStopCompleted;
+
+        /// <summary>
+        /// Schedules the registered OnStop callback so it will run on the next call to
+        /// <see cref="ProcessCallbacks"/>. This is idempotent: it only schedules once and
+        /// returns true only on the first call so callers can start a single wait/timeout.
+        /// </summary>
+        internal bool BeginStopCallback()
+        {
+            if (_onStopScheduled)
+                return false;
+
+            _onStopScheduled = true;
+
+            object callback = _onStopCallback;
+            if (callback == null)
+            {
+                _onStopCompleted = true;
+                return true;
+            }
+
+            ScheduleCallbackActions([WrapStopCallback(callback)]);
+            return true;
+        }
+
+        private Action WrapStopCallback(object callback) =>
+            () =>
+            {
+                try
+                {
+                    CallbackChannel.Invoke(callback);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"OnStop callback error: {ex}");
+                }
+                finally
+                {
+                    _onStopCompleted = true;
+                }
+            };
 
         #endregion
 
@@ -3257,6 +3315,32 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public void Stop() =>
             MainThreadQueue.InvokeOnMainThread(() => { LegionScripting.StopScript(_scriptFile); });
+
+        /// <summary>
+        /// Register an optional callback to run when this script is being stopped.
+        /// When set, stopping the script will be delayed until this callback has been
+        /// processed, or until a maximum of 5 seconds have passed.
+        ///
+        /// Callbacks only run while the script is calling `API.ProcessCallbacks`,
+        /// so make sure your script keeps calling it (for example in its main loop) for
+        /// the OnStop callback to actually run before the timeout elapses.
+        ///
+        /// Example:
+        /// ```py
+        /// def on_stop():
+        ///   API.SysMsg("Cleaning up before stopping...")
+        /// API.OnStop(on_stop)
+        /// while True:
+        ///   API.ProcessCallbacks()
+        ///   API.Pause(0.1)
+        /// ```
+        /// To unregister, call with no callback:
+        /// ```py
+        /// API.OnStop()
+        /// ```
+        /// </summary>
+        /// <param name="callback">The function to invoke when the script is stopping, or `null` to unregister.</param>
+        public void OnStop(object callback = null) => _onStopCallback = callback;
 
         /// <summary>
         /// Toggle autolooting on or off.
