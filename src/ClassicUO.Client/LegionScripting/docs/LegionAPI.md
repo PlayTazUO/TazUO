@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `7/1/26`.*
+*This was generated on `7/5/26`.*
 
 ## Properties
 ### `Events`
@@ -2558,6 +2558,41 @@ You can now type `-updateapi` in game to download the latest API.py file.
  API.Stop()
  ```
 
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OnStop
+`(callback)`
+ Register an optional callback to run when this script is being stopped.
+ When set, stopping the script will be delayed until this callback has been
+ processed, or until a maximum of 5 seconds have passed.
+
+ Callbacks only run while the script is calling <see cref="ProcessCallbacks"/> ,
+ so make sure your script keeps calling it (for example in its main loop) for
+ the OnStop callback to actually run before the timeout elapses.
+
+ Example:
+ ```py
+ def on_stop():
+   API.SysMsg("Cleaning up before stopping...")
+ API.OnStop(on_stop)
+ while True:
+   API.ProcessCallbacks()
+   API.Pause(0.1)
+ ```
+ To unregister, call with no callback:
+ ```py
+ API.OnStop()
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `callback` | `object` | ✅ Yes | The function to invoke when the script is stopping, or `null` to unregister. |
 
 **Return Type:** `void` *(Does not return anything)*
 
