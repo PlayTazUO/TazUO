@@ -85,6 +85,20 @@ public class WorldMapGump : ResizableGump
 
     private Renderer.SpriteFont _markerFont = Fonts.Map1;
     private int _markerFontIndex = 1;
+
+    // When a TTF font is selected all names/markers are rendered through cached TextBox
+    // instances instead of the sprite-font DrawString methods. An empty name means the
+    // sprite-font styles (_markerFont) are used instead.
+    private string _ttfFont = string.Empty;
+    private int _ttfFontSize = 20;
+    private const int TTF_FONT_SIZE_MIN = 6;
+    private const int TTF_FONT_SIZE_MAX = 60;
+    // TextBoxes are cached by their text and reused across frames. Entries that have not been
+    // drawn for a while are disposed in Update; everything is disposed when the gump closes.
+    private readonly Dictionary<string, TextBox> _ttfTextBoxes = new Dictionary<string, TextBox>();
+    private readonly Dictionary<string, long> _ttfTextBoxLastUse = new Dictionary<string, long>();
+    private const long TTF_TEXTBOX_TTL = 10000;
+    private bool UseTtfFont => !string.IsNullOrEmpty(_ttfFont);
     private readonly Dictionary<string, ContextMenuItemEntry> _options = new Dictionary<string, ContextMenuItemEntry>();
     private bool _showCoordinates;
     private bool _showSextantCoordinates;
@@ -236,6 +250,9 @@ public class WorldMapGump : ResizableGump
 
         SetFont(ProfileManager.CurrentProfile.WorldMapFont);
 
+        _ttfFont = ProfileManager.CurrentProfile.WorldMapTtfFont ?? string.Empty;
+        _ttfFontSize = Math.Clamp(ProfileManager.CurrentProfile.WorldMapTtfFontSize, TTF_FONT_SIZE_MIN, TTF_FONT_SIZE_MAX);
+
         ResizeWindow(new Point(Width, Height));
 
         _flipMap = ProfileManager.CurrentProfile.WorldMapFlipMap;
@@ -307,6 +324,10 @@ public class WorldMapGump : ResizableGump
 
         ProfileManager.CurrentProfile.WorldMapHiddenMarkerFiles = string.Join(",", _hiddenMarkerFiles);
         ProfileManager.CurrentProfile.WorldMapHiddenZoneFiles = string.Join(",", _hiddenZoneFiles);
+
+        ProfileManager.CurrentProfile.WorldMapFont = _markerFontIndex;
+        ProfileManager.CurrentProfile.WorldMapTtfFont = _ttfFont;
+        ProfileManager.CurrentProfile.WorldMapTtfFontSize = _ttfFontSize;
 
         ProfileManager.CurrentProfile.WorldMapShowGridIfZoomed = _showGridIfZoomed;
         ProfileManager.CurrentProfile.WorldMapPosition = _isFullscreen ? new Point(_preFullscreenBounds.X, _preFullscreenBounds.Y) : new Point(X, Y);
@@ -566,18 +587,22 @@ public class WorldMapGump : ResizableGump
         }
         ContextMenu.Add(follow);
 
+        // Font style choice applies to both marker names and mobile/entity names, so it
+        // lives on the main context menu (not the marker submenu). Selecting a sprite-font
+        // style also turns off any active TTF font.
         var markerFontEntry = new ContextMenuItemEntry(ResGumps.FontStyle);
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 1), () => { SetFont(1); }));
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 2), () => { SetFont(2); }));
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 3), () => { SetFont(3); }));
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 4), () => { SetFont(4); }));
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 5), () => { SetFont(5); }));
-        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 6), () => { SetFont(6); }));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 1), () => { SetFont(1); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 1));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 2), () => { SetFont(2); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 2));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 3), () => { SetFont(3); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 3));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 4), () => { SetFont(4); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 4));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 5), () => { SetFont(5); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 5));
+        markerFontEntry.Add(new ContextMenuItemEntry(string.Format(ResGumps.Style0, 6), () => { SetFont(6); SaveSettings(); }, true, !UseTtfFont && _markerFontIndex == 6));
+        ContextMenu.Add(markerFontEntry);
+
+        ContextMenu.Add(BuildTtfFontMenu());
 
         var markersEntry = new ContextMenuItemEntry(ResGumps.MapMarkerOptions);
         markersEntry.Add(new ContextMenuItemEntry(ResGumps.ReloadMarkers, LoadMarkers));
-
-        markersEntry.Add(markerFontEntry);
 
         markersEntry.Add(_options["show_all_markers"]);
         markersEntry.Add(new ContextMenuItemEntry(""));
@@ -691,6 +716,11 @@ public class WorldMapGump : ResizableGump
 
         if (_map.Index != World.MapIndex && !_freeView)
             ChangeMap(World.MapIndex);
+
+        // Drop cached TTF TextBoxes that haven't been drawn recently so names/markers that
+        // leave the view (or change) don't leak their layouts.
+        if (_ttfTextBoxes.Count > 0)
+            PurgeTtfTextBoxes();
 
         if (_isFullscreen)
         {
@@ -890,12 +920,23 @@ public class WorldMapGump : ResizableGump
         _navPath = null;
         _navSegments = 0;
 
+        // Dispose every cached TextBox so their layouts don't outlive the map gump.
+        PurgeTtfTextBoxes(true);
+
         base.Dispose();
     }
 
     private void SetFont(int fontIndex)
     {
         _markerFontIndex = fontIndex;
+
+        // Choosing a sprite-font style disables any active TTF font so both name and
+        // marker rendering fall back to the shared DrawString path.
+        if (UseTtfFont)
+        {
+            _ttfFont = string.Empty;
+            PurgeTtfTextBoxes(true);
+        }
 
         switch (fontIndex)
         {
@@ -934,6 +975,120 @@ public class WorldMapGump : ResizableGump
                 _markerFont = Fonts.Map1;
 
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Builds the "TTF Fonts" context menu. When a TTF font is selected every name and marker
+    /// is rendered through TextBox (TrueType) instead of the sprite-font DrawString methods.
+    /// The top of the menu holds a size increase/decrease submenu.
+    /// </summary>
+    private ContextMenuItemEntry BuildTtfFontMenu()
+    {
+        var ttfEntry = new ContextMenuItemEntry(TazLang.Get("map_ttf_fonts", "TTF Fonts"));
+
+        var sizeEntry = new ContextMenuItemEntry(string.Format(TazLang.Get("map_ttf_font_size", "Font Size: {0}"), _ttfFontSize));
+        sizeEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_ttf_font_size_inc", "Increase (+)"), () => AdjustTtfFontSize(2)));
+        sizeEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_ttf_font_size_dec", "Decrease (-)"), () => AdjustTtfFontSize(-2)));
+        ttfEntry.Add(sizeEntry);
+
+        ttfEntry.Add(new ContextMenuItemEntry(""));
+
+        // Turns TTF rendering off and returns to the sprite-font styles.
+        ttfEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_ttf_font_none", "None (use font style)"), () => SetTtfFont(string.Empty), true, !UseTtfFont));
+
+        (string[] fontNames, _) = TrueTypeLoader.Instance.GetSortedFontNames();
+
+        foreach (string fontName in fontNames)
+        {
+            string name = fontName;
+            ttfEntry.Add(new ContextMenuItemEntry(name, () => SetTtfFont(name), true, string.Equals(_ttfFont, name, StringComparison.Ordinal)));
+        }
+
+        return ttfEntry;
+    }
+
+    private void SetTtfFont(string fontName)
+    {
+        fontName ??= string.Empty;
+
+        if (string.Equals(_ttfFont, fontName, StringComparison.Ordinal))
+            return;
+
+        _ttfFont = fontName;
+        PurgeTtfTextBoxes(true); // Cached boxes are baked with the old font, drop them all.
+        SaveSettings();
+    }
+
+    private void AdjustTtfFontSize(int delta)
+    {
+        int newSize = Math.Clamp(_ttfFontSize + delta, TTF_FONT_SIZE_MIN, TTF_FONT_SIZE_MAX);
+
+        if (newSize == _ttfFontSize)
+            return;
+
+        _ttfFontSize = newSize;
+        PurgeTtfTextBoxes(true); // Size is baked into the layout, drop and rebuild on demand.
+        SaveSettings();
+        BuildContextMenu(); // Refresh the "Font Size: X" label.
+    }
+
+    /// <summary>
+    /// Returns a cached TextBox for <paramref name="text"/>, creating one if necessary, and marks
+    /// it as used this frame so it survives the next purge.
+    /// </summary>
+    private TextBox GetTtfTextBox(string text)
+    {
+        if (!_ttfTextBoxes.TryGetValue(text, out TextBox tb) || tb.IsDisposed)
+        {
+            tb = TextBox.GetOne
+            (
+                text,
+                _ttfFont,
+                _ttfFontSize,
+                Color.White,
+                new TextBox.RTLOptions { ConvertHtmlColors = false, SupportsCommands = false }
+            );
+
+            _ttfTextBoxes[text] = tb;
+        }
+
+        _ttfTextBoxLastUse[text] = Time.Ticks;
+
+        return tb;
+    }
+
+    /// <summary>
+    /// Disposes cached TextBoxes. When <paramref name="all"/> is true every box is disposed,
+    /// otherwise only those not drawn within <see cref="TTF_TEXTBOX_TTL"/> milliseconds.
+    /// </summary>
+    private void PurgeTtfTextBoxes(bool all = false)
+    {
+        if (_ttfTextBoxes.Count == 0)
+            return;
+
+        List<string> toRemove = null;
+
+        foreach (KeyValuePair<string, TextBox> kv in _ttfTextBoxes)
+        {
+            long lastUse = _ttfTextBoxLastUse.TryGetValue(kv.Key, out long t) ? t : 0;
+
+            if (all || Time.Ticks - lastUse > TTF_TEXTBOX_TTL)
+            {
+                (toRemove ??= new List<string>()).Add(kv.Key);
+            }
+        }
+
+        if (toRemove == null)
+            return;
+
+        foreach (string key in toRemove)
+        {
+            if (_ttfTextBoxes.TryGetValue(key, out TextBox tb))
+                tb.Dispose();
+
+            _ttfTextBoxes.Remove(key);
+            _ttfTextBoxLastUse.Remove(key);
         }
     }
 
@@ -2675,7 +2830,8 @@ public class WorldMapGump : ResizableGump
 
         if (drawName && !string.IsNullOrEmpty(mobile.Name))
         {
-            Vector2 size = Fonts.Regular.MeasureString(mobile.Name);
+            TextBox ttfBox = UseTtfFont ? GetTtfTextBox(mobile.Name) : null;
+            Vector2 size = ttfBox != null ? new Vector2(ttfBox.MeasuredSize.X, ttfBox.MeasuredSize.Y) : Fonts.Regular.MeasureString(mobile.Name);
 
             if (rot.X + size.X / 2 > x + Width - 8)
             {
@@ -2698,30 +2854,40 @@ public class WorldMapGump : ResizableGump
             int xx = (int)(rot.X - size.X / 2);
             int yy = (int)(rot.Y - size.Y);
 
-            hueVector.X = 0;
-            hueVector.Y = 1;
+            ushort nameHue = isparty ? (ushort)0x0034 : Notoriety.GetHue(mobile.NotorietyFlag);
 
-            batcher.DrawString
-            (
-                Fonts.Regular,
-                mobile.Name,
-                xx + 1,
-                yy + 1,
-                hueVector
-            );
+            if (ttfBox != null)
+            {
+                ttfBox.Draw(batcher, xx + 1, yy + 1, Color.Black);
+                ttfBox.Draw(batcher, xx, yy, TextBox.ConvertHueToColor(nameHue));
+            }
+            else
+            {
+                hueVector.X = 0;
+                hueVector.Y = 1;
 
-            hueVector.X = isparty ? 0x0034 : Notoriety.GetHue(mobile.NotorietyFlag);
-            hueVector.Y = 1;
-            hueVector.Z = 1;
+                batcher.DrawString
+                (
+                    Fonts.Regular,
+                    mobile.Name,
+                    xx + 1,
+                    yy + 1,
+                    hueVector
+                );
 
-            batcher.DrawString
-            (
-                Fonts.Regular,
-                mobile.Name,
-                xx,
-                yy,
-                hueVector
-            );
+                hueVector.X = nameHue;
+                hueVector.Y = 1;
+                hueVector.Z = 1;
+
+                batcher.DrawString
+                (
+                    Fonts.Regular,
+                    mobile.Name,
+                    xx,
+                    yy,
+                    hueVector
+                );
+            }
         }
 
         if (drawHpBar)
@@ -2864,7 +3030,8 @@ public class WorldMapGump : ResizableGump
         rot.X += x + width;
         rot.Y += y + height;
 
-        Vector2 size = _markerFont.MeasureString(marker.Name);
+        TextBox ttfBox = UseTtfFont ? GetTtfTextBox(marker.Name) : null;
+        Vector2 size = ttfBox != null ? new Vector2(ttfBox.MeasuredSize.X, ttfBox.MeasuredSize.Y) : _markerFont.MeasureString(marker.Name);
 
         if (rot.X + size.X / 2 > x + Width - 8)
         {
@@ -2901,6 +3068,12 @@ public class WorldMapGump : ResizableGump
             ),
             hueVector
         );
+
+        if (ttfBox != null)
+        {
+            ttfBox.Draw(batcher, xx, yy, Color.White);
+            return;
+        }
 
         hueVector = new Vector3(0f, 1f, 1f);
 
@@ -3261,7 +3434,8 @@ public class WorldMapGump : ResizableGump
         if (_showGroupName)
         {
             string name = entity.Name ?? ResGumps.OutOfRange;
-            Vector2 size = Fonts.Regular.MeasureString(entity.Name ?? name);
+            TextBox ttfBox = UseTtfFont ? GetTtfTextBox(name) : null;
+            Vector2 size = ttfBox != null ? new Vector2(ttfBox.MeasuredSize.X, ttfBox.MeasuredSize.Y) : Fonts.Regular.MeasureString(name);
 
             if (rot.X + size.X / 2 > x + Width - 8)
             {
@@ -3284,28 +3458,36 @@ public class WorldMapGump : ResizableGump
             int xx = (int)(rot.X - size.X / 2);
             int yy = (int)(rot.Y - size.Y);
 
-            hueVector.X = 0;
-            hueVector.Y = 1;
+            if (ttfBox != null)
+            {
+                ttfBox.Draw(batcher, xx + 1, yy + 1, Color.Black);
+                ttfBox.Draw(batcher, xx, yy, TextBox.ConvertHueToColor(uohue));
+            }
+            else
+            {
+                hueVector.X = 0;
+                hueVector.Y = 1;
 
-            batcher.DrawString
-            (
-                Fonts.Regular,
-                name,
-                xx + 1,
-                yy + 1,
-                hueVector
-            );
+                batcher.DrawString
+                (
+                    Fonts.Regular,
+                    name,
+                    xx + 1,
+                    yy + 1,
+                    hueVector
+                );
 
-            hueVector = new Vector3(uohue, 1f, 1f);
+                hueVector = new Vector3(uohue, 1f, 1f);
 
-            batcher.DrawString
-            (
-                Fonts.Regular,
-                name,
-                xx,
-                yy,
-                hueVector
-            );
+                batcher.DrawString
+                (
+                    Fonts.Regular,
+                    name,
+                    xx,
+                    yy,
+                    hueVector
+                );
+            }
         }
 
         if (_showGroupBar)
