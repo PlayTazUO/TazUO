@@ -3,6 +3,9 @@
 All notable changes to Legacy TazUO will be documented in this file.
 
 ---
+## [4.5.23]
+- Fixed an IndexOutOfRangeException crash when the mouse hovered over items/corpses with a graphic id outside the animation data index bounds
+
 ## [4.5.22]
 - More fixes for EA publish
 
