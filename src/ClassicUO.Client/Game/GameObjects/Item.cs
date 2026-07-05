@@ -36,6 +36,18 @@ namespace ClassicUO.Game.GameObjects
         public bool HighlightChecked;
         public string CustomName { get; set; }
 
+        /// <summary>
+        /// The OPL (Object Property List) name for this item, cached when OPL data is received.
+        /// May be null if OPL data has not yet been received.
+        /// </summary>
+        public string OPLName { get; set; }
+
+        /// <summary>
+        /// The OPL (Object Property List) data (tooltip body) for this item, cached when OPL data is received.
+        /// May be null if OPL data has not yet been received.
+        /// </summary>
+        public string OPLData { get; set; }
+
         public ushort DisplayedGraphic
         {
             get
@@ -171,6 +183,14 @@ namespace ClassicUO.Game.GameObjects
             var i = new Item(world); // _pool.GetOne();
             i.Serial = serial;
             i.TryGetCustomName();
+
+            // If OPL data was already received before this item existed, cache it now.
+            if (world.OPL.TryGetNameAndData(serial, out string oplName, out string oplData))
+            {
+                i.OPLName = oplName;
+                i.OPLData = oplData;
+            }
+
             return i;
         }
 
