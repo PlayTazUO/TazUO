@@ -66,11 +66,35 @@ namespace ClassicUO.Game.UI.Controls
             IsSelected = defaultValue;
         }
 
+        /// <summary>
+        /// Creates an entry rendered as a row of mutually exclusive segment buttons.
+        /// Selecting a segment invokes <paramref name="segmentAction"/> with the selected segment index.
+        /// </summary>
+        public ContextMenuItemEntry(string[] segmentLabels, int selectedSegment, Action<int> segmentAction)
+        {
+            SegmentLabels = segmentLabels;
+            SelectedSegment = selectedSegment;
+            SegmentAction = segmentAction;
+        }
+
+        /// <summary>
+        /// Creates a titled entry rendered as a row of mutually exclusive segment buttons.
+        /// </summary>
+        public ContextMenuItemEntry(string text, string[] segmentLabels, int selectedSegment, Action<int> segmentAction)
+            : this(segmentLabels, selectedSegment, segmentAction)
+        {
+            Text = text;
+        }
+
         public Action Action;
+        public Action<int> SegmentAction;
         public readonly bool CanBeSelected;
         public bool IsSelected;
+        public int SelectedSegment;
+        public string[] SegmentLabels;
         public List<ContextMenuItemEntry> Items = new List<ContextMenuItemEntry>();
         public string Text;
+        public bool HasSegments => SegmentAction != null && SegmentLabels != null && SegmentLabels.Length > 0;
 
         public void Add(ContextMenuItemEntry subEntry) => Items.Add(subEntry);
     }
@@ -297,6 +321,8 @@ namespace ClassicUO.Game.UI.Controls
             private readonly ContextMenuShowMenu _subMenu;
             private readonly ContextMenuShowMenu _gump;
             private readonly double _scale;
+            private int[] _segmentX;
+            private int[] _segmentWidths;
 
 
             public ContextMenuItem(ContextMenuShowMenu parent, ContextMenuItemEntry entry, double scale = 1.0)
@@ -305,6 +331,13 @@ namespace ClassicUO.Game.UI.Controls
                 _scale = scale;
                 CanCloseWithRightClick = false;
                 _entry = entry;
+
+                if (_entry.HasSegments)
+                {
+                    BuildSegments();
+                    WantUpdateSize = false;
+                    return;
+                }
 
                 _label = new Label
                 (
@@ -375,9 +408,85 @@ namespace ClassicUO.Game.UI.Controls
             }
 
 
+            private void BuildSegments()
+            {
+                int leftPadding = Math.Max(1, (int)(25 * _scale));
+                int topPadding = Math.Max(1, (int)(2 * _scale));
+                int segmentPadding = Math.Max(1, (int)(10 * _scale));
+                int segmentGap = Math.Max(1, (int)(2 * _scale));
+                int segmentHeight = Math.Max(1, (int)(22 * _scale));
+                int x = leftPadding;
+
+                if (!string.IsNullOrWhiteSpace(_entry.Text))
+                {
+                    Label titleLabel = new Label
+                    (
+                        _entry.Text,
+                        true,
+                        0xFFFF,
+                        0,
+                        style: FontStyle.BlackBorder
+                    );
+
+                    titleLabel.ApplyScale(_scale);
+                    titleLabel.X = x;
+                    titleLabel.Y = topPadding + ((segmentHeight - titleLabel.Height) >> 1);
+                    Add(titleLabel);
+
+                    x += titleLabel.Width + Math.Max(1, (int)(6 * _scale));
+                }
+
+                _segmentX = new int[_entry.SegmentLabels.Length];
+                _segmentWidths = new int[_entry.SegmentLabels.Length];
+
+                for (int i = 0; i < _entry.SegmentLabels.Length; i++)
+                {
+                    Label label = new Label
+                    (
+                        _entry.SegmentLabels[i],
+                        true,
+                        0xFFFF,
+                        0,
+                        style: FontStyle.BlackBorder
+                    );
+
+                    label.ApplyScale(_scale);
+
+                    int segmentWidth = Math.Max((int)(58 * _scale), label.Width + segmentPadding * 2);
+                    _segmentX[i] = x;
+                    _segmentWidths[i] = segmentWidth;
+
+                    label.X = x + ((segmentWidth - label.Width) >> 1);
+                    label.Y = topPadding + ((segmentHeight - label.Height) >> 1);
+                    Add(label);
+
+                    x += segmentWidth + segmentGap;
+                }
+
+                Height = segmentHeight + topPadding * 2;
+                Width = Math.Max((int)(100 * _scale), x + leftPadding - segmentGap);
+            }
+
+            private int GetSegmentIndex(int x)
+            {
+                if (_segmentX == null || _segmentWidths == null)
+                    return -1;
+
+                for (int i = 0; i < _segmentX.Length; i++)
+                {
+                    if (x >= _segmentX[i] && x < _segmentX[i] + _segmentWidths[i])
+                        return i;
+                }
+
+                return -1;
+            }
+
             public override void Update()
             {
                 base.Update();
+
+                if (_entry.HasSegments)
+                    return;
 
                 if (Width > _label.Width)
                 {
@@ -464,6 +573,23 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (button == MouseButtonType.Left)
                 {
+                    if (_entry.HasSegments)
+                    {
+                        int segmentIndex = GetSegmentIndex(x);
+
+                        if (segmentIndex >= 0)
+                        {
+                            _entry.SelectedSegment = segmentIndex;
+                            _entry.SegmentAction?.Invoke(segmentIndex);
+                            RootParent?.Dispose();
+                        }
+
+                        Mouse.CancelDoubleClick = true;
+                        Mouse.LastLeftButtonClickTime = 0;
+                        base.OnMouseUp(x, y, button);
+                        return;
+                    }
+
                     _entry.Action?.Invoke();
 
                     RootParent?.Dispose();
@@ -482,6 +608,13 @@ namespace ClassicUO.Game.UI.Controls
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {
+                if (_entry.HasSegments)
+                {
+                    DrawSegments(batcher, x, y);
+                    base.Draw(batcher, x, y);
+                    return true;
+                }
+
                 if (!string.IsNullOrWhiteSpace(_label.Text) && MouseIsOver)
                 {
                     Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
@@ -510,6 +643,39 @@ namespace ClassicUO.Game.UI.Controls
                 }
 
                 return true;
+            }
+
+            private void DrawSegments(UltimaBatcher2D batcher, int x, int y)
+            {
+                Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
+                int hoveredSegment = MouseIsOver ? GetSegmentIndex(Mouse.Position.X - ScreenCoordinateX) : -1;
+
+                for (int i = 0; i < _segmentX.Length; i++)
+                {
+                    Rectangle bounds = new Rectangle(_segmentX[i] + x, y + 3, _segmentWidths[i], Height - 6);
+                    bool selected = i == _entry.SelectedSegment;
+                    bool hovered = i == hoveredSegment;
+
+                    if (selected || hovered)
+                    {
+                        batcher.Draw
+                        (
+                            SolidColorTextureCache.GetTexture(selected ? Color.Gray : Color.DarkSlateGray),
+                            bounds,
+                            hueVector
+                        );
+                    }
+
+                    batcher.DrawRectangle
+                    (
+                        SolidColorTextureCache.GetTexture(selected ? Color.White : Color.Gray),
+                        bounds.X,
+                        bounds.Y,
+                        bounds.Width,
+                        bounds.Height,
+                        hueVector
+                    );
+                }
             }
         }
     }
