@@ -218,10 +218,11 @@ namespace ClassicUO.Game.GameObjects
 
             if (string.IsNullOrEmpty(name))
             {
-                // Fall back to the item data name, adjusted for plurality, then the entity name.
-                name = !string.IsNullOrEmpty(ItemData.Name)
-                    ? StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(ItemData.Name, Amount > 1))
-                    : Name;
+                // Fall back to the server-assigned entity name, then the item data name
+                // (adjusted for plurality).
+                name = !string.IsNullOrEmpty(Name)
+                    ? Name
+                    : StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(ItemData.Name, Amount > 1));
             }
 
             if (string.IsNullOrEmpty(name))
