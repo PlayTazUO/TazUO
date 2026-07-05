@@ -54,6 +54,8 @@ All notable changes to TazUO will be recorded here.
 * Added marker icons to the web map, served from their source file on disk instead of streaming rendered textures, with a toggle to switch between icons and circles - [P.R 637](https://github.com/PlayTazUO/TazUO/pull/637) ([bittiez](https://github.com/bittiez))
 * World map pathfinding now supports multi-segment routes — hold the append modifier (Shift by default, rebindable) while Ctrl right-clicking to chain a new path segment onto the current route (A→B→C) instead of restarting - [P.R 638](https://github.com/PlayTazUO/TazUO/pull/638) ([bittiez](https://github.com/bittiez))
 * Added scrollable item list views under the trade gump showing each item's graphic, name, and stack amount, with one list per trade side - [P.R 649](https://github.com/PlayTazUO/TazUO/pull/649) ([bittiez](https://github.com/bittiez))
+* Added a better weather atmospheric effect - [P.R 592](https://github.com/PlayTazUO/TazUO/pull/592) ([birdinforest](https://github.com/birdinforest))
+* Added list view to grid containers - [P.R 626](github.com/PlayTazUO/TazUO/pull/626) ([Nesci28](https://github.com/Nesci28))
 
 ### Fixes
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
