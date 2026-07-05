@@ -428,6 +428,8 @@ namespace ClassicUO.Configuration
         public int WorldMapWidth { get; set => SetProperty(ref field, value); } = 400;
         public int WorldMapHeight { get; set => SetProperty(ref field, value); } = 400;
         public int WorldMapFont { get; set => SetProperty(ref field, value); } = 3;
+        public string WorldMapTtfFont { get; set => SetProperty(ref field, value); } = string.Empty;
+        public int WorldMapTtfFontSize { get; set => SetProperty(ref field, value); } = 20;
         public bool WorldMapFlipMap { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapTopMost { get; set => SetProperty(ref field, value); }
         public bool WorldMapFreeView { get; set => SetProperty(ref field, value); }
