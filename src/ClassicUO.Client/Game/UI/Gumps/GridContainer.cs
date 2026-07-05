@@ -2520,21 +2520,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return contents;
             }
 
-            private static string GetItemName(Item item)
-            {
-                if (World.Instance?.OPL?.TryGetNameAndData(item.Serial, out string name, out string _) != true)
-                    return !string.IsNullOrEmpty(item.Name) ? item.Name : item.ItemData.Name;
-
-                // OPL has a cached name for the item
-                if (string.IsNullOrEmpty(name))
-                    return item.ItemData.Name;
-
-                // The stack-size, including a space
-                string itemAmountStr = $"{item.Amount.ToString(CultureInfo.InvariantCulture)} ";
-                return name.StartsWith(itemAmountStr, StringComparison.Ordinal)
-                    ? name[itemAmountStr.Length..] // Trim the stack-size and trailing space
-                    : name;
-            }
+            private static string GetItemName(Item item) => item.GetNormalizedName(false);
 
             private void SetupGridItemControls()
             {

@@ -1,12 +1,14 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Assets;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using MathHelper = ClassicUO.Utility.MathHelper;
@@ -198,6 +200,43 @@ namespace ClassicUO.Game.GameObjects
         {
             string name = await ItemDatabaseManager.Instance.GetItemCustomName(Serial);
             CustomName = name ?? "";
+        }
+
+        /// <summary>
+        /// Gets a display friendly name for this item, preferring the cached OPL name
+        /// (received from the server) and falling back to the item data name.
+        /// </summary>
+        /// <param name="showAmount">
+        /// When true, the stack size is prefixed to the name (e.g. "5 Gold Coins") for stacks
+        /// greater than one. When false, any leading stack size is stripped so only the name remains.
+        /// </param>
+        /// <returns>The normalized item name, or an empty string if no name is available.</returns>
+        public string GetNormalizedName(bool showAmount)
+        {
+            // Prefer the OPL name cached when OPL data was received (easier/faster lookup).
+            string name = OPLName;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                // Fall back to the item data name, adjusted for plurality, then the entity name.
+                name = !string.IsNullOrEmpty(ItemData.Name)
+                    ? StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(ItemData.Name, Amount > 1))
+                    : Name;
+            }
+
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            // OPL names (and some fallbacks) may already include a leading stack size,
+            // e.g. "5 Gold Coins". Strip it so amount display is controlled consistently.
+            string amountStr = $"{Amount.ToString(CultureInfo.InvariantCulture)} ";
+            if (name.StartsWith(amountStr, StringComparison.Ordinal))
+                name = name[amountStr.Length..];
+
+            if (showAmount && Amount > 1)
+                name = amountStr + name;
+
+            return name;
         }
 
         public override void OnGraphicSet(ushort newGraphic)
