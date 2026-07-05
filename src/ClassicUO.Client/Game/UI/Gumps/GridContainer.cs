@@ -44,7 +44,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Xml;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
@@ -1246,26 +1245,6 @@ public partial class GridContainer : ResizableGump
             Spotlight
         }
 
-/// <summary>
-/// Resolves the base item name from OPL tooltip data, falling back to the item's own name.
-/// When <paramref name="fromOPL" /> is true the returned value is the raw (untrimmed) OPL
-/// name; callers apply their own trimming and formatting.
-/// </summary>
-private static string ResolveItemBaseName(World world, Item item, out bool fromOPL)
-{
-    fromOPL = false;
-
-    if (world?.OPL?.TryGetNameAndData(item.Serial, out string oplName, out string _) == true
-        && !string.IsNullOrWhiteSpace(oplName))
-    {
-        fromOPL = true;
-        return oplName;
-    }
-
-    return item.Name;
-}
-
-
         public class GridItem : Control
         {
             private bool _mousePressedWhenEntered;
@@ -1381,82 +1360,11 @@ private static string ResolveItemBaseName(World world, Item item, out bool fromO
                 if (!_isListLayout || _item == null)
                     return;
 
-                string name = GetDisplayName(_world, _item);
+                string name = _item.GetNormalizedName(_item.ItemData.IsStackable && _item.Amount > 1);
                 int widthChars = Math.Max(8, (Width - LIST_ICON_SIZE - 8) / 7);
                 _listLabel.Text = name.Truncate(Math.Min(LIST_NAME_MAX_CHARS, widthChars));
                 _listLabel.Y = Math.Max(0, (Height - _listLabel.Height) >> 1);
                 _listLabel.IsVisible = true;
-            }
-
-private static string GetDisplayName(World world, Item item)
-{
-    bool showAmount = item.ItemData.IsStackable && item.Amount > 1;
-
-    string name = ResolveItemBaseName(world, item, out bool fromOPL);
-
-    // OPL hit: return trimmed tooltip name directly (no further normalization).
-    if (fromOPL)
-        return name.Trim();
-
-    name = NormalizeFallbackDisplayName(name, item, showAmount);
-
-    if (string.IsNullOrWhiteSpace(name))
-    {
-        name = StringHelper.CapitalizeAllWords(
-            StringHelper.GetPluralAdjustedString(item.ItemData.Name, showAmount)
-        );
-    }
-
-    if (showAmount && !HasAmountPrefix(name, item.Amount))
-        return $"{item.Amount} {name}";
-
-    return name;
-}
-
-            private static string NormalizeFallbackDisplayName(string name, Item item, bool showAmount)
-            {
-                if (string.IsNullOrWhiteSpace(name))
-                    return name;
-
-                name = name.Trim();
-
-                if (showAmount)
-                    return StripAmountPrefix(name, item.Amount);
-
-                return item.ItemData.IsStackable ? name : StripLeadingNumberPrefix(name);
-            }
-
-            private static string StripAmountPrefix(string name, int amount)
-            {
-                if (string.IsNullOrWhiteSpace(name) || amount <= 1)
-                    return name;
-
-                string amountPrefix = $"{amount} ";
-                return HasAmountPrefix(name, amount) ? name[amountPrefix.Length..] : name;
-            }
-
-            private static bool HasAmountPrefix(string name, int amount)
-            {
-                if (string.IsNullOrWhiteSpace(name) || amount <= 1)
-                    return false;
-
-                return name.StartsWith($"{amount} ", StringComparison.Ordinal);
-            }
-
-            private static string StripLeadingNumberPrefix(string name)
-            {
-                int separatorIndex = name.IndexOf(' ');
-
-                if (separatorIndex <= 0 || separatorIndex >= name.Length - 1)
-                    return name;
-
-                for (int i = 0; i < separatorIndex; i++)
-                {
-                    if (!char.IsDigit(name[i]))
-                        return name;
-                }
-
-                return name[(separatorIndex + 1)..];
             }
 
             /// <summary>
@@ -2708,19 +2616,7 @@ private static string GetDisplayName(World world, Item item)
                 return contents;
             }
 
-            private static string GetItemName(Item item)
-            {
-                string name = ResolveItemBaseName(World.Instance, item, out bool fromOPL);
-
-                if (!fromOPL)
-                    return !string.IsNullOrEmpty(name) ? name : item.ItemData.Name;
-
-                // stack-size, including space
-                string itemAmountStr = $"{item.Amount.ToString(CultureInfo.InvariantCulture)} ";
-                return name.StartsWith(itemAmountStr, StringComparison.Ordinal)
-                    ? name[itemAmountStr.Length..] // Trim stack-size trailing space
-                    : name;
-            }
+            private static string GetItemName(Item item) => item.GetNormalizedName(false);
 
             private void SetupGridItemControls()
             {

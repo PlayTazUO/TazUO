@@ -41,8 +41,12 @@ namespace ClassicUO.Game.Managers
             EventSink.InvokeOPLOnReceive(null, new OPLEventArgs(serial, name, data));
 
             Item item = _world.Items.Get(serial);
-            if(item != null)
+            if (item != null)
+            {
+                item.OPLName = name;
+                item.OPLData = data;
                 ItemDatabaseManager.Instance.AddOrUpdateItem(item, _world);
+            }
         }
 
         public bool Contains(uint serial)
