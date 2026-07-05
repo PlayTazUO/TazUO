@@ -3302,6 +3302,22 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new ComboBoxWithLabel
                 (World,
+                    TazLang.Get("gridcontainer_defaultview", "Default container view"), 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[] { TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List") }, profile.GridContainerViewMode,
+                    (i, s) =>
+                    {
+                        profile.GridContainerViewMode = i;
+                        GridContainer.UpdateAllGridContainers();
+                    }
+                ), true, page
+            );
+
+            content.BlankLine();
+
+            content.AddToRight
+            (
+                new ComboBoxWithLabel
+                (World,
                     lang.GetTazUO.SearchStyle, 0, ThemeSettings.COMBO_BOX_WIDTH,
                     new string[] { lang.GetTazUO.OnlyShow, lang.GetTazUO.Highlight }, profile.GridContainerSearchMode,
                     (i, s) => { profile.GridContainerSearchMode = i; }

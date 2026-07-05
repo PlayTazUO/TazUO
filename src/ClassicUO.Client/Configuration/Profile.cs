@@ -517,6 +517,7 @@ namespace ClassicUO.Configuration
         #region GRID CONTAINER
         public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
+        public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
         public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 1;
         public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;
         public byte GridBorderAlpha { get; set => SetProperty(ref field, value); } = 75;
@@ -650,7 +651,6 @@ namespace ClassicUO.Configuration
         public int OptionsFontSize { get; set => SetProperty(ref field, value); } = 18;
 
         public int TextBorderSize { get; set => SetProperty(ref field, value); } = 1;
-
         public uint SavedMountSerial { get; set => SetProperty(ref field, value); } = 0;
 
         public uint SavedMainHandSerial { get; set => SetProperty(ref field, value); } = 0;

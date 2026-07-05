@@ -320,6 +320,8 @@ public class GridContainerEntry
 
     [JsonPropertyName("sm")] public int SortMode { get; set; }
 
+    [JsonPropertyName("vm")] public int ViewModeOverride { get; set; }
+
     [JsonPropertyName("m")] public bool IsMinimized { get; set; }
 
     [JsonPropertyName("ls")] public Dictionary<uint, GridContainerSlotEntry> Slots { get; set; } = new();
