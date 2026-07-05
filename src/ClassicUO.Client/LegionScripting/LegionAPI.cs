@@ -44,7 +44,7 @@ namespace ClassicUO.LegionScripting
         private uint _timedCallbackCurrentId;
         private readonly ConcurrentDictionary<uint, TimedCallback> _timedCallbacks = new();
 
-        private object _onStopCallback;
+        private volatile object _onStopCallback;
         private volatile bool _onStopScheduled;
         private volatile bool _onStopCompleted;
         private readonly ConcurrentDictionary<string, bool> _pressedKeys = new();
@@ -3321,7 +3321,7 @@ namespace ClassicUO.LegionScripting
         /// When set, stopping the script will be delayed until this callback has been
         /// processed, or until a maximum of 5 seconds have passed.
         ///
-        /// Callbacks only run while the script is calling <see cref="ProcessCallbacks"/>,
+        /// Callbacks only run while the script is calling `API.ProcessCallbacks`,
         /// so make sure your script keeps calling it (for example in its main loop) for
         /// the OnStop callback to actually run before the timeout elapses.
         ///
