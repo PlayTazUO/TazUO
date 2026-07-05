@@ -50,7 +50,7 @@ namespace ClassicUO.Renderer.Animations
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sbyte GetMountedHeightOffset(ushort graphic) =>
-            graphic < _dataIndex.Length ? _dataIndex[graphic]?.MountedHeightOffset ?? 0 : 0;
+            (sbyte)(graphic < _dataIndex.Length ? _dataIndex[graphic]?.MountedHeightOffset ?? 0 : 0);
 
         public bool PixelCheck(
             ushort animID,
