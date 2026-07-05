@@ -228,6 +228,8 @@ namespace ClassicUO.Game.GameObjects
             if (string.IsNullOrEmpty(name))
                 return string.Empty;
 
+            name = name.Trim();
+
             // OPL names (and some fallbacks) may already include a leading stack size,
             // e.g. "5 Gold Coins". Strip it so amount display is controlled consistently.
             string amountStr = $"{Amount.ToString(CultureInfo.InvariantCulture)} ";
