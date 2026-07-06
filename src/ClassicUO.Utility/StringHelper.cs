@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -216,48 +217,56 @@ namespace ClassicUO.Utility
             if (string.IsNullOrEmpty(str))
                 return str;
 
-            bool hasSurrogate = false;
+            ReadOnlySpan<char> span = str.AsSpan();
 
-            for (int i = 0; i < str.Length; i++)
-            {
-                if (char.IsSurrogate(str[i]))
-                {
-                    hasSurrogate = true;
+            //Fast path: vectorized scan for the first surrogate. If there are none, keep the original reference.
+            int firstSurrogate = span.IndexOfAnyInRange('\uD800', '\uDFFF');
 
-                    break;
-                }
-            }
-
-            if (!hasSurrogate) //Fast path: nothing to sanitize, keep the original reference
+            if (firstSurrogate < 0)
                 return str;
 
-            var sb = new ValueStringBuilder(str.Length);
+            //Output can never be longer than the input. Stackalloc for small strings, rent for larger ones.
+            char[] rented = null;
+            Span<char> destination = str.Length <= 512
+                ? stackalloc char[512]
+                : (rented = ArrayPool<char>.Shared.Rent(str.Length));
 
-            for (int i = 0; i < str.Length; i++)
+            try
             {
-                char c = str[i];
+                //Bulk copy the clean prefix up to the first surrogate, then process the remainder char by char.
+                span.Slice(0, firstSurrogate).CopyTo(destination);
+                int d = firstSurrogate;
 
-                if (char.IsHighSurrogate(c))
+                for (int i = firstSurrogate; i < span.Length; i++)
                 {
-                    if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                    char c = span[i];
+
+                    if (char.IsHighSurrogate(c))
                     {
-                        sb.Append(c);
-                        sb.Append(str[i + 1]);
-                        i++;
+                        if (i + 1 < span.Length && char.IsLowSurrogate(span[i + 1]))
+                        {
+                            destination[d++] = c;
+                            destination[d++] = span[i + 1];
+                            i++;
+                        }
+                        //else: unpaired high surrogate -> drop it
                     }
-                    //else: unpaired high surrogate -> drop it
+                    else if (!char.IsLowSurrogate(c)) //Drop unpaired low surrogates, keep everything else
+                    {
+                        destination[d++] = c;
+                    }
                 }
-                else if (!char.IsLowSurrogate(c)) //Drop unpaired low surrogates, keep everything else
-                {
-                    sb.Append(c);
-                }
+
+                if (d == str.Length) //Every surrogate was part of a valid pair; nothing removed
+                    return str;
+
+                return new string(destination.Slice(0, d));
             }
-
-            string result = sb.ToString();
-
-            sb.Dispose();
-
-            return result;
+            finally
+            {
+                if (rented != null)
+                    ArrayPool<char>.Shared.Return(rented);
+            }
         }
 
         public static void AddSpaceBeforeCapital(string[] str, bool checkAcronyms = true)
