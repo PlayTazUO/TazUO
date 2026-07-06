@@ -35,6 +35,25 @@ namespace ClassicUO
                            "This can sometimes occur if your operating system shuts down your graphics adapter to preserve power.";
                 }
 
+                if (exception is ArgumentOutOfRangeException fetchDisplayAdapterException &&
+                    fetchDisplayAdapterException.StackTrace?.Contains("SDL3_FNAPlatform.FetchDisplayAdapter") == true)
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("TazUO crashed while trying to identify the display it is running on.");
+                    sb.AppendLine("This usually happens when the connected monitors change while the game is running - for example a monitor is unplugged, turned off, put to sleep, or switched to a different input.");
+                    sb.AppendLine("It can also occur when using a docking station, a KVM switch, or a laptop lid that was closed/opened.");
+                    sb.AppendLine();
+                    sb.AppendLine("This is a low-level issue in how the operating system reports displays and is not something TazUO can prevent.");
+                    sb.AppendLine();
+                    sb.AppendLine("Suggested fixes:");
+                    sb.AppendLine("1. Make sure your monitor(s) stay powered on and connected while TazUO is running.");
+                    sb.AppendLine("2. Avoid unplugging monitors, closing your laptop lid, or switching monitor inputs while the game is open.");
+                    sb.AppendLine("3. If you use a docking station or KVM switch, try connecting your monitor directly to test.");
+                    sb.AppendLine("4. Update your graphics card drivers to the latest version.");
+                    sb.AppendLine("5. Simply restart TazUO - it should start normally once your displays are stable.");
+                    return sb.ToString();
+                }
+
                 if (Client.IsShaderCompileFailure(exception))
                 {
                     return Client.GraphicsShaderHelpMessage;
