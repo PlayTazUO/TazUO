@@ -107,6 +107,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed context menu submenus being unreachable when they open to the left (or upward) near the screen edge, where moving the mouse onto them closed the whole menu - [P.R 642](https://github.com/PlayTazUO/TazUO/pull/642) ([bittiez](https://github.com/bittiez))
 * Fixed nested context menu submenus extending past the bottom of the window; the overflow guard now clamps against absolute screen coordinates and the live logical window height so it stays correct at any nesting depth and honors both context menu and game scaling - [P.R 646](https://github.com/PlayTazUO/TazUO/pull/646) ([bittiez](https://github.com/bittiez))
 * Fixed OverflowException crash in MultiMapLoader when a DisplayMap packet supplies out-of-range or inverted map bounds; the pixel buffer allocation is now validated to guard against negative or overflowing dimensions - [P.R 658](https://github.com/PlayTazUO/TazUO/pull/658) ([bittiez](https://github.com/bittiez))
+* Fixed client crash (IndexOutOfRangeException) from unpaired UTF-16 surrogates in journal/text; malformed text (e.g. a truncated emoji from the server) is now sanitized before measuring instead of crashing - [P.R 659](https://github.com/PlayTazUO/TazUO/pull/659) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
