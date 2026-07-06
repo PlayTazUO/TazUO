@@ -72,6 +72,28 @@ namespace ClassicUO.Configuration
             // Argument 2: default value (typed constant, boxed)
             object defaultRaw = attr.ConstructorArguments[2].Value;
 
+            string containingNamespace = containingType.ContainingNamespace?.ToDisplayString() ?? "ClassicUO.Configuration";
+            string jsonKey = ToSnakeCase(prop.Name);
+
+            bool isEnum = prop.Type.TypeKind == TypeKind.Enum;
+
+            if (isEnum)
+            {
+                string enumTypeName = prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                return new SqlSettingModel
+                {
+                    PropertyName = prop.Name,
+                    TypeName = enumTypeName,
+                    ScopeOrdinal = scopeOrdinal,
+                    Key = key,
+                    JsonKey = jsonKey,
+                    DefaultValueLiteral = BuildEnumDefaultLiteral(enumTypeName, defaultRaw),
+                    ContainingNamespace = containingNamespace,
+                    IsEnum = true,
+                    IsUnsupportedType = false
+                };
+            }
+
             string typeName = prop.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             string fullTypeName = prop.Type.SpecialType != SpecialType.None
                 ? GetPrimitiveTypeName(prop.Type.SpecialType)
@@ -85,8 +107,9 @@ namespace ClassicUO.Configuration
                     TypeName = fullTypeName,
                     ScopeOrdinal = scopeOrdinal,
                     Key = key,
+                    JsonKey = jsonKey,
                     DefaultValueLiteral = "default",
-                    ContainingNamespace = containingType.ContainingNamespace?.ToDisplayString() ?? "ClassicUO.Configuration",
+                    ContainingNamespace = containingNamespace,
                     IsUnsupportedType = true
                 };
             }
@@ -99,10 +122,26 @@ namespace ClassicUO.Configuration
                 TypeName = fullTypeName,
                 ScopeOrdinal = scopeOrdinal,
                 Key = key,
+                JsonKey = jsonKey,
                 DefaultValueLiteral = defaultLiteral,
-                ContainingNamespace = containingType.ContainingNamespace?.ToDisplayString() ?? "ClassicUO.Configuration",
+                ContainingNamespace = containingNamespace,
                 IsUnsupportedType = false
             };
+        }
+
+        // Reproduces ClassicUO.Configuration.ProfileJsonContext.SnakeCaseNamingPolicy exactly so the JSON
+        // import reads the same keys the old profile.json was written with.
+        private static string ToSnakeCase(string name)
+        {
+            var sb = new StringBuilder(name.Length + 8);
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (i > 0 && char.IsUpper(c))
+                    sb.Append('_');
+                sb.Append(c);
+            }
+            return sb.ToString().ToLowerInvariant();
         }
 
         private static string GetPrimitiveTypeName(SpecialType st)
@@ -110,10 +149,14 @@ namespace ClassicUO.Configuration
             switch (st)
             {
                 case SpecialType.System_Boolean: return "bool";
-                case SpecialType.System_Int32:   return "int";
-                case SpecialType.System_UInt32:  return "uint";
+                case SpecialType.System_Byte:    return "byte";
+                case SpecialType.System_SByte:   return "sbyte";
                 case SpecialType.System_Int16:   return "short";
                 case SpecialType.System_UInt16:  return "ushort";
+                case SpecialType.System_Int32:   return "int";
+                case SpecialType.System_UInt32:  return "uint";
+                case SpecialType.System_Int64:   return "long";
+                case SpecialType.System_UInt64:  return "ulong";
                 case SpecialType.System_Single:  return "float";
                 case SpecialType.System_Double:  return "double";
                 case SpecialType.System_String:  return "string";
@@ -127,10 +170,14 @@ namespace ClassicUO.Configuration
             switch (typeName)
             {
                 case "bool":
-                case "int":
-                case "uint":
+                case "byte":
+                case "sbyte":
                 case "short":
                 case "ushort":
+                case "int":
+                case "uint":
+                case "long":
+                case "ulong":
                 case "float":
                 case "double":
                 case "string":
@@ -148,14 +195,29 @@ namespace ClassicUO.Configuration
                 return GetTypeDefault(typeName);
             }
 
+            // Attribute constants may be boxed as a different primitive than the property type
+            // (e.g. an int literal for a ushort property, or a float literal for a double property),
+            // so convert explicitly rather than unboxing to a fixed type.
             switch (typeName)
             {
-                case "bool":   return (bool)value ? "true" : "false";
-                case "float":  return ((float)(double)value).ToString("R") + "f";
-                case "double": return ((double)value).ToString("R") + "d";
+                case "bool":   return System.Convert.ToBoolean(value) ? "true" : "false";
+                case "float":  return ((float)System.Convert.ToDouble(value)).ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "f";
+                case "double": return System.Convert.ToDouble(value).ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "d";
+                case "uint":   return System.Convert.ToUInt32(value) + "u";
+                case "long":   return System.Convert.ToInt64(value) + "L";
+                case "ulong":  return System.Convert.ToUInt64(value) + "UL";
                 case "string": return "\"" + value.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
-                default:       return value.ToString();
+                default:       return System.Convert.ToInt64(value).ToString(System.Globalization.CultureInfo.InvariantCulture);
             }
+        }
+
+        private static string BuildEnumDefaultLiteral(string enumTypeName, object value)
+        {
+            if (value == null)
+                return $"default({enumTypeName})";
+
+            // Attribute stores the enum's underlying constant (boxed). Cast it back to the enum type.
+            return $"({enumTypeName}){System.Convert.ToInt64(value)}";
         }
 
         private static string GetTypeDefault(string typeName)
@@ -164,6 +226,11 @@ namespace ClassicUO.Configuration
             {
                 case "bool":   return "false";
                 case "string": return "null";
+                case "float":  return "0f";
+                case "double": return "0d";
+                case "uint":   return "0u";
+                case "long":   return "0L";
+                case "ulong":  return "0UL";
                 default:       return "0";
             }
         }
@@ -181,29 +248,44 @@ namespace ClassicUO.Configuration
             }
         }
 
-        private static string TryParseExpr(string typeName, string varName, string rawVar)
+        // Returns a boolean expression that parses rawVar into outVar (declared inline), or null when the
+        // value needs no parsing (string) and can be assigned directly.
+        private static string ParseCondition(SqlSettingModel m, string rawVar, string outVar)
         {
-            switch (typeName)
+            if (m.IsEnum)
+                return $"System.Enum.TryParse<{m.TypeName}>({rawVar}, out var {outVar})";
+
+            switch (m.TypeName)
             {
-                case "bool":   return $"bool.TryParse({rawVar}, out bool {varName})";
-                case "int":    return $"int.TryParse({rawVar}, out int {varName})";
-                case "uint":   return $"uint.TryParse({rawVar}, out uint {varName})";
-                case "short":  return $"short.TryParse({rawVar}, out short {varName})";
-                case "ushort": return $"ushort.TryParse({rawVar}, out ushort {varName})";
-                case "float":  return $"float.TryParse({rawVar}, out float {varName})";
-                case "double": return $"double.TryParse({rawVar}, out double {varName})";
+                case "bool":   return $"bool.TryParse({rawVar}, out bool {outVar})";
+                case "byte":   return $"byte.TryParse({rawVar}, out byte {outVar})";
+                case "sbyte":  return $"sbyte.TryParse({rawVar}, out sbyte {outVar})";
+                case "short":  return $"short.TryParse({rawVar}, out short {outVar})";
+                case "ushort": return $"ushort.TryParse({rawVar}, out ushort {outVar})";
+                case "int":    return $"int.TryParse({rawVar}, out int {outVar})";
+                case "uint":   return $"uint.TryParse({rawVar}, out uint {outVar})";
+                case "long":   return $"long.TryParse({rawVar}, out long {outVar})";
+                case "ulong":  return $"ulong.TryParse({rawVar}, out ulong {outVar})";
+                case "float":  return $"float.TryParse({rawVar}, out float {outVar})";
+                case "double": return $"double.TryParse({rawVar}, out double {outVar})";
                 case "string": return null; // no TryParse needed
                 default:       return null;
             }
         }
 
-        private static bool IsNonDefaultValue(string typeName, string literal)
+        private static bool IsNonDefaultValue(SqlSettingModel m)
         {
-            switch (typeName)
+            string literal = m.DefaultValueLiteral;
+
+            if (m.IsEnum)
+                return literal != $"({m.TypeName})0" && !literal.StartsWith("default(");
+
+            switch (m.TypeName)
             {
                 case "bool":   return literal == "true";
                 case "string": return literal != "null" && literal != "\"\"";
-                default:       return literal != "0" && literal != "0f" && literal != "0d";
+                default:       return literal != "0" && literal != "0f" && literal != "0d"
+                                   && literal != "0u" && literal != "0L" && literal != "0UL";
             }
         }
 
@@ -253,6 +335,7 @@ namespace ClassicUO.Configuration
             sb.AppendLine("// <auto-generated/>");
             sb.AppendLine("#nullable disable");
             sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using System.Text.Json;");
             sb.AppendLine("using System.Text.Json.Serialization;");
             sb.AppendLine("using ClassicUO.Game;");
             sb.AppendLine("using ClassicUO.Game.Managers;");
@@ -271,15 +354,15 @@ namespace ClassicUO.Configuration
                 sb.AppendLine("            get;");
                 sb.AppendLine("            set");
                 sb.AppendLine("            {");
-                sb.AppendLine("                if (field != value)");
+                sb.AppendLine("                if (!EqualityComparer<" + m.TypeName + ">.Default.Equals(field, value))");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    _ = Client.Settings.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
+                sb.AppendLine($"                    _ = Client.Settings?.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
                 sb.AppendLine("                    field = value;");
                 sb.AppendLine("                    OnPropertyChanged();");
                 sb.AppendLine("                }");
                 sb.AppendLine("            }");
 
-                if (IsNonDefaultValue(m.TypeName, m.DefaultValueLiteral))
+                if (IsNonDefaultValue(m))
                     sb.AppendLine($"        }} = {m.DefaultValueLiteral};");
                 else
                     sb.AppendLine("        }");
@@ -290,8 +373,8 @@ namespace ClassicUO.Configuration
             // Group by scope ordinal
             var byScope = valid.GroupBy(m => m.ScopeOrdinal).ToDictionary(g => g.Key, g => g.ToList());
 
-            // Global / Account / Server: bulk dict load
-            foreach (int scopeOrdinal in new[] { 3, 1, 2 }) // Global, Account, Server
+            // Bulk dict loaders for every scope (Global, Account, Server, Char).
+            foreach (int scopeOrdinal in new[] { 3, 1, 2, 0 })
             {
                 if (!byScope.TryGetValue(scopeOrdinal, out List<SqlSettingModel> group))
                     continue;
@@ -303,41 +386,54 @@ namespace ClassicUO.Configuration
                 foreach (SqlSettingModel m in group)
                 {
                     string rawVar = $"_raw_{m.PropertyName}";
-                    string tryParse = TryParseExpr(m.TypeName, $"_v_{m.PropertyName}", rawVar);
-                    if (tryParse == null)
-                    {
-                        // string: direct assign
-                        sb.AppendLine($"            if (kvp.TryGetValue(\"{m.Key}\", out string {rawVar}))");
-                        sb.AppendLine($"                {m.PropertyName} = {rawVar};");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"            if (kvp.TryGetValue(\"{m.Key}\", out string {rawVar}) && {tryParse})");
-                        sb.AppendLine($"                {m.PropertyName} = _v_{m.PropertyName};");
-                    }
+                    sb.AppendLine($"            if (kvp.TryGetValue(\"{m.Key}\", out string {rawVar}))");
+                    EmitAssignFromRaw(sb, m, rawVar, "                ");
                 }
 
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
 
-            // Char: individual async loads
-            if (byScope.TryGetValue(0, out List<SqlSettingModel> charGroup))
+            // One-time import from the legacy profile.json document into SQLite. Assigning through each
+            // setter persists the value via Client.Settings.SetAsync.
+            sb.AppendLine("        internal void MigrateJsonToSql(JsonDocument doc)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (doc == null) return;");
+            sb.AppendLine("            JsonElement root = doc.RootElement;");
+            sb.AppendLine("            if (root.ValueKind != JsonValueKind.Object) return;");
+            foreach (SqlSettingModel m in valid)
             {
-                sb.AppendLine("        internal void LoadGeneratedCharSqlSettings()");
-                sb.AppendLine("        {");
-                foreach (SqlSettingModel m in charGroup)
-                {
-                    sb.AppendLine($"            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Char, \"{m.Key}\", {m.DefaultValueLiteral}, _v => {{ {m.PropertyName} = _v; }});");
-                }
-                sb.AppendLine("        }");
-                sb.AppendLine();
+                string elemVar = $"_e_{m.PropertyName}";
+                string rawVar = $"_raw_{m.PropertyName}";
+                sb.AppendLine($"            if (root.TryGetProperty(\"{m.JsonKey}\", out JsonElement {elemVar}) && {elemVar}.ValueKind != JsonValueKind.Null)");
+                sb.AppendLine("            {");
+                sb.AppendLine($"                string {rawVar} = {elemVar}.ValueKind == JsonValueKind.String ? {elemVar}.GetString() : {elemVar}.GetRawText();");
+                EmitAssignFromRaw(sb, m, rawVar, "                ");
+                sb.AppendLine("            }");
             }
+            sb.AppendLine("        }");
+            sb.AppendLine();
 
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
             spc.AddSource("Profile.SqlSettings.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
+        }
+
+        // Emits a single statement that assigns rawVar into the property (with parsing as needed).
+        private static void EmitAssignFromRaw(StringBuilder sb, SqlSettingModel m, string rawVar, string indent)
+        {
+            string outVar = $"_v_{m.PropertyName}";
+            string cond = ParseCondition(m, rawVar, outVar);
+            if (cond == null)
+            {
+                // string: direct assign
+                sb.AppendLine($"{indent}{m.PropertyName} = {rawVar};");
+            }
+            else
+            {
+                sb.AppendLine($"{indent}if ({cond}) {m.PropertyName} = {outVar};");
+            }
         }
     }
 
@@ -347,8 +443,10 @@ namespace ClassicUO.Configuration
         public string TypeName { get; set; }
         public int ScopeOrdinal { get; set; }
         public string Key { get; set; }
+        public string JsonKey { get; set; }
         public string DefaultValueLiteral { get; set; }
         public string ContainingNamespace { get; set; }
+        public bool IsEnum { get; set; }
         public bool IsUnsupportedType { get; set; }
     }
 }

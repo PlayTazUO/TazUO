@@ -43,6 +43,39 @@ namespace ClassicUO.Configuration
             }
         }
 
+        /// <summary>
+        /// Loads a configuration file as a raw <see cref="JsonDocument"/>, applying the same stray-backslash
+        /// fixup used by <see cref="Load{T}"/>. Used by the one-time profile.json -> SQLite migration.
+        /// Returns null when the file does not exist or cannot be parsed.
+        /// </summary>
+        public static JsonDocument LoadDocument(string file)
+        {
+            if (!File.Exists(file))
+                return null;
+
+            try
+            {
+                string text = File.ReadAllText(file);
+
+                text = Regex.Replace
+                (
+                    text,
+                    @"(?<!\\)  # lookbehind: Check that previous character isn't a \
+                                                    \\         # match a \
+                                                    (?!\\)     # lookahead: Check that the following character isn't a \",
+                    @"\\",
+                    RegexOptions.IgnorePatternWhitespace
+                );
+
+                return JsonDocument.Parse(text);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to load configuration document '{file}' - {e}");
+                return null;
+            }
+        }
+
         public static void Save<T>(T obj, string file, JsonTypeInfo<T> ctx) where T : class
         {
             // this try catch is necessary when multiples cuo instances points to this file.

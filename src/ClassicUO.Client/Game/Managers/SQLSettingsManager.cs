@@ -146,11 +146,11 @@ namespace ClassicUO.Game.Managers
                 if (type == typeof(bool))
                     return (T)(object)bool.Parse(value);
 
-                if (type == typeof(int))
-                    return (T)(object)int.Parse(value);
+                if (type == typeof(byte))
+                    return (T)(object)byte.Parse(value);
 
-                if (type == typeof(uint))
-                    return (T)(object)uint.Parse(value);
+                if (type == typeof(sbyte))
+                    return (T)(object)sbyte.Parse(value);
 
                 if (type == typeof(short))
                     return (T)(object)short.Parse(value);
@@ -158,11 +158,26 @@ namespace ClassicUO.Game.Managers
                 if (type == typeof(ushort))
                     return (T)(object)ushort.Parse(value);
 
+                if (type == typeof(int))
+                    return (T)(object)int.Parse(value);
+
+                if (type == typeof(uint))
+                    return (T)(object)uint.Parse(value);
+
+                if (type == typeof(long))
+                    return (T)(object)long.Parse(value);
+
+                if (type == typeof(ulong))
+                    return (T)(object)ulong.Parse(value);
+
                 if (type == typeof(float))
                     return (T)(object)float.Parse(value);
 
                 if (type == typeof(double))
                     return (T)(object)double.Parse(value);
+
+                if (type.IsEnum)
+                    return (T)Enum.Parse(type, value, ignoreCase: true);
 
                 return defaultValue;
             }

@@ -127,113 +127,307 @@ namespace ClassicUO.Configuration
         [JsonIgnore] public string CharacterName { get; set => SetProperty(ref field, value); }
 
         // voice recognition
-        public bool VoiceRecognitionEnabled { get; set => SetProperty(ref field, value); } = false;
-        public string VoiceModelPath { get; set => SetProperty(ref field, value); } = string.Empty;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "voice_recognition_enabled", false)]
+        public partial bool VoiceRecognitionEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "voice_model_path", "")]
+        public partial string VoiceModelPath { get; set; }
 
         // sounds
-        public bool EnableSound { get; set => SetProperty(ref field, value); } = true;
-        public int SoundVolume { get; set => SetProperty(ref field, value); } = 50;
-        public bool EnableMusic { get; set => SetProperty(ref field, value); } = true;
-        public int MusicVolume { get; set => SetProperty(ref field, value); } = 50;
-        public bool EnableFootstepsSound { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableRainSound { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableCombatMusic { get; set => SetProperty(ref field, value); } = true;
-        public bool ReproduceSoundsInBackground { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_sound", true)]
+        public partial bool EnableSound { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sound_volume", 50)]
+        public partial int SoundVolume { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_music", true)]
+        public partial bool EnableMusic { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "music_volume", 50)]
+        public partial int MusicVolume { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_footsteps_sound", true)]
+        public partial bool EnableFootstepsSound { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_rain_sound", true)]
+        public partial bool EnableRainSound { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_combat_music", true)]
+        public partial bool EnableCombatMusic { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "reproduce_sounds_in_background", false)]
+        public partial bool ReproduceSoundsInBackground { get; set; }
 
         // fonts and speech
-        public byte ChatFont { get; set => SetProperty(ref field, value); } = 1;
-        public int SpeechDelay { get; set => SetProperty(ref field, value); } = 100;
-        public bool ScaleSpeechDelay { get; set => SetProperty(ref field, value); } = true;
-        public bool SaveJournalToFile { get; set => SetProperty(ref field, value); } = false;
-        public bool ForceUnicodeJournal { get; set => SetProperty(ref field, value); }
-        public bool IgnoreAllianceMessages { get; set => SetProperty(ref field, value); }
-        public bool IgnoreGuildMessages { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "chat_font", 1)]
+        public partial byte ChatFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "speech_delay", 100)]
+        public partial int SpeechDelay { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "scale_speech_delay", true)]
+        public partial bool ScaleSpeechDelay { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "save_journal_to_file", false)]
+        public partial bool SaveJournalToFile { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "force_unicode_journal", false)]
+        public partial bool ForceUnicodeJournal { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "ignore_alliance_messages", false)]
+        public partial bool IgnoreAllianceMessages { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "ignore_guild_messages", false)]
+        public partial bool IgnoreGuildMessages { get; set; }
 
         // hues
-        public ushort SpeechHue { get; set => SetProperty(ref field, value); } = 0x02B2;
-        public ushort WhisperHue { get; set => SetProperty(ref field, value); } = 0x0033;
-        public ushort EmoteHue { get; set => SetProperty(ref field, value); } = 0x0021;
-        public ushort YellHue { get; set => SetProperty(ref field, value); } = 0x0021;
-        public ushort PartyMessageHue { get; set => SetProperty(ref field, value); } = 0x0044;
-        public ushort GuildMessageHue { get; set => SetProperty(ref field, value); } = 0x0044;
-        public ushort AllyMessageHue { get; set => SetProperty(ref field, value); } = 0x0057;
-        public ushort ChatMessageHue { get; set => SetProperty(ref field, value); } = 0x0256;
-        public ushort InnocentHue { get; set => SetProperty(ref field, value); } = 0x005A;
-        public ushort PartyAuraHue { get; set => SetProperty(ref field, value); } = 0x0044;
-        public ushort FriendHue { get; set => SetProperty(ref field, value); } = 0x0044;
-        public ushort CriminalHue { get; set => SetProperty(ref field, value); } = 0x03B2;
-        public ushort CanAttackHue { get; set => SetProperty(ref field, value); } = 0x03B2;
-        public ushort EnemyHue { get; set => SetProperty(ref field, value); } = 0x0031;
-        public ushort MurdererHue { get; set => SetProperty(ref field, value); } = 0x0023;
-        public ushort BeneficHue { get; set => SetProperty(ref field, value); } = 0x0059;
-        public ushort HarmfulHue { get; set => SetProperty(ref field, value); } = 0x0020;
-        public ushort NeutralHue { get; set => SetProperty(ref field, value); } = 0x03B1;
-        public bool EnabledSpellHue { get; set => SetProperty(ref field, value); }
-        public bool EnabledSpellFormat { get; set => SetProperty(ref field, value); } = true;
-        public string SpellDisplayFormat { get; set => SetProperty(ref field, value); } = "{power} [{spell}]";
-        public ushort PoisonHue { get; set => SetProperty(ref field, value); } = 0x0044;
-        public ushort ParalyzedHue { get; set => SetProperty(ref field, value); } = 0x014C;
-        public ushort InvulnerableHue { get; set => SetProperty(ref field, value); } = 0x0030;
-        public ushort AltJournalBackgroundHue { get; set => SetProperty(ref field, value); } = 0x0000;
-        public ushort AltGridContainerBackgroundHue { get; set => SetProperty(ref field, value); } = 0x0000;
-        public bool OverridePartyAndGuildHue { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "speech_hue", 0x02B2)]
+        public partial ushort SpeechHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "whisper_hue", 0x0033)]
+        public partial ushort WhisperHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "emote_hue", 0x0021)]
+        public partial ushort EmoteHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "yell_hue", 0x0021)]
+        public partial ushort YellHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "party_message_hue", 0x0044)]
+        public partial ushort PartyMessageHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "guild_message_hue", 0x0044)]
+        public partial ushort GuildMessageHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "ally_message_hue", 0x0057)]
+        public partial ushort AllyMessageHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "chat_message_hue", 0x0256)]
+        public partial ushort ChatMessageHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "innocent_hue", 0x005A)]
+        public partial ushort InnocentHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "party_aura_hue", 0x0044)]
+        public partial ushort PartyAuraHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "friend_hue", 0x0044)]
+        public partial ushort FriendHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "criminal_hue", 0x03B2)]
+        public partial ushort CriminalHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "can_attack_hue", 0x03B2)]
+        public partial ushort CanAttackHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enemy_hue", 0x0031)]
+        public partial ushort EnemyHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "murderer_hue", 0x0023)]
+        public partial ushort MurdererHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "benefic_hue", 0x0059)]
+        public partial ushort BeneficHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "harmful_hue", 0x0020)]
+        public partial ushort HarmfulHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "neutral_hue", 0x03B1)]
+        public partial ushort NeutralHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enabled_spell_hue", false)]
+        public partial bool EnabledSpellHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enabled_spell_format", true)]
+        public partial bool EnabledSpellFormat { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "spell_display_format", "{power} [{spell}]")]
+        public partial string SpellDisplayFormat { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "poison_hue", 0x0044)]
+        public partial ushort PoisonHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "paralyzed_hue", 0x014C)]
+        public partial ushort ParalyzedHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "invulnerable_hue", 0x0030)]
+        public partial ushort InvulnerableHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "alt_journal_background_hue", 0x0000)]
+        public partial ushort AltJournalBackgroundHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "alt_grid_container_background_hue", 0x0000)]
+        public partial ushort AltGridContainerBackgroundHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "override_party_and_guild_hue", false)]
+        public partial bool OverridePartyAndGuildHue { get; set; }
 
         // visual
-        public bool EnabledCriminalActionQuery { get; set => SetProperty(ref field, value); } = true;
-        public bool EnabledBeneficialCriminalActionQuery { get; set => SetProperty(ref field, value); }
-        public bool UseOldStatusGump { get; set => SetProperty(ref field, value); }
-        public bool StatusGumpBarMutuallyExclusive { get; set => SetProperty(ref field, value); } = true;
-        public int BackpackStyle { get; set => SetProperty(ref field, value); }
-        public bool HighlightGameObjects { get; set => SetProperty(ref field, value); }
-        public bool HighlightMobilesByParalize { get; set => SetProperty(ref field, value); } = true;
-        public bool HighlightMobilesByPoisoned { get; set => SetProperty(ref field, value); } = true;
-        public bool HighlightMobilesByInvul { get; set => SetProperty(ref field, value); } = true;
-        public bool ShowMobilesHP { get; set => SetProperty(ref field, value); }
-        public bool ShowTargetIndicator { get; set => SetProperty(ref field, value); }
-        public bool AutoAvoidObstacules { get; set => SetProperty(ref field, value); } = true;
-        public int MobileHPType { get; set => SetProperty(ref field, value); }     // 0 = %, 1 = line, 2 = both
-        public int MobileHPShowWhen { get; set => SetProperty(ref field, value); } // 0 = Always, 1 - <100%
-        public bool DrawRoofs { get; set => SetProperty(ref field, value); } = true;
-        public bool TreeToStumps { get; set => SetProperty(ref field, value); }
-        public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
-        public bool HideVegetation { get; set => SetProperty(ref field, value); }
-        public bool DisableGargoyleFlyingAnimation { get; set => SetProperty(ref field, value); }
-        public int FieldsType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = static, 2 = tile
-        public bool NoColorObjectsOutOfRange { get; set => SetProperty(ref field, value); }
-        public bool UseCircleOfTransparency { get; set => SetProperty(ref field, value); }
-        public int CircleOfTransparencyRadius { get; set => SetProperty(ref field, value); } = Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2;
-        public int CircleOfTransparencyType { get; set => SetProperty(ref field, value); } // 0 = normal, 1 = like original client
-        public int VendorGumpHeight { get; set => SetProperty(ref field, value); } = 350;   //original vendor gump size
-        public float DefaultScale { get; set => SetProperty(ref field, value); } = 1.0f;
-        public bool EnableMousewheelScaleZoom { get; set => SetProperty(ref field, value); } = true;
-        public bool RestoreScaleAfterUnpressCtrl { get; set => SetProperty(ref field, value); }
-        public bool BandageSelfOld { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enabled_criminal_action_query", true)]
+        public partial bool EnabledCriminalActionQuery { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enabled_beneficial_criminal_action_query", false)]
+        public partial bool EnabledBeneficialCriminalActionQuery { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_old_status_gump", false)]
+        public partial bool UseOldStatusGump { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "status_gump_bar_mutually_exclusive", true)]
+        public partial bool StatusGumpBarMutuallyExclusive { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "backpack_style", 0)]
+        public partial int BackpackStyle { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "highlight_game_objects", false)]
+        public partial bool HighlightGameObjects { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "highlight_mobiles_by_paralize", true)]
+        public partial bool HighlightMobilesByParalize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "highlight_mobiles_by_poisoned", true)]
+        public partial bool HighlightMobilesByPoisoned { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "highlight_mobiles_by_invul", true)]
+        public partial bool HighlightMobilesByInvul { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_mobiles_h_p", false)]
+        public partial bool ShowMobilesHP { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_target_indicator", false)]
+        public partial bool ShowTargetIndicator { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_avoid_obstacules", true)]
+        public partial bool AutoAvoidObstacules { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "mobile_h_p_type", 0)]
+        public partial int MobileHPType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "mobile_h_p_show_when", 0)]
+        public partial int MobileHPShowWhen { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "draw_roofs", true)]
+        public partial bool DrawRoofs { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tree_to_stumps", false)]
+        public partial bool TreeToStumps { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_cave_border", false)]
+        public partial bool EnableCaveBorder { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_vegetation", false)]
+        public partial bool HideVegetation { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_gargoyle_flying_animation", false)]
+        public partial bool DisableGargoyleFlyingAnimation { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "fields_type", 0)]
+        public partial int FieldsType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "no_color_objects_out_of_range", false)]
+        public partial bool NoColorObjectsOutOfRange { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_circle_of_transparency", false)]
+        public partial bool UseCircleOfTransparency { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "circle_of_transparency_radius", Constants.MAX_CIRCLE_OF_TRANSPARENCY_RADIUS / 2)]
+        public partial int CircleOfTransparencyRadius { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "circle_of_transparency_type", 0)]
+        public partial int CircleOfTransparencyType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "vendor_gump_height", 350)]
+        public partial int VendorGumpHeight { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "default_scale", 1.0f)]
+        public partial float DefaultScale { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_mousewheel_scale_zoom", true)]
+        public partial bool EnableMousewheelScaleZoom { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "restore_scale_after_unpress_ctrl", false)]
+        public partial bool RestoreScaleAfterUnpressCtrl { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_self_old", true)]
+        public partial bool BandageSelfOld { get; set; }
 
         // Bandage Agent Settings
-        public bool EnableBandageAgent { get; set => SetProperty(ref field, value); } = false;
-        public int BandageAgentDelay { get; set => SetProperty(ref field, value); } = 3000;
-        public bool BandageAgentCheckForBuff { get; set => SetProperty(ref field, value); } = false;
-        public ushort BandageAgentGraphic { get; set => SetProperty(ref field, value); } = 0x0E21;
-        public bool BandageAgentUseNewPacket { get; set => SetProperty(ref field, value); } = true;
-        public bool BandageAgentCheckHidden { get; set => SetProperty(ref field, value); } = true;
-        public bool BandageAgentCheckPoisoned { get; set => SetProperty(ref field, value); } = true;
-        public int BandageAgentHPPercentage { get; set => SetProperty(ref field, value); } = 80;
-        public bool BandageAgentCheckInvul { get; set => SetProperty(ref field, value); } = true;
-        public bool BandageAgentBandageFriends { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentBandageAllies { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentBandagePets { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentUseDexFormula { get; set => SetProperty(ref field, value); } = false;
-        public bool BandageAgentDisableSelfHeal { get; set => SetProperty(ref field, value); } = false;
-        public bool SelfHeal_Enabled { get; set => SetProperty(ref field, value); } = false;
-        public bool SelfHeal_UseChivalry { get; set => SetProperty(ref field, value); } = false; // false = Magery (Heal/Cure), true = Chivalry (Close Wounds/Cleanse by Fire)
-        public int SelfHeal_FC { get; set => SetProperty(ref field, value); } = 2;   // Faster Casting (used to auto-compute timings)
-        public int SelfHeal_FCR { get; set => SetProperty(ref field, value); } = 6;  // Faster Cast Recovery (used to auto-compute timings)
-        public int SelfHeal_Key { get; set => SetProperty(ref field, value); } = 0;   // (int)SDL.SDL_Keycode, 0 = unbound
-        public int SelfHeal_Mod { get; set => SetProperty(ref field, value); } = 0;   // (int)SDL.SDL_Keymod
-        public int SelfHeal_RecastDelayMs { get; set => SetProperty(ref field, value); } = 50;  // pad after a successful heal before the next cast
-        public int SelfHeal_CastStartGraceMs { get; set => SetProperty(ref field, value); } = 800; // max wait for a cast to register / produce a cursor
-        public int SelfHeal_CureVerifyMs { get; set => SetProperty(ref field, value); } = 600; // wait for poison to clear before recasting Cure
-        public int SelfHeal_InterruptRetryMs { get; set => SetProperty(ref field, value); } = 100; // delay before recasting after an interrupted cast
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_bandage_agent", false)]
+        public partial bool EnableBandageAgent { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_delay", 3000)]
+        public partial int BandageAgentDelay { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_check_for_buff", false)]
+        public partial bool BandageAgentCheckForBuff { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_graphic", 0x0E21)]
+        public partial ushort BandageAgentGraphic { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_use_new_packet", true)]
+        public partial bool BandageAgentUseNewPacket { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_check_hidden", true)]
+        public partial bool BandageAgentCheckHidden { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_check_poisoned", true)]
+        public partial bool BandageAgentCheckPoisoned { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_h_p_percentage", 80)]
+        public partial int BandageAgentHPPercentage { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_check_invul", true)]
+        public partial bool BandageAgentCheckInvul { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_bandage_friends", false)]
+        public partial bool BandageAgentBandageFriends { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_bandage_allies", false)]
+        public partial bool BandageAgentBandageAllies { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_bandage_pets", false)]
+        public partial bool BandageAgentBandagePets { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_use_dex_formula", false)]
+        public partial bool BandageAgentUseDexFormula { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "bandage_agent_disable_self_heal", false)]
+        public partial bool BandageAgentDisableSelfHeal { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__enabled", false)]
+        public partial bool SelfHeal_Enabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__use_chivalry", false)]
+        public partial bool SelfHeal_UseChivalry { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__f_c", 2)]
+        public partial int SelfHeal_FC { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__f_c_r", 6)]
+        public partial int SelfHeal_FCR { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__key", 0)]
+        public partial int SelfHeal_Key { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__mod", 0)]
+        public partial int SelfHeal_Mod { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__recast_delay_ms", 50)]
+        public partial int SelfHeal_RecastDelayMs { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__cast_start_grace_ms", 800)]
+        public partial int SelfHeal_CastStartGraceMs { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__cure_verify_ms", 600)]
+        public partial int SelfHeal_CureVerifyMs { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "self_heal__interrupt_retry_ms", 100)]
+        public partial int SelfHeal_InterruptRetryMs { get; set; }
 
         // RelativePaths of Legion scripts that have a hotkey assigned. The key binding itself lives in
         // the central hotkey system (hotkeys.json); this per-profile list records which scripts to
@@ -248,210 +442,526 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
         public partial string BandageAgentJournalMessages { get; set; }
 
-        public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
-        public ushort HiddenBodyHue { get; set => SetProperty(ref field, value); } = 0x038E;
-        public byte HiddenBodyAlpha { get; set => SetProperty(ref field, value); } = 40;
-        public int PlayerConstantAlpha { get; set => SetProperty(ref field, value); } = 100;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_death_screen", true)]
+        public partial bool EnableDeathScreen { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_black_white_effect", true)]
+        public partial bool EnableBlackWhiteEffect { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hidden_body_hue", 0x038E)]
+        public partial ushort HiddenBodyHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hidden_body_alpha", 40)]
+        public partial byte HiddenBodyAlpha { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "player_constant_alpha", 100)]
+        public partial int PlayerConstantAlpha { get; set; }
 
         // tooltip
-        public bool UseTooltip { get; set => SetProperty(ref field, value); } = true;
-        public ushort TooltipTextHue { get; set => SetProperty(ref field, value); } = 0xFFFF;
-        public int TooltipDelayBeforeDisplay { get; set => SetProperty(ref field, value); } = 250;
-        public int TooltipDisplayZoom { get; set => SetProperty(ref field, value); } = 100;
-        public int TooltipBackgroundOpacity { get; set => SetProperty(ref field, value); } = 70;
-        public byte TooltipFont { get; set => SetProperty(ref field, value); } = 1;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_tooltip", true)]
+        public partial bool UseTooltip { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_text_hue", 0xFFFF)]
+        public partial ushort TooltipTextHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_delay_before_display", 250)]
+        public partial int TooltipDelayBeforeDisplay { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_display_zoom", 100)]
+        public partial int TooltipDisplayZoom { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_background_opacity", 70)]
+        public partial int TooltipBackgroundOpacity { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_font", 1)]
+        public partial byte TooltipFont { get; set; }
 
         // movements
-        public bool EnablePathfind { get; set => SetProperty(ref field, value); } = true;
-        public bool UseShiftToPathfind { get; set => SetProperty(ref field, value); }
-        public bool PathfindSingleClick { get; set => SetProperty(ref field, value); }
-        public bool AlwaysRun { get; set => SetProperty(ref field, value); } = true;
-        public bool AlwaysRunUnlessHidden { get; set => SetProperty(ref field, value); } = true;
-        public bool HoldDownKeyTab { get; set => SetProperty(ref field, value); }
-        public bool HoldShiftForContext { get; set => SetProperty(ref field, value); } = false;
-        public bool HoldShiftToSplitStack { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_pathfind", true)]
+        public partial bool EnablePathfind { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_shift_to_pathfind", false)]
+        public partial bool UseShiftToPathfind { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "pathfind_single_click", false)]
+        public partial bool PathfindSingleClick { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "always_run", true)]
+        public partial bool AlwaysRun { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "always_run_unless_hidden", true)]
+        public partial bool AlwaysRunUnlessHidden { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hold_down_key_tab", false)]
+        public partial bool HoldDownKeyTab { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hold_shift_for_context", false)]
+        public partial bool HoldShiftForContext { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hold_shift_to_split_stack", false)]
+        public partial bool HoldShiftToSplitStack { get; set; }
 
         // general
         [JsonConverter(typeof(Point2Converter))] public Point WindowClientBounds { get; set => SetProperty(ref field, value); } = new Point(600, 480);
         [JsonConverter(typeof(Point2Converter))] public Point ContainerDefaultPosition { get; set => SetProperty(ref field, value); } = new Point(24, 24);
         [JsonConverter(typeof(Point2Converter))] public Point GameWindowPosition { get; set => SetProperty(ref field, value); } = new Point(10, 10);
-        public bool GameWindowLock { get; set => SetProperty(ref field, value); }
-        public bool GameWindowFullSize { get; set => SetProperty(ref field, value); }
-        public bool WindowBorderless { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "game_window_lock", false)]
+        public partial bool GameWindowLock { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "game_window_full_size", false)]
+        public partial bool GameWindowFullSize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "window_borderless", false)]
+        public partial bool WindowBorderless { get; set; }
         [JsonConverter(typeof(Point2Converter))] public Point GameWindowSize { get; set => SetProperty(ref field, value); } = new Point(800, 680);
         [JsonConverter(typeof(Point2Converter))] public Point TopbarGumpPosition { get; set => SetProperty(ref field, value); } = new Point(0, 0);
-        public bool TopbarGumpIsMinimized { get; set => SetProperty(ref field, value); }
-        public bool TopbarGumpIsDisabled { get; set => SetProperty(ref field, value); }
-        public bool UseAlternativeLights { get; set => SetProperty(ref field, value); }
-        public bool UseCustomLightLevel { get; set => SetProperty(ref field, value); }
-        public byte LightLevel { get; set => SetProperty(ref field, value); }
-        public int LightLevelType { get; set => SetProperty(ref field, value); } // 0 = absolute, 1 = minimum
-        public bool UseColoredLights { get; set => SetProperty(ref field, value); } = true;
-        public bool UseDarkNights { get; set => SetProperty(ref field, value); }
-        public int CloseHealthBarType { get; set => SetProperty(ref field, value); } = 2; // 0 = none, 1 == not exists, 2 == is dead
-        public bool ActivateChatAfterEnter { get; set => SetProperty(ref field, value); }
-        public bool ActivateChatAdditionalButtons { get; set => SetProperty(ref field, value); } = true;
-        public bool ActivateChatShiftEnterSupport { get; set => SetProperty(ref field, value); } = true;
-        public bool UseObjectsFading { get; set => SetProperty(ref field, value); } = true;
-        public bool HoldDownKeyAltToCloseAnchored { get; set => SetProperty(ref field, value); } = true;
-        public bool CloseAllAnchoredGumpsInGroupWithRightClick { get; set => SetProperty(ref field, value); } = false;
-        public bool HoldAltToMoveGumps { get; set => SetProperty(ref field, value); }
-        public byte JournalOpacity { get; set => SetProperty(ref field, value); } = 50;
-        public int JournalStyle { get; set => SetProperty(ref field, value); } = 0;
-        public bool HideScreenshotStoredInMessage { get; set => SetProperty(ref field, value); }
-        public bool UseModernPaperdoll { get; set => SetProperty(ref field, value); } = false;
-        public bool OpenModernPaperdollAtMinimizeLoc { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "topbar_gump_is_minimized", false)]
+        public partial bool TopbarGumpIsMinimized { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "topbar_gump_is_disabled", false)]
+        public partial bool TopbarGumpIsDisabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_alternative_lights", false)]
+        public partial bool UseAlternativeLights { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_custom_light_level", false)]
+        public partial bool UseCustomLightLevel { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "light_level", 0)]
+        public partial byte LightLevel { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "light_level_type", 0)]
+        public partial int LightLevelType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_colored_lights", true)]
+        public partial bool UseColoredLights { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_dark_nights", false)]
+        public partial bool UseDarkNights { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "close_health_bar_type", 2)]
+        public partial int CloseHealthBarType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "activate_chat_after_enter", false)]
+        public partial bool ActivateChatAfterEnter { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "activate_chat_additional_buttons", true)]
+        public partial bool ActivateChatAdditionalButtons { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "activate_chat_shift_enter_support", true)]
+        public partial bool ActivateChatShiftEnterSupport { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_objects_fading", true)]
+        public partial bool UseObjectsFading { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hold_down_key_alt_to_close_anchored", true)]
+        public partial bool HoldDownKeyAltToCloseAnchored { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "close_all_anchored_gumps_in_group_with_right_click", false)]
+        public partial bool CloseAllAnchoredGumpsInGroupWithRightClick { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hold_alt_to_move_gumps", false)]
+        public partial bool HoldAltToMoveGumps { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_opacity", 50)]
+        public partial byte JournalOpacity { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_style", 0)]
+        public partial int JournalStyle { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_screenshot_stored_in_message", false)]
+        public partial bool HideScreenshotStoredInMessage { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_modern_paperdoll", false)]
+        public partial bool UseModernPaperdoll { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "open_modern_paperdoll_at_minimize_loc", false)]
+        public partial bool OpenModernPaperdollAtMinimizeLoc { get; set; }
 
         // Experimental
-        public bool CastSpellsByOneClick { get; set => SetProperty(ref field, value); }
-        public bool BuffBarTime { get; set => SetProperty(ref field, value); }
-        public bool FastSpellsAssign { get; set => SetProperty(ref field, value); }
-        public bool AutoOpenDoors { get; set => SetProperty(ref field, value); } = true;
-        public bool SmoothDoors { get; set => SetProperty(ref field, value); } = true;
-        public bool AutoOpenCorpses { get; set => SetProperty(ref field, value); } = true;
-        public int AutoOpenCorpseRange { get; set => SetProperty(ref field, value); } = 2;
-        public int CorpseOpenOptions { get; set => SetProperty(ref field, value); } = 3;
-        public bool SkipEmptyCorpse { get; set => SetProperty(ref field, value); }
-        public bool AutoOpenOwnCorpse { get; set => SetProperty(ref field, value); } = true;
-        public bool DisableDefaultHotkeys { get; set => SetProperty(ref field, value); }
-        public bool DisableArrowBtn { get; set => SetProperty(ref field, value); }
-        public bool DisableTabBtn { get; set => SetProperty(ref field, value); }
-        public bool DisableCtrlQWBtn { get; set => SetProperty(ref field, value); }
-        public bool DisableAutoMove { get; set => SetProperty(ref field, value); }
-        public bool EnableDragSelect { get; set => SetProperty(ref field, value); }
-        public int DragSelectModifierKey { get; set => SetProperty(ref field, value); } // 0 = none, 1 = control, 2 = shift, 3 = alt
-        public int DragSelect_PlayersModifier { get; set => SetProperty(ref field, value); } = 0;
-        public int DragSelect_MonstersModifier { get; set => SetProperty(ref field, value); } = 0;
-        public int DragSelect_NameplateModifier { get; set => SetProperty(ref field, value); } = 0;
-        public bool OverrideContainerLocation { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "cast_spells_by_one_click", false)]
+        public partial bool CastSpellsByOneClick { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buff_bar_time", false)]
+        public partial bool BuffBarTime { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "fast_spells_assign", false)]
+        public partial bool FastSpellsAssign { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_open_doors", true)]
+        public partial bool AutoOpenDoors { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "smooth_doors", true)]
+        public partial bool SmoothDoors { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_open_corpses", true)]
+        public partial bool AutoOpenCorpses { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_open_corpse_range", 2)]
+        public partial int AutoOpenCorpseRange { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "corpse_open_options", 3)]
+        public partial int CorpseOpenOptions { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "skip_empty_corpse", false)]
+        public partial bool SkipEmptyCorpse { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_open_own_corpse", true)]
+        public partial bool AutoOpenOwnCorpse { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_default_hotkeys", false)]
+        public partial bool DisableDefaultHotkeys { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_arrow_btn", false)]
+        public partial bool DisableArrowBtn { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_tab_btn", false)]
+        public partial bool DisableTabBtn { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_ctrl_q_w_btn", false)]
+        public partial bool DisableCtrlQWBtn { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_auto_move", false)]
+        public partial bool DisableAutoMove { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_drag_select", false)]
+        public partial bool EnableDragSelect { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select_modifier_key", 0)]
+        public partial int DragSelectModifierKey { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select__players_modifier", 0)]
+        public partial int DragSelect_PlayersModifier { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select__monsters_modifier", 0)]
+        public partial int DragSelect_MonstersModifier { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select__nameplate_modifier", 0)]
+        public partial int DragSelect_NameplateModifier { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "override_container_location", false)]
+        public partial bool OverrideContainerLocation { get; set; }
 
-        public int OverrideContainerLocationSetting { get; set => SetProperty(ref field, value); } // 0 = container position, 1 = top right of screen, 2 = last dragged position, 3 = remember every container
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "override_container_location_setting", 0)]
+        public partial int OverrideContainerLocationSetting { get; set; }
 
         [JsonConverter(typeof(Point2Converter))] public Point OverrideContainerLocationPosition { get; set => SetProperty(ref field, value); } = new Point(200, 200);
-        public bool HueContainerGumps { get; set => SetProperty(ref field, value); } = true;
-        public int DragSelectStartX { get; set => SetProperty(ref field, value); } = 100;
-        public int DragSelectStartY { get; set => SetProperty(ref field, value); } = 100;
-        public bool DragSelectAsAnchor { get; set => SetProperty(ref field, value); } = false;
-        public string LastActiveNameOverheadOption { get; set => SetProperty(ref field, value); } = "All";
-        public bool NameOverheadToggled { get; set => SetProperty(ref field, value); } = false;
-        public bool ShowTargetRangeIndicator { get; set => SetProperty(ref field, value); }
-        public bool PartyInviteGump { get; set => SetProperty(ref field, value); } = true;
-        public bool CustomBarsToggled { get; set => SetProperty(ref field, value); }
-        public bool CBBlackBGToggled { get; set => SetProperty(ref field, value); }
-        public bool UsePartyHealthBars { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hue_container_gumps", true)]
+        public partial bool HueContainerGumps { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select_start_x", 100)]
+        public partial int DragSelectStartX { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select_start_y", 100)]
+        public partial int DragSelectStartY { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "drag_select_as_anchor", false)]
+        public partial bool DragSelectAsAnchor { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_active_name_overhead_option", "All")]
+        public partial string LastActiveNameOverheadOption { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_overhead_toggled", false)]
+        public partial bool NameOverheadToggled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_target_range_indicator", false)]
+        public partial bool ShowTargetRangeIndicator { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "party_invite_gump", true)]
+        public partial bool PartyInviteGump { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "custom_bars_toggled", false)]
+        public partial bool CustomBarsToggled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "c_b_black_b_g_toggled", false)]
+        public partial bool CBBlackBGToggled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_party_health_bars", true)]
+        public partial bool UsePartyHealthBars { get; set; }
 
-        public bool ShowInfoBar { get; set => SetProperty(ref field, value); }
-        public int InfoBarHighlightType { get; set => SetProperty(ref field, value); } // 0 = text colour changes, 1 = underline
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_info_bar", false)]
+        public partial bool ShowInfoBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "info_bar_highlight_type", 0)]
+        public partial int InfoBarHighlightType { get; set; }
 
-        public bool CounterBarEnabled { get; set => SetProperty(ref field, value); }
-        public bool CounterBarHighlightOnUse { get; set => SetProperty(ref field, value); }
-        public bool CounterBarHighlightOnAmount { get; set => SetProperty(ref field, value); }
-        public bool CounterBarDisplayAbbreviatedAmount { get; set => SetProperty(ref field, value); }
-        public int CounterBarAbbreviatedAmount { get; set => SetProperty(ref field, value); } = 1000;
-        public int CounterBarHighlightAmount { get; set => SetProperty(ref field, value); } = 5;
-        public int CounterBarCellSize { get; set => SetProperty(ref field, value); } = 40;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_enabled", false)]
+        public partial bool CounterBarEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_highlight_on_use", false)]
+        public partial bool CounterBarHighlightOnUse { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_highlight_on_amount", false)]
+        public partial bool CounterBarHighlightOnAmount { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_display_abbreviated_amount", false)]
+        public partial bool CounterBarDisplayAbbreviatedAmount { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_abbreviated_amount", 1000)]
+        public partial int CounterBarAbbreviatedAmount { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_highlight_amount", 5)]
+        public partial int CounterBarHighlightAmount { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_cell_size", 40)]
+        public partial int CounterBarCellSize { get; set; }
 
         // title bar stats
-        public bool EnableTitleBarStats { get; set => SetProperty(ref field, value); } = false;
-        public TitleBarStatsMode TitleBarStatsMode { get; set => SetProperty(ref field, value); } = TitleBarStatsMode.Text;
-        public int CounterBarRows { get; set => SetProperty(ref field, value); } = 1;
-        public int CounterBarColumns { get; set => SetProperty(ref field, value); } = 5;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_title_bar_stats", false)]
+        public partial bool EnableTitleBarStats { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "title_bar_stats_mode", TitleBarStatsMode.Text)]
+        public partial TitleBarStatsMode TitleBarStatsMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_rows", 1)]
+        public partial int CounterBarRows { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_bar_columns", 5)]
+        public partial int CounterBarColumns { get; set; }
 
-        public bool ShowSkillsChangedMessage { get; set => SetProperty(ref field, value); } = true;
-        public int ShowSkillsChangedDeltaValue { get; set => SetProperty(ref field, value); } = 1;
-        public bool ShowStatsChangedMessage { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_skills_changed_message", true)]
+        public partial bool ShowSkillsChangedMessage { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_skills_changed_delta_value", 1)]
+        public partial int ShowSkillsChangedDeltaValue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_stats_changed_message", true)]
+        public partial bool ShowStatsChangedMessage { get; set; }
 
 
-        public bool ShadowsEnabled { get; set => SetProperty(ref field, value); } = true;
-        public bool ShadowsStatics { get; set => SetProperty(ref field, value); } = true;
-        public int TerrainShadowsLevel { get; set => SetProperty(ref field, value); } = 15;
-        public int AuraUnderFeetType { get; set => SetProperty(ref field, value); } // 0 = NO, 1 = in warmode, 2 = ctrl+shift, 3 = always
-        public bool AuraOnMouse { get; set => SetProperty(ref field, value); } = true;
-        public bool AnimatedWaterEffect { get; set => SetProperty(ref field, value); } = false;
-        public bool EnableWeatherEffects { get; set => SetProperty(ref field, value); } = false;
-        public bool EnableEnhancedWeather { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "shadows_enabled", true)]
+        public partial bool ShadowsEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "shadows_statics", true)]
+        public partial bool ShadowsStatics { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "terrain_shadows_level", 15)]
+        public partial int TerrainShadowsLevel { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "aura_under_feet_type", 0)]
+        public partial int AuraUnderFeetType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "aura_on_mouse", true)]
+        public partial bool AuraOnMouse { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "animated_water_effect", false)]
+        public partial bool AnimatedWaterEffect { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_weather_effects", false)]
+        public partial bool EnableWeatherEffects { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_enhanced_weather", false)]
+        public partial bool EnableEnhancedWeather { get; set; }
 
-        public bool PartyAura { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "party_aura", false)]
+        public partial bool PartyAura { get; set; }
 
-        public bool HideChatGradient { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_chat_gradient", false)]
+        public partial bool HideChatGradient { get; set; }
 
-        public bool StandardSkillsGump { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "standard_skills_gump", true)]
+        public partial bool StandardSkillsGump { get; set; }
 
-        public bool ShowNewMobileNameIncoming { get; set => SetProperty(ref field, value); } = true;
-        public bool ShowNewCorpseNameIncoming { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_new_mobile_name_incoming", true)]
+        public partial bool ShowNewMobileNameIncoming { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_new_corpse_name_incoming", true)]
+        public partial bool ShowNewCorpseNameIncoming { get; set; }
 
-        public uint GrabBagSerial { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grab_bag_serial", 0)]
+        public partial uint GrabBagSerial { get; set; }
 
-        public int GridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_loot_type", 0)]
+        public partial int GridLootType { get; set; }
 
-        public bool ReduceFPSWhenInactive { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "reduce_f_p_s_when_inactive", false)]
+        public partial bool ReduceFPSWhenInactive { get; set; }
 
-        public bool EnableVSync { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_v_sync", true)]
+        public partial bool EnableVSync { get; set; }
 
-        public bool OverrideAllFonts { get; set => SetProperty(ref field, value); }
-        public bool OverrideAllFontsIsUnicode { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "override_all_fonts", false)]
+        public partial bool OverrideAllFonts { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "override_all_fonts_is_unicode", true)]
+        public partial bool OverrideAllFontsIsUnicode { get; set; }
 
-        public bool SallosEasyGrab { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sallos_easy_grab", false)]
+        public partial bool SallosEasyGrab { get; set; }
 
-        public bool JournalDarkMode { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_dark_mode", false)]
+        public partial bool JournalDarkMode { get; set; }
 
-        public byte ContainersScale { get; set => SetProperty(ref field, value); } = 100;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "containers_scale", 100)]
+        public partial byte ContainersScale { get; set; }
 
-        public byte ContainerOpacity { get; set => SetProperty(ref field, value); } = 50;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "container_opacity", 50)]
+        public partial byte ContainerOpacity { get; set; }
 
-        public bool ScaleItemsInsideContainers { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "scale_items_inside_containers", false)]
+        public partial bool ScaleItemsInsideContainers { get; set; }
 
-        public bool DoubleClickToLootInsideContainers { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "double_click_to_loot_inside_containers", false)]
+        public partial bool DoubleClickToLootInsideContainers { get; set; }
 
-        public bool UseLargeContainerGumps { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_large_container_gumps", false)]
+        public partial bool UseLargeContainerGumps { get; set; }
 
-        public bool RelativeDragAndDropItems { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "relative_drag_and_drop_items", false)]
+        public partial bool RelativeDragAndDropItems { get; set; }
 
-        public bool HighlightContainerWhenSelected { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "highlight_container_when_selected", false)]
+        public partial bool HighlightContainerWhenSelected { get; set; }
 
-        public bool UseNewTargetSystem { get; set => SetProperty(ref field, value); } = true;
-        public bool UseKrEquipUnequipPacket { get; set => SetProperty(ref field, value); }
-        public bool ShowHouseContent { get; set => SetProperty(ref field, value); }
-        public bool SaveHealthbars { get; set => SetProperty(ref field, value); }
-        public bool TextFading { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_new_target_system", true)]
+        public partial bool UseNewTargetSystem { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_kr_equip_unequip_packet", false)]
+        public partial bool UseKrEquipUnequipPacket { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_house_content", false)]
+        public partial bool ShowHouseContent { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "save_healthbars", false)]
+        public partial bool SaveHealthbars { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "text_fading", true)]
+        public partial bool TextFading { get; set; }
 
-        public bool UseSmoothBoatMovement { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_smooth_boat_movement", false)]
+        public partial bool UseSmoothBoatMovement { get; set; }
 
-        public bool IgnoreStaminaCheck { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "ignore_stamina_check", false)]
+        public partial bool IgnoreStaminaCheck { get; set; }
 
-        public bool ShowJournalClient { get; set => SetProperty(ref field, value); } = true;
-        public bool ShowJournalObjects { get; set => SetProperty(ref field, value); } = true;
-        public bool ShowJournalSystem { get; set => SetProperty(ref field, value); } = true;
-        public bool ShowJournalGuildAlly { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_journal_client", true)]
+        public partial bool ShowJournalClient { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_journal_objects", true)]
+        public partial bool ShowJournalObjects { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_journal_system", true)]
+        public partial bool ShowJournalSystem { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_journal_guild_ally", true)]
+        public partial bool ShowJournalGuildAlly { get; set; }
 
-        public int WorldMapWidth { get; set => SetProperty(ref field, value); } = 400;
-        public int WorldMapHeight { get; set => SetProperty(ref field, value); } = 400;
-        public int WorldMapFont { get; set => SetProperty(ref field, value); } = 3;
-        public string WorldMapTtfFont { get; set => SetProperty(ref field, value); } = string.Empty;
-        public int WorldMapTtfFontSize { get; set => SetProperty(ref field, value); } = 20;
-        public bool WorldMapFlipMap { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapTopMost { get; set => SetProperty(ref field, value); }
-        public bool WorldMapFreeView { get; set => SetProperty(ref field, value); }
-        public WorldMapDoubleClickAction WorldMapDoubleClickAction { get; set => SetProperty(ref field, value); } = WorldMapDoubleClickAction.ToggleLock;
-        public bool WorldMapShowParty { get; set => SetProperty(ref field, value); } = true;
-        public int WorldMapZoomIndex { get; set => SetProperty(ref field, value); } = 4;
-        public bool WorldMapShowCoordinates { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowMouseCoordinates { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowCorpse { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowSextantCoordinates { get; set => SetProperty(ref field, value); } = false;
-        public bool WorldMapShowMobiles { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowPlayerName { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowPlayerBar { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowGroupName { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowGroupBar { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowMarkers { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowMarkersNames { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapShowMultis { get; set => SetProperty(ref field, value); } = true;
-        public string WorldMapHiddenMarkerFiles { get; set => SetProperty(ref field, value); } = string.Empty;
-        public string WorldMapHiddenZoneFiles { get; set => SetProperty(ref field, value); } = string.Empty;
-        public bool WorldMapShowGridIfZoomed { get; set => SetProperty(ref field, value); } = true;
-        public bool WorldMapAllowPositionalTarget { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_width", 400)]
+        public partial int WorldMapWidth { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_height", 400)]
+        public partial int WorldMapHeight { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_font", 3)]
+        public partial int WorldMapFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_ttf_font", "")]
+        public partial string WorldMapTtfFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_ttf_font_size", 20)]
+        public partial int WorldMapTtfFontSize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_flip_map", true)]
+        public partial bool WorldMapFlipMap { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_top_most", false)]
+        public partial bool WorldMapTopMost { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_free_view", false)]
+        public partial bool WorldMapFreeView { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_double_click_action", WorldMapDoubleClickAction.ToggleLock)]
+        public partial WorldMapDoubleClickAction WorldMapDoubleClickAction { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_party", true)]
+        public partial bool WorldMapShowParty { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_zoom_index", 4)]
+        public partial int WorldMapZoomIndex { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_coordinates", true)]
+        public partial bool WorldMapShowCoordinates { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_mouse_coordinates", true)]
+        public partial bool WorldMapShowMouseCoordinates { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_corpse", true)]
+        public partial bool WorldMapShowCorpse { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_sextant_coordinates", false)]
+        public partial bool WorldMapShowSextantCoordinates { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_mobiles", true)]
+        public partial bool WorldMapShowMobiles { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_player_name", true)]
+        public partial bool WorldMapShowPlayerName { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_player_bar", true)]
+        public partial bool WorldMapShowPlayerBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_group_name", true)]
+        public partial bool WorldMapShowGroupName { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_group_bar", true)]
+        public partial bool WorldMapShowGroupBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_markers", true)]
+        public partial bool WorldMapShowMarkers { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_markers_names", true)]
+        public partial bool WorldMapShowMarkersNames { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_multis", true)]
+        public partial bool WorldMapShowMultis { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_hidden_marker_files", "")]
+        public partial string WorldMapHiddenMarkerFiles { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_hidden_zone_files", "")]
+        public partial string WorldMapHiddenZoneFiles { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_show_grid_if_zoomed", true)]
+        public partial bool WorldMapShowGridIfZoomed { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_allow_positional_target", true)]
+        public partial bool WorldMapAllowPositionalTarget { get; set; }
 
         [JsonIgnore]
         public int WebMapServerPort
@@ -475,70 +985,164 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public int AutoFollowDistance { get; set => SetProperty(ref field, value); } = 1;
-        public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_follow_distance", 1)]
+        public partial int AutoFollowDistance { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_auto_follow_alt", false)]
+        public partial bool DisableAutoFollowAlt { get; set; }
         [JsonConverter(typeof(Point2Converter))] public Point ResizeJournalSize { get; set => SetProperty(ref field, value); } = new(410, 350);
         [JsonConverter(typeof(NullablePoint2Converter))] public Point? OptionsWindowsSize { get; set => SetProperty(ref field, value); }
-        public bool FollowingMode { get; set => SetProperty(ref field, value); } = false;
-        public uint FollowingTarget { get; set => SetProperty(ref field, value); }
-        public bool NamePlateHealthBar { get; set => SetProperty(ref field, value); } = true;
-        public byte NamePlateOpacity { get; set => SetProperty(ref field, value); } = 75;
-        public byte NamePlateHealthBarOpacity { get; set => SetProperty(ref field, value); } = 50;
-        public bool NamePlateHideAtFullHealth { get; set => SetProperty(ref field, value); }
-        public bool NamePlateHideAtFullHealthInWarmode { get; set => SetProperty(ref field, value); }
-        public byte NamePlateBorderOpacity { get; set => SetProperty(ref field, value); } = 50;
-        public bool NamePlateAvoidOverlap { get; set => SetProperty(ref field, value); }
-        public bool NamePlateUseFixedWidth { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "following_mode", false)]
+        public partial bool FollowingMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "following_target", 0)]
+        public partial uint FollowingTarget { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_health_bar", true)]
+        public partial bool NamePlateHealthBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_opacity", 75)]
+        public partial byte NamePlateOpacity { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_health_bar_opacity", 50)]
+        public partial byte NamePlateHealthBarOpacity { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_hide_at_full_health", false)]
+        public partial bool NamePlateHideAtFullHealth { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_hide_at_full_health_in_warmode", false)]
+        public partial bool NamePlateHideAtFullHealthInWarmode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_border_opacity", 50)]
+        public partial byte NamePlateBorderOpacity { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_avoid_overlap", false)]
+        public partial bool NamePlateAvoidOverlap { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_use_fixed_width", false)]
+        public partial bool NamePlateUseFixedWidth { get; set; }
         public int NamePlateFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
-        public bool NamePlateUseFixedHealthBarWidth { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_use_fixed_health_bar_width", false)]
+        public partial bool NamePlateUseFixedHealthBarWidth { get; set; }
         public int NamePlateHealthBarFixedWidth { get; set => SetProperty(ref field, Math.Clamp(value, 60, 300)); } = 120;
-        public bool NamePlateShowWordOfDeathIcon { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_show_word_of_death_icon", false)]
+        public partial bool NamePlateShowWordOfDeathIcon { get; set; }
         public int NamePlateHeight { get; set => SetProperty(ref field, Math.Clamp(value, 0, 80)); }
-        public bool NamePlateSplitHealthBar { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_split_health_bar", false)]
+        public partial bool NamePlateSplitHealthBar { get; set; }
         public int NamePlateCornerRadius { get; set => SetProperty(ref field, Math.Clamp(value, 0, 40)); } = 0;
-        public NamePlateHealthBarMode NamePlateHealthBarMode { get; set => SetProperty(ref field, value); } = NamePlateHealthBarMode.StatusColor;
-        public NamePlateBackgroundMode NamePlateBackgroundMode { get; set => SetProperty(ref field, value); } = NamePlateBackgroundMode.FixedColor;
-        public byte NamePlateBackgroundR { get; set => SetProperty(ref field, value); }
-        public byte NamePlateBackgroundG { get; set => SetProperty(ref field, value); }
-        public byte NamePlateBackgroundB { get; set => SetProperty(ref field, value); }
-        public NamePlatePreset NamePlatePreset { get; set => SetProperty(ref field, value); } = NamePlatePreset.Custom;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_health_bar_mode", NamePlateHealthBarMode.StatusColor)]
+        public partial NamePlateHealthBarMode NamePlateHealthBarMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_background_mode", NamePlateBackgroundMode.FixedColor)]
+        public partial NamePlateBackgroundMode NamePlateBackgroundMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_background_r", 0)]
+        public partial byte NamePlateBackgroundR { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_background_g", 0)]
+        public partial byte NamePlateBackgroundG { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_background_b", 0)]
+        public partial byte NamePlateBackgroundB { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_preset", NamePlatePreset.Custom)]
+        public partial NamePlatePreset NamePlatePreset { get; set; }
 
-        public bool LeftAlignToolTips { get; set => SetProperty(ref field, value); }
-        public bool ForceCenterAlignTooltipMobiles { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "left_align_tool_tips", false)]
+        public partial bool LeftAlignToolTips { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "force_center_align_tooltip_mobiles", true)]
+        public partial bool ForceCenterAlignTooltipMobiles { get; set; }
 
-        public bool CorpseSingleClickLoot { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "corpse_single_click_loot", false)]
+        public partial bool CorpseSingleClickLoot { get; set; }
 
-        public bool DisableSystemChat { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_system_chat", false)]
+        public partial bool DisableSystemChat { get; set; }
 
-        public bool DisableSystemChatWhileJournalOpen { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_system_chat_while_journal_open", false)]
+        public partial bool DisableSystemChatWhileJournalOpen { get; set; }
 
-        public bool UsePromptPopup { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_prompt_popup", true)]
+        public partial bool UsePromptPopup { get; set; }
 
-        public uint SetFavoriteMoveBagSerial { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "set_favorite_move_bag_serial", 0)]
+        public partial uint SetFavoriteMoveBagSerial { get; set; }
 
         #region GRID CONTAINER
-        public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
-        public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
-        public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
-        public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 1;
-        public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;
-        public byte GridBorderAlpha { get; set => SetProperty(ref field, value); } = 75;
-        public ushort GridBorderHue { get; set => SetProperty(ref field, value); } = 0;
-        public byte GridContainersScale { get; set => SetProperty(ref field, value); } = 100;
-        public bool GridContainerScaleItems { get; set => SetProperty(ref field, value); } = true;
-        public bool GridHighlightLowContrastItems { get; set => SetProperty(ref field, value); } = false;
-        public int GridHighlightLowContrastItemsStyle { get; set => SetProperty(ref field, value); } = 0;
-        public bool GridEnableContPreview { get; set => SetProperty(ref field, value); } = true;
-        public int Grid_BorderStyle { get; set => SetProperty(ref field, value); } = 0;
-        public int Grid_DefaultColumns { get; set => SetProperty(ref field, value); } = 5;
-        public int Grid_DefaultRows { get; set => SetProperty(ref field, value); } = 5;
-        public bool Grid_UseContainerHue { get; set => SetProperty(ref field, value); } = false;
-        public bool Grid_HideBorder { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_grid_layout_container_gumps", true)]
+        public partial bool UseGridLayoutContainerGumps { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_containers_default_to_old_style_view", false)]
+        public partial bool GridContainersDefaultToOldStyleView { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_container_view_mode", 0)]
+        public partial int GridContainerViewMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_container_search_mode", 1)]
+        public partial int GridContainerSearchMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_grid_container_anchor", false)]
+        public partial bool EnableGridContainerAnchor { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_border_alpha", 75)]
+        public partial byte GridBorderAlpha { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_border_hue", 0)]
+        public partial ushort GridBorderHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_containers_scale", 100)]
+        public partial byte GridContainersScale { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_container_scale_items", true)]
+        public partial bool GridContainerScaleItems { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight_low_contrast_items", false)]
+        public partial bool GridHighlightLowContrastItems { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight_low_contrast_items_style", 0)]
+        public partial int GridHighlightLowContrastItemsStyle { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_enable_cont_preview", true)]
+        public partial bool GridEnableContPreview { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid__border_style", 0)]
+        public partial int Grid_BorderStyle { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid__default_columns", 5)]
+        public partial int Grid_DefaultColumns { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid__default_rows", 5)]
+        public partial int Grid_DefaultRows { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid__use_container_hue", false)]
+        public partial bool Grid_UseContainerHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid__hide_border", false)]
+        public partial bool Grid_HideBorder { get; set; }
         #endregion
 
         #region COOLDOWNS
-        public int CoolDownX { get; set => SetProperty(ref field, value); } = 50;
-        public int CoolDownY { get; set => SetProperty(ref field, value); } = 50;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "cool_down_x", 50)]
+        public partial int CoolDownX { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "cool_down_y", 50)]
+        public partial int CoolDownY { get; set; }
 
         public List<ushort> Condition_Hue { get; set => SetProperty(ref field, value); } = new List<ushort>();
         public List<string> Condition_Label { get; set => SetProperty(ref field, value); } = new List<string>();
@@ -557,18 +1161,34 @@ namespace ClassicUO.Configuration
         #endregion
 
         #region IMPROVED BUFF BAR
-        public bool UseImprovedBuffBar { get; set => SetProperty(ref field, value); } = true;
-        public ushort ImprovedBuffBarHue { get; set => SetProperty(ref field, value); } = 905;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_improved_buff_bar", true)]
+        public partial bool UseImprovedBuffBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "improved_buff_bar_hue", 905)]
+        public partial ushort ImprovedBuffBarHue { get; set; }
         #endregion
 
         #region DAMAGE NUMBER HUES
-        public ushort DamageHueSelf { get; set => SetProperty(ref field, value); } = 0x0034;
-        public ushort DamageHuePet { get; set => SetProperty(ref field, value); } = 0x0033;
-        public ushort DamageHueAlly { get; set => SetProperty(ref field, value); } = 0x0030;
-        public ushort DamageHueLastAttck { get; set => SetProperty(ref field, value); } = 0x1F;
-        public ushort DamageHueOther { get; set => SetProperty(ref field, value); } = 0x0021;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "damage_hue_self", 0x0034)]
+        public partial ushort DamageHueSelf { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "damage_hue_pet", 0x0033)]
+        public partial ushort DamageHuePet { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "damage_hue_ally", 0x0030)]
+        public partial ushort DamageHueAlly { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "damage_hue_last_attck", 0x1F)]
+        public partial ushort DamageHueLastAttck { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "damage_hue_other", 0x0021)]
+        public partial ushort DamageHueOther { get; set; }
 
-        public bool ShowDPS { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_d_p_s", true)]
+        public partial bool ShowDPS { get; set; }
         #endregion
 
         #region GridHighlightingProps
@@ -576,10 +1196,18 @@ namespace ClassicUO.Configuration
         public List<ushort> GridHighlight_Hue { get; set => SetProperty(ref field, value); } = new List<ushort>();
         public List<List<string>> GridHighlight_PropNames { get; set => SetProperty(ref field, value); } = new List<List<string>>();
         public List<List<int>> GridHighlight_PropMinVal { get; set => SetProperty(ref field, value); } = new List<List<int>>();
-        public bool GridHighlight_CorpseOnly { get; set => SetProperty(ref field, value); } = false;
-        public int GridHighlightSize { get; set => SetProperty(ref field, value); } = 1;
-        public bool GridHighlightProperties { get; set => SetProperty(ref field, value); } = true;
-        public bool GridHighlightShowRuleName { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight__corpse_only", false)]
+        public partial bool GridHighlight_CorpseOnly { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight_size", 1)]
+        public partial int GridHighlightSize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight_properties", true)]
+        public partial bool GridHighlightProperties { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "grid_highlight_show_rule_name", true)]
+        public partial bool GridHighlightShowRuleName { get; set; }
         public List<bool> GridHighlight_AcceptExtraProperties { get; set => SetProperty(ref field, value); } = new List<bool>();
         public List<List<bool>> GridHighlight_IsOptionalProperties { get; set => SetProperty(ref field, value); } = new List<List<bool>>();
         public List<List<string>> GridHighlight_ExcludeNegatives { get; set => SetProperty(ref field, value); } = new List<List<string>>();
@@ -595,28 +1223,52 @@ namespace ClassicUO.Configuration
         #endregion
 
         #region Modern paperdoll
-        public ushort ModernPaperDollHue { get; set => SetProperty(ref field, value); } = 0;
-        public ushort ModernPaperDollDurabilityHue { get; set => SetProperty(ref field, value); } = 32;
-        public int ModernPaperDoll_DurabilityPercent { get; set => SetProperty(ref field, value); } = 90;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "modern_paper_doll_hue", 0)]
+        public partial ushort ModernPaperDollHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "modern_paper_doll_durability_hue", 32)]
+        public partial ushort ModernPaperDollDurabilityHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "modern_paper_doll__durability_percent", 90)]
+        public partial int ModernPaperDoll_DurabilityPercent { get; set; }
         [JsonConverter(typeof(Point2Converter))] public Point ModernPaperdollPosition { get; set => SetProperty(ref field, value); } = new Point(100, 100);
         #endregion
 
         #region Health indicator
-        public float ShowHealthIndicatorBelow { get; set => SetProperty(ref field, value); } = 0.9f;
-        public bool EnableHealthIndicator { get; set => SetProperty(ref field, value); } = true;
-        public int HealthIndicatorWidth { get; set => SetProperty(ref field, value); } = 10;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "show_health_indicator_below", 0.9f)]
+        public partial float ShowHealthIndicatorBelow { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_health_indicator", true)]
+        public partial bool EnableHealthIndicator { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "health_indicator_width", 10)]
+        public partial int HealthIndicatorWidth { get; set; }
         #endregion
 
-        public ushort MainWindowBackgroundHue { get; set => SetProperty(ref field, value); } = 1;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "main_window_background_hue", 1)]
+        public partial ushort MainWindowBackgroundHue { get; set; }
 
-        public int MoveMultiObjectDelay { get; set => SetProperty(ref field, value); } = 1000;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "move_multi_object_delay", 1000)]
+        public partial int MoveMultiObjectDelay { get; set; }
 
-        public bool SpellIcon_DisplayHotkey { get; set => SetProperty(ref field, value); } = true;
-        public ushort SpellIcon_HotkeyHue { get; set => SetProperty(ref field, value); } = 1;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "spell_icon__display_hotkey", true)]
+        public partial bool SpellIcon_DisplayHotkey { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "spell_icon__hotkey_hue", 1)]
+        public partial ushort SpellIcon_HotkeyHue { get; set; }
 
-        public int SpellIconScale { get; set => SetProperty(ref field, value); } = 100;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "spell_icon_scale", 100)]
+        public partial int SpellIconScale { get; set; }
 
-        public bool EnableAlphaScrollingOnGumps { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_alpha_scrolling_on_gumps", true)]
+        public partial bool EnableAlphaScrollingOnGumps { get; set; }
 
         [JsonConverter(typeof(Point2Converter))] public Point WorldMapPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
         [JsonConverter(typeof(Point2Converter))] public Point PaperdollPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
@@ -624,58 +1276,128 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(Point2Converter))] public Point StatusGumpPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
         [JsonConverter(typeof(Point2Converter))] public Point BackpackGridPosition { get; set => SetProperty(ref field, value); } = new(100, 100);
         [JsonConverter(typeof(Point2Converter))] public Point BackpackGridSize { get; set => SetProperty(ref field, value); } = new(300, 300);
-        public bool WorldMapLocked { get; set => SetProperty(ref field, value); } = false;
-        public bool PaperdollLocked { get; set => SetProperty(ref field, value); } = false;
-        public bool JournalLocked { get; set => SetProperty(ref field, value); } = false;
-        public bool StatusGumpLocked { get; set => SetProperty(ref field, value); } = false;
-        public bool BackPackLocked { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "world_map_locked", false)]
+        public partial bool WorldMapLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "paperdoll_locked", false)]
+        public partial bool PaperdollLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_locked", false)]
+        public partial bool JournalLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "status_gump_locked", false)]
+        public partial bool StatusGumpLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "back_pack_locked", false)]
+        public partial bool BackPackLocked { get; set; }
 
-        public bool DisplayPartyChatOverhead { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "display_party_chat_overhead", true)]
+        public partial bool DisplayPartyChatOverhead { get; set; }
 
-        public string SelectedTTFJournalFont { get; set => SetProperty(ref field, value); } = "avadonian";
-        public int SelectedJournalFontSize { get; set => SetProperty(ref field, value); } = 20;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "selected_t_t_f_journal_font", "avadonian")]
+        public partial string SelectedTTFJournalFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "selected_journal_font_size", 20)]
+        public partial int SelectedJournalFontSize { get; set; }
 
-        public string SelectedToolTipFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
-        public int SelectedToolTipFontSize { get; set => SetProperty(ref field, value); } = 20;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "selected_tool_tip_font", "Roboto-Regular")]
+        public partial string SelectedToolTipFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "selected_tool_tip_font_size", 20)]
+        public partial int SelectedToolTipFontSize { get; set; }
 
-        public string GameWindowSideChatFont { get; set => SetProperty(ref field, value); } = "avadonian";
-        public int GameWindowSideChatFontSize { get; set => SetProperty(ref field, value); } = 20;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "game_window_side_chat_font", "avadonian")]
+        public partial string GameWindowSideChatFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "game_window_side_chat_font_size", 20)]
+        public partial int GameWindowSideChatFontSize { get; set; }
 
-        public string OverheadChatFont { get; set => SetProperty(ref field, value); } = "avadonian";
-        public int OverheadChatFontSize { get; set => SetProperty(ref field, value); } = 20;
-        public int OverheadChatWidth { get; set => SetProperty(ref field, value); } = 400;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "overhead_chat_font", "avadonian")]
+        public partial string OverheadChatFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "overhead_chat_font_size", 20)]
+        public partial int OverheadChatFontSize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "overhead_chat_width", 400)]
+        public partial int OverheadChatWidth { get; set; }
 
-        public string NamePlateFont { get; set => SetProperty(ref field, value); } = "avadonian";
-        public int NamePlateFontSize { get; set => SetProperty(ref field, value); } = 20;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_font", "avadonian")]
+        public partial string NamePlateFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "name_plate_font_size", 20)]
+        public partial int NamePlateFontSize { get; set; }
 
-        public bool UseNewOptionsWindow { get; set => SetProperty(ref field, value); } = true;
-        public string OptionsFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
-        public int OptionsFontSize { get; set => SetProperty(ref field, value); } = 18;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_new_options_window", true)]
+        public partial bool UseNewOptionsWindow { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "options_font", "Roboto-Regular")]
+        public partial string OptionsFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "options_font_size", 18)]
+        public partial int OptionsFontSize { get; set; }
 
-        public int TextBorderSize { get; set => SetProperty(ref field, value); } = 1;
-        public uint SavedMountSerial { get; set => SetProperty(ref field, value); } = 0;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "text_border_size", 1)]
+        public partial int TextBorderSize { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "saved_mount_serial", 0)]
+        public partial uint SavedMountSerial { get; set; }
 
-        public uint SavedMainHandSerial { get; set => SetProperty(ref field, value); } = 0;
-        public uint SavedOffHandSerial { get; set => SetProperty(ref field, value); } = 0;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "saved_main_hand_serial", 0)]
+        public partial uint SavedMainHandSerial { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "saved_off_hand_serial", 0)]
+        public partial uint SavedOffHandSerial { get; set; }
 
-        public bool UseModernShopGump { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_modern_shop_gump", false)]
+        public partial bool UseModernShopGump { get; set; }
 
-        public int MaxJournalEntries { get; set => SetProperty(ref field, value); } = 250;
-        public int MaxSoundEntries { get; set => SetProperty(ref field, value); } = 250;
-        public bool HideJournalBorder { get; set => SetProperty(ref field, value); } = false;
-        public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
-        public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "max_journal_entries", 250)]
+        public partial int MaxJournalEntries { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "max_sound_entries", 250)]
+        public partial int MaxSoundEntries { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_journal_border", false)]
+        public partial bool HideJournalBorder { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_journal_timestamp", false)]
+        public partial bool HideJournalTimestamp { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_journal_system_prefix", false)]
+        public partial bool HideJournalSystemPrefix { get; set; }
 
-        public int HealthLineSizeMultiplier { get; set => SetProperty(ref field, value); } = 1;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "health_line_size_multiplier", 1)]
+        public partial int HealthLineSizeMultiplier { get; set; }
 
-        public bool OpenHealthBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "open_health_bar_for_last_attack", true)]
+        public partial bool OpenHealthBarForLastAttack { get; set; }
         [JsonConverter(typeof(Point2Converter))]
         public Point LastTargetHealthBarPos { get; set => SetProperty(ref field, value); } = Point.Zero;
-        public ushort ToolTipBGHue { get; set => SetProperty(ref field, value); } = 0;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tool_tip_b_g_hue", 0)]
+        public partial ushort ToolTipBGHue { get; set; }
 
-        public string LastVersionHistoryShown { get; set => SetProperty(ref field, value); }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_version_history_shown", null)]
+        public partial string LastVersionHistoryShown { get; set; }
 
-        public int AdvancedSkillsGumpHeight { get; set => SetProperty(ref field, value); } = 510;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "advanced_skills_gump_height", 510)]
+        public partial int AdvancedSkillsGumpHeight { get; set; }
 
         #region ToolTip Overrides
         public List<string> ToolTipOverride_SearchText { get; set => SetProperty(ref field, value); } = new List<string>() { "Physical Res", "Fire Resist", "Cold Resist", "Poison Resist", "Energy Resist", "Weapon Damage" };
@@ -687,31 +1409,59 @@ namespace ClassicUO.Configuration
         public List<byte> ToolTipOverride_Layer { get; set => SetProperty(ref field, value); } = new List<byte>() { (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any };
         #endregion
 
-        public string TooltipHeaderFormat { get; set => SetProperty(ref field, value); } = "/c[yellow]{0}";
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "tooltip_header_format", "/c[yellow]{0}")]
+        public partial string TooltipHeaderFormat { get; set; }
 
-        public bool DisplaySkillBarOnChange { get; set => SetProperty(ref field, value); } = true;
-        public string SkillBarFormat { get; set => SetProperty(ref field, value); } = "{0}: {1} / {2}";
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "display_skill_bar_on_change", true)]
+        public partial bool DisplaySkillBarOnChange { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "skill_bar_format", "{0}: {1} / {2}")]
+        public partial string SkillBarFormat { get; set; }
 
-        public bool DisplayRadius { get; set => SetProperty(ref field, value); } = false;
-        public int DisplayRadiusDistance { get; set => SetProperty(ref field, value); } = 10;
-        public ushort DisplayRadiusHue { get; set => SetProperty(ref field, value); } = 22;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "display_radius", false)]
+        public partial bool DisplayRadius { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "display_radius_distance", 10)]
+        public partial int DisplayRadiusDistance { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "display_radius_hue", 22)]
+        public partial ushort DisplayRadiusHue { get; set; }
 
-        public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_spell_indicators", true)]
+        public partial bool EnableSpellIndicators { get; set; }
 
-        public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
-        public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_auto_loot", false)]
+        public partial bool EnableAutoLoot { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_loot_human_corpses", false)]
+        public partial bool AutoLootHumanCorpses { get; set; }
 
-        public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "item_database_enabled", true)]
+        public partial bool ItemDatabaseEnabled { get; set; }
 
         public static uint GumpsVersion { get; private set; }
 
         [JsonConverter(typeof(Point2Converter))]
         public Point InfoBarSize { get; set => SetProperty(ref field, value); } = new Point(400, 20);
-        public bool InfoBarLocked { get; set => SetProperty(ref field, value); } = false;
-        public string InfoBarFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
-        public int InfoBarFontSize { get; set => SetProperty(ref field, value); } = 18;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "info_bar_locked", false)]
+        public partial bool InfoBarLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "info_bar_font", "Roboto-Regular")]
+        public partial string InfoBarFont { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "info_bar_font_size", 18)]
+        public partial int InfoBarFontSize { get; set; }
 
-        public int LastJournalTab { get; set => SetProperty(ref field, value); } = 0;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_journal_tab", 0)]
+        public partial int LastJournalTab { get; set; }
         public Dictionary<string, MessageType[]> JournalTabs { get; set => SetProperty(ref field, value); } = new Dictionary<string, MessageType[]>()
         {
             { "All", new MessageType[] {
@@ -743,21 +1493,35 @@ namespace ClassicUO.Configuration
             }
         };
 
-        public bool UseLastMovedCooldownPosition { get; set => SetProperty(ref field, value); } = true;
-        public bool CloseHealthBarIfAnchored { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_last_moved_cooldown_position", true)]
+        public partial bool UseLastMovedCooldownPosition { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "close_health_bar_if_anchored", false)]
+        public partial bool CloseHealthBarIfAnchored { get; set; }
 
         [JsonConverter(typeof(Point2Converter))]
         public Point SkillProgressBarPosition { get; set => SetProperty(ref field, value); } = Point.Zero;
 
-        public bool ForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "force_resync_on_hang", false)]
+        public partial bool ForceResyncOnHang { get; set; }
 
-        public bool UseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_one_h_p_bar_for_last_attack", true)]
+        public partial bool UseOneHPBarForLastAttack { get; set; }
 
-        public bool DisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_mouse_interaction_overhead_text", false)]
+        public partial bool DisableMouseInteractionOverheadText { get; set; }
 
-        public bool HiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hidden_layers_enabled", false)]
+        public partial bool HiddenLayersEnabled { get; set; }
         public List<int> HiddenLayers { get; set => SetProperty(ref field, value); } = new List<int>();
-        public bool HideLayersForSelf { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_layers_for_self", true)]
+        public partial bool HideLayersForSelf { get; set; }
 
         public List<string> AutoOpenXmlGumps { get; set => SetProperty(ref field, value); } = new List<string>();
 
@@ -783,9 +1547,13 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(Point2Converter))]
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
 
-        public float CameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "camera_smoothing_factor", 0f)]
+        public partial float CameraSmoothingFactor { get; set; }
 
-        public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "paperdoll_scale", 1f)]
+        public partial double PaperdollScale { get; set; }
 
         public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
@@ -798,39 +1566,103 @@ namespace ClassicUO.Configuration
         /// </summary>
         public double ServerGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
-        public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "s_o_s_gump_i_d", 1915258020)]
+        public partial uint SOSGumpID { get; set; }
 
-        public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
-        public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
-        public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
-        public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
-        public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
-        public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
-        public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
-        public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-        public bool BuyAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int BuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int BuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-        public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
-        public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
-        public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
-        public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
-        public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
-        public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
-        public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
-        public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
-        public ulong HideHudGumpFlags { get; set => SetProperty(ref field, value); }
-        public bool DisableGrayEnemies { get; set => SetProperty(ref field, value); }
-        public bool EnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
-        public ushort PostProcessingType { get; set => SetProperty(ref field, value); }
-        public bool DisableHotkeys { get; set => SetProperty(ref field, value); }
-        public bool DisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "modern_paperdoll_anchor_enabled", false)]
+        public partial bool ModernPaperdollAnchorEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_anchor_enabled", false)]
+        public partial bool JournalAnchorEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_auto_loot_progress_bar", true)]
+        public partial bool EnableAutoLootProgressBar { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "use_w_a_s_d_instead_arrow_keys", false)]
+        public partial bool UseWASDInsteadArrowKeys { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_gump_height", 550)]
+        public partial int NearbyLootGumpHeight { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "force_tooltips_on_old_clients", true)]
+        public partial bool ForceTooltipsOnOldClients { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_opens_human_corpses", false)]
+        public partial bool NearbyLootOpensHumanCorpses { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "turn_delay", 100)]
+        public partial ushort TurnDelay { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sell_agent_enabled", false)]
+        public partial bool SellAgentEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sell_agent_max_uniques", 50)]
+        public partial int SellAgentMaxUniques { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sell_agent_max_items", 0)]
+        public partial int SellAgentMaxItems { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buy_agent_enabled", false)]
+        public partial bool BuyAgentEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buy_agent_max_uniques", 50)]
+        public partial int BuyAgentMaxUniques { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buy_agent_max_items", 0)]
+        public partial int BuyAgentMaxItems { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buy_agent_sub_containers", true)]
+        public partial bool BuyAgentSubContainers { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_targeting_grid_containers", false)]
+        public partial bool DisableTargetingGridContainers { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "controller_enabled", true)]
+        public partial bool ControllerEnabled { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_scavenger", true)]
+        public partial bool EnableScavenger { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_gump_locked", false)]
+        public partial bool CounterGumpLocked { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_conceals_container_on_open", true)]
+        public partial bool NearbyLootConcealsContainerOnOpen { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "spell_bar__show_hotkeys", true)]
+        public partial bool SpellBar_ShowHotkeys { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "forced_house_transparency", 40)]
+        public partial byte ForcedHouseTransparency { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "forced_transparency_house_tile_hue", 0)]
+        public partial ushort ForcedTransparencyHouseTileHue { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "force_house_transparency", false)]
+        public partial bool ForceHouseTransparency { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_hud_gump_flags", 0)]
+        public partial ulong HideHudGumpFlags { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_gray_enemies", false)]
+        public partial bool DisableGrayEnemies { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_post_processing_effects", false)]
+        public partial bool EnablePostProcessingEffects { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "post_processing_type", 0)]
+        public partial ushort PostProcessingType { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_hotkeys", false)]
+        public partial bool DisableHotkeys { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "disable_dismount_in_war_mode", true)]
+        public partial bool DisableDismountInWarMode { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_a_sync_map_loading", true)]
+        public partial bool EnableASyncMapLoading { get; set; }
 
         public string TazUOChatNick
         {
@@ -994,8 +1826,46 @@ namespace ClassicUO.Configuration
                 return;
             }
 
-            //Load Char-scoped settings after player is created (when serial is available)
-            LoadGeneratedCharSqlSettings();
+            // Load current Char-scoped values synchronously (single query) so every field is populated before
+            // the game scene builds its gumps from these values.
+            Dictionary<string, string> kvp = Client.Settings.GetAll(SettingsScope.Char);
+            LoadGeneratedCharSqlSettings(kvp);
+
+            // One-time migration: import existing profile.json values for the newly-migrated settings. Runs
+            // after the bulk load (so it overrides only the keys not yet present in SQLite) and here (after the
+            // player is created) so the Char scope key resolves against a valid serial. MigrateJsonToSql assigns
+            // through the setters, which both populate the fields for this session and persist to SQLite.
+            if (!Client.Settings.Get<bool>(SettingsScope.Char, Constants.SqlSettings.PROFILE_JSON_MIGRATED))
+            {
+                TryMigrateProfileJsonToSql();
+                Client.Settings.Set(SettingsScope.Char, Constants.SqlSettings.PROFILE_JSON_MIGRATED, true);
+            }
+
+            // Re-apply settings that are consumed during ProfileManager.Load (before Char-scoped values exist).
+            Client.Game?.SetVSync(EnableVSync);
+        }
+
+        // Reads the legacy per-character profile.json and copies every migrated scalar/enum setting into the
+        // SQLite store (via the generated MigrateJsonToSql). Best-effort: failures are logged and ignored.
+        private void TryMigrateProfileJsonToSql()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(ProfileManager.ProfilePath))
+                    return;
+
+                string file = Path.Combine(ProfileManager.ProfilePath, "profile.json");
+
+                using JsonDocument doc = ConfigurationResolver.LoadDocument(file);
+                if (doc == null)
+                    return;
+
+                MigrateJsonToSql(doc);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to migrate profile.json settings to SQL: {ex.Message}");
+            }
         }
 
         internal void Save(World world, string path, bool saveGumps = true)
