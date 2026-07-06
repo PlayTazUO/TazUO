@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -170,11 +171,13 @@ namespace ClassicUO.Game.Managers
                 if (type == typeof(ulong))
                     return (T)(object)ulong.Parse(value);
 
+                // Parse with invariant culture: values are stored in a locale-independent format (see SetAsync),
+                // and JSON-imported values always use '.' as the decimal separator.
                 if (type == typeof(float))
-                    return (T)(object)float.Parse(value);
+                    return (T)(object)float.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (type == typeof(double))
-                    return (T)(object)double.Parse(value);
+                    return (T)(object)double.Parse(value, NumberStyles.Float, CultureInfo.InvariantCulture);
 
                 if (type.IsEnum)
                     return (T)Enum.Parse(type, value, ignoreCase: true);
@@ -392,7 +395,13 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task SetAsync<T>(SettingsScope scope, string name, T value)
         {
-            string stringValue = value?.ToString() ?? string.Empty;
+            // Format with invariant culture so numeric values (float/double) are stored locale-independently
+            // and can be read back / imported regardless of the machine's decimal separator. IFormattable
+            // covers the numeric and enum types; bool and string fall through to their culture-agnostic ToString.
+            string stringValue = value is IFormattable formattable
+                ? formattable.ToString(null, CultureInfo.InvariantCulture)
+                : value?.ToString() ?? string.Empty;
+
             await SetAsync(scope, name, stringValue);
         }
 

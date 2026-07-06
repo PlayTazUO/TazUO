@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Threading;
 using ClassicUO.Game.Managers;
 using FluentAssertions;
 using Xunit;
@@ -47,6 +49,36 @@ namespace ClassicUO.UnitTests.Game.Managers
             settings.Get<double>(SettingsScope.Global, "t_double").Should().Be(3.14159d);
             settings.Get<string>(SettingsScope.Global, "t_string").Should().Be("hello world");
             settings.Get<SampleEnum>(SettingsScope.Global, "t_enum").Should().Be(SampleEnum.Third);
+        }
+
+        [Fact]
+        public void Float_And_Double_Are_Locale_Independent()
+        {
+            // A culture whose decimal separator is ',' (e.g. de-DE). Values must still store/parse with '.'
+            // so they round-trip and so JSON-imported values ("0.9") parse correctly.
+            CultureInfo original = Thread.CurrentThread.CurrentCulture;
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
+            try
+            {
+                using var settings = new SQLSettingsManager();
+
+                settings.Set(SettingsScope.Global, "loc_float", 0.9f);
+                settings.Set(SettingsScope.Global, "loc_double", 3.14159d);
+
+                // Stored form must be invariant ('.'), not the culture's ','.
+                settings.Get(SettingsScope.Global, "loc_float").Should().Be("0.9");
+
+                settings.Get<float>(SettingsScope.Global, "loc_float").Should().Be(0.9f);
+                settings.Get<double>(SettingsScope.Global, "loc_double").Should().Be(3.14159d);
+
+                // Simulate a value imported from profile.json (always '.'-decimal) read under this culture.
+                settings.Set(SettingsScope.Global, "loc_json", "0.5");
+                settings.Get<double>(SettingsScope.Global, "loc_json").Should().Be(0.5d);
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = original;
+            }
         }
 
         [Fact]

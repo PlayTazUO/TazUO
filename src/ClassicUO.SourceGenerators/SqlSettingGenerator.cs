@@ -266,8 +266,10 @@ namespace ClassicUO.Configuration
                 case "uint":   return $"uint.TryParse({rawVar}, out uint {outVar})";
                 case "long":   return $"long.TryParse({rawVar}, out long {outVar})";
                 case "ulong":  return $"ulong.TryParse({rawVar}, out ulong {outVar})";
-                case "float":  return $"float.TryParse({rawVar}, out float {outVar})";
-                case "double": return $"double.TryParse({rawVar}, out double {outVar})";
+                // Invariant culture: SQLite values are stored locale-independently and JSON-imported values
+                // always use '.' as the decimal separator.
+                case "float":  return $"float.TryParse({rawVar}, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float {outVar})";
+                case "double": return $"double.TryParse({rawVar}, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double {outVar})";
                 case "string": return null; // no TryParse needed
                 default:       return null;
             }
