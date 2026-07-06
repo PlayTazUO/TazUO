@@ -345,6 +345,11 @@ namespace ClassicUO.Configuration
             sb.AppendLine("    public sealed partial class Profile");
             sb.AppendLine("    {");
 
+            // When true, the generated setters skip persisting back to SQLite. Set while bulk-loading values
+            // that already came from SQLite so hydration does not write them straight back.
+            sb.AppendLine("        private bool _suppressSqlPersist;");
+            sb.AppendLine();
+
             // Properties
             foreach (SqlSettingModel m in valid)
             {
@@ -354,7 +359,7 @@ namespace ClassicUO.Configuration
                 sb.AppendLine("            get;");
                 sb.AppendLine("            set");
                 sb.AppendLine("            {");
-                sb.AppendLine("                if (SetProperty(ref field, value))");
+                sb.AppendLine("                if (SetProperty(ref field, value) && !_suppressSqlPersist)");
                 sb.AppendLine($"                    _ = Client.Settings?.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
                 sb.AppendLine("            }");
 
@@ -378,14 +383,22 @@ namespace ClassicUO.Configuration
                 string scopeName = ScopeName(scopeOrdinal);
                 sb.AppendLine($"        internal void LoadGenerated{scopeName}SqlSettings(System.Collections.Generic.Dictionary<string, string> kvp)");
                 sb.AppendLine("        {");
+                sb.AppendLine("            _suppressSqlPersist = true;");
+                sb.AppendLine("            try");
+                sb.AppendLine("            {");
 
                 foreach (SqlSettingModel m in group)
                 {
                     string rawVar = $"_raw_{m.PropertyName}";
-                    sb.AppendLine($"            if (kvp.TryGetValue(\"{m.Key}\", out string {rawVar}))");
-                    EmitAssignFromRaw(sb, m, rawVar, "                ");
+                    sb.AppendLine($"                if (kvp.TryGetValue(\"{m.Key}\", out string {rawVar}))");
+                    EmitAssignFromRaw(sb, m, rawVar, "                    ");
                 }
 
+                sb.AppendLine("            }");
+                sb.AppendLine("            finally");
+                sb.AppendLine("            {");
+                sb.AppendLine("                _suppressSqlPersist = false;");
+                sb.AppendLine("            }");
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
