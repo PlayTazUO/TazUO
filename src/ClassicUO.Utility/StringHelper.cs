@@ -203,6 +203,63 @@ namespace ClassicUO.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSafeChar(int c) => c >= 0x20 && c < 0xFFFE;
 
+        /// <summary>
+        /// Removes unpaired UTF-16 surrogate characters from a string.
+        /// A lone high surrogate (one not followed by a low surrogate) makes
+        /// FontStashSharp read past the end of its internal buffer and throws an
+        /// <see cref="IndexOutOfRangeException"/> while measuring text, so any
+        /// surrogate that is not part of a valid pair must be stripped before the
+        /// text reaches the renderer. Well-formed surrogate pairs are preserved.
+        /// </summary>
+        public static string RemoveUnpairedSurrogates(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return str;
+
+            bool hasSurrogate = false;
+
+            for (int i = 0; i < str.Length; i++)
+            {
+                if (char.IsSurrogate(str[i]))
+                {
+                    hasSurrogate = true;
+
+                    break;
+                }
+            }
+
+            if (!hasSurrogate) //Fast path: nothing to sanitize, keep the original reference
+                return str;
+
+            var sb = new ValueStringBuilder(str.Length);
+
+            for (int i = 0; i < str.Length; i++)
+            {
+                char c = str[i];
+
+                if (char.IsHighSurrogate(c))
+                {
+                    if (i + 1 < str.Length && char.IsLowSurrogate(str[i + 1]))
+                    {
+                        sb.Append(c);
+                        sb.Append(str[i + 1]);
+                        i++;
+                    }
+                    //else: unpaired high surrogate -> drop it
+                }
+                else if (!char.IsLowSurrogate(c)) //Drop unpaired low surrogates, keep everything else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            string result = sb.ToString();
+
+            sb.Dispose();
+
+            return result;
+        }
+
         public static void AddSpaceBeforeCapital(string[] str, bool checkAcronyms = true)
         {
             for (int i = 0; i < str.Length; i++)
