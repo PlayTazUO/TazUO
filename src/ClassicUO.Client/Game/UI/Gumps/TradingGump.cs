@@ -4,6 +4,7 @@ using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
@@ -174,7 +175,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var it = (Item)i;
 
-                _myListBox?.Add(new TradeItemListEntry(it, _myListBox.Width));
+                _myListBox?.Add(new TradeItemListEntry(it, _myListBox.Width, GumpScale));
 
                 var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
@@ -238,7 +239,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var it = (Item)i;
 
-                _hisListBox?.Add(new TradeItemListEntry(it, _hisListBox.Width));
+                _hisListBox?.Add(new TradeItemListEntry(it, _hisListBox.Width, GumpScale));
 
                 var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
                 {
@@ -638,15 +639,38 @@ namespace ClassicUO.Game.UI.Gumps
         {
             const int LIST_HEIGHT = 100;
 
-            int listTop = gumpHeight + 2;
-            int halfWidth = gumpWidth >> 1;
+            // The rest of the gump is drawn in scaled (logical) space, so pre-scale the list geometry
+            // here and build the scroll areas at their final size. We disable AutoScaleChildren while
+            // adding them so the base Add() doesn't scale the already-scaled values a second time (and
+            // so the scroll bar built inside ModernScrollArea ends up sized correctly).
+            double scale = GumpScale;
 
-            _myListBox = AddItemListView(0, listTop, halfWidth, LIST_HEIGHT);
-            _hisListBox = AddItemListView(halfWidth, listTop, gumpWidth - halfWidth, LIST_HEIGHT);
+            int listTop = ScaleHelper.Scaled(gumpHeight + 2, scale);
+            int scaledWidth = ScaleHelper.Scaled(gumpWidth, scale);
+            int listHeight = ScaleHelper.Scaled(LIST_HEIGHT, scale);
+            int halfWidth = scaledWidth >> 1;
+
+            bool prevAutoScale = AutoScaleChildren;
+            AutoScaleChildren = false;
+
+            _myListBox = AddItemListView(0, listTop, halfWidth, listHeight);
+            _hisListBox = AddItemListView(halfWidth, listTop, scaledWidth - halfWidth, listHeight);
+
+            AutoScaleChildren = prevAutoScale;
         }
 
         private VBoxContainer AddItemListView(int x, int y, int width, int height)
         {
+            // Semi-transparent backing panel so the list content stays legible over the world behind
+            // the gump. Added before the scroll area so it renders underneath the list.
+            Add(new AlphaBlendControl(0.5f)
+            {
+                X = x,
+                Y = y,
+                Width = width,
+                Height = height
+            });
+
             var scroll = new ModernScrollArea(x, y, width, height, height)
             {
                 ScrollbarBehaviour = ScrollbarBehaviour.ShowWhenDataExceedFromView
@@ -677,16 +701,20 @@ namespace ClassicUO.Game.UI.Gumps
         private const int ITEM_SIZE = 40;
 
         private readonly Item _item;
+        private readonly double _scale;
+        private readonly int _itemSize;
 
-        public TradeItemListEntry(Item item, int width)
+        public TradeItemListEntry(Item item, int width, double scale = 1.0)
         {
             _item = item;
+            _scale = scale;
+            _itemSize = ScaleHelper.Scaled(ITEM_SIZE, scale);
 
             CanMove = true;
             AcceptMouseInput = true;
             WantUpdateSize = false;
             Width = width;
-            Height = ITEM_SIZE;
+            Height = _itemSize;
 
             Add(new AlphaBlendControl(0.15f) { Width = width, Height = Height });
 
@@ -704,23 +732,32 @@ namespace ClassicUO.Game.UI.Gumps
                 );
             }
 
-            int textX = ITEM_SIZE + 4;
+            int textX = _itemSize + ScaleHelper.Scaled(4, scale);
 
-            var nameLabel = new Label(name, true, 0x0481, maxwidth: Math.Max(1, width - textX - 2), font: 1)
+            // Labels render at their native font size and are scaled at draw time via InternalScale, so
+            // the wrap width must be expressed in unscaled (design) space.
+            int available = Math.Max(1, width - textX - ScaleHelper.Scaled(2, scale));
+            int nativeMaxWidth = Math.Max(1, ScaleHelper.Unscaled(available, scale));
+
+            var nameLabel = new Label(name, true, 0x0481, maxwidth: nativeMaxWidth, font: 1)
             {
                 X = textX,
-                Y = 3
+                Y = ScaleHelper.Scaled(3, scale)
             };
+            nameLabel.ApplyScale(scale, scalePosition: false);
 
             Add(nameLabel);
 
             if (item.Amount > 1)
             {
-                Add(new Label($"x{item.Amount}", true, 0x0481, font: 1)
+                var amountLabel = new Label($"x{item.Amount}", true, 0x0481, font: 1)
                 {
                     X = textX,
-                    Y = nameLabel.Y + nameLabel.Height + 1
-                });
+                    Y = nameLabel.Y + nameLabel.Height + ScaleHelper.Scaled(1, scale)
+                };
+                amountLabel.ApplyScale(scale, scalePosition: false);
+
+                Add(amountLabel);
             }
 
             SetTooltip(item);
@@ -742,18 +779,18 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (texture.Texture != null)
             {
-                var size = new Point(rect.Width, rect.Height);
-                var point = new Point((ITEM_SIZE >> 1) - (size.X >> 1), (ITEM_SIZE >> 1) - (size.Y >> 1));
+                var size = new Point((int)(rect.Width * _scale), (int)(rect.Height * _scale));
+                var point = new Point((_itemSize >> 1) - (size.X >> 1), (_itemSize >> 1) - (size.Y >> 1));
 
-                if (rect.Width > ITEM_SIZE)
+                if (size.X > _itemSize)
                 {
-                    size.X = ITEM_SIZE;
+                    size.X = _itemSize;
                     point.X = 0;
                 }
 
-                if (rect.Height > ITEM_SIZE)
+                if (size.Y > _itemSize)
                 {
-                    size.Y = ITEM_SIZE;
+                    size.Y = _itemSize;
                     point.Y = 0;
                 }
 
