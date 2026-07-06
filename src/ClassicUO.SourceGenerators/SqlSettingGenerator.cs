@@ -354,12 +354,8 @@ namespace ClassicUO.Configuration
                 sb.AppendLine("            get;");
                 sb.AppendLine("            set");
                 sb.AppendLine("            {");
-                sb.AppendLine("                if (!EqualityComparer<" + m.TypeName + ">.Default.Equals(field, value))");
-                sb.AppendLine("                {");
+                sb.AppendLine("                if (SetProperty(ref field, value))");
                 sb.AppendLine($"                    _ = Client.Settings?.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
-                sb.AppendLine("                    field = value;");
-                sb.AppendLine("                    OnPropertyChanged();");
-                sb.AppendLine("                }");
                 sb.AppendLine("            }");
 
                 if (IsNonDefaultValue(m))
