@@ -664,6 +664,7 @@ namespace ClassicUO.Configuration
         public int MaxJournalEntries { get; set => SetProperty(ref field, value); } = 250;
         public int MaxSoundEntries { get; set => SetProperty(ref field, value); } = 250;
         public bool HideJournalBorder { get; set => SetProperty(ref field, value); } = false;
+        public bool JournalTransparencyWhenInactive { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalTimestamp { get; set => SetProperty(ref field, value); } = false;
         public bool HideJournalSystemPrefix { get; set => SetProperty(ref field, value); } = false;
 
