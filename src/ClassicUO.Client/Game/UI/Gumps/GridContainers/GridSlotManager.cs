@@ -247,7 +247,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         {
             if (_gridContainer.IsListView)
             {
-                int rowWidth = Math.Max(0, _area.Width - 14);
+                int rowWidth = Math.Max(0, _area.Width - GridScrollArea.SCROLLBAR_WIDTH);
                 int columns = Math.Max(1, rowWidth / LIST_COLUMN_WIDTH);
                 int columnWidth = columns > 1 ? rowWidth / columns : rowWidth;
                 int itemWidth = Math.Max(0, columnWidth - (columns > 1 ? LIST_COLUMN_GAP : 0));
@@ -276,7 +276,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 {
                     continue;
                 }
-                if (x + GridItemSize >= _area.Width - 14) //14 is the scroll bar width
+                if (x + GridItemSize >= _area.Width - GridScrollArea.SCROLLBAR_WIDTH)
                 {
                     x = X_SPACING;
                     y += GridItemSize + Y_SPACING;

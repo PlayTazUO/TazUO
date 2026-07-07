@@ -256,95 +256,110 @@ public class GridItem : Control
     {
         base.OnMouseUp(x, y, e);
 
-        if (e == MouseButtonType.Left)
+        if (e != MouseButtonType.Left)
+            return;
+
+        // Modes are mutually exclusive and checked in priority order.
+        if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            DropHeldItem();
+        else if (_world.TargetManager.IsTargeting)
+            HandleTargetingClick();
+        else if (_gridContainer.IsLockSlot)
+            HandleLockSlotClick();
+        else if (_gridContainer.IsMultiMove && _item != null)
+            HandleMultiMoveClick();
+        else if (_gridContainer.IsAutoLoot && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
+            AddToAutoLoot();
+        else if (_item != null)
+            HandlePlainClick();
+    }
+
+    // Drops the item currently held by the cursor: into this slot's item if it's a container,
+    // stacked onto a matching stackable, or into this grid slot otherwise.
+    private void DropHeldItem()
+    {
+        if (_item != null && _item.ItemData.IsContainer)
         {
-            if (Client.Game.UO.GameCursor.ItemHold.Enabled)
-            {
-                if (_item != null && _item.ItemData.IsContainer)
-                {
-                    GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, _item.Serial);
-                    Mouse.CancelDoubleClick = true;
-                    _mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
-                }
-                else if (_item != null && _item.ItemData.IsStackable && _item.Graphic == Client.Game.UO.GameCursor.ItemHold.Graphic)
-                {
-                    GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, _item.X, _item.Y, 0, _item.Serial);
-                    Mouse.CancelDoubleClick = true;
-                    _mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
-                }
-                else
-                {
-                    Rectangle containerBounds = _world.ContainerManager.Get(_container.Graphic).Bounds;
-                    _gridContainer.SlotManager.AddItemSlot(Client.Game.UO.GameCursor.ItemHold.Serial, _slot);
-                    (int X, int Y) pos = GetBoxPosition(_slot, Client.Game.UO.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
-                    GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, pos.X, pos.Y, 0, _container.Serial);
-                    Mouse.CancelDoubleClick = true;
-                    _mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
-                }
-            }
-            else if (_world.TargetManager.IsTargeting)
-            {
-                if (_item != null)
-                {
-                    _world.TargetManager.Target(_item);
-                    if (_world.TargetManager.TargetingState == CursorTarget.SetTargetClientSide)
-                    {
-                        UIManager.Add(new InspectorGump(_world, _item));
-                    }
-                }
-                else if (!_profile.DisableTargetingGridContainers)
-                    _world.TargetManager.Target(_container);
-                Mouse.CancelDoubleClick = true;
-            }
-            else if (_gridContainer.IsLockSlot)
-            {
-                if (_item != null)
-                    _gridContainer.SlotManager.SetLockedSlot(_slot, !ItemGridLocked, _gridContainer.GridContainerEntry.GetSlot(_item.Serial));
-                Mouse.CancelDoubleClick = true;
-            }
-            else if (_gridContainer.IsMultiMove && _item != null)
-            {
-                // If no drag occurred, toggle on click to prevent missed quick taps.
-                if (!_altDragActive)
-                {
-                    _selectHighlight = MultiItemMoveGump.ToggleItem(_item);
-                }
-                else
-                {
-                    _selectHighlight = MultiItemMoveGump.IsSelected(_item.Serial);
-                }
+            GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, 0xFFFF, 0xFFFF, 0, _item.Serial);
+        }
+        else if (_item != null && _item.ItemData.IsStackable && _item.Graphic == Client.Game.UO.GameCursor.ItemHold.Graphic)
+        {
+            GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, _item.X, _item.Y, 0, _item.Serial);
+        }
+        else
+        {
+            Rectangle containerBounds = _world.ContainerManager.Get(_container.Graphic).Bounds;
+            _gridContainer.SlotManager.AddItemSlot(Client.Game.UO.GameCursor.ItemHold.Serial, _slot);
+            (int X, int Y) pos = GetBoxPosition(_slot, Client.Game.UO.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
+            GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, pos.X, pos.Y, 0, _container.Serial);
+        }
 
-                if (_selectHighlight)
-                    MultiItemMoveGump.ShowNextTo(_gridContainer);
+        Mouse.CancelDoubleClick = true;
+        _mousePressedWhenEntered = false; //Fix for not needing to move mouse out of grid box to re-drag item
+    }
 
-                Mouse.CancelDoubleClick = true;
-            }
-            else if (_gridContainer.IsAutoLoot && _item != null && _profile.EnableAutoLoot && !_profile.HoldShiftForContext && !_profile.HoldShiftToSplitStack)
+    private void HandleTargetingClick()
+    {
+        if (_item != null)
+        {
+            _world.TargetManager.Target(_item);
+            if (_world.TargetManager.TargetingState == CursorTarget.SetTargetClientSide)
             {
-                AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
-                GameActions.Print(_world, $"Added this item to auto loot.");
+                UIManager.Add(new InspectorGump(_world, _item));
             }
-            else if (_item != null)
-            {
-                Point offset = Mouse.LDragOffset;
-                if (Math.Abs(offset.X) < Constants.MIN_PICKUP_DRAG_DISTANCE_PIXELS && Math.Abs(offset.Y) < Constants.MIN_PICKUP_DRAG_DISTANCE_PIXELS)
-                {
-                    if ((_gridContainer.IsCorpse && _profile.CorpseSingleClickLoot) || _gridContainer.QuickLootThisContainer)
-                    {
-                        ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.QuickLoot(_item), ActionPriority.MoveItem);
-                        Mouse.CancelDoubleClick = true;
-                    }
-                    else
-                    {
-                        if (_world.ClientFeatures.TooltipsEnabled)
-                            _world.DelayedObjectClickManager.Set(_item.Serial, _gridContainer.X, _gridContainer.Y - 80, Time.Ticks + Mouse.MOUSE_DELAY_DOUBLE_CLICK);
-                        else
-                        {
-                            GameActions.SingleClick(_world, _item.Serial);
-                        }
-                    }
-                }
-            }
+        }
+        else if (!_profile.DisableTargetingGridContainers)
+            _world.TargetManager.Target(_container);
+
+        Mouse.CancelDoubleClick = true;
+    }
+
+    private void HandleLockSlotClick()
+    {
+        if (_item != null)
+            _gridContainer.SlotManager.SetLockedSlot(_slot, !ItemGridLocked, _gridContainer.GridContainerEntry.GetSlot(_item.Serial));
+
+        Mouse.CancelDoubleClick = true;
+    }
+
+    private void HandleMultiMoveClick()
+    {
+        // If no drag occurred, toggle on click to prevent missed quick taps.
+        _selectHighlight = !_altDragActive
+            ? MultiItemMoveGump.ToggleItem(_item)
+            : MultiItemMoveGump.IsSelected(_item.Serial);
+
+        if (_selectHighlight)
+            MultiItemMoveGump.ShowNextTo(_gridContainer);
+
+        Mouse.CancelDoubleClick = true;
+    }
+
+    private void AddToAutoLoot()
+    {
+        AutoLootManager.Instance.AddAutoLootEntry(_item.Graphic, _item.Hue, _item.Name);
+        GameActions.Print(_world, $"Added this item to auto loot.");
+    }
+
+    // A plain left click on an item: quick-loot it if enabled, otherwise show its tooltip/single-click.
+    private void HandlePlainClick()
+    {
+        Point offset = Mouse.LDragOffset;
+        if (Math.Abs(offset.X) >= Constants.MIN_PICKUP_DRAG_DISTANCE_PIXELS || Math.Abs(offset.Y) >= Constants.MIN_PICKUP_DRAG_DISTANCE_PIXELS)
+            return;
+
+        if ((_gridContainer.IsCorpse && _profile.CorpseSingleClickLoot) || _gridContainer.QuickLootThisContainer)
+        {
+            ObjectActionQueue.Instance.Enqueue(ObjectActionQueueItem.QuickLoot(_item), ActionPriority.MoveItem);
+            Mouse.CancelDoubleClick = true;
+        }
+        else if (_world.ClientFeatures.TooltipsEnabled)
+        {
+            _world.DelayedObjectClickManager.Set(_item.Serial, _gridContainer.X, _gridContainer.Y - 80, Time.Ticks + Mouse.MOUSE_DELAY_DOUBLE_CLICK);
+        }
+        else
+        {
+            GameActions.SingleClick(_world, _item.Serial);
         }
     }
 
@@ -862,53 +877,68 @@ public class GridItem : Control
         );
     }
 
+    /// <summary>
+    /// When compare mode is active and the cursor is over an equippable item, builds the
+    /// side-by-side comparison tooltip against the currently equipped item(s).
+    /// </summary>
+    private void TryShowComparisonTooltip()
+    {
+        if (!_hasItem || !_gridContainer.IsCompare || _item.ItemData.Layer <= 0 || !MouseIsOver)
+            return;
+
+        // Bail if a comparison tooltip is already showing.
+        if ((_toolTipThis != null && !_toolTipThis.IsDisposed) ||
+            (_toolTipitem1 != null && !_toolTipitem1.IsDisposed) ||
+            (_toolTipitem2 != null && !_toolTipitem2.IsDisposed))
+            return;
+
+        var itemLayer = (Layer)_item.ItemData.Layer;
+        Item compItem = _world.Player.FindItemByLayer(itemLayer);
+        Item compItem2 = null;
+
+        // For weapons, get both possible comparison items (one-handed and two-handed)
+        (Item weaponPrimary, Item weaponSecondary) = GetWeaponComparisonItems(itemLayer);
+        if (weaponPrimary != null)
+        {
+            compItem = weaponPrimary;
+            compItem2 = weaponSecondary;
+        }
+
+        if (compItem == null || itemLayer == Layer.Backpack)
+            return;
+
+        ClearTooltip();
+        var toolTipList = new List<CustomToolTip>();
+        _toolTipThis = new CustomToolTip(_world, _item, Mouse.Position.X + 5, Mouse.Position.Y + 5, this, compareTo: compItem);
+        toolTipList.Add(_toolTipThis);
+        _toolTipitem1 = new CustomToolTip(_world, compItem, _toolTipThis.X + _toolTipThis.Width + 10, _toolTipThis.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
+        toolTipList.Add(_toolTipitem1);
+
+        if (CUOEnviroment.Debug)
+        {
+            var i1 = new ItemPropertiesData(_world, _item);
+            var i2 = new ItemPropertiesData(_world, compItem);
+
+            if (i1.GenerateComparisonTooltip(i2, out string compileToolTip))
+                GameActions.Print(_world, compileToolTip);
+        }
+
+        // Add second weapon comparison if both hands have weapons
+        if (compItem2 != null)
+        {
+            _toolTipitem2 = new CustomToolTip(_world, compItem2, _toolTipitem1.X + _toolTipitem1.Width + 10, _toolTipitem1.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
+            toolTipList.Add(_toolTipitem2);
+        }
+
+        var multipleToolTipGump = new MultipleToolTipGump(_world, Mouse.Position.X + 10, Mouse.Position.Y + 10, toolTipList.ToArray(), this);
+        UIManager.Add(multipleToolTipGump);
+    }
+
     public override bool Draw(UltimaBatcher2D batcher, int x, int y)
     {
         if (!_shouldDraw || IsDisposed) return false;
 
-        if (_hasItem && _gridContainer.IsCompare && _item.ItemData.Layer > 0 && MouseIsOver && (_toolTipThis == null || _toolTipThis.IsDisposed) && (_toolTipitem1 == null || _toolTipitem1.IsDisposed) && (_toolTipitem2 == null || _toolTipitem2.IsDisposed))
-        {
-            var itemLayer = (Layer)_item.ItemData.Layer;
-            Item compItem = _world.Player.FindItemByLayer(itemLayer);
-            Item compItem2 = null;
-
-            // For weapons, get both possible comparison items (one-handed and two-handed)
-            (Item weaponPrimary, Item weaponSecondary) = GetWeaponComparisonItems(itemLayer);
-            if (weaponPrimary != null)
-            {
-                compItem = weaponPrimary;
-                compItem2 = weaponSecondary;
-            }
-
-            if (compItem != null && itemLayer != Layer.Backpack)
-            {
-                ClearTooltip();
-                var toolTipList = new List<CustomToolTip>();
-                _toolTipThis = new CustomToolTip(_world, _item, Mouse.Position.X + 5, Mouse.Position.Y + 5, this, compareTo: compItem);
-                toolTipList.Add(_toolTipThis);
-                _toolTipitem1 = new CustomToolTip(_world, compItem, _toolTipThis.X + _toolTipThis.Width + 10, _toolTipThis.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
-                toolTipList.Add(_toolTipitem1);
-
-                if (CUOEnviroment.Debug)
-                {
-                    var i1 = new ItemPropertiesData(_world, _item);
-                    var i2 = new ItemPropertiesData(_world, compItem);
-
-                    if (i1.GenerateComparisonTooltip(i2, out string compileToolTip))
-                        GameActions.Print(_world, compileToolTip);
-                }
-
-                // Add second weapon comparison if both hands have weapons
-                if (compItem2 != null)
-                {
-                    _toolTipitem2 = new CustomToolTip(_world, compItem2, _toolTipitem1.X + _toolTipitem1.Width + 10, _toolTipitem1.Y, this, "<basefont color=\"orange\">Equipped Item<br>");
-                    toolTipList.Add(_toolTipitem2);
-                }
-
-                var multipleToolTipGump = new MultipleToolTipGump(_world, Mouse.Position.X + 10, Mouse.Position.Y + 10, toolTipList.ToArray(), this);
-                UIManager.Add(multipleToolTipGump);
-            }
-        }
+        TryShowComparisonTooltip();
 
         if (_selectHighlight && _hasItem)
             if (!MultiItemMoveGump.IsSelected(_item.Serial))

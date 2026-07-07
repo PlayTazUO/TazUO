@@ -23,6 +23,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         public BorderControl BorderControl => _borderControl;
 
+        /// <summary>The drag handle in the bottom-right corner used to resize the gump.</summary>
+        protected Button ResizeButton => _button;
+
         protected ResizableGump
         (
             World world,int width,
