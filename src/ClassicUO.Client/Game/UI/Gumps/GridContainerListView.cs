@@ -1,3 +1,4 @@
+using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 
@@ -55,17 +56,13 @@ namespace ClassicUO.Game.UI.Gumps
             SlotManager?.FindItem(e.Serial)?.RefreshListName();
         }
 
-        private GridContainerViewModeOverride GetContainerViewModeOverride()
-        {
-            int mode = _gridContainerEntry?.ViewModeOverride ?? (int)GridContainerViewModeOverride.Default;
+        private static GridContainerViewModeOverride ToViewModeOverride(int value) =>
+            Enum.IsDefined((GridContainerViewModeOverride)value)
+                ? (GridContainerViewModeOverride)value
+                : GridContainerViewModeOverride.Default;
 
-            return mode switch
-            {
-                (int)GridContainerViewModeOverride.Grid => GridContainerViewModeOverride.Grid,
-                (int)GridContainerViewModeOverride.List => GridContainerViewModeOverride.List,
-                _ => GridContainerViewModeOverride.Default
-            };
-        }
+        private GridContainerViewModeOverride GetContainerViewModeOverride() =>
+            ToViewModeOverride(_gridContainerEntry?.ViewModeOverride ?? (int)GridContainerViewModeOverride.Default);
 
         private void SetContainerViewModeOverride(GridContainerViewModeOverride mode)
         {
@@ -77,14 +74,6 @@ namespace ClassicUO.Game.UI.Gumps
 
         private int GetContainerViewModeOverrideIndex() => (int)GetContainerViewModeOverride();
 
-        private void SetContainerViewModeOverrideIndex(int index)
-        {
-            SetContainerViewModeOverride(index switch
-            {
-                (int)GridContainerViewModeOverride.Grid => GridContainerViewModeOverride.Grid,
-                (int)GridContainerViewModeOverride.List => GridContainerViewModeOverride.List,
-                _ => GridContainerViewModeOverride.Default
-            });
-        }
+        private void SetContainerViewModeOverrideIndex(int index) => SetContainerViewModeOverride(ToViewModeOverride(index));
     }
 }

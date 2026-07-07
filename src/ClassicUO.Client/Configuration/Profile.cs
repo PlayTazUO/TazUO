@@ -520,7 +520,7 @@ namespace ClassicUO.Configuration
         public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
         public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
-        public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 1;
+        public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 0;
         public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;
         public byte GridBorderAlpha { get; set => SetProperty(ref field, value); } = 75;
         public ushort GridBorderHue { get; set => SetProperty(ref field, value); } = 0;

@@ -6,6 +6,13 @@ namespace ClassicUO.Game.UI.Controls;
 
 public class GridScrollArea : Control
 {
+    /// <summary>Width reserved on the right edge for the scroll bar.</summary>
+    public const int SCROLLBAR_WIDTH = 14;
+
+    // The scroll bar is always Children[0]; content controls start at index 1. The loops
+    // below iterate from index 1 to skip the scroll bar itself.
+    private const int FIRST_CONTENT_CHILD = 1;
+
     private readonly ScrollBarBase _scrollBar;
     private int _lastWidth;
     private int _lastHeight;
@@ -26,7 +33,7 @@ public class GridScrollArea : Control
         _lastWidth = w;
         _lastHeight = h;
 
-        _scrollBar = new ScrollBar(Width - 14, 0, Height);
+        _scrollBar = new ScrollBar(Width - SCROLLBAR_WIDTH, 0, Height);
 
 
         ScrollMaxHeight = scrollMaxHeight;
@@ -56,7 +63,7 @@ public class GridScrollArea : Control
 
         if (Width != _lastWidth || Height != _lastHeight)
         {
-            _scrollBar.X = Width - 14;
+            _scrollBar.X = Width - SCROLLBAR_WIDTH;
             _scrollBar.Height = Height;
             _lastWidth = Width;
             _lastHeight = Height;
@@ -88,9 +95,9 @@ public class GridScrollArea : Control
     {
         _scrollBar.Draw(batcher, x + _scrollBar.X, y + _scrollBar.Y);
 
-        if (batcher.ClipBegin(x, y, Width - 14, Height))
+        if (batcher.ClipBegin(x, y, Width - SCROLLBAR_WIDTH, Height))
         {
-            for (int i = 1; i < Children.Count; i++)
+            for (int i = FIRST_CONTENT_CHILD; i < Children.Count; i++)
             {
                 IGui child = Children[i];
 
@@ -128,7 +135,7 @@ public class GridScrollArea : Control
 
     public override void Clear()
     {
-        for (int i = 1; i < Children.Count; i++)
+        for (int i = FIRST_CONTENT_CHILD; i < Children.Count; i++)
         {
             Children[i].Dispose();
         }
@@ -141,7 +148,7 @@ public class GridScrollArea : Control
 
         int startX = 0, startY = 0, endX = 0, endY = 0;
 
-        for (int i = 1; i < Children.Count; i++)
+        for (int i = FIRST_CONTENT_CHILD; i < Children.Count; i++)
         {
             IGui c = Children[i];
 
@@ -189,7 +196,7 @@ public class GridScrollArea : Control
 
         _scrollBar.UpdateOffset(0, Offset.Y);
 
-        for (int i = 1; i < Children.Count; i++)
+        for (int i = FIRST_CONTENT_CHILD; i < Children.Count; i++)
         {
             Children[i].UpdateOffset(0, -_scrollBar.Value);
         }

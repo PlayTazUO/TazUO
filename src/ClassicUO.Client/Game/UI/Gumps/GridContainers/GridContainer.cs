@@ -29,7 +29,10 @@ public partial class GridContainer : ResizableGump
         #region private static vars
         private static int _lastX = 100, _lastY = 100, _lastCorpseX = 100, _lastCorpseY = 100;
         public static int GridItemSize => (int)Math.Round(50 * (ProfileManager.CurrentProfile.GridContainersScale / 100f));
-        private static int _borderWidth = 4;
+        private const int DEFAULT_BORDER_WIDTH = 4;
+        // Per-instance so containers can't stomp each other's border width; the static size
+        // helpers derive the current width from the profile via GetCurrentBorderWidth().
+        private int _borderWidth = DEFAULT_BORDER_WIDTH;
 
         private static readonly Dictionary<BorderStyle, (int graphic, int borderSize)> _borderStyleConfig = new()
         {
@@ -44,14 +47,17 @@ public partial class GridContainer : ResizableGump
         #endregion
 
         #region private readonly vars
-        private readonly AlphaBlendControl _background;
-        private readonly AlphaBlendControl _searchBoxBackground;
-        private readonly Label _containerNameLabel;
-        private readonly StbTextBox _searchBox;
-        private readonly GumpPic _openRegularGump, _sortContents;
-        private readonly ResizableStaticPic _quickDropBackpack;
-        private readonly GumpPicTiled _backgroundTexture;
-        private readonly NiceButton _setLootBag, _searchClearButton;
+        // These UI controls are created once (in the Build* helpers invoked from the constructor)
+        // and never reassigned; they are non-readonly only because they are assigned from helper
+        // methods rather than inline in the constructor body.
+        private AlphaBlendControl _background;
+        private AlphaBlendControl _searchBoxBackground;
+        private Label _containerNameLabel;
+        private StbTextBox _searchBox;
+        private GumpPic _openRegularGump, _sortContents;
+        private ResizableStaticPic _quickDropBackpack;
+        private GumpPicTiled _backgroundTexture;
+        private NiceButton _setLootBag, _searchClearButton;
         private readonly bool _isCorpse;
         #endregion
 
@@ -72,7 +78,7 @@ public partial class GridContainer : ResizableGump
 
         #region private vars
         private Item Container => World.Items.Get(LocalSerial);
-        private float _lastGridItemScale = (ProfileManager.CurrentProfile.GridContainersScale / 100f);
+        private int _lastGridItemSize = GridItemSize;
         private int _lastWidth = GetWidth(), _lastHeight = GetHeight();
         private bool _quickLootThisContainer;
         public bool? UseOldContainerStyle;
@@ -82,7 +88,7 @@ public partial class GridContainer : ResizableGump
         private readonly bool _skipSave;
         private readonly ushort _originalContainerItemGraphic;
 
-        private readonly GridScrollArea _scrollArea;
+        private GridScrollArea _scrollArea;
         private bool _isMinimized;
         private int _heightBeforeMinimize;
         #endregion
@@ -152,15 +158,20 @@ public partial class GridContainer : ResizableGump
             if (_scrollArea != null) _scrollArea.IsVisible = visible;
             if (_setLootBag != null) _setLootBag.IsVisible = visible && _isCorpse;
 
-            // Find and toggle resize button
-            foreach (Control child in Children)
-            {
-                if (child is Button)
-                {
-                    child.IsVisible = visible;
-                    break;
-                }
-            }
+            if (ResizeButton != null) ResizeButton.IsVisible = visible;
+        }
+
+        /// <summary>
+        /// Repositions the resize handle into the bottom-right corner. Used when we bypass
+        /// <see cref="ResizableGump.ResizeWindow"/> (e.g. maintaining the minimized height).
+        /// </summary>
+        private void RepositionResizeButton()
+        {
+            Button btn = ResizeButton;
+            if (btn == null) return;
+
+            btn.X = Width - btn.Width + 2;
+            btn.Y = Height - btn.Height + 2;
         }
 
         /// <summary>
@@ -281,7 +292,42 @@ public partial class GridContainer : ResizableGump
             AcceptMouseInput = true;
             #endregion
 
-            #region background
+            BuildBackground();
+            BuildTopBar();
+            BuildScrollArea();
+            BuildLootBag();
+            AddControls();
+
+            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
+            InitializeListView();
+
+            UpdateContainerNameLabel();
+
+            if (ShouldUseOldContainerStyle())
+            {
+                _skipSave = true; //Avoid unsaving item slots because they have not be set up yet
+                OpenOldContainer(local);
+                return;
+            }
+
+            BuildBorder();
+            ResizeWindow(savedSize);
+
+            // Apply minimized state after all controls are created
+            if (loadMinimized)
+            {
+                // Store the current (full) height from savedSize before minimizing
+                _heightBeforeMinimize = savedSize.Y > 0 ? savedSize.Y : Height;
+                _isMinimized = true;
+                // Don't call UpdateMinimizedState here - just apply the minimized dimensions directly
+                // to avoid overwriting _heightBeforeMinimize
+                ApplyMinimizedDimensions();
+            }
+        }
+
+        #region Control construction
+        private void BuildBackground()
+        {
             _background = new AlphaBlendControl()
             {
                 Width = Width - (_borderWidth * 2),
@@ -298,9 +344,10 @@ public partial class GridContainer : ResizableGump
 
             _backgroundTexture = new GumpPicTiled(0) { CanMove = true };
             _backgroundTexture.MouseDoubleClick += OnMinimizeToggleDoubleClick;
-            #endregion
+        }
 
-            #region TOP BAR AREA
+        private void BuildTopBar()
+        {
             _containerNameLabel = new Label(GetContainerName(), true, 0x0481, 0, ishtml: true)
             {
                 X = _borderWidth,
@@ -403,9 +450,10 @@ public partial class GridContainer : ResizableGump
             _sortContents.MouseEnter += (sender, e) => { _sortContents.Graphic = 1209; };
             _sortContents.MouseExit += (sender, e) => { _sortContents.Graphic = 1210; };
             _sortContents.SetTooltip(SortButtonTooltip);
-            #endregion
+        }
 
-            #region Scroll Area
+        private void BuildScrollArea()
+        {
             _scrollArea = new GridScrollArea(
                 _background.X,
                 LABEL_HEIGHT + TOP_BAR_HEIGHT + _background.Y,
@@ -426,20 +474,22 @@ public partial class GridContainer : ResizableGump
                     }
                 }
             };
-            #endregion
+        }
 
-            #region Set loot bag
+        private void BuildLootBag()
+        {
             _setLootBag = new NiceButton(0, Height - 20, 100, 20, ButtonAction.Default, TazLang.Get("gridcontainer_setlootbag", "Set loot bag")) { IsSelectable = false };
             _setLootBag.IsVisible = _isCorpse;
             _setLootBag.SetTooltip(TazLang.Get("gridcontainer_setlootbag_tooltip", "For double click looting only"));
             _setLootBag.MouseUp += (s, e) =>
             {
-                GameActions.Print(world, Resources.ResGumps.TargetContainerToGrabItemsInto);
-                world.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
+                GameActions.Print(World, Resources.ResGumps.TargetContainerToGrabItemsInto);
+                World.TargetManager.SetTargeting(CursorTarget.SetGrabBag, 0, TargetType.Neutral);
             };
-            #endregion
+        }
 
-            #region Add controls
+        private void AddControls()
+        {
             Add(_background);
             Add(_backgroundTexture);
             Add(_containerNameLabel);
@@ -457,34 +507,8 @@ public partial class GridContainer : ResizableGump
             Add(_sortContents);
             Add(_scrollArea);
             Add(_setLootBag);
-            #endregion
-
-            SlotManager = new GridSlotManager(world, LocalSerial, this, _scrollArea); //Must come after scroll area
-            InitializeListView();
-
-            UpdateContainerNameLabel();
-
-            if (ShouldUseOldContainerStyle())
-            {
-                _skipSave = true; //Avoid unsaving item slots because they have not be set up yet
-                OpenOldContainer(local);
-                return;
-            }
-
-            BuildBorder();
-            ResizeWindow(savedSize);
-
-            // Apply minimized state after all controls are created
-            if (loadMinimized)
-            {
-                // Store the current (full) height from savedSize before minimizing
-                _heightBeforeMinimize = savedSize.Y > 0 ? savedSize.Y : Height;
-                _isMinimized = true;
-                // Don't call UpdateMinimizedState here - just apply the minimized dimensions directly
-                // to avoid overwriting _heightBeforeMinimize
-                ApplyMinimizedDimensions();
-            }
         }
+        #endregion
 
         /// <summary>
         ///     Checks whether the container should be opened in the 'old' style.
@@ -510,6 +534,24 @@ public partial class GridContainer : ResizableGump
 
         public override GumpType GumpType => GumpType.GridContainer;
 
+        /// <summary>Height of the container when minimized (just the label area plus borders).</summary>
+        private int MinimizedHeight => LABEL_HEIGHT + (_borderWidth * 2);
+
+        /// <summary>
+        /// Collapses the window to <see cref="MinimizedHeight"/> and shrinks the background to the
+        /// label strip. Shared by the runtime minimize toggle and the initial-load path.
+        /// </summary>
+        private void ApplyMinimizedHeight()
+        {
+            ResizeWindow(new Point(Width, MinimizedHeight));
+            Height = MinimizedHeight;
+
+            if (_background != null) _background.Height = LABEL_HEIGHT;
+            if (_backgroundTexture != null) _backgroundTexture.Height = LABEL_HEIGHT;
+
+            OnResize();
+        }
+
         private void UpdateMinimizedState()
         {
             if (_isMinimized)
@@ -519,31 +561,15 @@ public partial class GridContainer : ResizableGump
 
                 SwitchPositionState(false);
                 SetControlsVisibility(false);
-
-                // Resize to minimal height (just the label area + border)
-                int minimizedHeight = LABEL_HEIGHT + (_borderWidth * 2);
-                ResizeWindow(new Point(Width, minimizedHeight));
-                Height = minimizedHeight;
-
-                // Update border and background dimensions
-                if (_background != null) _background.Height = LABEL_HEIGHT;
-                if (_backgroundTexture != null) _backgroundTexture.Height = LABEL_HEIGHT;
-
-                OnResize();
+                ApplyMinimizedHeight();
             }
             else
             {
                 SwitchPositionState(true);
-
                 SetControlsVisibility(true);
 
-                // Restore original height (fallback to default if not set)
-                int restoredHeight;
-                if (_heightBeforeMinimize > 0)
-                    restoredHeight = _heightBeforeMinimize;
-                else
-                    // Fallback to a reasonable default height
-                    restoredHeight = GetHeight();
+                // Restore original height (fallback to a reasonable default if not set)
+                int restoredHeight = _heightBeforeMinimize > 0 ? _heightBeforeMinimize : GetHeight();
 
                 ResizeWindow(new Point(Width, restoredHeight));
                 Height = restoredHeight;
@@ -566,19 +592,7 @@ public partial class GridContainer : ResizableGump
         {
             // Hide all controls except container name, background, and border
             SetControlsVisibility(false);
-
-            // Resize to minimal height (just the label area + border)
-            int minimizedHeight = LABEL_HEIGHT + (_borderWidth * 2);
-            ResizeWindow(new Point(Width, minimizedHeight));
-            Height = minimizedHeight;
-
-            // Update border and background dimensions
-            if (_background != null) _background.Height = LABEL_HEIGHT;
-            if (_backgroundTexture != null) _backgroundTexture.Height = LABEL_HEIGHT;
-
-            // Update the border control to match new dimensions
-            OnResize();
-
+            ApplyMinimizedHeight();
             WantUpdateSize = true;
         }
 
@@ -674,17 +688,36 @@ public partial class GridContainer : ResizableGump
 
             return control;
         }
+        /// <summary>
+        /// Border width implied by the profile's current border style. Used by the static size
+        /// helpers, which run before an instance exists and so can't read <see cref="_borderWidth"/>.
+        /// </summary>
+        private static int GetCurrentBorderWidth()
+        {
+            var style = (BorderStyle)ProfileManager.CurrentProfile.Grid_BorderStyle;
+
+            if (style != BorderStyle.Default && _borderStyleConfig.TryGetValue(style, out (int graphic, int borderSize) config))
+                return config.borderSize;
+
+            return DEFAULT_BORDER_WIDTH;
+        }
+
         private static int GetWidth(int columns = -1)
         {
             // Use default columns if none are specified
             if (columns < 0)
                 columns = ProfileManager.CurrentProfile.Grid_DefaultColumns;
 
-            // Calculate the total width of the grid container
-            return (_borderWidth * 2)           // Borders on the left and right
-                    + 15                       // Width of the scroll bar
-                    + (GridItemSize * columns) // Total width of grid items
-                    + (X_SPACING * columns);   // Spacing between grid items
+            // Calculate the total width of the grid container.
+            // The layout (see GridSlotManager.SetGridPositions) starts each row at x = X_SPACING
+            // and advances by GridItemSize + X_SPACING per column, so N columns need a leading
+            // gap plus one trailing gap per column: X_SPACING * (columns + 1). Budgeting only
+            // X_SPACING * columns leaves the last column landing exactly on the wrap boundary,
+            // pushing it to the next row (e.g. asking for 5 columns only fits 4).
+            return (GetCurrentBorderWidth() * 2)          // Borders on the left and right
+                    + GridScrollArea.SCROLLBAR_WIDTH      // Width of the scroll bar
+                    + (GridItemSize * columns)            // Total width of grid items
+                    + (X_SPACING * (columns + 1));        // Leading gap + spacing after each column
         }
         private static int GetHeight(int rows = -1)
         {
@@ -695,7 +728,7 @@ public partial class GridContainer : ResizableGump
             // Calculate the total height of the grid container
             return LABEL_HEIGHT                 // Height of the container name label
                    + TOP_BAR_HEIGHT             // Height of the top bar
-                   + (_borderWidth * 2)          // Borders on the top and bottom
+                   + (GetCurrentBorderWidth() * 2)  // Borders on the top and bottom
                    + ((GridItemSize + Y_SPACING) * rows); // Total height of grid items with spacing
         }
 
@@ -964,46 +997,26 @@ public partial class GridContainer : ResizableGump
             }
 
             // Maintain minimized height when minimized
-            if (_isMinimized && Height != LABEL_HEIGHT + (_borderWidth * 2))
+            if (_isMinimized && Height != MinimizedHeight)
             {
-                Height = LABEL_HEIGHT + (_borderWidth * 2);
+                Height = MinimizedHeight;
                 _background.Height = LABEL_HEIGHT;
                 _backgroundTexture.Height = LABEL_HEIGHT;
                 BorderControl.Width = Width;
                 BorderControl.Height = Height;
 
                 // Manually reposition the resize button since we're bypassing ResizeWindow's min height
-                foreach (Control child in Children)
-                {
-                    if (child is Button btn)
-                    {
-                        btn.X = Width - (btn.Width >> 0) + 2;
-                        btn.Y = Height - (btn.Height >> 0) + 2;
-                        break;
-                    }
-                }
+                RepositionResizeButton();
 
                 WantUpdateSize = true;
             }
 
-            if (!_isMinimized && (_lastWidth != Width || _lastHeight != Height || _lastGridItemScale != GridItemSize))
+            if (!_isMinimized && (_lastWidth != Width || _lastHeight != Height || _lastGridItemSize != GridItemSize))
             {
-                _lastGridItemScale = GridItemSize;
-                int adjustedWidth = Width - (_borderWidth * 2);
-                int adjustedHeight = Height - (_borderWidth * 2);
-                UpdateBackgroundDimensions(adjustedWidth, adjustedHeight);
-                _scrollArea.Width = adjustedWidth;
-                _scrollArea.Height = adjustedHeight - LABEL_HEIGHT - TOP_BAR_HEIGHT;
-                _openRegularGump.X = Width - _openRegularGump.Width - _borderWidth;
-                _quickDropBackpack.X = _openRegularGump.X - _quickDropBackpack.Width;
-                _sortContents.X = _quickDropBackpack.X - _sortContents.Width;
+                _lastGridItemSize = GridItemSize;
+                LayoutControls();
                 _lastHeight = Height;
                 _lastWidth = Width;
-                _searchBox.Width = adjustedWidth - 18;
-                _searchBoxBackground.Width = _searchBox.Width;
-                _searchClearButton.X = _borderWidth + adjustedWidth - 16;
-                UpdateBackgroundStyle(_background.Hue, _background.Alpha);
-                _setLootBag.Y = Height - 20;
 
                 if (IsPlayerBackpack)
                     ProfileManager.CurrentProfile.BackpackGridSize = new Point(Width, Height);
@@ -1025,11 +1038,17 @@ public partial class GridContainer : ResizableGump
             }
         }
 
+        /// <summary>
+        /// Resolves the container's display name: custom name if set, otherwise the item's name,
+        /// falling back to "a container".
+        /// </summary>
+        private string ResolveRawName() =>
+            GridContainerEntry?.CustomName.NotNullNotEmpty() == true ? GridContainerEntry.CustomName :
+            !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+
         private void UpdateContainerNameLabel()
         {
-            string rawName = GridContainerEntry?.CustomName.NotNullNotEmpty() == true
-                ? GridContainerEntry.CustomName
-                : !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+            string rawName = ResolveRawName();
 
             string countSuffix = SlotManager != null ? $" ({SlotManager.ContainerContents.Count})" : "";
 
@@ -1057,9 +1076,7 @@ public partial class GridContainer : ResizableGump
 
         private string GetContainerName(bool skipCount = false, bool truncate = true)
         {
-            string containerName =
-                GridContainerEntry?.CustomName.NotNullNotEmpty() == true ? GridContainerEntry.CustomName :
-                !string.IsNullOrEmpty(Container.Name) ? Container.Name : "a container";
+            string containerName = ResolveRawName();
 
             if (truncate)
                 containerName = containerName.Truncate(21);
@@ -1138,35 +1155,52 @@ public partial class GridContainer : ResizableGump
                 BorderControl.BorderSize = borderSize;
                 _borderWidth = borderSize;
             }
-            UpdateUiPositions();
+            LayoutControls();
             OnResize();
 
             BorderControl.IsVisible = !ProfileManager.CurrentProfile.Grid_HideBorder;
         }
 
-        private void UpdateUiPositions()
+        /// <summary>
+        /// Positions and sizes every child control from the current <see cref="Control.Width"/>,
+        /// <see cref="Control.Height"/>, and <see cref="_borderWidth"/>. Shared by initial layout
+        /// (via <see cref="BuildBorder"/>) and the resize path in <see cref="PreDraw"/>; every
+        /// assignment is idempotent so calling it repeatedly is safe.
+        /// </summary>
+        private void LayoutControls()
         {
-            _background.X = _background.Y = _borderWidth;
-            _scrollArea.X = _background.X;
-            _scrollArea.Y = LABEL_HEIGHT + TOP_BAR_HEIGHT + _background.Y;
-            _searchBox.X = _borderWidth;
-            _searchBox.Y = _borderWidth + LABEL_HEIGHT;
-            _quickDropBackpack.Y = _sortContents.Y = _openRegularGump.Y = _borderWidth;
-            _backgroundTexture.X = _background.X;
-            _backgroundTexture.Y = _background.Y;
-
             int adjustedWidth = Width - (_borderWidth * 2);
             int adjustedHeight = Height - (_borderWidth * 2);
 
+            // Background + tiled texture
+            _background.X = _background.Y = _borderWidth;
+            _backgroundTexture.X = _background.X;
+            _backgroundTexture.Y = _background.Y;
             UpdateBackgroundDimensions(adjustedWidth, adjustedHeight);
+            UpdateBackgroundStyle(_background.Hue, _background.Alpha);
 
+            // Top-bar buttons (right-aligned, in from the right edge)
+            _openRegularGump.X = Width - _openRegularGump.Width - _borderWidth;
+            _quickDropBackpack.X = _openRegularGump.X - _quickDropBackpack.Width;
+            _sortContents.X = _quickDropBackpack.X - _sortContents.Width;
+            _quickDropBackpack.Y = _sortContents.Y = _openRegularGump.Y = _borderWidth;
+
+            // Search box + clear button
+            _searchBox.X = _borderWidth;
+            _searchBox.Y = _borderWidth + LABEL_HEIGHT;
             _searchBox.Width = adjustedWidth - 18;
             _searchBoxBackground.Width = _searchBox.Width;
             _searchClearButton.X = _borderWidth + adjustedWidth - 16;
             _searchClearButton.Y = _borderWidth + LABEL_HEIGHT;
 
+            // Scroll area (below the top bar)
+            _scrollArea.X = _background.X;
+            _scrollArea.Y = LABEL_HEIGHT + TOP_BAR_HEIGHT + _background.Y;
             _scrollArea.Width = adjustedWidth;
             _scrollArea.Height = adjustedHeight - LABEL_HEIGHT - TOP_BAR_HEIGHT;
+
+            // Set-loot-bag button (corpses only, pinned to the bottom)
+            _setLootBag.Y = Height - 20;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
