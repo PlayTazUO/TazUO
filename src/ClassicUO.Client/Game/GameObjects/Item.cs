@@ -236,7 +236,7 @@ namespace ClassicUO.Game.GameObjects
             if (name.StartsWith(amountStr, StringComparison.Ordinal))
                 name = name[amountStr.Length..];
 
-            if (showAmount && Amount > 1)
+            if (showAmount && !IsCorpse && Amount > 1)
                 name = amountStr + name;
 
             return name;

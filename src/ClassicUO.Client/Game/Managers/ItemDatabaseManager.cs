@@ -380,8 +380,8 @@ namespace ClassicUO.Game.Managers
                 Serial = item.Serial,
                 Graphic = item.Graphic,
                 Hue = item.Hue,
-                Name = item.Name ?? string.Empty,
-                Properties = string.Empty, // Will be filled by tooltip if available
+                Name = item.GetNormalizedName(false),
+                Properties = item.OPLData, // Will be filled by tooltip if available
                 Container = item.Container,
                 Layer = layer,
                 UpdatedTime = DateTime.Now,
@@ -394,19 +394,6 @@ namespace ClassicUO.Game.Managers
                 CustomName = item.CustomName ?? string.Empty,
             };
 
-            // Try to get properties from OPL
-            if (world.OPL.TryGetNameAndData(item.Serial, out string oplName, out string oplData))
-            {
-                if (!string.IsNullOrEmpty(oplName))
-                {
-                    itemInfo.Name = oplName;
-                }
-                if (!string.IsNullOrEmpty(oplData))
-                {
-                    itemInfo.Properties = oplData;
-                }
-            }
-
             _pendingItems.Enqueue(itemInfo);
 
             lock (_timerLock)
@@ -414,8 +401,11 @@ namespace ClassicUO.Game.Managers
                 if (_pendingItemsTimer != null)
                     return;
 
-                _pendingItemsTimer = new Timer(PENDING_ITEMS_FLUSH_INTERVAL_MS);
-                _pendingItemsTimer.AutoReset = false;
+                _pendingItemsTimer = new Timer(PENDING_ITEMS_FLUSH_INTERVAL_MS)
+                {
+                    AutoReset = false
+                };
+                
                 _pendingItemsTimer.Elapsed += PendingItemsTimerOnElapsed;
                 _pendingItemsTimer.Start();
             }

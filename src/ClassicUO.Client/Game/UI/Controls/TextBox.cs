@@ -114,6 +114,7 @@ namespace ClassicUO.Game.UI.Controls
         private void CreateRichTextLayout(string text)
         {
             text ??= string.Empty;  //Prevent null ref error while still updating everything else
+            text = StringHelper.RemoveUnpairedSurrogates(text); //Lone surrogates crash FontStashSharp's text measuring
             _dirty = false;         //Reset these because we're creating a new text object
             WantUpdateSize = false; //Not resetting them causes this to happen twice from the constructor setting _font and what not.
 
@@ -232,6 +233,8 @@ namespace ClassicUO.Game.UI.Controls
             {
                 if (_rtl.Text != value)
                 {
+                    value = StringHelper.RemoveUnpairedSurrogates(value); //Lone surrogates crash FontStashSharp's text measuring
+
                     if (Options.ConvertHtmlColors)
                     {
                         _rtl.Text = ConvertHTMLColorsToFSS(value);

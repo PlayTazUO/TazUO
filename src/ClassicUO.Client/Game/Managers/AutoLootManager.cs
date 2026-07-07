@@ -660,11 +660,15 @@ namespace ClassicUO.Game.Managers
 
             private bool RegexCheck(World world, Item compareTo)
             {
-                string search = "";
-                if (world.OPL.TryGetNameAndData(compareTo, out string name, out string data))
-                    search += name + data;
+                string search;
+
+                if (compareTo.OPLName.NotNullNotEmpty())
+                    search = compareTo.OPLName;
                 else
-                    search = StringHelper.GetPluralAdjustedString(compareTo.ItemData.Name);
+                    search = compareTo.GetNormalizedName(false);
+
+                if (compareTo.OPLData.NotNullNotEmpty())
+                    search += compareTo.OPLData;
 
                 return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
             }

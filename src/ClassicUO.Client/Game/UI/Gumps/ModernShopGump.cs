@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Game.Managers.Hotkeys;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -458,8 +459,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             public bool MatchSearch(string text)
             {
-                if (Name.ToLower().Contains(text))
+                if (Name.ContainsIgnoreCase(text))
                     return true;
+
                 if (world.OPL.TryGetNameAndData(Serial, out string name, out string data))
                 {
                     if (data.ToLower().Contains(text))

@@ -426,8 +426,8 @@ public static class ItemDatabaseTabContent
             Serial = item.Serial,
             Graphic = item.Graphic,
             Hue = item.Hue,
-            Name = item.Name ?? string.Empty,
-            Properties = string.Empty,
+            Name = item.GetNormalizedName(false),
+            Properties = item.OPLData,
             Container = item.Container,
             Layer = layer,
             UpdatedTime = DateTime.Now,
@@ -439,14 +439,6 @@ public static class ItemDatabaseTabContent
             OnGround = item.OnGround,
             CustomName = item.CustomName ?? string.Empty,
         };
-
-        if (world.OPL.TryGetNameAndData(item.Serial, out string oplName, out string oplData))
-        {
-            if (!string.IsNullOrEmpty(oplName))
-                info.Name = oplName;
-            if (!string.IsNullOrEmpty(oplData))
-                info.Properties = oplData;
-        }
 
         return info;
     }

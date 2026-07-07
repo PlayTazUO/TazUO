@@ -3,6 +3,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.LegionScripting.ApiClasses;
+using ClassicUO.Utility;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
 
@@ -108,10 +109,16 @@ public class ApiItem : ApiEntity
     public override string __class__ => "ApiItem";
 
     protected Item item;
-    protected Item GetItemUnsafe() => Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
+    protected Item GetItemUnsafe()
+    {
+        if (item != null) return item;
+
+        return item = Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
+    }
+
     protected Item GetItem()
     {
-        if (item != null && item.Serial == Serial) return item;
+        if (item != null && !item.IsDestroyed && item.Serial == Serial) return item;
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
@@ -128,6 +135,20 @@ public class ApiItem : ApiEntity
     /// <returns>Item name and properties, or empty string if we don't have them.</returns>
     public string NameAndProps(bool wait = false, int timeout = 10)
     {
+        string results = MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            Item i = GetItemUnsafe();
+            if (i != null && i.OPLName != null && i.OPLData != null)
+            {
+                return $"{i.OPLName}\n{i.OPLData}";
+            }
+
+            return null;
+        });
+
+        if (results.NotNullNotEmpty()) return results;
+
+
         if (wait)
         {
             System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
@@ -140,9 +161,10 @@ public class ApiItem : ApiEntity
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
-            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            Item i = GetItemUnsafe();
+            if (i.OPLName != null && i.OPLData != null)
             {
-                return n + "\n" + d;
+                return $"{i.OPLName}\n{i.OPLData}";
             }
 
             return string.Empty;
