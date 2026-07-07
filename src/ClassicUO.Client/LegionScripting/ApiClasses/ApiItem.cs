@@ -118,7 +118,7 @@ public class ApiItem : ApiEntity
 
     protected Item GetItem()
     {
-        if (item != null && item.Serial == Serial) return item;
+        if (item != null && !item.IsDestroyed && item.Serial == Serial) return item;
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
@@ -138,7 +138,7 @@ public class ApiItem : ApiEntity
         string results = MainThreadQueue.InvokeOnMainThread(() =>
         {
             Item i = GetItemUnsafe();
-            if (i.OPLName != null && i.OPLData != null)
+            if (i != null && i.OPLName != null && i.OPLData != null)
             {
                 return $"{i.OPLName}\n{i.OPLData}";
             }

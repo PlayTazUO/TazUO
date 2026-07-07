@@ -237,6 +237,6 @@ namespace ClassicUO.Utility
 
         public static int ToInt<T>(this T enumValue) where T : struct, Enum => Unsafe.As<T, int>(ref enumValue);
 
-        public static bool ContainsIgnoreCase(this string source, string searchString) => source != null && source.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+        public static bool ContainsIgnoreCase(this string source, string searchString) => source != null && searchString != null && source.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
 }

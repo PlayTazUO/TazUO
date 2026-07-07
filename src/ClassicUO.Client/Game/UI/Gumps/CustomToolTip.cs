@@ -63,9 +63,9 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             string name = item.OPLName;
-            string data = item.OPLData;
+            string data = item.OPLData ?? string.Empty;
 
-            if (name.NotNullNotEmpty() && data.NotNullNotEmpty())
+            if (name.NotNullNotEmpty())
             {
                 string finalString = FormatTooltip(name, data);
                 if (SerialHelper.IsItem(item.Serial))
@@ -98,7 +98,8 @@ namespace ClassicUO.Game.UI.Gumps
                 Task.Factory.StartNew(() =>
                 {
                     Task.Delay(1500).Wait();
-                    LoadOPLData(attempt++);
+                    attempt++;
+                    LoadOPLData(attempt);
                 });
             }
 
