@@ -200,7 +200,7 @@ namespace ClassicUO.Configuration
         // (2 -> 1 -> 0) reduces how far the feet overshoot into walls that are a tile or more in
         // front; a thin same-diagonal sliver is inherent to the flat-depth model and cannot be
         // removed here. 2 = classic ClassicUO behaviour.
-        public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 2;
+        public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 0;
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
         public bool HideVegetation { get; set => SetProperty(ref field, value); }
