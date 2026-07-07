@@ -60,6 +60,7 @@ All notable changes to TazUO will be recorded here.
 * World map font style now applies to both names and markers and moved to the main context menu; added a TTF Fonts menu to render names/markers with TrueType fonts and adjustable size - [P.R 655](https://github.com/PlayTazUO/TazUO/pull/655) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Added a Video > Misc option to reduce mobile feet clipping through walls (character depth slice step, default now minimizes clipping) - [P.R 666](https://github.com/PlayTazUO/TazUO/pull/666) ([bittiez](https://github.com/bittiez))
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Fixed reset/min/max size buttons in resizable windows not updating correctly or causing crashes - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Fixed mouse clicks passing through Myra windows in certain cases - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
