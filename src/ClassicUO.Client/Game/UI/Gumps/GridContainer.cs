@@ -2552,25 +2552,16 @@ public partial class GridContainer : ResizableGump
                 return _containerContents;
             }
 
-            private static bool ContainsIgnoreCase(string source, string searchLower) => source != null && source.ToLower().Contains(searchLower);
-
             private bool SearchItemNameAndProps(string search, Item item)
             {
                 if (item == null)
                     return false;
 
-                string searchLower = search.ToLower();
-
-                if (_world.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
-                {
-                    if (ContainsIgnoreCase(name, searchLower) || ContainsIgnoreCase(data, searchLower))
-                        return true;
-                }
-                else
-                {
-                    if (ContainsIgnoreCase(item.Name, searchLower) || ContainsIgnoreCase(item.ItemData.Name, searchLower))
-                        return true;
-                }
+                if(item.OPLName.ContainsIgnoreCase(search) || item.OPLData.ContainsIgnoreCase(search))
+                    return true;
+                
+                if(item.GetNormalizedName(false).ContainsIgnoreCase(search))
+                    return true;
 
                 return false;
             }
