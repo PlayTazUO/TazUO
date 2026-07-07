@@ -3224,7 +3224,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     World,
                     lang.GetTazUO.LowContrastHighlightStyle, 0, ThemeSettings.COMBO_BOX_WIDTH,
-                    Enum.GetNames(typeof(GridContainer.LowContrastHighlightStyle)), profile.GridHighlightLowContrastItemsStyle,
+                    Enum.GetNames(typeof(LowContrastHighlightStyle)), profile.GridHighlightLowContrastItemsStyle,
                     (i, s) => { profile.GridHighlightLowContrastItemsStyle = i; }
                 ), true, page
             );
@@ -3240,7 +3240,7 @@ namespace ClassicUO.Game.UI.Gumps
                     (i) =>
                     {
                         profile.GridBorderAlpha = (byte)i;
-                        GridContainer.GridItem.StaticGridContainerSettingUpdated();
+                        GridItem.StaticGridContainerSettingUpdated();
                     }), true, page
             );
 
@@ -3249,7 +3249,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (h) =>
                 {
                     profile.GridBorderHue = h;
-                    GridContainer.GridItem.StaticGridContainerSettingUpdated();
+                    GridItem.StaticGridContainerSettingUpdated();
                 }), true, page);
             content.RemoveIndent();
 
@@ -3355,7 +3355,7 @@ namespace ClassicUO.Game.UI.Gumps
                 new ComboBoxWithLabel
                 (World,
                     lang.GetTazUO.ContainerStyle, 0, ThemeSettings.COMBO_BOX_WIDTH,
-                    Enum.GetNames(typeof(GridContainer.BorderStyle)), profile.Grid_BorderStyle, (i, s) =>
+                    Enum.GetNames(typeof(BorderStyle)), profile.Grid_BorderStyle, (i, s) =>
                     {
                         profile.Grid_BorderStyle = i;
                         GridContainer.UpdateAllGridContainers();
