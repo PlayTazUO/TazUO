@@ -489,6 +489,41 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        public override void AddText(TextObject msg)
+        {
+            // The overhead text position carried on the message comes from the shared
+            // DelayedObjectClickManager, whose coordinates can be a stale absolute (world)
+            // position for a direct item click - the container renderer then adds this gump's
+            // ScreenCoordinateX on top, pushing the text far off to the side. Re-anchor the
+            // text over the item's actual slot (already in scaled, container-local space) so it
+            // renders above the item regardless of container scale.
+            if (msg?.Owner is Entity owner)
+            {
+                ItemGump slot = FindItemGump(owner.Serial);
+
+                if (slot != null)
+                {
+                    msg.X = slot.X + (slot.Width >> 1);
+                    msg.Y = slot.Y;
+                }
+            }
+
+            base.AddText(msg);
+        }
+
+        private ItemGump FindItemGump(uint serial)
+        {
+            foreach (Control c in Children)
+            {
+                if (c is ItemGump itemGump && itemGump.LocalSerial == serial)
+                {
+                    return itemGump;
+                }
+            }
+
+            return null;
+        }
+
         public override void Update()
         {
             base.Update();
