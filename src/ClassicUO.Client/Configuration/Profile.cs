@@ -194,10 +194,6 @@ namespace ClassicUO.Configuration
         public int MobileHPType { get; set => SetProperty(ref field, value); }     // 0 = %, 1 = line, 2 = both
         public int MobileHPShowWhen { get; set => SetProperty(ref field, value); } // 0 = Always, 1 - <100%
         public bool DrawRoofs { get; set => SetProperty(ref field, value); } = true;
-        // Experimental: give tall wall statics a top->bottom sloped depth so a mobile standing
-        // behind a wall no longer has its feet bleed through it. 0 disables; higher = stronger
-        // forward push at the wall base (2 roughly matches the character sprite's slice bias).
-        public float WallDepthSlope { get; set => SetProperty(ref field, value); } = 0f;
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
         public bool HideVegetation { get; set => SetProperty(ref field, value); }

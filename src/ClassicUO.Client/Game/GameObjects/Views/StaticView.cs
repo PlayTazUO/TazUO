@@ -116,12 +116,6 @@ namespace ClassicUO.Game.GameObjects
             graphic = GetDisplayGraphic(graphic);
             bool isTree = graphic == Constants.TREE_REPLACE_GRAPHIC;
 
-            float depthSlope = 0f;
-            if (_profile.WallDepthSlope > 0f && ItemData.IsWall && !ItemData.IsFoliage)
-            {
-                depthSlope = _profile.WallDepthSlope;
-            }
-
             DrawStaticAnimated(
                 batcher,
                 graphic,
@@ -133,8 +127,7 @@ namespace ClassicUO.Game.GameObjects
                     && (isTree || ItemData.IsFoliage || StaticFilters.IsRock(graphic)),
                 depth,
                 _profile.AnimatedWaterEffect && ItemData.IsWet,
-                OutlineColor,
-                depthSlope
+                OutlineColor
             );
 
             if (_isLight && GameScene.Instance != null)

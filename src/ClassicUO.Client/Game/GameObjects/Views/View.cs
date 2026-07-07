@@ -300,8 +300,7 @@ namespace ClassicUO.Game.GameObjects
             bool shadow,
             float depth,
             bool isWet = false,
-            Color? outlineColor = null,
-            float depthSlope = 0f
+            Color? outlineColor = null
         )
         {
             ref UOFileIndex index = ref Client.Game.UO.FileManager.Arts.File.GetValidRefEntry(graphic + ART_STATIC_OFFSET);
@@ -354,22 +353,6 @@ namespace ClassicUO.Game.GameObjects
                         scale,
                         SpriteEffects.None,
                         renderDepth
-                    );
-                }
-                else if (depthSlope > 0f)
-                {
-                    // Height-aware depth: keep the top of the wall at its base depth and push the
-                    // bottom forward, so the lower part of a tall wall competes with the forward
-                    // depth of a mobile's sliced feet instead of losing to it.
-                    float bottomDepth = renderDepth + (artInfo.UV.Height / 22f) * depthSlope;
-
-                    batcher.DrawSloped(
-                        artInfo.Texture,
-                        pos,
-                        artInfo.UV,
-                        hue,
-                        renderDepth,
-                        bottomDepth
                     );
                 }
                 else
