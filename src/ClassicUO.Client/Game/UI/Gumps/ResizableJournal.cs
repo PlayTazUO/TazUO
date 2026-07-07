@@ -29,6 +29,7 @@ namespace ClassicUO.Game.UI.Gumps
         private static int MIN_WIDTH = (BORDER_WIDTH * 2) + (TAB_WIDTH * 4) + 40;
         private const int MIN_HEIGHT = 100;
         private const int SCROLL_BAR_WIDTH = 14;
+        private const uint INACTIVE_TRANSPARENCY_DELAY = 3000;
         #region TABS
         private const int TAB_WIDTH = 80;
         private const int TAB_HEIGHT = 30;
@@ -56,6 +57,8 @@ namespace ClassicUO.Game.UI.Gumps
         private static int _lastWidth = MIN_WIDTH, _lastHeight = 300;
         private readonly GumpPicTiled _backgroundTexture;
         private World _world;
+        private uint _inactiveSince;
+        private bool _hiddenForInactivity;
         #endregion
         public ResizableJournal(World world) : base(world, _lastWidth, _lastHeight, MIN_WIDTH, MIN_HEIGHT, 0, 0)
         {
@@ -441,6 +444,91 @@ namespace ClassicUO.Game.UI.Gumps
 
                 BuildTabs();
             }
+
+            UpdateInactiveTransparency();
+        }
+
+        private void UpdateInactiveTransparency()
+        {
+            if (ProfileManager.CurrentProfile == null || !ProfileManager.CurrentProfile.JournalTransparencyWhenInactive)
+            {
+                if (_hiddenForInactivity)
+                    RestoreFromInactivity();
+
+                _inactiveSince = 0;
+                return;
+            }
+
+            if (IsMouseOverJournal() || IsTopMostGump())
+            {
+                _inactiveSince = 0;
+
+                if (_hiddenForInactivity)
+                    RestoreFromInactivity();
+
+                return;
+            }
+
+            if (_inactiveSince == 0)
+                _inactiveSince = Time.Ticks;
+
+            if (!_hiddenForInactivity && Time.Ticks - _inactiveSince >= INACTIVE_TRANSPARENCY_DELAY)
+                ApplyInactivity();
+
+            if (_hiddenForInactivity) //The journal area keeps re-enabling the scroll bar, so keep it hidden every frame.
+                _scrollBarBase.IsVisible = false;
+        }
+
+        private bool IsMouseOverJournal()
+        {
+            //MouseIsOver only covers the gump itself, so also treat hovering any child (text area, tabs, scroll bar) as being over the journal.
+            return MouseIsOver || UIManager.MouseOverControl?.RootParent == this;
+        }
+
+        private bool IsTopMostGump()
+        {
+            foreach (IGui gump in UIManager.Gumps)
+            {
+                if (gump.IsDisposed || !gump.IsVisible || gump.LayerOrder != UILayer.Default)
+                    continue;
+
+                return gump == this;
+            }
+
+            return false;
+        }
+
+        private void ApplyInactivity()
+        {
+            _hiddenForInactivity = true;
+
+            ShowBorder = false; //Hides the border and the resize handle.
+            _background.IsVisible = false;
+            _backgroundTexture.IsVisible = false;
+            _scrollBarBase.IsVisible = false;
+
+            foreach (NiceButton tab in _tab)
+                tab.IsVisible = false;
+
+            _newTabButton.IsVisible = false;
+            _clearJournalButton.IsVisible = false;
+        }
+
+        private void RestoreFromInactivity()
+        {
+            _hiddenForInactivity = false;
+
+            foreach (NiceButton tab in _tab)
+                tab.IsVisible = true;
+
+            _newTabButton.IsVisible = true;
+            _clearJournalButton.IsVisible = true;
+            ResizeButton.IsVisible = !IsLocked;
+
+            BuildBorder(); //Restores border and background visibility based on the current profile/style.
+
+            if (IsLocked)
+                ShowBorder = false;
         }
 
         public override void Dispose()
