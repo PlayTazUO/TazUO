@@ -97,9 +97,9 @@ public static class ChatTab
                 search: new SearchMetadata(journalLang.JournalHideBorders)
             ),
             Option.Checkbox(
-                journalLang.JournalTransparencyWhenInactive,
+                TazLang.Get("journal_transparencywheninactive", "Journal transparency when not active"),
                 new Accessor<bool>(() => profile.JournalTransparencyWhenInactive),
-                search: new SearchMetadata(journalLang.JournalTransparencyWhenInactive)
+                search: new SearchMetadata(TazLang.Get("journal_transparencywheninactive", "Journal transparency when not active"))
             ),
             Option.Checkbox(
                 journalLang.HideTimestamp,
