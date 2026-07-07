@@ -818,7 +818,10 @@ namespace ClassicUO.Game.GameObjects
                             rect.Height = Math.Min(value, rect.Height);
                             int remains = spriteInfo.UV.Height - rect.Height;
 
-                            const int tiles = 2;
+                            // Depth step between vertical slices of the character. Lower values
+                            // reduce how far the feet are pushed forward in the depth buffer, so
+                            // they clip through fewer walls the mobile is standing behind.
+                            int tiles = ProfileManager.CurrentProfile?.MobileDepthSliceStep ?? 2;
 
                             for (int i = 0; i < count; ++i)
                             {
