@@ -313,6 +313,13 @@ public partial class GridContainer : ResizableGump
             BuildBorder();
             ResizeWindow(savedSize);
 
+            // Populate and lay out the grid immediately. Content updates are otherwise only
+            // triggered when the server sends item packets (see ItemHelpers), so without this
+            // an empty container would leave its empty slots stacked at (0,0), and switching
+            // from the old container style back to the grid (where the items already exist in
+            // the world and no packet arrives) would render an empty grid.
+            RequestUpdateContents();
+
             // Apply minimized state after all controls are created
             if (loadMinimized)
             {
