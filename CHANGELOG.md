@@ -58,6 +58,7 @@ All notable changes to TazUO will be recorded here.
 * Added a better weather atmospheric effect - [P.R 592](https://github.com/PlayTazUO/TazUO/pull/592) ([birdinforest](https://github.com/birdinforest))
 * Added list view to grid containers - [P.R 626](github.com/PlayTazUO/TazUO/pull/626) ([Nesci28](https://github.com/Nesci28))
 * World map font style now applies to both names and markers and moved to the main context menu; added a TTF Fonts menu to render names/markers with TrueType fonts and adjustable size - [P.R 655](https://github.com/PlayTazUO/TazUO/pull/655) ([bittiez](https://github.com/bittiez))
+* Added a journal option to make the journal transparent (hide border, tabs, scroll bar, and background) after 3 seconds when it is not hovered and not the active window - [P.R 670](https://github.com/PlayTazUO/TazUO/pull/670) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Added a Video > Misc option to reduce mobile feet clipping through walls (character depth slice step, default now minimizes clipping) - [P.R 666](https://github.com/PlayTazUO/TazUO/pull/666) ([bittiez](https://github.com/bittiez))
