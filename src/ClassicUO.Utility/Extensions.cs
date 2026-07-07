@@ -223,6 +223,7 @@ namespace ClassicUO.Utility
         }
 
         public static bool NotNullNotEmpty(this string text) => !string.IsNullOrEmpty(text);
+        public static bool IsNullOrEmpty(this string text) => string.IsNullOrEmpty(text);
 
         public static string Truncate(this string text, int maxLength, bool addEllipsis = true) => StringHelper.Truncate(text, maxLength, addEllipsis);
 
@@ -235,5 +236,7 @@ namespace ClassicUO.Utility
         }
 
         public static int ToInt<T>(this T enumValue) where T : struct, Enum => Unsafe.As<T, int>(ref enumValue);
+
+        public static bool ContainsIgnoreCase(this string source, string searchString) => source != null && searchString != null && source.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
 }
