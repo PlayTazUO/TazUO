@@ -87,10 +87,13 @@ public class GridItem : Control
 
     public void AddText(string text, ushort hue)
     {
+        // Offset accounts for the scroll area's scroll position; ScreenCoordinate alone
+        // ignores it, which pushes the text far off screen once the grid is scrolled
+        // (which happens readily when the container is scaled up and cells overflow the view).
         var timedText = new SimpleTimedTextGump(_world, text, (uint)hue, TimeSpan.FromSeconds(2), 200)
         {
-            X = ScreenCoordinateX,
-            Y = ScreenCoordinateY
+            X = ScreenCoordinateX + Offset.X,
+            Y = ScreenCoordinateY + Offset.Y
         };
 
         // Remove disposed timed texts
