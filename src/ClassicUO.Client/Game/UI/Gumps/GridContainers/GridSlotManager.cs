@@ -124,44 +124,61 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 slot.Value.SetGridItem(null);
             }
 
+            // Serials of everything we're allowed to display, for O(1) membership checks.
+            var filteredSerials = new HashSet<uint>(filteredItems.Count);
+            foreach (Item i in filteredItems)
+                filteredSerials.Add(i.Serial);
+
+            // Tracks which items have already been placed so the second pass can skip them
+            // without mutating the caller's list (which may be a shared/cached collection).
+            var placed = new HashSet<uint>();
+
             // First pass: Place items that have saved positions (and locked items if sorting)
             // This maintains user-customized item positions unless auto-sort is overriding
             foreach (KeyValuePair<int, uint> spot in _itemPositions)
             {
-                Item i = _world.Items.Get(spot.Value);
-                if (i != null)
-                    // Place item if it's in the filtered list AND (not sorting OR item is locked)
-                    if (filteredItems.Contains(i) && (!overrideSort || _itemLocks.Contains(spot.Value)))
-                    {
-                        if (spot.Key < _gridSlots.Count)
-                        {
-                            // Place the item at its saved slot position
-                            _gridSlots[spot.Key].SetGridItem(i);
+                uint serial = spot.Value;
 
-                            // Mark the slot as locked if the item is locked in place
-                            if (_itemLocks.Contains(spot.Value))
-                                _gridSlots[spot.Key].ItemGridLocked = true;
+                if (spot.Key >= _gridSlots.Count || placed.Contains(serial))
+                    continue;
 
-                            // Remove from the list so it won't be placed again
-                            filteredItems.Remove(i);
-                        }
-                    }
+                // Place item if it's in the filtered list AND (not sorting OR item is locked)
+                if (!filteredSerials.Contains(serial) || (overrideSort && !_itemLocks.Contains(serial)))
+                    continue;
+
+                Item i = _world.Items.Get(serial);
+                if (i == null)
+                    continue;
+
+                // Place the item at its saved slot position
+                _gridSlots[spot.Key].SetGridItem(i);
+
+                // Mark the slot as locked if the item is locked in place
+                if (_itemLocks.Contains(serial))
+                    _gridSlots[spot.Key].ItemGridLocked = true;
+
+                placed.Add(serial);
             }
 
             // Second pass: Fill remaining empty slots with items that don't have saved positions
             // This includes new items or items being auto-sorted
+            int nextFreeSlot = 0;
             foreach (Item i in filteredItems)
             {
-                foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
-                {
-                    // Skip slots that already have items
-                    if (slot.Value.SlotItem != null)
-                        continue;
-                    // Place item in first available empty slot
-                    slot.Value.SetGridItem(i);
-                    AddItemSlot(i, slot.Key);
+                if (placed.Contains(i.Serial))
+                    continue;
+
+                // Advance to the next empty slot (slots fill front-to-back, so we never need
+                // to re-scan from the beginning).
+                while (nextFreeSlot < _gridSlots.Count && _gridSlots[nextFreeSlot].SlotItem != null)
+                    nextFreeSlot++;
+
+                if (nextFreeSlot >= _gridSlots.Count)
                     break;
-                }
+
+                _gridSlots[nextFreeSlot].SetGridItem(i);
+                AddItemSlot(i, nextFreeSlot);
+                placed.Add(i.Serial);
             }
 
             // Rebuild the GridItems lookup dictionary for quick serial-to-GridItem access

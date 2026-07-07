@@ -977,8 +977,8 @@ public partial class GridContainer : ResizableGump
                 {
                     if (child is Button btn)
                     {
-                        btn.X = Width - (btn.Width >> 0) + 2;
-                        btn.Y = Height - (btn.Height >> 0) + 2;
+                        btn.X = Width - btn.Width + 2;
+                        btn.Y = Height - btn.Height + 2;
                         break;
                     }
                 }

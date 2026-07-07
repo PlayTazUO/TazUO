@@ -112,6 +112,7 @@ public class GridItem : Control
         _background.Width = GridItemSize;
         _background.Height = GridItemSize;
         _listLabel.IsVisible = false;
+        RepositionCount();
     }
 
     public void ResizeList(int width)
@@ -124,6 +125,13 @@ public class GridItem : Control
         _listLabel.X = GridContainer.LIST_ICON_SIZE + 4;
         _listLabel.IsVisible = _item != null;
         RefreshListName();
+        RepositionCount();
+    }
+
+    private void RepositionCount()
+    {
+        if (_count != null)
+            _count.Y = Height - _count.Height;
     }
 
     public void RefreshListName()
@@ -182,7 +190,7 @@ public class GridItem : Control
             {
                 X = 1
             };
-            Y = Height - _count.Height;
+            RepositionCount();
         }
 
         RefreshListName();
