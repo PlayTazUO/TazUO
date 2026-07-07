@@ -708,11 +708,16 @@ public partial class GridContainer : ResizableGump
             if (columns < 0)
                 columns = ProfileManager.CurrentProfile.Grid_DefaultColumns;
 
-            // Calculate the total width of the grid container
+            // Calculate the total width of the grid container.
+            // The layout (see GridSlotManager.SetGridPositions) starts each row at x = X_SPACING
+            // and advances by GridItemSize + X_SPACING per column, so N columns need a leading
+            // gap plus one trailing gap per column: X_SPACING * (columns + 1). Budgeting only
+            // X_SPACING * columns leaves the last column landing exactly on the wrap boundary,
+            // pushing it to the next row (e.g. asking for 5 columns only fits 4).
             return (GetCurrentBorderWidth() * 2)          // Borders on the left and right
                     + GridScrollArea.SCROLLBAR_WIDTH      // Width of the scroll bar
                     + (GridItemSize * columns)            // Total width of grid items
-                    + (X_SPACING * columns);              // Spacing between grid items
+                    + (X_SPACING * (columns + 1));        // Leading gap + spacing after each column
         }
         private static int GetHeight(int rows = -1)
         {
