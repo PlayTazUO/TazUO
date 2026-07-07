@@ -481,8 +481,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         private bool IsMouseOverJournal()
         {
-            return UIManager.MouseOverControl != null &&
-                (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this);
+            //MouseIsOver only covers the gump itself, so also treat hovering any child (text area, tabs, scroll bar) as being over the journal.
+            return MouseIsOver || UIManager.MouseOverControl?.RootParent == this;
         }
 
         private bool IsTopMostGump()
