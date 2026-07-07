@@ -93,7 +93,13 @@ namespace ClassicUO.Game.GameObjects
             posX += (int)Offset.X;
             posY += (int)(Offset.Y + Offset.Z);
 
-            DrawStaticAnimated(batcher, graphic, posX, posY, hueVec, false, depth, outlineColor: OutlineColor);
+            float depthSlope = 0f;
+            if (currentProfile.WallDepthSlope > 0f && ItemData.IsWall && !ItemData.IsFoliage)
+            {
+                depthSlope = currentProfile.WallDepthSlope;
+            }
+
+            DrawStaticAnimated(batcher, graphic, posX, posY, hueVec, false, depth, outlineColor: OutlineColor, depthSlope: depthSlope);
 
             if (ItemData.IsLight)
             {

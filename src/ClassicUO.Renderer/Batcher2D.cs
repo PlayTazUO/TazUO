@@ -1006,6 +1006,83 @@ namespace ClassicUO.Renderer
             );
         }
 
+        /// <summary>
+        /// Draws a non-rotated sprite whose depth ramps linearly from <paramref name="depthTop"/> at
+        /// the top edge to <paramref name="depthBottom"/> at the bottom edge. Used to give tall
+        /// billboards (walls) a height-aware depth so they compete correctly with the vertically
+        /// sliced depth of mobiles instead of occluding as a single flat plane.
+        /// </summary>
+        public void DrawSloped
+        (
+            Texture2D texture,
+            Vector2 position,
+            Rectangle sourceRectangle,
+            Vector3 hue,
+            float depthTop,
+            float depthBottom
+        )
+        {
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
+            float sourceX = sourceRectangle.X / (float)texture.Width;
+            float sourceY = sourceRectangle.Y / (float)texture.Height;
+            float sourceW = Math.Sign(sourceRectangle.Width) * Math.Max(Math.Abs(sourceRectangle.Width), Utility.MathHelper.MachineEpsilonFloat) / (float)texture.Width;
+            float sourceH = Math.Sign(sourceRectangle.Height) * Math.Max(Math.Abs(sourceRectangle.Height), Utility.MathHelper.MachineEpsilonFloat) / (float)texture.Height;
+            float destW = sourceRectangle.Width;
+            float destH = sourceRectangle.Height;
+
+            EnsureSize();
+
+            ref PositionNormalTextureColor4 sprite = ref _vertexInfo[_numSprites];
+
+            // top edge -> depthTop, bottom edge -> depthBottom (rasterizer interpolates per pixel)
+            sprite.Position0.X = position.X;
+            sprite.Position0.Y = position.Y;
+            sprite.Position0.Z = depthTop;
+
+            sprite.Position1.X = position.X + destW;
+            sprite.Position1.Y = position.Y;
+            sprite.Position1.Z = depthTop;
+
+            sprite.Position2.X = position.X;
+            sprite.Position2.Y = position.Y + destH;
+            sprite.Position2.Z = depthBottom;
+
+            sprite.Position3.X = position.X + destW;
+            sprite.Position3.Y = position.Y + destH;
+            sprite.Position3.Z = depthBottom;
+
+            sprite.TextureCoordinate0.X = (_cornerOffsetX[0] * sourceW) + sourceX;
+            sprite.TextureCoordinate0.Y = (_cornerOffsetY[0] * sourceH) + sourceY;
+            sprite.TextureCoordinate1.X = (_cornerOffsetX[1] * sourceW) + sourceX;
+            sprite.TextureCoordinate1.Y = (_cornerOffsetY[1] * sourceH) + sourceY;
+            sprite.TextureCoordinate2.X = (_cornerOffsetX[2] * sourceW) + sourceX;
+            sprite.TextureCoordinate2.Y = (_cornerOffsetY[2] * sourceH) + sourceY;
+            sprite.TextureCoordinate3.X = (_cornerOffsetX[3] * sourceW) + sourceX;
+            sprite.TextureCoordinate3.Y = (_cornerOffsetY[3] * sourceH) + sourceY;
+            sprite.TextureCoordinate0.Z = 0;
+            sprite.TextureCoordinate1.Z = 0;
+            sprite.TextureCoordinate2.Z = 0;
+            sprite.TextureCoordinate3.Z = 0;
+
+            sprite.Hue0 = hue;
+            sprite.Hue1 = hue;
+            sprite.Hue2 = hue;
+            sprite.Hue3 = hue;
+
+            var n = new Vector3(0, 0, 1);
+            sprite.Normal0 = n;
+            sprite.Normal1 = n;
+            sprite.Normal2 = n;
+            sprite.Normal3 = n;
+
+            _textureInfo[_numSprites] = texture;
+            ++_numSprites;
+        }
+
         public void Draw
         (
             Texture2D texture,
