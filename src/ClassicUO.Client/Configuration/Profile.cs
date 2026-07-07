@@ -194,12 +194,6 @@ namespace ClassicUO.Configuration
         public int MobileHPType { get; set => SetProperty(ref field, value); }     // 0 = %, 1 = line, 2 = both
         public int MobileHPShowWhen { get; set => SetProperty(ref field, value); } // 0 = Always, 1 - <100%
         public bool DrawRoofs { get; set => SetProperty(ref field, value); } = true;
-        // Per-slice depth step for the character sprite. A mobile is drawn in vertical slices at
-        // depth + 1 + (i * step); the step pushes the lower body (feet) forward in the depth buffer,
-        // which is what lets feet leak through walls the mobile stands behind. Lowering it
-        // (2 -> 1 -> 0) reduces how far the feet overshoot into walls that are a tile or more in
-        // front; a thin same-diagonal sliver is inherent to the flat-depth model and cannot be
-        // removed here. 2 = classic ClassicUO behaviour.
         public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 0;
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
