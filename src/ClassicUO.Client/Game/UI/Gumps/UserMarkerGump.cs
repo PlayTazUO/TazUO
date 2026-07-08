@@ -19,6 +19,7 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly MyraInputBox _textBoxX;
         private readonly MyraInputBox _textBoxY;
         private readonly MyraInputBox _markerName;
+        private readonly MyraInputBox _zoomBox;
 
         private readonly string[] _colors;
         private int _selectedColorIndex;
@@ -32,6 +33,12 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly int _mapIndex;
 
         private const int MAX_NAME_LEN = 25;
+
+        // Zoom index gates at which world-map zoom level the marker's icon starts to appear
+        // (0 = always visible, up to 9 for the most zoomed-in level). New markers default to 3.
+        private const int MIN_ZOOM = 0;
+        private const int MAX_ZOOM = 9;
+        private const int DEFAULT_ZOOM = 3;
 
         private const int MAP_MIN_CORD = 0;
         private readonly int _mapMaxX;
@@ -107,6 +114,16 @@ namespace ClassicUO.Game.UI.Gumps
                 layout.Widgets.Add(BuildLabeledRow(ResGumps.MarkerIcon,
                     BuildCombo(_icons, selectedIcon, idx => _selectedIconIndex = idx)));
             }
+
+            // Zoom field
+            int initialZoom = isEdit && _markerIdx >= 0 ? _markers[_markerIdx].ZoomIndex : DEFAULT_ZOOM;
+            layout.Widgets.Add(BuildLabeledRow("Zoom", _zoomBox = new MyraInputBox
+            {
+                Text = Math.Clamp(initialZoom, MIN_ZOOM, MAX_ZOOM).ToString(),
+                Width = 200,
+                InputFilter = MyraInputBox.DigitInputFilter,
+                Tooltip = $"World-map zoom level ({MIN_ZOOM}-{MAX_ZOOM}) at which this marker's icon starts to show."
+            }));
 
             // Buttons Add/Edit and Cancel depend on state
             var btnRow = new HorizontalStackPanel { Spacing = 8, HorizontalAlignment = HorizontalAlignment.Right };
@@ -216,6 +233,8 @@ namespace ClassicUO.Game.UI.Gumps
             string color = _colors[_selectedColorIndex];
             string icon = _hasIcons ? _icons[_selectedIconIndex] : string.Empty;
 
+            int zoom = int.TryParse(_zoomBox.Text, out int z) ? Math.Clamp(z, MIN_ZOOM, MAX_ZOOM) : DEFAULT_ZOOM;
+
             var marker = new WMapMarker
             {
                 Name = markerName,
@@ -224,6 +243,7 @@ namespace ClassicUO.Game.UI.Gumps
                 MapId = mapIdx,
                 ColorName = color,
                 Color = GetColor(color),
+                ZoomIndex = zoom,
             };
 
             if (!_markerIcons.TryGetValue(icon, out Microsoft.Xna.Framework.Graphics.Texture2D iconTexture))

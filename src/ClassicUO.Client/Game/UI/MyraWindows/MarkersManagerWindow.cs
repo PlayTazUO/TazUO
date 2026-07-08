@@ -9,8 +9,6 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Resources;
 using ClassicUO.Utility.Logging;
-using Microsoft.Xna.Framework;
-using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.TextureAtlases;
 using Myra.Graphics2D.UI;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
@@ -36,9 +34,7 @@ public sealed class MarkersManagerWindow : MyraControl
     // Markers currently ticked for a bulk operation on the active (editable) tab.
     private readonly HashSet<WMapMarker> _selected = new();
 
-    private readonly VerticalStackPanel _listPanel = new() { Spacing = 2 };
-    private readonly HorizontalStackPanel _tabRow = new() { Spacing = 4 };
-    private readonly HorizontalStackPanel _bulkBar = new() { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+    private MyraTabControl? _tabControl;
 
     private MyraLabel? _selectionCountLabel;
     private MyraButton? _deleteSelectedButton;
@@ -73,13 +69,28 @@ public sealed class MarkersManagerWindow : MyraControl
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
         root.Widgets.Add(BuildToolbar());
-        BuildTabs();
-        root.Widgets.Add(_tabRow);
-        root.Widgets.Add(_bulkBar);
-        root.Widgets.Add(new ScrollViewer { MaxHeight = 400, Content = _listPanel });
 
-        RebuildList();
+        if (MarkerFiles.Count == 0)
+        {
+            root.Widgets.Add(new MyraLabel("No marker files found.", MyraLabel.TextStyle.P));
+            SetRootContent(root);
+            return;
+        }
 
+        _tabControl = new MyraTabControl();
+
+        for (int i = 0; i < MarkerFiles.Count; i++)
+        {
+            int index = i;
+            WMapMarkerFile file = MarkerFiles[i];
+            // The tab body is (re)built lazily; the header tooltip shows the file's full path.
+            _tabControl.AddTab(file.Name, () => BuildTabBody(index), file.FullPath);
+        }
+
+        _tabControl.SelectedIndexChanged += OnTabChanged;
+        _tabControl.SelectFirst();
+
+        root.Widgets.Add(_tabControl);
         SetRootContent(root);
     }
 
@@ -91,62 +102,48 @@ public sealed class MarkersManagerWindow : MyraControl
         searchBox.TextChangedByUser += (_, _) =>
         {
             _filterText = searchBox.Text ?? "";
-            RebuildList();
+            RebuildCurrentTab();
         };
 
         toolbar.Widgets.Add(searchBox);
         return toolbar;
     }
 
-    private void BuildTabs()
+    private void OnTabChanged(object? sender, EventArgs e)
     {
-        _tabRow.Widgets.Clear();
-
-        for (int i = 0; i < MarkerFiles.Count; i++)
-        {
-            int index = i;
-            WMapMarkerFile file = MarkerFiles[i];
-
-            var btn = new MyraButton(file.Name, () =>
-            {
-                if (_categoryId == index)
-                    return;
-
-                _categoryId = index;
-                _selected.Clear();
-                BuildTabs();
-                RebuildList();
-            })
-            {
-                Tooltip = file.Name
-            };
-
-            if (i == _categoryId)
-                btn.Background = new SolidBrush(new Color(170, 105, 13, 220));
-
-            _tabRow.Widgets.Add(btn);
-        }
+        _categoryId = _tabControl?.SelectedIndex ?? 0;
+        // Selections are per-file, so switching tabs starts a fresh selection.
+        _selected.Clear();
+        RebuildCurrentTab();
     }
 
     private WMapMarkerFile? CurrentFile =>
         _categoryId >= 0 && _categoryId < MarkerFiles.Count ? MarkerFiles[_categoryId] : null;
 
-    private void RebuildList()
+    /// <summary>Rebuilds the active tab's body in place (used after search, edit, delete and move).</summary>
+    private void RebuildCurrentTab()
     {
-        _listPanel.Widgets.Clear();
+        if (_tabControl?.SelectedItem != null)
+            _tabControl.SelectedItem.Content = BuildTabBody(_categoryId);
+    }
 
-        WMapMarkerFile? file = CurrentFile;
-        if (file == null)
-        {
-            _bulkBar.Visible = false;
-            _listPanel.Widgets.Add(new MyraLabel("No marker files found.", MyraLabel.TextStyle.P));
-            return;
-        }
-
+    private Widget BuildTabBody(int index)
+    {
+        WMapMarkerFile file = MarkerFiles[index];
         bool editable = file.IsEditable;
 
-        BuildBulkBar(editable);
+        var body = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
+        if (editable)
+            body.Widgets.Add(BuildBulkBar());
+
+        body.Widgets.Add(new ScrollViewer { MaxHeight = 400, Content = BuildListGrid(file, editable) });
+
+        return body;
+    }
+
+    private Widget BuildListGrid(WMapMarkerFile file, bool editable)
+    {
         var grid = new MyraGrid();
         grid.SetupWithHeaders(BuildColumns(editable));
 
@@ -166,9 +163,9 @@ public sealed class MarkersManagerWindow : MyraControl
         }
 
         if (dataRow == 1)
-            _listPanel.Widgets.Add(new MyraLabel("No markers found.", MyraLabel.TextStyle.P));
-        else
-            _listPanel.Widgets.Add(grid);
+            return new MyraLabel("No markers found.", MyraLabel.TextStyle.P);
+
+        return grid;
     }
 
     private static GridColumnInfo[] BuildColumns(bool editable)
@@ -183,6 +180,7 @@ public sealed class MarkersManagerWindow : MyraControl
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerX));
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerY));
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerColor));
+        columns.Add(GridColumnInfo.Auto("Zoom"));
         columns.Add(GridColumnInfo.Auto(""));
 
         return columns.ToArray();
@@ -215,6 +213,7 @@ public sealed class MarkersManagerWindow : MyraControl
         grid.AddWidget(new MyraLabel(marker.X.ToString(), MyraLabel.TextStyle.P), row, col++);
         grid.AddWidget(new MyraLabel(marker.Y.ToString(), MyraLabel.TextStyle.P), row, col++);
         grid.AddWidget(new MyraLabel(marker.ColorName ?? "", MyraLabel.TextStyle.P), row, col++);
+        grid.AddWidget(new MyraLabel(marker.ZoomIndex.ToString(), MyraLabel.TextStyle.P), row, col++);
 
         var actions = new HorizontalStackPanel { Spacing = 2 };
 
@@ -231,32 +230,26 @@ public sealed class MarkersManagerWindow : MyraControl
 
     #region Bulk operations
 
-    private void BuildBulkBar(bool editable)
+    private Widget BuildBulkBar()
     {
-        _bulkBar.Widgets.Clear();
-        _bulkBar.Visible = editable;
+        var bulkBar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
-        _selectionCountLabel = null;
-        _deleteSelectedButton = null;
-        _moveSelectedButton = null;
-
-        if (!editable)
-            return;
-
-        _bulkBar.Widgets.Add(new MyraButton("Select All", SelectAllVisible));
-        _bulkBar.Widgets.Add(new MyraButton("Clear", ClearSelection));
+        bulkBar.Widgets.Add(new MyraButton("Select All", SelectAllVisible));
+        bulkBar.Widgets.Add(new MyraButton("Clear", ClearSelection));
 
         _deleteSelectedButton = new MyraButton("Delete Selected", ConfirmDeleteSelected);
         MyraStyle.ApplyButtonDangerStyle(_deleteSelectedButton);
-        _bulkBar.Widgets.Add(_deleteSelectedButton);
+        bulkBar.Widgets.Add(_deleteSelectedButton);
 
         _moveSelectedButton = new MyraButton("Move Selected To…", ShowMoveMenu);
-        _bulkBar.Widgets.Add(_moveSelectedButton);
+        bulkBar.Widgets.Add(_moveSelectedButton);
 
         _selectionCountLabel = new MyraLabel("", MyraLabel.TextStyle.P);
-        _bulkBar.Widgets.Add(_selectionCountLabel);
+        bulkBar.Widgets.Add(_selectionCountLabel);
 
         UpdateBulkControls();
+
+        return bulkBar;
     }
 
     /// <summary>Refreshes the bulk action bar's label/enabled state without rebuilding the marker list.</summary>
@@ -289,13 +282,13 @@ public sealed class MarkersManagerWindow : MyraControl
             }
         }
 
-        RebuildList();
+        RebuildCurrentTab();
     }
 
     private void ClearSelection()
     {
         _selected.Clear();
-        RebuildList();
+        RebuildCurrentTab();
     }
 
     private void ConfirmDeleteSelected()
@@ -319,7 +312,7 @@ public sealed class MarkersManagerWindow : MyraControl
                 file.Markers.RemoveAll(_selected.Contains);
                 _selected.Clear();
                 SaveFile(file);
-                RebuildList();
+                RebuildCurrentTab();
             });
     }
 
@@ -357,7 +350,7 @@ public sealed class MarkersManagerWindow : MyraControl
 
         GameActions.Print(_world, $"Moved {moving.Count} marker{(moving.Count == 1 ? "" : "s")} to {target.Name}", 0x2B);
 
-        RebuildList();
+        RebuildCurrentTab();
     }
 
     private IEnumerable<WMapMarkerFile> OtherEditableFiles() =>
@@ -378,7 +371,7 @@ public sealed class MarkersManagerWindow : MyraControl
             // from the selection set to keep the bulk selection count accurate.
             _selected.Remove(marker);
             SaveFile(file);
-            RebuildList();
+            RebuildCurrentTab();
         };
     }
 
@@ -387,7 +380,7 @@ public sealed class MarkersManagerWindow : MyraControl
         file.Markers.Remove(marker);
         _selected.Remove(marker);
         SaveFile(file);
-        RebuildList();
+        RebuildCurrentTab();
     }
 
     private void GoToMarker(WMapMarker marker)
