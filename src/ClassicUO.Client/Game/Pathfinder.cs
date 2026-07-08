@@ -688,6 +688,55 @@ namespace ClassicUO.Game
             }
         }
 
+        // Doors block diagonal movement server-side: a door occupying either of the two
+        // cardinal tiles that flank a diagonal step causes the server to reject the walk,
+        // even when the door is open (and therefore passable to walk straight through).
+        // The client treats an open door tile as passable, so without this check it would
+        // approve and send the diagonal, then get denied — producing rubber-banding.
+        private bool TileHasDoor(int x, int y, sbyte z)
+        {
+            GameObject tile = _world.Map.GetTile(x, y, false);
+
+            if (tile == null)
+            {
+                return false;
+            }
+
+            GameObject obj = tile;
+
+            while (obj.TPrevious != null)
+            {
+                obj = obj.TPrevious;
+            }
+
+            for (; obj != null; obj = obj.TNext)
+            {
+                bool isDoor;
+
+                switch (obj)
+                {
+                    case Item item:
+                        isDoor = item.ItemData.IsDoor;
+                        break;
+                    case Static st:
+                        isDoor = st.ItemData.IsDoor;
+                        break;
+                    case Multi m:
+                        isDoor = m.ItemData.IsDoor;
+                        break;
+                    default:
+                        continue;
+                }
+
+                if (isDoor && obj.Z - 15 <= z && obj.Z + 15 >= z)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public bool CanWalk(ref Direction direction, ref int x, ref int y, ref sbyte z, bool dontChangeXY = false)
         {
             int newX = x;
@@ -710,6 +759,14 @@ namespace ClassicUO.Game
                         byte testDir = (byte)(((byte)direction + _dirOffset[i]) % 8);
                         GetNewXY(testDir, ref testX, ref testY);
                         passed = CalculateNewZ(testX, testY, ref testZ, testDir);
+
+                        // A door on a flanking cardinal tile blocks the diagonal server-side.
+                        // Treat the flank as blocked so we fall back to a straight step below
+                        // instead of sending a diagonal the server will reject.
+                        if (passed && TileHasDoor(testX, testY, testZ))
+                        {
+                            passed = false;
+                        }
                     }
                 }
 
