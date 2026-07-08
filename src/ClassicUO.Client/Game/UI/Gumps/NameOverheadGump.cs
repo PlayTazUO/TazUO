@@ -615,22 +615,9 @@ namespace ClassicUO.Game.UI.Gumps
                         && SerialHelper.IsMobile(LocalSerial)
                     )
                     {
-                        Entity followTarget = World.Get(LocalSerial);
-
-                        if (followTarget != null)
+                        if (World.Get(LocalSerial) is Mobile followTarget)
                         {
-                            World.MessageManager.HandleMessage(
-                                World.Player,
-                                ResGeneral.NowFollowing,
-                                string.Empty,
-                                0,
-                                MessageType.Regular,
-                                3,
-                                TextType.CLIENT
-                            );
-
-                            ProfileManager.CurrentProfile.FollowingMode = true;
-                            ProfileManager.CurrentProfile.FollowingTarget = followTarget;
+                            followTarget.Follow();
                         }
                     }
                     else if (!World.DelayedObjectClickManager.IsEnabled)

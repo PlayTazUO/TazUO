@@ -291,6 +291,33 @@ namespace ClassicUO.Game.GameObjects
 
         public void SetSAPoison(bool value) => _isSA_Poisoned = value;
 
+        /// <summary>
+        /// Enables auto follow mode with this mobile as the target.
+        /// </summary>
+        /// <param name="showMessage">Whether to display the "Now following" overhead message.</param>
+        public void Follow(bool showMessage = true)
+        {
+            if (ProfileManager.CurrentProfile == null)
+                return;
+
+            if (showMessage)
+            {
+                World.MessageManager.HandleMessage
+                (
+                    World.Player,
+                    ResGeneral.NowFollowing,
+                    string.Empty,
+                    0,
+                    MessageType.Regular,
+                    3,
+                    TextType.CLIENT
+                );
+            }
+
+            ProfileManager.CurrentProfile.FollowingMode = true;
+            ProfileManager.CurrentProfile.FollowingTarget = Serial;
+        }
+
         private void CalculateRandomIdleTime()
         {
             const int TIME = 30000;
