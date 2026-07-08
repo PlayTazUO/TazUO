@@ -5,9 +5,11 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
+using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -605,6 +607,30 @@ namespace ClassicUO.Game.UI.Gumps
                                     );
                                 }
                             }
+                        }
+                    }
+                    else if (
+                        HotKeys.IsPressed(HotKeyRegistrar.FollowMobileId)
+                        && !ProfileManager.CurrentProfile.DisableAutoFollowAlt
+                        && SerialHelper.IsMobile(LocalSerial)
+                    )
+                    {
+                        Entity followTarget = World.Get(LocalSerial);
+
+                        if (followTarget != null)
+                        {
+                            World.MessageManager.HandleMessage(
+                                World.Player,
+                                ResGeneral.NowFollowing,
+                                string.Empty,
+                                0,
+                                MessageType.Regular,
+                                3,
+                                TextType.CLIENT
+                            );
+
+                            ProfileManager.CurrentProfile.FollowingMode = true;
+                            ProfileManager.CurrentProfile.FollowingTarget = followTarget;
                         }
                     }
                     else if (!World.DelayedObjectClickManager.IsEnabled)

@@ -267,8 +267,6 @@ namespace ClassicUO.Game.Managers
                 UIManager.Add(new UI.Gumps.UpdateTimerViewer(_world));
             });
 
-            Register("artbrowser", (s) => { UIManager.Add(new ArtBrowserGump(_world)); });
-
             Register("animbrowser", (s) => { UIManager.Add(new AnimBrowser(_world)); });
 
             Register("syncfps", (_) =>

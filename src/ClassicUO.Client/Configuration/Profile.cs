@@ -313,6 +313,9 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Char, "draw_roofs", true)]
         public partial bool DrawRoofs { get; set; }
         [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "mobile_depth_slice_step", 0)]
+        public partial int MobileDepthSliceStep { get; set; }
+        [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "tree_to_stumps", false)]
         public partial bool TreeToStumps { get; set; }
         [JsonIgnore]
@@ -1093,7 +1096,7 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Char, "grid_container_view_mode", 0)]
         public partial int GridContainerViewMode { get; set; }
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "grid_container_search_mode", 1)]
+        [SqlSetting(SettingsScope.Char, "grid_container_search_mode", 0)]
         public partial int GridContainerSearchMode { get; set; }
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "enable_grid_container_anchor", false)]
@@ -1371,6 +1374,9 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "hide_journal_border", false)]
         public partial bool HideJournalBorder { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "journal_transparency_when_inactive", false)]
+        public partial bool JournalTransparencyWhenInactive { get; set; }
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "hide_journal_timestamp", false)]
         public partial bool HideJournalTimestamp { get; set; }

@@ -448,6 +448,7 @@ public static class VideoTab
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         string disableGargAnim = TazLang.Get("disable_gargoyle_flying_animation", "Disable gargoyle flying animation");
+        string mobileDepthSlice = TazLang.Get("mobile_depth_slice_step", "Character wall clipping (lower = less feet through walls)");
 
         return OptionsUi.Vertical(
             Option.Checkbox(
@@ -534,6 +535,13 @@ public static class VideoTab
                 disableGargAnim,
                 new Accessor<bool>(() => profile.DisableGargoyleFlyingAnimation),
                 search: new SearchMetadata(disableGargAnim, Keywords: [kw.Gargoyle, kw.Flying, kw.Animation])
+            ),
+            Option.Slider(
+                mobileDepthSlice,
+                0,
+                2,
+                new Accessor<int>(() => profile.MobileDepthSliceStep, v => profile.MobileDepthSliceStep = v),
+                search: new SearchMetadata(mobileDepthSlice, Keywords: [kw.Character, kw.Mobile])
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = miscLang.Perspective },

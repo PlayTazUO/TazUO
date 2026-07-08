@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
@@ -248,7 +249,7 @@ public static class ContainersTab
             Option.ComboBox(
                 tuoLang.ContainerStyle,
                 profile.Grid_BorderStyle,
-                Enum.GetNames<GridContainer.BorderStyle>(),
+                Enum.GetNames<BorderStyle>(),
                 i =>
                 {
                     profile.Grid_BorderStyle = i;
@@ -272,8 +273,8 @@ public static class ContainersTab
                 new PropertyBinder(new Accessor<bool>(() => profile.GridHighlightLowContrastItems), tuoLang.HighlightLowContrastItems),
                 Option.LComboBox(
                     tuoLang.LowContrastHighlightStyle,
-                    new Accessor<GridContainer.LowContrastHighlightStyle>(
-                        () => (GridContainer.LowContrastHighlightStyle)profile.GridHighlightLowContrastItemsStyle,
+                    new Accessor<LowContrastHighlightStyle>(
+                        () => (LowContrastHighlightStyle)profile.GridHighlightLowContrastItemsStyle,
                         newValue => profile.GridHighlightLowContrastItemsStyle = (int)newValue
                     ),
                     search: new SearchMetadata(tuoLang.LowContrastHighlightStyle, Keywords: [kw.Style])
@@ -286,7 +287,7 @@ public static class ContainersTab
                 new Accessor<float>(() => profile.GridBorderAlpha, f =>
                 {
                     profile.GridBorderAlpha = (byte)f;
-                    GridContainer.GridItem.StaticGridContainerSettingUpdated();
+                    GridItem.StaticGridContainerSettingUpdated();
                 }),
                 search: new SearchMetadata(tuoLang.GridItemBorderOpacity, Keywords: [kw.Border, kw.Opacity])
             ),
@@ -295,7 +296,7 @@ public static class ContainersTab
                 new Accessor<ushort>(() => profile.GridBorderHue, h =>
                 {
                     profile.GridBorderHue = h;
-                    GridContainer.GridItem.StaticGridContainerSettingUpdated();
+                    GridItem.StaticGridContainerSettingUpdated();
                 }),
                 search: new SearchMetadata(tuoLang.BorderColor, Keywords: [kw.Border, kw.Color])
             ),
