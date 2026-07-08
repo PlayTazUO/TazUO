@@ -226,8 +226,15 @@ public class GridItem : Control
         }
         else if (_gridContainer.IsMultiMove && _item != null)
         {
-            if (MultiItemMoveGump.TrySelect(_item))
-                _selectHighlight = true;
+            // The second click of this double-click is still a held button press, so the
+            // combo-drag logic in PreDraw would otherwise treat it as a fresh gesture and
+            // toggle the double-clicked item back off. Mark the gesture active and record
+            // this serial as already handled so it stays selected along with its matches.
+            _altDragActive = true;
+            _toggledThisAltDrag.Add(_item.Serial);
+
+            MultiItemMoveGump.TrySelect(_item);
+            _selectHighlight = true;
             ushort graphic = _item.Graphic;
             ushort hue = _item.Hue;
             foreach (GridItem gridItem in _gridContainer.SlotManager.GridSlots.Values)
