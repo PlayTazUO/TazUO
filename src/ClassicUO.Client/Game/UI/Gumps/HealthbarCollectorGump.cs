@@ -709,7 +709,7 @@ namespace ClassicUO.Game.UI.Gumps
                     else if (Keyboard.Alt && !ProfileManager.CurrentProfile.DisableAutoFollowAlt) //Auto follow
                     {
                         if (_world.Mobiles.Get(Serial) is Mobile mobile)
-                            mobile.Follow(false);
+                            mobile.Follow();
                     }
                     else if (!_world.Player.InWarMode)
                     {
