@@ -61,6 +61,7 @@ All notable changes to TazUO will be recorded here.
 * Added a journal option to make the journal transparent (hide border, tabs, scroll bar, and background) after 3 seconds when it is not hovered and not the active window - [P.R 670](https://github.com/PlayTazUO/TazUO/pull/670) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Auto open doors no longer closes a door that is already open - [P.R 674](https://github.com/PlayTazUO/TazUO/pull/674) ([bittiez](https://github.com/bittiez))
 * Added a Video > Misc option to reduce mobile feet clipping through walls (character depth slice step, default now minimizes clipping) - [P.R 666](https://github.com/PlayTazUO/TazUO/pull/666) ([bittiez](https://github.com/bittiez))
 * Fixed simultaneous drag and resize occurring on resizable windows - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
 * Fixed reset/min/max size buttons in resizable windows not updating correctly or causing crashes - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([yuval-po](https://github.com/yuval-po))
