@@ -252,19 +252,7 @@ internal static class Utility
         return serial;
     }
 
-    public static Color GetColorFromHex(string color)
-    {
-        if (color.StartsWith("#") && color.Length == 7)
-        {
-            byte r = Convert.ToByte(color.Substring(1, 2), 16);
-            byte g = Convert.ToByte(color.Substring(3, 2), 16);
-            byte b = Convert.ToByte(color.Substring(5, 2), 16);
-
-                return new Color(r, g, b);
-        }
-
-        return Color.Black;
-    }
+    public static Color GetColorFromHex(string color) => color.FromHtmlHex(Color.Black);
 
 
 

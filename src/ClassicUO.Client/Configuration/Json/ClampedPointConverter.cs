@@ -53,38 +53,8 @@ internal class ClampedPointConverter : JsonConverter<Point>
     /// </summary>
     public sealed override Point Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType != JsonTokenType.StartObject)
-            return Point.Zero;
-
-        reader.Read();
-
-        if (reader.TokenType != JsonTokenType.PropertyName)
-            return Point.Zero;
-
-        reader.Read();
-
-        if (reader.TokenType != JsonTokenType.Number)
-            return Point.Zero;
-
-        var point = new Point { X = reader.GetInt32() };
-
-        reader.Read();
-
-        if (reader.TokenType != JsonTokenType.PropertyName)
-            return Point.Zero;
-
-        reader.Read();
-
-        if (reader.TokenType != JsonTokenType.Number)
-            return Point.Zero;
-
-        point.Y = reader.GetInt32();
-
-        reader.Read();
-
-        return reader.TokenType != JsonTokenType.EndObject
-            ? Point.Zero
-            : point;
+        PointJsonHelper.TryReadPoint(ref reader, out Point point);
+        return point;
     }
 
     /// <summary>
@@ -92,9 +62,6 @@ internal class ClampedPointConverter : JsonConverter<Point>
     /// </summary>
     public override void Write(Utf8JsonWriter writer, Point value, JsonSerializerOptions options)
     {
-        writer.WriteStartObject();
-        writer.WriteNumber("X", Math.Clamp(value.X, _minX, _maxX));
-        writer.WriteNumber("Y", Math.Clamp(value.Y, _minY, _maxY));
-        writer.WriteEndObject();
+        PointJsonHelper.WritePoint(writer, Math.Clamp(value.X, _minX, _maxX), Math.Clamp(value.Y, _minY, _maxY));
     }
 }

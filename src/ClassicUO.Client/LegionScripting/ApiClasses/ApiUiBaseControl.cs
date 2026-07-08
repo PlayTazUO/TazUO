@@ -13,30 +13,14 @@ public class ApiUiBaseControl(Control control)
     /// </summary>
     public bool CanMove
     {
-        get
-        {
-            return VerifyIntegrity() && control.CanMove;
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            control.CanMove = value;
-        }
+        get => GetProp(() => control.CanMove);
+        set => SetProp(() => control.CanMove = value);
     }
 
     public bool IsVisible
     {
-        get
-        {
-            return VerifyIntegrity() && control.IsVisible;
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            control.IsVisible = value;
-        }
+        get => GetProp(() => control.IsVisible);
+        set => SetProp(() => control.IsVisible = value);
     }
 
     /// <summary>
@@ -69,50 +53,28 @@ public class ApiUiBaseControl(Control control)
     /// Used in python API
     /// </summary>
     /// <returns>The X coordinate of the control</returns>
-    public int GetX()
-    {
-        if (!VerifyIntegrity())
-            return 0;
-        return control.X;
-    }
+    public int GetX() => GetProp(() => control.X);
 
     /// <summary>
     /// Returns the control's Y position.
     /// Used in python API
     /// </summary>
     /// <returns>The Y coordinate of the control</returns>
-    public int GetY()
-    {
-        if (!VerifyIntegrity())
-            return 0;
-        return control.Y;
-    }
+    public int GetY() => GetProp(() => control.Y);
 
     /// <summary>
     /// Sets the control's X position.
     /// Used in python API
     /// </summary>
     /// <param name="x">The new X coordinate</param>
-    public ApiUiBaseControl SetX(int x)
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control.X = x);
-
-        return this;
-    }
+    public ApiUiBaseControl SetX(int x) => SetPropFluent(() => control.X = x);
 
     /// <summary>
     /// Sets the control's Y position.
     /// Used in python API
     /// </summary>
     /// <param name="y">The new Y coordinate</param>
-    public ApiUiBaseControl SetY(int y)
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control.Y = y);
-
-        return this;
-    }
+    public ApiUiBaseControl SetY(int y) => SetPropFluent(() => control.Y = y);
 
     /// <summary>
     /// Sets the control's X and Y positions.
@@ -120,57 +82,29 @@ public class ApiUiBaseControl(Control control)
     /// </summary>
     /// <param name="x">The new X coordinate</param>
     /// <param name="y">The new Y coordinate</param>
-    public ApiUiBaseControl SetPos(int x, int y)
+    public ApiUiBaseControl SetPos(int x, int y) => SetPropFluent(() =>
     {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() =>
-            {
-                control.X = x;
-                control.Y = y;
-            });
+        control.X = x;
+        control.Y = y;
+    });
 
-        return this;
-    }
+    public int GetWidth() => GetProp(() => control.Width);
 
-    public int GetWidth()
-    {
-        if (!VerifyIntegrity()) return 0;
-
-        return MainThreadQueue.InvokeOnMainThread(() => control.Width);
-    }
-
-    public int GetHeight()
-    {
-        if (!VerifyIntegrity()) return 0;
-
-        return MainThreadQueue.InvokeOnMainThread(() => control.Height);
-    }
+    public int GetHeight() => GetProp(() => control.Height);
 
     /// <summary>
     /// Sets the control's width.
     /// Used in python API
     /// </summary>
     /// <param name="width">The new width in pixels</param>
-    public ApiUiBaseControl SetWidth(int width)
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control.Width = width);
-
-        return this;
-    }
+    public ApiUiBaseControl SetWidth(int width) => SetPropFluent(() => control.Width = width);
 
     /// <summary>
     /// Sets the control's height.
     /// Used in python API
     /// </summary>
     /// <param name="height">The new height in pixels</param>
-    public ApiUiBaseControl SetHeight(int height)
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control.Height = height);
-
-        return this;
-    }
+    public ApiUiBaseControl SetHeight(int height) => SetPropFluent(() => control.Height = height);
 
     /// <summary>
     /// Sets the control's position and size in one operation.
@@ -180,19 +114,13 @@ public class ApiUiBaseControl(Control control)
     /// <param name="y">The new Y coordinate</param>
     /// <param name="width">The new width in pixels</param>
     /// <param name="height">The new height in pixels</param>
-    public ApiUiBaseControl SetRect(int x, int y, int width, int height)
+    public ApiUiBaseControl SetRect(int x, int y, int width, int height) => SetPropFluent(() =>
     {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() =>
-            {
-                control.X = x;
-                control.Y = y;
-                control.Width = width;
-                control.Height = height;
-            });
-
-        return this;
-    }
+        control.X = x;
+        control.Y = y;
+        control.Width = width;
+        control.Height = height;
+    });
 
     /// <summary>
     /// Centers a GUMP horizontally in the viewport. Only works on Gump instances.
@@ -223,38 +151,20 @@ public class ApiUiBaseControl(Control control)
     /// Used in python API
     /// </summary>
     /// <returns>The Alpha value of the control</returns>
-    public float GetAlpha()
-    {
-        if (!VerifyIntegrity())
-            return 0;
-
-        return MainThreadQueue.InvokeOnMainThread(() => control.Alpha);
-    }
+    public float GetAlpha() => GetProp(() => control.Alpha);
 
     /// <summary>
     /// Sets the control's Alpha value.
     /// Used in python API
     /// </summary>
     /// <param name="alpha">The new Alpha value</param>
-    public ApiUiBaseControl SetAlpha(float alpha)
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control.Alpha = alpha);
-
-        return this;
-    }
+    public ApiUiBaseControl SetAlpha(float alpha) => SetPropFluent(() => control.Alpha = alpha);
 
     /// <summary>
     /// Clears all child controls from this control.
     /// Used in python API
     /// </summary>
-    public ApiUiBaseControl Clear()
-    {
-        if (VerifyIntegrity())
-            MainThreadQueue.EnqueueAction(() => control?.Clear());
-
-        return this;
-    }
+    public ApiUiBaseControl Clear() => SetPropFluent(() => control?.Clear());
 
     /// <summary>
     /// Close/Destroy the control
@@ -271,5 +181,32 @@ public class ApiUiBaseControl(Control control)
             return false;
 
         return !control.IsDisposed;
+    }
+
+    /// <summary>
+    /// Reads a control property on the main thread, returning <paramref name="fallback"/>
+    /// when the control is disposed or missing.
+    /// </summary>
+    protected T GetProp<T>(System.Func<T> getter, T fallback = default)
+        => VerifyIntegrity() ? MainThreadQueue.InvokeOnMainThread(getter) : fallback;
+
+    /// <summary>
+    /// Applies a control property change on the main thread, no-op when the control is disposed or missing.
+    /// </summary>
+    protected void SetProp(System.Action setter)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.InvokeOnMainThread(setter);
+    }
+
+    /// <summary>
+    /// Enqueues a control mutation on the main thread and returns this wrapper for fluent chaining.
+    /// </summary>
+    protected ApiUiBaseControl SetPropFluent(System.Action setter)
+    {
+        if (VerifyIntegrity())
+            MainThreadQueue.EnqueueAction(setter);
+
+        return this;
     }
 }

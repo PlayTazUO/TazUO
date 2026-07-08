@@ -5,167 +5,64 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiButton(Button button) : ApiUiBaseControl(button)
 {
-    public int ButtonID
-    {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ButtonID);
-        }
-    }
+    public int ButtonID => GetProp(() => button.ButtonID);
 
     /// <summary>
     /// Check if the button is currently down(clicked) generally, HasBeenClicked() is a better way to check for button presses.
     /// </summary>
     public bool IsClicked
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.IsClicked);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.IsClicked = value);
-        }
+        get => GetProp(() => button.IsClicked);
+        set => SetProp(() => button.IsClicked = value);
     }
 
     public int ButtonAction
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => (int)button.ButtonAction);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ButtonAction = (ButtonAction)value);
-        }
+        get => GetProp(() => (int)button.ButtonAction);
+        set => SetProp(() => button.ButtonAction = (ButtonAction)value);
     }
 
     public int ToPage
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ToPage);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ToPage = value);
-        }
+        get => GetProp(() => button.ToPage);
+        set => SetProp(() => button.ToPage = value);
     }
 
     public ushort ButtonGraphicNormal
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicNormal);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicNormal = value);
-        }
+        get => GetProp(() => button.ButtonGraphicNormal);
+        set => SetProp(() => button.ButtonGraphicNormal = value);
     }
 
     public ushort ButtonGraphicPressed
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicPressed);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicPressed = value);
-        }
+        get => GetProp(() => button.ButtonGraphicPressed);
+        set => SetProp(() => button.ButtonGraphicPressed = value);
     }
 
     public ushort ButtonGraphicOver
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicOver);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ButtonGraphicOver = value);
-        }
+        get => GetProp(() => button.ButtonGraphicOver);
+        set => SetProp(() => button.ButtonGraphicOver = value);
     }
 
     public int Hue
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.Hue);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.Hue = value);
-        }
+        get => GetProp(() => button.Hue);
+        set => SetProp(() => button.Hue = value);
     }
 
     public bool FontCenter
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.FontCenter);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.FontCenter = value);
-        }
+        get => GetProp(() => button.FontCenter);
+        set => SetProp(() => button.FontCenter = value);
     }
 
     public bool ContainsByBounds
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => button.ContainsByBounds);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => button.ContainsByBounds = value);
-        }
+        get => GetProp(() => button.ContainsByBounds);
+        set => SetProp(() => button.ContainsByBounds = value);
     }
 
-    public bool HasBeenClicked()
-    {
-        if (!VerifyIntegrity()) return false;
-
-        return MainThreadQueue.InvokeOnMainThread(button.HasBeenClicked);
-    }
+    public bool HasBeenClicked() => GetProp(button.HasBeenClicked);
 }
