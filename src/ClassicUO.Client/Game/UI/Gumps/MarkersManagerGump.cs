@@ -246,13 +246,32 @@ namespace ClassicUO.Game.UI.Gumps
             if (sender is int idx)
             {
                 _markers.RemoveAt(idx);
-                // Clear area
-                Remove(_scrollArea);
                 //Redraw List
-                DrawArea(_markerFiles[_categoryId].IsEditable);
+                RebuildScrollArea();
                 //Mark list as Modified
                 _isMarkerListModified = true;
             }
+        }
+
+        /// <summary>
+        /// Disposes the current scroll area (and all of its child controls) on the
+        /// main thread before rebuilding it. Disposing deterministically frees the
+        /// per-label text textures here instead of leaking them and letting the GC
+        /// finalizer thread free the native graphics resources off the render thread,
+        /// which corrupts the native heap ("pointer being freed was not allocated").
+        /// The shared marker icon textures are owned by <see cref="WorldMapGump._markerIcons"/>
+        /// and are not touched by <see cref="DrawTexture"/>, so they survive this.
+        /// </summary>
+        private void RebuildScrollArea()
+        {
+            if (_scrollArea != null)
+            {
+                Remove(_scrollArea);
+                _scrollArea.Dispose();
+                _scrollArea = null;
+            }
+
+            DrawArea(_markerFiles[_categoryId].IsEditable);
         }
 
         public override void OnButtonClick(int buttonID)
@@ -274,8 +293,7 @@ namespace ClassicUO.Game.UI.Gumps
                     break;
             }
 
-            _scrollArea.Clear();
-            DrawArea(_markerFiles[_categoryId].IsEditable);
+            RebuildScrollArea();
         }
 
         public override void OnKeyboardReturn(int textID, string text)
@@ -283,9 +301,8 @@ namespace ClassicUO.Game.UI.Gumps
             if (_searchText.Equals(_searchTextBox.SearchText))
                 return;
 
-            _scrollArea.Clear();
             _searchText = _searchTextBox.SearchText;
-            DrawArea(_markerFiles[_categoryId].IsEditable);
+            RebuildScrollArea();
         }
 
         private void MarkerEditEventHandler(object sender, EventArgs e) => _isMarkerListModified = true;
