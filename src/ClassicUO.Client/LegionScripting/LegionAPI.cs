@@ -2003,8 +2003,8 @@ namespace ClassicUO.LegionScripting
         public void AutoFollow(uint mobile) => OnMain
         (() =>
             {
-                ProfileManager.CurrentProfile.FollowingMode = true;
-                ProfileManager.CurrentProfile.FollowingTarget = mobile;
+                if (World.Mobiles.Get(mobile) is Mobile m)
+                    m.Follow(false);
             }
         );
 

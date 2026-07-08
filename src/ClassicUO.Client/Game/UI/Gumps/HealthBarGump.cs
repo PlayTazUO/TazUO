@@ -291,18 +291,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (!ProfileManager.CurrentProfile.DisableAutoFollowAlt)
                 {
-                    _world.MessageManager.HandleMessage
-                    (
-                        World.Player,
-                        ResGeneral.NowFollowing,
-                        string.Empty,
-                        0,
-                        MessageType.Regular,
-                        3,
-                        TextType.CLIENT
-                    );
-                    ProfileManager.CurrentProfile.FollowingMode = true;
-                    ProfileManager.CurrentProfile.FollowingTarget = LocalSerial;
+                    if (_world.Mobiles.Get(LocalSerial) is Mobile mobile)
+                        mobile.Follow();
                 }
             }
         }
