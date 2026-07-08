@@ -20,6 +20,7 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly MyraInputBox _textBoxY;
         private readonly MyraInputBox _markerName;
         private readonly MyraInputBox _zoomBox;
+        private readonly MyraInputBox _mapBox;
 
         private readonly string[] _colors;
         private int _selectedColorIndex;
@@ -41,8 +42,10 @@ namespace ClassicUO.Game.UI.Gumps
         private const int DEFAULT_ZOOM = 3;
 
         private const int MAP_MIN_CORD = 0;
-        private readonly int _mapMaxX;
-        private readonly int _mapMaxY;
+        private const int MIN_MAP = 0;
+
+        /// <summary>Highest valid map/facet index for the currently loaded maps.</summary>
+        private static int MaxMap => Client.Game.UO.FileManager.Maps.MapsDefaultSize.GetLength(0) - 1;
 
         private readonly string _userMarkersFilePath = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Client", $"{USER_MARKERS_FILE}.usr");
 
@@ -58,9 +61,6 @@ namespace ClassicUO.Game.UI.Gumps
             // own MapId on edit, new markers use the explicitly displayed map (the world map can
             // free-view a different map than the player is currently on), falling back to the player's map.
             _mapIndex = isEdit && _markerIdx >= 0 ? _markers[_markerIdx].MapId : mapIndex ?? world.MapIndex;
-
-            _mapMaxX = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 0];
-            _mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[_mapIndex, 1];
 
             _colors = new[] { "none", "red", "green", "blue", "purple", "black", "yellow", "white" };
             _icons = _markerIcons.Keys.ToArray();
@@ -95,6 +95,15 @@ namespace ClassicUO.Game.UI.Gumps
                 Text = y.ToString(),
                 Width = 200,
                 InputFilter = MyraInputBox.DigitInputFilter
+            }));
+
+            // Map field (which facet the marker belongs to)
+            layout.Widgets.Add(BuildLabeledRow("Map", _mapBox = new MyraInputBox
+            {
+                Text = _mapIndex.ToString(),
+                Width = 200,
+                InputFilter = MyraInputBox.DigitInputFilter,
+                Tooltip = $"Map/facet index ({MIN_MAP}-{MaxMap}) this marker belongs to."
             }));
 
             // Marker Name field
@@ -192,7 +201,7 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            string newLine = $"{newMarker.X},{newMarker.Y},{newMarker.MapId},{newMarker.Name},{newMarker.MarkerIconName},{newMarker.ColorName},4\r";
+            string newLine = MarkerToCsvLine(newMarker) + "\r";
 
             File.AppendAllText(_userMarkersFilePath, newLine);
 
@@ -208,13 +217,19 @@ namespace ClassicUO.Game.UI.Gumps
             if (!int.TryParse(_textBoxY.Text, out int y))
                 return null;
 
+            // Resolve the map first: coordinate bounds depend on which facet the marker is on.
+            int mapIdx = int.TryParse(_mapBox.Text, out int m) ? Math.Clamp(m, MIN_MAP, MaxMap) : _mapIndex;
+
+            int mapMaxX = Client.Game.UO.FileManager.Maps.MapsDefaultSize[mapIdx, 0];
+            int mapMaxY = Client.Game.UO.FileManager.Maps.MapsDefaultSize[mapIdx, 1];
+
             // Validate User Enter Data
-            if (x > _mapMaxX || x < MAP_MIN_CORD)
+            if (x > mapMaxX || x < MAP_MIN_CORD)
             {
                 return null;
             }
 
-            if (y > _mapMaxY || y < MAP_MIN_CORD)
+            if (y > mapMaxY || y < MAP_MIN_CORD)
             {
                 return null;
             }
@@ -229,7 +244,6 @@ namespace ClassicUO.Game.UI.Gumps
             if (markerName.Contains(","))
                 markerName = markerName.Replace(",", "");
 
-            int mapIdx = _mapIndex;
             string color = _colors[_selectedColorIndex];
             string icon = _hasIcons ? _icons[_selectedIconIndex] : string.Empty;
 

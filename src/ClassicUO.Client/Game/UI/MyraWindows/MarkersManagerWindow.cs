@@ -179,6 +179,7 @@ public sealed class MarkersManagerWindow : MyraControl
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerName));
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerX));
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerY));
+        columns.Add(GridColumnInfo.Auto("Map"));
         columns.Add(GridColumnInfo.Auto(ResGumps.MarkerColor));
         columns.Add(GridColumnInfo.Auto("Zoom"));
         columns.Add(GridColumnInfo.Auto(""));
@@ -212,6 +213,7 @@ public sealed class MarkersManagerWindow : MyraControl
         grid.AddWidget(new MyraLabel(marker.Name ?? "", MyraLabel.TextStyle.P) { Tooltip = marker.Name }, row, col++);
         grid.AddWidget(new MyraLabel(marker.X.ToString(), MyraLabel.TextStyle.P), row, col++);
         grid.AddWidget(new MyraLabel(marker.Y.ToString(), MyraLabel.TextStyle.P), row, col++);
+        grid.AddWidget(new MyraLabel(marker.MapId.ToString(), MyraLabel.TextStyle.P), row, col++);
         grid.AddWidget(new MyraLabel(marker.ColorName ?? "", MyraLabel.TextStyle.P), row, col++);
         grid.AddWidget(new MyraLabel(marker.ZoomIndex.ToString(), MyraLabel.TextStyle.P), row, col++);
 
