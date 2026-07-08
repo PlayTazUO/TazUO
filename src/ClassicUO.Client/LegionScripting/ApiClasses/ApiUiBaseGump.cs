@@ -17,70 +17,28 @@ public class ApiUiBaseGump(Gump gump) : ApiUiBaseControl(gump), IApiGump
     /// Returns true if the gump is disposed or no longer exists.
     /// Used in python API
     /// </summary>
-    public bool IsDisposed
-    {
-        get
-        {
-            if (!VerifyIntegrity())
-                return true;
-
-            return MainThreadQueue.InvokeOnMainThread(() => Gump.IsDisposed);
-        }
-    }
+    public bool IsDisposed => GetProp(() => Gump.IsDisposed, true);
 
     /// <summary>
     /// Gets the original packet text that was used to create this gump.
     /// This contains the gump layout and content data sent from the server.
     /// Used in python API
     /// </summary>
-    public string PacketGumpText
-    {
-        get
-        {
-            if (!VerifyIntegrity()) return string.Empty;
-
-            return MainThreadQueue.InvokeOnMainThread(() => Gump.PacketGumpText);
-        }
-    }
+    public string PacketGumpText => GetProp(() => Gump.PacketGumpText, string.Empty);
 
     /// <summary>
     /// Gets or Sets the ability to close the gump with a right click
     /// </summary>
     public bool CanCloseWithRightClick
     {
-        get
-        {
-            if (!VerifyIntegrity())
-                return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => Gump.CanCloseWithRightClick);
-        }
-        set
-        {
-            if (!VerifyIntegrity())
-                return;
-
-            MainThreadQueue.InvokeOnMainThread(() => Gump.CanCloseWithRightClick = value);
-        }
+        get => GetProp(() => Gump.CanCloseWithRightClick);
+        set => SetProp(() => Gump.CanCloseWithRightClick = value);
     }
 
     public UILayer LayerOrder
     {
-        get
-        {
-            if (!VerifyIntegrity())
-                return UILayer.Default;
-
-            return MainThreadQueue.InvokeOnMainThread(() => Gump.LayerOrder);
-        }
-
-        set
-        {
-            if (!VerifyIntegrity())
-                return;
-
-            MainThreadQueue.InvokeOnMainThread(() => Gump.LayerOrder = value);
-        }
+        get => GetProp(() => Gump.LayerOrder, UILayer.Default);
+        set => SetProp(() => Gump.LayerOrder = value);
     }
 
     /// <summary>
@@ -94,50 +52,19 @@ public class ApiUiBaseGump(Gump gump) : ApiUiBaseControl(gump), IApiGump
     /// Adjusts the gump's position if it extends beyond the screen edges.
     /// Used in python API
     /// </summary>
-    public void SetInScreen()
-    {
-        if (!VerifyIntegrity())
-            return;
-
-        MainThreadQueue.InvokeOnMainThread(Gump.SetInScreen);
-    }
+    public void SetInScreen() => SetProp(Gump.SetInScreen);
 
     /// <summary>
     /// Centers the gump vertically within the entire screen.
     /// This accounts for the full screen dimensions, including all UI elements.
     /// Used in python API
     /// </summary>
-    public void CenterYInScreen()
-    {
-        if (!VerifyIntegrity())
-            return;
-
-        MainThreadQueue.InvokeOnMainThread(Gump.CenterYInScreen);
-    }
+    public void CenterYInScreen() => SetProp(Gump.CenterYInScreen);
 
     /// <summary>
     /// Centers the gump horizontally within the entire screen.
     /// This accounts for the full screen dimensions, including all UI elements.
     /// Used in python API
     /// </summary>
-    public void CenterXInScreen()
-    {
-        if (!VerifyIntegrity())
-            return;
-
-        MainThreadQueue.InvokeOnMainThread(Gump.CenterXInScreen);
-    }
-
-    /// <summary>
-    /// Verifies that the gump reference is still valid and not disposed.
-    /// Used internally to check if the gump can be safely accessed.
-    /// </summary>
-    /// <returns>True if the gump is valid and not disposed, false otherwise</returns>
-    private new bool VerifyIntegrity()
-    {
-        if (Gump == null)
-            return false;
-
-        return !Gump.IsDisposed;
-    }
+    public void CenterXInScreen() => SetProp(Gump.CenterXInScreen);
 }

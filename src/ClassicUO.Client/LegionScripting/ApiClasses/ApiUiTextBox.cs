@@ -8,88 +8,33 @@ public class ApiUiTextBox(TextBox textBox) : ApiUiBaseControl(textBox)
 {
     public string Text
     {
-        get
-        {
-            if (!VerifyIntegrity()) return string.Empty;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textBox.Text);
-        }
-        set
-        {
-            if (!VerifyIntegrity() || value == null) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => textBox.Text = value);
-        }
+        get => GetProp(() => textBox.Text, string.Empty);
+        set { if (value != null) SetProp(() => textBox.Text = value); }
     }
 
     public int Hue
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textBox.Hue);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => textBox.Hue = value);
-        }
+        get => GetProp(() => textBox.Hue);
+        set => SetProp(() => textBox.Hue = value);
     }
 
     public string Font
     {
-        get
-        {
-            if (!VerifyIntegrity()) return string.Empty;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textBox.Font);
-        }
-        set
-        {
-            if (!VerifyIntegrity() || value == null) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => textBox.Font = value);
-        }
+        get => GetProp(() => textBox.Font, string.Empty);
+        set { if (value != null) SetProp(() => textBox.Font = value); }
     }
 
     public float FontSize
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0f;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textBox.FontSize);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => textBox.FontSize = value);
-        }
+        get => GetProp(() => textBox.FontSize);
+        set => SetProp(() => textBox.FontSize = value);
     }
 
     public bool MultiLine
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textBox.MultiLine);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => textBox.MultiLine = value);
-        }
+        get => GetProp(() => textBox.MultiLine);
+        set => SetProp(() => textBox.MultiLine = value);
     }
 
-    public void SetText(string text)
-    {
-        if (!VerifyIntegrity()) return;
-
-        MainThreadQueue.InvokeOnMainThread(() => textBox.SetText(text));
-    }
+    public void SetText(string text) => SetProp(() => textBox.SetText(text));
 }
