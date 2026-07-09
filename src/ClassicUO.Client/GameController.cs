@@ -427,6 +427,16 @@ namespace ClassicUO
             bufferRect = new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight);
         }
 
+        /// <summary>
+        /// Toggles the window border (title bar and edges) without changing the window
+        /// size or position. Unlike <see cref="SetWindowBorderless"/>, this keeps the
+        /// window in its normal windowed size instead of resizing it to fill the display.
+        /// </summary>
+        public void SetWindowBordered(bool bordered)
+        {
+            SDL_SetWindowBordered(Window.Handle, bordered);
+        }
+
         public void MaximizeWindow()
         {
             SDL_MaximizeWindow(Window.Handle);

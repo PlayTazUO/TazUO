@@ -149,6 +149,17 @@ public static class VideoTab
                 search: new SearchMetadata(lang.FullScreen, Keywords: [kw.Fullscreen, kw.Borderless])
             ),
             Option.Checkbox(
+                lang.BorderlessWindow,
+                profile.BorderlessWindow,
+                newValue =>
+                {
+                    profile.BorderlessWindow = newValue;
+                    if (!profile.WindowBorderless)
+                        Client.Game.SetWindowBordered(!newValue);
+                },
+                search: new SearchMetadata(lang.BorderlessWindow, Keywords: [kw.Borderless, kw.Window])
+            ),
+            Option.Checkbox(
                 lang.LockViewport,
                 new Accessor<bool>(() => profile.GameWindowLock),
                 search: new SearchMetadata(lang.LockViewport, Keywords: [kw.Lock])
