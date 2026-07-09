@@ -1023,7 +1023,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new CheckboxWithLabel
                 (
-                    lang.GetVideo.BorderlessWindow, isChecked: profile.BorderlessWindow, valueChanged: (b) =>
+                    TazLang.Get("video_borderless_window", "Borderless window (no title bar)"), isChecked: profile.BorderlessWindow, valueChanged: (b) =>
                     {
                         profile.BorderlessWindow = b;
                         if (!profile.WindowBorderless)

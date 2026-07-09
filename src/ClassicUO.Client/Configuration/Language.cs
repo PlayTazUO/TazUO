@@ -623,7 +623,6 @@ namespace ClassicUO.Configuration
                 public string ViewportLabel { get; set; } = "Viewport";
                 public string FullsizeViewport { get; set; } = "Fullsize viewport";
                 public string FullScreen { get; set; } = "Fullscreen (borderless)";
-                public string BorderlessWindow { get; set; } = "Borderless window";
                 public string LockViewport { get; set; } = "Lock viewport";
                 public string ViewportX { get; set; } = "Viewport X";
                 public string ViewportY { get; set; } = "Viewport Y";
@@ -1030,7 +1029,6 @@ namespace ClassicUO.Configuration
             public string EnableVSync { get; set; } = "Enable VSync";
             public string FullsizeViewport { get; set; } = "Always use fullsize game world viewport";
             public string FullScreen { get; set; } = "Fullscreen window";
-            public string BorderlessWindow { get; set; } = "Borderless window (no title bar)";
             public string LockViewport { get; set; } = "Lock game world viewport position/size";
             public string ViewportX { get; set; } = "Viewport position X";
             public string ViewportY { get; set; } = "Viewport position Y";

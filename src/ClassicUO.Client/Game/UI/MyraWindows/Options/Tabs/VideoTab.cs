@@ -149,7 +149,7 @@ public static class VideoTab
                 search: new SearchMetadata(lang.FullScreen, Keywords: [kw.Fullscreen, kw.Borderless])
             ),
             Option.Checkbox(
-                lang.BorderlessWindow,
+                TazLang.Get("video_borderless_window", "Borderless window (no title bar)"),
                 profile.BorderlessWindow,
                 newValue =>
                 {
@@ -157,7 +157,7 @@ public static class VideoTab
                     if (!profile.WindowBorderless)
                         Client.Game.SetWindowBordered(!newValue);
                 },
-                search: new SearchMetadata(lang.BorderlessWindow, Keywords: [kw.Borderless, kw.Window])
+                search: new SearchMetadata(TazLang.Get("video_borderless_window", "Borderless window (no title bar)"), Keywords: [kw.Borderless, kw.Window])
             ),
             Option.Checkbox(
                 lang.LockViewport,
