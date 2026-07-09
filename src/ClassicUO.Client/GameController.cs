@@ -428,12 +428,17 @@ namespace ClassicUO
         }
 
         /// <summary>
-        /// Toggles the window border (title bar and edges) without changing the window
-        /// size or position. Unlike <see cref="SetWindowBorderless"/>, this keeps the
-        /// window in its normal windowed size instead of resizing it to fill the display.
+        /// Toggles the window border (title bar and edges) while keeping the window in a
+        /// normal windowed state. Unlike <see cref="SetWindowBorderless"/>, this does not
+        /// resize the window to fill the display. Because stripping the border from a
+        /// maximized window makes it cover the whole screen (borderless fullscreen), the
+        /// window is first restored to a normal size when removing the border.
         /// </summary>
         public void SetWindowBordered(bool bordered)
         {
+            if (!bordered && IsWindowMaximized())
+                SDL_RestoreWindow(Window.Handle);
+
             SDL_SetWindowBordered(Window.Handle, bordered);
         }
 
