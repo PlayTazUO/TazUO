@@ -4577,23 +4577,5 @@ namespace ClassicUO.Resources {
                 return ResourceManager.GetString("GoToExampleLabel", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Map: {0}, {1}.
-        /// </summary>
-        public static string GoToDecodedMapCoords {
-            get {
-                return ResourceManager.GetString("GoToDecodedMapCoords", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid coordinates.
-        /// </summary>
-        public static string GoToInvalidCoords {
-            get {
-                return ResourceManager.GetString("GoToInvalidCoords", resourceCulture);
-            }
-        }
     }
 }

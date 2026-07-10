@@ -1630,10 +1630,4 @@ Client version: '{0}'</value>
  100o25'S,40o04'E
  9 14'N 91 37'W</value>
   </data>
-  <data name="GoToDecodedMapCoords" xml:space="preserve">
-    <value>Map: {0}, {1}</value>
-  </data>
-  <data name="GoToInvalidCoords" xml:space="preserve">
-    <value>Invalid coordinates</value>
-  </data>
 </root>

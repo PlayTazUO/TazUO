@@ -1,10 +1,10 @@
 using System;
 using System.Text.RegularExpressions;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Resources;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.UI;
@@ -45,7 +45,7 @@ public sealed partial class LocationGoWindow : MyraControl
         Action<int, int> goTo,
         Action onClear,
         Point? prefilledLocation = null
-    ) : base(ResGumps.EnterLocation)
+    ) : base(TazLang.Get("map_goto_title", "Enter Location"))
     {
         _world = world;
         _goTo = goTo;
@@ -60,7 +60,7 @@ public sealed partial class LocationGoWindow : MyraControl
         _inputBox = new MyraInputBox
         {
             Width = 220,
-            HintText = "e.g. 1639, 1532",
+            HintText = TazLang.Get("map_goto_hint", "e.g. 1639, 1532"),
             Text = prefilledLocation.HasValue ? $"{prefilledLocation.Value.X}, {prefilledLocation.Value.Y}" : ""
         };
         _inputBox.TextChangedByUser += (_, _) => UpdateDecode();
@@ -71,8 +71,8 @@ public sealed partial class LocationGoWindow : MyraControl
         };
         inputRow.Widgets.Add(_inputBox);
 
-        inputRow.Widgets.Add(new MyraButton(ResGumps.Clear, Clear));
-        inputRow.Widgets.Add(new MyraButton(ResGumps.MarkerGoTo, Submit));
+        inputRow.Widgets.Add(new MyraButton(TazLang.Get("map_goto_clear", "Clear"), Clear));
+        inputRow.Widgets.Add(new MyraButton(TazLang.Get("map_goto_button", "Go To"), Submit));
 
         layout.Widgets.Add(inputRow);
 
@@ -80,7 +80,7 @@ public sealed partial class LocationGoWindow : MyraControl
         _decodeLabel = new MyraLabel("", MyraLabel.TextStyle.P);
         layout.Widgets.Add(_decodeLabel);
 
-        layout.Widgets.Add(new MyraLabel(ResGumps.GoToExampleLabel, MyraLabel.TextStyle.P));
+        layout.Widgets.Add(new MyraLabel(TazLang.Get("map_goto_examples", "Examples:\n 1639, 1532\n 100o25'S,40o04'E\n 9 14'N 91 37'W"), MyraLabel.TextStyle.P));
 
         SetRootContent(layout);
         UpdateDecode();
@@ -140,13 +140,13 @@ public sealed partial class LocationGoWindow : MyraControl
 
         if (valid)
         {
-            _decodeLabel.Text = string.Format(ResGumps.GoToDecodedMapCoords, _location.X, _location.Y);
+            _decodeLabel.Text = TazLang.Get("map_goto_decoded", [_location.X.ToString(), _location.Y.ToString()]);
             _decodeLabel.TextColor = ValidColor;
         }
         else
         {
             _location = Sextant.InvalidPoint;
-            _decodeLabel.Text = ResGumps.GoToInvalidCoords;
+            _decodeLabel.Text = TazLang.Get("map_goto_invalid", "Invalid coordinates");
             _decodeLabel.TextColor = InvalidColor;
         }
     }

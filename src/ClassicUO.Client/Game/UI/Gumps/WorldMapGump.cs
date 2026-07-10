@@ -377,7 +377,7 @@ public class WorldMapGump : ResizableGump
 
         _options["goto_location"] = new ContextMenuItemEntry
         (
-            ResGumps.GotoLocation,
+            TazLang.Get("map_goto_location", "Go to location"),
             () => LocationGoWindow.Show(
                     World,
                     (x, y) => GoToMarker(x, y, true),
