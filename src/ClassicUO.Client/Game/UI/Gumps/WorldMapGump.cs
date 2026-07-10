@@ -378,7 +378,7 @@ public class WorldMapGump : ResizableGump
         _options["goto_location"] = new ContextMenuItemEntry
         (
             ResGumps.GotoLocation,
-            () => UIManager.Add(new LocationGoGump(
+            () => LocationGoWindow.Show(
                     World,
                     (x, y) => GoToMarker(x, y, true),
                     ClearGoToMarker,
@@ -386,7 +386,6 @@ public class WorldMapGump : ResizableGump
                         ? new Point(_gotoMarker.X, _gotoMarker.Y)
                         : null
                 )
-            )
         );
 
         _options["top_most"] = new ContextMenuItemEntry(ResGumps.TopMost, () => { TopMost = !TopMost; }, true, _isTopMost);
