@@ -60,6 +60,7 @@ All notable changes to TazUO will be recorded here.
 * World map font style now applies to both names and markers and moved to the main context menu; added a TTF Fonts menu to render names/markers with TrueType fonts and adjustable size - [P.R 655](https://github.com/PlayTazUO/TazUO/pull/655) ([bittiez](https://github.com/bittiez))
 * Added a journal option to make the journal transparent (hide border, tabs, scroll bar, and background) after 3 seconds when it is not hovered and not the active window - [P.R 670](https://github.com/PlayTazUO/TazUO/pull/670) ([bittiez](https://github.com/bittiez))
 * Rebuilt the world map Markers Manager as a Myra window with real tabs (full-path tooltips), map/zoom columns, editable map and zoom fields, and — on editable .usr/.csv files — checkbox bulk delete and bulk move of markers between files - [P.R 679](https://github.com/PlayTazUO/TazUO/pull/679) ([bittiez](https://github.com/bittiez))
+* Converted the world map "Go to location" window to a Myra window with a clear button and live decoding that shows the resolved map coordinates (from map or sextant input) as you type - [P.R 682](https://github.com/PlayTazUO/TazUO/pull/682) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
