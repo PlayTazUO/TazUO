@@ -248,6 +248,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_togglenameplates", "Toggle nameplates"), () => { World.NameOverHeadManager.ToggleOverheads(); }));
 
+            moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_radarmap", "Radar Map"), () => { GameActions.OpenMiniMap(World); }));
+
             var submenu = new ContextMenuItemEntry(TazLang.Get("topbargump_tools", "Tools"));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_spellquickcast", "Spell quick cast"), () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_openboatcontrol", "Open boat control"), () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
