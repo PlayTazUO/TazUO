@@ -83,7 +83,9 @@ namespace ClassicUO.Renderer.Arts
                     Log.Error(
                         $"Texture not found for sprite: idx: {idx}; itemid: {(idx > 0x4000 ? idx - 0x4000 : '-')}"
                     );
-                    return ref Get(0); // ItemID of "UNUSED" placeholder
+                    // Cache the fallback so we don't hit this error every frame
+                    _spriteInfos[idx] = Get(0);
+                    return ref _spriteInfos[idx];
                 }
 
                 if (!artInfo.Pixels.IsEmpty)

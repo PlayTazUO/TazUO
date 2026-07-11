@@ -39,8 +39,14 @@ namespace ClassicUO
         public static void Main(string[] args) => Boot(null, args);
 
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool AllocConsole();
+
         public static void Boot(UnmanagedAssistantHost pluginHost, string[] args)
         {
+            if (Array.IndexOf(args, "--console") >= 0 && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                AllocConsole();
+
             CopyRequiredLibs();
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             TazLang.Load();
