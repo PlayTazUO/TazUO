@@ -61,6 +61,7 @@ All notable changes to TazUO will be recorded here.
 * Added a journal option to make the journal transparent (hide border, tabs, scroll bar, and background) after 3 seconds when it is not hovered and not the active window - [P.R 670](https://github.com/PlayTazUO/TazUO/pull/670) ([bittiez](https://github.com/bittiez))
 * Rebuilt the world map Markers Manager as a Myra window with real tabs (full-path tooltips), map/zoom columns, editable map and zoom fields, and — on editable .usr/.csv files — checkbox bulk delete and bulk move of markers between files - [P.R 679](https://github.com/PlayTazUO/TazUO/pull/679) ([bittiez](https://github.com/bittiez))
 * Converted the world map "Go to location" window to a Myra window with a clear button and live decoding that shows the resolved map coordinates (from map or sextant input) as you type - [P.R 682](https://github.com/PlayTazUO/TazUO/pull/682) ([bittiez](https://github.com/bittiez))
+* Added a "Radar Map" entry to the top bar More menu that opens the radar/mini map - [P.R 686](https://github.com/PlayTazUO/TazUO/pull/686) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
@@ -117,6 +118,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed client crash (IndexOutOfRangeException) from unpaired UTF-16 surrogates in journal/text; malformed text (e.g. a truncated emoji from the server) is now sanitized before measuring instead of crashing - [P.R 659](https://github.com/PlayTazUO/TazUO/pull/659) ([bittiez](https://github.com/bittiez))
 * Show a suggested fix for the ArgumentOutOfRangeException from FetchDisplayAdapter, which happens when connected displays change at runtime (monitor unplugged/slept, dock or KVM switch, laptop lid) - [P.R 660](https://github.com/PlayTazUO/TazUO/pull/660) ([bittiez](https://github.com/bittiez))
 * Fixed container overhead text (item names/speech) being pushed off screen instead of appearing above the item - grid containers now account for the scroll offset when scaled/scrolled, and legacy containers anchor the text over the item's actual slot instead of a stale click coordinate - [P.R 667](https://github.com/PlayTazUO/TazUO/pull/667) ([bittiez](https://github.com/bittiez))
+* World map mobile dots are now colored by notoriety (matching the radar/minimap) instead of always being red - [P.R 684](https://github.com/PlayTazUO/TazUO/pull/684) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))
