@@ -205,8 +205,9 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(hotkeyRow);
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            // Create Macro Button
-            editorPanel.Widgets.Add(new MyraButton("Create Macro Button", () =>
+            // Create Macro Button / Button Editor
+            var macroButtonRow = new HorizontalStackPanel { Spacing = 2 };
+            macroButtonRow.Widgets.Add(new MyraButton("Create Macro Button", () =>
             {
                 foreach (IGui? gump in UIManager.Gumps)
                     if (gump is MacroButtonGump mbg && mbg.TheMacro == macro)
@@ -219,6 +220,13 @@ public static class MacrosTabContent
                 macroButtonGump.CenterYInViewPort();
                 UIManager.Add(macroButtonGump);
             }) { Tooltip = "Create a draggable macro button for this macro" });
+
+            macroButtonRow.Widgets.Add(new MyraButton("Button Editor", () =>
+            {
+                OpenMacroButtonEditor(macro);
+            }) { Tooltip = "Edit the appearance of this macro's button (label, scale, color, graphic)" });
+
+            editorPanel.Widgets.Add(macroButtonRow);
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
@@ -718,5 +726,19 @@ public static class MacrosTabContent
         root.Widgets.Add(toolbar);
         root.Widgets.Add(mainArea);
         return root;
+    }
+
+    /// <summary>Opens (or brings to front) the macro button editor for the given macro.</summary>
+    private static void OpenMacroButtonEditor(Macro macro)
+    {
+        MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
+        existing?.Dispose();
+
+        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
+        btnEditorGump.CenterXInViewPort();
+        btnEditorGump.CenterYInViewPort();
+        UIManager.Add(btnEditorGump);
+        btnEditorGump.SetInScreen();
+        btnEditorGump.BringOnTop();
     }
 }

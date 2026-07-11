@@ -634,6 +634,8 @@ namespace ClassicUO.Configuration
 
         public bool DisplayPartyChatOverhead { get; set => SetProperty(ref field, value); } = true;
 
+        public bool HideMacroTargetMessage { get; set => SetProperty(ref field, value); } = false;
+
         public string SelectedTTFJournalFont { get; set => SetProperty(ref field, value); } = "avadonian";
         public int SelectedJournalFontSize { get; set => SetProperty(ref field, value); } = 20;
 

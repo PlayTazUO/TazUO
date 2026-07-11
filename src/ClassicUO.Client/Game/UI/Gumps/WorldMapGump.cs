@@ -377,8 +377,8 @@ public class WorldMapGump : ResizableGump
 
         _options["goto_location"] = new ContextMenuItemEntry
         (
-            ResGumps.GotoLocation,
-            () => UIManager.Add(new LocationGoGump(
+            TazLang.Get("map_goto_location", "Go to location"),
+            () => LocationGoWindow.Show(
                     World,
                     (x, y) => GoToMarker(x, y, true),
                     ClearGoToMarker,
@@ -386,7 +386,6 @@ public class WorldMapGump : ResizableGump
                         ? new Point(_gotoMarker.X, _gotoMarker.Y)
                         : null
                 )
-            )
         );
 
         _options["top_most"] = new ContextMenuItemEntry(ResGumps.TopMost, () => { TopMost = !TopMost; }, true, _isTopMost);
@@ -2489,7 +2488,8 @@ public class WorldMapGump : ResizableGump
                         halfWidth,
                         halfHeight,
                         Zoom,
-                        Color.Red
+                        Color.Red,
+                        useNotorietyHue: true
                     );
                 }
                 else
@@ -2760,7 +2760,8 @@ public class WorldMapGump : ResizableGump
         Color color,
         bool drawName = false,
         bool isparty = false,
-        bool drawHpBar = false
+        bool drawHpBar = false,
+        bool useNotorietyHue = false
     )
     {
         Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
@@ -2813,6 +2814,12 @@ public class WorldMapGump : ResizableGump
             rot.Y = y + Height - 8 - DOT_SIZE;
         }
 
+        // Color the dot by notoriety (matching the radar/minimap) when requested,
+        // otherwise use the flat color passed in.
+        Vector3 dotHueVector = useNotorietyHue
+            ? ShaderHueTranslator.GetHueVector(Notoriety.GetHue(mobile.NotorietyFlag))
+            : hueVector;
+
         batcher.Draw
         (
             SolidColorTextureCache.GetTexture(color),
@@ -2823,7 +2830,7 @@ public class WorldMapGump : ResizableGump
                 DOT_SIZE,
                 DOT_SIZE
             ),
-            hueVector
+            dotHueVector
         );
 
         if (drawName && !string.IsNullOrEmpty(mobile.Name))
