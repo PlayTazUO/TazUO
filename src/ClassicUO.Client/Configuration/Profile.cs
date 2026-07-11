@@ -280,6 +280,7 @@ namespace ClassicUO.Configuration
         public bool GameWindowLock { get; set => SetProperty(ref field, value); }
         public bool GameWindowFullSize { get; set => SetProperty(ref field, value); }
         public bool WindowBorderless { get; set => SetProperty(ref field, value); } = false;
+        public bool BorderlessWindow { get; set => SetProperty(ref field, value); } = false;
         [JsonConverter(typeof(Point2Converter))] public Point GameWindowSize { get; set => SetProperty(ref field, value); } = new Point(800, 680);
         [JsonConverter(typeof(Point2Converter))] public Point TopbarGumpPosition { get; set => SetProperty(ref field, value); } = new Point(0, 0);
         public bool TopbarGumpIsMinimized { get; set => SetProperty(ref field, value); }

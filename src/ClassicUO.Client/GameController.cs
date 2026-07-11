@@ -49,6 +49,7 @@ namespace ClassicUO
         private Texture2D _background;
         private bool _pluginsInitialized;
         private Rectangle bufferRect = Rectangle.Empty;
+        private bool _fullscreenBorderless;
         private RenderTarget2D _screenRenderTarget;
         private bool _useScreenRenderTarget = true; // Re-enabling to debug rendering issues
 
@@ -379,17 +380,17 @@ namespace ClassicUO
 
         public void SetWindowBorderless(bool borderless)
         {
-            var flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
-
-            if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) != 0 && borderless)
+            // Track fullscreen-borderless with an explicit flag rather than reading the
+            // SDL_WINDOW_BORDERLESS flag: the plain borderless-window mode also toggles
+            // that flag, so it can no longer tell the two modes apart. Without this, a
+            // normal borderless window would be resized to display bounds when leaving
+            // fullscreen, and entering fullscreen from a borderless window would no-op.
+            if (_fullscreenBorderless == borderless)
             {
                 return;
             }
 
-            if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) == 0 && !borderless)
-            {
-                return;
-            }
+            _fullscreenBorderless = borderless;
 
             SDL_SetWindowBordered(Window.Handle, !borderless);
 
@@ -425,6 +426,21 @@ namespace ClassicUO
                 viewport.Y = -5;
             }
             bufferRect = new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight);
+        }
+
+        /// <summary>
+        /// Toggles the window border (title bar and edges) while keeping the window in a
+        /// normal windowed state. Unlike <see cref="SetWindowBorderless"/>, this does not
+        /// resize the window to fill the display. Because stripping the border from a
+        /// maximized window makes it cover the whole screen (borderless fullscreen), the
+        /// window is first restored to a normal size when removing the border.
+        /// </summary>
+        public void SetWindowBordered(bool bordered)
+        {
+            if (!bordered && IsWindowMaximized())
+                SDL_RestoreWindow(Window.Handle);
+
+            SDL_SetWindowBordered(Window.Handle, bordered);
         }
 
         public void MaximizeWindow()

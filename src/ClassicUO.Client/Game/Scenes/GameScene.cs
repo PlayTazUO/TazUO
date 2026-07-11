@@ -109,7 +109,7 @@ namespace ClassicUO.Game.Scenes
             {
                 Client.Game.SetWindowBorderless(true);
             }
-            else if (Settings.GlobalSettings.IsWindowMaximized)
+            else if (Settings.GlobalSettings.IsWindowMaximized && !ProfileManager.CurrentProfile.BorderlessWindow)
             {
                 _waitingForWindowResize = true;
                 _windowResizeStartTime = Time.Ticks;
@@ -140,6 +140,14 @@ namespace ClassicUO.Game.Scenes
                 _windowResizeStartTime = Time.Ticks;
 
                 Client.Game.SetWindowSize(w, h);
+            }
+
+            // Borderless (windowed) removes the window border while keeping the normal
+            // windowed size. Skip it when fullscreen-borderless is active since that
+            // mode already strips the border and resizes the window to fill the display.
+            if (!ProfileManager.CurrentProfile.WindowBorderless && ProfileManager.CurrentProfile.BorderlessWindow)
+            {
+                Client.Game.SetWindowBordered(false);
             }
 
             SetPostProcessingSettings();
@@ -461,6 +469,7 @@ namespace ClassicUO.Game.Scenes
 
             Settings.GlobalSettings.IsWindowMaximized = Client.Game.IsWindowMaximized();
             Client.Game.SetWindowBorderless(false);
+            Client.Game.SetWindowBordered(true);
 
             base.Unload();
         }
