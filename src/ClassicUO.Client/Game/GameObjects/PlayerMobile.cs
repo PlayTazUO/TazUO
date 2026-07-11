@@ -423,7 +423,10 @@ namespace ClassicUO.Game.GameObjects
                 int x = X, y = Y, z = Z;
                 Pathfinder.GetNewXY((byte)Direction, ref x, ref y);
 
-                if (World.Items.Values.Any(s => s.ItemData.IsDoor && s.X == x && s.Y == y && s.Z - 15 <= z && s.Z + 15 >= z))
+                // Send_OpenDoor toggles the door server-side, so skip already-open doors to
+                // avoid closing one the player (or a script) deliberately left open.
+                if (World.Items.Values.Any(s => s.ItemData.IsDoor && s.X == x && s.Y == y && s.Z - 15 <= z && s.Z + 15 >= z
+                    && !DoorData.IsOpenDoor(s.Graphic)))
                 {
                     GameActions.OpenDoor();
                 }

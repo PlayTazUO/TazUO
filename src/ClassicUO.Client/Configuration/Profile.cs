@@ -520,6 +520,9 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "window_borderless", false)]
         public partial bool WindowBorderless { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "borderless_window", false)]
+        public partial bool BorderlessWindow { get; set; }
         [JsonConverter(typeof(Point2Converter))] public Point GameWindowSize { get; set => SetProperty(ref field, value); } = new Point(800, 680);
         [JsonConverter(typeof(Point2Converter))] public Point TopbarGumpPosition { get; set => SetProperty(ref field, value); } = new Point(0, 0);
         [JsonIgnore]
@@ -1298,6 +1301,10 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "display_party_chat_overhead", true)]
         public partial bool DisplayPartyChatOverhead { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "hide_macro_target_message", false)]
+        public partial bool HideMacroTargetMessage { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "selected_t_t_f_journal_font", "avadonian")]

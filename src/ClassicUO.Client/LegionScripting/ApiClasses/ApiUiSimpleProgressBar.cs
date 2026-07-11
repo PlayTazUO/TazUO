@@ -11,10 +11,5 @@ public class ApiUiSimpleProgressBar(SimpleProgressBar progressBar) : ApiUiBaseCo
     /// </summary>
     /// <param name="value">The current value</param>
     /// <param name="max">The maximum value</param>
-    public void SetProgress(float value, float max)
-    {
-        if (!VerifyIntegrity()) return;
-
-        MainThreadQueue.EnqueueAction(() => progressBar.SetProgress(value, max));
-    }
+    public void SetProgress(float value, float max) => SetProp(() => progressBar.SetProgress(value, max));
 }

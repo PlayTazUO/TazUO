@@ -6,99 +6,36 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 
 public class ApiUiTtfTextInputField(TTFTextInputField textInputField) : ApiUiBaseControl(textInputField)
 {
-    public string Text
-    {
-        get
-        {
-            if (!VerifyIntegrity()) return string.Empty;
+    public string Text => GetProp(() => textInputField.Text, string.Empty);
 
-            return MainThreadQueue.InvokeOnMainThread(() => textInputField.Text);
-        }
-    }
-
-    public int CaretIndex
-    {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textInputField.CaretIndex);
-        }
-    }
+    public int CaretIndex => GetProp(() => textInputField.CaretIndex);
 
     public bool NumbersOnly
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textInputField.NumbersOnly);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.EnqueueAction(() => textInputField.NumbersOnly = value);
-        }
+        get => GetProp(() => textInputField.NumbersOnly);
+        set => SetProp(() => textInputField.NumbersOnly = value);
     }
 
     public bool AcceptKeyboardInput
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textInputField.AcceptKeyboardInput);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.EnqueueAction(() => textInputField.AcceptKeyboardInput = value);
-        }
+        get => GetProp(() => textInputField.AcceptKeyboardInput);
+        set => SetProp(() => textInputField.AcceptKeyboardInput = value);
     }
 
     public bool ConvertHtmlColors
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => textInputField.ConvertHtmlColors);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.EnqueueAction(() => textInputField.ConvertHtmlColors = value);
-        }
+        get => GetProp(() => textInputField.ConvertHtmlColors);
+        set => SetProp(() => textInputField.ConvertHtmlColors = value);
     }
 
     public void SetText(string text)
     {
-        if (!VerifyIntegrity() || text == null) return;
-
-        MainThreadQueue.EnqueueAction(() => textInputField.SetText(text));
+        if (text != null) SetProp(() => textInputField.SetText(text));
     }
 
-    public void SetPlaceholder(string text)
-    {
-        if (!VerifyIntegrity()) return;
+    public void SetPlaceholder(string text) => SetProp(() => textInputField.SetPlaceholder(text));
 
-        MainThreadQueue.EnqueueAction(() => textInputField.SetPlaceholder(text));
-    }
+    public void SetFocus() => SetProp(() => textInputField.SetFocus());
 
-    public void SetFocus()
-    {
-        if (!VerifyIntegrity()) return;
-
-        MainThreadQueue.EnqueueAction(() => textInputField.SetFocus());
-    }
-
-    public void UpdateSize(int width, int height)
-    {
-        if (!VerifyIntegrity()) return;
-
-        MainThreadQueue.EnqueueAction(() => textInputField.UpdateSize(width, height));
-    }
+    public void UpdateSize(int width, int height) => SetProp(() => textInputField.UpdateSize(width, height));
 }

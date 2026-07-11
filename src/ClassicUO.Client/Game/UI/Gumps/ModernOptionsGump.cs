@@ -1020,6 +1020,21 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
+            (
+                new CheckboxWithLabel
+                (
+                    TazLang.Get("video_borderless_window", "Borderless window (no title bar)"), isChecked: profile.BorderlessWindow, valueChanged: (b) =>
+                    {
+                        profile.BorderlessWindow = b;
+                        if (!profile.WindowBorderless)
+                            Client.Game.SetWindowBordered(!b);
+                    }
+                ), true, page
+            );
+
+            content.BlankLine();
+
+            content.AddToRight
             (new CheckboxWithLabel(lang.GetVideo.LockViewport, isChecked: profile.GameWindowLock, valueChanged: (b) => { profile.GameWindowLock = b; }),
                 true, page);
 

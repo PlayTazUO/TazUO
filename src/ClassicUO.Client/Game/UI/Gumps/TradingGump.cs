@@ -175,6 +175,8 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var it = (Item)i;
 
+                World.OPL.Contains(it.Serial);
+
                 _myListBox?.Add(new TradeItemListEntry(it, _myListBox.Width, GumpScale));
 
                 var g = new ItemGump(this, it.Serial, it.DisplayedGraphic, it.Hue, it.X, it.Y)
@@ -238,6 +240,8 @@ namespace ClassicUO.Game.UI.Gumps
             for (LinkedObject i = container.Items; i != null; i = i.Next)
             {
                 var it = (Item)i;
+
+                World.OPL.Contains(it.Serial);
 
                 _hisListBox?.Add(new TradeItemListEntry(it, _hisListBox.Width, GumpScale));
 
@@ -739,7 +743,7 @@ namespace ClassicUO.Game.UI.Gumps
             int available = Math.Max(1, width - textX - ScaleHelper.Scaled(2, scale));
             int nativeMaxWidth = Math.Max(1, ScaleHelper.Unscaled(available, scale));
 
-            var nameLabel = new Label(name, true, 0x0481, maxwidth: nativeMaxWidth, font: 1)
+            var nameLabel = new Label(name, true, 0x0481, maxwidth: nativeMaxWidth, font: 1, ishtml: true)
             {
                 X = textX,
                 Y = ScaleHelper.Scaled(3, scale)

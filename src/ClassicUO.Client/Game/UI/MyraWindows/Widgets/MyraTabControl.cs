@@ -14,11 +14,48 @@ public class MyraTabControl : TabControl
         SelectedIndexChanged += OnTabSelected;
     }
 
-    public void AddTab(string name, Func<Widget> builder)
+    public void AddTab(string name, Func<Widget> builder, string? tooltip = null)
     {
         int index = _builders.Count;
         _builders.Add(builder);
-        Items.Add(new TabItem(name) { Tag = index });
+
+        var item = new TabItem(name) { Tag = index };
+        Items.Add(item);
+
+        if (!string.IsNullOrEmpty(tooltip))
+            SetHeaderTooltip(item, tooltip!);
+    }
+
+    /// <summary>
+    /// Applies a hover tooltip to a tab's header button. Myra's <see cref="TabItem"/> does not
+    /// expose its header button, so this reaches it through the control's own visual tree: the
+    /// header buttons live in the first <see cref="Grid"/> under <c>InternalChild</c>, each tagged
+    /// with its owning <see cref="TabItem"/>. If Myra's internals ever change, this degrades to
+    /// simply not showing a tooltip rather than throwing.
+    /// </summary>
+    private void SetHeaderTooltip(TabItem item, string tooltip)
+    {
+        Grid? buttonsGrid = null;
+        foreach (Widget w in InternalChild.Widgets)
+        {
+            if (w is Grid grid)
+            {
+                buttonsGrid = grid;
+                break;
+            }
+        }
+
+        if (buttonsGrid == null)
+            return;
+
+        foreach (Widget button in buttonsGrid.Widgets)
+        {
+            if (ReferenceEquals(button.Tag, item))
+            {
+                button.Tooltip = tooltip;
+                return;
+            }
+        }
     }
 
     public void SelectFirst()

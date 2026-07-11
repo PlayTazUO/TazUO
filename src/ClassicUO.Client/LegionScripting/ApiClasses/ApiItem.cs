@@ -110,20 +110,13 @@ public class ApiItem : ApiEntity
 
     protected Item item;
     protected Item GetItemUnsafe()
-    {
-        if (item != null) return item;
-
-        return item = Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
-    }
+        => ResolveCached(ref item, Serial, static s => Client.Game.UO.World.Items.TryGetValue(s, out Item i) ? i : null);
 
     protected Item GetItem()
     {
         if (item != null && !item.IsDestroyed && item.Serial == Serial) return item;
 
-        return MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            return item = GetItemUnsafe();
-        });
+        return MainThreadQueue.InvokeOnMainThread(GetItemUnsafe);
     }
 
     /// <summary>
@@ -133,41 +126,5 @@ public class ApiItem : ApiEntity
     /// <param name="wait">True or false to wait for name and props</param>
     /// <param name="timeout">Timeout in seconds</param>
     /// <returns>Item name and properties, or empty string if we don't have them.</returns>
-    public string NameAndProps(bool wait = false, int timeout = 10)
-    {
-        string results = MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            Item i = GetItemUnsafe();
-            if (i != null && i.OPLName != null && i.OPLData != null)
-            {
-                return $"{i.OPLName}\n{i.OPLData}";
-            }
-
-            return null;
-        });
-
-        if (results.NotNullNotEmpty()) return results;
-
-
-        if (wait)
-        {
-            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
-
-            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
-            {
-                System.Threading.Thread.Sleep(100);
-            }
-        }
-
-        return MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            Item i = GetItemUnsafe();
-            if (i.OPLName != null && i.OPLData != null)
-            {
-                return $"{i.OPLName}\n{i.OPLData}";
-            }
-
-            return string.Empty;
-        });
-    }
+    public string NameAndProps(bool wait = false, int timeout = 10) => GetNameAndProps(wait, timeout);
 }

@@ -160,10 +160,13 @@ namespace ClassicUO.Utility
         public static string ToHtmlHex(this Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Color FromHtmlHex(this string hex)
+        public static Color FromHtmlHex(this string hex) => hex.FromHtmlHex(Color.White);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Color FromHtmlHex(this string hex, Color fallback)
         {
             if (hex.StartsWith("#")) hex = hex.Substring(1);
-            if (hex.Length != 6) return Color.White;
+            if (hex.Length != 6) return fallback;
 
             int value = Convert.ToInt32(hex, 16);
             return new Color((value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF);

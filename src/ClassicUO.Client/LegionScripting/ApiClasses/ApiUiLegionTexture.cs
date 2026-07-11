@@ -10,15 +10,7 @@ public class ApiUiLegionTexture(LegionTexturePic control) : ApiUiBaseControl(con
     /// </summary>
     public string TextureName
     {
-        get
-        {
-            if (!VerifyIntegrity()) return string.Empty;
-            return MainThreadQueue.InvokeOnMainThread(() => control.TextureName);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-            MainThreadQueue.EnqueueAction(() => control.TextureName = value);
-        }
+        get => GetProp(() => control.TextureName, string.Empty);
+        set => SetProp(() => control.TextureName = value);
     }
 }

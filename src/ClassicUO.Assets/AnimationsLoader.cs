@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.IO;
 using ClassicUO.Utility;
@@ -174,7 +174,7 @@ namespace ClassicUO.Assets
 
                             //uint number = uint.Parse(parts[2], NumberStyles.HexNumber);
 
-                            if (!uint.TryParse(parts[2], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint number))
+                            if (!uint.TryParse(parts[2].Trim(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint number))
                             {
                                 Log.Error("Failed to parse expected number.");
                                 continue;

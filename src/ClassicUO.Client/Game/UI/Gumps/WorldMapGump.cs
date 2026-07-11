@@ -12,6 +12,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.IO;
 using ClassicUO.Renderer;
@@ -376,8 +377,8 @@ public class WorldMapGump : ResizableGump
 
         _options["goto_location"] = new ContextMenuItemEntry
         (
-            ResGumps.GotoLocation,
-            () => UIManager.Add(new LocationGoGump(
+            TazLang.Get("map_goto_location", "Go to location"),
+            () => LocationGoWindow.Show(
                     World,
                     (x, y) => GoToMarker(x, y, true),
                     ClearGoToMarker,
@@ -385,7 +386,6 @@ public class WorldMapGump : ResizableGump
                         ? new Point(_gotoMarker.X, _gotoMarker.Y)
                         : null
                 )
-            )
         );
 
         _options["top_most"] = new ContextMenuItemEntry(ResGumps.TopMost, () => { TopMost = !TopMost; }, true, _isTopMost);
@@ -444,12 +444,7 @@ public class WorldMapGump : ResizableGump
         );
 
         _options["markers_manager"] = new ContextMenuItemEntry(ResGumps.MarkersManager,
-            () =>
-            {
-                var mm = new MarkersManagerGump(World);
-
-                UIManager.Add(mm);
-            }
+            () => MarkersManagerWindow.Show(World)
         );
 
         _options["add_marker_on_player"] = new ContextMenuItemEntry(ResGumps.AddMarkerOnPlayer, () => AddMarkerOnPlayer());
@@ -1958,6 +1953,10 @@ public class WorldMapGump : ResizableGump
                         }
                         else if (mapFile != null) //CSV x,y,mapindex,name of marker,iconname,color,zoom
                         {
+                            // CSV files share the exact same line format as user markers (.usr),
+                            // so they can be edited and saved back to their own path losslessly.
+                            markerFile.IsEditable = true;
+
                             using (var reader = new StreamReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                             {
                                 while (!reader.EndOfStream)
@@ -2165,9 +2164,7 @@ public class WorldMapGump : ResizableGump
                  {
                      foreach (WMapMarker m in mapMarkerFile.Markers)
                      {
-                    string newLine = $"{m.X},{m.Y},{m.MapId},{m.Name},{m.MarkerIconName},{m.ColorName},4";
-
-                         writer.WriteLine(newLine);
+                         writer.WriteLine(MarkerToCsvLine(m));
                      }
                  }
              }
@@ -2491,7 +2488,8 @@ public class WorldMapGump : ResizableGump
                         halfWidth,
                         halfHeight,
                         Zoom,
-                        Color.Red
+                        Color.Red,
+                        useNotorietyHue: true
                     );
                 }
                 else
@@ -2762,7 +2760,8 @@ public class WorldMapGump : ResizableGump
         Color color,
         bool drawName = false,
         bool isparty = false,
-        bool drawHpBar = false
+        bool drawHpBar = false,
+        bool useNotorietyHue = false
     )
     {
         Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
@@ -2815,6 +2814,12 @@ public class WorldMapGump : ResizableGump
             rot.Y = y + Height - 8 - DOT_SIZE;
         }
 
+        // Color the dot by notoriety (matching the radar/minimap) when requested,
+        // otherwise use the flat color passed in.
+        Vector3 dotHueVector = useNotorietyHue
+            ? ShaderHueTranslator.GetHueVector(Notoriety.GetHue(mobile.NotorietyFlag))
+            : hueVector;
+
         batcher.Draw
         (
             SolidColorTextureCache.GetTexture(color),
@@ -2825,7 +2830,7 @@ public class WorldMapGump : ResizableGump
                 DOT_SIZE,
                 DOT_SIZE
             ),
-            hueVector
+            dotHueVector
         );
 
         if (drawName && !string.IsNullOrEmpty(mobile.Name))
@@ -4038,6 +4043,19 @@ public class WorldMapGump : ResizableGump
         }
 
         return marker;
+    }
+
+    /// <summary>
+    /// Serialize a marker into the shared CSV line format used by both the user
+    /// markers (.usr) file and editable .csv marker files:
+    /// <c>X,Y,MapId,Name,Icon,Color,Zoom</c>. A marker with no meaningful zoom
+    /// (freshly created/edited markers default to 0) falls back to the legacy 4,
+    /// while real zoom values are preserved so a round-trip does not alter them.
+    /// </summary>
+    internal static string MarkerToCsvLine(WMapMarker m)
+    {
+        int zoom = m.ZoomIndex > 0 ? m.ZoomIndex : 4;
+        return $"{m.X},{m.Y},{m.MapId},{m.Name},{m.MarkerIconName},{m.ColorName},{zoom}";
     }
 
     /// <summary>
