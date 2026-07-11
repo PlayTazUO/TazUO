@@ -53,9 +53,15 @@ namespace ClassicUO
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetDllDirectory(string lpPathName);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool AllocConsole();
+
         [STAThread]
         public static void Main(string[] args)
         {
+            if (Array.IndexOf(args, "--console") >= 0 && Environment.OSVersion.Platform == PlatformID.Win32NT)
+                AllocConsole();
+
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             Language.Load();
 #if !NETFRAMEWORK
