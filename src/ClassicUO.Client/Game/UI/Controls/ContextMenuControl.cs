@@ -223,6 +223,50 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
+        // Show the given submenu and close every other submenu opened from this
+        // menu (along with anything they had open). Called when the mouse hovers the
+        // item that owns <paramref name="sub"/>, so hovering a different item that has
+        // a submenu swaps which one is visible without relying on mouse bounds.
+        internal void OpenSubMenu(ContextMenuShowMenu sub)
+        {
+            if (_subMenus == null)
+            {
+                return;
+            }
+
+            foreach (ContextMenuShowMenu menu in _subMenus)
+            {
+                if (menu == sub)
+                {
+                    menu.IsVisible = true;
+                }
+                else if (menu.IsVisible)
+                {
+                    menu.HideWithChildren();
+                }
+            }
+        }
+
+        // Hide this submenu and recursively hide any submenus it had open, so a
+        // reopened branch does not resurrect a stale nested submenu.
+        internal void HideWithChildren()
+        {
+            IsVisible = false;
+
+            if (_subMenus == null)
+            {
+                return;
+            }
+
+            foreach (ContextMenuShowMenu menu in _subMenus)
+            {
+                if (menu.IsVisible)
+                {
+                    menu.HideWithChildren();
+                }
+            }
+        }
+
         public override void Update()
         {
             base.Update();
@@ -394,6 +438,11 @@ namespace ClassicUO.Game.UI.Controls
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
                     _subMenu = new ContextMenuShowMenu(_gump.World, _entry.Items);
+
+                    // Submenus stay hidden until the mouse hovers this item; they are
+                    // no longer toggled by mouse bounds, so start them closed.
+                    _subMenu.IsVisible = false;
+
                     parent.Add(_subMenu);
 
                     if (parent._subMenus == null)
@@ -546,25 +595,15 @@ namespace ClassicUO.Game.UI.Controls
 
                     _subMenu.Y = subMenuY;
 
+                    // Once opened, a submenu stays open until the whole menu is
+                    // disposed (something clicked), or a different sibling submenu is
+                    // opened by hovering its item. It is intentionally NOT closed just
+                    // because the mouse leaves this item's bounds: an upward-opening
+                    // submenu sits above the parent, and closing on mouse-exit made it
+                    // impossible to reach without the menu snapping shut.
                     if (MouseIsOver)
                     {
-                        _subMenu.IsVisible = true;
-                    }
-                    else
-                    {
-                        IGui p = UIManager.MouseOverControl?.Parent;
-
-                        while (p != null)
-                        {
-                            if (p == _subMenu)
-                            {
-                                break;
-                            }
-
-                            p = p.Parent;
-                        }
-
-                        _subMenu.IsVisible = p != null;
+                        _gump.OpenSubMenu(_subMenu);
                     }
                 }
             }
