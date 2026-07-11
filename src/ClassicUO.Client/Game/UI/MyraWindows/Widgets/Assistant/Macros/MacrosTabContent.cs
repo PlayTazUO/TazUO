@@ -734,10 +734,9 @@ public static class MacrosTabContent
         MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
         existing?.Dispose();
 
-        int posX = (Client.Game.Window.ClientBounds.Width >> 1) - 300;
-        int posY = (Client.Game.Window.ClientBounds.Height >> 1) - 250;
-
-        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, posX, posY);
+        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
+        btnEditorGump.CenterXInViewPort();
+        btnEditorGump.CenterYInViewPort();
         UIManager.Add(btnEditorGump);
         btnEditorGump.SetInScreen();
         btnEditorGump.BringOnTop();

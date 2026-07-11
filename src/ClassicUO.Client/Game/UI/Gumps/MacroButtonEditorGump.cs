@@ -76,6 +76,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildGump()
         {
+            Width = WIDTH;
+            Height = HEIGHT;
+
             Add
             (
                 new AlphaBlendControl(0.95f)
