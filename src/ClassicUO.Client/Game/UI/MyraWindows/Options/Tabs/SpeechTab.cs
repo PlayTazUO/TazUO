@@ -151,6 +151,12 @@ internal static class SpeechTab
                 tuoLang.DisableMouseInteractionsForOverheadText,
                 new Accessor<bool>(() => profile.DisableMouseInteractionOverheadText),
                 search: new SearchMetadata(tuoLang.DisableMouseInteractionsForOverheadText, Keywords: [kw.Mouse])
+            ),
+            Option.Checkbox(
+                tuoLang.HideMacroTargetMessage,
+                new Accessor<bool>(() => profile.HideMacroTargetMessage),
+                tuoLang.TooltipHideMacroTargetMessage,
+                new SearchMetadata(tuoLang.HideMacroTargetMessage, Keywords: [kw.Target])
             )
         ).AsSearchGroup()
          .WithSearch(new SearchMetadata(Keywords: [kw.Overhead]));
