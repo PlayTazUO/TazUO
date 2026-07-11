@@ -1348,8 +1348,6 @@ namespace ClassicUO.Configuration
             public string DamageToLastAttack { get; set; } = "Damage to last attack";
             public string DisplayPartyChatOverPlayerHeads { get; set; } = "Display party chat over player heads";
             public string TooltipPartyChat { get; set; } = "If a party member uses party chat their text will also show above their head to you";
-            public string HideMacroTargetMessage { get; set; } = "Hide macro target message";
-            public string TooltipHideMacroTargetMessage { get; set; } = "Hide the \"Target: name\" message shown overhead when a macro sets a target";
             public string OverheadTextWidth { get; set; } = "Overhead text width";
             public string TooltipOverheadText { get; set; } = "This adjusts the maximum width for text over players, setting to 0 will allow it to use any width needed to stay one line";
             public string BelowMobileHealthBarScale { get; set; } = "Below mobile health bar scale";

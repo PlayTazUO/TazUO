@@ -133,6 +133,9 @@ internal static class SpeechTab
         ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
+        string hideMacroTargetMessage = TazLang.Get("hidemacrotargetmessage", "Hide macro target message");
+        string hideMacroTargetMessageTooltip = TazLang.Get("hidemacrotargetmessage_tooltip", "Hide the \"Target: name\" message shown overhead when a macro sets a target");
+
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = speechLang.OverheadText },
             Option.Checkbox(
@@ -153,10 +156,10 @@ internal static class SpeechTab
                 search: new SearchMetadata(tuoLang.DisableMouseInteractionsForOverheadText, Keywords: [kw.Mouse])
             ),
             Option.Checkbox(
-                tuoLang.HideMacroTargetMessage,
+                hideMacroTargetMessage,
                 new Accessor<bool>(() => profile.HideMacroTargetMessage),
-                tuoLang.TooltipHideMacroTargetMessage,
-                new SearchMetadata(tuoLang.HideMacroTargetMessage, Keywords: [kw.Target])
+                hideMacroTargetMessageTooltip,
+                new SearchMetadata(hideMacroTargetMessage, Keywords: [kw.Target])
             )
         ).AsSearchGroup()
          .WithSearch(new SearchMetadata(Keywords: [kw.Overhead]));
