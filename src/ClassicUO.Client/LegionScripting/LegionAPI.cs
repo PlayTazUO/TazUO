@@ -13,6 +13,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Structs;
+using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
@@ -4293,6 +4294,31 @@ namespace ClassicUO.LegionScripting
                 ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
                 : Client.Game.UO.FileManager.Clilocs.GetString(cliloc)
         );
+
+        /// <summary>
+        /// Get the bounds of the client game window.
+        /// This covers the entire window, including all UI and the game world.
+        /// Coordinates are in screen pixels.
+        /// Example:
+        /// ```py
+        /// bounds = API.GetClientBounds()
+        /// API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+        /// ```
+        /// </summary>
+        /// <returns>A Rectangle with X, Y, Width and Height of the client window in screen pixels.</returns>
+        public Rectangle GetClientBounds() => OnMain(() => Client.Game.Window.ClientBounds);
+
+        /// <summary>
+        /// Get the bounds of the game world viewport.
+        /// This is the area where the game world is rendered, in screen pixel coordinates.
+        /// Example:
+        /// ```py
+        /// vp = API.GetViewportBounds()
+        /// API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+        /// ```
+        /// </summary>
+        /// <returns>A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.</returns>
+        public Rectangle GetViewportBounds() => OnMain(() => Client.Game.GetScene<GameScene>()?.Camera.Bounds ?? Rectangle.Empty);
 
         #endregion
     }
