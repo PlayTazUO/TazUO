@@ -65,6 +65,7 @@ All notable changes to TazUO will be recorded here.
 * Added a "Button Editor" button to the new options window's Macros tab, giving access to the macro button editor (label, scale, color, graphic) - [P.R 685](https://github.com/PlayTazUO/TazUO/pull/685) ([bittiez](https://github.com/bittiez))
 * Added an option to hide the "Target: name" overhead message shown when a macro sets a target - [P.R 687](https://github.com/PlayTazUO/TazUO/pull/687) ([bittiez](https://github.com/bittiez))
 * Added a "Borderless window (no title bar)" video option that removes the window border while keeping a normal windowed size, separate from fullscreen-borderless - [P.R 680](https://github.com/PlayTazUO/TazUO/pull/680) ([bittiez](https://github.com/bittiez))
+* The Open macro type's gump list in the Macros tab is now sorted alphabetically and spaced after capitals for legibility, matching the main macro list - [P.R 688](https://github.com/PlayTazUO/TazUO/pull/688) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
