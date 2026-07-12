@@ -82,18 +82,42 @@ namespace ClassicUO.Game.Managers
 
         public static NameOverheadOptions ActiveOverheadOptions { get; set; }
 
+        /// <summary>The nameplate option that is currently active. The search filters are stored on it.</summary>
+        public static NameOverheadOption ActiveOption { get; private set; }
+
         public static bool IsPermaToggled
         {
             get => ProfileManager.CurrentProfile.NameOverheadToggled;
             private set => ProfileManager.CurrentProfile.NameOverheadToggled = value;
         }
 
-        public static string Search { get; set; } = string.Empty;
+        /// <summary>
+        /// The positive search filter for the active nameplate option. Stored on the option so it is
+        /// persisted per nameplate profile and reloaded on profile switch and log out/in.
+        /// </summary>
+        public static string Search
+        {
+            get => ActiveOption?.Search ?? string.Empty;
+            set
+            {
+                if (ActiveOption != null)
+                    ActiveOption.Search = value ?? string.Empty;
+            }
+        }
 
         /// <summary>
         /// Nameplates whose text matches this filter are hidden (the opposite of <see cref="Search"/>).
+        /// Stored on the active option so it is persisted per nameplate profile.
         /// </summary>
-        public static string NegativeSearch { get; set; } = string.Empty;
+        public static string NegativeSearch
+        {
+            get => ActiveOption?.NegativeSearch ?? string.Empty;
+            set
+            {
+                if (ActiveOption != null)
+                    ActiveOption.NegativeSearch = value ?? string.Empty;
+            }
+        }
 
         /// <summary>True when either the positive or negative search filter is active.</summary>
         public static bool HasSearchFilter => !string.IsNullOrEmpty(Search) || !string.IsNullOrEmpty(NegativeSearch);
@@ -454,6 +478,8 @@ namespace ClassicUO.Game.Managers
 
         public void SetActiveOption(NameOverheadOption option)
         {
+            ActiveOption = option;
+
             if (option == null)
             {
                 ActiveOverheadOptions = NameOverheadOptions.None;
@@ -465,6 +491,9 @@ namespace ClassicUO.Game.Managers
                 LastActiveNameOverheadOption = option.Name;
                 _gump?.UpdateCheckboxes();
             }
+
+            // Load the search filters that belong to the newly active option into the input boxes.
+            _gump?.UpdateSearchBoxes();
         }
     }
 
@@ -480,6 +509,12 @@ namespace ClassicUO.Game.Managers
         public bool Shift { get; set => SetField(ref field, value); }
         public bool Deletable { get; set => SetField(ref field, value); } = true;
         public SDL.SDL_Keycode Key { get; set => SetField(ref field, value); }
+
+        /// <summary>Positive search filter saved with this nameplate option.</summary>
+        public string Search { get; set => SetField(ref field, value); } = string.Empty;
+
+        /// <summary>Negative (hide) search filter saved with this nameplate option.</summary>
+        public string NegativeSearch { get; set => SetField(ref field, value); } = string.Empty;
 
         #endregion
 
@@ -529,6 +564,8 @@ namespace ClassicUO.Game.Managers
             writer.WriteAttributeString("ctrl", Ctrl.ToString());
             writer.WriteAttributeString("shift", Shift.ToString());
             writer.WriteAttributeString("optionflagscode", NameOverheadOptionFlags.ToInt().ToString());
+            writer.WriteAttributeString("search", Search ?? string.Empty);
+            writer.WriteAttributeString("negativesearch", NegativeSearch ?? string.Empty);
 
             writer.WriteEndElement();
         }
@@ -547,6 +584,9 @@ namespace ClassicUO.Game.Managers
 
             NameOverheadOptionFlags = (NameOverheadOptions)int.Parse(xml.GetAttribute("optionflagscode"));
             Deletable = !bool.TryParse(xml.GetAttribute("deleteable"), out bool deletable) || deletable;
+
+            Search = xml.GetAttribute("search") ?? string.Empty;
+            NegativeSearch = xml.GetAttribute("negativesearch") ?? string.Empty;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

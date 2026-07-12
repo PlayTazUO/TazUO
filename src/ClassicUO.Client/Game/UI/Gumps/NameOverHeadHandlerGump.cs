@@ -157,6 +157,16 @@ namespace ClassicUO.Game.UI.Gumps
             DrawChoiceButtons();
         }
 
+        /// <summary>Refreshes the search input boxes to reflect the active nameplate option's saved filters.</summary>
+        public void UpdateSearchBoxes()
+        {
+            if (searchBox != null)
+                searchBox.Text = NameOverHeadManager.Search;
+
+            if (negativeSearchBox != null)
+                negativeSearchBox.Text = NameOverHeadManager.NegativeSearch;
+        }
+
         public void UpdateCheckboxes()
         {
             foreach (RadioButton button in _overheadButtons)
@@ -227,8 +237,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
-            NameOverHeadManager.Search = "";
-            NameOverHeadManager.NegativeSearch = "";
+            // Persist the current filters onto the active option before closing so they survive log out/in
+            // and profile switches. They are saved to disk with the rest of the nameplate options on unload.
             base.Dispose();
         }
 
