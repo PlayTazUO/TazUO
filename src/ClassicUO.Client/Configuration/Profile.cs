@@ -706,6 +706,12 @@ namespace ClassicUO.Configuration
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
         public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
 
+        // Auto skinning: double click a knife/dagger whose graphic is in this list to skin a targeted corpse.
+        // Graphic IDs are separated by ';' and may be hex (0x..) or decimal.
+        public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
+        public bool AutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+
         public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
 
         public static uint GumpsVersion { get; private set; }
