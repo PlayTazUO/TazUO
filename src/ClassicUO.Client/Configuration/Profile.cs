@@ -1454,6 +1454,18 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Char, "auto_loot_human_corpses", false)]
         public partial bool AutoLootHumanCorpses { get; set; }
 
+        // Auto skinning: double click a knife/dagger whose graphic is in this list to skin a targeted corpse.
+        // Graphic IDs are separated by ';' and may be hex (0x..) or decimal.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_auto_skinning", false)]
+        public partial bool EnableAutoSkinning { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_skinning_human_corpses", false)]
+        public partial bool AutoSkinningHumanCorpses { get; set; }
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "auto_skinning_knife_graphics", "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6")]
+        public partial string AutoSkinningKnifeGraphics { get; set; }
+
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, "item_database_enabled", true)]
         public partial bool ItemDatabaseEnabled { get; set; }

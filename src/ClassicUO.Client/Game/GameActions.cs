@@ -684,6 +684,10 @@ internal static class GameActions
                 if (!intercepted)
                     // Run the actual send only if the interceptor yielded control back, otherwise, the auto manager would have handled the 'send' part
                     Socket.Send_DoubleClick(serial);
+
+                // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+                if (!ignoreQueue)
+                    GlobalActionCooldown.BeginCooldown();
             }
         }
 
@@ -908,7 +912,13 @@ internal static class GameActions
         Client.Game.UO.GameCursor.ItemHold.IsGumpTexture = isGump;
 
         if (!ProfileManager.CurrentProfile.QueueManualItemMoves || skipQueue)
+        {
             Socket.Send_PickUpRequest(item, (ushort)amount);
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            if (!skipQueue)
+                GlobalActionCooldown.BeginCooldown();
+        }
 
         ScriptingInfoGump.AddOrUpdateInfo("Last Picked Up Item", $"0x{item.Serial:X}");
         ScriptingInfoGump.AddOrUpdateInfo("Last Object Graphic", $"0x{item.Graphic:X}");
@@ -961,6 +971,11 @@ internal static class GameActions
                                             (sbyte)z,
                                             container);
             }
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            // 'force' drops come from the queue itself (MoveRequest.Execute), which already manages the cooldown.
+            if (!force)
+                GlobalActionCooldown.BeginCooldown();
         }
     }
 
@@ -981,6 +996,9 @@ internal static class GameActions
             Client.Game.UO.GameCursor.ItemHold.Enabled = false;
             Client.Game.UO.GameCursor.ItemHold.Dropped = true;
             Client.Game.UO.GameCursor.ItemHold.Clear();
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            GlobalActionCooldown.BeginCooldown();
         }
     }
 
