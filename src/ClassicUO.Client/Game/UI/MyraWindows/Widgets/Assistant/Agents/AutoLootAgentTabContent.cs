@@ -91,6 +91,34 @@ public static class AutoLootAgentTabContent
             TazLang.Get("autoloot_disableretry_tooltip")));
         root.Widgets.Add(optRow3);
 
+        // Auto skinning section
+        root.Widgets.Add(new MyraSpacer(15, 5));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_title", "Auto Skinning"), MyraLabel.TextStyle.H2));
+
+        var skinRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
+        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.EnableAutoSkinning,
+            b => profile.EnableAutoSkinning = b,
+            TazLang.Get("autoskinning_enable", "Enable Auto Skinning"),
+            TazLang.Get("autoskinning_enable_tooltip", "Double click a knife/dagger from the graphic list below, then target a corpse to skin it. Uses the action queue.")));
+        root.Widgets.Add(skinRow);
+
+        var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
+        skinGraphicsRow.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_graphics", "Knife graphic IDs:"), MyraLabel.TextStyle.P)
+        {
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers that trigger skinning. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
+            VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
+        });
+        var skinGraphicsBox = new MyraInputBox
+        {
+            Text = profile.AutoSkinningKnifeGraphics,
+            MinWidth = 250,
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers that trigger skinning. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
+        };
+        skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
+        skinGraphicsRow.Widgets.Add(skinGraphicsBox);
+        root.Widgets.Add(skinGraphicsRow);
+
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));
         root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H2));
