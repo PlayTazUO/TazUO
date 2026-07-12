@@ -101,6 +101,11 @@ public static class AutoLootAgentTabContent
             b => profile.EnableAutoSkinning = b,
             TazLang.Get("autoskinning_enable", "Enable Auto Skinning"),
             TazLang.Get("autoskinning_enable_tooltip", "When a corpse is opened, automatically use a knife/dagger from the graphic list below on it (double clicks the knife and targets the corpse). Uses the action queue.")));
+        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.AutoSkinningHumanCorpses,
+            b => profile.AutoSkinningHumanCorpses = b,
+            TazLang.Get("autoskinning_humancorpses", "Skin Human Corpses"),
+            TazLang.Get("autoskinning_humancorpses_tooltip", "Also auto skin human/humanoid corpses.")));
         root.Widgets.Add(skinRow);
 
         var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };

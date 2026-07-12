@@ -68,6 +68,9 @@ public sealed class AutoSkinningManager
         if (!IsEnabled || corpse is not { IsCorpse: true })
             return;
 
+        if (corpse.IsHumanCorpse && !(ProfileManager.CurrentProfile?.AutoSkinningHumanCorpses ?? false))
+            return;
+
         if (!MarkSkinned(corpse.Serial))
             return;
 
