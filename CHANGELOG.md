@@ -122,6 +122,7 @@ All notable changes to TazUO will be recorded here.
 * Show a suggested fix for the ArgumentOutOfRangeException from FetchDisplayAdapter, which happens when connected displays change at runtime (monitor unplugged/slept, dock or KVM switch, laptop lid) - [P.R 660](https://github.com/PlayTazUO/TazUO/pull/660) ([bittiez](https://github.com/bittiez))
 * Fixed container overhead text (item names/speech) being pushed off screen instead of appearing above the item - grid containers now account for the scroll offset when scaled/scrolled, and legacy containers anchor the text over the item's actual slot instead of a stale click coordinate - [P.R 667](https://github.com/PlayTazUO/TazUO/pull/667) ([bittiez](https://github.com/bittiez))
 * World map mobile dots are now colored by notoriety (matching the radar/minimap) instead of always being red - [P.R 684](https://github.com/PlayTazUO/TazUO/pull/684) ([bittiez](https://github.com/bittiez))
+* Context menu submenus now stay open until the menu is closed, an item is clicked, or another submenu is opened, and remain fully clickable when they open above the parent menu instead of closing when the mouse moves toward them - [P.R 689](https://github.com/PlayTazUO/TazUO/pull/689) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

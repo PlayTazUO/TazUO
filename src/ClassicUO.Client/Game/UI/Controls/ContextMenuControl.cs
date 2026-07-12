@@ -223,6 +223,86 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
+        // Show the given submenu and close every other submenu opened from this
+        // menu (along with anything they had open). Called when the mouse hovers the
+        // item that owns <paramref name="sub"/>, so hovering a different item that has
+        // a submenu swaps which one is visible without relying on mouse bounds.
+        internal void OpenSubMenu(ContextMenuShowMenu sub)
+        {
+            if (_subMenus == null)
+            {
+                return;
+            }
+
+            foreach (ContextMenuShowMenu menu in _subMenus)
+            {
+                if (menu == sub)
+                {
+                    menu.IsVisible = true;
+                }
+                else if (menu.IsVisible)
+                {
+                    menu.HideWithChildren();
+                }
+            }
+        }
+
+        // Hide this submenu and recursively hide any submenus it had open, so a
+        // reopened branch does not resurrect a stale nested submenu.
+        internal void HideWithChildren()
+        {
+            IsVisible = false;
+
+            if (_subMenus == null)
+            {
+                return;
+            }
+
+            foreach (ContextMenuShowMenu menu in _subMenus)
+            {
+                if (menu.IsVisible)
+                {
+                    menu.HideWithChildren();
+                }
+            }
+        }
+
+        // Union of this menu's own hit area and every currently visible submenu subtree,
+        // expressed in this menu's local coordinate space (submenu positions are relative
+        // to this gump). Submenus can fly out to the left of or above their parent
+        // (negative X/Y) and can be nested several levels deep, so the reachable region
+        // has to be gathered recursively rather than from the direct children alone.
+        private Rectangle GetVisibleTreeBounds()
+        {
+            int minX = 0, minY = 0;
+            int maxX = _background.Width, maxY = _background.Height;
+
+            if (_subMenus != null)
+            {
+                foreach (ContextMenuShowMenu menu in _subMenus)
+                {
+                    if (menu == null || menu.IsDisposed || !menu.IsVisible)
+                    {
+                        continue;
+                    }
+
+                    Rectangle sub = menu.GetVisibleTreeBounds();
+
+                    int left = menu.X + sub.X;
+                    int top = menu.Y + sub.Y;
+                    int right = menu.X + sub.Right;
+                    int bottom = menu.Y + sub.Bottom;
+
+                    if (left < minX) minX = left;
+                    if (top < minY) minY = top;
+                    if (right > maxX) maxX = right;
+                    if (bottom > maxY) maxY = bottom;
+                }
+            }
+
+            return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+        }
+
         public override void Update()
         {
             base.Update();
@@ -232,46 +312,20 @@ namespace ClassicUO.Game.UI.Controls
             // therefore live at a negative X (and, near the bottom of the screen, can sit
             // above it at a negative Y). base.Update only ever grows the bounds rectangle
             // right/down, and Control.HitTest gates on that rectangle before descending
-            // into children, so those left/up regions are unreachable: moving the mouse
-            // onto a left-opening submenu is treated as leaving the menu and closes it.
-            // Extend the hit-test bounds to cover any negative-offset children without
-            // moving anything that is drawn (this gump is drawn at its raw X/Y, so the
-            // offset only affects hit testing).
-            int left = 0, top = 0;
+            // into children, so those left/up regions would be unreachable: the mouse
+            // there resolves to no control, which reads as a click/hover outside the menu
+            // and closes it. Extend the hit-test bounds to cover the whole visible submenu
+            // tree without moving anything that is drawn (this gump is drawn at its raw
+            // X/Y and its border/background use _background's size, so growing the bounds
+            // and shifting the hit-test offset only affects hit testing).
+            Rectangle tree = GetVisibleTreeBounds();
 
-            for (int i = 0; i < Children.Count; i++)
-            {
-                IGui c = Children[i];
-
-                if (c == null || c.IsDisposed || !c.IsVisible)
-                {
-                    continue;
-                }
-
-                if (c.X < left)
-                {
-                    left = c.X;
-                }
-
-                if (c.Y < top)
-                {
-                    top = c.Y;
-                }
-            }
-
-            SetHitTestOffset(left, top);
-
-            // Keep the right/bottom edges where base.Update put them while pushing the
-            // left/top edges out to include the negative-offset children.
-            if (left < 0)
-            {
-                Width -= left;
-            }
-
-            if (top < 0)
-            {
-                Height -= top;
-            }
+            // A negative-offset point p (in this gump's local space) is accepted by
+            // Control.HitTest when tree.X <= p.X < tree.X + Width and likewise for Y, given
+            // the offset below; so size the bounds to the full tree extent.
+            SetHitTestOffset(tree.X, tree.Y);
+            Width = tree.Width;
+            Height = tree.Height;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)
@@ -302,6 +356,11 @@ namespace ClassicUO.Game.UI.Controls
             {
                 foreach (ContextMenuShowMenu menu in _subMenus)
                 {
+                    if (menu == null || menu.IsDisposed || !menu.IsVisible)
+                    {
+                        continue;
+                    }
+
                     if (menu.Contains(x - menu.X, y - menu.Y))
                     {
                         return true;
@@ -394,6 +453,11 @@ namespace ClassicUO.Game.UI.Controls
                 if (_entry.Items != null && _entry.Items.Count != 0)
                 {
                     _subMenu = new ContextMenuShowMenu(_gump.World, _entry.Items);
+
+                    // Submenus stay hidden until the mouse hovers this item; they are
+                    // no longer toggled by mouse bounds, so start them closed.
+                    _subMenu.IsVisible = false;
+
                     parent.Add(_subMenu);
 
                     if (parent._subMenus == null)
@@ -546,25 +610,15 @@ namespace ClassicUO.Game.UI.Controls
 
                     _subMenu.Y = subMenuY;
 
+                    // Once opened, a submenu stays open until the whole menu is
+                    // disposed (something clicked), or a different sibling submenu is
+                    // opened by hovering its item. It is intentionally NOT closed just
+                    // because the mouse leaves this item's bounds: an upward-opening
+                    // submenu sits above the parent, and closing on mouse-exit made it
+                    // impossible to reach without the menu snapping shut.
                     if (MouseIsOver)
                     {
-                        _subMenu.IsVisible = true;
-                    }
-                    else
-                    {
-                        IGui p = UIManager.MouseOverControl?.Parent;
-
-                        while (p != null)
-                        {
-                            if (p == _subMenu)
-                            {
-                                break;
-                            }
-
-                            p = p.Parent;
-                        }
-
-                        _subMenu.IsVisible = p != null;
+                        _gump.OpenSubMenu(_subMenu);
                     }
                 }
             }
