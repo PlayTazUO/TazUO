@@ -13,69 +13,65 @@ public static class TooltipsTab
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ToolTips tooltipLang = lang.GetToolTips;
-        ModernOptionsGumpLanguage.TazUO tuoMiscLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.UseTooltip), tooltipLang.EnableToolTips),
+            new PropertyBinder(new Accessor<bool>(() => profile.UseTooltip), TazLang.Get("mog_tooltips_enabletooltips")),
             Option.Slider(
-                tooltipLang.ToolTipDelay,
+                TazLang.Get("mog_tooltips_tooltipdelay"),
                 0,
                 1000,
                 new Accessor<float>(() => profile.TooltipDelayBeforeDisplay, f => profile.TooltipDelayBeforeDisplay = (int)f),
-                search: new SearchMetadata(tooltipLang.ToolTipDelay, Keywords: [kw.Delay])
+                search: new SearchMetadata(TazLang.Get("mog_tooltips_tooltipdelay"), Keywords: [TazLang.Get("mog_kw_delay")])
             ),
             Option.Slider(
-                tooltipLang.ToolTipBG,
+                TazLang.Get("mog_tooltips_tooltipbg"),
                 0,
                 100,
                 new Accessor<float>(() => profile.TooltipBackgroundOpacity, f => profile.TooltipBackgroundOpacity = (int)f),
-                search: new SearchMetadata(tooltipLang.ToolTipBG, Keywords: [kw.Background, kw.Opacity])
+                search: new SearchMetadata(TazLang.Get("mog_tooltips_tooltipbg"), Keywords: [TazLang.Get("mog_kw_background"), TazLang.Get("mog_kw_opacity")])
             ),
             Option.HuePicker(
-                tooltipLang.ToolTipFont,
+                TazLang.Get("mog_tooltips_tooltipfont"),
                 new Accessor<ushort>(() => profile.TooltipTextHue),
-                search: new SearchMetadata(tooltipLang.ToolTipFont, Keywords: [kw.Font, kw.Color])
+                search: new SearchMetadata(TazLang.Get("mog_tooltips_tooltipfont"), Keywords: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_color")])
             ),
             Option.HuePicker(
-                tuoMiscLang.BackgroundHue,
+                TazLang.Get("mog_tazuo_backgroundhue"),
                 new Accessor<ushort>(() => profile.ToolTipBGHue),
-                search: new SearchMetadata(tuoMiscLang.BackgroundHue, Keywords: [kw.Background, kw.Color])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_backgroundhue"), Keywords: [TazLang.Get("mog_kw_background"), TazLang.Get("mog_kw_color")])
             ),
             Option.Checkbox(
-                tuoMiscLang.AlignTooltipsToTheLeftSide,
+                TazLang.Get("mog_tazuo_aligntooltipstotheleftside"),
                 new Accessor<bool>(() => profile.LeftAlignToolTips),
-                search: new SearchMetadata(tuoMiscLang.AlignTooltipsToTheLeftSide, Keywords: [kw.Align, kw.Left])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_aligntooltipstotheleftside"), Keywords: [TazLang.Get("mog_kw_align"), TazLang.Get("mog_kw_left")])
             ),
             Option.Checkbox(
-                tuoMiscLang.AlignMobileTooltipsToCenter,
+                TazLang.Get("mog_tazuo_alignmobiletooltipstocenter"),
                 new Accessor<bool>(() => profile.ForceCenterAlignTooltipMobiles),
-                search: new SearchMetadata(tuoMiscLang.AlignMobileTooltipsToCenter, Keywords: [kw.Align, kw.Mobile, kw.Center])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_alignmobiletooltipstocenter"), Keywords: [TazLang.Get("mog_kw_align"), TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_center")])
             ),
             Option.Checkbox(
-                tuoMiscLang.ForcedTooltips,
+                TazLang.Get("mog_tazuo_forcedtooltips"),
                 new Accessor<bool>(() => profile.ForceTooltipsOnOldClients),
-                search: new SearchMetadata(tuoMiscLang.ForcedTooltips, Keywords: [kw.Force])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_forcedtooltips"), Keywords: [TazLang.Get("mog_kw_force")])
             ),
             Option.InputField(
-                tuoMiscLang.HeaderFormatItemName,
+                TazLang.Get("mog_tazuo_headerformatitemname"),
                 new Accessor<string>(() => profile.TooltipHeaderFormat),
-                search: new SearchMetadata(tuoMiscLang.HeaderFormatItemName, Keywords: [kw.Format, kw.Name])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_headerformatitemname"), Keywords: [TazLang.Get("mog_kw_format"), TazLang.Get("mog_kw_name")])
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps
                 {
-                    LabelText = tooltipLang.LabelTooltipOverrides,
+                    LabelText = TazLang.Get("mog_tooltips_labeltooltipoverrides"),
                     LabelLink = "https://tazuo.org/wiki/tooltip-override/"
                 },
                 Option.Button(
-                    tooltipLang.LabelOpenOverridesConfig,
+                    TazLang.Get("mog_tooltips_labelopenoverridesconfig"),
                     () => UIManager.Add(new TooltipConfigGump()),
-                    search: new SearchMetadata(tooltipLang.LabelOpenOverridesConfig, Keywords: [kw.Override, kw.Config])
+                    search: new SearchMetadata(TazLang.Get("mog_tooltips_labelopenoverridesconfig"), Keywords: [TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_config")])
                 )
             )
-        ).WithSearch(new SearchMetadata(lang.LabelTooltips, Tags: [kw.Tooltip, kw.Hover]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_labeltooltips"), Tags: [TazLang.Get("mog_kw_tooltip"), TazLang.Get("mog_kw_hover")]));
     }
 }

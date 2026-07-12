@@ -28,9 +28,9 @@ internal class VersionHistory : NineSliceGump
 
         Positioner pos = new(13, 13);
 
-        Add(pos.Position(TextBox.GetOne(Language.Instance.TazuoVersionHistory, TrueTypeLoader.EMBEDDED_FONT, 30, Color.White, TextBox.RTLOptions.DefaultCentered(Width))));
+        Add(pos.Position(TextBox.GetOne(TazLang.Get("lang_tazuoversionhistory"), TrueTypeLoader.EMBEDDED_FONT, 30, Color.White, TextBox.RTLOptions.DefaultCentered(Width))));
 
-        Add(pos.Position(TextBox.GetOne(Language.Instance.CurrentVersion + CUOEnviroment.Version, TrueTypeLoader.EMBEDDED_FONT, 20, Color.Orange, TextBox.RTLOptions.DefaultCentered(Width))));
+        Add(pos.Position(TextBox.GetOne(TazLang.Get("lang_currentversion") + CUOEnviroment.Version, TrueTypeLoader.EMBEDDED_FONT, 20, Color.Orange, TextBox.RTLOptions.DefaultCentered(Width))));
 
         _scrollArea = new ScrollArea(0, 0, Width - 26, Height - (pos.LastY + pos.LastHeight) - 32, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways };
         _vBoxContainer = new VBoxContainer(_scrollArea.Width - _scrollArea.ScrollBarWidth());
@@ -42,8 +42,8 @@ internal class VersionHistory : NineSliceGump
 
         Add(pos.Position(_scrollArea));
 
-        Add(pos.PositionExact(new HttpClickableLink(Language.Instance.TazUOWiki, "https://github.com/PlayTazUO/TazUO/wiki", Color.Orange, 15), 25, Height - 20));
-        Add(pos.PositionExact(new HttpClickableLink(Language.Instance.TazUODiscord, "https://discord.gg/QvqzkB95G4", Color.Orange, 15), Width - 110, Height - 20));
+        Add(pos.PositionExact(new HttpClickableLink(TazLang.Get("lang_tazuowiki"), "https://github.com/PlayTazUO/TazUO/wiki", Color.Orange, 15), 25, Height - 20));
+        Add(pos.PositionExact(new HttpClickableLink(TazLang.Get("lang_tazuodiscord"), "https://discord.gg/QvqzkB95G4", Color.Orange, 15), Width - 110, Height - 20));
     }
 
     protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)

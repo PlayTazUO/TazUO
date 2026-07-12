@@ -15,72 +15,70 @@ internal static class GumpsTab
     private static OptionFragment GetOptionsContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.GumpsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.GumpsTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
             Option.Checkbox(
-                lang.AltForAnchorsGumps,
+                TazLang.Get("mog_gumpstab_altforanchorsgumps"),
                 new Accessor<bool>(() => profile.HoldDownKeyAltToCloseAnchored),
                 null,
-                new SearchMetadata(lang.AltForAnchorsGumps, Keywords: [kw.Anchor, kw.Alt, kw.Close])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_altforanchorsgumps"), Keywords: [TazLang.Get("mog_kw_anchor"), TazLang.Get("mog_kw_alt"), TazLang.Get("mog_kw_close")])
             ),
             Option.Checkbox(
-                lang.AltToMoveGumps,
+                TazLang.Get("mog_gumpstab_alttomovegumps"),
                 new Accessor<bool>(() => profile.HoldAltToMoveGumps),
                 null,
-                new SearchMetadata(lang.AltToMoveGumps, Keywords: [kw.Move, kw.Drag, kw.Alt])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_alttomovegumps"), Keywords: [TazLang.Get("mog_kw_move"), TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_alt")])
             ),
             Option.Checkbox(
-                lang.CloseEntireAnchorWithRClick,
+                TazLang.Get("mog_gumpstab_closeentireanchorwithrclick"),
                 new Accessor<bool>(() => profile.CloseAllAnchoredGumpsInGroupWithRightClick),
                 null,
-                new SearchMetadata(lang.CloseEntireAnchorWithRClick, Keywords: [kw.Anchor, kw.Right, kw.RightClick, kw.Group])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_closeentireanchorwithrclick"), Keywords: [TazLang.Get("mog_kw_anchor"), TazLang.Get("mog_kw_right"), TazLang.Get("mog_kw_rightclick"), TazLang.Get("mog_kw_group")])
             ),
             Option.Spacer(),
             Option.Checkbox(
-                lang.OriginalSkillsGump,
+                TazLang.Get("mog_gumpstab_originalskillsgump"),
                 new Accessor<bool>(() => profile.StandardSkillsGump),
                 null,
-                new SearchMetadata(lang.OriginalSkillsGump, Keywords: [kw.Skill, kw.Old, kw.Original])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_originalskillsgump"), Keywords: [TazLang.Get("mog_kw_skill"), TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_original")])
             ),
             Option.Checkbox(
-                lang.OldStatusGump,
+                TazLang.Get("mog_gumpstab_oldstatusgump"),
                 new Accessor<bool>(() => profile.UseOldStatusGump),
                 null,
-                new SearchMetadata(lang.OldStatusGump, Keywords: [kw.Old, kw.Status])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_oldstatusgump"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_status")])
             ),
             Option.Checkbox(
-                lang.PartyInviteGump,
+                TazLang.Get("mog_gumpstab_partyinvitegump"),
                 new Accessor<bool>(() => profile.PartyInviteGump),
                 null,
-                new SearchMetadata(lang.PartyInviteGump, Keywords: [kw.Party, kw.Invite])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_partyinvitegump"), Keywords: [TazLang.Get("mog_kw_party"), TazLang.Get("mog_kw_invite")])
             ),
             Option.Spacer(),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseImprovedBuffBar), lang.EnableImprovedBuffGump),
+                new PropertyBinder(new Accessor<bool>(() => profile.UseImprovedBuffBar), TazLang.Get("mog_gumpstab_enableimprovedbuffgump")),
                 Option.HuePicker(
-                    lang.BuffGumpHue,
+                    TazLang.Get("mog_gumpstab_buffgumphue"),
                     new Accessor<ushort>(() => profile.ImprovedBuffBarHue),
-                    new SearchMetadata(lang.BuffGumpHue, Keywords: [kw.Buff, kw.BuffBar, kw.Hue, kw.Color, kw.Colour])
+                    new SearchMetadata(TazLang.Get("mog_gumpstab_buffgumphue"), Keywords: [TazLang.Get("mog_kw_buff"), TazLang.Get("mog_kw_buffbar"), TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color"), TazLang.Get("mog_kw_colour")])
                 )
-            ).WithSearch(new SearchMetadata(Tags: [kw.Gump], Keywords: [kw.Buff, kw.BuffBar])),
+            ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_gump")], Keywords: [TazLang.Get("mog_kw_buff"), TazLang.Get("mog_kw_buffbar")])),
             Option.Spacer(),
             Option.Checkbox(
-                lang.EnableAdvancedShopGump,
+                TazLang.Get("mog_gumpstab_enableadvancedshopgump"),
                 new Accessor<bool>(() => profile.UseModernShopGump),
                 null,
-                new SearchMetadata(lang.EnableAdvancedShopGump, Keywords: [kw.Modern, kw.Advanced, kw.Shop, kw.Vendor])
+                new SearchMetadata(TazLang.Get("mog_gumpstab_enableadvancedshopgump"), Keywords: [TazLang.Get("mog_kw_modern"), TazLang.Get("mog_kw_advanced"), TazLang.Get("mog_kw_shop"), TazLang.Get("mog_kw_vendor")])
             ),
             Option.Checkbox(
-                lang.EnableGumpOpacityAdjustViaAltScroll,
+                TazLang.Get("mog_gumpstab_enablegumpopacityadjustviaaltscroll"),
                 new Accessor<bool>(() => profile.EnableAlphaScrollingOnGumps),
                 null,
                 new SearchMetadata(
-                    lang.EnableGumpOpacityAdjustViaAltScroll,
-                    Keywords: [kw.Alpha, kw.Opacity, kw.Transparency, kw.Scroll, kw.AltScroll]
+                    TazLang.Get("mog_gumpstab_enablegumpopacityadjustviaaltscroll"),
+                    Keywords: [TazLang.Get("mog_kw_alpha"), TazLang.Get("mog_kw_opacity"), TazLang.Get("mog_kw_transparency"), TazLang.Get("mog_kw_scroll"), TazLang.Get("mog_kw_altscroll")]
                 )
             )
-        ).WithSearch(new SearchMetadata(Tags: [kw.Gump, kw.Interface, kw.Window]));
+        ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_gump"), TazLang.Get("mog_kw_interface"), TazLang.Get("mog_kw_window")]));
     }
 }

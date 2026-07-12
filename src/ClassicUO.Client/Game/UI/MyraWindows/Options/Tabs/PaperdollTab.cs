@@ -11,59 +11,54 @@ public class PaperdollTab
     /// <summary>Returns the option fragment for modern-paperdoll enable/disable and styling</summary>
     internal static IOptionSource GetContent()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
         return OptionsUi.Vertical(
             GetModernPaperdollSection()
-        ).WithSearch(new SearchMetadata(lang.ButtonPaperdoll, [kw.Paperdoll, kw.Character, kw.Equipment]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonpaperdoll"), [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_equipment")]));
     }
 
     private static OptionFragment GetModernPaperdollSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = tuoLang.ModernPaperdoll, LabelLink = "https://tazuo.org/wiki/alternate-paperdoll/" },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_modernpaperdoll"), LabelLink = "https://tazuo.org/wiki/alternate-paperdoll/" },
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseModernPaperdoll), tuoLang.EnableModernPaperdoll),
+                new PropertyBinder(new Accessor<bool>(() => profile.UseModernPaperdoll), TazLang.Get("mog_tazuo_enablemodernpaperdoll")),
                 Option.HuePicker(
-                    tuoLang.PaperdollHue,
+                    TazLang.Get("mog_tazuo_paperdollhue"),
                     new Accessor<ushort>(() => profile.ModernPaperDollHue, newHue =>
                     {
                         profile.ModernPaperDollHue = newHue;
                         ModernPaperdoll.UpdateAllOptions();
                     }),
-                    new SearchMetadata(tuoLang.PaperdollHue, Keywords: [kw.Hue, kw.Color])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_paperdollhue"), Keywords: [TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
                 ),
                 Option.HuePicker(
-                    tuoLang.DurabilityBarHue,
+                    TazLang.Get("mog_tazuo_durabilitybarhue"),
                     new Accessor<ushort>(() => profile.ModernPaperDollDurabilityHue, newHue =>
                     {
                         profile.ModernPaperDollDurabilityHue = newHue;
                         ModernPaperdoll.UpdateAllOptions();
                     }),
-                    new SearchMetadata(tuoLang.DurabilityBarHue, Keywords: [kw.Durability, kw.Bar, kw.Hue, kw.Color])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_durabilitybarhue"), Keywords: [TazLang.Get("mog_kw_durability"), TazLang.Get("mog_kw_bar"), TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
                 ),
                 Option.Slider(
-                    tuoLang.ShowDurabilityBarBelow,
+                    TazLang.Get("mog_tazuo_showdurabilitybarbelow"),
                     1,
                     100,
                     new Accessor<float>(() => profile.ModernPaperDoll_DurabilityPercent, f => profile.ModernPaperDoll_DurabilityPercent = (int)f),
-                    search: new SearchMetadata(tuoLang.ShowDurabilityBarBelow, Keywords: [kw.Durability, kw.Bar, kw.Below])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_showdurabilitybarbelow"), Keywords: [TazLang.Get("mog_kw_durability"), TazLang.Get("mog_kw_bar"), TazLang.Get("mog_kw_below")])
                 ),
                 Option.Checkbox(
-                    tuoLang.PaperdollAnchor,
+                    TazLang.Get("mog_tazuo_paperdollanchor"),
                     new Accessor<bool>(() => profile.ModernPaperdollAnchorEnabled, newValue =>
                     {
                         profile.ModernPaperdollAnchorEnabled = newValue;
                         ModernPaperdoll.UpdateAllOptions();
                     }),
-                    search: new SearchMetadata(tuoLang.PaperdollAnchor, Keywords: [kw.Anchor])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_paperdollanchor"), Keywords: [TazLang.Get("mog_kw_anchor")])
                 )
-            ).WithSearch(new SearchMetadata(Tags: [kw.Paperdoll], Keywords: [kw.Enable]))
+            ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_paperdoll")], Keywords: [TazLang.Get("mog_kw_enable")]))
         );
     }
 }

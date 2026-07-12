@@ -15,53 +15,48 @@ internal static partial class CooldownBarsTab
     /// <summary>Returns the option fragment containing the cooldown-bars editor and enable toggle</summary>
     internal static IOptionSource GetContent()
     {
-        ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
         return OptionsUi.Vertical(
             GetSection()
-        ).WithSearch(new SearchMetadata(cdLang.CooldownBarsLabel, Tags: [kw.Cooldown, kw.Timer]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_cooldownstab_cooldownbarslabel"), Tags: [TazLang.Get("mog_kw_cooldown"), TazLang.Get("mog_kw_timer")]));
     }
 
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = cdLang.CustomCooldownBars },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_cooldownstab_customcooldownbars") },
             Option.IntegerInput(
-                cdLang.PositionX,
+                TazLang.Get("mog_cooldownstab_positionx"),
                 new Accessor<int>(() => profile.CoolDownX),
                 0,
                 8192,
-                search: new SearchMetadata(cdLang.PositionX, Keywords: [kw.Position, kw.X])
+                search: new SearchMetadata(TazLang.Get("mog_cooldownstab_positionx"), Keywords: [TazLang.Get("mog_kw_position"), TazLang.Get("mog_kw_x")])
             ),
             Option.IntegerInput(
-                cdLang.PositionY,
+                TazLang.Get("mog_cooldownstab_positiony"),
                 new Accessor<int>(() => profile.CoolDownY),
                 0,
                 8192,
-                search: new SearchMetadata(cdLang.PositionY, Keywords: [kw.Position, kw.Y])
+                search: new SearchMetadata(TazLang.Get("mog_cooldownstab_positiony"), Keywords: [TazLang.Get("mog_kw_position"), TazLang.Get("mog_kw_y")])
             ),
             Option.Checkbox(
-                cdLang.UseLastMovedBarPosition,
+                TazLang.Get("mog_cooldownstab_uselastmovedbarposition"),
                 new Accessor<bool>(() => profile.UseLastMovedCooldownPosition),
-                search: new SearchMetadata(cdLang.UseLastMovedBarPosition, Keywords: [kw.Last, kw.Moved, kw.Position])
+                search: new SearchMetadata(TazLang.Get("mog_cooldownstab_uselastmovedbarposition"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_moved"), TazLang.Get("mog_kw_position")])
             ),
-            Option.Custom(GetRuleEditor, new SearchMetadata(cdLang.Conditions, Keywords: [kw.Condition, kw.Rule]))
+            Option.Custom(GetRuleEditor, new SearchMetadata(TazLang.Get("mog_cooldownstab_conditions"), Keywords: [TazLang.Get("mog_kw_condition"), TazLang.Get("mog_kw_rule")]))
         );
     }
 
     private static Rulebase<CooldownBarRule> GetRuleEditor()
     {
-        ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
 
         var rb = new Rulebase<CooldownBarRule>
         {
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Top,
-            TitleLabel = { Text = cdLang.Conditions, HorizontalAlignment = HorizontalAlignment.Center }
+            TitleLabel = { Text = TazLang.Get("mog_cooldownstab_conditions"), HorizontalAlignment = HorizontalAlignment.Center }
         };
 
         rb.Columns.AddRange(GetRulebaseColumns());

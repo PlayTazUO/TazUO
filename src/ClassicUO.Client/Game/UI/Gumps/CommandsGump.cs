@@ -35,7 +35,7 @@ namespace ClassicUO.Game.UI.Gumps
             options.Width = Width;
 
             TextBox title;
-            Add(title = TextBox.GetOne(Language.Instance.CommandGump, TrueTypeLoader.EMBEDDED_FONT, 28, Color.Gold, options));
+            Add(title = TextBox.GetOne(TazLang.Get("lang_commandgump"), TrueTypeLoader.EMBEDDED_FONT, 28, Color.Gold, options));
             title.Y = 5;
 
             var scroll = new ScrollArea(10, 10 + title.Height, Width - 20, Height - title.Height - 40, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways };

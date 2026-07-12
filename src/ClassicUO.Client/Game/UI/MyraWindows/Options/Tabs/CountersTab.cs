@@ -13,9 +13,6 @@ public static class CountersTab
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.CheckBoxGroup(
             new PropertyBinder(
@@ -46,71 +43,62 @@ public static class CountersTab
                         );
                     }
                 ),
-                counterLang.EnableCounters
+                TazLang.Get("mog_counters_enablecounters")
             ),
             GetAbbreviationGroup(),
             GetHighlightGroup(),
             GetLayoutGroup()
-        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter, kw.Reagent], Keywords: [kw.Counter]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_counters_enablecounters"), Tags: [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_reagent")], Keywords: [TazLang.Get("mog_kw_counter")]));
     }
 
     private static OptionFragment GetAbbreviationGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount), counterLang.AbbreviatedValues),
+            new PropertyBinder(new Accessor<bool>(() => profile.CounterBarDisplayAbbreviatedAmount), TazLang.Get("mog_counters_abbreviatedvalues")),
             Option.IntegerInput(
-                counterLang.AbbreviateIfAmountExceeds,
+                TazLang.Get("mog_counters_abbreviateifamountexceeds"),
                 new Accessor<int>(() => profile.CounterBarAbbreviatedAmount),
                 min: 999,
                 max: 999999999,
-                search: new SearchMetadata(counterLang.AbbreviateIfAmountExceeds, Keywords: [kw.Abbreviate, kw.Amount, kw.Exceed])
+                search: new SearchMetadata(TazLang.Get("mog_counters_abbreviateifamountexceeds"), Keywords: [TazLang.Get("mog_kw_abbreviate"), TazLang.Get("mog_kw_amount"), TazLang.Get("mog_kw_exceed")])
             )
-        ).WithSearch(new SearchMetadata(counterLang.EnableCounters, Tags: [kw.Counter], Keywords: [kw.Abbreviate]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_counters_enablecounters"), Tags: [TazLang.Get("mog_kw_counter")], Keywords: [TazLang.Get("mog_kw_abbreviate")]));
     }
 
     private static OptionFragment GetHighlightGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = counterLang.SectionHighlightingLabel },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_counters_sectionhighlightinglabel") },
             Option.Checkbox(
-                counterLang.HighlightItemsOnUse,
+                TazLang.Get("mog_counters_highlightitemsonuse"),
                 new Accessor<bool>(() => profile.CounterBarHighlightOnUse),
-                search: new SearchMetadata(counterLang.HighlightItemsOnUse, Keywords: [kw.Highlight, kw.Item, kw.Use])
+                search: new SearchMetadata(TazLang.Get("mog_counters_highlightitemsonuse"), Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_use")])
             ),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.CounterBarHighlightOnAmount), counterLang.HighlightRedWhenAmountIsLow),
+                new PropertyBinder(new Accessor<bool>(() => profile.CounterBarHighlightOnAmount), TazLang.Get("mog_counters_highlightredwhenamountislow")),
                 Option.IntegerInput(
-                    counterLang.HighlightRedIfAmountIsBelow,
+                    TazLang.Get("mog_counters_highlightredifamountisbelow"),
                     new Accessor<int>(() => profile.CounterBarHighlightAmount),
                     min: 1,
                     max: 60000,
-                    search: new SearchMetadata(counterLang.HighlightRedIfAmountIsBelow, Keywords: [kw.Highlight, kw.Amount, kw.Below])
+                    search: new SearchMetadata(TazLang.Get("mog_counters_highlightredifamountisbelow"), Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_amount"), TazLang.Get("mog_kw_below")])
                 )
-            ).WithSearch(new SearchMetadata(counterLang.SectionHighlightingLabel, Tags: [kw.Counter], Keywords: [kw.Highlight]))
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_counters_sectionhighlightinglabel"), Tags: [TazLang.Get("mog_kw_counter")], Keywords: [TazLang.Get("mog_kw_highlight")]))
         );
     }
 
     private static OptionFragment GetLayoutGroup()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.Counters counterLang = lang.GetCounters;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = counterLang.CounterLayout },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_counters_counterlayout") },
             Option.Slider(
-                counterLang.GridSize,
+                TazLang.Get("mog_counters_gridsize"),
                 30,
                 80,
                 new Accessor<float>(() => profile.CounterBarCellSize, v =>
@@ -123,10 +111,10 @@ public static class CountersTab
                             profile.CounterBarColumns
                         );
                 }),
-                search: new SearchMetadata(counterLang.GridSize, Keywords: [kw.Grid, kw.Size])
+                search: new SearchMetadata(TazLang.Get("mog_counters_gridsize"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_size")])
             ),
             Option.IntegerInput(
-                counterLang.Rows,
+                TazLang.Get("mog_counters_rows"),
                 new Accessor<int>(() => profile.CounterBarRows, v =>
                 {
                     profile.CounterBarRows = v;
@@ -139,10 +127,10 @@ public static class CountersTab
                 }),
                 min: 1,
                 max: 30,
-                search: new SearchMetadata(counterLang.Rows, Keywords: [kw.Row])
+                search: new SearchMetadata(TazLang.Get("mog_counters_rows"), Keywords: [TazLang.Get("mog_kw_row")])
             ),
             Option.IntegerInput(
-                counterLang.Columns,
+                TazLang.Get("mog_counters_columns"),
                 new Accessor<int>(() => profile.CounterBarColumns, v =>
                 {
                     profile.CounterBarColumns = v;
@@ -155,7 +143,7 @@ public static class CountersTab
                 }),
                 min: 1,
                 max: 30,
-                search: new SearchMetadata(counterLang.Columns, Keywords: [kw.Column])
+                search: new SearchMetadata(TazLang.Get("mog_counters_columns"), Keywords: [TazLang.Get("mog_kw_column")])
             )
         );
     }

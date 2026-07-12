@@ -18,9 +18,6 @@ internal static class SpeechTab
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         string disableSysChatWhileJournal = TazLang.Get("disablesystemchat_journalopen", "Disable system chat while Resizable Journal is open");
 
@@ -28,24 +25,24 @@ internal static class SpeechTab
             GetDelaySection(),
             OptionsUi.Vertical(
                 Option.Checkbox(
-                    speechLang.ChatGradient,
+                    TazLang.Get("mog_chattab_speech_chatgradient"),
                     new Accessor<bool>(() => profile.HideChatGradient),
-                    search: new SearchMetadata(speechLang.ChatGradient)
+                    search: new SearchMetadata(TazLang.Get("mog_chattab_speech_chatgradient"))
                 ),
                 Option.Checkbox(
-                    speechLang.HideGuildChat,
+                    TazLang.Get("mog_chattab_speech_hideguildchat"),
                     new Accessor<bool>(() => profile.IgnoreGuildMessages),
-                    search: new SearchMetadata(speechLang.HideGuildChat)
+                    search: new SearchMetadata(TazLang.Get("mog_chattab_speech_hideguildchat"))
                 ),
                 Option.Checkbox(
-                    speechLang.HideAllianceChat,
+                    TazLang.Get("mog_chattab_speech_hidealliancechat"),
                     new Accessor<bool>(() => profile.IgnoreAllianceMessages),
-                    search: new SearchMetadata(speechLang.HideAllianceChat)
+                    search: new SearchMetadata(TazLang.Get("mog_chattab_speech_hidealliancechat"))
                 ),
                 Option.Checkbox(
-                    speechLang.DisableSystemChat,
+                    TazLang.Get("mog_chattab_speech_disablesystemchat"),
                     new Accessor<bool>(() => profile.DisableSystemChat),
-                    search: new SearchMetadata(speechLang.DisableSystemChat)
+                    search: new SearchMetadata(TazLang.Get("mog_chattab_speech_disablesystemchat"))
                 ),
                 Option.Checkbox(
                     disableSysChatWhileJournal,
@@ -59,119 +56,107 @@ internal static class SpeechTab
                 GetColorSection(),
                 GetOverheadSuppressionSection()
             )
-        ).WithSearch(new SearchMetadata(speechLang.Label, [kw.Speech, kw.Chat, kw.Text]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_speech_label"), [TazLang.Get("mog_kw_speech"), TazLang.Get("mog_kw_chat"), TazLang.Get("mog_kw_text")]));
     }
 
     private static OptionFragment GetDelaySection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ScaleSpeechDelay), speechLang.ScaleSpeechDelay),
+            new PropertyBinder(new Accessor<bool>(() => profile.ScaleSpeechDelay), TazLang.Get("mog_chattab_speech_scalespeechdelay")),
             Option.Slider(
-                speechLang.SpeechDelay,
+                TazLang.Get("mog_chattab_speech_speechdelay"),
                 0,
                 1000,
                 new Accessor<int>(() => profile.SpeechDelay),
-                search: new SearchMetadata(speechLang.SpeechDelay)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_speech_speechdelay"))
             )
-        ).WithSearch(new SearchMetadata(speechLang.ScaleSpeechDelay));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_speech_scalespeechdelay")));
     }
 
     private static OptionFragment GetActivationSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.ActivateChatAfterEnter), speechLang.ChatEnterActivation),
+            new PropertyBinder(new Accessor<bool>(() => profile.ActivateChatAfterEnter), TazLang.Get("mog_chattab_speech_chatenteractivation")),
             Option.Checkbox(
-                speechLang.ChatEnterSpecial,
+                TazLang.Get("mog_chattab_speech_chatenterspecial"),
                 new Accessor<bool>(() => profile.ActivateChatAdditionalButtons),
-                search: new SearchMetadata(speechLang.ChatEnterSpecial)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_speech_chatenterspecial"))
             ),
             Option.Checkbox(
-                speechLang.ShiftEnterChat,
+                TazLang.Get("mog_chattab_speech_shiftenterchat"),
                 new Accessor<bool>(() => profile.ActivateChatShiftEnterSupport),
-                search: new SearchMetadata(speechLang.ShiftEnterChat)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_speech_shiftenterchat"))
             )
-        ).WithSearch(new SearchMetadata(speechLang.ChatEnterActivation));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_speech_chatenteractivation")));
     }
 
     private static OptionFragment GetColorSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = speechLang.ColorsSection },
-            Option.HuePicker(speechLang.SpeechColor, new Accessor<ushort>(() => profile.SpeechHue, h => profile.SpeechHue = h),
-                new SearchMetadata(speechLang.SpeechColor)),
+            new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_speech_colorssection") },
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_speechcolor"), new Accessor<ushort>(() => profile.SpeechHue, h => profile.SpeechHue = h),
+                new SearchMetadata(TazLang.Get("mog_chattab_speech_speechcolor"))),
             Option.HuePicker(
-                speechLang.YellColor,
+                TazLang.Get("mog_chattab_speech_yellcolor"),
                 new Accessor<ushort>(() => profile.YellHue, h => profile.YellHue = h),
-                new SearchMetadata(speechLang.YellColor)
+                new SearchMetadata(TazLang.Get("mog_chattab_speech_yellcolor"))
             ),
-            Option.HuePicker(speechLang.PartyColor, new Accessor<ushort>(() => profile.PartyMessageHue), new SearchMetadata(speechLang.PartyColor)),
-            Option.HuePicker(speechLang.AllianceColor, new Accessor<ushort>(() => profile.AllyMessageHue), new SearchMetadata(speechLang.AllianceColor)),
-            Option.HuePicker(speechLang.EmoteColor, new Accessor<ushort>(() => profile.EmoteHue), new SearchMetadata(speechLang.EmoteColor)),
-            Option.HuePicker(speechLang.WhisperColor, new Accessor<ushort>(() => profile.WhisperHue), new SearchMetadata(speechLang.WhisperColor)),
-            Option.HuePicker(speechLang.GuildColor, new Accessor<ushort>(() => profile.GuildMessageHue), new SearchMetadata(speechLang.GuildColor)),
-            Option.HuePicker(speechLang.CharColor, new Accessor<ushort>(() => profile.ChatMessageHue), new SearchMetadata(speechLang.CharColor))
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_partycolor"), new Accessor<ushort>(() => profile.PartyMessageHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_partycolor"))),
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_alliancecolor"), new Accessor<ushort>(() => profile.AllyMessageHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_alliancecolor"))),
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_emotecolor"), new Accessor<ushort>(() => profile.EmoteHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_emotecolor"))),
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_whispercolor"), new Accessor<ushort>(() => profile.WhisperHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_whispercolor"))),
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_guildcolor"), new Accessor<ushort>(() => profile.GuildMessageHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_guildcolor"))),
+            Option.HuePicker(TazLang.Get("mog_chattab_speech_charcolor"), new Accessor<ushort>(() => profile.ChatMessageHue), new SearchMetadata(TazLang.Get("mog_chattab_speech_charcolor")))
         );
     }
 
     private static OptionFragment GetOverheadDisplaySection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         string hideMacroTargetMessage = TazLang.Get("hidemacrotargetmessage", "Hide macro target message");
         string hideMacroTargetMessageTooltip = TazLang.Get("hidemacrotargetmessage_tooltip", "Hide the \"Target: name\" message shown overhead when a macro sets a target");
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = speechLang.OverheadText },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_speech_overheadtext") },
             Option.Checkbox(
-                tuoLang.DisplayPartyChatOverPlayerHeads,
+                TazLang.Get("mog_tazuo_displaypartychatoverplayerheads"),
                 new Accessor<bool>(() => profile.DisplayPartyChatOverhead),
-                tuoLang.TooltipPartyChat,
-                new SearchMetadata(tuoLang.DisplayPartyChatOverPlayerHeads, Keywords: [kw.Party])
+                TazLang.Get("mog_tazuo_tooltippartychat"),
+                new SearchMetadata(TazLang.Get("mog_tazuo_displaypartychatoverplayerheads"), Keywords: [TazLang.Get("mog_kw_party")])
             ),
             Option.Slider(
-                tuoLang.OverheadTextWidth,
+                TazLang.Get("mog_tazuo_overheadtextwidth"),
                 0,
                 600,
                 new Accessor<int>(() => profile.OverheadChatWidth)
             ),
             Option.Checkbox(
-                tuoLang.DisableMouseInteractionsForOverheadText,
+                TazLang.Get("mog_tazuo_disablemouseinteractionsforoverheadtext"),
                 new Accessor<bool>(() => profile.DisableMouseInteractionOverheadText),
-                search: new SearchMetadata(tuoLang.DisableMouseInteractionsForOverheadText, Keywords: [kw.Mouse])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_disablemouseinteractionsforoverheadtext"), Keywords: [TazLang.Get("mog_kw_mouse")])
             ),
             Option.Checkbox(
                 hideMacroTargetMessage,
                 new Accessor<bool>(() => profile.HideMacroTargetMessage),
                 hideMacroTargetMessageTooltip,
-                new SearchMetadata(hideMacroTargetMessage, Keywords: [kw.Target])
+                new SearchMetadata(hideMacroTargetMessage, Keywords: [TazLang.Get("mog_kw_target")])
             )
         ).AsSearchGroup()
-         .WithSearch(new SearchMetadata(Keywords: [kw.Overhead]));
+         .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_overhead")]));
     }
 
     private static OptionFragment GetOverheadSuppressionSection()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = lang.ChatTab.Speech;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = speechLang.DisableOverheadMessages },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_speech_disableoverheadmessages") },
             OptionsUi.Horizontal(CreateMessageTypeCheckboxes())
         );
     }
@@ -220,7 +205,6 @@ internal static class SpeechTab
 
     private static string LocalizeMessageType(MessageType mType)
     {
-        ModernOptionsGumpLanguage.ChatTabLang.SpeechSection speechLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.Speech;
         string mTypeString = Enum.GetName(mType);
         string tazLangLoc = TazLang.Get(mTypeString);
 
@@ -229,23 +213,23 @@ internal static class SpeechTab
 
         return mTypeString switch
         {
-            "Regular" => speechLang.MessageTypeRegular,
-            "System" => speechLang.MessageTypeSystem,
-            "Emote" => speechLang.MessageTypeEmote,
-            "Limit3Spell" => speechLang.MessageTypeLimit3Spell,
-            "Label" => speechLang.MessageTypeLabel,
-            "Focus" => speechLang.MessageTypeFocus,
-            "Whisper" => speechLang.MessageTypeWhisper,
-            "Yell" => speechLang.MessageTypeYell,
-            "Spell" => speechLang.MessageTypeSpell,
-            "Guild" => speechLang.MessageTypeGuild,
-            "Alliance" => speechLang.MessageTypeAlliance,
-            "Command" => speechLang.MessageTypeCommand,
-            "Encoded" => speechLang.MessageTypeEncoded,
-            "ChatSystem" => speechLang.MessageTypeChatSystem,
-            "Damage" => speechLang.MessageTypeDamage,
-            "Discord" => speechLang.MessageTypeDiscord,
-            "Party" => speechLang.MessageTypeParty,
+            "Regular" => TazLang.Get("mog_chattab_speech_messagetyperegular"),
+            "System" => TazLang.Get("mog_chattab_speech_messagetypesystem"),
+            "Emote" => TazLang.Get("mog_chattab_speech_messagetypeemote"),
+            "Limit3Spell" => TazLang.Get("mog_chattab_speech_messagetypelimit3spell"),
+            "Label" => TazLang.Get("mog_chattab_speech_messagetypelabel"),
+            "Focus" => TazLang.Get("mog_chattab_speech_messagetypefocus"),
+            "Whisper" => TazLang.Get("mog_chattab_speech_messagetypewhisper"),
+            "Yell" => TazLang.Get("mog_chattab_speech_messagetypeyell"),
+            "Spell" => TazLang.Get("mog_chattab_speech_messagetypespell"),
+            "Guild" => TazLang.Get("mog_chattab_speech_messagetypeguild"),
+            "Alliance" => TazLang.Get("mog_chattab_speech_messagetypealliance"),
+            "Command" => TazLang.Get("mog_chattab_speech_messagetypecommand"),
+            "Encoded" => TazLang.Get("mog_chattab_speech_messagetypeencoded"),
+            "ChatSystem" => TazLang.Get("mog_chattab_speech_messagetypechatsystem"),
+            "Damage" => TazLang.Get("mog_chattab_speech_messagetypedamage"),
+            "Discord" => TazLang.Get("mog_chattab_speech_messagetypediscord"),
+            "Party" => TazLang.Get("mog_chattab_speech_messagetypeparty"),
             _ => mType.ToString()
         };
     }

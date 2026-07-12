@@ -98,7 +98,7 @@ public class HotkeyInput : Panel
 
         _input = new TextBox
         {
-            Tooltip = Language.Instance.GetModernOptionsGumpLanguage.GetNamePlates.OptionsTab.HotkeyInputTooltip,
+            Tooltip = TazLang.Get("mog_nameplates_optionstab_hotkeyinputtooltip"),
             Width = 150,
             Cursor = null,
             Selection = null,
@@ -109,7 +109,7 @@ public class HotkeyInput : Panel
         _defaultTextColor = _input.TextColor;
 
         panel.Widgets.Add(_input);
-        panel.Widgets.Add(new MyraButton(Language.Instance.GetModernOptionsGumpLanguage.Kw.Clear, Clear));
+        panel.Widgets.Add(new MyraButton(TazLang.Get("mog_kw_clear"), Clear));
 
         _selection = existingSelection ?? new HotkeyBinding();
         UpdateText();
