@@ -82,6 +82,29 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public void Default_Profile_Snapshot_Copies_Char_Settings_Except_Migration_Flag()
+        {
+            using var settings = new SQLSettingsManager();
+
+            settings.Set(SettingsScope.Char, "def_sound", 42);
+            settings.Set(SettingsScope.Char, "def_name", "hello");
+            // The migration bookkeeping flag must NOT be carried into the default snapshot.
+            settings.Set(SettingsScope.Char, ClassicUO.Game.Constants.SqlSettings.PROFILE_JSON_MIGRATED, true);
+
+            settings.SaveCharScopeAsDefaultProfile();
+
+            settings.HasDefaultProfile().Should().BeTrue();
+            settings.Get(SettingsScope.DefaultProfile, "def_sound").Should().Be("42");
+            settings.Get(SettingsScope.DefaultProfile, "def_name").Should().Be("hello");
+            settings.Get(SettingsScope.DefaultProfile, ClassicUO.Game.Constants.SqlSettings.PROFILE_JSON_MIGRATED)
+                .Should().BeEmpty();
+
+            // Seeding copies the snapshot into the Char scope.
+            settings.SeedCharScopeFromDefaultProfile();
+            settings.Get<int>(SettingsScope.Char, "def_sound").Should().Be(42);
+        }
+
+        [Fact]
         public void Missing_Value_Returns_Default()
         {
             using var settings = new SQLSettingsManager();

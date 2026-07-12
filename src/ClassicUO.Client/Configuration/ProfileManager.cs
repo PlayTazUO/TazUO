@@ -103,7 +103,15 @@ namespace ClassicUO.Configuration
             Client.Game?.SetVSync(CurrentProfile.EnableVSync);
         }
 
-        public static void SetProfileAsDefault(Profile profile) => profile.SaveAs(RootPath, "default.json");
+        public static void SetProfileAsDefault(Profile profile)
+        {
+            // JSON-backed settings (points, lists, etc.) live in default.json...
+            profile.SaveAs(RootPath, "default.json");
+
+            // ...and the SQLite-backed scalar/enum settings are snapshotted into the default-profile scope so
+            // new characters are seeded from them too (see Profile.LoadCharScopedSettings).
+            Client.Settings?.SaveCharScopeAsDefaultProfile();
+        }
 
         public static Profile NewFromDefault() => ConfigurationResolver.Load<Profile>(Path.Combine(RootPath, "default.json"), ProfileJsonContext.DefaultToUse.Profile) ?? new Profile();
 

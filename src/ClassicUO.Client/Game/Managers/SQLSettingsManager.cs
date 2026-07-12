@@ -206,6 +206,8 @@ namespace ClassicUO.Game.Managers
                     return ProfileManager.CurrentProfile?.ServerName ?? "SERVER";
                 case SettingsScope.Global:
                     return "GLOBAL";
+                case SettingsScope.DefaultProfile:
+                    return "DEFAULT_PROFILE";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(scope), scope, null);
             }
@@ -459,6 +461,37 @@ namespace ClassicUO.Game.Managers
         public Dictionary<string, string> GetAll(SettingsScope scope) => GetAllAsync(scope).ConfigureAwait(false).GetAwaiter().GetResult();
 
         /// <summary>
+        /// Snapshots the current character's settings into the <see cref="SettingsScope.DefaultProfile"/> scope,
+        /// so brand-new characters can be seeded from them. Mirrors saving a default.json for JSON settings.
+        /// The migration bookkeeping flag is intentionally excluded.
+        /// </summary>
+        public void SaveCharScopeAsDefaultProfile()
+        {
+            foreach (KeyValuePair<string, string> kv in GetAll(SettingsScope.Char))
+            {
+                if (kv.Key == Constants.SqlSettings.PROFILE_JSON_MIGRATED)
+                    continue;
+
+                Set(SettingsScope.DefaultProfile, kv.Key, kv.Value);
+            }
+        }
+
+        /// <summary>
+        /// Returns true when a default-profile snapshot has been saved.
+        /// </summary>
+        public bool HasDefaultProfile() => GetAll(SettingsScope.DefaultProfile).Count > 0;
+
+        /// <summary>
+        /// Copies the default-profile snapshot into the current character's Char scope. Intended for a
+        /// brand-new character that has no stored settings yet.
+        /// </summary>
+        public void SeedCharScopeFromDefaultProfile()
+        {
+            foreach (KeyValuePair<string, string> kv in GetAll(SettingsScope.DefaultProfile))
+                Set(SettingsScope.Char, kv.Key, kv.Value);
+        }
+
+        /// <summary>
         /// Releases resources used by the SQLSettingsManager.
         /// </summary>
         public void Dispose()
@@ -485,5 +518,9 @@ public enum SettingsScope
     Char,
     Account,
     Server,
-    Global
+    Global,
+
+    // A per-installation snapshot of Char-scoped settings used to seed brand-new characters,
+    // mirroring how default.json seeds new profiles. Not tied to any logged-in character.
+    DefaultProfile
 }

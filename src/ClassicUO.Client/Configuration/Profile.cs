@@ -1854,6 +1854,15 @@ namespace ClassicUO.Configuration
             // Load current Char-scoped values synchronously (single query) so every field is populated before
             // the game scene builds its gumps from these values.
             Dictionary<string, string> kvp = Client.Settings.GetAll(SettingsScope.Char);
+
+            // Brand-new character with no stored settings: seed from the saved default-profile snapshot (the
+            // SQLite equivalent of default.json) if one exists, then reload.
+            if (kvp.Count == 0 && Client.Settings.HasDefaultProfile())
+            {
+                Client.Settings.SeedCharScopeFromDefaultProfile();
+                kvp = Client.Settings.GetAll(SettingsScope.Char);
+            }
+
             LoadGeneratedCharSqlSettings(kvp);
 
             // One-time migration: import existing profile.json values for the newly-migrated settings. Runs
