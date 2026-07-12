@@ -95,6 +95,13 @@ public static class AutoLootAgentTabContent
         root.Widgets.Add(new MyraSpacer(15, 5));
         root.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_title", "Auto Skinning"), MyraLabel.TextStyle.H2));
 
+        var skinGraphicsBox = new MyraInputBox
+        {
+            Text = profile.AutoSkinningKnifeGraphics,
+            MinWidth = 250,
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
+        };
+
         var skinRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
         skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
             profile.EnableAutoSkinning,
@@ -106,6 +113,18 @@ public static class AutoLootAgentTabContent
             b => profile.AutoSkinningHumanCorpses = b,
             TazLang.Get("autoskinning_humancorpses", "Skin Human Corpses"),
             TazLang.Get("autoskinning_humancorpses_tooltip", "Also auto skin human/humanoid corpses.")));
+        skinRow.Widgets.Add(new MyraButton(TazLang.Get("autoskinning_targetweapon", "Target Skinning Weapon"), () =>
+        {
+            World.Instance.TargetManager.SetTargeting(targeted =>
+            {
+                if (targeted is Entity entity && SerialHelper.IsItem(entity))
+                {
+                    string appended = AppendSkinningGraphic(profile.AutoSkinningKnifeGraphics, entity.Graphic);
+                    profile.AutoSkinningKnifeGraphics = appended;
+                    skinGraphicsBox.Text = appended;
+                }
+            });
+        }) { Tooltip = TazLang.Get("autoskinning_targetweapon_tooltip", "Target a weapon to add its graphic to the skinning knife list.") });
         root.Widgets.Add(skinRow);
 
         var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
@@ -114,12 +133,6 @@ public static class AutoLootAgentTabContent
             Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
             VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
         });
-        var skinGraphicsBox = new MyraInputBox
-        {
-            Text = profile.AutoSkinningKnifeGraphics,
-            MinWidth = 250,
-            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
-        };
         skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
         skinGraphicsRow.Widgets.Add(skinGraphicsBox);
         root.Widgets.Add(skinGraphicsRow);
@@ -438,5 +451,21 @@ public static class AutoLootAgentTabContent
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = entriesPanel });
 
         return root;
+    }
+
+    /// <summary>
+    /// Appends <paramref name="graphic"/> (formatted as hex) to a ';'-separated skinning graphic
+    /// list, skipping it if an equal value is already present.
+    /// </summary>
+    private static string AppendSkinningGraphic(string current, ushort graphic)
+    {
+        current ??= string.Empty;
+
+        foreach (string part in current.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            if (StringHelper.TryParseInt(part, out int existing) && existing == graphic)
+                return current;
+
+        string entry = $"0x{graphic:X4}";
+        return string.IsNullOrWhiteSpace(current) ? entry : $"{current.TrimEnd(';', ' ')};{entry}";
     }
 }
