@@ -130,7 +130,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             int negativeSearchY = searchY + 20;
-            Add(new AlphaBlendControl() { Y = negativeSearchY, Width = 150, Height = 20, Hue = 0x0021 });
+            Add(new AlphaBlendControl() { Y = negativeSearchY, Width = 150, Height = 20, Hue = 0x0481 });
             Add(negativeSearchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = negativeSearchY, Width = 134, Height = 20 });
             negativeSearchBox.Text = NameOverHeadManager.NegativeSearch;
             negativeSearchBox.SetTooltip("Hide nameplates matching this text (opposite of search).\nSeparate multiple terms with ';'");
