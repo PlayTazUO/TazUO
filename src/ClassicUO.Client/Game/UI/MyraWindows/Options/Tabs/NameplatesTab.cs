@@ -107,8 +107,41 @@ public static class NameplatesTab
                     )
                 ]
             ),
-            settingsPanel
+            settingsPanel,
+            GetSearchFieldsPanel(profile)
         );
+    }
+
+    /// <summary>
+    ///     Builds the search / negative-search input rows for a nameplate profile. The values are stored on
+    ///     the profile so they persist per nameplate option (see <see cref="NameOverheadOption.Search" />).
+    /// </summary>
+    private static WrapPanel GetSearchFieldsPanel(NameOverheadOption profile)
+    {
+        WrapPanel searchRow = MyraInputBox.LabeledHorizontalStackPanel(
+            "Search:",
+            out MyraInputBox searchInput,
+            width: 200,
+            text: profile.Search,
+            hintText: "Only show matching",
+            tooltip: "Only show nameplates matching this text.\nSeparate multiple terms with ';'"
+        );
+        // Commit on focus loss so the editor isn't rebuilt on every keystroke (which would drop focus).
+        searchInput.LostFocus = () => profile.Search = searchInput.Text;
+
+        WrapPanel negativeSearchRow = MyraInputBox.LabeledHorizontalStackPanel(
+            "Hide search:",
+            out MyraInputBox negativeSearchInput,
+            width: 200,
+            text: profile.NegativeSearch,
+            hintText: "Hide matching",
+            tooltip: "Hide nameplates matching this text (opposite of search).\nSeparate multiple terms with ';'"
+        );
+        negativeSearchInput.LostFocus = () => profile.NegativeSearch = negativeSearchInput.Text;
+
+        WrapPanel panel = OptionTabCommons.StyledVerticalWrapPanel(searchRow, negativeSearchRow);
+        panel.Margin = new Thickness(0, MyraStyle.STANDARD_SPACING, 0, 0);
+        return panel;
     }
 
     private static void OnProfileHotkeyChanged(NameOverheadOption profile, SelectionChangedEventArgs e)
