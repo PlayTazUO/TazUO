@@ -14,7 +14,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.NameOverHeadHandler;
 
-        private const int OPTIONS_TOP_OFFSET = 64;
+        private const int OPTIONS_TOP_OFFSET = 66;
 
         private readonly List<RadioButton> _overheadButtons = new List<RadioButton>();
         private Control _alpha;
@@ -129,8 +129,8 @@ namespace ClassicUO.Game.UI.Gumps
                 UIManager.KeyboardFocusControl = searchBox; //Return focus to the input in case clicking the X moved it
             };
 
-            int negativeSearchY = searchY + 20;
-            Add(new AlphaBlendControl() { Y = negativeSearchY, Width = 150, Height = 20, Hue = 0x0481 });
+            int negativeSearchY = searchY + 22;
+            Add(new AlphaBlendControl(0.4f) { Y = negativeSearchY, Width = 150, Height = 20, Hue = 0x0481 });
             Add(negativeSearchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = negativeSearchY, Width = 134, Height = 20 });
             negativeSearchBox.Text = NameOverHeadManager.NegativeSearch;
             negativeSearchBox.SetTooltip("Hide nameplates matching this text (opposite of search).\nSeparate multiple terms with ';'");
