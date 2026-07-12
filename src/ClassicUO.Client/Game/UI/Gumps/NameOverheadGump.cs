@@ -839,24 +839,17 @@ namespace ClassicUO.Game.UI.Gumps
                     return false;
                 }
 
-                if (NameOverHeadManager.Search.NotNullNotEmpty())
+                if (NameOverHeadManager.HasSearchFilter)
                 {
-                    string sText = NameOverHeadManager.Search;
-                    if (m.Name == null || !m.Name.ContainsIgnoreCase(sText))
+                    string oplName = null;
+                    if (World.OPL.TryGetNameAndData(m.Serial, out string name, out string _))
+                        oplName = name;
+
+                    if (NameOverHeadManager.MatchesNegativeSearch(m.Name, oplName)
+                        || !NameOverHeadManager.MatchesSearch(m.Name, oplName))
                     {
-                        if (World.OPL.TryGetNameAndData(m.Serial, out string name, out string data))
-                        {
-                            if (name != null && !name.ContainsIgnoreCase(sText))
-                            {
-                                IsVisible = false;
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            IsVisible = false;
-                            return true;
-                        }
+                        IsVisible = false;
+                        return true;
                     }
                 }
 
@@ -925,24 +918,20 @@ namespace ClassicUO.Game.UI.Gumps
 
                 nameplateEntity = item;
 
-                if (!string.IsNullOrEmpty(NameOverHeadManager.Search))
+                if (NameOverHeadManager.HasSearchFilter)
                 {
-                    string sText = NameOverHeadManager.Search.ToLower();
-                    if (item.Name == null || !item.Name.ToLower().Contains(sText))// && (!item.ItemData.Name?.ToLower().Contains(sText)))
+                    string oplName = null, oplData = null;
+                    if (World.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
                     {
-                        if (World.OPL.TryGetNameAndData(item.Serial, out string name, out string data))
-                        {
-                            if ((data != null && !data.ToLower().Contains(sText)) && (name != null && !name.ToLower().Contains(sText)))
-                            {
-                                IsVisible = false;
-                                return true;
-                            }
-                        }
-                        else
-                        {
-                            IsVisible = false;
-                            return true;
-                        }
+                        oplName = name;
+                        oplData = data;
+                    }
+
+                    if (NameOverHeadManager.MatchesNegativeSearch(item.Name, oplName, oplData)
+                        || !NameOverHeadManager.MatchesSearch(item.Name, oplName, oplData))
+                    {
+                        IsVisible = false;
+                        return true;
                     }
                 }
 

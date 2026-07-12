@@ -90,6 +90,48 @@ namespace ClassicUO.Game.Managers
 
         public static string Search { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Nameplates whose text matches this filter are hidden (the opposite of <see cref="Search"/>).
+        /// </summary>
+        public static string NegativeSearch { get; set; } = string.Empty;
+
+        /// <summary>True when either the positive or negative search filter is active.</summary>
+        public static bool HasSearchFilter => !string.IsNullOrEmpty(Search) || !string.IsNullOrEmpty(NegativeSearch);
+
+        /// <summary>
+        /// Returns true when any of the supplied text pieces matches the positive <see cref="Search"/> filter.
+        /// An empty filter matches everything. Multiple terms may be separated with ';' and are OR'd together.
+        /// </summary>
+        public static bool MatchesSearch(params string[] textPieces) => MatchesFilter(Search, textPieces, matchWhenEmpty: true);
+
+        /// <summary>
+        /// Returns true when any of the supplied text pieces matches the <see cref="NegativeSearch"/> filter.
+        /// An empty filter matches nothing. Multiple terms may be separated with ';' and are OR'd together.
+        /// </summary>
+        public static bool MatchesNegativeSearch(params string[] textPieces) => MatchesFilter(NegativeSearch, textPieces, matchWhenEmpty: false);
+
+        private static bool MatchesFilter(string filter, string[] textPieces, bool matchWhenEmpty)
+        {
+            if (string.IsNullOrEmpty(filter))
+                return matchWhenEmpty;
+
+            string[] terms = filter.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (terms.Length == 0)
+                return matchWhenEmpty;
+
+            foreach (string term in terms)
+            {
+                foreach (string piece in textPieces)
+                {
+                    if (piece != null && piece.ContainsIgnoreCase(term))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         public static bool IsTemporarilyShowing { get; private set; }
         public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || HotKeys.IsPressed(HotKeyRegistrar.ShowNameplatesId);
 

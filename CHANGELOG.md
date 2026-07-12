@@ -65,6 +65,8 @@ All notable changes to TazUO will be recorded here.
 * Added a "Button Editor" button to the new options window's Macros tab, giving access to the macro button editor (label, scale, color, graphic) - [P.R 685](https://github.com/PlayTazUO/TazUO/pull/685) ([bittiez](https://github.com/bittiez))
 * Added an option to hide the "Target: name" overhead message shown when a macro sets a target - [P.R 687](https://github.com/PlayTazUO/TazUO/pull/687) ([bittiez](https://github.com/bittiez))
 * Added a "Borderless window (no title bar)" video option that removes the window border while keeping a normal windowed size, separate from fullscreen-borderless - [P.R 680](https://github.com/PlayTazUO/TazUO/pull/680) ([bittiez](https://github.com/bittiez))
+* The Open macro type's gump list in the Macros tab is now sorted alphabetically and spaced after capitals for legibility, matching the main macro list - [P.R 688](https://github.com/PlayTazUO/TazUO/pull/688) ([bittiez](https://github.com/bittiez))
+* Added a negative search field to the nameplate manager that hides matching nameplates (the opposite of search); both search fields now accept multiple terms separated by `;` - [P.R 691](https://github.com/PlayTazUO/TazUO/pull/691) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
@@ -122,6 +124,7 @@ All notable changes to TazUO will be recorded here.
 * Show a suggested fix for the ArgumentOutOfRangeException from FetchDisplayAdapter, which happens when connected displays change at runtime (monitor unplugged/slept, dock or KVM switch, laptop lid) - [P.R 660](https://github.com/PlayTazUO/TazUO/pull/660) ([bittiez](https://github.com/bittiez))
 * Fixed container overhead text (item names/speech) being pushed off screen instead of appearing above the item - grid containers now account for the scroll offset when scaled/scrolled, and legacy containers anchor the text over the item's actual slot instead of a stale click coordinate - [P.R 667](https://github.com/PlayTazUO/TazUO/pull/667) ([bittiez](https://github.com/bittiez))
 * World map mobile dots are now colored by notoriety (matching the radar/minimap) instead of always being red - [P.R 684](https://github.com/PlayTazUO/TazUO/pull/684) ([bittiez](https://github.com/bittiez))
+* Context menu submenus now stay open until the menu is closed, an item is clicked, or another submenu is opened, and remain fully clickable when they open above the parent menu instead of closing when the mouse moves toward them - [P.R 689](https://github.com/PlayTazUO/TazUO/pull/689) ([bittiez](https://github.com/bittiez))
 
 ### Legion
 * Added ModernNineSliceGump.SetLegionTexture to go along with zip files and custom png's - Use your own png for a 9-slice texture - ([bittiez](https://github.com/bittiez))

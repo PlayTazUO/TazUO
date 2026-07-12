@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `7/6/26`.*
+*This was generated on `7/11/26`.*
 
 ## Properties
 ### `Events`
@@ -3655,6 +3655,37 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `englishOnly` | `bool` | ✅ Yes | True to always return the English string, ignoring the client language setting |
 
 **Return Type:** `string`
+
+---
+
+### GetClientBounds
+
+ Get the bounds of the client game window.
+ This covers the entire window, including all UI and the game world.
+ Coordinates are in screen pixels.
+ Example:
+ ```py
+ bounds = API.GetClientBounds()
+ API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+ ```
+
+
+**Return Type:** `Rectangle`
+
+---
+
+### GetViewportBounds
+
+ Get the bounds of the game world viewport.
+ This is the area where the game world is rendered, in screen pixel coordinates.
+ Example:
+ ```py
+ vp = API.GetViewportBounds()
+ API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+ ```
+
+
+**Return Type:** `Rectangle`
 
 ---
 

@@ -14,9 +14,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.NameOverHeadHandler;
 
+        private const int OPTIONS_TOP_OFFSET = 66;
+
         private readonly List<RadioButton> _overheadButtons = new List<RadioButton>();
         private Control _alpha;
         private StbTextBox searchBox;
+        private StbTextBox negativeSearchBox;
 
         public NameOverHeadHandlerGump(World world) : base(world, 0, 0)
         {
@@ -105,6 +108,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(new AlphaBlendControl() { Y = searchY, Width = 150, Height = 20, Hue = 0x0481 });
             Add(searchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = searchY, Width = 134, Height = 20 });
             searchBox.Text = NameOverHeadManager.Search;
+            searchBox.SetTooltip("Only show nameplates matching this text.\nSeparate multiple terms with ';'");
             searchBox.TextChanged += (s, e) => { NameOverHeadManager.Search = searchBox.Text; };
 
             Label clearSearch;
@@ -123,6 +127,31 @@ namespace ClassicUO.Game.UI.Gumps
                 searchBox.Text = "";
                 NameOverHeadManager.Search = "";
                 UIManager.KeyboardFocusControl = searchBox; //Return focus to the input in case clicking the X moved it
+            };
+
+            int negativeSearchY = searchY + 22;
+            Add(new AlphaBlendControl(0.4f) { Y = negativeSearchY, Width = 150, Height = 20, Hue = 0x0481 });
+            Add(negativeSearchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = negativeSearchY, Width = 134, Height = 20 });
+            negativeSearchBox.Text = NameOverHeadManager.NegativeSearch;
+            negativeSearchBox.SetTooltip("Hide nameplates matching this text (opposite of search).\nSeparate multiple terms with ';'");
+            negativeSearchBox.TextChanged += (s, e) => { NameOverHeadManager.NegativeSearch = negativeSearchBox.Text; };
+
+            Label clearNegativeSearch;
+            Add
+            (
+                clearNegativeSearch = new Label("X", true, 0xFFFF, font: 1)
+                {
+                    AcceptMouseInput = true,
+                    X = 138
+                }
+            );
+            clearNegativeSearch.Y = negativeSearchY + ((20 - clearNegativeSearch.Height) >> 1);
+            clearNegativeSearch.SetTooltip("Clear hide search");
+            clearNegativeSearch.MouseUp += (s, e) =>
+            {
+                negativeSearchBox.Text = "";
+                NameOverHeadManager.NegativeSearch = "";
+                UIManager.KeyboardFocusControl = negativeSearchBox; //Return focus to the input in case clicking the X moved it
             };
 
             DrawChoiceButtons();
@@ -155,7 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             _alpha.Width = biggestWidth;
-            _alpha.Height = Math.Max(30, options.Count * 20) + 44;
+            _alpha.Height = Math.Max(30, options.Count * 20) + OPTIONS_TOP_OFFSET;
 
             Width = _alpha.Width;
             Height = _alpha.Height;
@@ -173,7 +202,7 @@ namespace ClassicUO.Game.UI.Gumps
                     color: 0xFFFF
                 )
                 {
-                    Y = 20 * index + 44,
+                    Y = 20 * index + OPTIONS_TOP_OFFSET,
                     IsChecked = NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == option.Name,
                 }
             );
@@ -199,6 +228,7 @@ namespace ClassicUO.Game.UI.Gumps
         public override void Dispose()
         {
             NameOverHeadManager.Search = "";
+            NameOverHeadManager.NegativeSearch = "";
             base.Dispose();
         }
 
