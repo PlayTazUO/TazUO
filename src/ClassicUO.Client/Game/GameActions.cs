@@ -649,14 +649,6 @@ internal static class GameActions
         bool isItem = SerialHelper.IsItem(serial);
         bool isMobile = SerialHelper.IsMobile(serial);
 
-        // Auto skinning: intercept a double click on a configured knife/dagger and turn it into a
-        // corpse-targeted skinning action routed through the object action queue.
-        if (isItem && AutoSkinningManager.Instance.ShouldIntercept(serial))
-        {
-            AutoSkinningManager.Instance.RequestSkinning(serial);
-            return;
-        }
-
         // Record action for script recording (only for items)
         if (isItem)
             ScriptRecorder.Instance.RecordUseItem(serial);

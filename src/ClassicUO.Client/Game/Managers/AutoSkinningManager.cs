@@ -7,59 +7,91 @@ using ClassicUO.Utility;
 namespace ClassicUO.Game.Managers;
 
 /// <summary>
-/// Auto skinning support. When enabled, double clicking a knife/dagger whose graphic is in the
-/// configured list prompts for a corpse target and then skins it through the object action queue.
+/// Auto skinning support. When enabled, opening a corpse automatically uses a knife/dagger
+/// (from the configured graphic list) on that corpse through the object action queue -
+/// i.e. it double clicks the knife and targets the corpse for you.
 /// </summary>
 public sealed class AutoSkinningManager
 {
-    public static AutoSkinningManager Instance { get; } = new();
+    public static AutoSkinningManager Instance
+    {
+        get
+        {
+            if (field == null)
+                field = new();
+            return field;
+        }
+        private set => field = value;
+    }
 
-    // Set while the manager performs the actual skinning double click so the interception in
-    // GameActions.DoubleClick does not re-trigger and loop.
-    private bool _performingSkin;
+    // Bounded history of corpses we've already tried to skin so we don't spam the same corpse
+    // when it re-fires open/creation events.
+    private const int MaxSkinnedHistory = 200;
+    private readonly HashSet<uint> _skinnedCorpses = new();
+    private readonly Queue<uint> _skinnedOrder = new();
 
     private string _cachedRaw;
-    private readonly HashSet<ushort> _cachedGraphics = new();
+    private readonly List<ushort> _cachedGraphics = new();
 
     private AutoSkinningManager() { }
 
     public bool IsEnabled => ProfileManager.CurrentProfile?.EnableAutoSkinning ?? false;
 
-    /// <summary>
-    /// Returns true if a double click on <paramref name="serial"/> should be intercepted and turned
-    /// into a skinning action instead of a normal use.
-    /// </summary>
-    public bool ShouldIntercept(uint serial)
+    public void OnSceneLoad()
     {
-        if (_performingSkin || !IsEnabled)
-            return false;
+        EventSink.OnOpenContainer += OnOpenContainer;
+    }
 
-        if (!SerialHelper.IsItem(serial))
-            return false;
+    public void OnSceneUnload()
+    {
+        EventSink.OnOpenContainer -= OnOpenContainer;
+        _skinnedCorpses.Clear();
+        _skinnedOrder.Clear();
+        Instance = null;
+    }
 
-        Item item = World.Instance?.Items.Get(serial);
-        if (item == null)
-            return false;
+    private void OnOpenContainer(object sender, uint serial)
+    {
+        if (!IsEnabled)
+            return;
 
-        return GetKnifeGraphics().Contains(item.Graphic);
+        if (sender is Item corpse && corpse.IsCorpse)
+            TrySkin(corpse);
     }
 
     /// <summary>
-    /// Begins the skinning flow: prompts the user to target a corpse, then queues the skinning action.
+    /// Attempts to skin the given corpse if a configured knife is available. Safe to call multiple
+    /// times for the same corpse - it will only be attempted once.
     /// </summary>
-    public void RequestSkinning(uint knifeSerial)
+    public void TrySkin(Item corpse)
     {
-        World world = World.Instance;
-        if (world == null)
+        if (!IsEnabled || corpse is not { IsCorpse: true })
             return;
 
-        GameActions.Print(world, TazLang.Get("autoskinning_targetcorpse", "Target a corpse to skin."));
+        if (!MarkSkinned(corpse.Serial))
+            return;
 
-        world.TargetManager.SetTargeting(targeted =>
+        Item knife = FindKnife();
+        if (knife == null)
+            return;
+
+        EnqueueSkin(knife.Serial, corpse.Serial);
+    }
+
+    private Item FindKnife()
+    {
+        PlayerMobile player = World.Instance?.Player;
+        if (player == null)
+            return null;
+
+        foreach (ushort graphic in GetKnifeGraphics())
         {
-            if (targeted is Item corpse)
-                EnqueueSkin(knifeSerial, corpse.Serial);
-        }, CursorType.Target, TargetType.Neutral);
+            Item knife = player.FindItemByGraphic(graphic);
+            if (knife != null)
+                return knife;
+        }
+
+        return null;
     }
 
     private void EnqueueSkin(uint knifeSerial, uint corpseSerial)
@@ -73,20 +105,25 @@ public sealed class AutoSkinningManager
             // Queue the corpse serial to answer the server target request produced by using the knife.
             TargetManager.SetAutoTarget(corpseSerial, TargetType.Neutral);
 
-            _performingSkin = true;
-            try
-            {
-                // ignoreQueue: this is already running inside the action queue, don't re-enqueue.
-                GameActions.DoubleClick(world, knifeSerial, false, true);
-            }
-            finally
-            {
-                _performingSkin = false;
-            }
+            // ignoreQueue: this is already running inside the action queue, don't re-enqueue.
+            GameActions.DoubleClick(world, knifeSerial, false, true);
         }), ActionPriority.UseItem);
     }
 
-    private HashSet<ushort> GetKnifeGraphics()
+    private bool MarkSkinned(uint serial)
+    {
+        if (serial == 0 || !_skinnedCorpses.Add(serial))
+            return false;
+
+        _skinnedOrder.Enqueue(serial);
+
+        while (_skinnedOrder.Count > MaxSkinnedHistory && _skinnedOrder.TryDequeue(out uint oldest))
+            _skinnedCorpses.Remove(oldest);
+
+        return true;
+    }
+
+    private List<ushort> GetKnifeGraphics()
     {
         string raw = ProfileManager.CurrentProfile?.AutoSkinningKnifeGraphics ?? string.Empty;
 

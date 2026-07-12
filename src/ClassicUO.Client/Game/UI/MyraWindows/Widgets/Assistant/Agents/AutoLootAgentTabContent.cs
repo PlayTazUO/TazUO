@@ -100,20 +100,20 @@ public static class AutoLootAgentTabContent
             profile.EnableAutoSkinning,
             b => profile.EnableAutoSkinning = b,
             TazLang.Get("autoskinning_enable", "Enable Auto Skinning"),
-            TazLang.Get("autoskinning_enable_tooltip", "Double click a knife/dagger from the graphic list below, then target a corpse to skin it. Uses the action queue.")));
+            TazLang.Get("autoskinning_enable_tooltip", "When a corpse is opened, automatically use a knife/dagger from the graphic list below on it (double clicks the knife and targets the corpse). Uses the action queue.")));
         root.Widgets.Add(skinRow);
 
         var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
         skinGraphicsRow.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_graphics", "Knife graphic IDs:"), MyraLabel.TextStyle.P)
         {
-            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers that trigger skinning. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
             VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
         });
         var skinGraphicsBox = new MyraInputBox
         {
             Text = profile.AutoSkinningKnifeGraphics,
             MinWidth = 250,
-            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers that trigger skinning. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
         };
         skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
         skinGraphicsRow.Widgets.Add(skinGraphicsBox);
