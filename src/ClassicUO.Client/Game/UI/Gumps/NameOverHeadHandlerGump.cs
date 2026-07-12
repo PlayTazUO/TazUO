@@ -235,13 +235,6 @@ namespace ClassicUO.Game.UI.Gumps
             return button;
         }
 
-        public override void Dispose()
-        {
-            // Persist the current filters onto the active option before closing so they survive log out/in
-            // and profile switches. They are saved to disk with the rest of the nameplate options on unload.
-            base.Dispose();
-        }
-
         protected override void OnDragEnd(int x, int y)
         {
             LastPosition = new Point(ScreenCoordinateX, ScreenCoordinateY);
