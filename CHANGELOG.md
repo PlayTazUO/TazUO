@@ -144,6 +144,7 @@ All notable changes to TazUO will be recorded here.
 * Add option to disable corpse retry in autoloot - [P.R 525](https://github.com/PlayTazUO/TazUO/pull/525) ([bittiez](https://github.com/bittiez))
 * Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 557](https://github.com/PlayTazUO/TazUO/pull/557) ([bittiez](https://github.com/bittiez))
 * Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 607](https://github.com/PlayTazUO/TazUO/pull/607) ([bittiez](https://github.com/bittiez))
+* Migrated profile scalar/enum settings from profile.json to the SQLite settings store, with a one-time import of existing values - [P.R 657](https://github.com/PlayTazUO/TazUO/pull/657) ([bittiez](https://github.com/bittiez))
 
 ---
 
