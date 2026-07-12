@@ -91,6 +91,52 @@ public static class AutoLootAgentTabContent
             TazLang.Get("autoloot_disableretry_tooltip")));
         root.Widgets.Add(optRow3);
 
+        // Auto skinning section
+        root.Widgets.Add(new MyraSpacer(15, 5));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_title", "Auto Skinning"), MyraLabel.TextStyle.H2));
+
+        var skinGraphicsBox = new MyraInputBox
+        {
+            Text = profile.AutoSkinningKnifeGraphics,
+            MinWidth = 250,
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal.")
+        };
+
+        var skinRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
+        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.EnableAutoSkinning,
+            b => profile.EnableAutoSkinning = b,
+            TazLang.Get("autoskinning_enable", "Enable Auto Skinning"),
+            TazLang.Get("autoskinning_enable_tooltip", "When a corpse is opened, automatically use a knife/dagger from the graphic list below on it (double clicks the knife and targets the corpse). Uses the action queue.")));
+        skinRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+            profile.AutoSkinningHumanCorpses,
+            b => profile.AutoSkinningHumanCorpses = b,
+            TazLang.Get("autoskinning_humancorpses", "Skin Human Corpses"),
+            TazLang.Get("autoskinning_humancorpses_tooltip", "Also auto skin human/humanoid corpses.")));
+        skinRow.Widgets.Add(new MyraButton(TazLang.Get("autoskinning_targetweapon", "Target Skinning Weapon"), () =>
+        {
+            World.Instance.TargetManager.SetTargeting(targeted =>
+            {
+                if (targeted is Entity entity && SerialHelper.IsItem(entity))
+                {
+                    string appended = AppendSkinningGraphic(profile.AutoSkinningKnifeGraphics, entity.Graphic);
+                    profile.AutoSkinningKnifeGraphics = appended;
+                    skinGraphicsBox.Text = appended;
+                }
+            });
+        }) { Tooltip = TazLang.Get("autoskinning_targetweapon_tooltip", "Target a weapon to add its graphic to the skinning knife list.") });
+        root.Widgets.Add(skinRow);
+
+        var skinGraphicsRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center };
+        skinGraphicsRow.Widgets.Add(new MyraLabel(TazLang.Get("autoskinning_graphics", "Knife graphic IDs:"), MyraLabel.TextStyle.P)
+        {
+            Tooltip = TazLang.Get("autoskinning_graphics_tooltip", "Graphic IDs of knives/daggers used to skin corpses. The first one found in your backpack is used. Separate multiple with ';'. Accepts hex (0x0F52) or decimal."),
+            VerticalAlignment = Myra.Graphics2D.UI.VerticalAlignment.Center
+        });
+        skinGraphicsBox.TextChangedByUser += (_, _) => profile.AutoSkinningKnifeGraphics = skinGraphicsBox.Text;
+        skinGraphicsRow.Widgets.Add(skinGraphicsBox);
+        root.Widgets.Add(skinGraphicsRow);
+
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));
         root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H2));
@@ -405,5 +451,21 @@ public static class AutoLootAgentTabContent
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = entriesPanel });
 
         return root;
+    }
+
+    /// <summary>
+    /// Appends <paramref name="graphic"/> (formatted as hex) to a ';'-separated skinning graphic
+    /// list, skipping it if an equal value is already present.
+    /// </summary>
+    private static string AppendSkinningGraphic(string current, ushort graphic)
+    {
+        current ??= string.Empty;
+
+        foreach (string part in current.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            if (StringHelper.TryParseInt(part, out int existing) && existing == graphic)
+                return current;
+
+        string entry = $"0x{graphic:X4}";
+        return string.IsNullOrWhiteSpace(current) ? entry : $"{current.TrimEnd(';', ' ')};{entry}";
     }
 }
