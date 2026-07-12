@@ -17,6 +17,12 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 public static class MacrosTabContent
 {
     private static readonly HashSet<MacroType> _filteredMacroTypes = new() { MacroType.INVALID };
+
+    /// <summary>Macro types whose sub-type dropdown is a list of available gumps (shared sub-type range).</summary>
+    private static readonly HashSet<MacroType> _gumpListMacroTypes = new()
+    {
+        MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump
+    };
     private static readonly string[] _sortedMacroTypeNames;
     private static readonly MacroType[] _sortedMacroTypeValues;
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
@@ -493,12 +499,28 @@ public static class MacrosTabContent
                 int subCount = 0, subOffset = 0;
                 Macro.GetBoundByCode(capturedAction.Code, ref subCount, ref subOffset);
 
+                var subValues = new MacroSubType[subCount];
                 string[] subNames = new string[subCount];
                 for (int si = 0; si < subCount; si++)
-                    subNames[si] = ((MacroSubType)(si + subOffset)).ToString();
+                {
+                    subValues[si] = (MacroSubType)(si + subOffset);
+                    subNames[si] = subValues[si].ToString();
+                }
 
-                int curSubIdx = (int)capturedAction.SubCode - subOffset;
-                if (curSubIdx < 0 || curSubIdx >= subCount) curSubIdx = 0;
+                // The gump-list macro types (Open/Close/Minimize/Maximize/ToggleGump) show a list
+                // of available gumps. Sort that list the same way as the main macro list and add
+                // spacing after capitals for legibility; other sub-type lists keep their natural order.
+                if (_gumpListMacroTypes.Contains(capturedAction.Code))
+                {
+                    int[] order = Enumerable.Range(0, subCount)
+                        .OrderBy(i => subNames[i], StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    subValues = order.Select(i => subValues[i]).ToArray();
+                    subNames = order.Select(i => StringHelper.AddSpaceBeforeCapital(subNames[i])).ToArray();
+                }
+
+                int curSubIdx = Array.IndexOf(subValues, capturedAction.SubCode);
+                if (curSubIdx < 0) curSubIdx = 0;
 
 #pragma warning disable CS0612, CS0618
                 var subCombo = new ComboBox
@@ -514,7 +536,7 @@ public static class MacrosTabContent
                 subCombo.SelectedIndexChanged += (_, _) =>
                 {
                     if (subCombo.SelectedIndex == null) return;
-                    capturedAction.SubCode = (MacroSubType)(subCombo.SelectedIndex.Value + subOffset);
+                    capturedAction.SubCode = subValues[subCombo.SelectedIndex.Value];
                     MarkDirty();
                 };
 #pragma warning restore CS0612, CS0618
