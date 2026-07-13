@@ -71,6 +71,7 @@ All notable changes to TazUO will be recorded here.
 * Nameplate search and negative search now save per nameplate profile — switching profiles and logging out/in restore each profile's filters, and both fields are editable in the nameplate profile editor - [P.R 695](https://github.com/PlayTazUO/TazUO/pull/695) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed the nameplate overhead manager gump not resizing to fit all buttons and profile names, and now refreshes its buttons when a profile is renamed in the options window - [P.R 698](https://github.com/PlayTazUO/TazUO/pull/698) ([bittiez](https://github.com/bittiez))
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
 * Auto open doors no longer closes a door that is already open - [P.R 674](https://github.com/PlayTazUO/TazUO/pull/674) ([bittiez](https://github.com/bittiez))
 * Added a Video > Misc option to reduce mobile feet clipping through walls (character depth slice step, default now minimizes clipping) - [P.R 666](https://github.com/PlayTazUO/TazUO/pull/666) ([bittiez](https://github.com/bittiez))

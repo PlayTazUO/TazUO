@@ -440,6 +440,18 @@ namespace ClassicUO.Game.Managers
             _gump?.RedrawOverheadOptions();
         }
 
+        /// <summary>
+        ///     Refreshes the active overhead handler gump after an option was renamed so the buttons show the new name.
+        /// </summary>
+        public void HandleRenamedOption(NameOverheadOption option)
+        {
+            // The active option is persisted by name, so keep it in sync if that option was the one renamed.
+            if (option != null && option == ActiveOption)
+                LastActiveNameOverheadOption = option.Name;
+
+            _gump?.RedrawOverheadOptions();
+        }
+
         public static NameOverheadOption FindOptionByHotkey(SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift) => Options.FirstOrDefault(o => o.Key == key && o.Alt == alt && o.Ctrl == ctrl && o.Shift == shift);
 
         public static List<NameOverheadOption> GetAllOptions() => Options;

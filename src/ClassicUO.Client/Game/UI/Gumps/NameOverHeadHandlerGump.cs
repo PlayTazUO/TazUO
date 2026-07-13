@@ -20,6 +20,7 @@ namespace ClassicUO.Game.UI.Gumps
         private Control _alpha;
         private StbTextBox searchBox;
         private StbTextBox negativeSearchBox;
+        private int _topContentWidth;
 
         public NameOverHeadHandlerGump(World world) : base(world, 0, 0)
         {
@@ -102,9 +103,13 @@ namespace ClassicUO.Game.UI.Gumps
             hideInWarmode.SetTooltip("Only hide 100% hp nameplates in warmode.");
             hideInWarmode.ValueChanged += (sender, e) => { ProfileManager.CurrentProfile.NamePlateHideAtFullHealthInWarmode = hideInWarmode.IsChecked; };
 
+            // Track how wide the checkbox row is so the background can be sized to contain it.
+            _topContentWidth = Math.Max(_topContentWidth, hideInWarmode.X + hideInWarmode.Width);
+
 
 
             int searchY = stayActive.Height + stayActive.Y;
+            _topContentWidth = Math.Max(_topContentWidth, 150);
             Add(new AlphaBlendControl() { Y = searchY, Width = 150, Height = 20, Hue = 0x0481 });
             Add(searchBox = new StbTextBox(0, -1, 134, hue: 0xFFFF) { Y = searchY, Width = 134, Height = 20 });
             searchBox.Text = NameOverHeadManager.Search;
@@ -121,6 +126,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             );
             clearSearch.Y = searchY + ((20 - clearSearch.Height) >> 1);
+            _topContentWidth = Math.Max(_topContentWidth, clearSearch.X + clearSearch.Width);
             clearSearch.SetTooltip("Clear search");
             clearSearch.MouseUp += (s, e) =>
             {
@@ -146,6 +152,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             );
             clearNegativeSearch.Y = negativeSearchY + ((20 - clearNegativeSearch.Height) >> 1);
+            _topContentWidth = Math.Max(_topContentWidth, clearNegativeSearch.X + clearNegativeSearch.Width);
             clearNegativeSearch.SetTooltip("Clear hide search");
             clearNegativeSearch.MouseUp += (s, e) =>
             {
@@ -185,7 +192,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void DrawChoiceButtons()
         {
-            int biggestWidth = 100;
+            int biggestWidth = Math.Max(100, _topContentWidth);
             List<NameOverheadOption> options = NameOverHeadManager.GetAllOptions();
 
             for (int i = 0; i < options.Count; i++)
