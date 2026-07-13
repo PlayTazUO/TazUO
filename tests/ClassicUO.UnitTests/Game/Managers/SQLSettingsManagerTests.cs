@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using ClassicUO.Game.Managers;
@@ -102,6 +103,35 @@ namespace ClassicUO.UnitTests.Game.Managers
             // Seeding copies the snapshot into the Char scope.
             settings.SeedCharScopeFromDefaultProfile();
             settings.Get<int>(SettingsScope.Char, "def_sound").Should().Be(42);
+        }
+
+        [Fact]
+        public void ImportSettingsFromScope_Copies_Rows_Into_Char()
+        {
+            using var settings = new SQLSettingsManager();
+
+            settings.Set(SettingsScope.DefaultProfile, "imp_number", 7);
+            settings.Set(SettingsScope.DefaultProfile, "imp_text", "copied");
+
+            settings.ImportSettingsFromScope("DEFAULT_PROFILE");
+
+            settings.Get<int>(SettingsScope.Char, "imp_number").Should().Be(7);
+            settings.Get(SettingsScope.Char, "imp_text").Should().Be("copied");
+        }
+
+        [Fact]
+        public void GetCharProfileScopeKeys_Excludes_NonChar_Scopes()
+        {
+            using var settings = new SQLSettingsManager();
+
+            settings.Set(SettingsScope.Global, "g", 1);
+            settings.Set(SettingsScope.DefaultProfile, "d", 1);
+
+            List<string> scopes = settings.GetCharProfileScopeKeys();
+
+            // Non-character scopes (no trailing numeric serial) must never be offered for import.
+            scopes.Should().NotContain("GLOBAL");
+            scopes.Should().NotContain("DEFAULT_PROFILE");
         }
 
         [Fact]

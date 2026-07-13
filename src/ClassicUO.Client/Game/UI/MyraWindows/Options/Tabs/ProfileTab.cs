@@ -3,14 +3,18 @@ using System.IO;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
-using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
-/// <summary>Options tab source for profile management utilities (copy settings to other character profiles)</summary>
+/// <summary>Options tab source for profile management utilities (import settings from other characters,
+/// set defaults, and copy macros)</summary>
 public static class ProfileTab
 {
-    /// <summary>Returns the option fragment with profile-override buttons and transfer helpers</summary>
+    // Char-scope keys ({server}_{username}_{serial}) offered in the import dropdown, plus the selected index.
+    private static List<string> _importScopes = new();
+    private static int _selectedImportIndex;
+
+    /// <summary>Returns the option fragment with profile transfer helpers</summary>
     internal static IOptionSource GetContent() => GetSection();
 
     private static OptionFragment GetSection()
@@ -18,64 +22,85 @@ public static class ProfileTab
         ModernOptionsGumpLanguage.TazUO lang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
         ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
-        (List<string> allLocations, List<string> sameServerLocations) = GetProfileLocations();
+        List<string> allLocations = GetProfileLocations();
+
+        _importScopes = Client.Settings?.GetCharProfileScopeKeys() ?? new List<string>();
+        _selectedImportIndex = 0;
+
+        var children = new List<OptionContent>();
+
+        // Import another character's settings (pulls from the SQLite settings store).
+        if (_importScopes.Count > 0)
+        {
+            children.Add(Option.ComboBox(
+                lang.ImportFromProfile,
+                0,
+                _importScopes.ToArray(),
+                i => _selectedImportIndex = i,
+                search: new SearchMetadata(lang.ImportFromProfile, Keywords: [kw.Profile])
+            ));
+            children.Add(Option.Button(
+                lang.ImportFromButton,
+                ImportFromSelected,
+                new SearchMetadata(lang.ImportFromButton, Keywords: [kw.Profile])
+            ));
+        }
+        else
+        {
+            children.Add(Option.Custom(() => new MyraLabel(lang.NoProfilesToImport, MyraLabel.TextStyle.P)));
+        }
+
+        // Copy this profile's macros to other characters / set defaults for new characters.
+        children.Add(Option.Button(
+            string.Format(lang.OverrideAllMacros, allLocations.Count - 1),
+            () => OverrideAllMacros(allLocations),
+            new SearchMetadata(lang.OverrideAllMacros, Keywords: [kw.Override])
+        ));
+        children.Add(Option.Button(
+            lang.SetAsDefault,
+            SetProfileAsDefault,
+            new SearchMetadata(lang.SetAsDefault, Keywords: [kw.Profile])
+        ));
+        children.Add(Option.Button(
+            lang.SetMacrosAsDefault,
+            SetMacrosAsDefault,
+            new SearchMetadata(lang.SetMacrosAsDefault)
+        ));
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = lang.SettingsTransfers },
-            Option.Custom(() => new MyraLabel(string.Format(lang.SettingsWarning, allLocations.Count), MyraLabel.TextStyle.P)),
-            Option.Button(
-                string.Format(lang.OverrideAll, allLocations.Count - 1),
-                () => OverrideAllProfiles(allLocations),
-                new SearchMetadata(lang.OverrideAll, Keywords: [kw.Profile, kw.Override])
-            ),
-            Option.Button(
-                string.Format(lang.OverrideSame, sameServerLocations.Count - 1),
-                () => OverrideAllProfiles(sameServerLocations),
-                new SearchMetadata(lang.OverrideSame, Keywords: [kw.Profile, kw.Override])
-            ),
-            Option.Button(
-                string.Format(lang.OverrideAllMacros, allLocations.Count - 1),
-                () => OverrideAllMacros(allLocations),
-                new SearchMetadata(lang.OverrideAllMacros, Keywords: [kw.Override])
-            ),
-            Option.Button(
-                lang.SetAsDefault,
-                SetProfileAsDefault,
-                new SearchMetadata(lang.SetAsDefault, Keywords: [kw.Profile])
-            ),
-            Option.Button(
-                lang.SetMacrosAsDefault,
-                SetMacrosAsDefault,
-                new SearchMetadata(lang.SetMacrosAsDefault)
-            )
+            children.ToArray()
         ).WithSearch(new SearchMetadata(lang.SettingsTransfers, [kw.Profile]));
     }
 
-    private static (List<string> All, List<string> SameServer) GetProfileLocations()
+    private static List<string> GetProfileLocations()
     {
-        Profile profile = ProfileManager.CurrentProfile;
         var all = new List<string>();
-        var sameServer = new List<string>();
 
         foreach (string account in Directory.GetDirectories(ProfileManager.RootPath))
         foreach (string server in Directory.GetDirectories(account))
         foreach (string character in Directory.GetDirectories(server))
-        {
             all.Add(character);
 
-            if (FileSystemHelper.RemoveInvalidChars(profile.ServerName) == FileSystemHelper.RemoveInvalidChars(Path.GetFileName(server)))
-                sameServer.Add(character);
-        }
-
-        return (all, sameServer);
+        return all;
     }
 
-    private static void OverrideAllProfiles(List<string> locations)
+    private static void ImportFromSelected()
     {
-        foreach (string location in locations)
-            ProfileManager.CurrentProfile.Save(World.Instance, location, false);
+        if (_selectedImportIndex < 0 || _selectedImportIndex >= _importScopes.Count)
+            return;
 
-        PrintOverrideSuccess(locations.Count - 1);
+        string source = _importScopes[_selectedImportIndex];
+
+        Client.Settings?.ImportSettingsFromScope(source);
+        ProfileManager.CurrentProfile?.ReloadCharScopedSettingsFromDatabase();
+
+        GameActions.Print(
+            World.Instance,
+            string.Format(Language.Instance.GetModernOptionsGumpLanguage.GetTazUO.ImportFromSuccess, source),
+            Constants.HUE_SUCCESS,
+            MessageType.System
+        );
     }
 
     private static void OverrideAllMacros(List<string> locations)

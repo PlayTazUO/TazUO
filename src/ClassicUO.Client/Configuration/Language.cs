@@ -1447,6 +1447,10 @@ namespace ClassicUO.Configuration
             public string SetMacrosAsDefault { get; set; } = "Set this profile's macros as the default for new characters.";
             public string SetAsDefaultSuccess { get; set; } = "This profile is now the default for new characters.";
             public string SetMacrosAsDefaultSuccess { get; set; } = "This profile's macros are now the default for new characters.";
+            public string ImportFromProfile { get; set; } = "Import settings from another character:";
+            public string ImportFromButton { get; set; } = "Import selected profile";
+            public string ImportFromSuccess { get; set; } = "Imported settings from {0}.";
+            public string NoProfilesToImport { get; set; } = "No other character profiles found to import from.";
 
             #endregion
 

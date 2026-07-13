@@ -1879,6 +1879,19 @@ namespace ClassicUO.Configuration
             Client.Game?.SetVSync(EnableVSync);
         }
 
+        /// <summary>
+        /// Re-hydrates the Char-scoped settings from SQLite into the live profile (firing property-change
+        /// notifications so the UI updates). Used after importing another character's settings.
+        /// </summary>
+        internal void ReloadCharScopedSettingsFromDatabase()
+        {
+            if (Client.Settings == null)
+                return;
+
+            LoadGeneratedCharSqlSettings(Client.Settings.GetAll(SettingsScope.Char));
+            Client.Game?.SetVSync(EnableVSync);
+        }
+
         // Reads the legacy per-character profile.json and copies every migrated scalar/enum setting into the
         // SQLite store (via the generated MigrateJsonToSql). Best-effort: failures are logged and ignored.
         private void TryMigrateProfileJsonToSql()

@@ -4697,7 +4697,6 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             var locations = new List<ProfileLocationData>();
-            var sameServerLocations = new List<ProfileLocationData>();
             string[] allAccounts = Directory.GetDirectories(rootpath);
 
             foreach (string account in allAccounts)
@@ -4709,68 +4708,60 @@ namespace ClassicUO.Game.UI.Gumps
                     string[] allCharacters = Directory.GetDirectories(server);
 
                     foreach (string character in allCharacters)
-                    {
                         locations.Add(new ProfileLocationData(server, account, character));
-
-                        if (FileSystemHelper.RemoveInvalidChars(profile.ServerName) ==
-                            FileSystemHelper.RemoveInvalidChars(Path.GetFileName(server)))
-                        {
-                            sameServerLocations.Add(new ProfileLocationData(server, account, character));
-                        }
-                    }
                 }
             }
 
-            content.AddToRight
-            (
-                TextBox.GetOne
-                (
-                    string.Format(lang.GetTazUO.SettingsWarning, locations.Count), ThemeSettings.FONT,
-                    ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR,
-                    TextBox.RTLOptions.DefaultCentered(content.RightWidth - 20)
-                ), true, page
-            );
+            // Import settings from another character (pulls from the SQLite settings store).
+            List<string> importScopes = Client.Settings?.GetCharProfileScopeKeys() ?? new List<string>();
 
-            content.AddToRight
-            (
-                c = new ModernButton
-                (0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
-                    string.Format(lang.GetTazUO.OverrideAll, locations.Count - 1), ThemeSettings.BUTTON_FONT_COLOR)
-                {
-                    IsSelectable = true, IsSelected = true
-                }, true, page
-            );
-
-            c.MouseUp += (s, e) =>
+            if (importScopes.Count > 0)
             {
-                if (e.Button == MouseButtonType.Left)
-                {
-                    OverrideAllProfiles(locations);
-                    GameActions.Print(World, string.Format(lang.GetTazUO.OverrideSuccess, locations.Count - 1), Constants.HUE_SUCCESS,
-                        Data.MessageType.System);
-                }
-            };
+                int selectedImport = 0;
 
-            content.AddToRight
-            (
-                c = new ModernButton
+                content.AddToRight
                 (
-                    0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
-                    string.Format(lang.GetTazUO.OverrideSame, sameServerLocations.Count - 1),
-                    ThemeSettings.BUTTON_FONT_COLOR
-                ) { IsSelectable = true, IsSelected = true }, true, page
-            );
+                    new ComboBoxWithLabel
+                    (
+                        World, lang.GetTazUO.ImportFromProfile, 0, ThemeSettings.COMBO_BOX_WIDTH,
+                        importScopes.ToArray(), 0, (i, s) => selectedImport = i
+                    ), true, page
+                );
 
-            c.MouseUp += (s, e) =>
-            {
-                if (e.Button == MouseButtonType.Left)
+                content.AddToRight
+                (
+                    c = new ModernButton
+                    (0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
+                        lang.GetTazUO.ImportFromButton, ThemeSettings.BUTTON_FONT_COLOR)
+                    {
+                        IsSelectable = true, IsSelected = true
+                    }, true, page
+                );
+
+                c.MouseUp += (s, e) =>
                 {
-                    OverrideAllProfiles(sameServerLocations);
-                    GameActions.Print(World,
-                        string.Format(lang.GetTazUO.OverrideSuccess, sameServerLocations.Count - 1), Constants.HUE_SUCCESS,
-                        Data.MessageType.System);
-                }
-            };
+                    if (e.Button == MouseButtonType.Left && selectedImport >= 0 && selectedImport < importScopes.Count)
+                    {
+                        string source = importScopes[selectedImport];
+                        Client.Settings?.ImportSettingsFromScope(source);
+                        CurrentProfile?.ReloadCharScopedSettingsFromDatabase();
+                        GameActions.Print(World, string.Format(lang.GetTazUO.ImportFromSuccess, source), Constants.HUE_SUCCESS,
+                            Data.MessageType.System);
+                    }
+                };
+            }
+            else
+            {
+                content.AddToRight
+                (
+                    TextBox.GetOne
+                    (
+                        lang.GetTazUO.NoProfilesToImport, ThemeSettings.FONT,
+                        ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR,
+                        TextBox.RTLOptions.DefaultCentered(content.RightWidth - 20)
+                    ), true, page
+                );
+            }
 
             content.AddToRight
             (
@@ -5135,14 +5126,6 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Dispose();
             CurrentProfile?.Save(World, ProfilePath);
-        }
-
-        private void OverrideAllProfiles(List<ProfileLocationData> allProfiles)
-        {
-            foreach (ProfileLocationData profile in allProfiles)
-            {
-                CurrentProfile.Save(World, profile.ToString(), false);
-            }
         }
 
         private void OverrideAllMacros(List<ProfileLocationData> allProfiles)

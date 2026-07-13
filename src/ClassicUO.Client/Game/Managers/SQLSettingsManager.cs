@@ -413,12 +413,13 @@ namespace ClassicUO.Game.Managers
         /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
         /// <returns>A task that represents the asynchronous operation, containing a dictionary of all setting name-value pairs for the scope</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
-        public async Task<Dictionary<string, string>> GetAllAsync(SettingsScope scope)
+        public Task<Dictionary<string, string>> GetAllAsync(SettingsScope scope) => GetAllForScopeKeyAsync(GetScopeKey(scope));
+
+        private async Task<Dictionary<string, string>> GetAllForScopeKeyAsync(string scopeKey)
         {
             if (_disposed)
                 throw new ObjectDisposedException(nameof(SQLSettingsManager));
 
-            string scopeKey = GetScopeKey(scope);
             Dictionary<string, string> result = new();
 
             await _dbLock.WaitAsync();
@@ -450,6 +451,93 @@ namespace ClassicUO.Game.Managers
             finally
             {
                 _dbLock.Release();
+            }
+        }
+
+        private async Task<List<string>> GetAllScopeKeysAsync()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(SQLSettingsManager));
+
+            List<string> result = new();
+
+            await _dbLock.WaitAsync();
+            try
+            {
+                await using SqliteConnection connection = new(_connectionString);
+                await connection.OpenAsync();
+
+                await using SqliteCommand cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT DISTINCT scope FROM settings";
+
+                await using SqliteDataReader reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                    result.Add(reader.GetString(0));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($@"Error listing settings scopes: {ex.Message}");
+                return result;
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Returns the scope keys of other characters' settings (format {server}_{username}_{serial}),
+        /// excluding the current character. Used by the "Import from" profile feature.
+        /// </summary>
+        public List<string> GetCharProfileScopeKeys()
+        {
+            string current = GetScopeKey(SettingsScope.Char);
+
+            List<string> all = GetAllScopeKeysAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            List<string> result = new();
+
+            foreach (string scope in all)
+            {
+                if (scope == current || !LooksLikeCharScopeKey(scope))
+                    continue;
+
+                result.Add(scope);
+            }
+
+            result.Sort(StringComparer.OrdinalIgnoreCase);
+            return result;
+        }
+
+        // Char scope keys end with the player's serial, so the segment after the last '_' is numeric.
+        // This distinguishes them from Account/Server/Global/DefaultProfile scopes.
+        private static bool LooksLikeCharScopeKey(string scope)
+        {
+            int idx = scope.LastIndexOf('_');
+            if (idx <= 0 || idx == scope.Length - 1)
+                return false;
+
+            return ulong.TryParse(scope.AsSpan(idx + 1), out _);
+        }
+
+        /// <summary>
+        /// Copies every setting stored under <paramref name="sourceScopeKey"/> into the current character's
+        /// Char scope, overwriting existing values. Used by the "Import from" profile feature.
+        /// </summary>
+        public void ImportSettingsFromScope(string sourceScopeKey)
+        {
+            if (string.IsNullOrEmpty(sourceScopeKey))
+                return;
+
+            Dictionary<string, string> rows = GetAllForScopeKeyAsync(sourceScopeKey).ConfigureAwait(false).GetAwaiter().GetResult();
+
+            foreach (KeyValuePair<string, string> kv in rows)
+            {
+                if (kv.Key == Constants.SqlSettings.PROFILE_JSON_MIGRATED)
+                    continue;
+
+                Set(SettingsScope.Char, kv.Key, kv.Value);
             }
         }
 
