@@ -50,6 +50,11 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     private readonly Action<TProfile> _onDeleteProfile;
 
     /// <summary>
+    ///     An optional action invoked after a profile is renamed via the editor's "Rename" flow.
+    /// </summary>
+    private readonly Action<TProfile> _onRenameProfile;
+
+    /// <summary>
     ///     Margins for the profile combo box.
     /// </summary>
     private readonly Thickness _profileBoxMargins = new(0, 0, 20, 0);
@@ -99,11 +104,13 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
     /// <param name="createProfile">The function to create a new profile.</param>
     /// <param name="onDeleteProfile">The action to perform when deleting a profile.</param>
     /// <param name="profiles">The initial list of profiles.</param>
+    /// <param name="onRenameProfile">An optional action to perform after renaming a profile.</param>
     public ProfileEditor(
         Func<TProfile, Widget> getConfigUiForProfile,
         Func<string, TProfile> createProfile,
         Action<TProfile> onDeleteProfile,
-        IEnumerable<TProfile> profiles = null
+        IEnumerable<TProfile> profiles = null,
+        Action<TProfile> onRenameProfile = null
     )
     {
         ArgumentNullException.ThrowIfNull(getConfigUiForProfile);
@@ -113,6 +120,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
         _configUiGetter = getConfigUiForProfile;
         _createProfile = createProfile;
         _onDeleteProfile = onDeleteProfile;
+        _onRenameProfile = onRenameProfile;
 
         foreach (TProfile profile in profiles ?? [])
             AddProfile(profile);
@@ -205,6 +213,7 @@ public class ProfileEditor<TProfile> : Widget where TProfile : IProfile
             return;
 
         _selectedProfile.Name = newName;
+        _onRenameProfile?.Invoke(_selectedProfile);
 
         _isRenaming = false;
         RebuildUi();
