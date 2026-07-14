@@ -16,58 +16,56 @@ public static class FontsTab
     internal static IOptionSource GetContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
             Option.Spacer(),
             Option.Custom(
-                () => new LinkLabel(fontsLang.FontsWikiLabel, "https://tazuo.org/wiki/tazuottf-fonts/")
+                () => new LinkLabel(TazLang.Get("mog_chattab_fonttab_fontswikilabel"), "https://tazuo.org/wiki/tazuottf-fonts/")
                 {
                     HorizontalAlignment = HorizontalAlignment.Stretch
                 },
-                new SearchMetadata(fontsLang.FontsWikiLabel, Keywords: [kw.Wiki, kw.Help])
+                new SearchMetadata(TazLang.Get("mog_chattab_fonttab_fontswikilabel"), Keywords: [TazLang.Get("mog_kw_wiki"), TazLang.Get("mog_kw_help")])
             ),
             UniformHorizontal(
                 CreateFontSelectorFragment(
-                    fontsLang.InfoBarFont,
+                    TazLang.Get("mog_chattab_fonttab_infobarfont"),
                     new Accessor<string>(() => profile.InfoBarFont),
                     new Accessor<int>(() => profile.InfoBarFontSize),
                     InfoBarGump.UpdateAllOptions
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.SystemChatFont,
+                    TazLang.Get("mog_chattab_fonttab_systemchatfont"),
                     new Accessor<string>(() => profile.GameWindowSideChatFont),
                     new Accessor<int>(() => profile.GameWindowSideChatFontSize)
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.TooltipFont,
+                    TazLang.Get("mog_chattab_fonttab_tooltipfont"),
                     new Accessor<string>(() => profile.SelectedToolTipFont),
                     new Accessor<int>(() => profile.SelectedToolTipFontSize)
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.OverheadFont,
+                    TazLang.Get("mog_chattab_fonttab_overheadfont"),
                     new Accessor<string>(() => profile.OverheadChatFont),
                     new Accessor<int>(() => profile.OverheadChatFontSize)
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.JournalFont,
+                    TazLang.Get("mog_chattab_fonttab_journalfont"),
                     new Accessor<string>(() => profile.SelectedTTFJournalFont),
                     new Accessor<int>(() => profile.SelectedJournalFontSize),
                     ResizableJournal.UpdateJournalOptions
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.NameplateFont,
+                    TazLang.Get("mog_chattab_fonttab_nameplatefont"),
                     new Accessor<string>(() => profile.NamePlateFont),
                     new Accessor<int>(() => profile.NamePlateFontSize)
                 ),
                 CreateFontSelectorFragment(
-                    fontsLang.OptionsFont,
+                    TazLang.Get("mog_chattab_fonttab_optionsfont"),
                     new Accessor<string>(() => profile.OptionsFont),
                     new Accessor<int>(() => profile.OptionsFontSize)
                 )
             )
-        ).WithSearch(new SearchMetadata(fontsLang.FontsLabel, Keywords: [kw.Font, kw.Text, kw.Style], Tags: [kw.Font, kw.Style]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_fonttab_fontslabel"), Keywords: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_text"), TazLang.Get("mog_kw_style")], Tags: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_style")]));
     }
 
     private static OptionFragment UniformHorizontal(params OptionContent[] children) =>
@@ -90,8 +88,6 @@ public static class FontsTab
         Action onAfterUpdate = null
     )
     {
-        ModernOptionsGumpLanguage.FontTabLang fontsLang = Language.Instance.GetModernOptionsGumpLanguage.ChatTab.FontTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         Accessor<string> fontPropToUse;
         Accessor<int> fontSizePropToUse;
@@ -123,13 +119,13 @@ public static class FontsTab
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = label },
-            Option.FontSelector(fontsLang.FontLabel, fontPropToUse, search: new SearchMetadata(label, Keywords: [kw.Font])),
+            Option.FontSelector(TazLang.Get("mog_chattab_fonttab_fontlabel"), fontPropToUse, search: new SearchMetadata(label, Keywords: [TazLang.Get("mog_kw_font")])),
             Option.Slider(
-                fontsLang.Size,
+                TazLang.Get("mog_chattab_fonttab_size"),
                 5,
                 50,
                 new Accessor<float>(() => fontSizePropToUse.Get(), f => fontSizePropToUse.Set((int)f)),
-                search: new SearchMetadata(label, Keywords: [kw.Size])
+                search: new SearchMetadata(label, Keywords: [TazLang.Get("mog_kw_size")])
             )
         );
     }

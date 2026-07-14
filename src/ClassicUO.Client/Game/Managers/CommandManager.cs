@@ -286,8 +286,8 @@ namespace ClassicUO.Game.Managers
             Register("myra-draw-hovered-widget-frames", args => MyraEnvironment.DrawMouseHoveredWidgetFrame = ParseBooleanCommandArgs(args));
             Register("myra-draw-hovered-widget-info", args => MyraEnvironment.DrawMouseHoveredWidgetInfo = ParseBooleanCommandArgs(args));
 
-            // Regenerate the `Language` instance, loading any changes that have been made without having to restart the game
-            Register("language-regenerate", _ => Language.RegenerateLanguageFile());
+            // Reload the language strings, loading any changes that have been made without having to restart the game
+            Register("language-regenerate", _ => TazLang.Load(Settings.GlobalSettings.UILanguage));
         }
 
         /// <summary>

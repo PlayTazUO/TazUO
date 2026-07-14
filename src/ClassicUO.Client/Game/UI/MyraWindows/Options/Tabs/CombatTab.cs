@@ -11,70 +11,65 @@ public static class CombatTab
 
     private static OptionTabGroup GetTabs()
     {
-        ModernOptionsGumpLanguage.CombatTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return new OptionTabGroup()
             .AddTab(
-                lang.Combat.Label,
+                TazLang.Get("mog_combattab_combat_label"),
                 GetCombatSection,
-                new SearchMetadata(lang.Combat.Label, Keywords: [kw.Combat, kw.Attack, kw.Battle])
+                new SearchMetadata(TazLang.Get("mog_combattab_combat_label"), Keywords: [TazLang.Get("mog_kw_combat"), TazLang.Get("mog_kw_attack"), TazLang.Get("mog_kw_battle")])
             )
             .AddTab(
-                lang.Spells.SpellLabel,
+                TazLang.Get("mog_combattab_spells_spelllabel"),
                 SpellsTab.GetContent,
-                new SearchMetadata(lang.Spells.SpellLabel, Keywords: [kw.Spell, kw.Magic, kw.Cast])
+                new SearchMetadata(TazLang.Get("mog_combattab_spells_spelllabel"), Keywords: [TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_magic"), TazLang.Get("mog_kw_cast")])
             );
     }
 
     private static IOptionSource GetCombatSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.CombatTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab;
-        ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
             Option.Checkbox(
-                lang.Combat.HoldTabForCombat,
+                TazLang.Get("mog_combattab_combat_holdtabforcombat"),
                 new Accessor<bool>(() => profile.HoldDownKeyTab),
-                search: new SearchMetadata(lang.Combat.HoldTabForCombat, Keywords: [kw.Tab])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_combat_holdtabforcombat"), Keywords: [TazLang.Get("mog_kw_tab")])
             ),
             Option.Checkbox(
-                lang.Combat.QueryBeforeAttack,
+                TazLang.Get("mog_combattab_combat_querybeforeattack"),
                 new Accessor<bool>(() => profile.EnabledCriminalActionQuery),
-                search: new SearchMetadata(lang.Combat.QueryBeforeAttack, Keywords: [kw.Criminal, kw.Query])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_combat_querybeforeattack"), Keywords: [TazLang.Get("mog_kw_criminal"), TazLang.Get("mog_kw_query")])
             ),
             Option.Checkbox(
-                lang.Combat.QueryBeforeBeneficial,
+                TazLang.Get("mog_combattab_combat_querybeforebeneficial"),
                 new Accessor<bool>(() => profile.EnabledBeneficialCriminalActionQuery),
-                search: new SearchMetadata(lang.Combat.QueryBeforeBeneficial, Keywords: [kw.Beneficial, kw.Criminal, kw.Query])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_combat_querybeforebeneficial"), Keywords: [TazLang.Get("mog_kw_beneficial"), TazLang.Get("mog_kw_criminal"), TazLang.Get("mog_kw_query")])
             ),
             Option.Checkbox(
-                lang.Combat.ShowBuffDurationOnOldStyleBuffBar,
+                TazLang.Get("mog_combattab_combat_showbuffdurationonoldstylebuffbar"),
                 new Accessor<bool>(() => profile.BuffBarTime),
-                search: new SearchMetadata(lang.Combat.ShowBuffDurationOnOldStyleBuffBar, Keywords: [kw.Buff, kw.Duration, kw.Time])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_combat_showbuffdurationonoldstylebuffbar"), Keywords: [TazLang.Get("mog_kw_buff"), TazLang.Get("mog_kw_duration"), TazLang.Get("mog_kw_time")])
             ),
             Option.Checkbox(
-                lang.Combat.EnableDPSCounter,
+                TazLang.Get("mog_combattab_combat_enabledpscounter"),
                 new Accessor<bool>(() => profile.ShowDPS),
-                search: new SearchMetadata(lang.Combat.EnableDPSCounter, Keywords: [kw.Dps, kw.Damage])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_combat_enabledpscounter"), Keywords: [TazLang.Get("mog_kw_dps"), TazLang.Get("mog_kw_damage")])
             ),
             Option.Checkbox(
-                genLang.ShowTargetIndicator,
+                TazLang.Get("mog_general_showtargetindicator"),
                 new Accessor<bool>(() => profile.ShowTargetIndicator),
-                search: new SearchMetadata(genLang.ShowTargetIndicator, Keywords: [kw.Target, kw.Indicator])
+                search: new SearchMetadata(TazLang.Get("mog_general_showtargetindicator"), Keywords: [TazLang.Get("mog_kw_target"), TazLang.Get("mog_kw_indicator")])
             ),
             Option.Checkbox(
-                genLang.IgnoreStaminaCheck,
+                TazLang.Get("mog_general_ignorestaminacheck"),
                 new Accessor<bool>(() => profile.IgnoreStaminaCheck),
-                search: new SearchMetadata(genLang.IgnoreStaminaCheck, Keywords: [kw.Stamina, kw.Disable])
+                search: new SearchMetadata(TazLang.Get("mog_general_ignorestaminacheck"), Keywords: [TazLang.Get("mog_kw_stamina"), TazLang.Get("mog_kw_disable")])
             ),
             Option.Checkbox(
-                genLang.DisableDismountWarmode,
+                TazLang.Get("mog_general_disabledismountwarmode"),
                 new Accessor<bool>(() => profile.DisableDismountInWarMode),
-                search: new SearchMetadata(genLang.DisableDismountWarmode, Keywords: [kw.Dismount, kw.Warmode])
+                search: new SearchMetadata(TazLang.Get("mog_general_disabledismountwarmode"), Keywords: [TazLang.Get("mog_kw_dismount"), TazLang.Get("mog_kw_warmode")])
             )
-        ).WithSearch(new SearchMetadata(lang.Combat.Label, [kw.Combat, kw.Battle]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_combattab_combat_label"), [TazLang.Get("mog_kw_combat"), TazLang.Get("mog_kw_battle")]));
     }
 }

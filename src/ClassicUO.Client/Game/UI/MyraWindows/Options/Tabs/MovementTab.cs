@@ -13,92 +13,88 @@ public static class MovementTab
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.MovementTabLang moveLang = lang.MovementTab;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnablePathfind), moveLang.Pathfinding.EnablePathfinding),
+                new PropertyBinder(new Accessor<bool>(() => profile.EnablePathfind), TazLang.Get("mog_movementtab_pathfinding_enablepathfinding")),
                 Option.Checkbox(
-                    moveLang.Pathfinding.ShiftPathfinding,
+                    TazLang.Get("mog_movementtab_pathfinding_shiftpathfinding"),
                     new Accessor<bool>(() => profile.UseShiftToPathfind),
-                    search: new SearchMetadata(moveLang.Pathfinding.ShiftPathfinding, Keywords: [kw.Pathfinding, kw.Shift])
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_pathfinding_shiftpathfinding"), Keywords: [TazLang.Get("mog_kw_pathfinding"), TazLang.Get("mog_kw_shift")])
                 ),
                 Option.Checkbox(
-                    moveLang.Pathfinding.SingleClickPathfind,
+                    TazLang.Get("mog_movementtab_pathfinding_singleclickpathfind"),
                     new Accessor<bool>(() => profile.PathfindSingleClick),
-                    search: new SearchMetadata(moveLang.Pathfinding.SingleClickPathfind, Keywords: [kw.Pathfinding, kw.Click])
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_pathfinding_singleclickpathfind"), Keywords: [TazLang.Get("mog_kw_pathfinding"), TazLang.Get("mog_kw_click")])
                 )
-            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Pathfinding])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_pathfinding")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.AlwaysRun), moveLang.Running.AlwaysRun),
+                new PropertyBinder(new Accessor<bool>(() => profile.AlwaysRun), TazLang.Get("mog_movementtab_running_alwaysrun")),
                 Option.Checkbox(
-                    moveLang.Running.RunUnlessHidden,
+                    TazLang.Get("mog_movementtab_running_rununlesshidden"),
                     new Accessor<bool>(() => profile.AlwaysRunUnlessHidden),
-                    search: new SearchMetadata(moveLang.Running.RunUnlessHidden, Keywords: [kw.Run, kw.Hidden])
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_running_rununlesshidden"), Keywords: [TazLang.Get("mog_kw_run"), TazLang.Get("mog_kw_hidden")])
                 )
-            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Run])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_run")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenDoors), moveLang.Doors.AutoOpenDoors),
+                new PropertyBinder(new Accessor<bool>(() => profile.AutoOpenDoors), TazLang.Get("mog_movementtab_doors_autoopendoors")),
                 Option.Checkbox(
-                    moveLang.Doors.AutoOpenPathfinding,
+                    TazLang.Get("mog_movementtab_doors_autoopenpathfinding"),
                     new Accessor<bool>(() => profile.SmoothDoors),
-                    search: new SearchMetadata(moveLang.Doors.AutoOpenPathfinding, Keywords: [kw.Door, kw.Pathfinding])
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_autoopenpathfinding"), Keywords: [TazLang.Get("mog_kw_door"), TazLang.Get("mog_kw_pathfinding")])
                 ),
                 Option.Checkbox(
-                    moveLang.Doors.AutoOpenHidden,
+                    TazLang.Get("mog_movementtab_doors_autoopenhidden"),
                     new Accessor<bool>(() => profile.AutoOpenDoorsIfHidden),
-                    search: new SearchMetadata(moveLang.Doors.AutoOpenHidden, Keywords: [kw.Door, kw.Hidden])
+                    search: new SearchMetadata(TazLang.Get("mog_movementtab_doors_autoopenhidden"), Keywords: [TazLang.Get("mog_kw_door"), TazLang.Get("mog_kw_hidden")])
                 )
-            ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement], Keywords: [kw.Door])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_door")])),
             Option.Checkbox(
-                moveLang.AutoAvoidObstacles,
+                TazLang.Get("mog_movementtab_autoavoidobstacles"),
                 new Accessor<bool>(() => profile.AutoAvoidObstacules),
-                search: new SearchMetadata(moveLang.AutoAvoidObstacles, Keywords: [kw.Avoid, kw.Obstacle])
+                search: new SearchMetadata(TazLang.Get("mog_movementtab_autoavoidobstacles"), Keywords: [TazLang.Get("mog_kw_avoid"), TazLang.Get("mog_kw_obstacle")])
             ),
             Option.Checkbox(
-                moveLang.UseWasdMovement,
+                TazLang.Get("mog_movementtab_usewasdmovement"),
                 new Accessor<bool>(() => profile.UseWASDInsteadArrowKeys),
-                search: new SearchMetadata(moveLang.UseWasdMovement, Keywords: [kw.WASD, kw.Keyboard])
+                search: new SearchMetadata(TazLang.Get("mog_movementtab_usewasdmovement"), Keywords: [TazLang.Get("mog_kw_wasd"), TazLang.Get("mog_kw_keyboard")])
             ),
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = moveLang.AutoFollow },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_movementtab_autofollow") },
                 Option.Slider(
-                    tuoLang.AutoFollowDistance,
+                    TazLang.Get("mog_tazuo_autofollowdistance"),
                     1,
                     10,
                     new Accessor<int>(() => profile.AutoFollowDistance),
-                    search: new SearchMetadata(tuoLang.AutoFollowDistance, Keywords: [kw.Distance])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_autofollowdistance"), Keywords: [TazLang.Get("mog_kw_distance")])
                 ),
                 Option.Checkbox(
-                    tuoLang.DisableAutoFollow,
+                    TazLang.Get("mog_tazuo_disableautofollow"),
                     new Accessor<bool>(() => profile.DisableAutoFollowAlt),
-                    search: new SearchMetadata(tuoLang.DisableAutoFollow, Keywords: [kw.Disable, kw.Alt])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_disableautofollow"), Keywords: [TazLang.Get("mog_kw_disable"), TazLang.Get("mog_kw_alt")])
                 )
             ).AsSearchGroup()
-             .WithSearch(new SearchMetadata(Keywords: [kw.Auto, kw.Follow])),
+             .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_auto"), TazLang.Get("mog_kw_follow")])),
             Option.Slider(
-                tuoLang.TurnDelay,
+                TazLang.Get("mog_tazuo_turndelay"),
                 45,
                 120,
                 new Accessor<ushort>(() => profile.TurnDelay),
-                search: new SearchMetadata(tuoLang.TurnDelay, Keywords: [kw.Turn, kw.Delay])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_turndelay"), Keywords: [TazLang.Get("mog_kw_turn"), TazLang.Get("mog_kw_delay")])
             ),
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = moveLang.Controller.Label, LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_movementtab_controller_label"), LabelLink = "https://tazuo.org/wiki/tazuocontroller-support" },
                 OptionsUi.CheckBoxGroup(
-                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), moveLang.Controller.EnableController),
+                    new PropertyBinder(new Accessor<bool>(() => profile.ControllerEnabled), TazLang.Get("mog_movementtab_controller_enablecontroller")),
                     Option.Slider(
-                        moveLang.Controller.MouseSensitivity,
+                        TazLang.Get("mog_movementtab_controller_mousesensitivity"),
                         1,
                         20,
                         new Accessor<float>(() => profile.ControllerMouseSensativity, f => profile.ControllerMouseSensativity = (int)f),
-                        search: new SearchMetadata(moveLang.Controller.MouseSensitivity, Keywords: [kw.Controller, kw.Sensitivity])
+                        search: new SearchMetadata(TazLang.Get("mog_movementtab_controller_mousesensitivity"), Keywords: [TazLang.Get("mog_kw_controller"), TazLang.Get("mog_kw_sensitivity")])
                     )
-                ).WithSearch(new SearchMetadata(moveLang.Controller.Label, Tags: [kw.Movement], Keywords: [kw.Controller]))
+                ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_controller_label"), Tags: [TazLang.Get("mog_kw_movement")], Keywords: [TazLang.Get("mog_kw_controller")]))
             )
-        ).WithSearch(new SearchMetadata(moveLang.Label, Tags: [kw.Movement]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_movementtab_label"), Tags: [TazLang.Get("mog_kw_movement")]));
     }
 }

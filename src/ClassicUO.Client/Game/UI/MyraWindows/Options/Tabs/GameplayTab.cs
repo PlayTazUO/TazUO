@@ -12,81 +12,73 @@ public static class GameplayTab
 
     private static OptionTabGroup GetGameplayMenuTabs()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.GameplayTabLang gameplayLang = lang.GameplayTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return new OptionTabGroup()
             .AddTab(
-                lang.CombatTab.Combat.Label,
+                TazLang.Get("mog_combattab_combat_label"),
                 CombatTab.GetContent,
-                new SearchMetadata(lang.CombatTab.Combat.Label, Keywords: [kw.Combat, kw.Attack, kw.Battle])
+                new SearchMetadata(TazLang.Get("mog_combattab_combat_label"), Keywords: [TazLang.Get("mog_kw_combat"), TazLang.Get("mog_kw_attack"), TazLang.Get("mog_kw_battle")])
             )
             .AddTab(
-                lang.MobilesTab.Label,
+                TazLang.Get("mog_mobilestab_label"),
                 MobilesTab.GetContent,
-                new SearchMetadata(lang.MobilesTab.Label, Keywords: [kw.Mobile, kw.Humanoid, kw.Monster, kw.HP, kw.Health])
+                new SearchMetadata(TazLang.Get("mog_mobilestab_label"), Keywords: [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_humanoid"), TazLang.Get("mog_kw_monster"), TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])
             )
             .AddTab(
-                lang.MovementTab.Label,
+                TazLang.Get("mog_movementtab_label"),
                 MovementTab.GetContent,
-                new SearchMetadata(lang.MovementTab.Label, Keywords: [kw.Movement, kw.Pathfinding, kw.WASD, kw.Move])
+                new SearchMetadata(TazLang.Get("mog_movementtab_label"), Keywords: [TazLang.Get("mog_kw_movement"), TazLang.Get("mog_kw_pathfinding"), TazLang.Get("mog_kw_wasd"), TazLang.Get("mog_kw_move")])
             )
             .AddTab(
-                gameplayLang.Terrain.Label,
+                TazLang.Get("mog_gameplaytab_terrain_label"),
                 GetTerrainAndStaticsSubTabContent,
-                new SearchMetadata(gameplayLang.Terrain.Label, Keywords: [kw.Terrain, kw.Static, kw.Tree, kw.Roof, kw.Vegetation])
+                new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_label"), Keywords: [TazLang.Get("mog_kw_terrain"), TazLang.Get("mog_kw_static"), TazLang.Get("mog_kw_tree"), TazLang.Get("mog_kw_roof"), TazLang.Get("mog_kw_vegetation")])
             )
             .AddTab(
-                lang.LayerHidingTab.Label,
+                TazLang.Get("mog_layerhidingtab_label"),
                 LayerHidingTab.GetContent,
-                new SearchMetadata(lang.LayerHidingTab.Label, Keywords: [kw.Layer, kw.Hide, kw.Equipment, kw.Clothing])
+                new SearchMetadata(TazLang.Get("mog_layerhidingtab_label"), Keywords: [TazLang.Get("mog_kw_layer"), TazLang.Get("mog_kw_hide"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_clothing")])
             );
     }
 
     private static IOptionSource GetTerrainAndStaticsSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
-        ModernOptionsGumpLanguage.GameplayTabLang gameplayLang = lang.GameplayTab;
-        ModernOptionsGumpLanguage.GameplayTabLang.TerrainSection terrainLang = gameplayLang.Terrain;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
             Option.Checkbox(
-                terrainLang.HideRoof,
+                TazLang.Get("mog_gameplaytab_terrain_hideroof"),
                 !profile.DrawRoofs,
                 b => profile.DrawRoofs = !b,
-                search: new SearchMetadata(terrainLang.HideRoof, Keywords: [kw.Roof])
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_hideroof"), Keywords: [TazLang.Get("mog_kw_roof")])
             ),
             Option.Checkbox(
-                terrainLang.TreesToStump,
+                TazLang.Get("mog_gameplaytab_terrain_treestostump"),
                 new Accessor<bool>(() => profile.TreeToStumps),
-                search: new SearchMetadata(terrainLang.TreesToStump, Keywords: [kw.Tree, kw.Stump])
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_treestostump"), Keywords: [TazLang.Get("mog_kw_tree"), TazLang.Get("mog_kw_stump")])
             ),
             Option.Checkbox(
-                terrainLang.HideVegetation,
+                TazLang.Get("mog_gameplaytab_terrain_hidevegetation"),
                 new Accessor<bool>(() => profile.HideVegetation),
-                search: new SearchMetadata(terrainLang.HideVegetation, Keywords: [kw.Vegetation])
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_hidevegetation"), Keywords: [TazLang.Get("mog_kw_vegetation")])
             ),
             Option.ComboBox(
-                terrainLang.MagicFieldType,
+                TazLang.Get("mog_gameplaytab_terrain_magicfieldtype"),
                 profile.FieldsType,
-                [genLang.MagicFieldOpt_Normal, genLang.MagicFieldOpt_Static, genLang.MagicFieldOpt_Tile],
+                [TazLang.Get("mog_general_magicfieldopt_normal"), TazLang.Get("mog_general_magicfieldopt_static"), TazLang.Get("mog_general_magicfieldopt_tile")],
                 i => profile.FieldsType = i,
-                search: new SearchMetadata(terrainLang.MagicFieldType, Keywords: [kw.Magic, kw.Field])
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_magicfieldtype"), Keywords: [TazLang.Get("mog_kw_magic"), TazLang.Get("mog_kw_field")])
             ),
             Option.Checkbox(
-                terrainLang.ApplyBorderCaveTiles,
+                TazLang.Get("mog_gameplaytab_terrain_applybordercavetiles"),
                 new Accessor<bool>(() => profile.EnableCaveBorder, newValue =>
                 {
                     profile.EnableCaveBorder = newValue;
                     if (newValue)
                         StaticFilters.ApplyCaveTileBorder();
                 }),
-                search: new SearchMetadata(terrainLang.ApplyBorderCaveTiles, Keywords: [kw.Cave, kw.Border])
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_applybordercavetiles"), Keywords: [TazLang.Get("mog_kw_cave"), TazLang.Get("mog_kw_border")])
             )
-        ).WithSearch(new SearchMetadata(terrainLang.Label, Tags: [kw.Terrain, kw.Static]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_label"), Tags: [TazLang.Get("mog_kw_terrain"), TazLang.Get("mog_kw_static")]));
     }
 }

@@ -18,70 +18,67 @@ public static class SpellsTab
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.CombatTab.Spells;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnabledSpellFormat), lang.EnableOverheadSpellFormat),
+                new PropertyBinder(new Accessor<bool>(() => profile.EnabledSpellFormat), TazLang.Get("mog_combattab_spells_enableoverheadspellformat")),
                 Option.InputField(
-                    lang.SpellOverheadFormat,
+                    TazLang.Get("mog_combattab_spells_spelloverheadformat"),
                     new Accessor<string>(() => profile.SpellDisplayFormat, s => profile.SpellDisplayFormat = s),
-                    search: new SearchMetadata(lang.SpellOverheadFormat, Keywords: [kw.Format])
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_spelloverheadformat"), Keywords: [TazLang.Get("mog_kw_format")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Format])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_format")])),
             Option.Checkbox(
-                lang.EnableOverheadSpellHue,
+                TazLang.Get("mog_combattab_spells_enableoverheadspellhue"),
                 new Accessor<bool>(() => profile.EnabledSpellHue),
-                search: new SearchMetadata(lang.EnableOverheadSpellHue, Keywords: [kw.Hue, kw.Color])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_spells_enableoverheadspellhue"), Keywords: [TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
             ),
             Option.Checkbox(
-                lang.SingleClickForSpellIcons,
+                TazLang.Get("mog_combattab_spells_singleclickforspellicons"),
                 new Accessor<bool>(() => profile.CastSpellsByOneClick),
-                search: new SearchMetadata(lang.SingleClickForSpellIcons, Keywords: [kw.Click, kw.Cast])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_spells_singleclickforspellicons"), Keywords: [TazLang.Get("mog_kw_click"), TazLang.Get("mog_kw_cast")])
             ),
             Option.Checkbox(
-                lang.EnableFastSpellHotkeyAssigning,
+                TazLang.Get("mog_combattab_spells_enablefastspellhotkeyassigning"),
                 new Accessor<bool>(() => profile.FastSpellsAssign),
-                search: new SearchMetadata(lang.EnableFastSpellHotkeyAssigning, Keywords: [kw.Hotkey, kw.Assign])
+                search: new SearchMetadata(TazLang.Get("mog_combattab_spells_enablefastspellhotkeyassigning"), Keywords: [TazLang.Get("mog_kw_hotkey"), TazLang.Get("mog_kw_assign")])
             ),
             Option.Slider(
-                lang.SpellIconScale, 50, 300, new Accessor<float>(() => profile.SpellIconScale, f => profile.SpellIconScale = (int)f),
-                search: new SearchMetadata(lang.SpellIconScale, Keywords: [kw.Scale, kw.Size])
+                TazLang.Get("mog_combattab_spells_spelliconscale"), 50, 300, new Accessor<float>(() => profile.SpellIconScale, f => profile.SpellIconScale = (int)f),
+                search: new SearchMetadata(TazLang.Get("mog_combattab_spells_spelliconscale"), Keywords: [TazLang.Get("mog_kw_scale"), TazLang.Get("mog_kw_size")])
             ),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey), lang.DisplayMatchingHotkeysOnSpellIcons),
+                new PropertyBinder(new Accessor<bool>(() => profile.SpellIcon_DisplayHotkey), TazLang.Get("mog_combattab_spells_displaymatchinghotkeysonspellicons")),
                 Option.HuePicker(
-                    lang.HotkeyTextHue,
+                    TazLang.Get("mog_combattab_spells_hotkeytexthue"),
                     new Accessor<ushort>(() => profile.SpellIcon_HotkeyHue, h => profile.SpellIcon_HotkeyHue = h),
-                    search: new SearchMetadata(lang.HotkeyTextHue, Keywords: [kw.Color, kw.Hue])
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_hotkeytexthue"), Keywords: [TazLang.Get("mog_kw_color"), TazLang.Get("mog_kw_hue")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Hotkey])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_hotkey")])),
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = lang.SpellIndicators },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_combattab_spells_spellindicators") },
                 Option.Checkbox(
-                    lang.EnableSpellIndicators,
+                    TazLang.Get("mog_combattab_spells_enablespellindicators"),
                     new Accessor<bool>(() => profile.EnableSpellIndicators),
-                    search: new SearchMetadata(lang.EnableSpellIndicators)
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_enablespellindicators"))
                 ),
                 Option.Button(
-                    lang.ImportIndicatorsFromUrl,
+                    TazLang.Get("mog_combattab_spells_importindicatorsfromurl"),
                     OpenConfigDownloadModal,
-                    search: new SearchMetadata(lang.ImportIndicatorsFromUrl, Keywords: [kw.Import, kw.Download])
+                    search: new SearchMetadata(TazLang.Get("mog_combattab_spells_importindicatorsfromurl"), Keywords: [TazLang.Get("mog_kw_import"), TazLang.Get("mog_kw_download")])
                 )
             )
-        ).WithSearch(new SearchMetadata(lang.SpellLabel, Tags: [kw.Spell, kw.Magic]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_combattab_spells_spelllabel"), Tags: [TazLang.Get("mog_kw_spell"), TazLang.Get("mog_kw_magic")]));
     }
 
     private static void OpenConfigDownloadModal()
     {
-        ModernOptionsGumpLanguage.SpellsTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.SpellsTab;
         UIManager.Add
         (
             new PromptPopupWindow
             (
-                lang.ImportIndicatorsFromUrl,
-                lang.SpellIndicatorsDownloadPrompt,
+                TazLang.Get("mog_spellstab_importindicatorsfromurl"),
+                TazLang.Get("mog_spellstab_spellindicatorsdownloadprompt"),
                 url => _ = OnDownloadConfirmed(url),
                 TazLang.Get("uicommons_download"),
                 TazLang.Get("uicommons_cancel"),
@@ -93,7 +90,6 @@ public static class SpellsTab
 
     private static async Task OnDownloadConfirmed(string url)
     {
-        ModernOptionsGumpLanguage.TazUO tuoLang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
 
         if (string.IsNullOrWhiteSpace(url))
             return;
@@ -101,7 +97,7 @@ public static class SpellsTab
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri))
             return;
 
-        GameActions.Print(World.Instance, tuoLang.AttemptingToDownloadSpellConfig);
+        GameActions.Print(World.Instance, TazLang.Get("mog_tazuo_attemptingtodownloadspellconfig"));
 
         try
         {
@@ -110,16 +106,16 @@ public static class SpellsTab
             string fetchResult = await httpClient.GetStringAsync(uri);
 
             if (SpellVisualRangeManager.Instance.LoadFromString(fetchResult))
-                GameActions.Print(World.Instance, tuoLang.SuccesfullyDownloadedNewSpellConfig);
+                GameActions.Print(World.Instance, TazLang.Get("mog_tazuo_succesfullydownloadednewspellconfig"));
             else
             {
-                string message = string.Format(tuoLang.FailedToDownloadTheSpellConfigExMessage, tuoLang.FailedToLoadSpellConfigMessage);
+                string message = TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage", [TazLang.Get("mog_tazuo_failedtoloadspellconfigmessage")]);
                 GameActions.Print(World.Instance, message, Constants.HUE_WARN);
             }
         }
         catch (Exception ex)
         {
-            GameActions.Print(World.Instance, string.Format(tuoLang.FailedToDownloadTheSpellConfigExMessage, ex.Message));
+            GameActions.Print(World.Instance, TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage", [ex.Message]));
         }
     }
 }

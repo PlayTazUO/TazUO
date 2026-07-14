@@ -16,17 +16,14 @@ public static class InfoBarsTab
     /// <summary>Returns the option fragment containing the info-bar editor widget</summary>
     internal static IOptionSource GetContent()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
         return OptionsUi.Vertical(
-            Option.Custom(GetContentWidget, new SearchMetadata(lang.ButtonInfoBar, Keywords: [kw.InfoBarSpaced, kw.InfoBar, kw.Stat]))
-        ).WithSearch(new SearchMetadata(lang.ButtonInfoBar, Tags: [kw.InfoBarSpaced, kw.InfoBar, kw.Stat]));
+            Option.Custom(GetContentWidget, new SearchMetadata(TazLang.Get("mog_buttoninfobar"), Keywords: [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]))
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttoninfobar"), Tags: [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")]));
     }
 
     private static Widget GetContentWidget()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.InfoBars ibLang = Language.Instance.GetModernOptionsGumpLanguage.GetInfoBars;
 
         var root = new VerticalStackPanel { Spacing = 6 };
 
@@ -52,45 +49,45 @@ public static class InfoBarsTab
                     infoBarGump?.Dispose();
                 }
             },
-            ibLang.ShowInfoBar
+            TazLang.Get("mog_infobars_showinfobar")
         ));
 
         root.Widgets.Add(new MyraSpacer(1, 2));
 
         root.Widgets.Add(OptionTabCommons.StyledFontSelector(
-            ibLang.InfoBarFont,
+            TazLang.Get("mog_infobars_infobarfont"),
             new Accessor<string>(() => profile.InfoBarFont),
             _ => InfoBarGump.UpdateAllOptions()
         ));
 
         // Highlight type combo box
         var highlightCombo = new ComboView { MinWidth = 150, VerticalAlignment = VerticalAlignment.Center };
-        highlightCombo.ListView.Widgets.Add(new Label { Text = ibLang.HighLightOpt_TextColor });
-        highlightCombo.ListView.Widgets.Add(new Label { Text = ibLang.HighLightOpt_ColoredBars });
+        highlightCombo.ListView.Widgets.Add(new Label { Text = TazLang.Get("mog_infobars_highlightopt_textcolor") });
+        highlightCombo.ListView.Widgets.Add(new Label { Text = TazLang.Get("mog_infobars_highlightopt_coloredbars") });
         highlightCombo.ListView.SelectedIndex = profile.InfoBarHighlightType;
         highlightCombo.ListView.SelectedIndexChanged += (_, _) =>
         {
             if (highlightCombo.ListView.SelectedIndex.HasValue)
                 profile.InfoBarHighlightType = highlightCombo.ListView.SelectedIndex.Value;
         };
-        root.Widgets.Add(new MyraLabel(ibLang.HighlightType, MyraLabel.TextStyle.P).PlaceBefore(highlightCombo));
+        root.Widgets.Add(new MyraLabel(TazLang.Get("mog_infobars_highlighttype"), MyraLabel.TextStyle.P).PlaceBefore(highlightCombo));
 
         root.Widgets.Add(new MyraSpacer(1, 4));
 
         // Column headers
         var headers = new HorizontalStackPanel { Spacing = 4 };
-        headers.Widgets.Add(new MyraLabel(ibLang.Label, MyraLabel.TextStyle.TableHeader) { Width = 130, MinWidth = 130 });
-        headers.Widgets.Add(new MyraLabel(ibLang.Color, MyraLabel.TextStyle.TableHeader) { Width = 60, MinWidth = 60 });
-        headers.Widgets.Add(new MyraLabel(ibLang.Data, MyraLabel.TextStyle.TableHeader) { Width = 170, MinWidth = 170 });
+        headers.Widgets.Add(new MyraLabel(TazLang.Get("mog_infobars_label"), MyraLabel.TextStyle.TableHeader) { Width = 130, MinWidth = 130 });
+        headers.Widgets.Add(new MyraLabel(TazLang.Get("mog_infobars_color"), MyraLabel.TextStyle.TableHeader) { Width = 60, MinWidth = 60 });
+        headers.Widgets.Add(new MyraLabel(TazLang.Get("mog_infobars_data"), MyraLabel.TextStyle.TableHeader) { Width = 170, MinWidth = 170 });
         root.Widgets.Add(headers);
 
         // Items list panel (rebuilt dynamically on add/remove)
         var itemsPanel = new VerticalStackPanel { Spacing = 3 };
 
         // Add item button
-        root.Widgets.Add(new MyraButton(ibLang.AddItem, () =>
+        root.Widgets.Add(new MyraButton(TazLang.Get("mog_infobars_additem"), () =>
         {
-            var ibi = new InfoBarItem(ibLang.Hp, InfoBarVars.HP, 0x3B9);
+            var ibi = new InfoBarItem(TazLang.Get("mog_infobars_hp"), InfoBarVars.HP, 0x3B9);
             World.Instance.InfoBars?.AddItem(ibi);
             UIManager.GetGump<InfoBarGump>()?.ResetItems();
             itemsPanel.Widgets.Add(BuildItemRow(ibi, itemsPanel));
@@ -120,8 +117,7 @@ public static class InfoBarsTab
         row.Widgets.Add(labelInput);
 
         // Hue picker button
-        ModernOptionsGumpLanguage.InfoBars ibLang = Language.Instance.GetModernOptionsGumpLanguage.GetInfoBars;
-        var hueBtn = new MyraButton(ibLang.Color, () =>
+        var hueBtn = new MyraButton(TazLang.Get("mog_infobars_color"), () =>
         {
             UIManager.GetGump<ModernColorPicker>()?.Dispose();
             UIManager.Add(new ModernColorPicker(World.Instance, h =>
@@ -133,7 +129,7 @@ public static class InfoBarsTab
         {
             Width = 60,
             MinWidth = 60,
-            Tooltip = string.Format(ibLang.HueTooltipFormat, item.hue)
+            Tooltip = TazLang.Get("mog_infobars_huetooltipformat", [item.hue.ToString("X")])
         };
         row.Widgets.Add(hueBtn);
 
@@ -153,7 +149,7 @@ public static class InfoBarsTab
         row.Widgets.Add(varCombo);
 
         // Delete button
-        var deleteBtn = new MyraButton(ibLang.DeleteButtonLabel, () =>
+        var deleteBtn = new MyraButton(TazLang.Get("mog_infobars_deletebuttonlabel"), () =>
         {
             World.Instance.InfoBars?.RemoveItem(item);
             UIManager.GetGump<InfoBarGump>()?.ResetItems();

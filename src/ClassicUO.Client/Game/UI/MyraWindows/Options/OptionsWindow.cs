@@ -106,7 +106,7 @@ public class OptionsWindow : MyraControl
 
     #region Constructors
 
-    public OptionsWindow() : base(Language.Instance.GetModernOptionsGumpLanguage.Kw.Options)
+    public OptionsWindow() : base(TazLang.Get("mog_kw_options"))
     {
         UIManager.ForEach<OptionsWindow>(w =>
         {
@@ -166,15 +166,14 @@ public class OptionsWindow : MyraControl
 
     private void SetupOptions()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
 
-        AddOptionSource(lang.GameplayTab.GameplayLabel, GameplayTab.GetContent());
-        AddOptionSource(lang.Kw.Interface, InterfaceTab.GetContent());
-        AddOptionSource(lang.LabelChatAndText, ChatTab.GetContent());
-        AddOptionSource(lang.VideoTab.Label, VideoTab.GetContent());
-        AddOptionSource(lang.SoundTab.Label, SoundsTab.GetContent());
-        AddOptionSource(lang.MiscTab.Label, MiscTab.GetContent());
-        AddOptionSource(lang.Kw.Profile, ProfileTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_gameplaytab_gameplaylabel"), GameplayTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_kw_interface"), InterfaceTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_labelchatandtext"), ChatTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_videotab_label"), VideoTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_soundtab_label"), SoundsTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_misctab_label"), MiscTab.GetContent());
+        AddOptionSource(TazLang.Get("mog_kw_profile"), ProfileTab.GetContent());
     }
 
     private void AddOptionSource(string category, IOptionSource source)
@@ -206,7 +205,7 @@ public class OptionsWindow : MyraControl
         _mainArea.AddRow(Proportion.Auto);
         _mainArea.AddRow(Proportion.Fill);
 
-        _searchField.HintText = Language.Instance.GetModernOptionsGumpLanguage.SearchEllipses;
+        _searchField.HintText = TazLang.Get("mog_searchellipses");
         _searchField.TextChangedByUser += SearchFieldOnTextChangedByUser;
         _mainArea.AddWidget(_searchField, 0, 0, null, 2);
 
@@ -466,7 +465,7 @@ public class OptionsWindow : MyraControl
 
         _searchField.Text = null;
         // This internally calls some setters that render the hint again. Without this, and even though the property hasn't changes, hint will be lost.
-        _searchField.HintText = Language.Instance.GetModernOptionsGumpLanguage.SearchEllipses;
+        _searchField.HintText = TazLang.Get("mog_searchellipses");
 
         _optionsStack.Widgets.Clear();
         _optionsStack.Widgets.Add(_optionsPanel);

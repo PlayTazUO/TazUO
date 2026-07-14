@@ -12,54 +12,52 @@ public static class InterfaceTab
     /// <summary>Returns the tab group containing all interface sub-tabs</summary>
     internal static IOptionSource GetContent()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
-        return new OptionTabGroup(search: new SearchMetadata(Tags: [kw.Interface]))
+        return new OptionTabGroup(search: new SearchMetadata(Tags: [TazLang.Get("mog_kw_interface")]))
             .AddTab(
-                lang.ButtonContainers,
+                TazLang.Get("mog_buttoncontainers"),
                 ContainersTab.GetContent,
-                new SearchMetadata(lang.ButtonContainers)
+                new SearchMetadata(TazLang.Get("mog_buttoncontainers"))
             )
             .AddTab(
-                lang.ButtonNameplates,
+                TazLang.Get("mog_buttonnameplates"),
                 NameplatesTab.GetContent,
-                new SearchMetadata(lang.ButtonNameplates, [kw.Nameplate, kw.Name])
+                new SearchMetadata(TazLang.Get("mog_buttonnameplates"), [TazLang.Get("mog_kw_nameplate"), TazLang.Get("mog_kw_name")])
             )
             .AddTab(
-                lang.LabelTooltips,
+                TazLang.Get("mog_labeltooltips"),
                 TooltipsTab.GetContent,
-                new SearchMetadata(lang.LabelTooltips, [kw.Tooltip, kw.Hover])
+                new SearchMetadata(TazLang.Get("mog_labeltooltips"), [TazLang.Get("mog_kw_tooltip"), TazLang.Get("mog_kw_hover")])
             )
             .AddTab(
-                lang.ButtonInfoBar,
+                TazLang.Get("mog_buttoninfobar"),
                 InfoBarsTab.GetContent,
-                new SearchMetadata(lang.ButtonInfoBar, [kw.InfoBarSpaced, kw.InfoBar, kw.Stat])
+                new SearchMetadata(TazLang.Get("mog_buttoninfobar"), [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")])
             )
             .AddTab(
-                lang.ButtonHealthBars,
+                TazLang.Get("mog_buttonhealthbars"),
                 HealthBarsTab.GetContent,
-                new SearchMetadata(lang.ButtonHealthBars, [kw.HealthBar, kw.HP])
+                new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])
             )
             .AddTab(
-                lang.ButtonGumps,
+                TazLang.Get("mog_buttongumps"),
                 GumpsTab.GetContent,
-                new SearchMetadata(lang.ButtonGumps, [kw.Gump, kw.Window])
+                new SearchMetadata(TazLang.Get("mog_buttongumps"), [TazLang.Get("mog_kw_gump"), TazLang.Get("mog_kw_window")])
             )
             .AddTab(
-                lang.ButtonCounters,
+                TazLang.Get("mog_buttoncounters"),
                 CountersTab.GetContent,
-                new SearchMetadata(lang.ButtonCounters, [kw.Counter, kw.Item, kw.Reagent])
+                new SearchMetadata(TazLang.Get("mog_buttoncounters"), [TazLang.Get("mog_kw_counter"), TazLang.Get("mog_kw_item"), TazLang.Get("mog_kw_reagent")])
             )
             .AddTab(
-                lang.ButtonPaperdoll,
+                TazLang.Get("mog_buttonpaperdoll"),
                 PaperdollTab.GetContent,
-                new SearchMetadata(lang.ButtonPaperdoll, [kw.Paperdoll, kw.Character, kw.Equipment])
+                new SearchMetadata(TazLang.Get("mog_buttonpaperdoll"), [TazLang.Get("mog_kw_paperdoll"), TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_equipment")])
             )
             .AddTab(
-                lang.CooldownsTab.CooldownBarsLabel,
+                TazLang.Get("mog_cooldownstab_cooldownbarslabel"),
                 CooldownBarsTab.GetContent,
-                new SearchMetadata(lang.CooldownsTab.CooldownBarsLabel, [kw.Cooldown, kw.Timer])
+                new SearchMetadata(TazLang.Get("mog_cooldownstab_cooldownbarslabel"), [TazLang.Get("mog_kw_cooldown"), TazLang.Get("mog_kw_timer")])
             );
     }
 }

@@ -14,25 +14,22 @@ public static class ChatTab
 
     private static OptionTabGroup GetChatMenuTabs()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang chatLang = lang.ChatTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return new OptionTabGroup()
             .AddTab(
-                chatLang.Speech.Label,
+                TazLang.Get("mog_chattab_speech_label"),
                 SpeechTab.GetContent,
-                new SearchMetadata(chatLang.Speech.Label, Keywords: [kw.Speech, kw.Talk])
+                new SearchMetadata(TazLang.Get("mog_chattab_speech_label"), Keywords: [TazLang.Get("mog_kw_speech"), TazLang.Get("mog_kw_talk")])
             )
             .AddTab(
-                chatLang.Journal.Label,
+                TazLang.Get("mog_chattab_journal_label"),
                 GetJournalSubTabContentSource,
-                new SearchMetadata(chatLang.Journal.Label, Keywords: [kw.Journal, kw.Log, kw.History])
+                new SearchMetadata(TazLang.Get("mog_chattab_journal_label"), Keywords: [TazLang.Get("mog_kw_journal"), TazLang.Get("mog_kw_log"), TazLang.Get("mog_kw_history")])
             )
             .AddTab(
-                chatLang.FontTab.FontsLabel,
+                TazLang.Get("mog_chattab_fonttab_fontslabel"),
                 FontsTab.GetContent,
-                new SearchMetadata(chatLang.FontTab.FontsLabel, Keywords: [kw.Font, kw.Text, kw.Style])
+                new SearchMetadata(TazLang.Get("mog_chattab_fonttab_fontslabel"), Keywords: [TazLang.Get("mog_kw_font"), TazLang.Get("mog_kw_text"), TazLang.Get("mog_kw_style")])
             );
     }
 
@@ -40,32 +37,27 @@ public static class ChatTab
 
     private static IOptionSource GetJournalSubTabContentSource()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.JournalSection journalLang = lang.ChatTab.Journal;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
             GetJournalSubTabContent()
-        ).WithSearch(new SearchMetadata(journalLang.Label, [kw.Journal, kw.Log]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_chattab_journal_label"), [TazLang.Get("mog_kw_journal"), TazLang.Get("mog_kw_log")]));
     }
 
     private static OptionFragment GetJournalSubTabContent()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.ChatTabLang.JournalSection journalLang = lang.ChatTab.Journal;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = journalLang.Label, LabelLink = "https://tazuo.org/wiki/tazuojournal/" },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_chattab_journal_label"), LabelLink = "https://tazuo.org/wiki/tazuojournal/" },
             Option.Slider(
-                journalLang.MaxJournalEntries,
+                TazLang.Get("mog_chattab_journal_maxjournalentries"),
                 100,
                 2000,
                 new Accessor<int>(() => profile.MaxJournalEntries),
-                search: new SearchMetadata(journalLang.MaxJournalEntries)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_maxjournalentries"))
             ),
             Option.Slider(
-                journalLang.JournalOpacity,
+                TazLang.Get("mog_chattab_journal_journalopacity"),
                 0,
                 100,
                 new Accessor<float>(() => profile.JournalOpacity, newValue =>
@@ -73,28 +65,28 @@ public static class ChatTab
                     profile.JournalOpacity = (byte)newValue;
                     ResizableJournal.UpdateJournalOptions();
                 }),
-                search: new SearchMetadata(journalLang.JournalOpacity)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalopacity"))
             ),
             Option.ComboBox(
-                journalLang.JournalStyle,
+                TazLang.Get("mog_chattab_journal_journalstyle"),
                 profile.JournalStyle,
                 Enum.GetNames<ResizableJournal.BorderStyle>(),
                 newValue => profile.JournalStyle = newValue,
-                search: new SearchMetadata(journalLang.JournalStyle)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalstyle"))
             ),
             Option.HuePicker(
-                journalLang.JournalBackgroundColor,
+                TazLang.Get("mog_chattab_journal_journalbackgroundcolor"),
                 new Accessor<ushort>(() => profile.AltJournalBackgroundHue, h =>
                 {
                     profile.AltJournalBackgroundHue = h;
                     ResizableJournal.UpdateJournalOptions();
                 }),
-                new SearchMetadata(journalLang.JournalBackgroundColor)
+                new SearchMetadata(TazLang.Get("mog_chattab_journal_journalbackgroundcolor"))
             ),
             Option.Checkbox(
-                journalLang.JournalHideBorders,
+                TazLang.Get("mog_chattab_journal_journalhideborders"),
                 new Accessor<bool>(() => profile.HideJournalBorder),
-                search: new SearchMetadata(journalLang.JournalHideBorders)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalhideborders"))
             ),
             Option.Checkbox(
                 TazLang.Get("journal_transparencywheninactive", "Journal transparency when not active"),
@@ -102,24 +94,24 @@ public static class ChatTab
                 search: new SearchMetadata(TazLang.Get("journal_transparencywheninactive", "Journal transparency when not active"))
             ),
             Option.Checkbox(
-                journalLang.HideTimestamp,
+                TazLang.Get("mog_chattab_journal_hidetimestamp"),
                 new Accessor<bool>(() => profile.HideJournalTimestamp),
-                search: new SearchMetadata(journalLang.HideTimestamp)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_hidetimestamp"))
             ),
             Option.Checkbox(
-                journalLang.JournalHideSystemPrefix,
+                TazLang.Get("mog_chattab_journal_journalhidesystemprefix"),
                 new Accessor<bool>(() => profile.HideJournalSystemPrefix),
-                search: new SearchMetadata(journalLang.JournalHideSystemPrefix)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_journalhidesystemprefix"))
             ),
             Option.Checkbox(
-                journalLang.MakeAnchorable,
+                TazLang.Get("mog_chattab_journal_makeanchorable"),
                 new Accessor<bool>(() => profile.JournalAnchorEnabled),
-                search: new SearchMetadata(journalLang.MakeAnchorable)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_makeanchorable"))
             ),
             Option.Checkbox(
-                journalLang.SaveJournalToFile,
+                TazLang.Get("mog_chattab_journal_savejournaltofile"),
                 new Accessor<bool>(() => profile.SaveJournalToFile),
-                search: new SearchMetadata(journalLang.SaveJournalToFile)
+                search: new SearchMetadata(TazLang.Get("mog_chattab_journal_savejournaltofile"))
             )
         );
     }

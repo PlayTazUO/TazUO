@@ -12,167 +12,157 @@ public static class MobilesTab
 
     private static OptionTabGroup GetTabs()
     {
-        ModernOptionsGumpLanguage.MobilesTabLang mobilesLang = Language.Instance.GetModernOptionsGumpLanguage.MobilesTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return new OptionTabGroup()
             .AddTab(
-                mobilesLang.Highlighting.Label,
+                TazLang.Get("mog_mobilestab_highlighting_label"),
                 GetHighlightingSection,
-                new SearchMetadata(mobilesLang.Highlighting.Label, Keywords: [kw.Highlight])
+                new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_label"), Keywords: [TazLang.Get("mog_kw_highlight")])
             )
             .AddTab(
-                mobilesLang.Hues.Label,
+                TazLang.Get("mog_mobilestab_hues_label"),
                 GetEntityHueSettingSection,
-                new SearchMetadata(mobilesLang.Hues.Label, Keywords: [kw.Hue, kw.Color])
+                new SearchMetadata(TazLang.Get("mog_mobilestab_hues_label"), Keywords: [TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
             );
     }
 
     private static IOptionSource GetHighlightingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.MobilesTabLang mobLang = Language.Instance.GetModernOptionsGumpLanguage.MobilesTab;
-        ModernOptionsGumpLanguage.MobilesTabLang.HighlightingSection lang = mobLang.Highlighting;
-        ModernOptionsGumpLanguage.General genLang = Language.Instance.GetModernOptionsGumpLanguage.GetGeneral;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), lang.ShowMobileHP),
+                new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), TazLang.Get("mog_mobilestab_highlighting_showmobilehp")),
                 Option.ComboBox(
-                    lang.MobileHPType,
+                    TazLang.Get("mog_mobilestab_highlighting_mobilehptype"),
                     profile.MobileHPType,
-                    [genLang.HPTypePerc, genLang.HPTypeBar, genLang.HPTypeNBoth],
+                    [TazLang.Get("mog_general_hptypeperc"), TazLang.Get("mog_general_hptypebar"), TazLang.Get("mog_general_hptypenboth")],
                     i => profile.MobileHPType = i,
-                    search: new SearchMetadata(lang.MobileHPType, Keywords: [kw.HP, kw.Health, kw.Type])
+                    search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_mobilehptype"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_type")])
                 ),
                 Option.ComboBox(
-                    lang.HPShowWhen,
+                    TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"),
                     profile.MobileHPShowWhen,
-                    [genLang.HPShowWhen_Always, genLang.HPShowWhen_Less100, genLang.HPShowWhen_Smart],
+                    [TazLang.Get("mog_general_hpshowwhen_always"), TazLang.Get("mog_general_hpshowwhen_less100"), TazLang.Get("mog_general_hpshowwhen_smart")],
                     i => profile.MobileHPShowWhen = i,
-                    search: new SearchMetadata(lang.HPShowWhen, Keywords: [kw.HP, kw.Health, kw.Show])
+                    search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_show")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.HP, kw.Health])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByPoisoned), lang.HighlightPoisoned),
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByPoisoned), TazLang.Get("mog_mobilestab_highlighting_highlightpoisoned")),
                 Option.HuePicker(
-                    genLang.PoisonHighlightColor,
+                    TazLang.Get("mog_general_poisonhighlightcolor"),
                     new Accessor<ushort>(() => profile.PoisonHue, h => profile.PoisonHue = h),
-                    new SearchMetadata(genLang.PoisonHighlightColor, Keywords: [kw.Poison, kw.Hue])
+                    new SearchMetadata(TazLang.Get("mog_general_poisonhighlightcolor"), Keywords: [TazLang.Get("mog_kw_poison"), TazLang.Get("mog_kw_hue")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Poison])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_poison")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByParalize), lang.HighlightPara),
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByParalize), TazLang.Get("mog_mobilestab_highlighting_highlightpara")),
                 Option.HuePicker(
-                    genLang.ParaHighlightColor,
+                    TazLang.Get("mog_general_parahighlightcolor"),
                     new Accessor<ushort>(() => profile.ParalyzedHue, h => profile.ParalyzedHue = h),
-                    new SearchMetadata(genLang.ParaHighlightColor, Keywords: [kw.Paralyze, kw.Hue])
+                    new SearchMetadata(TazLang.Get("mog_general_parahighlightcolor"), Keywords: [TazLang.Get("mog_kw_paralyze"), TazLang.Get("mog_kw_hue")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Paralyze])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_paralyze")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByInvul), lang.HighlightInvul),
+                new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByInvul), TazLang.Get("mog_mobilestab_highlighting_highlightinvul")),
                 Option.HuePicker(
-                    genLang.InvulHighlightColor,
+                    TazLang.Get("mog_general_invulhighlightcolor"),
                     new Accessor<ushort>(() => profile.InvulnerableHue, h => profile.InvulnerableHue = h),
-                    new SearchMetadata(genLang.InvulHighlightColor, Keywords: [kw.Invulnerable, kw.Hue])
+                    new SearchMetadata(TazLang.Get("mog_general_invulhighlightcolor"), Keywords: [TazLang.Get("mog_kw_invulnerable"), TazLang.Get("mog_kw_hue")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Highlight, kw.Invulnerable])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_invulnerable")])),
             Option.Checkbox(
-                lang.IncomingMobiles,
+                TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"),
                 new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
-                search: new SearchMetadata(lang.IncomingMobiles, Keywords: [kw.Incoming, kw.Mobile])
+                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
             ),
             Option.Checkbox(
-                lang.IncomingCorpses,
+                TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"),
                 new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
-                search: new SearchMetadata(lang.IncomingCorpses, Keywords: [kw.Incoming, kw.Corpse])
+                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
             ),
             Option.ComboBox(
-                lang.AuraUnderFeet,
+                TazLang.Get("mog_mobilestab_highlighting_auraunderfeet"),
                 profile.AuraUnderFeetType,
                 [
-                    genLang.AuraOptDisabled,
-                    genLang.AuroOptWarmode,
-                    genLang.AuraOptCtrlShift,
-                    genLang.AuraOptAlways
+                    TazLang.Get("mog_general_auraoptdisabled"),
+                    TazLang.Get("mog_general_aurooptwarmode"),
+                    TazLang.Get("mog_general_auraoptctrlshift"),
+                    TazLang.Get("mog_general_auraoptalways")
                 ],
                 i => profile.AuraUnderFeetType = i,
-                search: new SearchMetadata(lang.AuraUnderFeet, Keywords: [kw.Aura])
+                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_auraunderfeet"), Keywords: [TazLang.Get("mog_kw_aura")])
             ),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.PartyAura), lang.AuraForParty),
+                new PropertyBinder(new Accessor<bool>(() => profile.PartyAura), TazLang.Get("mog_mobilestab_highlighting_auraforparty")),
                 Option.HuePicker(
-                    genLang.AuraPartyColor,
+                    TazLang.Get("mog_general_aurapartycolor"),
                     new Accessor<ushort>(() => profile.PartyAuraHue, h => profile.PartyAuraHue = h),
-                    new SearchMetadata(genLang.AuraPartyColor, Keywords: [kw.Aura, kw.Party, kw.Hue])
+                    new SearchMetadata(TazLang.Get("mog_general_aurapartycolor"), Keywords: [TazLang.Get("mog_kw_aura"), TazLang.Get("mog_kw_party"), TazLang.Get("mog_kw_hue")])
                 )
-            ).WithSearch(new SearchMetadata(Keywords: [kw.Aura, kw.Party])),
+            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_aura"), TazLang.Get("mog_kw_party")])),
             Option.Checkbox(
-                genLang.DisableGrayEnemies,
+                TazLang.Get("mog_general_disablegrayenemies"),
                 new Accessor<bool>(() => profile.DisableGrayEnemies),
-                search: new SearchMetadata(genLang.DisableGrayEnemies, Keywords: [kw.Enemy, kw.Disable])
+                search: new SearchMetadata(TazLang.Get("mog_general_disablegrayenemies"), Keywords: [TazLang.Get("mog_kw_enemy"), TazLang.Get("mog_kw_disable")])
             )
-        ).WithSearch(new SearchMetadata(lang.Label, [kw.Mobile, kw.Health]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_label"), [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_health")]));
     }
 
     private static IOptionSource GetEntityHueSettingSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.CombatTabLang combatLang = lang.CombatTab;
-        ModernOptionsGumpLanguage.MobilesTabLang mobLang = lang.MobilesTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.Vertical(
             OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = mobLang.Hues.HueMobileByNotoriety },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_mobilestab_hues_huemobilebynotoriety") },
                 Option.HuePicker(
-                    combatLang.Spells.InnocentColor,
+                    TazLang.Get("mog_combattab_spells_innocentcolor"),
                     new Accessor<ushort>(() => profile.InnocentHue),
-                    new SearchMetadata(combatLang.Spells.InnocentColor, Keywords: [kw.Notoriety, kw.Innocent])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_innocentcolor"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_innocent")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.BeneficialSpell,
+                    TazLang.Get("mog_combattab_spells_beneficialspell"),
                     new Accessor<ushort>(() => profile.BeneficHue),
-                    new SearchMetadata(combatLang.Spells.BeneficialSpell, Keywords: [kw.Notoriety, kw.Beneficial])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_beneficialspell"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_beneficial")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.FriendColor,
+                    TazLang.Get("mog_combattab_spells_friendcolor"),
                     new Accessor<ushort>(() => profile.FriendHue),
-                    new SearchMetadata(combatLang.Spells.FriendColor, Keywords: [kw.Notoriety, kw.Friend])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_friendcolor"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_friend")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.HarmfulSpell,
+                    TazLang.Get("mog_combattab_spells_harmfulspell"),
                     new Accessor<ushort>(() => profile.HarmfulHue),
-                    new SearchMetadata(combatLang.Spells.HarmfulSpell, Keywords: [kw.Notoriety, kw.Harmful])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_harmfulspell"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_harmful")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.Criminal,
+                    TazLang.Get("mog_combattab_spells_criminal"),
                     new Accessor<ushort>(() => profile.CriminalHue),
-                    new SearchMetadata(combatLang.Spells.Criminal, Keywords: [kw.Notoriety, kw.Criminal])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_criminal"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_criminal")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.NeutralSpell,
+                    TazLang.Get("mog_combattab_spells_neutralspell"),
                     new Accessor<ushort>(() => profile.NeutralHue),
-                    new SearchMetadata(combatLang.Spells.NeutralSpell, Keywords: [kw.Notoriety, kw.Neutral])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_neutralspell"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_neutral")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.CanBeAttackedHue,
+                    TazLang.Get("mog_combattab_spells_canbeattackedhue"),
                     new Accessor<ushort>(() => profile.CanAttackHue),
-                    new SearchMetadata(combatLang.Spells.CanBeAttackedHue, Keywords: [kw.Notoriety, kw.Attack])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_canbeattackedhue"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_attack")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.Murderer,
+                    TazLang.Get("mog_combattab_spells_murderer"),
                     new Accessor<ushort>(() => profile.MurdererHue),
-                    new SearchMetadata(combatLang.Spells.Murderer, Keywords: [kw.Notoriety, kw.Murderer])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_murderer"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_murderer")])
                 ),
                 Option.HuePicker(
-                    combatLang.Spells.Enemy,
+                    TazLang.Get("mog_combattab_spells_enemy"),
                     new Accessor<ushort>(() => profile.EnemyHue),
-                    new SearchMetadata(combatLang.Spells.Enemy, Keywords: [kw.Notoriety, kw.Enemy])
+                    new SearchMetadata(TazLang.Get("mog_combattab_spells_enemy"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_enemy")])
                 )
-            ).WithSearch(new SearchMetadata(Tags: [kw.Mobile, kw.Notoriety])),
+            ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_notoriety")])),
             GetDamageHuesSection(),
             GetPlayerVisibilitySection()
         );
@@ -181,76 +171,68 @@ public static class MobilesTab
     private static OptionFragment GetPlayerVisibilitySection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.MobilesTabLang.HuesSection hueLang = lang.MobilesTab.Hues;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = hueLang.PlayerVisibility },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_mobilestab_hues_playervisibility") },
                 Option.Slider(
-                    tuoLang.HiddenPlayerOpacity,
+                    TazLang.Get("mog_tazuo_hiddenplayeropacity"),
                     0,
                     100,
                     new Accessor<byte>(() => profile.HiddenBodyAlpha),
-                    search: new SearchMetadata(tuoLang.HiddenPlayerOpacity, Keywords: [kw.Hidden])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_hiddenplayeropacity"), Keywords: [TazLang.Get("mog_kw_hidden")])
                 ),
                 Option.Slider(
-                    tuoLang.RegularPlayerOpacity,
+                    TazLang.Get("mog_tazuo_regularplayeropacity"),
                     0,
                     100,
                     new Accessor<int>(() => profile.PlayerConstantAlpha)
                 ),
                 Option.HuePicker(
-                    tuoLang.HiddenPlayerHue,
+                    TazLang.Get("mog_tazuo_hiddenplayerhue"),
                     new Accessor<ushort>(() => profile.HiddenBodyHue),
-                    new SearchMetadata(tuoLang.HiddenPlayerHue, Keywords: [kw.Hue])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_hiddenplayerhue"), Keywords: [TazLang.Get("mog_kw_hue")])
                 ),
                 Option.Checkbox(
-                    tuoLang.OverridePartyMemberHues,
+                    TazLang.Get("mog_tazuo_overridepartymemberhues"),
                     new Accessor<bool>(() => profile.OverridePartyAndGuildHue),
-                    search: new SearchMetadata(tuoLang.OverridePartyMemberHues, Keywords: [kw.Party])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_overridepartymemberhues"), Keywords: [TazLang.Get("mog_kw_party")])
                 )
             ).AsSearchGroup()
-            .WithSearch(new SearchMetadata(Keywords: [kw.Player, kw.Opacity, kw.Hidden]));
+            .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_player"), TazLang.Get("mog_kw_opacity"), TazLang.Get("mog_kw_hidden")]));
     }
 
     private static OptionFragment GetDamageHuesSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
-        ModernOptionsGumpLanguage.MobilesTabLang.HuesSection hueLang = lang.MobilesTab.Hues;
 
         return OptionsUi.VisualContainer(
-                new VisualContainerProps { LabelText = kw.Damage, LabelTooltip = hueLang.DamageHuesTooltip },
+                new VisualContainerProps { LabelText = TazLang.Get("mog_kw_damage"), LabelTooltip = TazLang.Get("mog_mobilestab_hues_damagehuestooltip") },
                 Option.HuePicker(
-                    tuoLang.DamageToSelf,
+                    TazLang.Get("mog_tazuo_damagetoself"),
                     new Accessor<ushort>(() => profile.DamageHueSelf),
-                    new SearchMetadata(tuoLang.DamageToSelf, Keywords: [kw.Self])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_damagetoself"), Keywords: [TazLang.Get("mog_kw_self")])
                 ),
                 Option.HuePicker(
-                    tuoLang.DamageToOthers,
+                    TazLang.Get("mog_tazuo_damagetoothers"),
                     new Accessor<ushort>(() => profile.DamageHueOther),
-                    new SearchMetadata(tuoLang.DamageToOthers, Keywords: [kw.Other])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_damagetoothers"), Keywords: [TazLang.Get("mog_kw_other")])
                 ),
                 Option.HuePicker(
-                    tuoLang.DamageToPets,
+                    TazLang.Get("mog_tazuo_damagetopets"),
                     new Accessor<ushort>(() => profile.DamageHuePet),
-                    new SearchMetadata(tuoLang.DamageToPets, Keywords: [kw.Pet])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_damagetopets"), Keywords: [TazLang.Get("mog_kw_pet")])
                 ),
                 Option.HuePicker(
-                    tuoLang.DamageToAllies,
+                    TazLang.Get("mog_tazuo_damagetoallies"),
                     new Accessor<ushort>(() => profile.DamageHueAlly),
-                    new SearchMetadata(tuoLang.DamageToAllies, Keywords: [kw.Ally])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_damagetoallies"), Keywords: [TazLang.Get("mog_kw_ally")])
                 ),
                 Option.HuePicker(
-                    tuoLang.DamageToLastAttack,
+                    TazLang.Get("mog_tazuo_damagetolastattack"),
                     new Accessor<ushort>(() => profile.DamageHueLastAttck),
-                    new SearchMetadata(tuoLang.DamageToLastAttack, Keywords: [kw.Last, kw.Attack])
+                    new SearchMetadata(TazLang.Get("mog_tazuo_damagetolastattack"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack")])
                 )
             ).AsSearchGroup()
-            .WithSearch(new SearchMetadata(Keywords: [kw.Damage]));
+            .WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_damage")]));
     }
 }

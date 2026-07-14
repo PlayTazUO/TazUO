@@ -43,7 +43,7 @@ namespace ClassicUO
         {
             CopyRequiredLibs();
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-            Language.Load();
+            TazLang.Load();
             Log.Start(LogTypes.All);
 
             //DllMap.Init();

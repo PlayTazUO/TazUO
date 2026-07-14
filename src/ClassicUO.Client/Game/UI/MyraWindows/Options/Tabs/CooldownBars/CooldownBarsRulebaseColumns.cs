@@ -12,21 +12,19 @@ internal static partial class CooldownBarsTab
 {
     private static RulebaseColumn<CooldownBarRule>[] GetRulebaseColumns()
     {
-        ModernOptionsGumpLanguage.CooldownsTabLang cdLang = Language.Instance.GetModernOptionsGumpLanguage.CooldownsTab;
-        ModernOptionsGumpLanguage.KeywordsLang kwLang = Language.Instance.GetModernOptionsGumpLanguage.Kw;
         return
         [
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.Name,
-                HeaderTooltip = cdLang.NameTooltip,
+                Header = TazLang.Get("mog_cooldownstab_name"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_nametooltip"),
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.Name))
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.Hue,
-                HeaderTooltip = cdLang.HueTooltip,
+                Header = TazLang.Get("mog_cooldownstab_hue"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_huetooltip"),
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule =>
                 {
@@ -48,15 +46,15 @@ internal static partial class CooldownBarsTab
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.Cooldown,
-                HeaderTooltip = cdLang.CooldownTooltip,
+                Header = TazLang.Get("mog_cooldownstab_cooldown"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_cooldowntooltip"),
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundUIntInput(null, new Accessor<uint>(() => rule.Cooldown))
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.TriggerMessageType,
-                HeaderTooltip = cdLang.TriggerMessageTypeTooltip,
+                Header = TazLang.Get("mog_cooldownstab_triggermessagetype"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_triggermessagetypetooltip"),
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule =>
                 {
@@ -73,23 +71,23 @@ internal static partial class CooldownBarsTab
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.TriggerMessage,
-                HeaderTooltip = cdLang.TriggerMessageTooltip,
+                Header = TazLang.Get("mog_cooldownstab_triggermessage"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_triggermessagetooltip"),
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => OptionsFactory.PropBoundInputField(null, new Accessor<string>(() => rule.TriggerMessage))
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = cdLang.ReplaceExisting,
-                HeaderTooltip = cdLang.ReplaceExistingTooltip,
+                Header = TazLang.Get("mog_cooldownstab_replaceexisting"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_replaceexistingtooltip"),
                 CellContentAlignment = HorizontalAlignment.Center,
                 Proportion = new Proportion(ProportionType.Auto),
                 CellFactory = rule => MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => rule.ReplaceExisting))
             },
             new RulebaseColumn<CooldownBarRule>
             {
-                Header = kwLang.Preview,
-                HeaderTooltip = cdLang.PreviewTooltip,
+                Header = TazLang.Get("mog_kw_preview"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_previewtooltip"),
                 Proportion = new Proportion(ProportionType.Fill),
                 CellFactory = rule => new BasicButton(() =>
                 {

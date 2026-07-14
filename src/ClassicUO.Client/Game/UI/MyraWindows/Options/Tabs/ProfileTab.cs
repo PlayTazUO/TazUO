@@ -15,40 +15,38 @@ public static class ProfileTab
 
     private static OptionFragment GetSection()
     {
-        ModernOptionsGumpLanguage.TazUO lang = Language.Instance.GetModernOptionsGumpLanguage.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         (List<string> allLocations, List<string> sameServerLocations) = GetProfileLocations();
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = lang.SettingsTransfers },
-            Option.Custom(() => new MyraLabel(string.Format(lang.SettingsWarning, allLocations.Count), MyraLabel.TextStyle.P)),
+            new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_settingstransfers") },
+            Option.Custom(() => new MyraLabel(TazLang.Get("mog_tazuo_settingswarning", [allLocations.Count.ToString()]), MyraLabel.TextStyle.P)),
             Option.Button(
-                string.Format(lang.OverrideAll, allLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overrideall", [(allLocations.Count - 1).ToString()]),
                 () => OverrideAllProfiles(allLocations),
-                new SearchMetadata(lang.OverrideAll, Keywords: [kw.Profile, kw.Override])
+                new SearchMetadata(TazLang.Get("mog_tazuo_overrideall"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_override")])
             ),
             Option.Button(
-                string.Format(lang.OverrideSame, sameServerLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overridesame", [(sameServerLocations.Count - 1).ToString()]),
                 () => OverrideAllProfiles(sameServerLocations),
-                new SearchMetadata(lang.OverrideSame, Keywords: [kw.Profile, kw.Override])
+                new SearchMetadata(TazLang.Get("mog_tazuo_overridesame"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_override")])
             ),
             Option.Button(
-                string.Format(lang.OverrideAllMacros, allLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overrideallmacros", [(allLocations.Count - 1).ToString()]),
                 () => OverrideAllMacros(allLocations),
-                new SearchMetadata(lang.OverrideAllMacros, Keywords: [kw.Override])
+                new SearchMetadata(TazLang.Get("mog_tazuo_overrideallmacros"), Keywords: [TazLang.Get("mog_kw_override")])
             ),
             Option.Button(
-                lang.SetAsDefault,
+                TazLang.Get("mog_tazuo_setasdefault"),
                 SetProfileAsDefault,
-                new SearchMetadata(lang.SetAsDefault, Keywords: [kw.Profile])
+                new SearchMetadata(TazLang.Get("mog_tazuo_setasdefault"), Keywords: [TazLang.Get("mog_kw_profile")])
             ),
             Option.Button(
-                lang.SetMacrosAsDefault,
+                TazLang.Get("mog_tazuo_setmacrosasdefault"),
                 SetMacrosAsDefault,
-                new SearchMetadata(lang.SetMacrosAsDefault)
+                new SearchMetadata(TazLang.Get("mog_tazuo_setmacrosasdefault"))
             )
-        ).WithSearch(new SearchMetadata(lang.SettingsTransfers, [kw.Profile]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_settingstransfers"), [TazLang.Get("mog_kw_profile")]));
     }
 
     private static (List<string> All, List<string> SameServer) GetProfileLocations()
@@ -91,7 +89,7 @@ public static class ProfileTab
         ProfileManager.SetProfileAsDefault(ProfileManager.CurrentProfile);
         GameActions.Print(
             World.Instance,
-            Language.Instance.GetModernOptionsGumpLanguage.GetTazUO.SetAsDefaultSuccess,
+            TazLang.Get("mog_tazuo_setasdefaultsuccess"),
             Constants.HUE_SUCCESS,
             MessageType.System
         );
@@ -102,7 +100,7 @@ public static class ProfileTab
         World.Instance.Macros.Save(Path.Combine(ProfileManager.RootPath, "macros.xml"));
         GameActions.Print(
             World.Instance,
-            Language.Instance.GetModernOptionsGumpLanguage.GetTazUO.SetMacrosAsDefaultSuccess,
+            TazLang.Get("mog_tazuo_setmacrosasdefaultsuccess"),
             Constants.HUE_SUCCESS,
             MessageType.System
         );
@@ -111,7 +109,7 @@ public static class ProfileTab
     private static void PrintOverrideSuccess(int count) =>
         GameActions.Print(
             World.Instance,
-            string.Format(Language.Instance.GetModernOptionsGumpLanguage.GetTazUO.OverrideSuccess, count),
+            TazLang.Get("mog_tazuo_overridesuccess", [count.ToString()]),
             Constants.HUE_SUCCESS,
             MessageType.System
             );

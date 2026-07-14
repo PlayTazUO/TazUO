@@ -10,171 +10,162 @@ public static class HealthBarsTab
     /// <summary>Returns the option fragment for health-bar appearance and drag-lock configuration</summary>
     internal static IOptionSource GetContent()
     {
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
         return OptionsUi.Vertical(
             GetMainSection(),
             GetDragSection()
-        ).WithSearch(new SearchMetadata(lang.ButtonHealthBars, Tags: [kw.HealthBar, kw.HP]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), Tags: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")]));
     }
 
     private static OptionFragment GetMainSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
-        ModernOptionsGumpLanguage.TazUO tuoLang = lang.GetTazUO;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         string usePartyHealthBarsLabel = TazLang.Get("healthbar_usepartystyle", "Use party health bar style for party members");
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.CustomBarsToggled), genLang.ModernHealthBars),
+                new PropertyBinder(new Accessor<bool>(() => profile.CustomBarsToggled), TazLang.Get("mog_general_modernhealthbars")),
                 Option.Checkbox(
-                    genLang.ModernHPBlackBG,
+                    TazLang.Get("mog_general_modernhpblackbg"),
                     new Accessor<bool>(() => profile.CBBlackBGToggled),
-                    search: new SearchMetadata(genLang.ModernHPBlackBG, Keywords: [kw.Black, kw.Background])
+                    search: new SearchMetadata(TazLang.Get("mog_general_modernhpblackbg"), Keywords: [TazLang.Get("mog_kw_black"), TazLang.Get("mog_kw_background")])
                 )
-            ).WithSearch(new SearchMetadata(genLang.ModernHealthBars, Keywords: [kw.Modern])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_general_modernhealthbars"), Keywords: [TazLang.Get("mog_kw_modern")])),
             Option.Checkbox(
                 usePartyHealthBarsLabel,
                 new Accessor<bool>(() => profile.UsePartyHealthBars),
-                search: new SearchMetadata(usePartyHealthBarsLabel, Keywords: [kw.Party, kw.HealthBar])
+                search: new SearchMetadata(usePartyHealthBarsLabel, Keywords: [TazLang.Get("mog_kw_party"), TazLang.Get("mog_kw_healthbar")])
             ),
             Option.Checkbox(
-                genLang.SaveHPBars,
+                TazLang.Get("mog_general_savehpbars"),
                 new Accessor<bool>(() => profile.SaveHealthbars),
-                search: new SearchMetadata(genLang.SaveHPBars, Keywords: [kw.Save])
+                search: new SearchMetadata(TazLang.Get("mog_general_savehpbars"), Keywords: [TazLang.Get("mog_kw_save")])
             ),
-            Option.ComboBox(genLang.CloseHPGumpsWhen, profile.CloseHealthBarType, [
-                    genLang.CloseHPOptDisable, genLang.CloseHPOptOOR,
-                    genLang.CloseHPOptDead, genLang.CloseHPOptBoth
+            Option.ComboBox(TazLang.Get("mog_general_closehpgumpswhen"), profile.CloseHealthBarType, [
+                    TazLang.Get("mog_general_closehpoptdisable"), TazLang.Get("mog_general_closehpoptoor"),
+                    TazLang.Get("mog_general_closehpoptdead"), TazLang.Get("mog_general_closehpoptboth")
                 ], b => profile.CloseHealthBarType = b,
-                search: new SearchMetadata(genLang.CloseHPGumpsWhen, Keywords: [kw.Close])
+                search: new SearchMetadata(TazLang.Get("mog_general_closehpgumpswhen"), Keywords: [TazLang.Get("mog_kw_close")])
             ),
             Option.Checkbox(
-                tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars,
+                TazLang.Get("mog_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars"),
                 new Accessor<bool>(() => profile.CloseHealthBarIfAnchored),
-                search: new SearchMetadata(tuoLang.AlsoCloseAnchoredHealthbarsWhenAutoClosingHealthbars, Keywords: [kw.Close, kw.Anchor])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars"), Keywords: [TazLang.Get("mog_kw_close"), TazLang.Get("mog_kw_anchor")])
             ),
             Option.Slider(
-                tuoLang.BelowMobileHealthBarScale,
+                TazLang.Get("mog_tazuo_belowmobilehealthbarscale"),
                 1,
                 5,
                 new Accessor<int>(() => profile.HealthLineSizeMultiplier),
-                search: new SearchMetadata(tuoLang.BelowMobileHealthBarScale, Keywords: [kw.Below, kw.Scale])
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
             ),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), tuoLang.HealthBarIndicator),
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator")),
                 Option.Slider(
-                    tuoLang.OnlyShowBelowHp,
+                    TazLang.Get("mog_tazuo_onlyshowbelowhp"),
                     0,
                     100,
                     new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
-                    search: new SearchMetadata(tuoLang.OnlyShowBelowHp, Keywords: [kw.HP])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
                 ),
                 Option.Slider(
-                    tuoLang.Size,
+                    TazLang.Get("mog_tazuo_size"),
                     1,
                     25,
                     new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
-                    search: new SearchMetadata(tuoLang.Size, Keywords: [kw.Size])
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_size"), Keywords: [TazLang.Get("mog_kw_size")])
                 )
-            ).WithSearch(new SearchMetadata(tuoLang.HealthBarIndicator, Keywords: [kw.Indicator, kw.Border])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_healthbarindicator"), Keywords: [TazLang.Get("mog_kw_indicator"), TazLang.Get("mog_kw_border")])),
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), tuoLang.AutomaticallyOpenHealthBarsForLastAttack),
+                new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack")),
                 Option.Checkbox(
-                    tuoLang.UpdateOneBarAsLastAttack,
+                    TazLang.Get("mog_tazuo_updateonebaraslastattack"),
                     new Accessor<bool>(() => profile.UseOneHPBarForLastAttack)
                 )
-            ).WithSearch(new SearchMetadata(tuoLang.AutomaticallyOpenHealthBarsForLastAttack, Keywords: [kw.Last, kw.Attack]))
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack")]))
         );
     }
 
     private static OptionFragment GetDragSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage lang = Language.Instance.GetModernOptionsGumpLanguage;
-        ModernOptionsGumpLanguage.General genLang = lang.GetGeneral;
-        ModernOptionsGumpLanguage.KeywordsLang kw = lang.Kw;
 
         return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = genLang.DraggingSectionLabel },
+            new VisualContainerProps { LabelText = TazLang.Get("mog_general_draggingsectionlabel") },
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableDragSelect), genLang.DragSelectHP),
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableDragSelect), TazLang.Get("mog_general_dragselecthp")),
                 Option.Checkbox(
-                    genLang.DragAnchored,
+                    TazLang.Get("mog_general_draganchored"),
                     new Accessor<bool>(() => profile.DragSelectAsAnchor),
-                    search: new SearchMetadata(genLang.DragAnchored, Keywords: [kw.Drag, kw.Select])
+                    search: new SearchMetadata(TazLang.Get("mog_general_draganchored"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_select")])
                 ),
                 Option.ComboBox(
-                    genLang.DragKeyMod,
+                    TazLang.Get("mog_general_dragkeymod"),
                     profile.DragSelectModifierKey,
                     [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
+                        TazLang.Get("mog_general_sharednone"),
+                        TazLang.Get("mog_general_sharedctrl"),
+                        TazLang.Get("mog_general_sharedshift"),
+                        TazLang.Get("mog_general_sharedalt")
                     ],
                     i => profile.DragSelectModifierKey = i,
-                    search: new SearchMetadata(genLang.DragKeyMod, Keywords: [kw.Drag, kw.Modifier])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragkeymod"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_modifier")])
                 ),
                 Option.ComboBox(
-                    genLang.DragPlayersOnly,
+                    TazLang.Get("mog_general_dragplayersonly"),
                     profile.DragSelect_PlayersModifier,
                     [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
+                        TazLang.Get("mog_general_sharednone"),
+                        TazLang.Get("mog_general_sharedctrl"),
+                        TazLang.Get("mog_general_sharedshift"),
+                        TazLang.Get("mog_general_sharedalt")
                     ],
                     i => profile.DragSelect_PlayersModifier = i,
-                    search: new SearchMetadata(genLang.DragPlayersOnly, Keywords: [kw.Drag, kw.Player])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragplayersonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_player")])
                 ),
                 Option.ComboBox(
-                    genLang.DragMobsOnly,
+                    TazLang.Get("mog_general_dragmobsonly"),
                     profile.DragSelect_MonstersModifier,
                     [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
+                        TazLang.Get("mog_general_sharednone"),
+                        TazLang.Get("mog_general_sharedctrl"),
+                        TazLang.Get("mog_general_sharedshift"),
+                        TazLang.Get("mog_general_sharedalt")
                     ],
                     i => profile.DragSelect_MonstersModifier = i,
-                    search: new SearchMetadata(genLang.DragMobsOnly, Keywords: [kw.Drag, kw.Monster])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragmobsonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_monster")])
                 ),
                 Option.ComboBox(
-                    genLang.DragNameplatesOnly,
+                    TazLang.Get("mog_general_dragnameplatesonly"),
                     profile.DragSelect_NameplateModifier,
                     [
-                        genLang.SharedNone,
-                        genLang.SharedCtrl,
-                        genLang.SharedShift,
-                        genLang.SharedAlt
+                        TazLang.Get("mog_general_sharednone"),
+                        TazLang.Get("mog_general_sharedctrl"),
+                        TazLang.Get("mog_general_sharedshift"),
+                        TazLang.Get("mog_general_sharedalt")
                     ],
                     i => profile.DragSelect_NameplateModifier = i,
-                    search: new SearchMetadata(genLang.DragNameplatesOnly, Keywords: [kw.Drag, kw.Nameplate])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragnameplatesonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_nameplate")])
                 ),
                 Option.InputField(
-                    genLang.DragX,
+                    TazLang.Get("mog_general_dragx"),
                     new Accessor<string>(() => profile.DragSelectStartX.ToString(), s =>
                     {
                         if (int.TryParse(s, out int result))
                             profile.DragSelectStartX = result;
                     }),
-                    search: new SearchMetadata(genLang.DragX, Keywords: [kw.Drag, kw.X])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragx"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_x")])
                 ),
                 Option.InputField(
-                    genLang.DragY,
+                    TazLang.Get("mog_general_dragy"),
                     new Accessor<string>(() => profile.DragSelectStartY.ToString(), s =>
                     {
                         if (int.TryParse(s, out int result))
                             profile.DragSelectStartY = result;
                     }),
-                    search: new SearchMetadata(genLang.DragY, Keywords: [kw.Drag, kw.Y])
+                    search: new SearchMetadata(TazLang.Get("mog_general_dragy"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_y")])
                 )
-            ).WithSearch(new SearchMetadata(genLang.DragSelectHP, Keywords: [kw.Drag, kw.Select]))
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_general_dragselecthp"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_select")]))
         );
     }
 }

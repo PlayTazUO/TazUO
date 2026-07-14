@@ -19,27 +19,24 @@ public static class LayerHidingTab
     private static OptionFragment GetSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.LayerHidingTabLang lang = Language.Instance.GetModernOptionsGumpLanguage.LayerHidingTab;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         return OptionsUi.CheckBoxGroup(
-            new PropertyBinder(new Accessor<bool>(() => profile.HiddenLayersEnabled), lang.EnableLayerHiding),
+            new PropertyBinder(new Accessor<bool>(() => profile.HiddenLayersEnabled), TazLang.Get("mog_layerhidingtab_enablelayerhiding")),
             Option.Checkbox(
-                lang.OnlyForYourself,
+                TazLang.Get("mog_layerhidingtab_onlyforyourself"),
                 new Accessor<bool>(() => profile.HideLayersForSelf),
-                lang.OnlyForYourselfTooltip,
-                search: new SearchMetadata(lang.OnlyForYourself, Keywords: [kw.Self])
+                TazLang.Get("mog_layerhidingtab_onlyforyourselftooltip"),
+                search: new SearchMetadata(TazLang.Get("mog_layerhidingtab_onlyforyourself"), Keywords: [TazLang.Get("mog_kw_self")])
             ),
             Option.Spacer(),
-            Option.Custom(() => new MyraLabel(lang.HideFollowingLayers, MyraLabel.TextStyle.P), new SearchMetadata(lang.HideFollowingLayers)),
+            Option.Custom(() => new MyraLabel(TazLang.Get("mog_layerhidingtab_hidefollowinglayers"), MyraLabel.TextStyle.P), new SearchMetadata(TazLang.Get("mog_layerhidingtab_hidefollowinglayers"))),
             GetLayerBoxesFragment()
-        ).WithSearch(new SearchMetadata(lang.Label, Tags: [kw.Layer, kw.Hide]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_layerhidingtab_label"), Tags: [TazLang.Get("mog_kw_layer"), TazLang.Get("mog_kw_hide")]));
     }
 
     private static OptionFragment GetLayerBoxesFragment()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        ModernOptionsGumpLanguage.KeywordsLang kw = Language.Instance.GetModernOptionsGumpLanguage.Kw;
 
         Layer[] ignoredLayers =
         [
@@ -97,7 +94,7 @@ public static class LayerHidingTab
                             profile.HiddenLayers.Remove((int)layer);
                     }
                 ),
-                search: new SearchMetadata(layer.ToString(), Keywords: [kw.Layer])
+                search: new SearchMetadata(layer.ToString(), Keywords: [TazLang.Get("mog_kw_layer")])
             ))
         );
     }
