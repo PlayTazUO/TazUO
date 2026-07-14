@@ -57,7 +57,11 @@ public static class NameplatesTab
             {
                 World.Instance.NameOverHeadManager.RemoveOption(profile);
             },
-            NameOverHeadManager.GetAllOptions()
+            NameOverHeadManager.GetAllOptions(),
+            profile =>
+            {
+                World.Instance.NameOverHeadManager.HandleRenamedOption(profile);
+            }
         );
         return profileEditor;
     }
