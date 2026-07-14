@@ -388,6 +388,16 @@ public class WorldMapGump : ResizableGump
                 )
         );
 
+        _options["pathfind_location"] = new ContextMenuItemEntry
+        (
+            TazLang.Get("map_pathfind_location", "Pathfind to location"),
+            () => LocationGoWindow.Show(
+                    World,
+                    (x, y) => BeginFreshNavTo(_world.Map.Index, x, y),
+                    null
+                )
+        );
+
         _options["top_most"] = new ContextMenuItemEntry(ResGumps.TopMost, () => { TopMost = !TopMost; }, true, _isTopMost);
 
         _options["free_view"] = new ContextMenuItemEntry(ResGumps.FreeView, () => { FreeView = !FreeView; }, true, FreeView);
@@ -658,6 +668,7 @@ public class WorldMapGump : ResizableGump
 
         ContextMenu.Add("", null);
         ContextMenu.Add(_options["goto_location"]);
+        ContextMenu.Add(_options["pathfind_location"]);
         ContextMenu.Add(_options["flip_map"]);
         ContextMenu.Add(_options["top_most"]);
 
@@ -3650,29 +3661,7 @@ public class WorldMapGump : ResizableGump
                     return;
                 }
 
-                _navDest = new Point(wX, wY);
-                _navDestSetTime = Environment.TickCount64;
-                _navPath = null;
-                _navPlannedEnd = new Point(wX, wY);
-                _navPlannedEndZ = _world.Player.Z;
-                _navSegments = 1;
-                ClearGoToMarker();
-
-                // Fresh nav session: clear any dynamic-block memory from a previous run,
-                // reset the hook so a stale closure from an old session can't fire, and
-                // stop any walk that may still be in progress.
-                WorldMapPathfinder.ClearDynamicBlocks();
-                if (_world.Player?.Pathfinder != null)
-                {
-                    if (_navStepFailedHandler != null)
-                        _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
-                    _navStepFailedHandler = null;
-                    _world.Player.Pathfinder.StopAutoWalk();
-                }
-                _navReplansLeft = MaxNavReplans;
-
-                StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY,
-                             firstAttempt: true, append: false);
+                BeginFreshNavTo(mapIndex, wX, wY);
                 return;
             }
 
@@ -3700,6 +3689,41 @@ public class WorldMapGump : ResizableGump
         }
 
         base.OnMouseDown(x, y, button);
+    }
+
+    /// <summary>
+    /// Starts a fresh pathfinding session from the player to (wX, wY) on the given map,
+    /// replacing any route currently being walked. Shared by the right-click pathfind hotkey
+    /// and the "Pathfind to location" context-menu option.
+    /// </summary>
+    public void BeginFreshNavTo(int mapIndex, int wX, int wY)
+    {
+        if (_world.Player == null)
+            return;
+
+        _navDest = new Point(wX, wY);
+        _navDestSetTime = Environment.TickCount64;
+        _navPath = null;
+        _navPlannedEnd = new Point(wX, wY);
+        _navPlannedEndZ = _world.Player.Z;
+        _navSegments = 1;
+        ClearGoToMarker();
+
+        // Fresh nav session: clear any dynamic-block memory from a previous run,
+        // reset the hook so a stale closure from an old session can't fire, and
+        // stop any walk that may still be in progress.
+        WorldMapPathfinder.ClearDynamicBlocks();
+        if (_world.Player?.Pathfinder != null)
+        {
+            if (_navStepFailedHandler != null)
+                _world.Player.Pathfinder.OnComputedPathStepFailed -= _navStepFailedHandler;
+            _navStepFailedHandler = null;
+            _world.Player.Pathfinder.StopAutoWalk();
+        }
+        _navReplansLeft = MaxNavReplans;
+
+        StartNavPath(mapIndex, _world.Player.X, _world.Player.Y, _world.Player.Z, wX, wY,
+                     firstAttempt: true, append: false);
     }
 
     /// <summary>
