@@ -20,19 +20,19 @@ public static class ProfileTab
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_settingstransfers") },
-            Option.Custom(() => new MyraLabel(string.Format(TazLang.Get("mog_tazuo_settingswarning"), allLocations.Count), MyraLabel.TextStyle.P)),
+            Option.Custom(() => new MyraLabel(TazLang.Get("mog_tazuo_settingswarning", [allLocations.Count.ToString()]), MyraLabel.TextStyle.P)),
             Option.Button(
-                string.Format(TazLang.Get("mog_tazuo_overrideall"), allLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overrideall", [(allLocations.Count - 1).ToString()]),
                 () => OverrideAllProfiles(allLocations),
                 new SearchMetadata(TazLang.Get("mog_tazuo_overrideall"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_override")])
             ),
             Option.Button(
-                string.Format(TazLang.Get("mog_tazuo_overridesame"), sameServerLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overridesame", [(sameServerLocations.Count - 1).ToString()]),
                 () => OverrideAllProfiles(sameServerLocations),
                 new SearchMetadata(TazLang.Get("mog_tazuo_overridesame"), Keywords: [TazLang.Get("mog_kw_profile"), TazLang.Get("mog_kw_override")])
             ),
             Option.Button(
-                string.Format(TazLang.Get("mog_tazuo_overrideallmacros"), allLocations.Count - 1),
+                TazLang.Get("mog_tazuo_overrideallmacros", [(allLocations.Count - 1).ToString()]),
                 () => OverrideAllMacros(allLocations),
                 new SearchMetadata(TazLang.Get("mog_tazuo_overrideallmacros"), Keywords: [TazLang.Get("mog_kw_override")])
             ),
@@ -109,7 +109,7 @@ public static class ProfileTab
     private static void PrintOverrideSuccess(int count) =>
         GameActions.Print(
             World.Instance,
-            string.Format(TazLang.Get("mog_tazuo_overridesuccess"), count),
+            TazLang.Get("mog_tazuo_overridesuccess", [count.ToString()]),
             Constants.HUE_SUCCESS,
             MessageType.System
             );

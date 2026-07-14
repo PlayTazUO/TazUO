@@ -109,13 +109,13 @@ public static class SpellsTab
                 GameActions.Print(World.Instance, TazLang.Get("mog_tazuo_succesfullydownloadednewspellconfig"));
             else
             {
-                string message = string.Format(TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage"), TazLang.Get("mog_tazuo_failedtoloadspellconfigmessage"));
+                string message = TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage", [TazLang.Get("mog_tazuo_failedtoloadspellconfigmessage")]);
                 GameActions.Print(World.Instance, message, Constants.HUE_WARN);
             }
         }
         catch (Exception ex)
         {
-            GameActions.Print(World.Instance, string.Format(TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage"), ex.Message));
+            GameActions.Print(World.Instance, TazLang.Get("mog_tazuo_failedtodownloadthespellconfigexmessage", [ex.Message]));
         }
     }
 }

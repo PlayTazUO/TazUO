@@ -4723,7 +4723,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 TextBox.GetOne
                 (
-                    string.Format(TazLang.Get("mog_tazuo_settingswarning"), locations.Count), ThemeSettings.FONT,
+                    TazLang.Get("mog_tazuo_settingswarning", [locations.Count.ToString()]), ThemeSettings.FONT,
                     ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.TEXT_FONT_COLOR,
                     TextBox.RTLOptions.DefaultCentered(content.RightWidth - 20)
                 ), true, page
@@ -4733,7 +4733,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 c = new ModernButton
                 (0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
-                    string.Format(TazLang.Get("mog_tazuo_overrideall"), locations.Count - 1), ThemeSettings.BUTTON_FONT_COLOR)
+                    TazLang.Get("mog_tazuo_overrideall", [(locations.Count - 1).ToString()]), ThemeSettings.BUTTON_FONT_COLOR)
                 {
                     IsSelectable = true, IsSelected = true
                 }, true, page
@@ -4744,7 +4744,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e.Button == MouseButtonType.Left)
                 {
                     OverrideAllProfiles(locations);
-                    GameActions.Print(World, string.Format(TazLang.Get("mog_tazuo_overridesuccess"), locations.Count - 1), Constants.HUE_SUCCESS,
+                    GameActions.Print(World, TazLang.Get("mog_tazuo_overridesuccess", [(locations.Count - 1).ToString()]), Constants.HUE_SUCCESS,
                         Data.MessageType.System);
                 }
             };
@@ -4754,7 +4754,7 @@ namespace ClassicUO.Game.UI.Gumps
                 c = new ModernButton
                 (
                     0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
-                    string.Format(TazLang.Get("mog_tazuo_overridesame"), sameServerLocations.Count - 1),
+                    TazLang.Get("mog_tazuo_overridesame", [(sameServerLocations.Count - 1).ToString()]),
                     ThemeSettings.BUTTON_FONT_COLOR
                 ) { IsSelectable = true, IsSelected = true }, true, page
             );
@@ -4765,7 +4765,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     OverrideAllProfiles(sameServerLocations);
                     GameActions.Print(World,
-                        string.Format(TazLang.Get("mog_tazuo_overridesuccess"), sameServerLocations.Count - 1), Constants.HUE_SUCCESS,
+                        TazLang.Get("mog_tazuo_overridesuccess", [(sameServerLocations.Count - 1).ToString()]), Constants.HUE_SUCCESS,
                         Data.MessageType.System);
                 }
             };
@@ -4774,7 +4774,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 c = new ModernButton
                 (0, 0, content.RightWidth - 20, 40, ButtonAction.Activate,
-                    string.Format(TazLang.Get("mog_tazuo_overrideallmacros"), locations.Count - 1), ThemeSettings.BUTTON_FONT_COLOR)
+                    TazLang.Get("mog_tazuo_overrideallmacros", [(locations.Count - 1).ToString()]), ThemeSettings.BUTTON_FONT_COLOR)
                 {
                     IsSelectable = true, IsSelected = true
                 }, true, page
@@ -4785,7 +4785,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (e.Button == MouseButtonType.Left)
                 {
                     OverrideAllMacros(locations);
-                    GameActions.Print(World, string.Format(TazLang.Get("mog_tazuo_overridesuccess"), locations.Count - 1), Constants.HUE_SUCCESS,
+                    GameActions.Print(World, TazLang.Get("mog_tazuo_overridesuccess", [(locations.Count - 1).ToString()]), Constants.HUE_SUCCESS,
                         Data.MessageType.System);
                 }
             };

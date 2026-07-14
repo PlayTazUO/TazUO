@@ -129,7 +129,7 @@ public static class InfoBarsTab
         {
             Width = 60,
             MinWidth = 60,
-            Tooltip = string.Format(TazLang.Get("mog_infobars_huetooltipformat"), item.hue)
+            Tooltip = TazLang.Get("mog_infobars_huetooltipformat", [item.hue.ToString("X")])
         };
         row.Widgets.Add(hueBtn);
 
