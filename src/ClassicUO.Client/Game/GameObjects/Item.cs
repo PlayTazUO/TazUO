@@ -166,6 +166,12 @@ namespace ClassicUO.Game.GameObjects
         public ushort Amount;
         public uint Container = 0xFFFF_FFFF;
 
+        /// <summary>
+        /// The serial of the parent mobile this corpse belongs to.
+        /// Set via the DisplayDeath packet when this item is a corpse.
+        /// </summary>
+        public uint CorpseParent;
+
         public bool IsDamageable;
         public Layer Layer;
         public byte LightID;
