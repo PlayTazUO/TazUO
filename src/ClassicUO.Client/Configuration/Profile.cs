@@ -249,6 +249,11 @@ namespace ClassicUO.Configuration
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
         public partial string BandageAgentJournalMessages { get; set; }
 
+        // Semicolon-separated list of poll ids the user has already voted on (see PollsWindow / FirebasePollsManager).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, "")]
+        public partial string VotedPolls { get; set; }
+
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
         public ushort HiddenBodyHue { get; set => SetProperty(ref field, value); } = 0x038E;
@@ -1658,6 +1663,11 @@ namespace ClassicUO.Configuration
                     var smw = new ScriptManagerWindow();
                     smw.Load(xml);
                     UIManager.Add(smw);
+                    break;
+                case "ClassicUO.Game.UI.MyraWindows.PollsWindow":
+                    var polls = new PollsWindow();
+                    polls.Load(xml);
+                    UIManager.Add(polls);
                     break;
             }
         }
