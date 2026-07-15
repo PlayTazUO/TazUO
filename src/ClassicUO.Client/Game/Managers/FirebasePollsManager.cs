@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ClassicUO.Configuration;
 using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Game.Managers;
@@ -95,6 +96,50 @@ public static class FirebasePollsManager
             Log.Error($"Failed to fetch polls: {e}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Fetches the available polls and, if the current profile has any it hasn't voted on yet, returns a
+    /// user-facing reminder message. Returns <c>null</c> when the fetch fails, there are no polls, or every
+    /// poll has already been voted on. Intended to be shown once after the user is in-world.
+    /// </summary>
+    public static async Task<string> GetUnvotedNotificationAsync()
+    {
+        Dictionary<string, Poll> polls = await FetchPollsAsync();
+
+        if (polls == null || polls.Count == 0)
+            return null;
+
+        int unvoted = CountUnvoted(polls);
+
+        if (unvoted <= 0)
+            return null;
+
+        return unvoted == 1
+            ? TazLang.Get("polls_notify_one",
+                "There is a new TazUO poll you haven't voted on. Open Polls from the top bar menu to vote.")
+            : string.Format(
+                TazLang.Get("polls_notify_many",
+                    "There are {0} TazUO polls you haven't voted on. Open Polls from the top bar menu to vote."),
+                unvoted);
+    }
+
+    /// <summary>Counts how many of the given polls the current profile has not yet voted on.</summary>
+    private static int CountUnvoted(Dictionary<string, Poll> polls)
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        var voted = new HashSet<string>((profile?.VotedPolls ?? string.Empty)
+            .Split(';', StringSplitOptions.RemoveEmptyEntries));
+
+        int count = 0;
+        foreach (string pollId in polls.Keys)
+        {
+            if (!voted.Contains(pollId))
+                count++;
+        }
+
+        return count;
     }
 
     /// <summary>
