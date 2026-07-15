@@ -434,7 +434,6 @@ public static class VideoTab
 
         string disableGargAnim = TazLang.Get("disable_gargoyle_flying_animation", "Disable gargoyle flying animation");
         string mobileDepthSlice = TazLang.Get("mobile_depth_slice_step", "Character wall clipping (lower = less feet through walls)");
-        string showMobileHealthbar = TazLang.Get("show_mobile_healthbar", "Show healthbar under mobiles");
 
         return OptionsUi.Vertical(
             Option.Checkbox(
@@ -528,11 +527,6 @@ public static class VideoTab
                 2,
                 new Accessor<int>(() => profile.MobileDepthSliceStep, v => profile.MobileDepthSliceStep = v),
                 search: new SearchMetadata(mobileDepthSlice, Keywords: [TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_mobile")])
-            ),
-            Option.Checkbox(
-                showMobileHealthbar,
-                new Accessor<bool>(() => profile.ShowMobileHealthbar),
-                search: new SearchMetadata(showMobileHealthbar, Keywords: [TazLang.Get("mog_kw_character"), TazLang.Get("mog_kw_mobile")])
             ),
             OptionsUi.VisualContainer(
                 new VisualContainerProps { LabelText = TazLang.Get("mog_videotab_misc_perspective") },

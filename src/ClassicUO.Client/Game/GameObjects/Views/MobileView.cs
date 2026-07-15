@@ -489,7 +489,7 @@ namespace ClassicUO.Game.GameObjects
 
             if (profile.ShowMobileHealthbar)
             {
-                DrawHealthbar(batcher, drawX, drawY, depth);
+                DrawHealthbar(batcher, drawX, drawY);
             }
 
             FrameInfo.X = Math.Abs(FrameInfo.X);
@@ -499,19 +499,19 @@ namespace ClassicUO.Game.GameObjects
             return true;
         }
 
-        private const int HEALTHBAR_WIDTH = 88;
+        private const int HEALTHBAR_WIDTH = 70;
         private const int HEALTHBAR_HEIGHT = 5;
-        // Pushes the healthbar forward in the depth buffer so it draws over tiles
-        // rendered below (closer to the camera than) the mobile's feet.
-        private const float HEALTHBAR_DEPTH_OFFSET = 100f;
 
-        private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y, float depth)
+        private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y)
         {
             // Centered horizontally on the sprite, placed at the bottom of the sprite.
             int barX = x - (HEALTHBAR_WIDTH / 2);
             int barY = y;
 
-            float barDepth = depth + HEALTHBAR_DEPTH_OFFSET;
+            // Draw above the tile diagonally in front of the mobile (one tile in +X and +Y).
+            // Using the same depth formula tiles use lets the bar shove above that tile so it
+            // isn't hidden behind terrain rendered below the mobile's feet.
+            float barDepth = CalculateDepthZ(X + 1, Y + 1, Z) + 1f;
 
             // Background
             batcher.Draw(

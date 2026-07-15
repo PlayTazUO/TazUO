@@ -98,6 +98,15 @@ namespace ClassicUO.Game.GameObjects
             return (x + y) + (DEPTH_Z_OFFSET + z) * DEPTH_Z_SCALE;
         }
 
+        /// <summary>
+        /// Calculates the render depth for an arbitrary tile position, using the same
+        /// formula as <see cref="CalculateDepthZ()"/>. Useful for drawing something so it
+        /// sits above a specific neighbouring tile.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float CalculateDepthZ(int x, int y, int z) =>
+            (x + y) + (DEPTH_Z_OFFSET + z) * DEPTH_Z_SCALE;
+
         public Rectangle GetOnScreenRectangle()
         {
             Rectangle prect = Rectangle.Empty;

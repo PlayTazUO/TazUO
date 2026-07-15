@@ -23,7 +23,27 @@ public static class MobilesTab
                 TazLang.Get("mog_mobilestab_hues_label"),
                 GetEntityHueSettingSection,
                 new SearchMetadata(TazLang.Get("mog_mobilestab_hues_label"), Keywords: [TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
+            )
+            .AddTab(
+                TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"),
+                GetHealthbarsSection,
+                new SearchMetadata(TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])
             );
+    }
+
+    private static IOptionSource GetHealthbarsSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        string simpleHealthbar = TazLang.Get("mog_mobilestab_healthbars_simple", "Simple healthbar");
+
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                simpleHealthbar,
+                new Accessor<bool>(() => profile.ShowMobileHealthbar),
+                search: new SearchMetadata(simpleHealthbar, Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_mobile")])
+            )
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"), [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_health")]));
     }
 
     private static IOptionSource GetHighlightingSection()
