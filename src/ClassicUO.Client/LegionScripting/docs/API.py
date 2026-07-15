@@ -89,6 +89,7 @@ class ApiItem(ApiEntity):
     Opened: bool = None
     Container: int = None
     RootContainer: int = None
+    CorpseParent: int = None
     OnGround: bool = None
     RootEntity: ApiEntity = None
     __class__: str = None

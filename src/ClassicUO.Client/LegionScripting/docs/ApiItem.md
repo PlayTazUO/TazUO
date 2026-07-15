@@ -25,6 +25,13 @@ description:  Represents a Python-accessible item in the game world.  Inherits e
 
 **Type:** `uint`
 
+### `CorpseParent`
+
+**Type:** `uint`
+
+ If this item is a corpse, the serial of the parent mobile it belongs to.
+
+
 ### `OnGround`
 
 **Type:** `bool`
