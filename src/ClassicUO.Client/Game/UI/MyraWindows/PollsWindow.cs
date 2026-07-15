@@ -140,12 +140,12 @@ public sealed class PollsWindow : MyraControl
 
     private static void AddResults(VerticalStackPanel panel, Poll poll)
     {
-        int total = poll.Options.Values.Sum();
+        int total = poll.Options.Sum(o => o.Votes);
 
-        foreach (KeyValuePair<string, int> opt in poll.Options)
+        foreach (PollOption opt in poll.Options)
         {
-            int percent = total > 0 ? (int)Math.Round(opt.Value * 100.0 / total) : 0;
-            panel.Widgets.Add(new MyraLabel($"{opt.Key} — {opt.Value} ({percent}%)", MyraLabel.TextStyle.P));
+            int percent = total > 0 ? (int)Math.Round(opt.Votes * 100.0 / total) : 0;
+            panel.Widgets.Add(new MyraLabel($"{opt.Label} — {opt.Votes} ({percent}%)", MyraLabel.TextStyle.P));
         }
 
         panel.Widgets.Add(new MyraLabel(
@@ -156,11 +156,11 @@ public sealed class PollsWindow : MyraControl
     private void AddVotingForm(VerticalStackPanel panel, string pollId, Poll poll)
     {
         bool singleChoice = poll.Type == 0;
-        var choices = new List<(string name, MyraCheckButton cb)>();
+        var choices = new List<(PollOption option, MyraCheckButton cb)>();
 
-        foreach (string optionName in poll.Options.Keys)
+        foreach (PollOption option in poll.Options)
         {
-            var cb = new MyraCheckButton(optionName);
+            var cb = new MyraCheckButton(option.Label);
 
             if (singleChoice)
             {
@@ -170,7 +170,7 @@ public sealed class PollsWindow : MyraControl
                         return;
 
                     // Radio-style behaviour: selecting one option clears the others.
-                    foreach ((string _, MyraCheckButton other) in choices)
+                    foreach ((PollOption _, MyraCheckButton other) in choices)
                     {
                         if (!ReferenceEquals(other, cb))
                             other.IsChecked = false;
@@ -178,7 +178,7 @@ public sealed class PollsWindow : MyraControl
                 };
             }
 
-            choices.Add((optionName, cb));
+            choices.Add((option, cb));
             panel.Widgets.Add(cb);
         }
 
@@ -187,9 +187,9 @@ public sealed class PollsWindow : MyraControl
             () => SubmitVote(pollId, poll, choices)));
     }
 
-    private void SubmitVote(string pollId, Poll poll, List<(string name, MyraCheckButton cb)> choices)
+    private void SubmitVote(string pollId, Poll poll, List<(PollOption option, MyraCheckButton cb)> choices)
     {
-        List<string> selected = choices.Where(c => c.cb.IsChecked).Select(c => c.name).ToList();
+        List<PollOption> selected = choices.Where(c => c.cb.IsChecked).Select(c => c.option).ToList();
 
         if (selected.Count == 0)
         {
@@ -203,8 +203,17 @@ public sealed class PollsWindow : MyraControl
         Task.Run(async () =>
         {
             bool allOk = true;
-            foreach (string option in selected)
-                allOk &= await FirebasePollsManager.VoteAsync(pollId, option);
+            string error = null;
+            foreach (PollOption option in selected)
+            {
+                VoteResult result = await FirebasePollsManager.VoteAsync(pollId, option);
+                if (!result.Success)
+                {
+                    allOk = false;
+                    error = result.Error;
+                    break;
+                }
+            }
 
             MainThreadQueue.InvokeOnMainThread(() =>
             {
@@ -214,19 +223,20 @@ public sealed class PollsWindow : MyraControl
                 if (allOk)
                 {
                     // Reflect our own votes immediately so the results view is accurate without a re-fetch.
-                    foreach (string option in selected)
-                    {
-                        if (poll.Options.ContainsKey(option))
-                            poll.Options[option]++;
-                    }
+                    foreach (PollOption option in selected)
+                        option.Votes++;
 
                     MarkVoted(pollId);
                 }
                 else
                 {
+                    string message = TazLang.Get("polls_vote_failed", "Your vote could not be recorded. Please try again.");
+                    if (!string.IsNullOrEmpty(error))
+                        message += $"\n\n{error}";
+
                     new MyraDialog(
                         TazLang.Get("polls_title", "TazUO Polls"),
-                        new MyraLabel(TazLang.Get("polls_vote_failed", "Your vote could not be recorded. Please try again."), MyraLabel.TextStyle.P),
+                        new MyraLabel(message, MyraLabel.TextStyle.P),
                         _ => { });
                 }
 
