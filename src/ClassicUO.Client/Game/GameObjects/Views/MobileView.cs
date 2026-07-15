@@ -487,11 +487,69 @@ namespace ClassicUO.Game.GameObjects
                 }
             }
 
+            if (profile.ShowMobileHealthbar)
+            {
+                DrawHealthbar(batcher, drawX, drawY, depth);
+            }
+
             FrameInfo.X = Math.Abs(FrameInfo.X);
             FrameInfo.Y = Math.Abs(FrameInfo.Y);
             FrameInfo.Width = FrameInfo.X + FrameInfo.Width;
             FrameInfo.Height = FrameInfo.Y + FrameInfo.Height;
             return true;
+        }
+
+        private const int HEALTHBAR_WIDTH = 88;
+        private const int HEALTHBAR_HEIGHT = 5;
+        // Pushes the healthbar forward in the depth buffer so it draws over tiles
+        // rendered below (closer to the camera than) the mobile's feet.
+        private const float HEALTHBAR_DEPTH_OFFSET = 100f;
+
+        private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y, float depth)
+        {
+            // Centered horizontally on the sprite, placed at the bottom of the sprite.
+            int barX = x - (HEALTHBAR_WIDTH / 2);
+            int barY = y;
+
+            float barDepth = depth + HEALTHBAR_DEPTH_OFFSET;
+
+            // Background
+            batcher.Draw(
+                SolidColorTextureCache.GetTexture(Color.Black),
+                new Rectangle(barX, barY, HEALTHBAR_WIDTH, HEALTHBAR_HEIGHT),
+                ShaderHueTranslator.GetHueVector(0, false, 1f),
+                barDepth
+            );
+
+            float hitPercentage = HitsMax > 0 ? (float)Hits / HitsMax : 1f;
+            hitPercentage = Math.Clamp(hitPercentage, 0f, 1f);
+
+            int fillWidth = (int)((HEALTHBAR_WIDTH - 2) * hitPercentage);
+
+            if (fillWidth > 0)
+            {
+                ushort barHue;
+
+                if (IsPoisoned)
+                {
+                    barHue = 63;
+                }
+                else if (IsYellowHits)
+                {
+                    barHue = 53;
+                }
+                else
+                {
+                    barHue = Notoriety.GetHue(NotorietyFlag);
+                }
+
+                batcher.Draw(
+                    SolidColorTextureCache.GetTexture(Color.White),
+                    new Rectangle(barX + 1, barY + 1, fillWidth, HEALTHBAR_HEIGHT - 2),
+                    ShaderHueTranslator.GetHueVector(barHue, false, 1f),
+                    barDepth + 0.01f
+                );
+            }
         }
 
         private ushort GetAnimationInfo(Item item, bool isGargoyle)
