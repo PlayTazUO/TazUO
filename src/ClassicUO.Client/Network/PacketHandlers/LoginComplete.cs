@@ -45,9 +45,6 @@ internal static class LoginComplete
             if (gumps != null)
                 foreach (Gump gump in gumps)
                     UIManager.Add(gump);
-
-            // Let the user know if there are community polls they haven't voted on yet.
-            FirebasePollsManager.NotifyUnvotedPolls(world);
         }
     }
 }

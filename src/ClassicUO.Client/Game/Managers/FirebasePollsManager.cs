@@ -99,38 +99,29 @@ public static class FirebasePollsManager
     }
 
     /// <summary>
-    /// Fetches the available polls and, if the current profile has any it hasn't voted on yet, prints a
-    /// notification to the user. Intended to be called once after login. Runs the fetch on a background
-    /// task and prints on the main thread; does nothing when the fetch fails, there are no polls, or every
-    /// poll has already been voted on.
+    /// Fetches the available polls and, if the current profile has any it hasn't voted on yet, returns a
+    /// user-facing reminder message. Returns <c>null</c> when the fetch fails, there are no polls, or every
+    /// poll has already been voted on. Intended to be shown once after the user is in-world.
     /// </summary>
-    public static void NotifyUnvotedPolls(World world)
+    public static async Task<string> GetUnvotedNotificationAsync()
     {
-        Task.Run(async () =>
-        {
-            Dictionary<string, Poll> polls = await FetchPollsAsync();
+        Dictionary<string, Poll> polls = await FetchPollsAsync();
 
-            if (polls == null || polls.Count == 0)
-                return;
+        if (polls == null || polls.Count == 0)
+            return null;
 
-            int unvoted = CountUnvoted(polls);
+        int unvoted = CountUnvoted(polls);
 
-            if (unvoted <= 0)
-                return;
+        if (unvoted <= 0)
+            return null;
 
-            MainThreadQueue.InvokeOnMainThread(() =>
-            {
-                string message = unvoted == 1
-                    ? TazLang.Get("polls_notify_one",
-                        "There is a new TazUO poll you haven't voted on. Open Polls from the top bar menu to vote.")
-                    : string.Format(
-                        TazLang.Get("polls_notify_many",
-                            "There are {0} TazUO polls you haven't voted on. Open Polls from the top bar menu to vote."),
-                        unvoted);
-
-                GameActions.Print(world, message);
-            });
-        });
+        return unvoted == 1
+            ? TazLang.Get("polls_notify_one",
+                "There is a new TazUO poll you haven't voted on. Open Polls from the top bar menu to vote.")
+            : string.Format(
+                TazLang.Get("polls_notify_many",
+                    "There are {0} TazUO polls you haven't voted on. Open Polls from the top bar menu to vote."),
+                unvoted);
     }
 
     /// <summary>Counts how many of the given polls the current profile has not yet voted on.</summary>
