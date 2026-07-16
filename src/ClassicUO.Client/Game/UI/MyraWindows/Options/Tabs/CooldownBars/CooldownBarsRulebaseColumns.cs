@@ -82,7 +82,13 @@ internal static partial class CooldownBarsTab
                 HeaderTooltip = TazLang.Get("mog_cooldownstab_replaceexistingtooltip"),
                 CellContentAlignment = HorizontalAlignment.Center,
                 Proportion = new Proportion(ProportionType.Auto),
-                CellFactory = rule => MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => rule.ReplaceExisting))
+                CellFactory = rule => CreateExclusiveCheckbox(
+                    rule,
+                    r => r.ReplaceExisting,
+                    (r, v) => r.ReplaceExisting = v,
+                    r => r.SkipIfExists = false,
+                    nameof(CooldownBarRule.ReplaceExisting)
+                )
             },
             new RulebaseColumn<CooldownBarRule>
             {
@@ -90,7 +96,13 @@ internal static partial class CooldownBarsTab
                 HeaderTooltip = TazLang.Get("mog_cooldownstab_skipifexiststooltip"),
                 CellContentAlignment = HorizontalAlignment.Center,
                 Proportion = new Proportion(ProportionType.Auto),
-                CellFactory = rule => MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => rule.SkipIfExists))
+                CellFactory = rule => CreateExclusiveCheckbox(
+                    rule,
+                    r => r.SkipIfExists,
+                    (r, v) => r.SkipIfExists = v,
+                    r => r.ReplaceExisting = false,
+                    nameof(CooldownBarRule.SkipIfExists)
+                )
             },
             new RulebaseColumn<CooldownBarRule>
             {
@@ -103,5 +115,36 @@ internal static partial class CooldownBarsTab
                 }) { Width = 45, Height = 18 }
             }
         ];
+    }
+
+    /// <summary>
+    /// Creates a checkbox bound to <paramref name="get"/>/<paramref name="set"/> that, when checked, clears the
+    /// mutually-exclusive sibling option via <paramref name="clearOther"/>. The checkbox's visual state is kept in
+    /// sync with the backing rule so that clearing one option from the other's handler updates both boxes.
+    /// </summary>
+    private static MyraCheckButton CreateExclusiveCheckbox(
+        CooldownBarRule rule,
+        Func<CooldownBarRule, bool> get,
+        Action<CooldownBarRule, bool> set,
+        Action<CooldownBarRule> clearOther,
+        string propertyName)
+    {
+        MyraCheckButton cb = MyraCheckButton.CreateWithCallback(get(rule), isChecked =>
+        {
+            set(rule, isChecked);
+
+            if (isChecked)
+                clearOther(rule);
+        });
+
+        // The checkbox binding is one-way (it only writes on user input), so mirror programmatic changes to the
+        // backing property - e.g. when the sibling option clears this one - back onto the checkbox's visual state.
+        rule.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == propertyName && cb.IsChecked != get(rule))
+                cb.IsChecked = get(rule);
+        };
+
+        return cb;
     }
 }
