@@ -225,6 +225,16 @@ public class WorldMapGump : ResizableGump
                 _freeView = value;
                 SaveSettings();
 
+                // The context menu is only rebuilt on certain events (not on every
+                // right-click), so a programmatic FreeView change - e.g. via GoToMarker
+                // from the web map - would leave the cached "Free view" toggle showing a
+                // stale state. Keep the existing option entry in sync so the menu reflects
+                // reality the next time it is shown.
+                if (_options.TryGetValue("free_view", out ContextMenuItemEntry freeViewOption) && freeViewOption != null)
+                {
+                    freeViewOption.IsSelected = _freeView;
+                }
+
                 if (!_freeView)
                 {
                     _isScrolling = false;
