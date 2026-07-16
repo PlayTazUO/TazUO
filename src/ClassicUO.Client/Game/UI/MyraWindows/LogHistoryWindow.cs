@@ -17,12 +17,22 @@ namespace ClassicUO.Game.UI.MyraWindows
     {
         private const uint UPDATE_INTERVAL = 500;
 
+        // Severity types shown as filter toggles. Panic is logged through Error, so
+        // it shares the Error toggle and is not listed separately.
+        private static readonly LogTypes[] _filterableTypes =
+        {
+            LogTypes.Trace, LogTypes.Debug, LogTypes.Info, LogTypes.Warning, LogTypes.Error,
+        };
+
         private readonly VerticalStackPanel _logPanel;
         private readonly ScrollViewer _scrollViewer;
         private readonly MyraLabel _statusLabel;
         private uint _lastUpdate;
         private long _lastRevision = -1;
         private bool _autoScroll = true;
+
+        // Bitmask of which severities are currently shown. Defaults to everything.
+        private LogTypes _enabledTypes = LogTypes.All;
 
         public static void Show()
         {
@@ -50,6 +60,25 @@ namespace ClassicUO.Game.UI.MyraWindows
                 RebuildList(true);
             }));
 
+            var filters = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+            filters.Widgets.Add(new MyraLabel("Show:", MyraLabel.TextStyle.P));
+            foreach (LogTypes type in _filterableTypes)
+            {
+                LogTypes captured = type;
+                filters.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                    true,
+                    isChecked =>
+                    {
+                        if (isChecked)
+                            _enabledTypes |= captured;
+                        else
+                            _enabledTypes &= ~captured;
+
+                        RebuildList(true);
+                    },
+                    type.ToString()));
+            }
+
             _statusLabel = new MyraLabel(string.Empty, MyraLabel.TextStyle.P);
 
             _scrollViewer = new ScrollViewer
@@ -67,6 +96,7 @@ namespace ClassicUO.Game.UI.MyraWindows
                 Padding = new Thickness(4),
             };
             root.Widgets.Add(buttons);
+            root.Widgets.Add(filters);
             root.Widgets.Add(_statusLabel);
             root.Widgets.Add(_scrollViewer);
 
@@ -74,6 +104,15 @@ namespace ClassicUO.Game.UI.MyraWindows
             CenterInViewPort();
 
             RebuildList(true);
+        }
+
+        private bool IsTypeEnabled(LogTypes type)
+        {
+            // Panic is recorded through Error and has no dedicated toggle.
+            if (type == LogTypes.Panic)
+                type = LogTypes.Error;
+
+            return (_enabledTypes & type) == type;
         }
 
         private static Color GetColor(LogTypes type) => type switch
@@ -98,24 +137,31 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             _logPanel.Widgets.Clear();
 
-            if (entries.Length == 0)
+            int shown = 0;
+            foreach (LogEntry entry in entries)
             {
-                _logPanel.Widgets.Add(new MyraLabel("No log entries recorded yet.", MyraLabel.TextStyle.P));
-            }
-            else
-            {
-                foreach (LogEntry entry in entries)
+                if (!IsTypeEnabled(entry.Type))
+                    continue;
+
+                var label = new MyraLabel(entry.ToString(), MyraLabel.TextStyle.P)
                 {
-                    var label = new MyraLabel(entry.ToString(), MyraLabel.TextStyle.P)
-                    {
-                        Wrap = false,
-                        TextColor = GetColor(entry.Type),
-                    };
-                    _logPanel.Widgets.Add(label);
-                }
+                    Wrap = false,
+                    TextColor = GetColor(entry.Type),
+                };
+                _logPanel.Widgets.Add(label);
+                shown++;
             }
 
-            _statusLabel.Text = $"{entries.Length} / {LogHistory.MaxEntries} entries";
+            if (shown == 0)
+            {
+                _logPanel.Widgets.Add(new MyraLabel(
+                    entries.Length == 0
+                        ? "No log entries recorded yet."
+                        : "No entries match the current filters.",
+                    MyraLabel.TextStyle.P));
+            }
+
+            _statusLabel.Text = $"Showing {shown} of {entries.Length} entries (max {LogHistory.MaxEntries})";
 
             if (_autoScroll)
                 ScrollToBottom();
@@ -124,12 +170,17 @@ namespace ClassicUO.Game.UI.MyraWindows
         private void ScrollToBottom() =>
             _scrollViewer.ScrollPosition = new Point(_scrollViewer.ScrollPosition.X, _scrollViewer.ScrollMaximum.Y);
 
-        private static void CopyToClipboard()
+        private void CopyToClipboard()
         {
-            string text = LogHistory.ToText();
+            var sb = new System.Text.StringBuilder();
 
-            if (string.IsNullOrEmpty(text))
-                text = "No log entries recorded.";
+            foreach (LogEntry entry in LogHistory.Snapshot())
+            {
+                if (IsTypeEnabled(entry.Type))
+                    sb.AppendLine(entry.ToString());
+            }
+
+            string text = sb.Length > 0 ? sb.ToString() : "No log entries to copy.";
 
             Clipboard.SetClipboardText(text);
             GameActions.Print("Copied log history to clipboard!", Constants.HUE_SUCCESS);
