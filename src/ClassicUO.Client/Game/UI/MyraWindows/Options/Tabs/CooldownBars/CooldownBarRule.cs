@@ -56,6 +56,12 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
     public bool ReplaceExisting { get; set => SetField(ref field, value); } = true;
 
     /// <summary>
+    /// When <see langword="true"/>, triggering this rule while a bar of the same name is already running does nothing,
+    /// preserving the existing countdown. Takes precedence over <see cref="ReplaceExisting"/>.
+    /// </summary>
+    public bool SkipIfExists { get; set => SetField(ref field, value); } = false;
+
+    /// <summary>
     /// Converts a legacy <see cref="CoolDownBar.CoolDownConditionData"/> record into a
     /// <see cref="CooldownBarRule"/> for use in the rulebase editor
     /// </summary>
@@ -80,7 +86,8 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
             TriggerMessageType = trigger,
             Hue = data.hue,
             Cooldown = (uint)data.cooldown,
-            ReplaceExisting = data.replace_if_exists
+            ReplaceExisting = data.replace_if_exists,
+            SkipIfExists = data.skip_if_exists
         };
     }
 

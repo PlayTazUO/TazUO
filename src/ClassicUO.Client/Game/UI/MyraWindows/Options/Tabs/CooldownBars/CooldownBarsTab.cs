@@ -117,7 +117,8 @@ internal static partial class CooldownBarsTab
             (int)rule.Cooldown,
             isNew,
             (int)rule.TriggerMessageType,
-            rule.ReplaceExisting
+            rule.ReplaceExisting,
+            rule.SkipIfExists
         );
     }
 }
