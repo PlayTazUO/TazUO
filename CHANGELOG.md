@@ -71,6 +71,7 @@ All notable changes to TazUO will be recorded here.
 * Added auto skinning support — when a corpse is opened, a configured knife/dagger is automatically used on it through the action queue; includes enable and human-corpse toggles, an editable knife graphic list, and a "Target Skinning Weapon" button in the Auto Loot tab - [P.R 694](https://github.com/PlayTazUO/TazUO/pull/694) ([bittiez](https://github.com/bittiez))
 * Nameplate search and negative search now save per nameplate profile — switching profiles and logging out/in restore each profile's filters, and both fields are editable in the nameplate profile editor - [P.R 695](https://github.com/PlayTazUO/TazUO/pull/695) ([bittiez](https://github.com/bittiez))
 * Added new tazuo polls window - ([bittiez](https://github.com/bittiez))
+* Added a goto location input to the web map (accepts raw map or sextant coordinates) that sets the player's Go-To location - [P.R 708](https://github.com/PlayTazUO/TazUO/pull/708) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
 * Fixed the nameplate overhead manager gump not resizing to fit all buttons and profile names, and now refreshes its buttons when a profile is renamed in the options window - [P.R 698](https://github.com/PlayTazUO/TazUO/pull/698) ([bittiez](https://github.com/bittiez))
