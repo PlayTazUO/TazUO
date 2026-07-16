@@ -7,6 +7,7 @@ client expects.
 - **Database root:** `https://tazuopolls-default-rtdb.firebaseio.com/polls`
 - **Client parser:** `src/ClassicUO.Client/Game/Managers/FirebasePollsManager.cs`
 - **Window:** `src/ClassicUO.Client/Game/UI/MyraWindows/PollsWindow.cs`
+- **Interactive builder:** `tools/poll_builder.py` — walks you through a poll and prints the JSON entry.
 
 Polls are parsed defensively. Each poll — and each option/attachment within it — is validated
 independently, so a single malformed entry is skipped rather than breaking the rest of the list.

@@ -115,13 +115,61 @@ public static class FirebasePollsManager
         {
             string json = await _httpClient.GetStringAsync($"{BASE_URL}.json");
 
-            return ParsePolls(json);
+            Dictionary<string, Poll> polls = ParsePolls(json);
+
+            // We only reach here on a successful fetch, so it is safe to drop saved "already voted" ids
+            // for polls that no longer exist and keep the per-profile list from growing without bound.
+            PruneVotedPolls(polls);
+
+            return polls;
         }
         catch (Exception e)
         {
             Log.Error($"Failed to fetch polls: {e}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// Removes saved "already voted" poll ids that are no longer present in <paramref name="polls"/> so the
+    /// per-profile <see cref="Profile.VotedPolls"/> list cannot grow indefinitely. Only call this with a
+    /// successfully fetched set — passing a stale or failed result would wrongly forget real votes. The
+    /// write is marshalled to the main thread to match the rest of the profile-mutation code.
+    /// </summary>
+    private static void PruneVotedPolls(Dictionary<string, Poll> polls)
+    {
+        if (polls == null)
+            return;
+
+        Profile profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return;
+
+        string[] voted = (profile.VotedPolls ?? string.Empty)
+            .Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        if (voted.Length == 0)
+            return;
+
+        var kept = new List<string>(voted.Length);
+        foreach (string id in voted)
+        {
+            if (polls.ContainsKey(id))
+                kept.Add(id);
+        }
+
+        // Nothing stale to remove.
+        if (kept.Count == voted.Length)
+            return;
+
+        string updated = string.Join(';', kept);
+
+        MainThreadQueue.InvokeOnMainThread(() =>
+        {
+            // Guard against the active profile changing between fetch and write.
+            if (ReferenceEquals(ProfileManager.CurrentProfile, profile))
+                profile.VotedPolls = updated;
+        });
     }
 
     /// <summary>
