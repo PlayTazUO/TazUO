@@ -1,17 +1,22 @@
+using System.Text;
+using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
+using FontStashSharp;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
 using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.MyraWindows
 {
     /// <summary>
     /// Developer window that displays the rolling in-memory log history captured by
-    /// <see cref="LogHistory"/>, with a button to copy the whole output to the clipboard.
+    /// <see cref="LogHistory"/> in a single read-only text field, with a button to copy
+    /// the whole output to the clipboard.
     /// </summary>
     public class LogHistoryWindow : MyraControl
     {
@@ -24,7 +29,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             LogTypes.Trace, LogTypes.Debug, LogTypes.Info, LogTypes.Warning, LogTypes.Error,
         };
 
-        private readonly VerticalStackPanel _logPanel;
+        private readonly MyraInputBox _textBox;
         private readonly ScrollViewer _scrollViewer;
         private readonly MyraLabel _statusLabel;
         private uint _lastUpdate;
@@ -48,15 +53,13 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         public LogHistoryWindow() : base("Log History")
         {
-            _logPanel = new VerticalStackPanel { Spacing = 0 };
-
             var buttons = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
-            buttons.Widgets.Add(new MyraButton("Refresh", () => RebuildList(true)));
+            buttons.Widgets.Add(new MyraButton("Refresh", () => Rebuild(true)));
             buttons.Widgets.Add(new MyraButton("Clear", () =>
             {
                 LogHistory.Clear();
-                RebuildList(true);
+                Rebuild(true);
             }));
 
             var filters = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
@@ -73,12 +76,24 @@ namespace ClassicUO.Game.UI.MyraWindows
                         else
                             _enabledTypes &= ~captured;
 
-                        RebuildList(true);
+                        Rebuild(true);
                     },
                     type.ToString()));
             }
 
             _statusLabel = new MyraLabel(string.Empty, MyraLabel.TextStyle.P);
+
+            SpriteFontBase monoFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.ROBOTO_MONO, 16);
+
+            _textBox = new MyraInputBox
+            {
+                Text = "",
+                Multiline = true,
+                Readonly = true,
+                Font = monoFont,
+                Background = new SolidBrush(new Color(0, 0, 0, 75)),
+                VerticalAlignment = VerticalAlignment.Stretch,
+            };
 
             _scrollViewer = new ScrollViewer
             {
@@ -86,7 +101,7 @@ namespace ClassicUO.Game.UI.MyraWindows
                 MinHeight = 350,
                 MaxWidth = 900,
                 MaxHeight = 600,
-                Content = _logPanel,
+                Content = _textBox,
             };
 
             var root = new VerticalStackPanel
@@ -102,7 +117,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             SetRootContent(root);
             CenterInViewPort();
 
-            RebuildList(true);
+            Rebuild(true);
         }
 
         private bool IsTypeEnabled(LogTypes type)
@@ -114,17 +129,30 @@ namespace ClassicUO.Game.UI.MyraWindows
             return (_enabledTypes & type) == type;
         }
 
-        private static Color GetColor(LogTypes type) => type switch
+        /// <summary>
+        /// Builds the plain-text dump of the entries matching the active filters and
+        /// reports how many were shown out of the total captured.
+        /// </summary>
+        private string BuildText(out int shown, out int total)
         {
-            LogTypes.Error or LogTypes.Panic => Color.OrangeRed,
-            LogTypes.Warning => Color.Gold,
-            LogTypes.Info => Color.LightGreen,
-            LogTypes.Trace => Color.LightGray,
-            LogTypes.Debug => Color.Violet,
-            _ => Color.White,
-        };
+            LogEntry[] entries = LogHistory.Snapshot();
+            total = entries.Length;
+            shown = 0;
 
-        private void RebuildList(bool force = false)
+            var sb = new StringBuilder();
+            foreach (LogEntry entry in entries)
+            {
+                if (!IsTypeEnabled(entry.Type))
+                    continue;
+
+                sb.AppendLine(entry.ToString());
+                shown++;
+            }
+
+            return sb.ToString();
+        }
+
+        private void Rebuild(bool force = false)
         {
             long revision = LogHistory.Revision;
             if (!force && revision == _lastRevision)
@@ -134,45 +162,18 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             // Decide before repopulating whether to snap to the newest entry. We stick to
             // the bottom only when the user hasn't parked the scrollbar somewhere in the
-            // middle to read — i.e. it's currently at the top or bottom of the list.
+            // middle to read — i.e. it's currently at the top or bottom of the content.
             bool stickToBottom = ShouldAutoScroll();
 
-            LogEntry[] entries = LogHistory.Snapshot();
-
-            _logPanel.Widgets.Clear();
-
-            int shown = 0;
-            foreach (LogEntry entry in entries)
-            {
-                if (!IsTypeEnabled(entry.Type))
-                    continue;
-
-                var label = new MyraLabel(entry.ToString(), MyraLabel.TextStyle.P)
-                {
-                    Wrap = false,
-                    TextColor = GetColor(entry.Type),
-                };
-                _logPanel.Widgets.Add(label);
-                shown++;
-            }
-
-            if (shown == 0)
-            {
-                _logPanel.Widgets.Add(new MyraLabel(
-                    entries.Length == 0
-                        ? "No log entries recorded yet."
-                        : "No entries match the current filters.",
-                    MyraLabel.TextStyle.P));
-            }
-
-            _statusLabel.Text = $"Showing {shown} of {entries.Length} entries (max {LogHistory.MaxEntries})";
+            _textBox.Text = BuildText(out int shown, out int total);
+            _statusLabel.Text = $"Showing {shown} of {total} entries (max {LogHistory.MaxEntries})";
 
             if (stickToBottom)
                 ScrollToBottom();
         }
 
         /// <summary>
-        /// True when the list should snap to the newest entry after a rebuild: when the
+        /// True when the view should snap to the newest entry after a rebuild: when the
         /// scrollbar is at the top or bottom (or there's nothing to scroll yet), but not
         /// when the user has scrolled to a position in the middle.
         /// </summary>
@@ -197,17 +198,9 @@ namespace ClassicUO.Game.UI.MyraWindows
 
         private void CopyToClipboard()
         {
-            var sb = new System.Text.StringBuilder();
+            string text = BuildText(out int shown, out _);
 
-            foreach (LogEntry entry in LogHistory.Snapshot())
-            {
-                if (IsTypeEnabled(entry.Type))
-                    sb.AppendLine(entry.ToString());
-            }
-
-            string text = sb.Length > 0 ? sb.ToString() : "No log entries to copy.";
-
-            Clipboard.SetClipboardText(text);
+            Clipboard.SetClipboardText(shown > 0 ? text : "No log entries to copy.");
             GameActions.Print("Copied log history to clipboard!", Constants.HUE_SUCCESS);
         }
 
@@ -221,7 +214,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             if (Time.Ticks - _lastUpdate > UPDATE_INTERVAL)
             {
                 _lastUpdate = Time.Ticks;
-                RebuildList();
+                Rebuild();
             }
         }
     }
