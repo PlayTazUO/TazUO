@@ -508,7 +508,7 @@ public class MyraControl : IGui
     /// <summary>This is not in use here. Use _rootWindow events instead.</summary>
     public void Remove(IGui c) => Children.Remove(c);
 
-    public void SetTooltip(string text, int maxWidth = 0) //TODO: Remove maxWidth param
+    public void SetTooltip(string text)
     {
         ClearTooltip();
 

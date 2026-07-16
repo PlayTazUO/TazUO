@@ -407,7 +407,7 @@ namespace ClassicUO.Game.UI.Gumps
                                             toolTipCliloc
                                         );
 
-                                    icon.SetTooltip(tooltip, 250);
+                                    icon.SetTooltip(tooltip);
                                 }
                             }
                         }
@@ -724,7 +724,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (toolTipCliloc > 0)
                 {
                     string tooltip = Client.Game.UO.FileManager.Clilocs.GetString(toolTipCliloc + i);
-                    icon.SetTooltip(tooltip, 250);
+                    icon.SetTooltip(tooltip);
                 }
 
                 icon.MouseDoubleClick += OnIconDoubleClick;

@@ -531,7 +531,7 @@ namespace ClassicUO.Game.UI.Controls
 
     public void BringOnTop() => UIManager.MakeTopMostGump(this);
 
-    public void SetTooltip(string text, int maxWidth = 0) //TODO: Remove maxWidth param
+    public void SetTooltip(string text)
     {
         ClearTooltip();
 
