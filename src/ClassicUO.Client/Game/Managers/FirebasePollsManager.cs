@@ -36,6 +36,29 @@ public sealed class PollOption
     public string VotePath { get; set; }
 }
 
+/// <summary>The kind of content carried by a <see cref="PollAttachment"/>.</summary>
+public enum AttachmentType
+{
+    /// <summary>A clickable web link. <see cref="PollAttachment.Data"/> is the URL.</summary>
+    Url = 0,
+
+    /// <summary>An image to download and display. <see cref="PollAttachment.Data"/> is the image URL.</summary>
+    Image = 1
+}
+
+/// <summary>
+/// An optional piece of extra content attached to a <see cref="Poll"/>, such as a link or an image.
+/// Attachments are parsed defensively: a malformed entry (unknown type, missing/empty data) is skipped.
+/// </summary>
+public sealed class PollAttachment
+{
+    /// <summary>What kind of content <see cref="Data"/> refers to.</summary>
+    public AttachmentType Type { get; set; }
+
+    /// <summary>The URL of the link or image.</summary>
+    public string Data { get; set; }
+}
+
 /// <summary>
 /// A single poll as stored in the Firebase realtime database.
 /// </summary>
@@ -47,6 +70,9 @@ public sealed class Poll
 
     /// <summary>0 = single choice, 1 = multiple choice.</summary>
     public int Type { get; set; }
+
+    /// <summary>Optional extra content (links, images) shown alongside the poll. Never null.</summary>
+    public List<PollAttachment> Attachments { get; set; } = new();
 }
 
 /// <summary>Outcome of a vote attempt, carrying the server's error message when it fails.</summary>
@@ -205,7 +231,59 @@ public static class FirebasePollsManager
         if (options.Count == 0)
             return false;
 
-        poll = new Poll { Question = question, Type = type, Options = options };
+        // Attachments are entirely optional; a missing, malformed, or empty array yields no attachments.
+        List<PollAttachment> attachments = ParseAttachments(element);
+
+        poll = new Poll { Question = question, Type = type, Options = options, Attachments = attachments };
+        return true;
+    }
+
+    /// <summary>
+    /// Parses the optional <c>attachments</c> array. Individual entries are validated independently, and any
+    /// malformed one (not an object, unknown/missing type, or missing/empty data) is skipped rather than
+    /// failing the whole poll. Returns an empty list when the key is absent or not an array.
+    /// </summary>
+    private static List<PollAttachment> ParseAttachments(JsonElement element)
+    {
+        var attachments = new List<PollAttachment>();
+
+        if (!element.TryGetProperty("attachments", out JsonElement attachmentsEl) ||
+            attachmentsEl.ValueKind != JsonValueKind.Array)
+            return attachments;
+
+        foreach (JsonElement entry in attachmentsEl.EnumerateArray())
+        {
+            if (TryParseAttachment(entry, out PollAttachment attachment))
+                attachments.Add(attachment);
+        }
+
+        return attachments;
+    }
+
+    private static bool TryParseAttachment(JsonElement element, out PollAttachment attachment)
+    {
+        attachment = null;
+
+        if (element.ValueKind != JsonValueKind.Object)
+            return false;
+
+        // Type is required and must be a known value.
+        if (!element.TryGetProperty("type", out JsonElement typeEl) ||
+            typeEl.ValueKind != JsonValueKind.Number ||
+            !typeEl.TryGetInt32(out int type) ||
+            !Enum.IsDefined(typeof(AttachmentType), type))
+            return false;
+
+        // Data is required and must be a non-empty string.
+        if (!element.TryGetProperty("data", out JsonElement dataEl) ||
+            dataEl.ValueKind != JsonValueKind.String)
+            return false;
+
+        string data = dataEl.GetString();
+        if (string.IsNullOrWhiteSpace(data))
+            return false;
+
+        attachment = new PollAttachment { Type = (AttachmentType)type, Data = data };
         return true;
     }
 

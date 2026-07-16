@@ -124,6 +124,8 @@ public sealed class PollsWindow : MyraControl
 
         panel.Widgets.Add(new MyraLabel(poll.Question, MyraLabel.TextStyle.H4));
 
+        AddAttachments(panel, poll);
+
         if (poll.Options == null || poll.Options.Count == 0)
         {
             panel.Widgets.Add(new MyraLabel(TazLang.Get("polls_no_options", "This poll has no options."), MyraLabel.TextStyle.P));
@@ -136,6 +138,31 @@ public sealed class PollsWindow : MyraControl
             AddVotingForm(panel, pollId, poll);
 
         return panel;
+    }
+
+    /// <summary>
+    /// Renders any attachments on the poll: URLs become clickable links, images are downloaded
+    /// asynchronously and shown inline. Malformed attachments are already filtered out during parsing,
+    /// so a poll with no valid attachments simply adds nothing here.
+    /// </summary>
+    private static void AddAttachments(VerticalStackPanel panel, Poll poll)
+    {
+        if (poll.Attachments == null || poll.Attachments.Count == 0)
+            return;
+
+        foreach (PollAttachment attachment in poll.Attachments)
+        {
+            switch (attachment.Type)
+            {
+                case AttachmentType.Url:
+                    panel.Widgets.Add(new LinkLabel(attachment.Data, attachment.Data, MyraLabel.TextStyle.P));
+                    break;
+
+                case AttachmentType.Image:
+                    panel.Widgets.Add(new MyraExternalImage(attachment.Data, 320));
+                    break;
+            }
+        }
     }
 
     private static void AddResults(VerticalStackPanel panel, Poll poll)
