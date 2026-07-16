@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
@@ -15,12 +17,15 @@ namespace ClassicUO.Game.UI.MyraWindows
 {
     /// <summary>
     /// Developer window that displays the rolling in-memory log history captured by
-    /// <see cref="LogHistory"/> in a single read-only text field, with a button to copy
-    /// the whole output to the clipboard.
+    /// <see cref="LogHistory"/> in a single read-only text field. Only the most recent
+    /// <see cref="PageSize"/> entries are rendered up front; scrolling to the top loads
+    /// another page of older entries, keeping the Myra text layout cheap.
     /// </summary>
     public class LogHistoryWindow : MyraControl
     {
         private const uint UPDATE_INTERVAL = 500;
+        private const int PageSize = 50;
+        private const int ScrollEdgeTolerance = 4;
 
         // Severity types shown as filter toggles. Panic is logged through Error, so
         // it shares the Error toggle and is not listed separately.
@@ -34,6 +39,11 @@ namespace ClassicUO.Game.UI.MyraWindows
         private readonly MyraLabel _statusLabel;
         private uint _lastUpdate;
         private long _lastRevision = -1;
+
+        // How many of the most-recent filtered entries are currently rendered, and whether
+        // older ones remain to be loaded by scrolling up.
+        private int _visibleCount = PageSize;
+        private bool _hasMore;
 
         // Bitmask of which severities are currently shown. Defaults to everything.
         private LogTypes _enabledTypes = LogTypes.All;
@@ -55,11 +65,11 @@ namespace ClassicUO.Game.UI.MyraWindows
         {
             var buttons = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             buttons.Widgets.Add(new MyraButton("Copy Output", CopyToClipboard));
-            buttons.Widgets.Add(new MyraButton("Refresh", () => Rebuild(true)));
+            buttons.Widgets.Add(new MyraButton("Refresh", ResetToLatest));
             buttons.Widgets.Add(new MyraButton("Clear", () =>
             {
                 LogHistory.Clear();
-                Rebuild(true);
+                ResetToLatest();
             }));
 
             var filters = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
@@ -76,7 +86,7 @@ namespace ClassicUO.Game.UI.MyraWindows
                         else
                             _enabledTypes &= ~captured;
 
-                        Rebuild(true);
+                        ResetToLatest();
                     },
                     type.ToString()));
             }
@@ -117,7 +127,7 @@ namespace ClassicUO.Game.UI.MyraWindows
             SetRootContent(root);
             CenterInViewPort();
 
-            Rebuild(true);
+            ResetToLatest();
         }
 
         private bool IsTypeEnabled(LogTypes type)
@@ -129,78 +139,101 @@ namespace ClassicUO.Game.UI.MyraWindows
             return (_enabledTypes & type) == type;
         }
 
-        /// <summary>
-        /// Builds the plain-text dump of the entries matching the active filters and
-        /// reports how many were shown out of the total captured.
-        /// </summary>
-        private string BuildText(out int shown, out int total)
+        private List<LogEntry> GetFilteredEntries()
         {
             LogEntry[] entries = LogHistory.Snapshot();
-            total = entries.Length;
-            shown = 0;
+            var filtered = new List<LogEntry>(entries.Length);
 
-            var sb = new StringBuilder();
             foreach (LogEntry entry in entries)
             {
-                if (!IsTypeEnabled(entry.Type))
-                    continue;
-
-                sb.AppendLine(entry.ToString());
-                shown++;
+                if (IsTypeEnabled(entry.Type))
+                    filtered.Add(entry);
             }
 
-            return sb.ToString();
-        }
-
-        private void Rebuild(bool force = false)
-        {
-            long revision = LogHistory.Revision;
-            if (!force && revision == _lastRevision)
-                return;
-
-            _lastRevision = revision;
-
-            // Decide before repopulating whether to snap to the newest entry. We stick to
-            // the bottom only when the user hasn't parked the scrollbar somewhere in the
-            // middle to read — i.e. it's currently at the top or bottom of the content.
-            bool stickToBottom = ShouldAutoScroll();
-
-            _textBox.Text = BuildText(out int shown, out int total);
-            _statusLabel.Text = $"Showing {shown} of {total} entries (max {LogHistory.MaxEntries})";
-
-            if (stickToBottom)
-                ScrollToBottom();
+            return filtered;
         }
 
         /// <summary>
-        /// True when the view should snap to the newest entry after a rebuild: when the
-        /// scrollbar is at the top or bottom (or there's nothing to scroll yet), but not
-        /// when the user has scrolled to a position in the middle.
+        /// Renders the newest <see cref="_visibleCount"/> filtered entries into the text
+        /// field and refreshes the status line. Does not touch the scroll position.
         /// </summary>
-        private bool ShouldAutoScroll()
+        private void RenderText()
+        {
+            List<LogEntry> filtered = GetFilteredEntries();
+            int total = filtered.Count;
+            int start = Math.Max(0, total - _visibleCount);
+            _hasMore = start > 0;
+
+            var sb = new StringBuilder();
+            for (int i = start; i < total; i++)
+                sb.AppendLine(filtered[i].ToString());
+
+            _textBox.Text = sb.ToString();
+
+            int shown = total - start;
+            _statusLabel.Text = _hasMore
+                ? $"Showing latest {shown} of {total} — scroll up to load more (max {LogHistory.MaxEntries})"
+                : $"Showing {shown} of {total} entries (max {LogHistory.MaxEntries})";
+        }
+
+        /// <summary>
+        /// Resets the view to the most recent page and snaps to the newest entry. Used on
+        /// open, refresh, clear and filter changes.
+        /// </summary>
+        private void ResetToLatest()
+        {
+            _visibleCount = PageSize;
+            _lastRevision = LogHistory.Revision;
+            RenderText();
+            ScrollToBottom();
+        }
+
+        /// <summary>
+        /// Loads another page of older entries, keeping the viewport anchored to the same
+        /// content by offsetting the scroll position by the height added above it.
+        /// </summary>
+        private void LoadOlder()
+        {
+            int oldMax = _scrollViewer.ScrollMaximum.Y;
+
+            _visibleCount += PageSize;
+            // Fold in any entries logged since the last render so this snapshot stays current.
+            _lastRevision = LogHistory.Revision;
+            RenderText();
+
+            _scrollViewer.UpdateArrange();
+            int newMax = _scrollViewer.ScrollMaximum.Y;
+
+            int newY = _scrollViewer.ScrollPosition.Y + (newMax - oldMax);
+            _scrollViewer.ScrollPosition = new Point(_scrollViewer.ScrollPosition.X, newY);
+        }
+
+        private bool IsAtTop() =>
+            _scrollViewer.ScrollMaximum.Y > 0 && _scrollViewer.ScrollPosition.Y <= ScrollEdgeTolerance;
+
+        private bool IsAtBottom()
         {
             int max = _scrollViewer.ScrollMaximum.Y;
-            if (max <= 0)
-                return true;
-
-            const int tolerance = 2;
-            int y = _scrollViewer.ScrollPosition.Y;
-
-            return y <= tolerance || y >= max - tolerance;
+            return max <= 0 || _scrollViewer.ScrollPosition.Y >= max - ScrollEdgeTolerance;
         }
 
         private void ScrollToBottom()
         {
-            // Ensure ScrollMaximum reflects the freshly rebuilt content before snapping.
+            // Ensure ScrollMaximum reflects the freshly rendered content before snapping.
             _scrollViewer.UpdateArrange();
             _scrollViewer.ScrollPosition = new Point(_scrollViewer.ScrollPosition.X, _scrollViewer.ScrollMaximum.Y);
         }
 
         private void CopyToClipboard()
         {
-            string text = BuildText(out int shown, out _);
+            // Copy every filtered entry, not just the currently-rendered page.
+            List<LogEntry> filtered = GetFilteredEntries();
 
-            Clipboard.SetClipboardText(shown > 0 ? text : "No log entries to copy.");
+            var sb = new StringBuilder();
+            foreach (LogEntry entry in filtered)
+                sb.AppendLine(entry.ToString());
+
+            Clipboard.SetClipboardText(filtered.Count > 0 ? sb.ToString() : "No log entries to copy.");
             GameActions.Print("Copied log history to clipboard!", Constants.HUE_SUCCESS);
         }
 
@@ -211,10 +244,25 @@ namespace ClassicUO.Game.UI.MyraWindows
             if (IsDisposed)
                 return;
 
+            // Scrolling to the top pages in older entries on demand.
+            if (_hasMore && IsAtTop())
+            {
+                LoadOlder();
+                return;
+            }
+
             if (Time.Ticks - _lastUpdate > UPDATE_INTERVAL)
             {
                 _lastUpdate = Time.Ticks;
-                Rebuild();
+
+                // Live-tail new entries only while parked at the bottom; if the user has
+                // scrolled up to read, leave their view untouched.
+                if (IsAtBottom() && LogHistory.Revision != _lastRevision)
+                {
+                    _lastRevision = LogHistory.Revision;
+                    RenderText();
+                    ScrollToBottom();
+                }
             }
         }
     }
