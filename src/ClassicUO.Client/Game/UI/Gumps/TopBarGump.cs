@@ -282,6 +282,7 @@ namespace ClassicUO.Game.UI.Gumps
             var devSubmenu = new ContextMenuItemEntry(TazLang.Get("topbargump_developer", "Developer"));
             devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_tinkerer", "Tinkerer"), TinkererWindow.Show));
             devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_profiler", "Profiler"), MyraWindows.ProfilerWindow.Show));
+            devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_loghistory", "Log History"), MyraWindows.LogHistoryWindow.Show));
             moreMenu.ContextMenu.Add(devSubmenu);
 
             startX += largeWidth + 1;
