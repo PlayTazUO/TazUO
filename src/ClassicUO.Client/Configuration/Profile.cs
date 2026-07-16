@@ -553,6 +553,7 @@ namespace ClassicUO.Configuration
         public List<string> Condition_Trigger { get; set => SetProperty(ref field, value); } = new List<string>();
         public List<int> Condition_Type { get; set => SetProperty(ref field, value); } = new List<int>();
         public List<bool> Condition_ReplaceIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
+        public List<bool> Condition_SkipIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
         public int CoolDownConditionCount
         {
             get

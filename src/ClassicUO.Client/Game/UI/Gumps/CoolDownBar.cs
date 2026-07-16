@@ -158,6 +158,7 @@ namespace ClassicUO.Game.UI.Gumps
             public int cooldown;
             public int message_type;
             public bool replace_if_exists;
+            public bool skip_if_exists;
 
             /// <summary>
             /// Represents a cooldown bar condition.
@@ -172,13 +173,18 @@ namespace ClassicUO.Game.UI.Gumps
             /// Whether to replace an existing instance of the cooldown bar when triggered.
             /// To clarify, this does not refer to the configuration - this refers to the cooldown bar itself, i.e., whether additional calls replace an already-on-screen instance
             /// </param>
+            /// <param name="skipExisting">
+            /// Whether to skip (not add) a new cooldown bar when an instance of the same bar is already on-screen, preserving the running countdown.
+            /// When set, this takes precedence over <paramref name="replaceExisting"/>.
+            /// </param>
             private CoolDownConditionData(
                 ushort hue = 42,
                 string label = "Label",
                 string trigger = "Text to trigger",
                 int cooldown = 10,
                 int messageType = (int)MESSAGE_TYPE.ALL,
-                bool replaceExisting = false
+                bool replaceExisting = false,
+                bool skipExisting = false
             )
             {
                 this.hue = hue;
@@ -187,6 +193,7 @@ namespace ClassicUO.Game.UI.Gumps
                 this.cooldown = cooldown;
                 message_type = messageType;
                 replace_if_exists = replaceExisting;
+                skip_if_exists = skipExisting;
             }
 
             public static CoolDownConditionData[] GetAllRules()
@@ -218,6 +225,16 @@ namespace ClassicUO.Game.UI.Gumps
                             ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(false);
                         }
                     }
+
+                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key) //Remove me after a while to prevent index not found
+                        data.skip_if_exists = ProfileManager.CurrentProfile.Condition_SkipIfExists[key];
+                    else
+                    {
+                        while (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count <= key)
+                        {
+                            ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(false);
+                        }
+                    }
                 }
                 else if (createIfNotExist)
                 {
@@ -227,11 +244,12 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.Condition_Duration.Add(data.cooldown);
                     ProfileManager.CurrentProfile.Condition_Type.Add(data.message_type);
                     ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(data.replace_if_exists);
+                    ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(data.skip_if_exists);
                 }
                 return data;
             }
 
-            public static void SaveCondition(int key, ushort hue, string label, string trigger, int cooldown, bool createIfNotExist, int message_type, bool replace_if_exists)
+            public static void SaveCondition(int key, ushort hue, string label, string trigger, int cooldown, bool createIfNotExist, int message_type, bool replace_if_exists, bool skip_if_exists)
             {
                 if (ProfileManager.CurrentProfile.CoolDownConditionCount > key)
                 {
@@ -251,6 +269,17 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                         ProfileManager.CurrentProfile.Condition_ReplaceIfExists[key] = replace_if_exists;
                     }
+
+                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key) //Remove me after a while to prevent index not found
+                        ProfileManager.CurrentProfile.Condition_SkipIfExists[key] = skip_if_exists;
+                    else
+                    {
+                        while (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count <= key)
+                        {
+                            ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(false);
+                        }
+                        ProfileManager.CurrentProfile.Condition_SkipIfExists[key] = skip_if_exists;
+                    }
                 }
                 else if (createIfNotExist)
                 {
@@ -259,7 +288,8 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.Condition_Trigger.Add(trigger);
                     ProfileManager.CurrentProfile.Condition_Duration.Add(cooldown);
                     ProfileManager.CurrentProfile.Condition_Type.Add(message_type);
-                    ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(createIfNotExist);
+                    ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(replace_if_exists);
+                    ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(skip_if_exists);
                 }
             }
 
@@ -272,13 +302,18 @@ namespace ClassicUO.Game.UI.Gumps
                     ProfileManager.CurrentProfile.Condition_Trigger.RemoveAt(key);
                     ProfileManager.CurrentProfile.Condition_Duration.RemoveAt(key);
                     ProfileManager.CurrentProfile.Condition_Type.RemoveAt(key);
-                    ProfileManager.CurrentProfile.Condition_ReplaceIfExists.RemoveAt(key);
+
+                    if (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > key)
+                        ProfileManager.CurrentProfile.Condition_ReplaceIfExists.RemoveAt(key);
+
+                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key)
+                        ProfileManager.CurrentProfile.Condition_SkipIfExists.RemoveAt(key);
                 }
             }
 
             /// <summary>
             /// Moves a cooldown condition from one position to another, reordering all associated
-            /// profile lists (hue, label, trigger, duration, type, replace-if-exists) atomically.
+            /// profile lists (hue, label, trigger, duration, type, replace-if-exists, skip-if-exists) atomically.
             /// </summary>
             /// <param name="oldOrder">Current zero-based index of the condition to move.</param>
             /// <param name="newOrder">Target zero-based index the condition should occupy after the move.</param>
@@ -303,6 +338,11 @@ namespace ClassicUO.Game.UI.Gumps
                     profile.Condition_ReplaceIfExists.Add(false);
 
                 MoveListItem(profile.Condition_ReplaceIfExists, oldOrder, newOrder);
+
+                while (profile.Condition_SkipIfExists.Count < count)
+                    profile.Condition_SkipIfExists.Add(false);
+
+                MoveListItem(profile.Condition_SkipIfExists, oldOrder, newOrder);
             }
 
             /// <summary>
