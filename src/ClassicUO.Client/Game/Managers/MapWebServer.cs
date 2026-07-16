@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
@@ -734,8 +735,14 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        // Matches raw map coordinates, e.g. "1639, 1532", "123 456" or "1331:745".
+        // Mirrors the point regex used by the in-game LocationGoWindow.
+        private static readonly Regex PointCoordsRegex = new Regex(@"^(?<X>\d+)\s*[,:\s]\s*(?<Y>\d+)$", RegexOptions.Compiled);
+
         // Sets the player's Go-To location on the in-game World Map from the web map.
         // Mirrors the "Go to location" context menu option, which calls WorldMapGump.GoToMarker.
+        // The input text accepts either raw map coordinates ("X, Y") or sextant coordinates
+        // (e.g. "100o25'S, 40o04'E"), decoded the same way as the in-game LocationGoWindow.
         private void HandleGoto(HttpListenerRequest request, HttpListenerResponse response)
         {
             try
@@ -750,21 +757,39 @@ namespace ClassicUO.Game.Managers
                 using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
                 {
                     string body = reader.ReadToEnd();
-                    Dictionary<string, int> gotoData = JsonSerializer.Deserialize<Dictionary<string, int>>(body);
+                    Dictionary<string, string> gotoData = JsonSerializer.Deserialize<Dictionary<string, string>>(body);
 
-                    if (gotoData != null && gotoData.TryGetValue("x", out int x) && gotoData.TryGetValue("y", out int y))
+                    if (gotoData != null && gotoData.TryGetValue("text", out string text) && !string.IsNullOrWhiteSpace(text))
                     {
-                        MainThreadQueue.InvokeOnMainThread(() =>
+                        bool parsed = MainThreadQueue.InvokeOnMainThread(() =>
                         {
+                            if (World.Instance == null || !World.Instance.InGame)
+                                return false;
+
+                            if (!TryParseLocation(World.Instance.Map, text, out Point point))
+                                return false;
+
                             UI.Gumps.WorldMapGump wmap = UIManager.GetGump<UI.Gumps.WorldMapGump>();
-                            wmap?.GoToMarker(x, y, true);
+                            wmap?.GoToMarker(point.X, point.Y, true);
+                            return true;
                         });
 
-                        response.StatusCode = 200;
-                        byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
-                        response.ContentType = "application/json";
-                        response.ContentLength64 = buffer.Length;
-                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                        if (parsed)
+                        {
+                            response.StatusCode = 200;
+                            byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                        else
+                        {
+                            response.StatusCode = 400;
+                            byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"invalid\"}");
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
                     }
                     else
                     {
@@ -780,6 +805,23 @@ namespace ClassicUO.Game.Managers
                 response.StatusCode = 500;
                 response.Close();
             }
+        }
+
+        // Decodes goto input into map coordinates. Tries sextant coordinates first, then falls back
+        // to raw "X, Y" map coordinates - matching the in-game LocationGoWindow parsing order.
+        private static bool TryParseLocation(Map.Map map, string text, out Point point)
+        {
+            if (map != null && Sextant.Parse(map, text, out point))
+                return true;
+
+            point = Sextant.InvalidPoint;
+
+            Match match = PointCoordsRegex.Match(text.Trim());
+            if (!match.Success)
+                return false;
+
+            point = new Point(int.Parse(match.Groups["X"].Value), int.Parse(match.Groups["Y"].Value));
+            return true;
         }
 
         private void GetJournalSize(HttpListenerResponse response)
@@ -998,7 +1040,8 @@ namespace ClassicUO.Game.Managers
             margin: 5px 0;
         }
         #controls .goto-input {
-            width: 70px;
+            flex: 1;
+            min-width: 0;
             padding: 6px 8px;
             background: rgba(0,0,0,0.5);
             border: 1px solid #555;
@@ -1191,8 +1234,7 @@ namespace ClassicUO.Game.Managers
             <button onclick=""centerOnPlayer()"">Center</button>
             <br>
             <div class=""goto-row"">
-                <input type=""number"" id=""gotoX"" class=""goto-input"" placeholder=""X"" autocomplete=""off"" />
-                <input type=""number"" id=""gotoY"" class=""goto-input"" placeholder=""Y"" autocomplete=""off"" />
+                <input type=""text"" id=""gotoInput"" class=""goto-input"" placeholder=""X, Y or sextant"" title=""e.g. 1639, 1532 or 100o25'S, 40o04'E"" autocomplete=""off"" />
                 <button onclick=""sendGoto()"">Go</button>
             </div>
             <label><input type=""checkbox"" id=""followPlayer"" checked> Follow Player</label>
@@ -1457,13 +1499,10 @@ namespace ClassicUO.Game.Managers
         }
 
         async function sendGoto() {
-            const xInput = document.getElementById('gotoX');
-            const yInput = document.getElementById('gotoY');
-            const x = parseInt(xInput.value, 10);
-            const y = parseInt(yInput.value, 10);
+            const input = document.getElementById('gotoInput');
+            const text = input.value.trim();
 
-            if (isNaN(x) || isNaN(y)) {
-                console.warn('Goto requires valid X and Y coordinates');
+            if (!text) {
                 return;
             }
 
@@ -1473,11 +1512,16 @@ namespace ClassicUO.Game.Managers
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ x: x, y: y })
+                    body: JSON.stringify({ text: text })
                 });
 
-                if (!response.ok) {
-                    console.error('Failed to set goto location');
+                // Server decodes both raw (X, Y) and sextant coordinates. A 400 means the
+                // input could not be parsed - flag it so the user knows to fix their input.
+                if (response.ok) {
+                    input.style.borderColor = '';
+                } else {
+                    input.style.borderColor = '#f44336';
+                    console.error('Failed to set goto location (invalid coordinates?)');
                 }
             } catch (err) {
                 console.error('Error sending goto:', err);
@@ -1651,13 +1695,11 @@ namespace ClassicUO.Game.Managers
             draw();
         });
 
-        // Allow pressing Enter in either goto field to trigger the goto
-        ['gotoX', 'gotoY'].forEach(id => {
-            document.getElementById(id).addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendGoto();
-                }
-            });
+        // Allow pressing Enter in the goto field to trigger the goto
+        document.getElementById('gotoInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGoto();
+            }
         });
 
         // Handle journal input
