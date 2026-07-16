@@ -15,7 +15,18 @@ internal static class OpenCompressedGump
         uint gumpID = p.ReadUInt32BE();
         uint x = p.ReadUInt32BE();
         uint y = p.ReadUInt32BE();
-        uint layoutCompressedLen = p.ReadUInt32BE() - 4;
+
+        uint layoutCompressedRaw = p.ReadUInt32BE();
+
+        // The wire value includes the 4 bytes of the decompressed-length field that follows.
+        // A value below 4 would underflow to a huge length, so treat it as a bad packet.
+        if (layoutCompressedRaw < 4)
+        {
+            Log.Error("[Initial]A bad compressed gump packet was received. Unable to process.");
+            return;
+        }
+
+        uint layoutCompressedLen = layoutCompressedRaw - 4;
         int layoutDecompressedLen = (int)p.ReadUInt32BE();
 
         if (layoutDecompressedLen < 1)
@@ -47,14 +58,23 @@ internal static class OpenCompressedGump
 
         p.Skip((int)layoutCompressedLen);
 
-        uint linesNum = p.ReadUInt32BE();
-        string[] lines = new string[linesNum];
+        string[] lines = Array.Empty<string>();
 
         try
         {
+            uint linesNum = p.ReadUInt32BE();
+
             if (linesNum != 0)
             {
-                uint linesCompressedLen = p.ReadUInt32BE() - 4;
+                uint linesCompressedRaw = p.ReadUInt32BE();
+
+                if (linesCompressedRaw < 4)
+                {
+                    Log.Error("A bad compressed gump packet was received. Unable to process.");
+                    return;
+                }
+
+                uint linesCompressedLen = linesCompressedRaw - 4;
                 int linesDecompressedLen = (int)p.ReadUInt32BE();
 
                 if (linesDecompressedLen < 1)
@@ -62,6 +82,19 @@ internal static class OpenCompressedGump
                     Log.Error("A bad compressed gump packet was received. Unable to process.");
                     return;
                 }
+
+                // Each line occupies at least a 2-byte length prefix in the decompressed buffer,
+                // so the reported line count can never legitimately exceed half the decompressed
+                // size. Without this guard a corrupt/garbage line count would throw an
+                // OverflowException (or OutOfMemoryException) on the array allocation below and
+                // crash the client.
+                if (linesNum > (uint)(linesDecompressedLen / 2))
+                {
+                    Log.Error("A bad compressed gump packet was received (invalid line count). Unable to process.");
+                    return;
+                }
+
+                lines = new string[linesNum];
 
                 byte[]
                     linesBuffer =
