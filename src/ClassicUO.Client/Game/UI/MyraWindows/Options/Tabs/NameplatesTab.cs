@@ -462,13 +462,6 @@ public static class NameplatesTab
                     locNameplatesHealth,
                     search: new SearchMetadata(presetLabel, Keywords: [TazLang.Get("mog_kw_preset")])
                 ),
-                Option.ComboBox(
-                    TazLang.Get("mog_general_dragnameplatesonly"),
-                    profile.DragSelect_NameplateModifier,
-                    [TazLang.Get("mog_general_sharednone"), TazLang.Get("mog_general_sharedctrl"), TazLang.Get("mog_general_sharedshift"), TazLang.Get("mog_general_sharedalt")],
-                    i => profile.DragSelect_NameplateModifier = i,
-                    search: new SearchMetadata(TazLang.Get("mog_general_dragnameplatesonly"), Keywords: [TazLang.Get("mog_kw_drag"), TazLang.Get("mog_kw_modifier")])
-                ),
                 Option.Checkbox(
                     TazLang.Get("mog_general_incomingmobiles"),
                     new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
