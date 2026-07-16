@@ -121,7 +121,7 @@ description: EventSinkApiDeclaration class documentation
 
 ### ClilocMessageReceived
 `(callback)`
-  Not currently used. May be removed later or put into use, not sure right now
+ Invoked when a cliloc message is received from the server
 
 
 **Parameters:**
