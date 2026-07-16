@@ -198,129 +198,111 @@ namespace ClassicUO.Game.UI.Gumps
 
             public static CoolDownConditionData[] GetAllRules()
             {
-                var data = new CoolDownConditionData[ProfileManager.CurrentProfile.CoolDownConditionCount];
-                for (int i = 0; i < ProfileManager.CurrentProfile.CoolDownConditionCount; i++)
-                    data[i] = GetConditionData(i, false);
+                List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+                var data = new CoolDownConditionData[bars.Count];
+                for (int i = 0; i < bars.Count; i++)
+                    data[i] = FromEntry(bars[i]);
 
                 return data;
             }
 
+            private static CoolDownConditionData FromEntry(CooldownBarConfigEntry entry)
+            {
+                return new CoolDownConditionData
+                {
+                    hue = entry.Hue,
+                    label = entry.Label,
+                    trigger = entry.Trigger,
+                    cooldown = entry.Cooldown,
+                    message_type = entry.MessageType,
+                    replace_if_exists = entry.ReplaceIfExists,
+                    skip_if_exists = entry.SkipIfExists
+                };
+            }
+
             public static CoolDownConditionData GetConditionData(int key, bool createIfNotExist)
             {
+                List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+
+                if (key >= 0 && key < bars.Count)
+                    return FromEntry(bars[key]);
+
                 var data = new CoolDownConditionData();
-                if (ProfileManager.CurrentProfile.CoolDownConditionCount > key)
-                {
-                    data.hue = ProfileManager.CurrentProfile.Condition_Hue[key];
-                    data.label = ProfileManager.CurrentProfile.Condition_Label[key];
-                    data.trigger = ProfileManager.CurrentProfile.Condition_Trigger[key];
-                    data.cooldown = ProfileManager.CurrentProfile.Condition_Duration[key];
-                    data.message_type = ProfileManager.CurrentProfile.Condition_Type[key];
 
-                    if (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > key) //Remove me after a while to prevent index not found
-                        data.replace_if_exists = ProfileManager.CurrentProfile.Condition_ReplaceIfExists[key];
-                    else
-                    {
-                        while (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count <= key)
-                        {
-                            ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(false);
-                        }
-                    }
-
-                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key) //Remove me after a while to prevent index not found
-                        data.skip_if_exists = ProfileManager.CurrentProfile.Condition_SkipIfExists[key];
-                    else
-                    {
-                        while (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count <= key)
-                        {
-                            ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(false);
-                        }
-                    }
-                }
-                else if (createIfNotExist)
+                if (createIfNotExist)
                 {
-                    ProfileManager.CurrentProfile.Condition_Hue.Add(data.hue);
-                    ProfileManager.CurrentProfile.Condition_Label.Add(data.label);
-                    ProfileManager.CurrentProfile.Condition_Trigger.Add(data.trigger);
-                    ProfileManager.CurrentProfile.Condition_Duration.Add(data.cooldown);
-                    ProfileManager.CurrentProfile.Condition_Type.Add(data.message_type);
-                    ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(data.replace_if_exists);
-                    ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(data.skip_if_exists);
+                    bars.Add(new CooldownBarConfigEntry
+                    {
+                        Hue = data.hue,
+                        Label = data.label,
+                        Trigger = data.trigger,
+                        Cooldown = data.cooldown,
+                        MessageType = data.message_type,
+                        ReplaceIfExists = data.replace_if_exists,
+                        SkipIfExists = data.skip_if_exists
+                    });
+                    CooldownBarsConfig.Current.Save();
                 }
+
                 return data;
             }
 
             public static void SaveCondition(int key, ushort hue, string label, string trigger, int cooldown, bool createIfNotExist, int message_type, bool replace_if_exists, bool skip_if_exists)
             {
-                if (ProfileManager.CurrentProfile.CoolDownConditionCount > key)
+                List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+
+                if (key >= 0 && key < bars.Count)
                 {
-                    ProfileManager.CurrentProfile.Condition_Hue[key] = hue;
-                    ProfileManager.CurrentProfile.Condition_Label[key] = label;
-                    ProfileManager.CurrentProfile.Condition_Trigger[key] = trigger;
-                    ProfileManager.CurrentProfile.Condition_Duration[key] = cooldown;
-                    ProfileManager.CurrentProfile.Condition_Type[key] = message_type;
-
-                    if (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > key) //Remove me after a while to prevent index not found
-                        ProfileManager.CurrentProfile.Condition_ReplaceIfExists[key] = replace_if_exists;
-                    else
-                    {
-                        while (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count <= key)
-                        {
-                            ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(false);
-                        }
-                        ProfileManager.CurrentProfile.Condition_ReplaceIfExists[key] = replace_if_exists;
-                    }
-
-                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key) //Remove me after a while to prevent index not found
-                        ProfileManager.CurrentProfile.Condition_SkipIfExists[key] = skip_if_exists;
-                    else
-                    {
-                        while (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count <= key)
-                        {
-                            ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(false);
-                        }
-                        ProfileManager.CurrentProfile.Condition_SkipIfExists[key] = skip_if_exists;
-                    }
+                    CooldownBarConfigEntry entry = bars[key];
+                    entry.Hue = hue;
+                    entry.Label = label;
+                    entry.Trigger = trigger;
+                    entry.Cooldown = cooldown;
+                    entry.MessageType = message_type;
+                    entry.ReplaceIfExists = replace_if_exists;
+                    entry.SkipIfExists = skip_if_exists;
                 }
                 else if (createIfNotExist)
                 {
-                    ProfileManager.CurrentProfile.Condition_Hue.Add(hue);
-                    ProfileManager.CurrentProfile.Condition_Label.Add(label);
-                    ProfileManager.CurrentProfile.Condition_Trigger.Add(trigger);
-                    ProfileManager.CurrentProfile.Condition_Duration.Add(cooldown);
-                    ProfileManager.CurrentProfile.Condition_Type.Add(message_type);
-                    ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Add(replace_if_exists);
-                    ProfileManager.CurrentProfile.Condition_SkipIfExists.Add(skip_if_exists);
+                    bars.Add(new CooldownBarConfigEntry
+                    {
+                        Hue = hue,
+                        Label = label,
+                        Trigger = trigger,
+                        Cooldown = cooldown,
+                        MessageType = message_type,
+                        ReplaceIfExists = replace_if_exists,
+                        SkipIfExists = skip_if_exists
+                    });
                 }
+                else
+                {
+                    return;
+                }
+
+                CooldownBarsConfig.Current.Save();
             }
 
             public static void RemoveCondition(int key)
             {
-                if (ProfileManager.CurrentProfile.CoolDownConditionCount > key)
+                List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+
+                if (key >= 0 && key < bars.Count)
                 {
-                    ProfileManager.CurrentProfile.Condition_Hue.RemoveAt(key);
-                    ProfileManager.CurrentProfile.Condition_Label.RemoveAt(key);
-                    ProfileManager.CurrentProfile.Condition_Trigger.RemoveAt(key);
-                    ProfileManager.CurrentProfile.Condition_Duration.RemoveAt(key);
-                    ProfileManager.CurrentProfile.Condition_Type.RemoveAt(key);
-
-                    if (ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > key)
-                        ProfileManager.CurrentProfile.Condition_ReplaceIfExists.RemoveAt(key);
-
-                    if (ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > key)
-                        ProfileManager.CurrentProfile.Condition_SkipIfExists.RemoveAt(key);
+                    bars.RemoveAt(key);
+                    CooldownBarsConfig.Current.Save();
                 }
             }
 
             /// <summary>
-            /// Moves a cooldown condition from one position to another, reordering all associated
-            /// profile lists (hue, label, trigger, duration, type, replace-if-exists, skip-if-exists) atomically.
+            /// Moves a cooldown condition from one position to another.
             /// </summary>
             /// <param name="oldOrder">Current zero-based index of the condition to move.</param>
             /// <param name="newOrder">Target zero-based index the condition should occupy after the move.</param>
             public static void ReorderCondition(int oldOrder, int newOrder)
             {
-                Profile profile = ProfileManager.CurrentProfile;
-                int count = profile.CoolDownConditionCount;
+                List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+                int count = bars.Count;
 
                 if (oldOrder == newOrder)
                     return;
@@ -328,36 +310,11 @@ namespace ClassicUO.Game.UI.Gumps
                 if (oldOrder < 0 || oldOrder >= count || newOrder < 0 || newOrder >= count)
                     return;
 
-                MoveListItem(profile.Condition_Hue, oldOrder, newOrder);
-                MoveListItem(profile.Condition_Label, oldOrder, newOrder);
-                MoveListItem(profile.Condition_Trigger, oldOrder, newOrder);
-                MoveListItem(profile.Condition_Duration, oldOrder, newOrder);
-                MoveListItem(profile.Condition_Type, oldOrder, newOrder);
+                CooldownBarConfigEntry item = bars[oldOrder];
+                bars.RemoveAt(oldOrder);
+                bars.Insert(newOrder, item);
 
-                while (profile.Condition_ReplaceIfExists.Count < count)
-                    profile.Condition_ReplaceIfExists.Add(false);
-
-                MoveListItem(profile.Condition_ReplaceIfExists, oldOrder, newOrder);
-
-                while (profile.Condition_SkipIfExists.Count < count)
-                    profile.Condition_SkipIfExists.Add(false);
-
-                MoveListItem(profile.Condition_SkipIfExists, oldOrder, newOrder);
-            }
-
-            /// <summary>
-            /// Relocates the element at <paramref name="oldIndex"/> to <paramref name="newIndex"/>
-            /// by removing it and re-inserting it, shifting intermediate elements accordingly.
-            /// </summary>
-            /// <typeparam name="T">Element type of the list.</typeparam>
-            /// <param name="list">List to mutate in place.</param>
-            /// <param name="oldIndex">Zero-based source index.</param>
-            /// <param name="newIndex">Zero-based destination index.</param>
-            private static void MoveListItem<T>(IList<T> list, int oldIndex, int newIndex)
-            {
-                T item = list[oldIndex];
-                list.RemoveAt(oldIndex);
-                list.Insert(newIndex, item);
+                CooldownBarsConfig.Current.Save();
             }
 
             public enum MESSAGE_TYPE

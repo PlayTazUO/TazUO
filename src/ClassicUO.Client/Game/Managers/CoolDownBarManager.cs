@@ -21,12 +21,13 @@ namespace ClassicUO.Game.Managers
         {
             if (ProfileManager.CurrentProfile == null) return;
 
+            CooldownBarConfigEntry[] bars = CooldownBarsConfig.Current.Bars.ToArray();
+
             Task.Factory.StartNew(() =>
                 {
-                    int count = ProfileManager.CurrentProfile.CoolDownConditionCount;
-                    for (int i = 0; i < count; i++)
+                    foreach (CooldownBarConfigEntry bar in bars)
                     {
-                        switch (ProfileManager.CurrentProfile.Condition_Type[i])
+                        switch (bar.MessageType)
                         {
                             default:
                             case 0:
@@ -41,15 +42,15 @@ namespace ClassicUO.Game.Managers
                                 break;
 
                         }
-                        if (e.Text.Contains(ProfileManager.CurrentProfile.Condition_Trigger[i]))
+                        if (e.Text.Contains(bar.Trigger))
                         {
                             AddCoolDownBar(
                                 World,
-                                TimeSpan.FromSeconds(ProfileManager.CurrentProfile.Condition_Duration[i]),
-                                ProfileManager.CurrentProfile.Condition_Label[i],
-                                ProfileManager.CurrentProfile.Condition_Hue[i],
-                                ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > i && ProfileManager.CurrentProfile.Condition_ReplaceIfExists[i],
-                                ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > i && ProfileManager.CurrentProfile.Condition_SkipIfExists[i]
+                                TimeSpan.FromSeconds(bar.Cooldown),
+                                bar.Label,
+                                bar.Hue,
+                                bar.ReplaceIfExists,
+                                bar.SkipIfExists
                                 );
                         }
                     }

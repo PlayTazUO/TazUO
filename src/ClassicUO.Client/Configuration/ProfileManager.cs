@@ -96,6 +96,12 @@ namespace ClassicUO.Configuration
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 
+            // Load (or migrate from the legacy per-list profile storage) the cooldown-bar rules.
+            if (CooldownBarsConfig.LoadForProfile(ProfilePath, CurrentProfile))
+            {
+                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
+            }
+
             ValidateFields(CurrentProfile);
 
             CurrentProfile.AfterLoad();

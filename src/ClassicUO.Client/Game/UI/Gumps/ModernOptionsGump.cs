@@ -2991,7 +2991,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             addcond.MouseUp += (s, e) =>
             {
-                CoolDownBar.CoolDownConditionData.GetConditionData(profile.CoolDownConditionCount, true);
+                CoolDownBar.CoolDownConditionData.GetConditionData(CooldownBarsConfig.Current.Bars.Count, true);
 
                 Gump g = UIManager.GetGump<ModernOptionsGump>();
 
@@ -3009,7 +3009,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             PositionHelper.PositionControl(s.FullControl);
 
-            int count = profile.CoolDownConditionCount;
+            int count = CooldownBarsConfig.Current.Bars.Count;
 
             for (int i = 0; i < count; i++)
             {
