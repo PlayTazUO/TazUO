@@ -1527,7 +1527,7 @@ namespace ClassicUO.Game.Managers
                 if (response.ok) {
                     input.style.borderColor = '';
 
-                    // Mirror the in-game map: drop out of follow-player ("free view") and
+                    // Mirror the in-game map: drop out of follow-player (free view) and
                     // center the web map on the decoded goto point returned by the server.
                     const data = await response.json();
                     if (data && typeof data.x === 'number' && typeof data.y === 'number') {
