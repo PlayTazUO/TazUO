@@ -49,11 +49,9 @@ namespace ClassicUO.Configuration
 
         public List<CooldownBarConfigEntry> Bars { get; set; } = new();
 
-        [JsonIgnore]
         private static CooldownBarsConfig _current;
 
         /// <summary>The cooldown-bar config for the currently loaded profile.</summary>
-        [JsonIgnore]
         public static CooldownBarsConfig Current => _current ??= LoadForCurrentProfile();
 
         private static string GetFilePath() =>
@@ -98,9 +96,37 @@ namespace ClassicUO.Configuration
         }
 
         /// <summary>
+        /// Stores <paramref name="entry"/> at <paramref name="index"/>. When <paramref name="index"/>
+        /// is out of range the entry is appended if <paramref name="createIfMissing"/> is set,
+        /// otherwise the call is a no-op. Persists on any change.
+        /// </summary>
+        public void Upsert(int index, CooldownBarConfigEntry entry, bool createIfMissing)
+        {
+            if (index >= 0 && index < Bars.Count)
+                Bars[index] = entry;
+            else if (createIfMissing)
+                Bars.Add(entry);
+            else
+                return;
+
+            Save();
+        }
+
+        /// <summary>Removes the entry at <paramref name="index"/>, if present, and persists.</summary>
+        public void RemoveAt(int index)
+        {
+            if (index < 0 || index >= Bars.Count)
+                return;
+
+            Bars.RemoveAt(index);
+            Save();
+        }
+
+        /// <summary>
         /// Builds a config from the legacy parallel <see cref="Profile"/> lists and clears them.
         /// </summary>
         /// <returns><see langword="true"/> when there was legacy data to migrate.</returns>
+#pragma warning disable CS0618 // Reading the obsolete legacy lists is the whole point of migration.
         private static bool MigrateFromProfile(Profile profile, out CooldownBarsConfig config)
         {
             config = new CooldownBarsConfig();
@@ -138,6 +164,7 @@ namespace ClassicUO.Configuration
 
             return true;
         }
+#pragma warning restore CS0618
     }
 
     [JsonSerializable(typeof(CooldownBarsConfig), GenerationMode = JsonSourceGenerationMode.Metadata)]
