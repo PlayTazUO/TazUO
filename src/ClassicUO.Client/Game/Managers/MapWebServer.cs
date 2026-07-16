@@ -143,6 +143,9 @@ namespace ClassicUO.Game.Managers
                     case "/api/command":
                         HandleCommand(context.Request, context.Response);
                         break;
+                    case "/api/goto":
+                        HandleGoto(context.Request, context.Response);
+                        break;
                     case "/api/journalsize":
                         if (context.Request.HttpMethod == "GET")
                             GetJournalSize(context.Response);
@@ -731,6 +734,54 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        // Sets the player's Go-To location on the in-game World Map from the web map.
+        // Mirrors the "Go to location" context menu option, which calls WorldMapGump.GoToMarker.
+        private void HandleGoto(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                if (request.HttpMethod != "POST")
+                {
+                    response.StatusCode = 405;
+                    response.Close();
+                    return;
+                }
+
+                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    string body = reader.ReadToEnd();
+                    Dictionary<string, int> gotoData = JsonSerializer.Deserialize<Dictionary<string, int>>(body);
+
+                    if (gotoData != null && gotoData.TryGetValue("x", out int x) && gotoData.TryGetValue("y", out int y))
+                    {
+                        MainThreadQueue.InvokeOnMainThread(() =>
+                        {
+                            UI.Gumps.WorldMapGump wmap = UIManager.GetGump<UI.Gumps.WorldMapGump>();
+                            wmap?.GoToMarker(x, y, true);
+                        });
+
+                        response.StatusCode = 200;
+                        byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                        response.ContentType = "application/json";
+                        response.ContentLength64 = buffer.Length;
+                        response.OutputStream.Write(buffer, 0, buffer.Length);
+                    }
+                    else
+                    {
+                        response.StatusCode = 400;
+                    }
+                }
+
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error handling goto: {ex.Message}");
+                response.StatusCode = 500;
+                response.Close();
+            }
+        }
+
         private void GetJournalSize(HttpListenerResponse response)
         {
             try
@@ -940,6 +991,28 @@ namespace ClassicUO.Game.Managers
         #controls .marker-search:focus {
             border-color: #4CAF50;
         }
+        #controls .goto-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        #controls .goto-input {
+            width: 70px;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        #controls .goto-input:focus {
+            border-color: #4CAF50;
+        }
+        #controls .goto-row button {
+            margin: 0;
+        }
         #controls button {
             margin: 5px 5px 5px 0;
             padding: 8px 15px;
@@ -1117,6 +1190,11 @@ namespace ClassicUO.Game.Managers
             <button onclick=""zoomOut()"">Zoom Out (-)</button>
             <button onclick=""centerOnPlayer()"">Center</button>
             <br>
+            <div class=""goto-row"">
+                <input type=""number"" id=""gotoX"" class=""goto-input"" placeholder=""X"" autocomplete=""off"" />
+                <input type=""number"" id=""gotoY"" class=""goto-input"" placeholder=""Y"" autocomplete=""off"" />
+                <button onclick=""sendGoto()"">Go</button>
+            </div>
             <label><input type=""checkbox"" id=""followPlayer"" checked> Follow Player</label>
             <label><input type=""checkbox"" id=""rotateMap"" checked> Rotate Map 45°</label>
             <label><input type=""checkbox"" id=""showParty"" checked> Show Party</label>
@@ -1378,6 +1456,34 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        async function sendGoto() {
+            const xInput = document.getElementById('gotoX');
+            const yInput = document.getElementById('gotoY');
+            const x = parseInt(xInput.value, 10);
+            const y = parseInt(yInput.value, 10);
+
+            if (isNaN(x) || isNaN(y)) {
+                console.warn('Goto requires valid X and Y coordinates');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/goto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ x: x, y: y })
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to set goto location');
+                }
+            } catch (err) {
+                console.error('Error sending goto:', err);
+            }
+        }
+
         async function loadJournalSize() {
             try {
                 const response = await fetch('/api/journalsize');
@@ -1543,6 +1649,15 @@ namespace ClassicUO.Game.Managers
         markerSearchInput.addEventListener('input', () => {
             markerSearchText = markerSearchInput.value.trim().toLowerCase();
             draw();
+        });
+
+        // Allow pressing Enter in either goto field to trigger the goto
+        ['gotoX', 'gotoY'].forEach(id => {
+            document.getElementById(id).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendGoto();
+                }
+            });
         });
 
         // Handle journal input
