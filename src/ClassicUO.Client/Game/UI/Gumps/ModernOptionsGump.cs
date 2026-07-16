@@ -5290,7 +5290,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 CoolDownBar.CoolDownConditionData.SaveCondition
                 (key, _hueSelector.Hue, _name.Text, _conditionText.Text, int.Parse(_cooldown.Text), false,
-                    _message_type.SelectedIndex, _replaceIfExists.IsChecked);
+                    _message_type.SelectedIndex, _replaceIfExists.IsChecked, data.skip_if_exists);
             };
 
             main.Add(_save);

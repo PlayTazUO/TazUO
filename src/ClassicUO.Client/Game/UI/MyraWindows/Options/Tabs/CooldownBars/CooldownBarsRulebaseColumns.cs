@@ -86,6 +86,14 @@ internal static partial class CooldownBarsTab
             },
             new RulebaseColumn<CooldownBarRule>
             {
+                Header = TazLang.Get("mog_cooldownstab_skipifexists"),
+                HeaderTooltip = TazLang.Get("mog_cooldownstab_skipifexiststooltip"),
+                CellContentAlignment = HorizontalAlignment.Center,
+                Proportion = new Proportion(ProportionType.Auto),
+                CellFactory = rule => MyraCheckButton.CreatePropBoundCheckButton(new Accessor<bool>(() => rule.SkipIfExists))
+            },
+            new RulebaseColumn<CooldownBarRule>
+            {
                 Header = TazLang.Get("mog_kw_preview"),
                 HeaderTooltip = TazLang.Get("mog_cooldownstab_previewtooltip"),
                 Proportion = new Proportion(ProportionType.Fill),
