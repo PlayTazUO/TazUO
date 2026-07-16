@@ -761,23 +761,30 @@ namespace ClassicUO.Game.Managers
 
                     if (gotoData != null && gotoData.TryGetValue("text", out string text) && !string.IsNullOrWhiteSpace(text))
                     {
-                        bool parsed = MainThreadQueue.InvokeOnMainThread(() =>
+                        Point? parsedPoint = MainThreadQueue.InvokeOnMainThread<Point?>(() =>
                         {
                             if (World.Instance == null || !World.Instance.InGame)
-                                return false;
+                                return null;
 
                             if (!TryParseLocation(World.Instance.Map, text, out Point point))
-                                return false;
+                                return null;
 
                             UI.Gumps.WorldMapGump wmap = UIManager.GetGump<UI.Gumps.WorldMapGump>();
                             wmap?.GoToMarker(point.X, point.Y, true);
-                            return true;
+                            return point;
                         });
 
-                        if (parsed)
+                        if (parsedPoint.HasValue)
                         {
                             response.StatusCode = 200;
-                            byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                            // Return the decoded coordinates so the web map can center itself on
+                            // the goto point and switch to free view, mirroring the in-game map.
+                            string json = JsonSerializer.Serialize(new Dictionary<string, int>
+                            {
+                                ["x"] = parsedPoint.Value.X,
+                                ["y"] = parsedPoint.Value.Y
+                            });
+                            byte[] buffer = Encoding.UTF8.GetBytes(json);
                             response.ContentType = "application/json";
                             response.ContentLength64 = buffer.Length;
                             response.OutputStream.Write(buffer, 0, buffer.Length);
@@ -1519,6 +1526,14 @@ namespace ClassicUO.Game.Managers
                 // input could not be parsed - flag it so the user knows to fix their input.
                 if (response.ok) {
                     input.style.borderColor = '';
+
+                    // Mirror the in-game map: drop out of follow-player (free view) and
+                    // center the web map on the decoded goto point returned by the server.
+                    const data = await response.json();
+                    if (data && typeof data.x === 'number' && typeof data.y === 'number') {
+                        document.getElementById('followPlayer').checked = false;
+                        centerOnWorldPoint(data.x, data.y);
+                    }
                 } else {
                     input.style.borderColor = '#f44336';
                     console.error('Failed to set goto location (invalid coordinates?)');
@@ -2248,6 +2263,25 @@ namespace ClassicUO.Game.Managers
             targetOffsetX = -scaledX;
             targetOffsetY = -scaledY;
             // Animation loop will smoothly interpolate to these target values
+        }
+
+        // Centers the view on an arbitrary map coordinate (used by the goto feature).
+        // Mirrors centerOnPlayer() but for a caller-supplied world point instead of the player.
+        function centerOnWorldPoint(worldX, worldY) {
+            if (!mapImage) return;
+
+            let scaledX = (worldX - mapImage.width / 2) * zoom;
+            let scaledY = (worldY - mapImage.height / 2) * zoom;
+
+            const isRotated = document.getElementById('rotateMap').checked;
+            if (isRotated) {
+                const rotated = rotatePoint(scaledX, scaledY, Math.PI / 4);
+                scaledX = rotated.x;
+                scaledY = rotated.y;
+            }
+
+            targetOffsetX = -scaledX;
+            targetOffsetY = -scaledY;
         }
 
         function zoomIn() {
