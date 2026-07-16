@@ -29,7 +29,6 @@ namespace ClassicUO.Game.UI.MyraWindows
         private readonly MyraLabel _statusLabel;
         private uint _lastUpdate;
         private long _lastRevision = -1;
-        private bool _autoScroll = true;
 
         // Bitmask of which severities are currently shown. Defaults to everything.
         private LogTypes _enabledTypes = LogTypes.All;
@@ -133,6 +132,11 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             _lastRevision = revision;
 
+            // Decide before repopulating whether to snap to the newest entry. We stick to
+            // the bottom only when the user hasn't parked the scrollbar somewhere in the
+            // middle to read — i.e. it's currently at the top or bottom of the list.
+            bool stickToBottom = ShouldAutoScroll();
+
             LogEntry[] entries = LogHistory.Snapshot();
 
             _logPanel.Widgets.Clear();
@@ -163,12 +167,33 @@ namespace ClassicUO.Game.UI.MyraWindows
 
             _statusLabel.Text = $"Showing {shown} of {entries.Length} entries (max {LogHistory.MaxEntries})";
 
-            if (_autoScroll)
+            if (stickToBottom)
                 ScrollToBottom();
         }
 
-        private void ScrollToBottom() =>
+        /// <summary>
+        /// True when the list should snap to the newest entry after a rebuild: when the
+        /// scrollbar is at the top or bottom (or there's nothing to scroll yet), but not
+        /// when the user has scrolled to a position in the middle.
+        /// </summary>
+        private bool ShouldAutoScroll()
+        {
+            int max = _scrollViewer.ScrollMaximum.Y;
+            if (max <= 0)
+                return true;
+
+            const int tolerance = 2;
+            int y = _scrollViewer.ScrollPosition.Y;
+
+            return y <= tolerance || y >= max - tolerance;
+        }
+
+        private void ScrollToBottom()
+        {
+            // Ensure ScrollMaximum reflects the freshly rebuilt content before snapping.
+            _scrollViewer.UpdateArrange();
             _scrollViewer.ScrollPosition = new Point(_scrollViewer.ScrollPosition.X, _scrollViewer.ScrollMaximum.Y);
+        }
 
         private void CopyToClipboard()
         {
