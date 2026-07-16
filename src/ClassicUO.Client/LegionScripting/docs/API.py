@@ -3303,7 +3303,7 @@ class EventSinkApiDeclaration:
 
     def ClilocMessageReceived(self, callback: "Any") -> None:
         """
-          Not currently used. May be removed later or put into use, not sure right now
+         Invoked when a cliloc message is received from the server
         
         """
         pass

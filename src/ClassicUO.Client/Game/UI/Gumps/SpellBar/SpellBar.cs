@@ -321,7 +321,7 @@ public class SpellBar : Gump
                 }
 
                 if (this.slot.TryGetTooltip(World, out string tip))
-                    SetTooltip(tip, 80);
+                    SetTooltip(tip);
                 else
                     SetTooltip(string.Empty);
             }
@@ -653,7 +653,7 @@ public class SpellBar : Gump
                     {
                         icon.Graphic = graphic;
                         if (slot.TryGetTooltip(World, out string tip))
-                            SetTooltip(tip, 80);
+                            SetTooltip(tip);
                         else
                             SetTooltip(string.Empty);
                     }

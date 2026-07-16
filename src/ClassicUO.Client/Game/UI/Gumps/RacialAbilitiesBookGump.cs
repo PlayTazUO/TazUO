@@ -199,7 +199,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
 
                 Add(pic, page1);
-                pic.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(_tooltipOffset + i), 150);
+                pic.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(_tooltipOffset + i));
 
                 Add
                 (

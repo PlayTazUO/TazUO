@@ -271,7 +271,7 @@ internal static class GumpHelpers
                     if (string.IsNullOrEmpty(s))
                         s = "Unknown virtue";
 
-                    pic.SetTooltip(lvl + s, 100);
+                    pic.SetTooltip(lvl + s);
                 }
                 else
                     pic = new GumpPic(gparams);
