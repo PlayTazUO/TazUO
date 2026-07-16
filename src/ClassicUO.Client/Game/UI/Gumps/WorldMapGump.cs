@@ -608,6 +608,7 @@ public class WorldMapGump : ResizableGump
 
         var markersEntry = new ContextMenuItemEntry(ResGumps.MapMarkerOptions);
         markersEntry.Add(new ContextMenuItemEntry(ResGumps.ReloadMarkers, LoadMarkers));
+        markersEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_import_map_file", "Import Map File"), ImportMapFile));
 
         markersEntry.Add(_options["show_all_markers"]);
         markersEntry.Add(new ContextMenuItemEntry(""));
@@ -1730,6 +1731,47 @@ public class WorldMapGump : ResizableGump
     }
 
     private bool ShouldDrawGrid() => (_showGridIfZoomed && Zoom >= 4);
+
+    private void ImportMapFile()
+    {
+        // Copy the chosen marker file into this server's marker directory
+        // (Data/<ServerName>/MapMarkers) so it is picked up by LoadMarkers.
+        string targetDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data", FileSystemHelper.RemoveInvalidChars(World.Instance.ServerName), "MapMarkers");
+
+        FileSelector.ShowFileBrowser
+        (
+            World,
+            FileSelectorType.File,
+            null,
+            new[] { "map", "csv", "xml" },
+            (selectedFile) =>
+            {
+                if (string.IsNullOrEmpty(selectedFile) || !File.Exists(selectedFile))
+                {
+                    return;
+                }
+
+                try
+                {
+                    Directory.CreateDirectory(targetDir);
+
+                    string destination = Path.Combine(targetDir, Path.GetFileName(selectedFile));
+                    File.Copy(selectedFile, destination, true);
+
+                    GameActions.Print(World, string.Format(TazLang.Get("map_import_map_file_success", "Imported map file: {0}"), Path.GetFileName(selectedFile)), 0x2A);
+
+                    LoadMarkers();
+                    BuildContextMenu();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Failed to import map file: {e}");
+                    GameActions.Print(World, TazLang.Get("map_import_map_file_failed", "Failed to import map file."), 0x21);
+                }
+            },
+            TazLang.Get("map_import_map_file", "Import Map File")
+        );
+    }
 
     private void LoadMarkers()
     {
