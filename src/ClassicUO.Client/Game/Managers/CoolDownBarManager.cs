@@ -1,7 +1,6 @@
 ﻿using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
 using System;
-using System.Threading.Tasks;
 
 namespace ClassicUO.Game.Managers
 {
@@ -21,39 +20,35 @@ namespace ClassicUO.Game.Managers
         {
             if (ProfileManager.CurrentProfile == null) return;
 
-            Task.Factory.StartNew(() =>
+            foreach (CooldownBarConfigEntry bar in CooldownBarsConfig.Current.Bars)
+            {
+                switch (bar.MessageType)
                 {
-                    int count = ProfileManager.CurrentProfile.CoolDownConditionCount;
-                    for (int i = 0; i < count; i++)
-                    {
-                        switch (ProfileManager.CurrentProfile.Condition_Type[i])
-                        {
-                            default:
-                            case 0:
-                                break;
-                            case 1: //self
-                                if (e.Parent != null && e.Parent.Serial != World.Player.Serial)
-                                    return;
-                                break;
-                            case 2:
-                                if (e.Parent != null && e.Parent.Serial == World.Player.Serial)
-                                    return;
-                                break;
+                    default:
+                    case 0:
+                        break;
+                    case 1: //self
+                        if (e.Parent != null && e.Parent.Serial != World.Player.Serial)
+                            return;
+                        break;
+                    case 2:
+                        if (e.Parent != null && e.Parent.Serial == World.Player.Serial)
+                            return;
+                        break;
 
-                        }
-                        if (e.Text.Contains(ProfileManager.CurrentProfile.Condition_Trigger[i]))
-                        {
-                            AddCoolDownBar(
-                                World,
-                                TimeSpan.FromSeconds(ProfileManager.CurrentProfile.Condition_Duration[i]),
-                                ProfileManager.CurrentProfile.Condition_Label[i],
-                                ProfileManager.CurrentProfile.Condition_Hue[i],
-                                ProfileManager.CurrentProfile.Condition_ReplaceIfExists.Count > i && ProfileManager.CurrentProfile.Condition_ReplaceIfExists[i],
-                                ProfileManager.CurrentProfile.Condition_SkipIfExists.Count > i && ProfileManager.CurrentProfile.Condition_SkipIfExists[i]
-                                );
-                        }
-                    }
-                });
+                }
+                if (e.Text.Contains(bar.Trigger))
+                {
+                    AddCoolDownBar(
+                        World,
+                        TimeSpan.FromSeconds(bar.Cooldown),
+                        bar.Label,
+                        bar.Hue,
+                        bar.ReplaceIfExists,
+                        bar.SkipIfExists
+                        );
+                }
+            }
         }
 
         public static void AddCoolDownBar(World world, TimeSpan _duration, string _name, ushort _hue, bool replace, bool skipIfExists = false)

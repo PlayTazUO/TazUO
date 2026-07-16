@@ -150,6 +150,7 @@ All notable changes to TazUO will be recorded here.
 * Add option to disable corpse retry in autoloot - [P.R 525](https://github.com/PlayTazUO/TazUO/pull/525) ([bittiez](https://github.com/bittiez))
 * Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 557](https://github.com/PlayTazUO/TazUO/pull/557) ([bittiez](https://github.com/bittiez))
 * Corpse hueing from auto loot will now reapply when a corpse is removed and added back onto your screen - [P.R 607](https://github.com/PlayTazUO/TazUO/pull/607) ([bittiez](https://github.com/bittiez))
+* Moved cooldown bar rules to a dedicated `cooldownbars.json` in the profile folder (existing profiles are migrated automatically) and consolidated their configuration into the new options menu - [P.R 711](https://github.com/PlayTazUO/TazUO/pull/711) ([bittiez](https://github.com/bittiez))
 
 ---
 

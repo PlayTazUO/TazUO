@@ -547,19 +547,34 @@ namespace ClassicUO.Configuration
         public int CoolDownX { get; set => SetProperty(ref field, value); } = 50;
         public int CoolDownY { get; set => SetProperty(ref field, value); } = 50;
 
+        // The Condition_* lists and CoolDownConditionCount below are the legacy cooldown-bar storage.
+        // They have been superseded by cooldownbars.json (see CooldownBarsConfig) and are retained only so
+        // existing profiles can be migrated on load. Do not use them in new code.
+        private const string CooldownMigratedMessage = "Migrated to cooldownbars.json (CooldownBarsConfig); retained only for one-time migration of existing profiles.";
+
+        [Obsolete(CooldownMigratedMessage)]
         public List<ushort> Condition_Hue { get; set => SetProperty(ref field, value); } = new List<ushort>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<string> Condition_Label { get; set => SetProperty(ref field, value); } = new List<string>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<int> Condition_Duration { get; set => SetProperty(ref field, value); } = new List<int>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<string> Condition_Trigger { get; set => SetProperty(ref field, value); } = new List<string>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<int> Condition_Type { get; set => SetProperty(ref field, value); } = new List<int>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<bool> Condition_ReplaceIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<bool> Condition_SkipIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
+        [Obsolete(CooldownMigratedMessage)]
         public int CoolDownConditionCount
         {
+#pragma warning disable CS0618
             get
             {
                 return Condition_Hue.Count;
             }
+#pragma warning restore CS0618
             set { }
         }
         #endregion
