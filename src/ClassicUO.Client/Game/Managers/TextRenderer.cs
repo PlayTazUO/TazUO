@@ -36,6 +36,17 @@ namespace ClassicUO.Game.Managers
             int mouseX = Mouse.Position.X;
             int mouseY = Mouse.Position.Y;
 
+            // World overhead text is stored in world/game coordinates and drawn under the
+            // camera's ViewTransformMatrix, so the raw screen mouse position no longer lines up
+            // with it. Use the mouse position translated into that same world space (the value
+            // every other world hit-test uses) so the clickable region matches the drawn text.
+            // Gump text is in screen coordinates, so the raw mouse position is correct there.
+            if (!isGump)
+            {
+                mouseX = SelectedObject.TranslatedMousePositionByViewport.X;
+                mouseY = SelectedObject.TranslatedMousePositionByViewport.Y;
+            }
+
             for (TextObject o = DrawPointer; o != null; o = o.DLeft)
             {
                 if (o.IsDestroyed || o.TextBox == null || o.TextBox.IsDisposed || o.Time < ClassicUO.Time.Ticks)
