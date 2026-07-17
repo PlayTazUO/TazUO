@@ -457,6 +457,8 @@ public class WorldMapGump : ResizableGump
 
         _options["show_sextant_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowSextantCoordinates, () => { _showSextantCoordinates = !_showSextantCoordinates; }, true, _showSextantCoordinates);
 
+        _options["sextant_base_coordinates"] = new ContextMenuItemEntry(TazLang.Get("map_sextant_base_location", "Set sextant base coordinates"), SextantBaseWindow.Show);
+
         _options["show_mouse_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowMouseCoordinates, () => { _showMouseCoordinates = !_showMouseCoordinates; }, true, _showMouseCoordinates);
 
         _options["allow_positional_target"] = new ContextMenuItemEntry(
@@ -707,6 +709,7 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["show_multis"]);
         ContextMenu.Add(_options["show_coordinates"]);
         ContextMenu.Add(_options["show_sextant_coordinates"]);
+        ContextMenu.Add(_options["sextant_base_coordinates"]);
         ContextMenu.Add(_options["show_mouse_coordinates"]);
         ContextMenu.Add(_options["allow_positional_target"]);
         ContextMenu.Add("", null);
