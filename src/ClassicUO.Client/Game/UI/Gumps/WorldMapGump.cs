@@ -4163,67 +4163,6 @@ public class WorldMapGump : ResizableGump
     /// <param name="name">Color name</param>
     /// <returns>Color in XNA (RGBA)</returns>
     public static Color GetColor(string name) => _colorMap.TryGetValue(name, out Color color) ? color : Color.White;
-
-    /// <summary>
-    /// Converts latitudes and longitudes to X and Y locations based on Lord British's throne is located at 1323.1624 or 0° 0'N 0° 0'E
-    /// </summary>
-    /// <param name="coords"></param>
-    /// <param name="xAxis"></param>
-    /// <param name="yAxis"></param>
-    private static void ConvertCoords(string coords, ref int xAxis, ref int yAxis)
-    {
-        string[] coordsSplit = coords.Split(',');
-
-        string yCoord = coordsSplit[0];
-        string xCoord = coordsSplit[1];
-
-        // Calc Y first
-        string[] ySplit = yCoord.Split('°', 'o');
-        double yDegree = Convert.ToDouble(ySplit[0]);
-        double yMinute = Convert.ToDouble(ySplit[1].Substring(0, ySplit[1].IndexOf("'", StringComparison.Ordinal)));
-
-        if (yCoord.Substring(yCoord.Length - 1).Equals("N"))
-        {
-            yAxis = (int)(1624 - (yMinute / 60) * (4096.0 / 360) - yDegree * (4096.0 / 360));
-        }
-        else
-        {
-            yAxis = (int)(1624 + (yMinute / 60) * (4096.0 / 360) + yDegree * (4096.0 / 360));
-        }
-
-        // Calc X next
-        string[] xSplit = xCoord.Split('°', 'o');
-        double xDegree = Convert.ToDouble(xSplit[0]);
-        double xMinute = Convert.ToDouble(xSplit[1].Substring(0, xSplit[1].IndexOf("'", StringComparison.Ordinal)));
-
-        if (xCoord.Substring(xCoord.Length - 1).Equals("W"))
-        {
-            xAxis = (int)(1323 - (xMinute / 60) * (5120.0 / 360) - xDegree * (5120.0 / 360));
-        }
-        else
-        {
-            xAxis = (int)(1323 + (xMinute / 60) * (5120.0 / 360) + xDegree * (5120.0 / 360));
-        }
-
-        // Normalize values outside of map range.
-        if (xAxis < 0)
-        {
-            xAxis += 5120;
-        }
-        else if (xAxis > 5120)
-        {
-            xAxis -= 5120;
-        }
-
-        if (yAxis < 0)
-        {
-            yAxis += 4096;
-        }
-        else if (yAxis > 4096)
-        {
-            yAxis -= 4096;
-        }
-    }
 }
 
 #endregion
