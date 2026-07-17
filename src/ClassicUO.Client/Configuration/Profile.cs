@@ -447,6 +447,8 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowMouseCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowCorpse { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowSextantCoordinates { get; set => SetProperty(ref field, value); } = false;
+        public int WorldMapSextantBaseX { get; set => SetProperty(ref field, value); } = 1323;
+        public int WorldMapSextantBaseY { get; set => SetProperty(ref field, value); } = 1624;
         public bool WorldMapShowMobiles { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowPlayerName { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowPlayerBar { get; set => SetProperty(ref field, value); } = true;
