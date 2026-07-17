@@ -13,6 +13,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Input;
 using ClassicUO.IO;
 using ClassicUO.Renderer;
@@ -457,7 +458,7 @@ public class WorldMapGump : ResizableGump
 
         _options["show_sextant_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowSextantCoordinates, () => { _showSextantCoordinates = !_showSextantCoordinates; }, true, _showSextantCoordinates);
 
-        _options["sextant_base_coordinates"] = new ContextMenuItemEntry(TazLang.Get("map_sextant_base_location", "Set sextant base coordinates"), SextantBaseWindow.Show);
+        _options["sextant_base_coordinates"] = new ContextMenuItemEntry(TazLang.Get("map_sextant_base_location", "Set sextant base coordinates"), OpenSextantBaseOptions);
 
         _options["show_mouse_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowMouseCoordinates, () => { _showMouseCoordinates = !_showMouseCoordinates; }, true, _showMouseCoordinates);
 
@@ -490,6 +491,44 @@ public class WorldMapGump : ResizableGump
             if(Directory.Exists(_mapsCachePath))
                 Directory.GetFiles(_mapsCachePath, "*.png").ForEach(s => File.Delete(s));
         }, false);
+    }
+
+    /// <summary>
+    /// Opens a quick options window for editing the base X,Y map coordinates (Lord British's throne,
+    /// i.e. 0° 0'N 0° 0'E) used to anchor sextant coordinate conversions. Values are persisted to the
+    /// current profile so every conversion (map display, go-to, web map) shares the same origin.
+    /// </summary>
+    private void OpenSextantBaseOptions()
+    {
+        string title = TazLang.Get("map_sextant_base_title", "Sextant Base Coordinates");
+
+        OptionsWindow existing = OptionsWindow.GetExisting(title);
+        if (existing != null)
+        {
+            existing.CenterInScreen();
+            existing.BringOnTop();
+            return;
+        }
+
+        Profile profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return;
+
+        var w = new OptionsWindow(title);
+
+        w.AddLabel(TazLang.Get("map_sextant_base_desc", "Base map X,Y used to convert sextant coordinates (0° 0'N 0° 0'E)."));
+
+        w.AddInput(TazLang.Get("map_sextant_base_x", "Base X:"), profile.WorldMapSextantBaseX.ToString(), v =>
+        {
+            if (int.TryParse(v, out int x))
+                profile.WorldMapSextantBaseX = x;
+        }, 100, inputFilter: MyraInputBox.DigitInputFilter);
+
+        w.AddInput(TazLang.Get("map_sextant_base_y", "Base Y:"), profile.WorldMapSextantBaseY.ToString(), v =>
+        {
+            if (int.TryParse(v, out int y))
+                profile.WorldMapSextantBaseY = y;
+        }, 100, inputFilter: MyraInputBox.DigitInputFilter);
     }
 
     public void GoToMarker(int x, int y, bool isManualType)
