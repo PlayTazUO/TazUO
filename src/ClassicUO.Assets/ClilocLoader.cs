@@ -106,7 +106,7 @@ namespace ClassicUO.Assets
         void ReadCliloc(string path)
         {
             var newFileFormat = UOFileManager.Version >= ClientVersion.CV_7010400;
-            using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             int bytesRead;
             var totalRead = 0;

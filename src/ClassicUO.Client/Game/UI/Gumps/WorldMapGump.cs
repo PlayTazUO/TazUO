@@ -1876,7 +1876,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     foreach (string icon in mapIconPaths)
                     {
-                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
+                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read, FileShare.Read);
                         MemoryStream ms = new MemoryStream();
                         fs.CopyTo(ms);
                         ms.Seek(0, SeekOrigin.Begin);
@@ -1900,7 +1900,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                     foreach (string icon in mapIconPathsPngJpg)
                     {
-                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read);
+                        FileStream fs = new FileStream(icon, FileMode.Open, FileAccess.Read, FileShare.Read);
                         MemoryStream ms = new MemoryStream();
                         fs.CopyTo(ms);
                         ms.Seek(0, SeekOrigin.Begin);
