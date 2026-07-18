@@ -112,7 +112,7 @@ namespace ClassicUO.Assets
         {
             target ??= _entries;
 
-            using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             int bytesRead;
             int totalRead = 0;
