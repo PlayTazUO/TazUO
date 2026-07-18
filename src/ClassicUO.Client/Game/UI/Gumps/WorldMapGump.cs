@@ -502,7 +502,7 @@ public class WorldMapGump : ResizableGump
     {
         string title = TazLang.Get("map_sextant_base_title", "Sextant Base Coordinates");
 
-        OptionsWindow existing = OptionsWindow.GetExisting(title);
+        QuickOptionsWindow existing = QuickOptionsWindow.GetExisting(title);
         if (existing != null)
         {
             existing.CenterInScreen();
@@ -514,7 +514,7 @@ public class WorldMapGump : ResizableGump
         if (profile == null)
             return;
 
-        var w = new OptionsWindow(title);
+        var w = new QuickOptionsWindow(title);
 
         w.AddLabel(TazLang.Get("map_sextant_base_desc", "Base map X,Y used to convert sextant coordinates (0° 0'N 0° 0'E)."));
 
