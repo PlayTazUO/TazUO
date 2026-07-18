@@ -481,7 +481,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
         private void OpenEditSettings()
         {
-            var existing = OptionsWindow.GetExisting(TazLang.Get("editsettings"));
+            var existing = QuickOptionsWindow.GetExisting(TazLang.Get("editsettings"));
             if (existing != null)
             {
                 existing.CenterInScreen();
@@ -491,7 +491,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             Settings s = Settings.GlobalSettings;
 
-            var w = new OptionsWindow(TazLang.Get("editsettings"));
+            var w = new QuickOptionsWindow(TazLang.Get("editsettings"));
 
             w.AddInput(TazLang.Get("ipentry"), s.IP, v => { s.IP = v; s.Save(); }, 200, TazLang.Get("iporhostnamedesc"));
 
