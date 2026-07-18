@@ -113,7 +113,19 @@ namespace ClassicUO.Game.UI.Controls
 
             int off = w0 - w3;
 
-            _gumpRight.X = _gumpMiddle.X = S((width - w1) / 2);
+            if (_scale == 1.0)
+            {
+                _gumpRight.X = _gumpMiddle.X = (width - w1) / 2;
+            }
+            else
+            {
+                // Center each tiled piece by its own (scaled) width. The original shares the w1-based
+                // offset for both pieces; when the body width differs from w1 that tiny off-center error
+                // gets multiplied by the scale and becomes visible, so re-center from each real width.
+                _gumpRight.X = (S(width) - _gumpRight.Width) / 2;
+                _gumpMiddle.X = (S(width) - _gumpMiddle.Width) / 2;
+            }
+
             _gumpRight.Y = _gumpMiddle.Y = _gumplingMidY;
             _gumpRight.Height = _gumpMiddle.Height = _gumplingMidHeight;
             _gumpRight.WantUpdateSize = _gumpMiddle.WantUpdateSize = true;
