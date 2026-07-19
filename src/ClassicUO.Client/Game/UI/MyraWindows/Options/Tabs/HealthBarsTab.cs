@@ -21,6 +21,8 @@ public static class HealthBarsTab
         Profile profile = ProfileManager.CurrentProfile;
 
         string usePartyHealthBarsLabel = TazLang.Get("healthbar_usepartystyle", "Use party health bar style for party members");
+        string healCureAllLabel = TazLang.Get("healthbar_healcureall", "Show heal/cure buttons on all health bars (except invulnerable)");
+        string healCureFriendsLabel = TazLang.Get("healthbar_healcurefriends", "Show heal/cure buttons on friends list health bars");
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
@@ -35,6 +37,16 @@ public static class HealthBarsTab
                 usePartyHealthBarsLabel,
                 new Accessor<bool>(() => profile.UsePartyHealthBars),
                 search: new SearchMetadata(usePartyHealthBarsLabel, Keywords: [TazLang.Get("mog_kw_party"), TazLang.Get("mog_kw_healthbar")])
+            ),
+            Option.Checkbox(
+                healCureAllLabel,
+                new Accessor<bool>(() => profile.ShowHealCureButtonsAllHealthbars),
+                search: new SearchMetadata(healCureAllLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
+            ),
+            Option.Checkbox(
+                healCureFriendsLabel,
+                new Accessor<bool>(() => profile.ShowHealCureButtonsFriends),
+                search: new SearchMetadata(healCureFriendsLabel, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_heal")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_general_savehpbars"),
