@@ -10,7 +10,8 @@ namespace ClassicUO.Game.GameObjects
 {
     public sealed partial class Land
     {
-        private const float LAND_DEPTH_OFFSET = 0.5f;
+        // Land sits below statics within a tile cell so ground decals/effects can be layered between them.
+        private const float LAND_DEPTH_OFFSET = RenderDepth.Land;
         private const int Z_TO_PIXEL_MULTIPLIER = 4;
 
         private static float _cachedWaterSin;
