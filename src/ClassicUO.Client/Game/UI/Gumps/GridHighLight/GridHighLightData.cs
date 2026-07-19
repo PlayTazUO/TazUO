@@ -219,6 +219,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             list.Insert(up ? index - 1 : index + 1, _entry);
         }
 
+        public static void Unload()
+        {
+            allConfigs = null;
+            _queue.Clear();
+            _queuedItems.Clear();
+            hasQueuedItems = false;
+        }
+
         public static void ProcessItemOpl(World world, Item item)
         {
             if (item.HighlightChecked) return;
