@@ -45,7 +45,11 @@ namespace ClassicUO.Game.Managers
             return this;
         }
 
-        /// <summary>Gets or sets the value for a column. The setter appends a new pair.</summary>
+        /// <summary>
+        /// Gets or sets the value for a column. The setter replaces the value in place if the column
+        /// already exists, otherwise it appends a new pair. (Use <see cref="Add"/> for append-always
+        /// semantics.)
+        /// </summary>
         public object this[string column]
         {
             readonly get
@@ -61,7 +65,21 @@ namespace ClassicUO.Game.Managers
 
                 return null;
             }
-            set => Add(column, value);
+            set
+            {
+                _columns ??= new List<KeyValuePair<string, object>>();
+
+                for (int i = 0; i < _columns.Count; i++)
+                {
+                    if (_columns[i].Key == column)
+                    {
+                        _columns[i] = new KeyValuePair<string, object>(column, value);
+                        return;
+                    }
+                }
+
+                _columns.Add(new KeyValuePair<string, object>(column, value));
+            }
         }
 
         public readonly IEnumerator<KeyValuePair<string, object>> GetEnumerator()

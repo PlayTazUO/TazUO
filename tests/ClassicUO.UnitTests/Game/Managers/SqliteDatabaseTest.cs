@@ -105,6 +105,17 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public void SqliteRow_Indexer_ReplacesValueInPlace()
+        {
+            var row = new SqliteRow();
+            row["id"] = 1;
+            row["id"] = 2;
+
+            row.Count.Should().Be(1);
+            row["id"].Should().Be(2);
+        }
+
+        [Fact]
         public async Task Operations_AfterDispose_Throw()
         {
             var db = new TestDatabase(_tempDir);

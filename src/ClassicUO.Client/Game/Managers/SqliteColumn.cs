@@ -81,7 +81,11 @@ namespace ClassicUO.Game.Managers
         public string ToDefinition(bool includePrimaryKey = true)
         {
             System.Text.StringBuilder sb = new();
-            sb.Append(Name);
+            // Quote the identifier so names that are keywords or contain unusual characters cannot
+            // break out of the DDL (identifiers cannot be passed as SQL parameters).
+            sb.Append('"');
+            sb.Append(Name.Replace("\"", "\"\""));
+            sb.Append('"');
             sb.Append(' ');
             sb.Append(SqlType);
 

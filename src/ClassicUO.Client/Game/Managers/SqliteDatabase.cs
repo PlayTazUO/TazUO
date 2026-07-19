@@ -118,7 +118,7 @@ namespace ClassicUO.Game.Managers
 
             StringBuilder sb = new();
             sb.Append("CREATE TABLE IF NOT EXISTS ");
-            sb.Append(tableName);
+            sb.Append(QuoteIdentifier(tableName));
             sb.Append(" (");
 
             for (int i = 0; i < columns.Length; i++)
@@ -132,7 +132,13 @@ namespace ClassicUO.Game.Managers
             if (compositeKey)
             {
                 sb.Append(", PRIMARY KEY (");
-                sb.Append(string.Join(", ", primaryKeys));
+                for (int i = 0; i < primaryKeys.Count; i++)
+                {
+                    if (i > 0)
+                        sb.Append(", ");
+
+                    sb.Append(QuoteIdentifier(primaryKeys[i]));
+                }
                 sb.Append(')');
             }
 
@@ -143,8 +149,10 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// Ensures each given column exists on a table, adding any that are missing via
-        /// <c>ALTER TABLE ... ADD COLUMN</c>. Columns that already exist are skipped silently, so this
-        /// is safe to call on every startup for schema migrations.
+        /// <c>ALTER TABLE ... ADD COLUMN</c>. Existing columns are detected up front (via
+        /// <c>PRAGMA table_info</c>) and skipped, so this is safe to call on every startup for schema
+        /// migrations. Unlike a blanket exception swallow, a genuine ALTER failure is not hidden - it
+        /// surfaces and is logged.
         /// </summary>
         /// <param name="tableName">The table to add columns to.</param>
         /// <param name="columns">The columns to ensure exist.</param>
@@ -160,19 +168,29 @@ namespace ClassicUO.Game.Managers
             {
                 await using SqliteConnection connection = await OpenConnectionAsync().ConfigureAwait(false);
 
+                // Determine which columns already exist so we only ALTER the missing ones. This avoids
+                // swallowing SqliteExceptions blindly (which would hide real schema/SQL errors).
+                HashSet<string> existing = new(StringComparer.OrdinalIgnoreCase);
+                await using (SqliteCommand info = connection.CreateCommand())
+                {
+                    info.CommandText = $"PRAGMA table_info({QuoteIdentifier(tableName)})";
+                    await using SqliteDataReader reader = await info.ExecuteReaderAsync().ConfigureAwait(false);
+                    while (await reader.ReadAsync().ConfigureAwait(false))
+                    {
+                        // PRAGMA table_info columns: cid(0), name(1), type(2), ...
+                        existing.Add(reader.GetString(1));
+                    }
+                }
+
                 foreach (SqliteColumn column in columns)
                 {
-                    try
-                    {
-                        await using SqliteCommand cmd = connection.CreateCommand();
-                        // A primary key cannot be added via ALTER TABLE, so never inline it here.
-                        cmd.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}";
-                        await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-                    }
-                    catch (SqliteException)
-                    {
-                        // Column already exists - ignore, this is the expected migration path.
-                    }
+                    if (existing.Contains(column.Name))
+                        continue;
+
+                    await using SqliteCommand cmd = connection.CreateCommand();
+                    // A primary key cannot be added via ALTER TABLE, so never inline it here.
+                    cmd.CommandText = $"ALTER TABLE {QuoteIdentifier(tableName)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}";
+                    await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
@@ -198,7 +216,8 @@ namespace ClassicUO.Game.Managers
             if (columns == null || columns.Length == 0)
                 throw new ArgumentException("At least one column is required.", nameof(columns));
 
-            string sql = $"CREATE INDEX IF NOT EXISTS {indexName} ON {tableName} ({string.Join(", ", columns)})";
+            string quotedColumns = string.Join(", ", Array.ConvertAll(columns, QuoteIdentifier));
+            string sql = $"CREATE INDEX IF NOT EXISTS {QuoteIdentifier(indexName)} ON {QuoteIdentifier(tableName)} ({quotedColumns})";
             await ExecuteNonQueryAsync(sql).ConfigureAwait(false);
         }
 
@@ -239,14 +258,14 @@ namespace ClassicUO.Game.Managers
                 }
 
                 string paramName = $"$p{i}";
-                columnList.Append(pair.Key);
+                columnList.Append(QuoteIdentifier(pair.Key));
                 valueList.Append(paramName);
                 parameters.Add(new KeyValuePair<string, object>(paramName, pair.Value ?? DBNull.Value));
                 i++;
             }
 
             string verb = orReplace ? "INSERT OR REPLACE INTO" : "INSERT INTO";
-            string sql = $"{verb} {tableName} ({columnList}) VALUES ({valueList})";
+            string sql = $"{verb} {QuoteIdentifier(tableName)} ({columnList}) VALUES ({valueList})";
 
             await ExecuteNonQueryAsync(sql, parameters).ConfigureAwait(false);
         }
@@ -306,6 +325,20 @@ namespace ClassicUO.Game.Managers
             {
                 _dbLock.Release();
             }
+        }
+
+        /// <summary>
+        /// Quotes a SQLite identifier (table/column/index name) so it cannot break out of the
+        /// surrounding SQL. Identifiers cannot be passed as bound parameters, so callers that build
+        /// SQL from identifiers must quote them; embedded double quotes are doubled per the SQLite
+        /// grammar.
+        /// </summary>
+        protected static string QuoteIdentifier(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+                throw new ArgumentException("Identifier cannot be null or empty.", nameof(identifier));
+
+            return "\"" + identifier.Replace("\"", "\"\"") + "\"";
         }
 
         private static void AddParameters(SqliteCommand cmd, IEnumerable<KeyValuePair<string, object>> parameters)
