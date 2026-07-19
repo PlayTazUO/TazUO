@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added UI scaling support to both skill gumps (standard and advanced), sharing a single configurable scale setting - [P.R 722](https://github.com/PlayTazUO/TazUO/pull/722) ([bittiez](https://github.com/bittiez))
 * Added options to show the heal/cure buttons on all health bars (except invulnerable notoriety) and on health bars of mobiles in the friends list - [P.R 726](https://github.com/PlayTazUO/TazUO/pull/726) ([bittiez](https://github.com/bittiez))
 * Moved the Health Bars options tab from the Interface category to Gameplay > Mobiles - [P.R 714](https://github.com/PlayTazUO/TazUO/pull/714) ([bittiez](https://github.com/bittiez))
 * Added an "Import Map File" option to the world map context menu (under Map Marker Options) that copies a selected .map/.csv/.xml file into the current server's marker directory and reloads markers - [P.R 710](https://github.com/PlayTazUO/TazUO/pull/710) ([bittiez](https://github.com/bittiez))
