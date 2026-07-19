@@ -104,6 +104,20 @@ public class TrueTypeLoader
 
     private TrueTypeLoader()
     {
+        // Disable kerning globally before any FontSystem is created.
+        //
+        // FontStashSharp's kerning cache (StbTrueTypeSharpSource's Int32Map) is not thread-safe, and
+        // TazUO shares its FontSystem/DynamicSpriteFont instances across every consumer (game UI, Myra
+        // windows, and the Python scripting API). Python scripts run on background threads and can build
+        // and measure TTF text (e.g. CreateGumpTTFLabel -> TextBox -> RichTextLayout) while the main
+        // thread is measuring/drawing the same fonts. Concurrent kerning-pair inserts corrupt the map's
+        // internal arrays and throw IndexOutOfRangeException from deep inside a measure/draw call.
+        //
+        // Kerning contributes only a marginal cosmetic tweak to glyph spacing for our UI fonts, so
+        // turning it off removes the crash entirely with no meaningful visual cost. FontSystem copies
+        // this value at construction time, so it must be set before the fonts are loaded below.
+        FontSystemDefaults.UseKernings = false;
+
         // Register a global resolver so rich-text '/f[fontName, size]' commands can resolve fonts.
         // Without this, FontStashSharp throws "FontResolver isnt set" whenever such a command is
         // encountered (e.g. a user-typed InfoBar label). Resolving here reuses the normal font
