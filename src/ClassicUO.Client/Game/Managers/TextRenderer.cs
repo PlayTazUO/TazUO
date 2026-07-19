@@ -36,15 +36,16 @@ namespace ClassicUO.Game.Managers
             int mouseX = Mouse.Position.X;
             int mouseY = Mouse.Position.Y;
 
-            // World overhead text is stored in world/game coordinates and drawn under the
-            // camera's ViewTransformMatrix, so the raw screen mouse position no longer lines up
-            // with it. Use the mouse position translated into that same world space (the value
-            // every other world hit-test uses) so the clickable region matches the drawn text.
-            // Gump text is in screen coordinates, so the raw mouse position is correct there.
-            if (!isGump)
+            // World overhead text is drawn in screen space at a constant size (see
+            // GameScene.DrawOverheads), so it is hit-tested against the raw viewport-relative mouse
+            // position. Gump text is already in screen coordinates, so the raw mouse position is
+            // correct there too.
+            Camera camera = Client.Game.Scene?.Camera;
+
+            if (!isGump && camera != null)
             {
-                mouseX = SelectedObject.TranslatedMousePositionByViewport.X;
-                mouseY = SelectedObject.TranslatedMousePositionByViewport.Y;
+                mouseX = Mouse.Position.X - camera.Bounds.X;
+                mouseY = Mouse.Position.Y - camera.Bounds.Y;
             }
 
             for (TextObject o = DrawPointer; o != null; o = o.DLeft)
@@ -67,6 +68,21 @@ namespace ClassicUO.Game.Managers
                 }
 
                 Point pos = o.RealScreenPosition;
+
+                if (!isGump && camera != null)
+                {
+                    // RealScreenPosition already bakes in this text's own centering (half width)
+                    // and vertical stacking. Recover the object's world anchor, convert only that
+                    // anchor to screen space, then re-apply the centering/stacking at native size
+                    // so the text stays glued to the object without scaling with the zoom.
+                    int halfWidth = o.TextBox.Width >> 1;
+                    int stack = o.OffsetY + o.TextBox.Height;
+
+                    Point anchor = camera.WorldToScreen(new Point(pos.X + halfWidth, pos.Y + stack));
+
+                    pos.X = anchor.X - halfWidth;
+                    pos.Y = anchor.Y - stack;
+                }
 
                 if (o.TextBox.PixelCheck(mouseX - pos.X - startX, mouseY - pos.Y - startY))
                 {
