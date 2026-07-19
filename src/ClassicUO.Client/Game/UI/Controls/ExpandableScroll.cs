@@ -24,14 +24,20 @@ namespace ClassicUO.Game.UI.Controls
         private readonly bool _isResizable = true;
         private Point _lastExpanderPosition;
 
+        // Gump scale baked into the scroll's graphics/layout. SpecialHeight is always kept in design
+        // (unscaled) space so persisted heights stay valid regardless of the current scale.
+        private readonly double _scale = 1.0;
+        private int S(int v) => (int)(v * _scale);
+
         public event EventHandler SizeChanged;
 
-        public ExpandableScroll(int x, int y, int height, ushort graphic, bool isResizable = true)
+        public ExpandableScroll(int x, int y, int height, ushort graphic, bool isResizable = true, double scale = 1.0)
         {
             X = x;
             Y = y;
             SpecialHeight = height;
             _isResizable = isResizable;
+            _scale = scale <= 0 ? 1.0 : scale;
             CanMove = true;
             AcceptMouseInput = true;
 
@@ -94,15 +100,43 @@ namespace ClassicUO.Game.UI.Controls
                 _gumpExpander.MouseUp += expander_OnMouseUp;
             }
 
+            // Bake the gump scale into every part's size (positions are (re)computed below / in
+            // RepositionElements). Guarded so the default scale of 1.0 leaves behaviour untouched.
+            if (_scale != 1.0)
+            {
+                _gumpTop.ApplyScale(_scale, scalePosition: false);
+                _gumpRight.ApplyScale(_scale, scalePosition: false);
+                _gumpMiddle.ApplyScale(_scale, scalePosition: false);
+                _gumpBottom.ApplyScale(_scale, scalePosition: false);
+                _gumpExpander?.ApplyScale(_scale, scalePosition: false);
+
+                // The side/body pieces are tiled; scale the tile so their baked-in edges land on the
+                // scaled width instead of repeating at the native width.
+                _gumpRight.ScaleTiledTexture = true;
+                _gumpMiddle.ScaleTiledTexture = true;
+            }
+
             int off = w0 - w3;
 
-            _gumpRight.X = _gumpMiddle.X = (width - w1) / 2;
+            if (_scale == 1.0)
+            {
+                _gumpRight.X = _gumpMiddle.X = (width - w1) / 2;
+            }
+            else
+            {
+                // Center each tiled piece by its own (scaled) width. The original shares the w1-based
+                // offset for both pieces; when the body width differs from w1 that tiny off-center error
+                // gets multiplied by the scale and becomes visible, so re-center from each real width.
+                _gumpRight.X = (S(width) - _gumpRight.Width) / 2;
+                _gumpMiddle.X = (S(width) - _gumpMiddle.Width) / 2;
+            }
+
             _gumpRight.Y = _gumpMiddle.Y = _gumplingMidY;
             _gumpRight.Height = _gumpMiddle.Height = _gumplingMidHeight;
             _gumpRight.WantUpdateSize = _gumpMiddle.WantUpdateSize = true;
-            _gumpBottom.X = (off / 2) + (off / 4);
+            _gumpBottom.X = S((off / 2) + (off / 4));
 
-            Width = width;
+            Width = S(width);
 
             RepositionElements();
 
@@ -112,15 +146,15 @@ namespace ClassicUO.Game.UI.Controls
         private int _gumplingMidY => _gumpTop.Height;
 
         private int _gumplingMidHeight =>
-            SpecialHeight - _gumpTop.Height - _gumpBottom.Height - (_gumpExpander?.Height ?? 0);
+            S(SpecialHeight) - _gumpTop.Height - _gumpBottom.Height - (_gumpExpander?.Height ?? 0);
 
         private int _gumplingBottomY =>
-            SpecialHeight - _gumpBottom.Height - (_gumpExpander?.Height ?? 0);
+            S(SpecialHeight) - _gumpBottom.Height - (_gumpExpander?.Height ?? 0);
 
         private int _gumplingExpanderX => (Width - (_gumpExpander?.Width ?? 0)) >> 1;
 
         private int _gumplingExpanderY =>
-            SpecialHeight - (_gumpExpander?.Height ?? 0) - c_GumplingExpanderY_Offset;
+            S(SpecialHeight) - (_gumpExpander?.Height ?? 0) - S(c_GumplingExpanderY_Offset);
 
         public int TitleGumpID
         {
@@ -201,7 +235,8 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (Mouse.LButtonPressed && _isExpanding)
             {
-                SpecialHeight += Mouse.Position.Y - _lastExpanderPosition.Y;
+                // Mouse movement is in scaled (logical) space; SpecialHeight is in design space.
+                SpecialHeight += (int)((Mouse.Position.Y - _lastExpanderPosition.Y) / _scale);
                 _lastExpanderPosition = Mouse.Position;
 
                 RepositionElements();
@@ -216,6 +251,10 @@ namespace ClassicUO.Game.UI.Controls
 
                 _gumplingTitle?.Dispose();
                 Add(_gumplingTitle = new GumpPic(0, 0, (ushort)_gumplingTitleGumpID, 0));
+
+                if (_scale != 1.0)
+                    _gumplingTitle.ApplyScale(_scale, scalePosition: false);
+
                 RepositionElements();
             }
 
