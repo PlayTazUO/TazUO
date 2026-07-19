@@ -489,7 +489,10 @@ namespace ClassicUO.Game.GameObjects
 
             if (profile.ShowMobileHealthbar)
             {
-                DrawHealthbar(batcher, drawX, drawY);
+                // FrameInfo.Y is still the raw (negative) top offset at this point, so
+                // drawY + FrameInfo.Y is the top of the drawn sprite. Place the bar just above it.
+                int barTop = drawY + FrameInfo.Y - HEALTHBAR_HEIGHT - 2;
+                DrawHealthbar(batcher, drawX, barTop);
             }
 
             FrameInfo.X = Math.Abs(FrameInfo.X);
@@ -499,12 +502,12 @@ namespace ClassicUO.Game.GameObjects
             return true;
         }
 
-        private const int HEALTHBAR_WIDTH = 70;
+        private const int HEALTHBAR_WIDTH = 60;
         private const int HEALTHBAR_HEIGHT = 5;
 
         private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y)
         {
-            // Centered horizontally on the sprite, placed at the bottom of the sprite.
+            // Centered horizontally on the sprite, placed above the sprite.
             int barX = x - (HEALTHBAR_WIDTH / 2);
             int barY = y;
 
