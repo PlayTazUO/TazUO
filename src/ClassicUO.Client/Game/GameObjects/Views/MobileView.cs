@@ -491,8 +491,8 @@ namespace ClassicUO.Game.GameObjects
             {
                 // FrameInfo.Y is still the raw (negative) top offset at this point, so
                 // drawY + FrameInfo.Y is the top of the drawn sprite. Place the bar just above it.
-                int barTop = drawY + FrameInfo.Y - HEALTHBAR_HEIGHT - 2;
-                DrawHealthbar(batcher, drawX, barTop);
+                int barTop = drawY + FrameInfo.Y - 5;
+                DrawHealthbar(batcher, drawX, barTop, depth);
             }
 
             FrameInfo.X = Math.Abs(FrameInfo.X);
@@ -505,16 +505,14 @@ namespace ClassicUO.Game.GameObjects
         private const int HEALTHBAR_WIDTH = 60;
         private const int HEALTHBAR_HEIGHT = 5;
 
-        private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y)
+        private void DrawHealthbar(UltimaBatcher2D batcher, int x, int y, float depth)
         {
             // Centered horizontally on the sprite, placed above the sprite.
             int barX = x - (HEALTHBAR_WIDTH / 2);
             int barY = y;
 
-            // Draw above the tile diagonally in front of the mobile (one tile in +X and +Y).
-            // Using the same depth formula tiles use lets the bar shove above that tile so it
-            // isn't hidden behind terrain rendered below the mobile's feet.
-            float barDepth = CalculateDepthZ(X + 1, Y + 1, Z) + 1f;
+            // Match the character's own draw depth so the bar sorts together with the mobile.
+            float barDepth = depth + 1f;
 
             // Background
             batcher.Draw(
