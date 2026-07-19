@@ -8,21 +8,15 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 public static class HealthBarsTab
 {
     /// <summary>Returns the option fragment for health-bar appearance and drag-lock configuration</summary>
-    internal static IOptionSource GetContent()
-    {
-        return OptionsUi.Vertical(
+    internal static IOptionSource GetContent() => OptionsUi.Vertical(
             GetMainSection(),
+            GetHealthBars(),
             GetDragSection()
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), Tags: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")]));
-    }
 
     private static OptionFragment GetMainSection()
     {
         Profile profile = ProfileManager.CurrentProfile;
-
-        string usePartyHealthBarsLabel = TazLang.Get("healthbar_usepartystyle", "Use party health bar style for party members");
-        string healCureAllLabel = TazLang.Get("healthbar_healcureall", "Show heal/cure buttons on all health bars (except invulnerable)");
-        string healCureFriendsLabel = TazLang.Get("healthbar_healcurefriends", "Show heal/cure buttons on friends list health bars");
         string simpleHealthbar = TazLang.Get("mog_mobilestab_healthbars_simple", "Simple healthbar");
 
         return OptionsUi.Vertical(
@@ -31,6 +25,43 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.ShowMobileHealthbar),
                 search: new SearchMetadata(simpleHealthbar, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_mobile")])
             ),
+            Option.Slider(
+                TazLang.Get("mog_tazuo_belowmobilehealthbarscale"),
+                1,
+                5,
+                new Accessor<int>(() => profile.HealthLineSizeMultiplier),
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
+            ),
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator")),
+                Option.Slider(
+                    TazLang.Get("mog_tazuo_onlyshowbelowhp"),
+                    0,
+                    100,
+                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
+                ),
+                Option.Slider(
+                    TazLang.Get("mog_tazuo_size"),
+                    1,
+                    25,
+                    new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_size"), Keywords: [TazLang.Get("mog_kw_size")])
+                )
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_healthbarindicator"), Keywords: [TazLang.Get("mog_kw_indicator"), TazLang.Get("mog_kw_border")]))
+        );
+    }
+
+    private static OptionFragment GetHealthBars()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        string usePartyHealthBarsLabel = TazLang.Get("healthbar_usepartystyle", "Use party health bar style for party members");
+        string healCureAllLabel = TazLang.Get("healthbar_healcureall", "Show heal/cure buttons on all health bars (except invulnerable)");
+        string healCureFriendsLabel = TazLang.Get("healthbar_healcurefriends", "Show heal/cure buttons on friends list health bars");
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = TazLang.Get("healthbars_floating_section") },
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.CustomBarsToggled), TazLang.Get("mog_general_modernhealthbars")),
                 Option.Checkbox(
@@ -70,30 +101,6 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.CloseHealthBarIfAnchored),
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_alsocloseanchoredhealthbarswhenautoclosinghealthbars"), Keywords: [TazLang.Get("mog_kw_close"), TazLang.Get("mog_kw_anchor")])
             ),
-            Option.Slider(
-                TazLang.Get("mog_tazuo_belowmobilehealthbarscale"),
-                1,
-                5,
-                new Accessor<int>(() => profile.HealthLineSizeMultiplier),
-                search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
-            ),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator")),
-                Option.Slider(
-                    TazLang.Get("mog_tazuo_onlyshowbelowhp"),
-                    0,
-                    100,
-                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
-                ),
-                Option.Slider(
-                    TazLang.Get("mog_tazuo_size"),
-                    1,
-                    25,
-                    new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_size"), Keywords: [TazLang.Get("mog_kw_size")])
-                )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_healthbarindicator"), Keywords: [TazLang.Get("mog_kw_indicator"), TazLang.Get("mog_kw_border")])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.OpenHealthBarForLastAttack), TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack")),
                 Option.Checkbox(
@@ -101,7 +108,7 @@ public static class HealthBarsTab
                     new Accessor<bool>(() => profile.UseOneHPBarForLastAttack)
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_automaticallyopenhealthbarsforlastattack"), Keywords: [TazLang.Get("mog_kw_last"), TazLang.Get("mog_kw_attack")]))
-        );
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_kw_healthbar"), [TazLang.Get("mog_kw_heal")]));
     }
 
     private static OptionFragment GetDragSection()
