@@ -37,23 +37,6 @@ public static class MobilesTab
 
         return OptionsUi.Vertical(
             OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), TazLang.Get("mog_mobilestab_highlighting_showmobilehp")),
-                Option.ComboBox(
-                    TazLang.Get("mog_mobilestab_highlighting_mobilehptype"),
-                    profile.MobileHPType,
-                    [TazLang.Get("mog_general_hptypeperc"), TazLang.Get("mog_general_hptypebar"), TazLang.Get("mog_general_hptypenboth")],
-                    i => profile.MobileHPType = i,
-                    search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_mobilehptype"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_type")])
-                ),
-                Option.ComboBox(
-                    TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"),
-                    profile.MobileHPShowWhen,
-                    [TazLang.Get("mog_general_hpshowwhen_always"), TazLang.Get("mog_general_hpshowwhen_less100"), TazLang.Get("mog_general_hpshowwhen_smart")],
-                    i => profile.MobileHPShowWhen = i,
-                    search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_show")])
-                )
-            ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])),
-            OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.HighlightMobilesByPoisoned), TazLang.Get("mog_mobilestab_highlighting_highlightpoisoned")),
                 Option.HuePicker(
                     TazLang.Get("mog_general_poisonhighlightcolor"),

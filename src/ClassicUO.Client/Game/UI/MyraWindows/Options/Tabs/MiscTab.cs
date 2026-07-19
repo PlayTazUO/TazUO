@@ -14,16 +14,14 @@ public static class MiscTab
     /// <summary>Returns the paged option group containing miscellaneous settings pages</summary>
     internal static IOptionSource GetContent() => GetPages();
 
-    private static OptionPageGroup GetPages()
-    {
-
-        return new OptionPageGroup(
+    private static OptionPageGroup GetPages() => new OptionPageGroup(
             new SearchMetadata(Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]),
             GetPage1,
             GetPage2,
-            GetPage3
+            GetPage3,
+            GetGridLoot,
+            GetExperimentalSection
         );
-    }
 
     private static OptionFragment GetPage1()
     {
@@ -142,20 +140,7 @@ public static class MiscTab
                 new Accessor<bool>(() => profile.UseSmoothBoatMovement),
                 TazLang.Get("mog_general_clientversionlimitedtooltip"),
                 search: new SearchMetadata(TazLang.Get("mog_general_smoothboat"), Keywords: [TazLang.Get("mog_kw_boat"), TazLang.Get("mog_kw_smooth")])
-            ),
-            Option.ComboBox(
-                TazLang.Get("mog_general_gridloot"),
-                profile.GridLootType,
-                [
-                    TazLang.Get("mog_general_gridlootoptdisable"),
-                    TazLang.Get("mog_general_gridlootoptonly"),
-                    TazLang.Get("mog_general_gridlootoptboth")
-                ],
-                newValue => profile.GridLootType = newValue,
-                TazLang.Get("mog_general_gridlootoptonlytooltip"),
-                new SearchMetadata(TazLang.Get("mog_general_gridloot"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot")])
-            ),
-            GetExperimentalSection()
+            )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
     }
 
@@ -258,5 +243,40 @@ public static class MiscTab
                 ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_housingtransparency"), Tags: [TazLang.Get("mog_kw_misc")], Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_transparency")]))
             )
         ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
+    }
+
+    private static OptionFragment GetGridLoot()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.Vertical(
+                OptionsUi.VisualContainer(
+                    new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_oldstylegridloot_label") },
+                    Option.ComboBox(
+                        TazLang.Get("mog_general_gridloot"),
+                        profile.GridLootType,
+                        [
+                            TazLang.Get("mog_general_gridlootoptdisable"),
+                            TazLang.Get("mog_general_gridlootoptonly"),
+                            TazLang.Get("mog_general_gridlootoptboth")
+                        ],
+                        newValue => profile.GridLootType = newValue,
+                        TazLang.Get("mog_general_gridlootoptonlytooltip"),
+                        new SearchMetadata(TazLang.Get("mog_general_gridloot"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot")])
+                    ),
+                    Option.ComboBox(
+                        TazLang.Get("gridcontainer_defaultview", "Default container view"),
+                        profile.GridContainerViewMode,
+                        [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
+                        i =>
+                        {
+                            profile.GridContainerViewMode = i;
+                            GridContainer.UpdateAllGridContainers();
+                        },
+                        search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
+                    )
+                ).AsSearchGroup()
+                .WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_oldstylegridloot_label"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot"), TazLang.Get("mog_kw_view")]))
+        );
     }
 }

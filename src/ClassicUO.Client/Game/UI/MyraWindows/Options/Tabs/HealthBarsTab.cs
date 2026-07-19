@@ -25,13 +25,34 @@ public static class HealthBarsTab
                 new Accessor<bool>(() => profile.ShowMobileHealthbar),
                 search: new SearchMetadata(simpleHealthbar, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_mobile")])
             ),
-            Option.Slider(
-                TazLang.Get("mog_tazuo_belowmobilehealthbarscale"),
-                1,
-                5,
-                new Accessor<int>(() => profile.HealthLineSizeMultiplier),
-                search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
-            ),
+            OptionsUi.VisualContainer(
+                    new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_mobilehealthindicator") },
+                    OptionsUi.CheckBoxGroup(
+                        new PropertyBinder(new Accessor<bool>(() => profile.ShowMobilesHP), TazLang.Get("mog_mobilestab_highlighting_showmobilehp")),
+                        Option.ComboBox(
+                            TazLang.Get("mog_mobilestab_highlighting_mobilehptype"),
+                            profile.MobileHPType,
+                            [TazLang.Get("mog_general_hptypeperc"), TazLang.Get("mog_general_hptypebar"), TazLang.Get("mog_general_hptypenboth")],
+                            i => profile.MobileHPType = i,
+                            search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_mobilehptype"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_type")])
+                        ),
+                        Option.ComboBox(
+                            TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"),
+                            profile.MobileHPShowWhen,
+                            [TazLang.Get("mog_general_hpshowwhen_always"), TazLang.Get("mog_general_hpshowwhen_less100"), TazLang.Get("mog_general_hpshowwhen_smart")],
+                            i => profile.MobileHPShowWhen = i,
+                            search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_hpshowwhen"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_show")])
+                        )
+                    ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])),
+                    Option.Slider(
+                        TazLang.Get("mog_tazuo_belowmobilehealthbarscale"),
+                        1,
+                        5,
+                        new Accessor<int>(() => profile.HealthLineSizeMultiplier),
+                        search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
+                    )
+                ).AsSearchGroup()
+                .WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_mobilehealthindicator"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_scale")])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator")),
                 Option.Slider(

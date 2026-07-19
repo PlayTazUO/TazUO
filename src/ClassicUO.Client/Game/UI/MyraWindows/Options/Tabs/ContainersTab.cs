@@ -175,17 +175,6 @@ public static class ContainersTab
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_view")])
                 ),
                 Option.ComboBox(
-                    TazLang.Get("gridcontainer_defaultview", "Default container view"),
-                    profile.GridContainerViewMode,
-                    [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
-                    i =>
-                    {
-                        profile.GridContainerViewMode = i;
-                        GridContainer.UpdateAllGridContainers();
-                    },
-                    search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
-                ),
-                Option.ComboBox(
                     TazLang.Get("mog_tazuo_searchstyle"),
                     profile.GridContainerSearchMode,
                     [TazLang.Get("mog_tazuo_onlyshow"), TazLang.Get("mog_tazuo_highlight")],
