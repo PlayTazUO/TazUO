@@ -692,7 +692,7 @@ namespace ClassicUO.Game.UI.Gumps
                         ClearSelection();
                     }
 
-                    removed.Destroy();
+                    removed?.Destroy();
                 }
 
                 string timestampText = $"{time:t}";
@@ -1136,7 +1136,7 @@ namespace ClassicUO.Game.UI.Gumps
             private void Reset()
             {
                 foreach (JournalData _ in journalDatas)
-                    _.Destroy();
+                    _?.Destroy();
 
                 journalDatas.Clear();
                 ClearSelection();
