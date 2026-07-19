@@ -109,6 +109,11 @@ namespace ClassicUO.Game.UI.Controls
                 _gumpMiddle.ApplyScale(_scale, scalePosition: false);
                 _gumpBottom.ApplyScale(_scale, scalePosition: false);
                 _gumpExpander?.ApplyScale(_scale, scalePosition: false);
+
+                // The side/body pieces are tiled; scale the tile so their baked-in edges land on the
+                // scaled width instead of repeating at the native width.
+                _gumpRight.ScaleTiledTexture = true;
+                _gumpMiddle.ScaleTiledTexture = true;
             }
 
             int off = w0 - w3;
