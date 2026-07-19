@@ -347,6 +347,8 @@ namespace ClassicUO.Configuration
         public bool CustomBarsToggled { get; set => SetProperty(ref field, value); }
         public bool CBBlackBGToggled { get; set => SetProperty(ref field, value); }
         public bool UsePartyHealthBars { get; set => SetProperty(ref field, value); } = true;
+        public bool ShowHealCureButtonsAllHealthbars { get; set => SetProperty(ref field, value); }
+        public bool ShowHealCureButtonsFriends { get; set => SetProperty(ref field, value); }
 
         public bool ShowInfoBar { get; set => SetProperty(ref field, value); }
         public int InfoBarHighlightType { get; set => SetProperty(ref field, value); } // 0 = text colour changes, 1 = underline

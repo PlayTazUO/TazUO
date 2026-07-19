@@ -15,7 +15,7 @@ namespace ClassicUO.Game.UI.MyraWindows;
 /// each of which appends the appropriate control (wired to a callback) to a vertical stack.
 /// The window is shown automatically once constructed.
 /// </summary>
-public class OptionsWindow : MyraControl
+public class QuickOptionsWindow : MyraControl
 {
     private readonly VerticalStackPanel _stack;
 
@@ -23,7 +23,7 @@ public class OptionsWindow : MyraControl
     public string Title { get; }
 
     /// <param name="title">The window title shown in the title bar.</param>
-    public OptionsWindow(string title) : base(title)
+    public QuickOptionsWindow(string title) : base(title)
     {
         Title = title;
         _stack = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Padding = new Thickness(8) };
@@ -35,14 +35,14 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>
-    /// Returns an existing, non-disposed <see cref="OptionsWindow"/> with the given <paramref name="title"/>,
+    /// Returns an existing, non-disposed <see cref="QuickOptionsWindow"/> with the given <paramref name="title"/>,
     /// or null if none is open. Useful to focus an existing window instead of opening a duplicate.
     /// </summary>
-    public static OptionsWindow? GetExisting(string title)
+    public static QuickOptionsWindow? GetExisting(string title)
     {
         foreach (IGui g in UIManager.Gumps)
         {
-            if (g is OptionsWindow ow && !ow.IsDisposed && ow.Title == title)
+            if (g is QuickOptionsWindow ow && !ow.IsDisposed && ow.Title == title)
                 return ow;
         }
 
@@ -50,7 +50,7 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>Appends a plain text label.</summary>
-    public OptionsWindow AddLabel(string text, MyraLabel.TextStyle style = MyraLabel.TextStyle.P)
+    public QuickOptionsWindow AddLabel(string text, MyraLabel.TextStyle style = MyraLabel.TextStyle.P)
     {
         _stack.Widgets.Add(new MyraLabel(text, style));
         Refresh();
@@ -58,7 +58,7 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>Appends a labeled checkbox that invokes <paramref name="onChange"/> when toggled.</summary>
-    public OptionsWindow AddCheckbox(string label, bool isChecked, Action<bool> onChange, string? tooltip = null)
+    public QuickOptionsWindow AddCheckbox(string label, bool isChecked, Action<bool> onChange, string? tooltip = null)
     {
         _stack.Widgets.Add(MyraCheckButton.CreateWithCallback(isChecked, onChange, label, tooltip));
         Refresh();
@@ -66,7 +66,7 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>Appends a labeled text input that invokes <paramref name="onChange"/> as the user types.</summary>
-    public OptionsWindow AddInput(
+    public QuickOptionsWindow AddInput(
         string label,
         string value,
         Action<string> onChange,
@@ -88,7 +88,7 @@ public class OptionsWindow : MyraControl
     }
 
     /// <summary>Appends a labeled dropdown that invokes <paramref name="onChange"/> when the selection changes.</summary>
-    public OptionsWindow AddDropdown(string label, string[] items, int selectedIndex, Action<int> onChange, string? tooltip = null)
+    public QuickOptionsWindow AddDropdown(string label, string[] items, int selectedIndex, Action<int> onChange, string? tooltip = null)
     {
         if (items == null || items.Length == 0)
             throw new ArgumentException("Items array cannot be null or empty.", nameof(items));
