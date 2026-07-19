@@ -1,84 +1,99 @@
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using Myra.Graphics2D.UI;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
-    public class GridHighlightConfig : Gump
+    /// <summary>
+    /// Myra-based editor for the shared, configurable property lists used by grid highlighting.
+    /// Each category is a multiline text box (one property per line); edits are parsed, de-duplicated
+    /// and persisted to the profile when the box loses focus.
+    /// </summary>
+    public class GridHighlightConfig : MyraControl
     {
-        private const int WIDTH = 350, HEIGHT = 500;
-        private int lastYitem = 0;
-        private int lastXitem = 0;
+        private readonly World _world;
 
-        public GridHighlightConfig(World world, int x, int y) : base(world, 0, 0)
+        public GridHighlightConfig(World world) : base(TazLang.Get("gridhighlight_config_title"))
         {
-            Width = (175 + 2) * 6;
-            Height = HEIGHT;
-            CanMove = true;
-            AcceptMouseInput = true;
-            CanCloseWithRightClick = true;
+            _world = world;
+            Build();
+            CenterInViewPort();
+        }
 
-            Add(new AlphaBlendControl(0.85f) { Width = Width, Height = HEIGHT });
-
-            Label label;
-            Add(label = new Label(TazLang.Get("gridhighlight_config_title"), true, 0xffff) { X = 0, Y = lastYitem });
-
-            lastYitem += 20;
-
-            List<(string Label, HashSet<string> Set)> categories = new()
-                {
-                    (TazLang.Get("gridhighlight_cat_properties"), GridHighlightRules.Properties),
-                    (TazLang.Get("gridhighlight_cat_superslayers"), GridHighlightRules.SuperSlayerProperties),
-                    (TazLang.Get("gridhighlight_cat_slayers"), GridHighlightRules.SlayerProperties),
-                    (TazLang.Get("gridhighlight_cat_resistances"), GridHighlightRules.Resistances),
-                    (TazLang.Get("gridhighlight_cat_negatives"), GridHighlightRules.NegativeProperties),
-                    (TazLang.Get("gridhighlight_cat_rarity"), GridHighlightRules.RarityProperties)
-                };
-            foreach ((string labelText, HashSet<string> propSet) in categories)
+        public static void Show(World world)
+        {
+            foreach (IGui gump in UIManager.Gumps)
             {
-                Add(label = new Label(labelText, true, 0xffff) { X = lastXitem, Y = lastYitem });
-                ScrollArea propertiesScrollArea;
-                InputField propertiesPropInput;
-                Add(propertiesScrollArea = new ScrollArea(lastXitem, lastYitem + 20, 175, HEIGHT - lastYitem - 20, true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
-                propertiesScrollArea.Add(propertiesPropInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 175 - 13, (HEIGHT - lastYitem - 20) * 10) { Y = 0 });
-                string s = string.Join("\n", propSet);
-                propertiesPropInput.SetText(s);
-                var cts = new CancellationTokenSource();
-                propertiesPropInput.TextChanged += async (s, e) =>
+                if (gump is GridHighlightConfig w && !w.IsDisposed)
                 {
-                    CancellationTokenSource oldToken = cts;
-                    oldToken?.Cancel();
-                    cts = new CancellationTokenSource();
-                    CancellationToken token = cts.Token;
+                    w.BringOnTop();
+                    return;
+                }
+            }
 
-                    try
-                    {
-                        await Task.Delay(500, token);
-                        if (!token.IsCancellationRequested)
-                        {
-                            string text = propertiesPropInput.Text;
-                            var parsed = text
-                                .Split(new[] { ',', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                                .Select(p => p.Trim())
-                                .Where(p => !string.IsNullOrEmpty(p))
-                                .Distinct(StringComparer.OrdinalIgnoreCase)
-                                .ToList();
+            UIManager.Add(new GridHighlightConfig(world));
+        }
 
-                            ProfileManager.CurrentProfile.ConfigurableProperties = parsed;
-                            GridHighlightRules.SaveGridHighlightConfiguration();
-                            propertiesPropInput.Add(new FadingLabel(10, TazLang.Get("gridhighlight_saved"), true, 0xff) { X = 0, Y = 0 });
-                        }
-                    }
-                    catch (TaskCanceledException) { }
-                    oldToken?.Dispose();
+        private void Build()
+        {
+            Profile profile = ProfileManager.CurrentProfile;
+
+            (string Label, HashSet<string> Set, Action<List<string>> Save)[] categories =
+            {
+                (TazLang.Get("gridhighlight_cat_properties"),   GridHighlightRules.Properties,             v => profile.ConfigurableProperties = v),
+                (TazLang.Get("gridhighlight_cat_superslayers"), GridHighlightRules.SuperSlayerProperties,  v => profile.ConfigurableSuperSlayers = v),
+                (TazLang.Get("gridhighlight_cat_slayers"),      GridHighlightRules.SlayerProperties,       v => profile.ConfigurableSlayers = v),
+                (TazLang.Get("gridhighlight_cat_resistances"),  GridHighlightRules.Resistances,            v => profile.ConfigurableResistances = v),
+                (TazLang.Get("gridhighlight_cat_negatives"),    GridHighlightRules.NegativeProperties,     v => profile.ConfigurableNegatives = v),
+                (TazLang.Get("gridhighlight_cat_rarity"),       GridHighlightRules.RarityProperties,       v => profile.ConfigurableRarities = v),
+            };
+
+            var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+            root.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_config_title"), MyraLabel.TextStyle.P));
+
+            var columns = new HorizontalStackPanel { Spacing = 4 };
+
+            foreach ((string label, HashSet<string> set, Action<List<string>> save) in categories)
+            {
+                var column = new VerticalStackPanel { Spacing = 2 };
+                column.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P));
+
+                var input = new MyraInputBox
+                {
+                    Text = string.Join("\n", set),
+                    Width = 175,
+                    MinHeight = 420,
+                    Multiline = true,
+                    VerticalAlignment = VerticalAlignment.Stretch
                 };
 
-                lastXitem += 175 + 2;
+                Action<List<string>> capturedSave = save;
+                input.LostFocus = () =>
+                {
+                    List<string> parsed = (input.Text ?? "")
+                        .Split(new[] { ',', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(p => p.Trim())
+                        .Where(p => !string.IsNullOrEmpty(p))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    capturedSave(parsed);
+                    GridHighlightRules.SaveGridHighlightConfiguration();
+                    GridHighlightData.RecheckMatchStatus();
+                };
+
+                column.Widgets.Add(new ScrollViewer { MaxHeight = 420, Content = input });
+                columns.Widgets.Add(column);
             }
+
+            root.Widgets.Add(columns);
+            SetRootContent(root);
         }
     }
 }
