@@ -531,7 +531,7 @@ namespace ClassicUO.Configuration
         #region GRID CONTAINER
         public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
-        public int CorpseContainerStyle { get; set => SetProperty(ref field, value); } = 0; // 0 = Follow global, 1 = Grid, 2 = Original
+        public CorpseContainerStyle CorpseContainerStyle { get; set => SetProperty(ref field, value); } = CorpseContainerStyle.Default;
         public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
         public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 0;
         public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;

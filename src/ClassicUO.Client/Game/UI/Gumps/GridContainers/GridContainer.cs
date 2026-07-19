@@ -539,9 +539,9 @@ public partial class GridContainer : ResizableGump
                 {
                     switch (ProfileManager.CurrentProfile.CorpseContainerStyle)
                     {
-                        case 1: return false; // Force grid style
-                        case 2: return true;  // Force original style
-                        // case 0 falls through to the global default
+                        case CorpseContainerStyle.Grid: return false;
+                        case CorpseContainerStyle.Original: return true;
+                        // CorpseContainerStyle.Default falls through to the global default
                     }
                 }
 

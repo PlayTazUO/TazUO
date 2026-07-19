@@ -174,15 +174,10 @@ public static class ContainersTab
                     new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_view")])
                 ),
-                Option.ComboBox(
+                Option.LComboBox(
                     TazLang.Get("mog_tazuo_corpsecontainerstyle"),
-                    profile.CorpseContainerStyle,
-                    [
-                        TazLang.Get("mog_tazuo_corpsestyleopt_default"),
-                        TazLang.Get("mog_tazuo_corpsestyleopt_grid"),
-                        TazLang.Get("mog_tazuo_corpsestyleopt_original")
-                    ],
-                    i => profile.CorpseContainerStyle = i,
+                    new Accessor<CorpseContainerStyle>(() => profile.CorpseContainerStyle, v => profile.CorpseContainerStyle = v),
+                    "mog_tazuo_corpsestyleopt_",
                     TazLang.Get("mog_tazuo_tooltipcorpsecontainerstyle"),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_corpsecontainerstyle"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_container")])
                 ),
