@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added options to show the heal/cure buttons on all health bars (except invulnerable notoriety) and on health bars of mobiles in the friends list - [P.R 726](https://github.com/PlayTazUO/TazUO/pull/726) ([bittiez](https://github.com/bittiez))
 * Moved the Health Bars options tab from the Interface category to Gameplay > Mobiles - [P.R 714](https://github.com/PlayTazUO/TazUO/pull/714) ([bittiez](https://github.com/bittiez))
 * Added an "Import Map File" option to the world map context menu (under Map Marker Options) that copies a selected .map/.csv/.xml file into the current server's marker directory and reloads markers - [P.R 710](https://github.com/PlayTazUO/TazUO/pull/710) ([bittiez](https://github.com/bittiez))
 * Added a "Keep Existing" option to cooldown bars that preserves the running countdown instead of adding a new bar when the same rule triggers again; mutually exclusive with "Replace Existing" - [P.R 709](https://github.com/PlayTazUO/TazUO/pull/709) ([bittiez](https://github.com/bittiez))
