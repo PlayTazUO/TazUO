@@ -108,6 +108,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             y = 0;
             int spaceBetween = 7;
 
+            Checkbox enabledCheckbox;
+            area.Add(enabledCheckbox = new Checkbox(0x00D2, 0x00D3) { X = 0, Y = y, IsChecked = data.Enabled });
+            enabledCheckbox.SetTooltip(TazLang.Get("gridhighlight_enabled_tooltip"));
+            enabledCheckbox.ValueChanged += (s, e) =>
+            {
+                data.Enabled = enabledCheckbox.IsChecked;
+                GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
+            };
+
             NiceButton colorButton;
             area.Add(colorButton = new NiceButton(0, y, 60, 20, ButtonAction.Activate, TazLang.Get("gridhighlight_color")) { BackgroundColor = data.HighlightColor, IsSelectable = false });
             colorButton.SetTooltip(TazLang.Get("gridhighlight_color_tooltip"));
@@ -180,10 +189,11 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             pos.PositionLeftOf(_propertiesButton, _del);
             pos.PositionLeftOf(colorButton, _propertiesButton);
 
+            int nameX = enabledCheckbox.Width + spaceBetween;
             InputField _name;
-            area.Add(_name = new InputField(0x0BB8, 0xFF, 0xFFFF, true, colorButton.X - spaceBetween, 20)
+            area.Add(_name = new InputField(0x0BB8, 0xFF, 0xFFFF, true, colorButton.X - spaceBetween - nameX, 20)
             {
-                X = 0,
+                X = nameX,
                 Y = y,
                 AcceptKeyboardInput = true
             }

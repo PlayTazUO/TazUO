@@ -36,6 +36,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => allConfigs = value;
         }
 
+        public bool Enabled
+        {
+            get => _entry.Enabled;
+            set => _entry.Enabled = value;
+        }
+
         public string Name
         {
             get => _entry.Name;
@@ -628,6 +634,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             foreach (GridHighlightData config in AllConfigs)
             {
+                // Disabled configs highlight nothing and never trigger auto loot
+                if (!config.Enabled)
+                    continue;
+
                 if (!config.IsMatch(itemData))
                     continue;
 
