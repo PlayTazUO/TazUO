@@ -23,6 +23,7 @@ using static ClassicUO.Configuration.ProfileManager;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    [Obsolete("Use OptionsWindow instead. This will be removed in the future.")]
     public class ModernOptionsGump : BaseOptionsGump
     {
         private List<SettingsOption> _options = new List<SettingsOption>();
