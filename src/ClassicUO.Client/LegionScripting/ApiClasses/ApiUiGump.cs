@@ -297,7 +297,11 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="multiline"></param>
     /// <returns></returns>
     public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false) =>
-        new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true });
+        // Construct on the main thread: TTFTextInputField builds FontStashSharp-backed TextBoxes whose
+        // shared font caches are not thread-safe. Building them here (a script background thread) while
+        // the main thread measures/draws the same fonts corrupts those caches and crashes.
+        MainThreadQueue.InvokeOnMainThread(() =>
+            new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true }));
 
     /// <summary>
     /// Create a TTF label with advanced options.
@@ -342,7 +346,11 @@ public class ApiUiGump(LegionAPI api)
         if (maxWidth > 0)
             opts.Width = maxWidth;
 
-        return new ApiUiTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts));
+        // Construct on the main thread: TextBox measures its text through FontStashSharp, whose shared
+        // font caches (glyph/kerning) are not thread-safe. Measuring here (a script background thread)
+        // while the main thread measures/draws the same fonts corrupts those caches and crashes.
+        return MainThreadQueue.InvokeOnMainThread(() =>
+            new ApiUiTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts)));
     }
 
     /// <summary>
