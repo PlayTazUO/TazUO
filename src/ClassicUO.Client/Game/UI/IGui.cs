@@ -94,7 +94,7 @@ public interface IGui
     void UpdateOffset(int x, int y);
     T Add<T>(T c, int page = 0) where T : IGui;
     void Remove(IGui c);
-    void SetTooltip(string text, int maxWidth = 0);
+    void SetTooltip(string text);
     void SetTooltip(IGui c);
     void SetTooltip(uint entity);
     void OnPageChanged();

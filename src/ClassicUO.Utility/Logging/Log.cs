@@ -27,11 +27,20 @@ public class Log
 
     public static void Pause() => _logger?.LogTypes = LogTypes.None;
 
+    // Records the message into the rolling in-memory history (used by the Log History
+    // window) and forwards it to the console logger. The history is kept independent of
+    // the logger's LogTypes filter so it always reflects everything that was logged.
+    private static void Write(LogTypes type, string text)
+    {
+        LogHistory.Add(type, text);
+        _logger?.Message(type, text);
+    }
+
     public static void Trace(
         string text,
         [CallerFilePath] string callerPath = "Unk",
         [CallerMemberName] string callerName = "Unk"
-    ) => _logger?.Message(LogTypes.Trace, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
+    ) => Write(LogTypes.Trace, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
 
     [Conditional("DEBUG")]
     public static void TraceDebug(
@@ -45,20 +54,20 @@ public class Log
         string text,
         [CallerFilePath] string callerPath = "Unk",
         [CallerMemberName] string callerName = "Unk"
-    ) => _logger?.Message(LogTypes.Debug, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
+    ) => Write(LogTypes.Debug, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
 
 
     public static void Info(
         string text,
         [CallerFilePath] string callerPath = "Unk",
         [CallerMemberName] string callerName = "Unk"
-    ) => _logger?.Message(LogTypes.Info, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
+    ) => Write(LogTypes.Info, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
 
     public static void Warn(
         string text,
         [CallerFilePath] string callerPath = "Unk",
         [CallerMemberName] string callerName = "Unk"
-    ) => _logger?.Message(LogTypes.Warning, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
+    ) => Write(LogTypes.Warning, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
 
     [Conditional("DEBUG")]
     public static void WarnDebug(
@@ -71,7 +80,7 @@ public class Log
         string text,
         [CallerFilePath] string callerPath = "Unk",
         [CallerMemberName] string callerName = "Unk"
-    ) => _logger?.Message(LogTypes.Error, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
+    ) => Write(LogTypes.Error, $"[{Path.GetFileNameWithoutExtension(callerPath)}.{callerName}] {text}");
 
     [Conditional("DEBUG")]
     public static void ErrorDebug(

@@ -34,6 +34,7 @@ using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -42,6 +43,7 @@ using System.Threading;
 using ClassicUO.IO.Persistency;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
+using FontStashSharp.RichText;
 
 namespace ClassicUO.Assets;
 
@@ -99,6 +101,39 @@ public class TrueTypeLoader
     public static TrueTypeLoader Instance => _instance ??= new TrueTypeLoader();
 
     private readonly FontSystemSettings _fontSysSettings = new() { FontResolutionFactor = 2, KernelWidth = 2, KernelHeight = 2 };
+
+    private TrueTypeLoader()
+    {
+        // Register a global resolver so rich-text '/f[fontName, size]' commands can resolve fonts.
+        // Without this, FontStashSharp throws "FontResolver isnt set" whenever such a command is
+        // encountered (e.g. a user-typed InfoBar label). Resolving here reuses the normal font
+        // lookup, which safely falls back to an embedded font when the requested one is unavailable.
+        RichTextDefaults.FontResolver ??= ResolveRichTextFont;
+    }
+
+    /// <summary>
+    ///     Resolves a font for a rich-text '/f[...]' command.
+    /// </summary>
+    /// <param name="parameters">
+    ///     The command parameters, expected as '&lt;fontName&gt;' or '&lt;fontName&gt;, &lt;size&gt;'.
+    /// </param>
+    /// <returns>The requested font, or a fallback font when it cannot be loaded.</returns>
+    private SpriteFontBase ResolveRichTextFont(string parameters)
+    {
+        string fontName = parameters ?? string.Empty;
+        float size = 12;
+
+        int commaIndex = fontName.IndexOf(',');
+        if (commaIndex >= 0)
+        {
+            if (float.TryParse(fontName.AsSpan(commaIndex + 1).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize))
+                size = parsedSize;
+
+            fontName = fontName.Substring(0, commaIndex);
+        }
+
+        return GetFont(fontName.Trim(), size);
+    }
 
     public void Load()
     {

@@ -754,6 +754,77 @@ namespace ClassicUO.Renderer
             }
         }
 
+        /// <summary>
+        /// Tiled draw where the tile itself is scaled by <paramref name="scale"/>. The default
+        /// <see cref="DrawTiled(Texture2D, Rectangle, Rectangle, Vector3)"/> always steps by the native
+        /// texture size, which repeats the texture (and any edges baked into it) across a scaled area.
+        /// This variant steps by the scaled tile size so a scaled control renders one scaled tile, with
+        /// edges landing on the scaled bounds instead of the native ones.
+        /// </summary>
+        public void DrawTiled
+        (
+            Texture2D texture,
+            Rectangle destinationRectangle,
+            Rectangle sourceRectangle,
+            Vector3 hue,
+            float scale
+        )
+        {
+            if (texture == null || texture.IsDisposed)
+            {
+                return;
+            }
+
+            if (scale <= 0f || Math.Abs(scale - 1f) < 0.0001f)
+            {
+                DrawTiled(texture, destinationRectangle, sourceRectangle, hue);
+                return;
+            }
+
+            int tileW = Math.Max(1, (int)(sourceRectangle.Width * scale));
+            int tileH = Math.Max(1, (int)(sourceRectangle.Height * scale));
+
+            var scaleVec = new Vector2(scale, scale);
+            var pos = new Vector2(destinationRectangle.X, destinationRectangle.Y);
+
+            int h = destinationRectangle.Height;
+            Rectangle rect = sourceRectangle;
+
+            while (h > 0)
+            {
+                // Source height for this row, scaled down from the remaining destination height so the
+                // final (partial) tile only draws the part of the texture that fits.
+                rect.Height = h >= tileH ? sourceRectangle.Height : Math.Clamp((int)(h / scale), 1, sourceRectangle.Height);
+
+                pos.X = destinationRectangle.X;
+                int w = destinationRectangle.Width;
+
+                while (w > 0)
+                {
+                    rect.Width = w >= tileW ? sourceRectangle.Width : Math.Clamp((int)(w / scale), 1, sourceRectangle.Width);
+
+                    Draw
+                    (
+                        texture,
+                        pos,
+                        rect,
+                        hue,
+                        0f,
+                        Vector2.Zero,
+                        scaleVec,
+                        SpriteEffects.None,
+                        0f
+                    );
+
+                    w -= tileW;
+                    pos.X += tileW;
+                }
+
+                h -= tileH;
+                pos.Y += tileH;
+            }
+        }
+
         public bool DrawRectangle
         (
             Texture2D texture,

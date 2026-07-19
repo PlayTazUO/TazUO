@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
@@ -142,6 +143,9 @@ namespace ClassicUO.Game.Managers
                         break;
                     case "/api/command":
                         HandleCommand(context.Request, context.Response);
+                        break;
+                    case "/api/goto":
+                        HandleGoto(context.Request, context.Response);
                         break;
                     case "/api/journalsize":
                         if (context.Request.HttpMethod == "GET")
@@ -731,6 +735,102 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        // Matches raw map coordinates, e.g. "1639, 1532", "123 456" or "1331:745".
+        // Mirrors the point regex used by the in-game LocationGoWindow.
+        private static readonly Regex PointCoordsRegex = new Regex(@"^(?<X>\d+)\s*[,:\s]\s*(?<Y>\d+)$", RegexOptions.Compiled);
+
+        // Sets the player's Go-To location on the in-game World Map from the web map.
+        // Mirrors the "Go to location" context menu option, which calls WorldMapGump.GoToMarker.
+        // The input text accepts either raw map coordinates ("X, Y") or sextant coordinates
+        // (e.g. "100o25'S, 40o04'E"), decoded the same way as the in-game LocationGoWindow.
+        private void HandleGoto(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                if (request.HttpMethod != "POST")
+                {
+                    response.StatusCode = 405;
+                    response.Close();
+                    return;
+                }
+
+                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    string body = reader.ReadToEnd();
+                    Dictionary<string, string> gotoData = JsonSerializer.Deserialize<Dictionary<string, string>>(body);
+
+                    if (gotoData != null && gotoData.TryGetValue("text", out string text) && !string.IsNullOrWhiteSpace(text))
+                    {
+                        Point? parsedPoint = MainThreadQueue.InvokeOnMainThread<Point?>(() =>
+                        {
+                            if (World.Instance == null || !World.Instance.InGame)
+                                return null;
+
+                            if (!TryParseLocation(World.Instance.Map, text, out Point point))
+                                return null;
+
+                            UI.Gumps.WorldMapGump wmap = UIManager.GetGump<UI.Gumps.WorldMapGump>();
+                            wmap?.GoToMarker(point.X, point.Y, true);
+                            return point;
+                        });
+
+                        if (parsedPoint.HasValue)
+                        {
+                            response.StatusCode = 200;
+                            // Return the decoded coordinates so the web map can center itself on
+                            // the goto point and switch to free view, mirroring the in-game map.
+                            string json = JsonSerializer.Serialize(new Dictionary<string, int>
+                            {
+                                ["x"] = parsedPoint.Value.X,
+                                ["y"] = parsedPoint.Value.Y
+                            });
+                            byte[] buffer = Encoding.UTF8.GetBytes(json);
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                        else
+                        {
+                            response.StatusCode = 400;
+                            byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"invalid\"}");
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                    }
+                    else
+                    {
+                        response.StatusCode = 400;
+                    }
+                }
+
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error handling goto: {ex.Message}");
+                response.StatusCode = 500;
+                response.Close();
+            }
+        }
+
+        // Decodes goto input into map coordinates. Tries sextant coordinates first, then falls back
+        // to raw "X, Y" map coordinates - matching the in-game LocationGoWindow parsing order.
+        private static bool TryParseLocation(Map.Map map, string text, out Point point)
+        {
+            if (map != null && Sextant.Parse(map, text, out point))
+                return true;
+
+            point = Sextant.InvalidPoint;
+
+            Match match = PointCoordsRegex.Match(text.Trim());
+            if (!match.Success)
+                return false;
+
+            point = new Point(int.Parse(match.Groups["X"].Value), int.Parse(match.Groups["Y"].Value));
+            return true;
+        }
+
         private void GetJournalSize(HttpListenerResponse response)
         {
             try
@@ -940,6 +1040,29 @@ namespace ClassicUO.Game.Managers
         #controls .marker-search:focus {
             border-color: #4CAF50;
         }
+        #controls .goto-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        #controls .goto-input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        #controls .goto-input:focus {
+            border-color: #4CAF50;
+        }
+        #controls .goto-row button {
+            margin: 0;
+        }
         #controls button {
             margin: 5px 5px 5px 0;
             padding: 8px 15px;
@@ -1117,6 +1240,10 @@ namespace ClassicUO.Game.Managers
             <button onclick=""zoomOut()"">Zoom Out (-)</button>
             <button onclick=""centerOnPlayer()"">Center</button>
             <br>
+            <div class=""goto-row"">
+                <input type=""text"" id=""gotoInput"" class=""goto-input"" placeholder=""X, Y or sextant"" title=""e.g. 1639, 1532 or 100o25'S, 40o04'E"" autocomplete=""off"" />
+                <button onclick=""sendGoto()"">Go</button>
+            </div>
             <label><input type=""checkbox"" id=""followPlayer"" checked> Follow Player</label>
             <label><input type=""checkbox"" id=""rotateMap"" checked> Rotate Map 45°</label>
             <label><input type=""checkbox"" id=""showParty"" checked> Show Party</label>
@@ -1378,6 +1505,44 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        async function sendGoto() {
+            const input = document.getElementById('gotoInput');
+            const text = input.value.trim();
+
+            if (!text) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/goto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                // Server decodes both raw (X, Y) and sextant coordinates. A 400 means the
+                // input could not be parsed - flag it so the user knows to fix their input.
+                if (response.ok) {
+                    input.style.borderColor = '';
+
+                    // Mirror the in-game map: drop out of follow-player (free view) and
+                    // center the web map on the decoded goto point returned by the server.
+                    const data = await response.json();
+                    if (data && typeof data.x === 'number' && typeof data.y === 'number') {
+                        document.getElementById('followPlayer').checked = false;
+                        centerOnWorldPoint(data.x, data.y);
+                    }
+                } else {
+                    input.style.borderColor = '#f44336';
+                    console.error('Failed to set goto location (invalid coordinates?)');
+                }
+            } catch (err) {
+                console.error('Error sending goto:', err);
+            }
+        }
+
         async function loadJournalSize() {
             try {
                 const response = await fetch('/api/journalsize');
@@ -1543,6 +1708,13 @@ namespace ClassicUO.Game.Managers
         markerSearchInput.addEventListener('input', () => {
             markerSearchText = markerSearchInput.value.trim().toLowerCase();
             draw();
+        });
+
+        // Allow pressing Enter in the goto field to trigger the goto
+        document.getElementById('gotoInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGoto();
+            }
         });
 
         // Handle journal input
@@ -2091,6 +2263,25 @@ namespace ClassicUO.Game.Managers
             targetOffsetX = -scaledX;
             targetOffsetY = -scaledY;
             // Animation loop will smoothly interpolate to these target values
+        }
+
+        // Centers the view on an arbitrary map coordinate (used by the goto feature).
+        // Mirrors centerOnPlayer() but for a caller-supplied world point instead of the player.
+        function centerOnWorldPoint(worldX, worldY) {
+            if (!mapImage) return;
+
+            let scaledX = (worldX - mapImage.width / 2) * zoom;
+            let scaledY = (worldY - mapImage.height / 2) * zoom;
+
+            const isRotated = document.getElementById('rotateMap').checked;
+            if (isRotated) {
+                const rotated = rotatePoint(scaledX, scaledY, Math.PI / 4);
+                scaledX = rotated.x;
+                scaledY = rotated.y;
+            }
+
+            targetOffsetX = -scaledX;
+            targetOffsetY = -scaledY;
         }
 
         function zoomIn() {

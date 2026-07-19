@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
-using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility.Collections;
@@ -61,10 +61,10 @@ internal static partial class CooldownBarsTab
 
         rb.Columns.AddRange(GetRulebaseColumns());
 
-        CoolDownBar.CoolDownConditionData[] cooldownRules = CoolDownBar.CoolDownConditionData.GetAllRules();
-        for (uint i = 0; i < cooldownRules.Length; i++)
+        List<CooldownBarConfigEntry> bars = CooldownBarsConfig.Current.Bars;
+        for (uint i = 0; i < bars.Count; i++)
         {
-            var rule = CooldownBarRule.FromLegacyCondition(i, cooldownRules[i]);
+            var rule = CooldownBarRule.FromEntry(i, bars[(int)i]);
             rb.Rules.Add(rule);
             rule.PropertyChanged += OnCooldownRuleChanged;
         }
@@ -91,7 +91,7 @@ internal static partial class CooldownBarsTab
                 break;
             case RuleCrudEventType.Delete:
                 ruleCrudEventArgs.Rule.PropertyChanged -= OnCooldownRuleChanged;
-                CoolDownBar.CoolDownConditionData.RemoveCondition((int)ruleCrudEventArgs.Rule.Order);
+                CooldownBarsConfig.Current.RemoveAt((int)ruleCrudEventArgs.Rule.Order);
                 break;
         }
     }
@@ -109,15 +109,6 @@ internal static partial class CooldownBarsTab
         if (isNew)
             rule.PropertyChanged += OnCooldownRuleChanged;
 
-        CoolDownBar.CoolDownConditionData.SaveCondition(
-            (int)rule.Order,
-            rule.Hue,
-            rule.Name,
-            rule.TriggerMessage,
-            (int)rule.Cooldown,
-            isNew,
-            (int)rule.TriggerMessageType,
-            rule.ReplaceExisting
-        );
+        CooldownBarsConfig.Current.Upsert((int)rule.Order, rule.ToEntry(), isNew);
     }
 }

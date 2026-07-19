@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.MyraWindows.Options.Editors.Rulebase;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs.CooldownBars;
@@ -56,15 +56,21 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
     public bool ReplaceExisting { get; set => SetField(ref field, value); } = true;
 
     /// <summary>
-    /// Converts a legacy <see cref="CoolDownBar.CoolDownConditionData"/> record into a
-    /// <see cref="CooldownBarRule"/> for use in the rulebase editor
+    /// When <see langword="true"/>, triggering this rule while a bar of the same name is already running does nothing,
+    /// preserving the existing countdown. Takes precedence over <see cref="ReplaceExisting"/>.
+    /// </summary>
+    public bool SkipIfExists { get; set => SetField(ref field, value); } = false;
+
+    /// <summary>
+    /// Builds a <see cref="CooldownBarRule"/> for the rulebase editor from a persisted
+    /// <see cref="CooldownBarConfigEntry"/>
     /// </summary>
     /// <param name="order">The sort position to assign to the new rule</param>
-    /// <param name="data">The legacy condition data to convert</param>
-    /// <returns>A new <see cref="CooldownBarRule"/> populated from <paramref name="data"/></returns>
-    public static CooldownBarRule FromLegacyCondition(uint order, CoolDownBar.CoolDownConditionData data)
+    /// <param name="entry">The stored entry to convert</param>
+    /// <returns>A new <see cref="CooldownBarRule"/> populated from <paramref name="entry"/></returns>
+    public static CooldownBarRule FromEntry(uint order, CooldownBarConfigEntry entry)
     {
-        CooldownTriggerMessageType trigger = data.message_type switch
+        CooldownTriggerMessageType trigger = entry.MessageType switch
         {
             0 => CooldownTriggerMessageType.All,
             1 => CooldownTriggerMessageType.Self,
@@ -75,12 +81,31 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
         return new CooldownBarRule
         {
             Order = order,
-            Name = data.label,
-            TriggerMessage = data.trigger,
+            Name = entry.Label,
+            TriggerMessage = entry.Trigger,
             TriggerMessageType = trigger,
-            Hue = data.hue,
-            Cooldown = (uint)data.cooldown,
-            ReplaceExisting = data.replace_if_exists
+            Hue = entry.Hue,
+            Cooldown = (uint)entry.Cooldown,
+            ReplaceExisting = entry.ReplaceIfExists,
+            SkipIfExists = entry.SkipIfExists
+        };
+    }
+
+    /// <summary>
+    /// Projects this rule into a persistable <see cref="CooldownBarConfigEntry"/>
+    /// </summary>
+    /// <returns>A new entry mirroring this rule's current values</returns>
+    public CooldownBarConfigEntry ToEntry()
+    {
+        return new CooldownBarConfigEntry
+        {
+            Hue = Hue,
+            Label = Name,
+            Trigger = TriggerMessage,
+            Cooldown = (int)Cooldown,
+            MessageType = (int)TriggerMessageType,
+            ReplaceIfExists = ReplaceExisting,
+            SkipIfExists = SkipIfExists
         };
     }
 

@@ -4,10 +4,10 @@ using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
-/// <summary>Options tab source for mobile-entity highlighting and hue settings</summary>
+/// <summary>Options tab source for mobile-entity highlighting, hue, and health bar settings</summary>
 public static class MobilesTab
 {
-    /// <summary>Returns the tab group containing highlighting and hue sub-tabs</summary>
+    /// <summary>Returns the tab group containing highlighting, hue, and health bar sub-tabs</summary>
     internal static IOptionSource GetContent() => GetTabs();
 
     private static OptionTabGroup GetTabs()
@@ -25,25 +25,10 @@ public static class MobilesTab
                 new SearchMetadata(TazLang.Get("mog_mobilestab_hues_label"), Keywords: [TazLang.Get("mog_kw_hue"), TazLang.Get("mog_kw_color")])
             )
             .AddTab(
-                TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"),
-                GetHealthbarsSection,
-                new SearchMetadata(TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health")])
+                TazLang.Get("mog_buttonhealthbars"),
+                HealthBarsTab.GetContent,
+                new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])
             );
-    }
-
-    private static IOptionSource GetHealthbarsSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-
-        string simpleHealthbar = TazLang.Get("mog_mobilestab_healthbars_simple", "Simple healthbar");
-
-        return OptionsUi.Vertical(
-            Option.Checkbox(
-                simpleHealthbar,
-                new Accessor<bool>(() => profile.ShowMobileHealthbar),
-                search: new SearchMetadata(simpleHealthbar, Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_mobile")])
-            )
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_healthbars_label", "Healthbars"), [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_health")]));
     }
 
     private static IOptionSource GetHighlightingSection()

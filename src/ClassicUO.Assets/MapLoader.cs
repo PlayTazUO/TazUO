@@ -324,6 +324,28 @@ namespace ClassicUO.Assets
                 heights[index] = height;
             }
 
+            if (count == MAPS_COUNT && count <= existing)
+            {
+                bool changed = false;
+
+                for (int i = 0; i < count; i++)
+                {
+                    if (MapsDefaultSize[i, 0] != widths[i] || MapsDefaultSize[i, 1] != heights[i])
+                    {
+                        changed = true;
+
+                        break;
+                    }
+                }
+
+                if (!changed)
+                {
+                    Log.Trace($"Server map definitions unchanged [count: {count}], skipping reload");
+
+                    return;
+                }
+            }
+
             string[] parts = new string[count];
 
             for (int i = 0; i < count; i++)

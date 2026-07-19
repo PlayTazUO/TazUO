@@ -5,7 +5,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
 /// <summary>
 /// Top-level interface options tab that groups containers, nameplates, tooltips, info bars,
-/// health bars, cooldown bars, gumps, and counter sub-tabs.
+/// cooldown bars, gumps, and counter sub-tabs.
 /// </summary>
 public static class InterfaceTab
 {
@@ -33,11 +33,6 @@ public static class InterfaceTab
                 TazLang.Get("mog_buttoninfobar"),
                 InfoBarsTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_buttoninfobar"), [TazLang.Get("mog_kw_infobarspaced"), TazLang.Get("mog_kw_infobar"), TazLang.Get("mog_kw_stat")])
-            )
-            .AddTab(
-                TazLang.Get("mog_buttonhealthbars"),
-                HealthBarsTab.GetContent,
-                new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])
             )
             .AddTab(
                 TazLang.Get("mog_buttongumps"),

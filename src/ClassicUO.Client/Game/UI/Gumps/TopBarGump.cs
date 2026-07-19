@@ -250,6 +250,8 @@ namespace ClassicUO.Game.UI.Gumps
 
             moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_radarmap", "Radar Map"), () => { GameActions.OpenMiniMap(World); }));
 
+            moreMenu.ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_polls", "Polls"), MyraWindows.PollsWindow.Show));
+
             var submenu = new ContextMenuItemEntry(TazLang.Get("topbargump_tools", "Tools"));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_spellquickcast", "Spell quick cast"), () => { UIManager.Add(new SpellQuickSearch(World, 200, 200, (sp) => {if (sp != null) GameActions.CastSpell(sp.ID);})); }));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_openboatcontrol", "Open boat control"), () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
@@ -280,6 +282,7 @@ namespace ClassicUO.Game.UI.Gumps
             var devSubmenu = new ContextMenuItemEntry(TazLang.Get("topbargump_developer", "Developer"));
             devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_tinkerer", "Tinkerer"), TinkererWindow.Show));
             devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_profiler", "Profiler"), MyraWindows.ProfilerWindow.Show));
+            devSubmenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_loghistory", "Log History"), MyraWindows.LogHistoryWindow.Show));
             moreMenu.ContextMenu.Add(devSubmenu);
 
             startX += largeWidth + 1;

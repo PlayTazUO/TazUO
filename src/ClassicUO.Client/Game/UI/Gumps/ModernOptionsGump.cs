@@ -23,6 +23,7 @@ using static ClassicUO.Configuration.ProfileManager;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    [Obsolete("Use OptionsWindow instead. This will be removed in the future.")]
     public class ModernOptionsGump : BaseOptionsGump
     {
         private List<SettingsOption> _options = new List<SettingsOption>();
@@ -2913,121 +2914,26 @@ namespace ClassicUO.Game.UI.Gumps
             PositionHelper.PositionControl(s.FullControl);
             PositionHelper.Indent();
 
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    TazLang.Get("mog_cooldowns_positionx"), new InputField
-                    (
-                        100, 40, text: profile.CoolDownX.ToString(), numbersOnly: true, onTextChanges: (s, e) =>
-                        {
-                            if (int.TryParse(((InputField.StbTextBox)s).Text, out int v))
-                            {
-                                profile.CoolDownX = v;
-                            }
-                        }
-                    ), MainContent.RightWidth, (int)PAGE.TUOCooldowns
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
-            PositionHelper.BlankLine();
-
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    TazLang.Get("mog_cooldowns_positiony"), new InputField
-                    (
-                        100, 40, text: profile.CoolDownY.ToString(), numbersOnly: true, onTextChanges: (s, e) =>
-                        {
-                            if (int.TryParse(((InputField.StbTextBox)s).Text, out int v))
-                            {
-                                profile.CoolDownY = v;
-                            }
-                        }
-                    ), MainContent.RightWidth, (int)PAGE.TUOCooldowns
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
-            PositionHelper.BlankLine();
-
-            _options.Add
-            (
-                s = new SettingsOption
-                (
-                    string.Empty,
-                    new CheckboxWithLabel(TazLang.Get("mog_cooldowns_uselastmovedbarposition"), 0,
-                        profile.UseLastMovedCooldownPosition, (b) => { profile.UseLastMovedCooldownPosition = b; }),
-                    MainContent.RightWidth, (int)PAGE.TUOCooldowns
-                )
-            );
-
-            PositionHelper.PositionControl(s.FullControl);
-            PositionHelper.RemoveIndent();
-
-            PositionHelper.BlankLine();
-            PositionHelper.BlankLine();
-
-            _options.Add(s = new SettingsOption(TazLang.Get("mog_cooldowns_conditions"), new Area(false), MainContent.RightWidth,
-                (int)PAGE.TUOCooldowns));
-            PositionHelper.PositionControl(s.FullControl);
-
-            var conditionsDataBox = new DataBox(0, 0, 0, 0) { WantUpdateSize = true };
-
-            ModernButton addcond;
-
+            // Cooldown bar configuration now lives in the new (Myra) options menu, backed by cooldownbars.json.
             _options.Add
             (
                 s = new SettingsOption
                 (
                     "",
-                    addcond = new ModernButton(0, 0, 175, 40, ButtonAction.Activate, TazLang.Get("mog_cooldowns_addcondition"),
-                        ThemeSettings.BUTTON_FONT_COLOR), MainContent.RightWidth,
+                    TextBox.GetOne(
+                        TazLang.Get("mog_cooldowns_movednotice"),
+                        ThemeSettings.FONT,
+                        ThemeSettings.STANDARD_TEXT_SIZE,
+                        ThemeSettings.TEXT_FONT_COLOR,
+                        TextBox.RTLOptions.Default(MainContent.RightWidth)
+                    ),
+                    MainContent.RightWidth,
                     (int)PAGE.TUOCooldowns
                 )
             );
 
-            addcond.MouseUp += (s, e) =>
-            {
-                CoolDownBar.CoolDownConditionData.GetConditionData(profile.CoolDownConditionCount, true);
-
-                Gump g = UIManager.GetGump<ModernOptionsGump>();
-
-                if (g != null)
-                {
-                    Point pos = g.Location;
-                    g.Dispose();
-
-                    g = new ModernOptionsGump(World) { Location = pos };
-
-                    g.ChangePage((int)PAGE.TUOCooldowns);
-                    UIManager.Add(g);
-                }
-            };
-
             PositionHelper.PositionControl(s.FullControl);
-
-            int count = profile.CoolDownConditionCount;
-
-            for (int i = 0; i < count; i++)
-            {
-                conditionsDataBox.Add(GenConditionControl(i, MainContent.RightWidth - 19, false));
-            }
-
-            conditionsDataBox.ReArrangeChildren();
-            conditionsDataBox.ForceSizeUpdate();
-
-            var scroll = new ScrollArea(0, 0, MainContent.RightWidth, MainContent.Height - PositionHelper.Y)
-            {
-                CanMove = true, AcceptMouseInput = true
-            };
-
-            scroll.Add(conditionsDataBox);
-
-            _options.Add(s = new SettingsOption("", scroll, MainContent.RightWidth, (int)PAGE.TUOCooldowns));
-            PositionHelper.PositionControl(s.FullControl);
+            PositionHelper.RemoveIndent();
         }
 
         private void SetNamePlatePresetCustom()
@@ -4884,6 +4790,20 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 new SliderWithLabel
                 (
+                    TazLang.Get("gumpscaling_skillgump", "Skills Gump"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
+                    (int)(profile.SkillsGumpScale * 100), (i) =>
+                    {
+                        //Must be cast even though VS thinks it's redundant.
+                        double v = (double)i / (double)100;
+                        profile.SkillsGumpScale = v > 0 ? v : 1f;
+                    }
+                ), true, page
+            );
+
+            content.AddToRight
+            (
+                new SliderWithLabel
+                (
                     TazLang.Get("gumpscaling_contextmenu", "Context Menus"), 0, ThemeSettings.SLIDER_WIDTH, 50, 300,
                     (int)(profile.ContextMenuScale * 100), (i) =>
                     {
@@ -5189,135 +5109,6 @@ namespace ClassicUO.Game.UI.Gumps
                 onSelect,
                 false
             );
-        }
-
-        public Control GenConditionControl(int key, int width, bool createIfNotExists)
-        {
-            var data = CoolDownBar.CoolDownConditionData.GetConditionData(key, createIfNotExists);
-
-            var main = new Area { Width = width };
-
-            var _background = new AlphaBlendControl();
-            main.Add(_background);
-
-            var _delete = new ModernButton(1, 1, 30, 40, ButtonAction.Activate, "X", ThemeSettings.BUTTON_FONT_COLOR);
-            _delete.SetTooltip("Delete this cooldown bar");
-
-            _delete.MouseUp += (sender, e) =>
-            {
-                if (e.Button == MouseButtonType.Left)
-                {
-                    CoolDownBar.CoolDownConditionData.RemoveCondition(key);
-
-                    Gump g = UIManager.GetGump<ModernOptionsGump>();
-
-                    if (g != null)
-                    {
-                        Point pos = g.Location;
-                        g.Dispose();
-
-                        g = new ModernOptionsGump(World) { Location = pos };
-
-                        g.ChangePage((int)PAGE.TUOCooldowns);
-                        UIManager.Add(g);
-                    }
-                }
-            };
-
-            main.Add(_delete);
-
-
-            var _hueLabel = TextBox.GetOne("Hue:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE,
-                ThemeSettings.BUTTON_FONT_COLOR, TextBox.RTLOptions.Default());
-            _hueLabel.X = _delete.X + _delete.Width + 5;
-            _hueLabel.Y = 10;
-            main.Add(_hueLabel);
-
-            var _hueSelector = new ModernColorPickerWithLabel(World, string.Empty, data.hue)
-            {
-                X = _hueLabel.X + _hueLabel.Width + 5, Y = 10
-            };
-
-            main.Add(_hueSelector);
-
-            var _name = new InputField(140, 40, text: data.label)
-            {
-                X = _hueSelector.X + _hueSelector.Width + 10, Y = 1
-            };
-
-            main.Add(_name);
-
-            var _cooldownLabel = TextBox.GetOne
-            ("Cooldown:", ThemeSettings.FONT, ThemeSettings.STANDARD_TEXT_SIZE, ThemeSettings.BUTTON_FONT_COLOR,
-                TextBox.RTLOptions.Default());
-
-            _cooldownLabel.X = _name.X + _name.Width + 10;
-            _cooldownLabel.Y = 10;
-            main.Add(_cooldownLabel);
-
-            var _cooldown = new InputField(45, 40, numbersOnly: true, text: data.cooldown.ToString()) { Y = 1 };
-
-            _cooldown.X = _cooldownLabel.X + _cooldownLabel.Width + 10;
-            main.Add(_cooldown);
-
-            var _message_type =
-                new ComboBoxWithLabel(World, string.Empty, 0, 85, new string[] { "All", "Self", "Other" },
-                    data.message_type) { X = _cooldown.X + _cooldown.Width + 10, Y = 10 };
-
-            main.Add(_message_type);
-
-            var _conditionText = new InputField(main.Width - 50, 40, text: data.trigger)
-            {
-                X = 1, Y = _delete.Height + 5
-            };
-
-            main.Add(_conditionText);
-
-            var _replaceIfExists = new CheckboxWithLabel(isChecked: data.replace_if_exists)
-            {
-                X = _conditionText.X + _conditionText.Width + 2, Y = _conditionText.Y + 5
-            };
-
-            _replaceIfExists.SetTooltip("Replace any active cooldown of this type with a new one if triggered again.");
-            main.Add(_replaceIfExists);
-
-            var _save = new ModernButton(0, 1, 40, 40, ButtonAction.Activate, "Save", ThemeSettings.BUTTON_FONT_COLOR);
-            _save.X = main.Width - _save.Width;
-            _save.IsSelectable = true;
-            _save.IsSelected = true;
-
-            _save.MouseUp += (s, e) =>
-            {
-                CoolDownBar.CoolDownConditionData.SaveCondition
-                (key, _hueSelector.Hue, _name.Text, _conditionText.Text, int.Parse(_cooldown.Text), false,
-                    _message_type.SelectedIndex, _replaceIfExists.IsChecked);
-            };
-
-            main.Add(_save);
-
-            var _preview = new ModernButton(0, 1, 65, 40, ButtonAction.Activate, "Preview",
-                ThemeSettings.BUTTON_FONT_COLOR);
-            _preview.X = _save.X - _preview.Width - 15;
-            _preview.IsSelectable = true;
-            _preview.IsSelected = true;
-
-            _preview.MouseUp += (s, e) =>
-            {
-                if (int.TryParse(_cooldown.Text, out int value))
-                {
-                    CoolDownBarManager.AddCoolDownBar(World, TimeSpan.FromSeconds(value), _name.Text, _hueSelector.Hue,
-                        _replaceIfExists.IsChecked);
-                }
-            };
-
-            main.Add(_preview);
-
-            main.ForceSizeUpdate();
-
-            _background.Width = width;
-            _background.Height = main.Height;
-
-            return main;
         }
 
         public Control GenHotKeyDisplay(string text, string hotkey, int width, bool enabled = true)

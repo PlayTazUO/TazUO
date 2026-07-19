@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using ClassicUO.Configuration;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 
@@ -54,24 +55,46 @@ internal static partial class Sextant
         return false;
     }
 
+    /// <summary>
+    /// The default base X/Y (map coordinates of Lord British's throne, i.e. 0° 0'N 0° 0'E) used to
+    /// anchor the sextant conversion when no profile override is available.
+    /// </summary>
+    public const int DefaultBaseX = 1323;
+    public const int DefaultBaseY = 1624;
+
+    /// <summary>
+    /// Returns the configurable base X/Y used as the origin for sextant conversions, falling back to
+    /// <see cref="DefaultBaseX"/>/<see cref="DefaultBaseY"/> when no profile is loaded.
+    /// </summary>
+    private static (int x, int y) GetBaseCenter()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return profile != null
+            ? (profile.WorldMapSextantBaseX, profile.WorldMapSextantBaseY)
+            : (DefaultBaseX, DefaultBaseY);
+    }
+
     private static bool ComputeMapDetails(Map.Map map, int x, int y, out int xCenter, out int yCenter, out int xWidth, out int yHeight)
     {
         xWidth = 5120;
         yHeight = 4096;
+
+        (int baseX, int baseY) = GetBaseCenter();
 
         int mapWidth = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 0];
         int mapHeight = Client.Game.UO.FileManager.Maps.MapsDefaultSize[map.Index, 1];
 
         bool isTrammel = map.Index == 0 && mapWidth == 7168 && mapHeight == 4096;
         bool isFelucca = map.Index == 1 && mapWidth == 7168 && mapHeight == 4096;
-        
+
         if (isTrammel || isFelucca)
         {
             switch (x)
             {
                 case >= 0 when y >= 0 && x < 5120 && y < 4096:
-                    xCenter = 1323;
-                    yCenter = 1624;
+                    xCenter = baseX;
+                    yCenter = baseY;
 
                     break;
 
@@ -91,8 +114,8 @@ internal static partial class Sextant
         else switch (x)
         {
             case >= 0 when y >= 0 && x < mapWidth && y < mapHeight:
-                xCenter = 1323;
-                yCenter = 1624;
+                xCenter = baseX;
+                yCenter = baseY;
 
                 break;
 

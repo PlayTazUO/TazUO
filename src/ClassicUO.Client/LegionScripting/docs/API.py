@@ -89,6 +89,7 @@ class ApiItem(ApiEntity):
     Opened: bool = None
     Container: int = None
     RootContainer: int = None
+    CorpseParent: int = None
     OnGround: bool = None
     RootEntity: ApiEntity = None
     __class__: str = None
@@ -3302,7 +3303,7 @@ class EventSinkApiDeclaration:
 
     def ClilocMessageReceived(self, callback: "Any") -> None:
         """
-          Not currently used. May be removed later or put into use, not sure right now
+         Invoked when a cliloc message is received from the server
         
         """
         pass

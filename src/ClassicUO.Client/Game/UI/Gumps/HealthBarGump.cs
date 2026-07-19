@@ -474,6 +474,30 @@ namespace ClassicUO.Game.UI.Gumps
             && !World.Party.Contains(LocalSerial);
 
         /// <summary>
+        /// Whether the heal/cure buttons should be shown for this entity's (non-party) health bar.
+        /// Always true for pets. Additionally shown when the profile enables them for every health
+        /// bar (excluding invulnerable notoriety) or for mobiles in the friends list.
+        /// </summary>
+        protected bool ShouldShowHealButtons(Entity entity)
+        {
+            if (IsPet(entity))
+                return true;
+
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (profile == null || entity is not Mobile mobile || mobile == World.Player)
+                return false;
+
+            if (profile.ShowHealCureButtonsFriends && FriendsListManager.Instance.IsFriend(LocalSerial))
+                return true;
+
+            if (profile.ShowHealCureButtonsAllHealthbars && mobile.NotorietyFlag != NotorietyFlag.Invulnerable)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
         /// Whether this bar should be drawn using the special compact party style.
         /// Returns true only when the entity is in the party and the user has not
         /// disabled the party health bar style via <see cref="Profile.UsePartyHealthBars"/>.
@@ -766,7 +790,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     }
 
-                    if (_buttonHeal1 != null && _buttonHeal2 != null && IsPet(entity))
+                    if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
                     {
                         _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
                     }
@@ -1409,8 +1433,8 @@ namespace ClassicUO.Game.UI.Gumps
                         )
                     );
 
-                    // Add healing buttons for pets
-                    if (IsPet(entity))
+                    // Add healing buttons for pets and, when enabled, other mobiles
+                    if (ShouldShowHealButtons(entity))
                     {
                         Add(_buttonHeal1 = new Button(
                             (int)ButtonParty.Heal1,
@@ -1861,8 +1885,8 @@ namespace ClassicUO.Game.UI.Gumps
                     Width = _background.Width;
                     Height = _background.Height;
 
-                    // Add healing buttons for pets
-                    if (IsPet(entity))
+                    // Add healing buttons for pets and, when enabled, other mobiles
+                    if (ShouldShowHealButtons(entity))
                     {
                         Add(_buttonHeal1 = new Button(
                             (int)ButtonParty.Heal1,
@@ -2108,7 +2132,7 @@ namespace ClassicUO.Game.UI.Gumps
                             _bars[2].IsVisible = true;
                         }
                     }
-                    else if (_buttonHeal1 != null && _buttonHeal2 != null && IsPet(entity))
+                    else if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
                     {
                         _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
                     }

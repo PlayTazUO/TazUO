@@ -13,6 +13,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Input;
 using ClassicUO.IO;
 using ClassicUO.Renderer;
@@ -224,6 +225,16 @@ public class WorldMapGump : ResizableGump
             {
                 _freeView = value;
                 SaveSettings();
+
+                // The context menu is only rebuilt on certain events (not on every
+                // right-click), so a programmatic FreeView change - e.g. via GoToMarker
+                // from the web map - would leave the cached "Free view" toggle showing a
+                // stale state. Keep the existing option entry in sync so the menu reflects
+                // reality the next time it is shown.
+                if (_options.TryGetValue("free_view", out ContextMenuItemEntry freeViewOption) && freeViewOption != null)
+                {
+                    freeViewOption.IsSelected = _freeView;
+                }
 
                 if (!_freeView)
                 {
@@ -447,6 +458,8 @@ public class WorldMapGump : ResizableGump
 
         _options["show_sextant_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowSextantCoordinates, () => { _showSextantCoordinates = !_showSextantCoordinates; }, true, _showSextantCoordinates);
 
+        _options["sextant_base_coordinates"] = new ContextMenuItemEntry(TazLang.Get("map_sextant_base_location", "Set sextant base coordinates"), OpenSextantBaseOptions);
+
         _options["show_mouse_coordinates"] = new ContextMenuItemEntry(ResGumps.ShowMouseCoordinates, () => { _showMouseCoordinates = !_showMouseCoordinates; }, true, _showMouseCoordinates);
 
         _options["allow_positional_target"] = new ContextMenuItemEntry(
@@ -478,6 +491,44 @@ public class WorldMapGump : ResizableGump
             if(Directory.Exists(_mapsCachePath))
                 Directory.GetFiles(_mapsCachePath, "*.png").ForEach(s => File.Delete(s));
         }, false);
+    }
+
+    /// <summary>
+    /// Opens a quick options window for editing the base X,Y map coordinates (Lord British's throne,
+    /// i.e. 0° 0'N 0° 0'E) used to anchor sextant coordinate conversions. Values are persisted to the
+    /// current profile so every conversion (map display, go-to, web map) shares the same origin.
+    /// </summary>
+    private void OpenSextantBaseOptions()
+    {
+        string title = TazLang.Get("map_sextant_base_title", "Sextant Base Coordinates");
+
+        QuickOptionsWindow existing = QuickOptionsWindow.GetExisting(title);
+        if (existing != null)
+        {
+            existing.CenterInScreen();
+            existing.BringOnTop();
+            return;
+        }
+
+        Profile profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return;
+
+        var w = new QuickOptionsWindow(title);
+
+        w.AddLabel(TazLang.Get("map_sextant_base_desc", "Base map X,Y used to convert sextant coordinates (0° 0'N 0° 0'E)."));
+
+        w.AddInput(TazLang.Get("map_sextant_base_x", "Base X:"), profile.WorldMapSextantBaseX.ToString(), v =>
+        {
+            if (int.TryParse(v, out int x))
+                profile.WorldMapSextantBaseX = x;
+        }, 100, inputFilter: MyraInputBox.DigitInputFilter);
+
+        w.AddInput(TazLang.Get("map_sextant_base_y", "Base Y:"), profile.WorldMapSextantBaseY.ToString(), v =>
+        {
+            if (int.TryParse(v, out int y))
+                profile.WorldMapSextantBaseY = y;
+        }, 100, inputFilter: MyraInputBox.DigitInputFilter);
     }
 
     public void GoToMarker(int x, int y, bool isManualType)
@@ -608,6 +659,7 @@ public class WorldMapGump : ResizableGump
 
         var markersEntry = new ContextMenuItemEntry(ResGumps.MapMarkerOptions);
         markersEntry.Add(new ContextMenuItemEntry(ResGumps.ReloadMarkers, LoadMarkers));
+        markersEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_import_map_file", "Import Map File"), ImportMapFile));
 
         markersEntry.Add(_options["show_all_markers"]);
         markersEntry.Add(new ContextMenuItemEntry(""));
@@ -696,6 +748,7 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["show_multis"]);
         ContextMenu.Add(_options["show_coordinates"]);
         ContextMenu.Add(_options["show_sextant_coordinates"]);
+        ContextMenu.Add(_options["sextant_base_coordinates"]);
         ContextMenu.Add(_options["show_mouse_coordinates"]);
         ContextMenu.Add(_options["allow_positional_target"]);
         ContextMenu.Add("", null);
@@ -1730,6 +1783,47 @@ public class WorldMapGump : ResizableGump
     }
 
     private bool ShouldDrawGrid() => (_showGridIfZoomed && Zoom >= 4);
+
+    private void ImportMapFile()
+    {
+        // Copy the chosen marker file into this server's marker directory
+        // (Data/<ServerName>/MapMarkers) so it is picked up by LoadMarkers.
+        string targetDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data", FileSystemHelper.RemoveInvalidChars(World.Instance.ServerName), "MapMarkers");
+
+        FileSelector.ShowFileBrowser
+        (
+            World,
+            FileSelectorType.File,
+            null,
+            new[] { "map", "csv", "xml" },
+            (selectedFile) =>
+            {
+                if (string.IsNullOrEmpty(selectedFile) || !File.Exists(selectedFile))
+                {
+                    return;
+                }
+
+                try
+                {
+                    Directory.CreateDirectory(targetDir);
+
+                    string destination = Path.Combine(targetDir, Path.GetFileName(selectedFile));
+                    File.Copy(selectedFile, destination, true);
+
+                    GameActions.Print(World, string.Format(TazLang.Get("map_import_map_file_success", "Imported map file: {0}"), Path.GetFileName(selectedFile)), 0x2A);
+
+                    LoadMarkers();
+                    BuildContextMenu();
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"Failed to import map file: {e}");
+                    GameActions.Print(World, TazLang.Get("map_import_map_file_failed", "Failed to import map file."), 0x21);
+                }
+            },
+            TazLang.Get("map_import_map_file", "Import Map File")
+        );
+    }
 
     private void LoadMarkers()
     {
@@ -4111,67 +4205,6 @@ public class WorldMapGump : ResizableGump
     /// <param name="name">Color name</param>
     /// <returns>Color in XNA (RGBA)</returns>
     public static Color GetColor(string name) => _colorMap.TryGetValue(name, out Color color) ? color : Color.White;
-
-    /// <summary>
-    /// Converts latitudes and longitudes to X and Y locations based on Lord British's throne is located at 1323.1624 or 0° 0'N 0° 0'E
-    /// </summary>
-    /// <param name="coords"></param>
-    /// <param name="xAxis"></param>
-    /// <param name="yAxis"></param>
-    private static void ConvertCoords(string coords, ref int xAxis, ref int yAxis)
-    {
-        string[] coordsSplit = coords.Split(',');
-
-        string yCoord = coordsSplit[0];
-        string xCoord = coordsSplit[1];
-
-        // Calc Y first
-        string[] ySplit = yCoord.Split('°', 'o');
-        double yDegree = Convert.ToDouble(ySplit[0]);
-        double yMinute = Convert.ToDouble(ySplit[1].Substring(0, ySplit[1].IndexOf("'", StringComparison.Ordinal)));
-
-        if (yCoord.Substring(yCoord.Length - 1).Equals("N"))
-        {
-            yAxis = (int)(1624 - (yMinute / 60) * (4096.0 / 360) - yDegree * (4096.0 / 360));
-        }
-        else
-        {
-            yAxis = (int)(1624 + (yMinute / 60) * (4096.0 / 360) + yDegree * (4096.0 / 360));
-        }
-
-        // Calc X next
-        string[] xSplit = xCoord.Split('°', 'o');
-        double xDegree = Convert.ToDouble(xSplit[0]);
-        double xMinute = Convert.ToDouble(xSplit[1].Substring(0, xSplit[1].IndexOf("'", StringComparison.Ordinal)));
-
-        if (xCoord.Substring(xCoord.Length - 1).Equals("W"))
-        {
-            xAxis = (int)(1323 - (xMinute / 60) * (5120.0 / 360) - xDegree * (5120.0 / 360));
-        }
-        else
-        {
-            xAxis = (int)(1323 + (xMinute / 60) * (5120.0 / 360) + xDegree * (5120.0 / 360));
-        }
-
-        // Normalize values outside of map range.
-        if (xAxis < 0)
-        {
-            xAxis += 5120;
-        }
-        else if (xAxis > 5120)
-        {
-            xAxis -= 5120;
-        }
-
-        if (yAxis < 0)
-        {
-            yAxis += 4096;
-        }
-        else if (yAxis > 4096)
-        {
-            yAxis -= 4096;
-        }
-    }
 }
 
 #endregion

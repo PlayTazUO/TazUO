@@ -194,7 +194,7 @@ namespace ClassicUO.Configuration
         public int MobileHPType { get; set => SetProperty(ref field, value); }     // 0 = %, 1 = line, 2 = both
         public int MobileHPShowWhen { get; set => SetProperty(ref field, value); } // 0 = Always, 1 - <100%
         public bool DrawRoofs { get; set => SetProperty(ref field, value); } = true;
-        public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 0;
+        public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 1;
         public bool ShowMobileHealthbar { get; set => SetProperty(ref field, value); } // Draws a small healthbar directly under each mobile
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
@@ -249,6 +249,11 @@ namespace ClassicUO.Configuration
         [JsonIgnore]
         [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
         public partial string BandageAgentJournalMessages { get; set; }
+
+        // Semicolon-separated list of poll ids the user has already voted on (see PollsWindow / FirebasePollsManager).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, "")]
+        public partial string VotedPolls { get; set; }
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
@@ -343,6 +348,8 @@ namespace ClassicUO.Configuration
         public bool CustomBarsToggled { get; set => SetProperty(ref field, value); }
         public bool CBBlackBGToggled { get; set => SetProperty(ref field, value); }
         public bool UsePartyHealthBars { get; set => SetProperty(ref field, value); } = true;
+        public bool ShowHealCureButtonsAllHealthbars { get; set => SetProperty(ref field, value); }
+        public bool ShowHealCureButtonsFriends { get; set => SetProperty(ref field, value); }
 
         public bool ShowInfoBar { get; set => SetProperty(ref field, value); }
         public int InfoBarHighlightType { get; set => SetProperty(ref field, value); } // 0 = text colour changes, 1 = underline
@@ -443,6 +450,8 @@ namespace ClassicUO.Configuration
         public bool WorldMapShowMouseCoordinates { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowCorpse { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowSextantCoordinates { get; set => SetProperty(ref field, value); } = false;
+        public int WorldMapSextantBaseX { get; set => SetProperty(ref field, value); } = 1323;
+        public int WorldMapSextantBaseY { get; set => SetProperty(ref field, value); } = 1624;
         public bool WorldMapShowMobiles { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowPlayerName { get; set => SetProperty(ref field, value); } = true;
         public bool WorldMapShowPlayerBar { get; set => SetProperty(ref field, value); } = true;
@@ -543,18 +552,34 @@ namespace ClassicUO.Configuration
         public int CoolDownX { get; set => SetProperty(ref field, value); } = 50;
         public int CoolDownY { get; set => SetProperty(ref field, value); } = 50;
 
+        // The Condition_* lists and CoolDownConditionCount below are the legacy cooldown-bar storage.
+        // They have been superseded by cooldownbars.json (see CooldownBarsConfig) and are retained only so
+        // existing profiles can be migrated on load. Do not use them in new code.
+        private const string CooldownMigratedMessage = "Migrated to cooldownbars.json (CooldownBarsConfig); retained only for one-time migration of existing profiles.";
+
+        [Obsolete(CooldownMigratedMessage)]
         public List<ushort> Condition_Hue { get; set => SetProperty(ref field, value); } = new List<ushort>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<string> Condition_Label { get; set => SetProperty(ref field, value); } = new List<string>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<int> Condition_Duration { get; set => SetProperty(ref field, value); } = new List<int>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<string> Condition_Trigger { get; set => SetProperty(ref field, value); } = new List<string>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<int> Condition_Type { get; set => SetProperty(ref field, value); } = new List<int>();
+        [Obsolete(CooldownMigratedMessage)]
         public List<bool> Condition_ReplaceIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
+        [Obsolete(CooldownMigratedMessage)]
+        public List<bool> Condition_SkipIfExists { get; set => SetProperty(ref field, value); } = new List<bool>();
+        [Obsolete(CooldownMigratedMessage)]
         public int CoolDownConditionCount
         {
+#pragma warning disable CS0618
             get
             {
                 return Condition_Hue.Count;
             }
+#pragma warning restore CS0618
             set { }
         }
         #endregion
@@ -800,6 +825,8 @@ namespace ClassicUO.Configuration
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
         public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
+
+        public double SkillsGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
         public double ContextMenuScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
 
@@ -1659,6 +1686,11 @@ namespace ClassicUO.Configuration
                     var smw = new ScriptManagerWindow();
                     smw.Load(xml);
                     UIManager.Add(smw);
+                    break;
+                case "ClassicUO.Game.UI.MyraWindows.PollsWindow":
+                    var polls = new PollsWindow();
+                    polls.Load(xml);
+                    UIManager.Add(polls);
                     break;
             }
         }

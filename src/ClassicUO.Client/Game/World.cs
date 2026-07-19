@@ -249,23 +249,25 @@ namespace ClassicUO.Game
 
             int index = Map.Index;
 
-            InternalMapChangeClear(true);
+            if (index < 0 || index >= MapLoader.MAPS_COUNT)
+                index = 0;
 
             ushort x = Player.X;
             ushort y = Player.Y;
             sbyte z = Player.Z;
 
+            UnlinkEntitiesFromMap();
+
             Map.Destroy();
             Map = null;
-
-            if (index < 0 || index >= MapLoader.MAPS_COUNT)
-                index = 0;
 
             Client.Game.UO.FileManager.Maps.LoadMap(index, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
             Map = new Map.Map(this, index);
 
             Player.SetInWorldTile(x, y, z);
             Player.ClearSteps();
+
+            RelinkEntitiesToMap();
 
             if (Client.Game.UO.GameCursor != null)
             {
@@ -1015,6 +1017,54 @@ namespace ClassicUO.Game
             ActiveSpellIcons.Clear();
 
             SkillsRequested = false;
+        }
+
+        private void UnlinkEntitiesFromMap()
+        {
+            foreach (Mobile mobile in Mobiles.Values)
+            {
+                mobile.RemoveFromTile();
+            }
+
+            foreach (Item item in Items.Values)
+            {
+                if (item.OnGround)
+                {
+                    item.RemoveFromTile();
+                }
+            }
+
+            foreach (House house in HouseManager.Houses)
+            {
+                foreach (Multi component in house.Components)
+                {
+                    component.RemoveFromTile();
+                }
+            }
+        }
+
+        private void RelinkEntitiesToMap()
+        {
+            foreach (Mobile mobile in Mobiles.Values)
+            {
+                if (mobile != Player)
+                {
+                    mobile.SetInWorldTile(mobile.X, mobile.Y, mobile.Z);
+                }
+            }
+
+            foreach (Item item in Items.Values)
+            {
+                if (item.OnGround)
+                {
+                    item.SetInWorldTile(item.X, item.Y, item.Z);
+                }
+            }
+
+            foreach (House house in HouseManager.Houses)
+            {
+                house.Generate(true);
+            }
         }
 
         private void InternalMapChangeClear(bool noplayer)
