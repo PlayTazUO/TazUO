@@ -169,7 +169,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             writer.WriteAttributeString("type", ((int)GumpType).ToString());
             writer.WriteAttributeString("x", X.ToString());
-            writer.WriteAttributeString("y", (_direction ? Y : Bounds.Bottom - _background.Height - 7).ToString());
+            writer.WriteAttributeString("y", (_direction ? Y : Bounds.Bottom - PADDING_HANDLE).ToString());
             writer.WriteAttributeString("serial", LocalSerial.ToString());
             writer.WriteAttributeString("serverSerial", ServerSerial.ToString());
             writer.WriteAttributeString("isLocked", IsLocked.ToString());
