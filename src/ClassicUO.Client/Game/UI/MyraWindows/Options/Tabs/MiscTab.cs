@@ -8,20 +8,27 @@ using ClassicUO.Utility;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
-/// <summary>Options tab source for miscellaneous settings that don't belong in another category, spread across multiple pages</summary>
+/// <summary>
+///     Options tab source for miscellaneous settings that don't belong in another category, spread across multiple
+///     pages
+/// </summary>
 public static class MiscTab
 {
     /// <summary>Returns the paged option group containing miscellaneous settings pages</summary>
-    internal static IOptionSource GetContent() => GetPages();
-
-    private static OptionPageGroup GetPages() => new OptionPageGroup(
-            new SearchMetadata(Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]),
-            GetPage1,
-            GetPage2,
-            GetPage3,
-            GetGridLoot,
-            GetExperimentalSection
+    internal static IOptionSource GetContent() =>
+        OptionsUi.Horizontal(
+            GetGridLoot(),
+            GetPages()
         );
+
+    private static OptionPageGroup GetPages() => new(
+        new SearchMetadata(Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+            Tags: [TazLang.Get("mog_kw_misc")]),
+        GetPage1,
+        GetPage2,
+        GetPage3,
+        GetExperimentalSection
+    );
 
     private static OptionFragment GetPage1()
     {
@@ -62,16 +69,16 @@ public static class MiscTab
                     new Accessor<float>(() => profile.ShowSkillsChangedDeltaValue, f => profile.ShowSkillsChangedDeltaValue = (int)f),
                     search: new SearchMetadata(TazLang.Get("mog_general_changevolume"), Keywords: [TazLang.Get("mog_kw_skills"), TazLang.Get("mog_kw_volume")])
                 )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Tags: [TazLang.Get("mog_kw_misc")], Keywords: [TazLang.Get("mog_kw_skills")])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_skills")])),
             OptionsUi.CheckBoxGroup(
                 new PropertyBinder(new Accessor<bool>(() => profile.DisplaySkillBarOnChange), TazLang.Get("mog_misctab_displayprogressbaronskillchanges")),
                 Option.InputField(
                     TazLang.Get("uicommons_format"),
                     new Accessor<string>(() => profile.SkillBarFormat, s => profile.SkillBarFormat = s),
                     TazLang.Get("mog_misctab_skillprogressbarformattooltip"),
-                    search: new SearchMetadata(TazLang.Get("uicommons_format"), Keywords: [TazLang.Get("mog_kw_skill"), TazLang.Get("mog_kw_format")])
+                    new SearchMetadata(TazLang.Get("uicommons_format"), Keywords: [TazLang.Get("mog_kw_skill"), TazLang.Get("mog_kw_format")])
                 )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Tags: [TazLang.Get("mog_kw_misc")], Keywords: [TazLang.Get("mog_kw_skill")])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_skill")])),
             Option.Checkbox(
                 TazLang.Get("mog_general_shiftcontext"),
                 new Accessor<bool>(() => profile.HoldShiftForContext),
@@ -82,7 +89,8 @@ public static class MiscTab
                 new Accessor<bool>(() => profile.HoldShiftToSplitStack),
                 search: new SearchMetadata(TazLang.Get("mog_general_shiftsplit"), Keywords: [TazLang.Get("mog_kw_shift"), TazLang.Get("mog_kw_split")])
             )
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"),
+            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
     }
 
     private static OptionFragment GetPage2()
@@ -102,7 +110,8 @@ public static class MiscTab
                     0,
                     5,
                     new Accessor<float>(() => profile.AutoOpenCorpseRange, f => profile.AutoOpenCorpseRange = (int)f),
-                    search: new SearchMetadata(TazLang.Get("mog_general_corpseopendistance"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_distance")])
+                    search: new SearchMetadata(TazLang.Get("mog_general_corpseopendistance"),
+                        Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_distance")])
                 ),
                 Option.CheckboxWithEnableWarning(
                     TazLang.Get("mog_general_corpseskipempty"),
@@ -110,16 +119,19 @@ public static class MiscTab
                     TazLang.Get("mog_general_corpseskipemptywarningtitle"),
                     TazLang.Get("mog_general_corpseskipemptywarning"),
                     TazLang.Get("mog_general_corpseskipemptytooltip"),
-                    search: new SearchMetadata(TazLang.Get("mog_general_corpseskipempty"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_empty")])
+                    new SearchMetadata(TazLang.Get("mog_general_corpseskipempty"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_empty")])
                 ),
                 Option.ComboBox(
                     TazLang.Get("mog_general_corpseopenoptions"),
                     profile.CorpseOpenOptions,
-                    [TazLang.Get("mog_general_corpseoptnone"), TazLang.Get("mog_general_corpseoptnottarg"), TazLang.Get("mog_general_corpseoptnothiding"), TazLang.Get("mog_general_corpseoptboth")],
+                    [
+                        TazLang.Get("mog_general_corpseoptnone"), TazLang.Get("mog_general_corpseoptnottarg"), TazLang.Get("mog_general_corpseoptnothiding"),
+                        TazLang.Get("mog_general_corpseoptboth")
+                    ],
                     i => profile.CorpseOpenOptions = i,
                     search: new SearchMetadata(TazLang.Get("mog_general_corpseopenoptions"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_type")])
                 )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Tags: [TazLang.Get("mog_kw_misc")], Keywords: [TazLang.Get("mog_kw_corpse")])),
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), [TazLang.Get("mog_kw_misc")], [TazLang.Get("mog_kw_corpse")])),
             Option.Checkbox(
                 TazLang.Get("mog_general_outrangecolor"),
                 new Accessor<bool>(() => profile.NoColorObjectsOutOfRange),
@@ -129,55 +141,22 @@ public static class MiscTab
                 TazLang.Get("mog_general_salloseasygrab"),
                 new Accessor<bool>(() => profile.SallosEasyGrab),
                 TazLang.Get("mog_general_sallostooltip"),
-                search: new SearchMetadata(TazLang.Get("mog_general_salloseasygrab"), Keywords: [TazLang.Get("mog_kw_sallos"), TazLang.Get("mog_kw_grab")])
+                new SearchMetadata(TazLang.Get("mog_general_salloseasygrab"), Keywords: [TazLang.Get("mog_kw_sallos"), TazLang.Get("mog_kw_grab")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_general_showhousecontent"),
                 new Accessor<bool>(() => profile.ShowHouseContent),
                 TazLang.Get("mog_general_clientversionlimitedtooltip"),
-                search: new SearchMetadata(TazLang.Get("mog_general_showhousecontent"), Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_content")])
+                new SearchMetadata(TazLang.Get("mog_general_showhousecontent"), Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_content")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_general_smoothboat"),
                 new Accessor<bool>(() => profile.UseSmoothBoatMovement),
                 TazLang.Get("mog_general_clientversionlimitedtooltip"),
-                search: new SearchMetadata(TazLang.Get("mog_general_smoothboat"), Keywords: [TazLang.Get("mog_kw_boat"), TazLang.Get("mog_kw_smooth")])
+                new SearchMetadata(TazLang.Get("mog_general_smoothboat"), Keywords: [TazLang.Get("mog_kw_boat"), TazLang.Get("mog_kw_smooth")])
             )
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
-    }
-
-    private static OptionFragment GetExperimentalSection()
-    {
-        Profile profile = ProfileManager.CurrentProfile;
-
-        return OptionsUi.VisualContainer(
-            new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_experimental_label") },
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_experimental_disabledefaultuohotkeys"),
-                new Accessor<bool>(() => profile.DisableDefaultHotkeys),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disabledefaultuohotkeys"), Keywords: [TazLang.Get("mog_kw_hotkey"), TazLang.Get("mog_kw_disable")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_experimental_disablearrowsnumlockarrowsplayermovement"),
-                new Accessor<bool>(() => profile.DisableArrowBtn),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablearrowsnumlockarrowsplayermovement"), Keywords: [TazLang.Get("mog_kw_arrow"), TazLang.Get("mog_kw_movement")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_experimental_disabletabtogglewarmode"),
-                new Accessor<bool>(() => profile.DisableTabBtn),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disabletabtogglewarmode"), Keywords: [TazLang.Get("mog_kw_tab"), TazLang.Get("mog_kw_warmode")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_experimental_disablectrlqwmessagehistory"),
-                new Accessor<bool>(() => profile.DisableCtrlQWBtn),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablectrlqwmessagehistory"), Keywords: [TazLang.Get("mog_kw_history"), TazLang.Get("mog_kw_message")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_misctab_experimental_disablerightleftclickautomove"),
-                new Accessor<bool>(() => profile.DisableAutoMove),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablerightleftclickautomove"), Keywords: [TazLang.Get("mog_kw_automove"), TazLang.Get("mog_kw_click")])
-            )
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_experimental_label"), Keywords: [TazLang.Get("mog_kw_experimental"), TazLang.Get("mog_kw_beta"), TazLang.Get("mog_kw_test")], Tags: [TazLang.Get("mog_kw_experimental")]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"),
+            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
     }
 
     private static OptionFragment GetPage3()
@@ -192,7 +171,7 @@ public static class MiscTab
                     UIManager.GetGump<IgnoreManagerGump>()?.Dispose();
                     UIManager.Add(new IgnoreManagerGump(World.Instance));
                 },
-                search: new SearchMetadata(TazLang.Get("mog_misctab_manageignorelistbuttonlabel"), Keywords: [TazLang.Get("mog_kw_ignore"), TazLang.Get("mog_kw_entity")])
+                new SearchMetadata(TazLang.Get("mog_misctab_manageignorelistbuttonlabel"), Keywords: [TazLang.Get("mog_kw_ignore"), TazLang.Get("mog_kw_entity")])
             ),
             Option.UIntegerInput(
                 TazLang.Get("mog_misctab_sosgumpid"),
@@ -204,7 +183,7 @@ public static class MiscTab
                 TazLang.Get("mog_misctab_enableautoresynconhangdetection"),
                 new Accessor<bool>(() => profile.ForceResyncOnHang),
                 TazLang.Get("mog_misctab_enableautoresynconhangdetectiontooltip"),
-                search: new SearchMetadata(TazLang.Get("mog_misctab_enableautoresynconhangdetection"), Keywords: [TazLang.Get("mog_kw_resync"), TazLang.Get("mog_kw_hang")])
+                new SearchMetadata(TazLang.Get("mog_misctab_enableautoresynconhangdetection"), Keywords: [TazLang.Get("mog_kw_resync"), TazLang.Get("mog_kw_hang")])
             ),
             Option.Checkbox(
                 TazLang.Get("mog_misctab_usemanagedzlib"),
@@ -240,45 +219,88 @@ public static class MiscTab
                     Option.HuePicker(
                         TazLang.Get("uicommons_hue"),
                         new Accessor<ushort>(() => profile.ForcedTransparencyHouseTileHue, h => profile.ForcedTransparencyHouseTileHue = h),
-                        search: new SearchMetadata(TazLang.Get("uicommons_hue"), Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_hue")])
+                        new SearchMetadata(TazLang.Get("uicommons_hue"), Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_hue")])
                     )
-                ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_housingtransparency"), Tags: [TazLang.Get("mog_kw_misc")], Keywords: [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_transparency")]))
+                ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_housingtransparency"), [TazLang.Get("mog_kw_misc")],
+                    [TazLang.Get("mog_kw_house"), TazLang.Get("mog_kw_transparency")]))
             )
-        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_label"),
+            Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")], Tags: [TazLang.Get("mog_kw_misc")]));
+    }
+
+    private static OptionFragment GetExperimentalSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_experimental_label") },
+            Option.Checkbox(
+                TazLang.Get("mog_misctab_experimental_disabledefaultuohotkeys"),
+                new Accessor<bool>(() => profile.DisableDefaultHotkeys),
+                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disabledefaultuohotkeys"),
+                    Keywords: [TazLang.Get("mog_kw_hotkey"), TazLang.Get("mog_kw_disable")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_misctab_experimental_disablearrowsnumlockarrowsplayermovement"),
+                new Accessor<bool>(() => profile.DisableArrowBtn),
+                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablearrowsnumlockarrowsplayermovement"),
+                    Keywords: [TazLang.Get("mog_kw_arrow"), TazLang.Get("mog_kw_movement")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_misctab_experimental_disabletabtogglewarmode"),
+                new Accessor<bool>(() => profile.DisableTabBtn),
+                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disabletabtogglewarmode"),
+                    Keywords: [TazLang.Get("mog_kw_tab"), TazLang.Get("mog_kw_warmode")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_misctab_experimental_disablectrlqwmessagehistory"),
+                new Accessor<bool>(() => profile.DisableCtrlQWBtn),
+                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablectrlqwmessagehistory"),
+                    Keywords: [TazLang.Get("mog_kw_history"), TazLang.Get("mog_kw_message")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_misctab_experimental_disablerightleftclickautomove"),
+                new Accessor<bool>(() => profile.DisableAutoMove),
+                search: new SearchMetadata(TazLang.Get("mog_misctab_experimental_disablerightleftclickautomove"),
+                    Keywords: [TazLang.Get("mog_kw_automove"), TazLang.Get("mog_kw_click")])
+            )
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_experimental_label"),
+            Keywords: [TazLang.Get("mog_kw_experimental"), TazLang.Get("mog_kw_beta"), TazLang.Get("mog_kw_test")], Tags: [TazLang.Get("mog_kw_experimental")]));
     }
 
     private static OptionFragment GetGridLoot()
     {
         Profile profile = ProfileManager.CurrentProfile;
 
-        return OptionsUi.Vertical(
-                OptionsUi.VisualContainer(
-                    new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_oldstylegridloot_label") },
-                    Option.ComboBox(
-                        TazLang.Get("mog_general_gridloot"),
-                        profile.GridLootType,
-                        [
-                            TazLang.Get("mog_general_gridlootoptdisable"),
-                            TazLang.Get("mog_general_gridlootoptonly"),
-                            TazLang.Get("mog_general_gridlootoptboth")
-                        ],
-                        newValue => profile.GridLootType = newValue,
-                        TazLang.Get("mog_general_gridlootoptonlytooltip"),
-                        new SearchMetadata(TazLang.Get("mog_general_gridloot"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot")])
-                    ),
-                    Option.ComboBox(
-                        TazLang.Get("gridcontainer_defaultview", "Default container view"),
-                        profile.GridContainerViewMode,
-                        [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
-                        i =>
-                        {
-                            profile.GridContainerViewMode = i;
-                            GridContainer.UpdateAllGridContainers();
-                        },
-                        search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
-                    )
-                ).AsSearchGroup()
-                .WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_oldstylegridloot_label"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot"), TazLang.Get("mog_kw_view")]))
-        );
+        return OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = TazLang.Get("mog_misctab_oldstylegridloot_label") },
+                Option.ComboBox(
+                    TazLang.Get("mog_general_gridloot"),
+                    profile.GridLootType,
+                    [
+                        TazLang.Get("mog_general_gridlootoptdisable"),
+                        TazLang.Get("mog_general_gridlootoptonly"),
+                        TazLang.Get("mog_general_gridlootoptboth")
+                    ],
+                    newValue => profile.GridLootType = newValue,
+                    TazLang.Get("mog_general_gridlootoptonlytooltip"),
+                    new SearchMetadata(TazLang.Get("mog_general_gridloot"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot")])
+                ),
+                Option.ComboBox(
+                    TazLang.Get("gridcontainer_defaultview", "Default container view"),
+                    profile.GridContainerViewMode,
+                    [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
+                    i =>
+                    {
+                        profile.GridContainerViewMode = i;
+                        GridContainer.UpdateAllGridContainers();
+                    },
+                    search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"),
+                        Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
+                )
+            )
+            .AsSearchGroup()
+            .WithSearch(new SearchMetadata(TazLang.Get("mog_misctab_oldstylegridloot_label"),
+                Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_loot"), TazLang.Get("mog_kw_view")]));
     }
 }
