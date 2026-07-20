@@ -112,7 +112,14 @@ namespace ClassicUO.Configuration
 
         public static void SetProfileAsDefault(Profile profile) => profile.SaveAs(RootPath, "default.json");
 
-        public static Profile NewFromDefault() => ConfigurationResolver.Load<Profile>(Path.Combine(RootPath, "default.json"), ProfileJsonContext.DefaultToUse.Profile) ?? new Profile();
+        public static Profile NewFromDefault()
+        {
+            Profile profile = ConfigurationResolver.Load<Profile>(Path.Combine(RootPath, "default.json"), ProfileJsonContext.DefaultToUse.Profile) ?? new Profile();
+            // Seed grid-highlight rules from the default template's sibling database (they are no longer
+            // stored in default.json) so a profile created from the default inherits them.
+            GridHighlightDatabase.GetForProfilePath(RootPath)?.LoadForProfile(profile);
+            return profile;
+        }
 
         private static void ValidateFields(Profile profile)
         {

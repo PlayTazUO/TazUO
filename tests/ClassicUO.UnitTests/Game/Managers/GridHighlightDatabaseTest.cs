@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using FluentAssertions;
 using Xunit;
@@ -170,6 +171,32 @@ namespace ClassicUO.UnitTests.Game.Managers
             _db.Save(new List<GridHighlightSetupEntry>());
 
             _db.Load().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void LoadForProfile_KeepsSeededRules_WhenDatabaseAndLegacyEmpty()
+        {
+            // Simulates a profile seeded from a default template: no rows yet in its own DB, no legacy JSON.
+            var profile = new Profile { GridHighlightSetup = new List<GridHighlightSetupEntry> { MakeEntry("from-default", 7) } };
+
+            bool migrated = _db.LoadForProfile(profile);
+
+            migrated.Should().BeTrue();
+            profile.GridHighlightSetup.Should().ContainSingle().Which.Name.Should().Be("from-default");
+            _db.Load().Should().ContainSingle().Which.Name.Should().Be("from-default");
+        }
+
+        [Fact]
+        public void LoadForProfile_PrefersStoredRulesOverSeeded()
+        {
+            _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("stored", 1) });
+
+            var profile = new Profile { GridHighlightSetup = new List<GridHighlightSetupEntry> { MakeEntry("seeded", 2) } };
+
+            bool migrated = _db.LoadForProfile(profile);
+
+            migrated.Should().BeFalse();
+            profile.GridHighlightSetup.Should().ContainSingle().Which.Name.Should().Be("stored");
         }
 
         public void Dispose()

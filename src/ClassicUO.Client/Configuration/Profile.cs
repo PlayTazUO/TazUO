@@ -620,12 +620,12 @@ namespace ClassicUO.Configuration
         public List<GridHighlightSetupEntry> GridHighlightSetup { get; set => SetProperty(ref field, value); } = new();
 
         // Legacy profile.json storage for grid-highlight rules. Retained only so existing profiles can be
-        // migrated into GridHighlightDatabase on load. Do not use it in new code.
-        [Obsolete(GridHighlightMigratedMessage)]
-        [JsonPropertyName("GridHighlightSetup")]
+        // migrated into GridHighlightDatabase on load. Do not use it in new code. The JSON name is the
+        // snake_case key that ProfileJsonContext historically wrote (JsonPropertyName bypasses the naming
+        // policy, so it must be spelled out explicitly to match existing files).
+        [Obsolete("Migrated to gridhighlights.db (GridHighlightDatabase); retained only for one-time migration of existing profiles.")]
+        [JsonPropertyName("grid_highlight_setup")]
         public List<GridHighlightSetupEntry> LegacyGridHighlightSetup { get; set => SetProperty(ref field, value); } = new();
-
-        private const string GridHighlightMigratedMessage = "Migrated to gridhighlights.db (GridHighlightDatabase); retained only for one-time migration of existing profiles.";
         public List<string> ConfigurableProperties { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableResistances { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableNegatives { get; set => SetProperty(ref field, value); } = new();
@@ -1075,7 +1075,12 @@ namespace ClassicUO.Configuration
             lastSave = Time.Ticks;
         }
 
-        public void SaveAsFile(string path, string filename) => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAsFile(string path, string filename)
+        {
+            ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+            // Grid-highlight rules live in a sibling SQLite store, not the JSON, so mirror them here too.
+            GridHighlightDatabase.GetForProfilePath(path)?.SaveForProfile(this);
+        }
 
         private void CreateBackupRotation(string filePath)
         {
@@ -1115,7 +1120,13 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public void SaveAs(string path, string filename = "default.json") => ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+        public void SaveAs(string path, string filename = "default.json")
+        {
+            ConfigurationResolver.Save(this, Path.Combine(path, filename), ProfileJsonContext.DefaultToUse.Profile);
+            // Grid-highlight rules live in a sibling SQLite store, not the JSON, so mirror them here too
+            // (e.g. so "Set as Default" preserves them in the default template).
+            GridHighlightDatabase.GetForProfilePath(path)?.SaveForProfile(this);
+        }
 
         private void SaveGumps(World world, string path)
         {

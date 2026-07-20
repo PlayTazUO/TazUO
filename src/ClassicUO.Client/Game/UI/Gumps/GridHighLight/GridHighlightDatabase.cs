@@ -57,6 +57,51 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             ("slot_other", s => s.Other, (s, v) => s.Other = v),
         };
 
+        // A scalar (non-list) rule column, mapping the column definition, the value written for an entry,
+        // and how to read it back. Kept in one ordered place so the schema, SELECT list, INSERT values and
+        // positional reads can never drift apart (the "id" position column is handled separately).
+        private readonly record struct ScalarColumn(
+            SqliteColumn Definition,
+            Func<GridHighlightSetupEntry, object> Get,
+            Action<GridHighlightSetupEntry, SqliteDataReader, int> Read)
+        {
+            public string Name => Definition.Name;
+        }
+
+        private static readonly ScalarColumn[] ScalarColumns =
+        {
+            new(SqliteColumn.Int("enabled", notNull: true, def: "1"),
+                e => e.Enabled ? 1 : 0, (e, r, i) => e.Enabled = r.GetInt64(i) != 0),
+            new(SqliteColumn.Str("name", def: "''"),
+                e => (object)e.Name ?? DBNull.Value, (e, r, i) => e.Name = r.IsDBNull(i) ? null : r.GetString(i)),
+            new(SqliteColumn.Int("hue", notNull: true, def: "0"),
+                e => (int)e.Hue, (e, r, i) => e.Hue = (ushort)r.GetInt64(i)),
+            new(SqliteColumn.Str("highlight_color", notNull: true, def: "'#FF0000'"),
+                e => e.HighlightColor ?? "#FF0000", (e, r, i) => e.HighlightColor = r.IsDBNull(i) ? "#FF0000" : r.GetString(i)),
+            new(SqliteColumn.Int("accept_extra_properties", notNull: true, def: "1"),
+                e => e.AcceptExtraProperties ? 1 : 0, (e, r, i) => e.AcceptExtraProperties = r.GetInt64(i) != 0),
+            new(SqliteColumn.Int("overweight", notNull: true, def: "0"),
+                e => e.Overweight ? 1 : 0, (e, r, i) => e.Overweight = r.GetInt64(i) != 0),
+            new(SqliteColumn.Int("minimum_weight", notNull: true, def: "0"),
+                e => e.MinimumWeight, (e, r, i) => e.MinimumWeight = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("maximum_weight", notNull: true, def: "0"),
+                e => e.MaximumWeight, (e, r, i) => e.MaximumWeight = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("minimum_property", notNull: true, def: "0"),
+                e => e.MinimumProperty, (e, r, i) => e.MinimumProperty = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("maximum_property", notNull: true, def: "0"),
+                e => e.MaximumProperty, (e, r, i) => e.MaximumProperty = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("minimum_matching_property", notNull: true, def: "0"),
+                e => e.MinimumMatchingProperty, (e, r, i) => e.MinimumMatchingProperty = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("maximum_matching_property", notNull: true, def: "0"),
+                e => e.MaximumMatchingProperty, (e, r, i) => e.MaximumMatchingProperty = (int)r.GetInt64(i)),
+            new(SqliteColumn.Int("loot_on_match", notNull: true, def: "0"),
+                e => e.LootOnMatch ? 1 : 0, (e, r, i) => e.LootOnMatch = r.GetInt64(i) != 0),
+            new(SqliteColumn.Int("destination_container", notNull: true, def: "0"),
+                e => e.DestinationContainer, (e, r, i) => e.DestinationContainer = (uint)r.GetInt64(i)),
+            new(SqliteColumn.Int("is_highlight_properties", notNull: true, def: "1"),
+                e => e.IsHighlightProperties ? 1 : 0, (e, r, i) => e.IsHighlightProperties = r.GetInt64(i) != 0),
+        };
+
         private static GridHighlightDatabase _current;
         private static string _currentDirectory;
 
@@ -95,25 +140,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private async Task EnsureSchemaAsync()
         {
-            List<SqliteColumn> columns = new()
-            {
-                SqliteColumn.Int("id", primaryKey: true, notNull: true),
-                SqliteColumn.Int("enabled", notNull: true, def: "1"),
-                SqliteColumn.Str("name", def: "''"),
-                SqliteColumn.Int("hue", notNull: true, def: "0"),
-                SqliteColumn.Str("highlight_color", notNull: true, def: "'#FF0000'"),
-                SqliteColumn.Int("accept_extra_properties", notNull: true, def: "1"),
-                SqliteColumn.Int("overweight", notNull: true, def: "0"),
-                SqliteColumn.Int("minimum_weight", notNull: true, def: "0"),
-                SqliteColumn.Int("maximum_weight", notNull: true, def: "0"),
-                SqliteColumn.Int("minimum_property", notNull: true, def: "0"),
-                SqliteColumn.Int("maximum_property", notNull: true, def: "0"),
-                SqliteColumn.Int("minimum_matching_property", notNull: true, def: "0"),
-                SqliteColumn.Int("maximum_matching_property", notNull: true, def: "0"),
-                SqliteColumn.Int("loot_on_match", notNull: true, def: "0"),
-                SqliteColumn.Int("destination_container", notNull: true, def: "0"),
-                SqliteColumn.Int("is_highlight_properties", notNull: true, def: "1"),
-            };
+            List<SqliteColumn> columns = new() { SqliteColumn.Int("id", primaryKey: true, notNull: true) };
+
+            foreach (ScalarColumn scalar in ScalarColumns)
+                columns.Add(scalar.Definition);
 
             foreach ((string column, _, _) in SlotColumns)
                 columns.Add(SqliteColumn.Int(column, notNull: true, def: column == "slot_other" ? "0" : "1"));
@@ -163,8 +193,18 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 return false;
             }
 
-            // Nothing in the database yet: migrate whatever legacy storage exists.
+            // Preserve any rules already seeded in memory (e.g. from a default template) before legacy
+            // migration, which may clear the working list.
+            List<GridHighlightSetupEntry> seeded = profile.GridHighlightSetup is { Count: > 0 } inMemory
+                ? new List<GridHighlightSetupEntry>(inMemory)
+                : null;
+
+            // Nothing in the database yet: migrate whatever legacy storage exists, falling back to the
+            // seeded rules when there is no legacy data.
             List<GridHighlightSetupEntry> migrated = MigrateLegacy(profile);
+            if (migrated.Count == 0 && seeded != null)
+                migrated = seeded;
+
             profile.GridHighlightSetup = migrated;
 
             if (migrated.Count > 0)
@@ -263,18 +303,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         private static string BuildMainSelect()
         {
             System.Text.StringBuilder sb = new();
-            sb.Append("SELECT id, enabled, name, hue, highlight_color, accept_extra_properties, overweight, ");
-            sb.Append("minimum_weight, maximum_weight, minimum_property, maximum_property, ");
-            sb.Append("minimum_matching_property, maximum_matching_property, loot_on_match, ");
-            sb.Append("destination_container, is_highlight_properties");
+            sb.Append("SELECT ").Append(QuoteIdentifier("id"));
+
+            foreach (ScalarColumn scalar in ScalarColumns)
+                sb.Append(", ").Append(QuoteIdentifier(scalar.Name));
+
             foreach ((string column, _, _) in SlotColumns)
-            {
-                sb.Append(", ");
-                sb.Append(QuoteIdentifier(column));
-            }
-            sb.Append(" FROM ");
-            sb.Append(QuoteIdentifier(TABLE));
-            sb.Append(" ORDER BY id");
+                sb.Append(", ").Append(QuoteIdentifier(column));
+
+            sb.Append(" FROM ").Append(QuoteIdentifier(TABLE)).Append(" ORDER BY ").Append(QuoteIdentifier("id"));
             return sb.ToString();
         }
 
@@ -282,21 +319,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             GridHighlightSetupEntry entry = new()
             {
-                Enabled = reader.GetInt64(1) != 0,
-                Name = reader.IsDBNull(2) ? null : reader.GetString(2),
-                Hue = (ushort)reader.GetInt64(3),
-                HighlightColor = reader.IsDBNull(4) ? "#FF0000" : reader.GetString(4),
-                AcceptExtraProperties = reader.GetInt64(5) != 0,
-                Overweight = reader.GetInt64(6) != 0,
-                MinimumWeight = (int)reader.GetInt64(7),
-                MaximumWeight = (int)reader.GetInt64(8),
-                MinimumProperty = (int)reader.GetInt64(9),
-                MaximumProperty = (int)reader.GetInt64(10),
-                MinimumMatchingProperty = (int)reader.GetInt64(11),
-                MaximumMatchingProperty = (int)reader.GetInt64(12),
-                LootOnMatch = reader.GetInt64(13) != 0,
-                DestinationContainer = (uint)reader.GetInt64(14),
-                IsHighlightProperties = reader.GetInt64(15) != 0,
                 GridHighlightSlot = new GridHighlightSlot(),
                 ItemNames = new List<string>(),
                 Properties = new List<GridHighlightProperty>(),
@@ -304,9 +326,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 RequiredRarities = new List<string>(),
             };
 
-            const int slotOffset = 16;
+            // Column order mirrors BuildMainSelect: id (0), scalars, then slots.
+            int ordinal = 1;
+            foreach (ScalarColumn scalar in ScalarColumns)
+                scalar.Read(entry, reader, ordinal++);
+
             for (int i = 0; i < SlotColumns.Length; i++)
-                SlotColumns[i].Set(entry.GridHighlightSlot, reader.GetInt64(slotOffset + i) != 0);
+                SlotColumns[i].Set(entry.GridHighlightSlot, reader.GetInt64(ordinal++) != 0);
 
             return entry;
         }
@@ -315,23 +341,21 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             GridHighlightSlot slot = entry.GridHighlightSlot ?? new GridHighlightSlot();
 
-            System.Text.StringBuilder columns = new(
-                "id, enabled, name, hue, highlight_color, accept_extra_properties, overweight, " +
-                "minimum_weight, maximum_weight, minimum_property, maximum_property, " +
-                "minimum_matching_property, maximum_matching_property, loot_on_match, " +
-                "destination_container, is_highlight_properties");
-            System.Text.StringBuilder values = new(
-                "$id, $enabled, $name, $hue, $highlight_color, $accept_extra_properties, $overweight, " +
-                "$minimum_weight, $maximum_weight, $minimum_property, $maximum_property, " +
-                "$minimum_matching_property, $maximum_matching_property, $loot_on_match, " +
-                "$destination_container, $is_highlight_properties");
+            System.Text.StringBuilder columns = new();
+            System.Text.StringBuilder values = new();
+            columns.Append(QuoteIdentifier("id"));
+            values.Append("$id");
+
+            foreach (ScalarColumn scalar in ScalarColumns)
+            {
+                columns.Append(", ").Append(QuoteIdentifier(scalar.Name));
+                values.Append(", $").Append(scalar.Name);
+            }
 
             foreach ((string column, _, _) in SlotColumns)
             {
-                columns.Append(", ");
-                columns.Append(QuoteIdentifier(column));
-                values.Append(", $");
-                values.Append(column);
+                columns.Append(", ").Append(QuoteIdentifier(column));
+                values.Append(", $").Append(column);
             }
 
             await using SqliteCommand cmd = connection.CreateCommand();
@@ -339,21 +363,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             cmd.CommandText = $"INSERT INTO {QuoteIdentifier(TABLE)} ({columns}) VALUES ({values})";
 
             cmd.Parameters.AddWithValue("$id", id);
-            cmd.Parameters.AddWithValue("$enabled", entry.Enabled ? 1 : 0);
-            cmd.Parameters.AddWithValue("$name", (object)entry.Name ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$hue", entry.Hue);
-            cmd.Parameters.AddWithValue("$highlight_color", entry.HighlightColor ?? "#FF0000");
-            cmd.Parameters.AddWithValue("$accept_extra_properties", entry.AcceptExtraProperties ? 1 : 0);
-            cmd.Parameters.AddWithValue("$overweight", entry.Overweight ? 1 : 0);
-            cmd.Parameters.AddWithValue("$minimum_weight", entry.MinimumWeight);
-            cmd.Parameters.AddWithValue("$maximum_weight", entry.MaximumWeight);
-            cmd.Parameters.AddWithValue("$minimum_property", entry.MinimumProperty);
-            cmd.Parameters.AddWithValue("$maximum_property", entry.MaximumProperty);
-            cmd.Parameters.AddWithValue("$minimum_matching_property", entry.MinimumMatchingProperty);
-            cmd.Parameters.AddWithValue("$maximum_matching_property", entry.MaximumMatchingProperty);
-            cmd.Parameters.AddWithValue("$loot_on_match", entry.LootOnMatch ? 1 : 0);
-            cmd.Parameters.AddWithValue("$destination_container", entry.DestinationContainer);
-            cmd.Parameters.AddWithValue("$is_highlight_properties", entry.IsHighlightProperties ? 1 : 0);
+
+            foreach (ScalarColumn scalar in ScalarColumns)
+                cmd.Parameters.AddWithValue($"${scalar.Name}", scalar.Get(entry));
 
             foreach ((string column, Func<GridHighlightSlot, bool> get, _) in SlotColumns)
                 cmd.Parameters.AddWithValue($"${column}", get(slot) ? 1 : 0);
