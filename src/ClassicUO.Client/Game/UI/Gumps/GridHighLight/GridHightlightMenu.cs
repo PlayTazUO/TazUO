@@ -183,7 +183,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     file += ".json";
                 }
 
-                string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                string json = JsonSerializer.Serialize(data, GridHighlightJsonContext.Default.ListGridHighlightSetupEntry);
                 File.WriteAllText(file, json);
                 GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
             });
@@ -197,11 +197,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                     return;
 
                 string json = File.ReadAllText(file);
-                List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
+                List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize(json, GridHighlightJsonContext.Default.ListGridHighlightSetupEntry);
                 if (imported != null)
                 {
                     ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
                     SaveProfile();
+                    GridHighlightDatabase.Instance.SaveForProfile(ProfileManager.CurrentProfile);
 
                     foreach (IGui gump in UIManager.Gumps)
                     {

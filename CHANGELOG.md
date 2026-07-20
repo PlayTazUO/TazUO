@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Grid highlight rules now save to a SQLite database (`gridhighlights.db`) instead of the profile file; existing profiles are migrated automatically on load - [P.R #](https://github.com/PlayTazUO/TazUO/pull/#) ([bittiez](https://github.com/bittiez))
 * Rebuilt the grid highlight menu, per-rule property editor, and shared property-list config as Myra windows - [P.R 735](https://github.com/PlayTazUO/TazUO/pull/735) ([bittiez](https://github.com/bittiez))
 * Added a corpse container style setting to grid containers, allowing corpses to open in Grid or Original style independently of the global "open new containers in the original view" option - [P.R 733](https://github.com/PlayTazUO/TazUO/pull/733) ([bittiez](https://github.com/bittiez))
 * Added UI scaling support to both skill gumps (standard and advanced), sharing a single configurable scale setting - [P.R 722](https://github.com/PlayTazUO/TazUO/pull/722) ([bittiez](https://github.com/bittiez))

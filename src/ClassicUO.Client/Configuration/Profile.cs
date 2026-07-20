@@ -613,7 +613,19 @@ namespace ClassicUO.Configuration
         public List<List<bool>> GridHighlight_IsOptionalProperties { get; set => SetProperty(ref field, value); } = new List<List<bool>>();
         public List<List<string>> GridHighlight_ExcludeNegatives { get; set => SetProperty(ref field, value); } = new List<List<string>>();
         public List<List<string>> GridHighlight_RequiredRarities { get; set => SetProperty(ref field, value); } = new();
+
+        // The grid-highlight rules now live in gridhighlights.db (see GridHighlightDatabase). This list
+        // is the in-memory working copy and is no longer written to profile.json.
+        [JsonIgnore]
         public List<GridHighlightSetupEntry> GridHighlightSetup { get; set => SetProperty(ref field, value); } = new();
+
+        // Legacy profile.json storage for grid-highlight rules. Retained only so existing profiles can be
+        // migrated into GridHighlightDatabase on load. Do not use it in new code.
+        [Obsolete(GridHighlightMigratedMessage)]
+        [JsonPropertyName("GridHighlightSetup")]
+        public List<GridHighlightSetupEntry> LegacyGridHighlightSetup { get; set => SetProperty(ref field, value); } = new();
+
+        private const string GridHighlightMigratedMessage = "Migrated to gridhighlights.db (GridHighlightDatabase); retained only for one-time migration of existing profiles.";
         public List<string> ConfigurableProperties { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableResistances { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableNegatives { get; set => SetProperty(ref field, value); } = new();
@@ -1051,6 +1063,9 @@ namespace ClassicUO.Configuration
 
             // Save profile settings
             ConfigurationResolver.Save(this, filePath, ProfileJsonContext.DefaultToUse.Profile);
+
+            // Persist the grid-highlight rules to their SQLite store (no longer part of profile.json).
+            GridHighlightDatabase.Instance.SaveForProfile(this);
 
             // Save opened gumps
             if (saveGumps)
