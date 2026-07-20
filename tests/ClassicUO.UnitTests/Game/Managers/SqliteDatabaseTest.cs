@@ -1,29 +1,31 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ClassicUO.Game.Managers;
+using Dapper;
 using FluentAssertions;
+using Microsoft.Data.Sqlite;
 using Xunit;
 
 namespace ClassicUO.UnitTests.Game.Managers
 {
     public class SqliteDatabaseTest : IDisposable
     {
-        // Concrete subclass exposing the protected scalar helper so tests can read values back.
+        // Concrete subclass exposing the protected helpers so tests can exercise them.
         private sealed class TestDatabase : SqliteDatabase
         {
             public TestDatabase(string directory) : base("test.db", directory) { }
 
-            public Task<object> ScalarAsync(string sql, string paramName = null, object paramValue = null)
-            {
-                if (paramName == null)
-                    return ExecuteScalarAsync(sql);
+            public Task<T> RunAsync<T>(Func<SqliteConnection, Task<T>> operation) => WithConnectionAsync(operation);
 
-                return ExecuteScalarAsync(sql, new[]
-                {
-                    new System.Collections.Generic.KeyValuePair<string, object>(paramName, paramValue)
-                });
-            }
+            public Task RunAsync(Func<SqliteConnection, Task> operation) => WithConnectionAsync(operation);
+
+            public Task EnsureSchemaAsync(SqliteTableSchema schema) => EnsureTableAsync(schema);
+
+            public Task<List<string>> GetColumnsAsync(string table) => WithConnectionAsync(async c =>
+                (await c.QueryAsync<string>($"SELECT name FROM pragma_table_info('{table}')")).ToList());
         }
 
         private readonly string _tempDir;
@@ -42,77 +44,104 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
-        public async Task EnsureTable_And_EnsureColumns_AreIdempotent()
+        public async Task WithConnectionAsync_CreatesDatabaseFile_AndRunsSql()
         {
-            Func<Task> act = async () =>
-            {
-                await _db.EnsureTableAsync("things",
-                    SqliteColumn.Int("id", primaryKey: true),
-                    SqliteColumn.Str("name", notNull: true, def: "''"));
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
 
-                // Calling again must not throw.
-                await _db.EnsureTableAsync("things",
-                    SqliteColumn.Int("id", primaryKey: true),
-                    SqliteColumn.Str("name", notNull: true, def: "''"));
-
-                // Adding a new column, twice, must not throw (migration path).
-                await _db.EnsureColumnsAsync("things", SqliteColumn.Int("count", def: "0"));
-                await _db.EnsureColumnsAsync("things", SqliteColumn.Int("count", def: "0"));
-            };
-
-            await act.Should().NotThrowAsync();
             File.Exists(Path.Combine(_tempDir, "test.db")).Should().BeTrue();
+
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "original" }));
+
+            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+                "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
+            name.Should().Be("original");
+
+            // Upsert by primary key should update, not duplicate.
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "updated" }));
+
+            name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+                "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
+            name.Should().Be("updated");
+
+            long count = await _db.RunAsync(c => c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM things"));
+            count.Should().Be(1);
         }
 
         [Fact]
-        public async Task AddRow_Then_AddOrUpdate_UpsertsByPrimaryKey()
+        public async Task EnsureTableAsync_CreatesTable_WithDeclaredColumns()
         {
-            await _db.EnsureTableAsync("things",
+            var schema = new SqliteTableSchema("things",
                 SqliteColumn.Int("id", primaryKey: true),
                 SqliteColumn.Str("name", notNull: true, def: "''"));
 
-            await _db.AddRowAsync("things", new SqliteRow { { "id", 1 }, { "name", "original" } });
+            await _db.EnsureSchemaAsync(schema);
 
-            object before = await _db.ScalarAsync("SELECT name FROM things WHERE id = $id", "$id", 1);
-            before.Should().Be("original");
+            File.Exists(Path.Combine(_tempDir, "test.db")).Should().BeTrue();
 
-            // Same primary key with a changed value should update, not duplicate.
-            await _db.AddOrUpdateAsync("things", new SqliteRow { { "id", 1 }, { "name", "updated" } });
+            List<string> columns = await _db.GetColumnsAsync("things");
+            columns.Should().BeEquivalentTo(new[] { "id", "name" });
 
-            object after = await _db.ScalarAsync("SELECT name FROM things WHERE id = $id", "$id", 1);
-            after.Should().Be("updated");
-
-            object count = await _db.ScalarAsync("SELECT COUNT(*) FROM things");
-            Convert.ToInt64(count).Should().Be(1);
+            // Calling again with the same schema must not throw and must not alter the columns.
+            await _db.EnsureSchemaAsync(schema);
+            columns = await _db.GetColumnsAsync("things");
+            columns.Should().BeEquivalentTo(new[] { "id", "name" });
         }
 
         [Fact]
-        public async Task AddOrUpdate_WithCompositeKey_Works()
+        public async Task EnsureTableAsync_AddsMissingColumn_AndPreservesExistingData()
         {
-            await _db.EnsureTableAsync("kv",
-                SqliteColumn.Str("scope", primaryKey: true, notNull: true),
-                SqliteColumn.Str("key", primaryKey: true, notNull: true),
-                SqliteColumn.Str("value", notNull: true, def: "''"));
+            await _db.EnsureSchemaAsync(new SqliteTableSchema("things",
+                SqliteColumn.Int("id", primaryKey: true),
+                SqliteColumn.Str("name", notNull: true, def: "''")));
 
-            await _db.AddOrUpdateAsync("kv", new SqliteRow { { "scope", "a" }, { "key", "x" }, { "value", "1" } });
-            await _db.AddOrUpdateAsync("kv", new SqliteRow { { "scope", "a" }, { "key", "x" }, { "value", "2" } });
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "INSERT INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "original" }));
 
-            object value = await _db.ScalarAsync("SELECT value FROM kv WHERE scope = 'a' AND key = 'x'");
-            value.Should().Be("2");
+            // Re-declare the schema with an extra column - the migration should add it without
+            // touching existing rows.
+            await _db.EnsureSchemaAsync(new SqliteTableSchema("things",
+                SqliteColumn.Int("id", primaryKey: true),
+                SqliteColumn.Str("name", notNull: true, def: "''"),
+                SqliteColumn.Int("count", def: "0")));
 
-            object count = await _db.ScalarAsync("SELECT COUNT(*) FROM kv");
-            Convert.ToInt64(count).Should().Be(1);
+            List<string> columns = await _db.GetColumnsAsync("things");
+            columns.Should().BeEquivalentTo(new[] { "id", "name", "count" });
+
+            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+                "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
+            name.Should().Be("original");
+
+            long count = await _db.RunAsync(c => c.ExecuteScalarAsync<long>(
+                "SELECT count FROM things WHERE id = @Id", new { Id = 1 }));
+            count.Should().Be(0);
         }
 
         [Fact]
-        public void SqliteRow_Indexer_ReplacesValueInPlace()
+        public async Task EnsureTableAsync_DropsRemovedColumn_AndPreservesRemainingData()
         {
-            var row = new SqliteRow();
-            row["id"] = 1;
-            row["id"] = 2;
+            await _db.EnsureSchemaAsync(new SqliteTableSchema("things",
+                SqliteColumn.Int("id", primaryKey: true),
+                SqliteColumn.Str("name", notNull: true, def: "''"),
+                SqliteColumn.Int("count", def: "0")));
 
-            row.Count.Should().Be(1);
-            row["id"].Should().Be(2);
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "INSERT INTO things (id, name, count) VALUES (@Id, @Name, @Count)",
+                new { Id = 1, Name = "original", Count = 5 }));
+
+            // Re-declare the schema without "count" - the migration should drop that column.
+            await _db.EnsureSchemaAsync(new SqliteTableSchema("things",
+                SqliteColumn.Int("id", primaryKey: true),
+                SqliteColumn.Str("name", notNull: true, def: "''")));
+
+            List<string> columns = await _db.GetColumnsAsync("things");
+            columns.Should().BeEquivalentTo(new[] { "id", "name" });
+
+            string name = await _db.RunAsync(c => c.ExecuteScalarAsync<string>(
+                "SELECT name FROM things WHERE id = @Id", new { Id = 1 }));
+            name.Should().Be("original");
         }
 
         [Fact]
@@ -121,8 +150,22 @@ namespace ClassicUO.UnitTests.Game.Managers
             var db = new TestDatabase(_tempDir);
             db.Dispose();
 
-            Func<Task> act = () => db.EnsureTableAsync("t", SqliteColumn.Int("id", primaryKey: true));
+            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync("SELECT 1"));
             await act.Should().ThrowAsync<ObjectDisposedException>();
+        }
+
+        [Fact]
+        public void Dispose_IsIdempotent()
+        {
+            var db = new TestDatabase(_tempDir);
+
+            Action act = () =>
+            {
+                db.Dispose();
+                db.Dispose();
+            };
+
+            act.Should().NotThrow();
         }
 
         public void Dispose()
