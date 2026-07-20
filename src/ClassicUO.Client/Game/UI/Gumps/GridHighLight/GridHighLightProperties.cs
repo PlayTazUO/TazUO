@@ -156,17 +156,23 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private void BuildProperties()
         {
-            var header = new HorizontalStackPanel { Spacing = 8 };
-            header.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_propertyname"), MyraLabel.TextStyle.TableHeader));
-            header.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_minvalue"), MyraLabel.TextStyle.TableHeader));
-            header.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_optional"), MyraLabel.TextStyle.TableHeader));
-            _content.Widgets.Add(header);
-
             string[] values = GridHighlightRules.FlattenAndDistinctParameters(
                 GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties);
 
+            // A grid keeps the header labels aligned above their columns (a plain stack sizes each
+            // label to its own text width, so the titles drift out of line with the fields).
+            var grid = new MyraGrid();
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_propertyname")),
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_minvalue")),
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_optional")),
+                GridColumnInfo.Auto("")
+            );
+
             for (int i = 0; i < _data.Properties.Count; i++)
-                _content.Widgets.Add(BuildPropertyRow(i, values));
+                AddPropertyRow(grid, i + 1, i, values);
+
+            _content.Widgets.Add(grid);
 
             _content.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_addproperty"), () =>
             {
@@ -177,17 +183,18 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             }));
         }
 
-        private Widget BuildPropertyRow(int index, string[] values)
+        private void AddPropertyRow(MyraGrid grid, int row, int index, string[] values)
         {
             GridHighlightProperty property = _data.Properties[index];
-
-            var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
             var nameInput = new MyraInputBox { Text = property.Name ?? "", Width = 170 };
             nameInput.TextChangedByUser += (_, _) => property.Name = nameInput.Text ?? "";
 
-            row.Widgets.Add(SuggestionCombo(values, v => nameInput.Text = v));
-            row.Widgets.Add(nameInput);
+            // Property picker: a suggestion dropdown that fills the editable name box next to it.
+            var propCell = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            propCell.Widgets.Add(SuggestionCombo(values, v => nameInput.Text = v));
+            propCell.Widgets.Add(nameInput);
+            grid.AddWidget(propCell, row, 0);
 
             var minInput = new MyraInputBox { Text = property.MinValue.ToString(), Width = 55, InputFilter = IntInputFilter };
             minInput.TextChangedByUser += (_, _) =>
@@ -195,19 +202,17 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (int.TryParse(minInput.Text, out int v))
                     property.MinValue = v;
             };
-            row.Widgets.Add(minInput);
+            grid.AddWidget(minInput, row, 1);
 
-            row.Widgets.Add(MyraCheckButton.CreateWithCallback(property.IsOptional, v => property.IsOptional = v));
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(property.IsOptional, v => property.IsOptional = v), row, 2);
 
-            row.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+            grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
             {
                 _data.Properties.RemoveAt(index);
                 _data.InvalidateCache();
                 Rebuild();
                 GridHighlightData.RecheckMatchStatus();
-            }) { Tooltip = TazLang.Get("gridhighlight_deleteproperty_tooltip") }));
-
-            return row;
+            }) { Tooltip = TazLang.Get("gridhighlight_deleteproperty_tooltip") }), row, 3);
         }
 
         #endregion
