@@ -28,6 +28,11 @@ namespace ClassicUO.Game.UI.Gumps
             CanMove = true;
             CanCloseWithRightClick = true;
             AcceptMouseInput = false;
+            // This gump manages its own Width/Height in UpdateSize(). Leaving the base
+            // auto-size on would let the child graphics (toggle button/background) grow the
+            // empty-bar height past PADDING_HANDLE, which shifts the saved bottom anchor and
+            // makes the bar creep up/down a few pixels each logout.
+            WantUpdateSize = false;
 
             BuildGump();
         }
