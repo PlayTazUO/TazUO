@@ -877,18 +877,6 @@ namespace ClassicUO.Configuration
         public bool DisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
         public bool EnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
 
-        public string TazUOChatNick
-        {
-            get
-            {
-                if (field == null)
-                    SetProperty(ref field, TazUOChatManager.GenerateFantasyName(2, 3));
-
-                return field;
-            }
-            set => SetProperty(ref field, value);
-        }
-
         // SQL-backed settings — property implementations are source-generated into Profile.SqlSettings.g.cs
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_WEATHER, false)]
@@ -974,21 +962,6 @@ namespace ClassicUO.Configuration
             }
         }
 
-        // Hand-written: has side-effect (TazUOChatManager.Init)
-        [JsonIgnore]
-        public bool DisableConnectToIrcOnLogin
-        {
-            get;
-            set
-            {
-                if (SetProperty(ref field, value))
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.IRC_AUTO_CONNECT, value);
-
-                // if(value && !TazUOChatManager.Instance.IsConnected)
-                //     TazUOChatManager.Instance.Init();
-            }
-        }
-
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
         public partial uint DisabledOverheadMessageTypes { get; set; }
@@ -1014,10 +987,6 @@ namespace ClassicUO.Configuration
                 MainThreadQueue.EnqueueAction(() =>
                 {
                     LoadGeneratedGlobalSqlSettings(kvp);
-
-                    // Hand-written: IRC has a side-effect in its setter
-                    if (kvp.TryGetValue(Constants.SqlSettings.IRC_AUTO_CONNECT, out string val) && bool.TryParse(val, out bool b))
-                        DisableConnectToIrcOnLogin = b;
                 });
             });
 

@@ -95,7 +95,7 @@ public class ApiPlayer : ApiMobile
     public short MaxManaIncrease => ReadPlayer(static p => p.MaxManaIncrease);
     public short MaxStaminaIncrease => ReadPlayer(static p => p.MaxStaminaIncrease);
 
-    public bool IsHidden => ReadPlayer(static p => p.IsHidden);
+    public new bool IsHidden => ReadPlayer(static p => p.IsHidden);
     public bool IsWalking => ReadPlayer(static p => p.IsWalking);
 
     public override bool InWarMode

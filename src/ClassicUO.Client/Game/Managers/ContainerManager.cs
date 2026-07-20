@@ -237,7 +237,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void BuildContainerFile(bool force, string? fromPath = null)
+        public void BuildContainerFile(bool force, string fromPath = null)
         {
             string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", "Client");
 

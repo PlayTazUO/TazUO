@@ -338,7 +338,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        private new void SetHeight(int height)
+        private void SetHeight(int height)
         {
             Height = height;
 

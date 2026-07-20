@@ -34,7 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
             _savedSize;
         private readonly GameScene _scene;
         private readonly SystemChatControl _systemChatControl;
-        private List<(string, ushort)>? _userNotifications = null;
+        private List<(string, ushort)> _userNotifications = null;
 
         private static Texture2D damageWindowOutline = SolidColorTextureCache.GetTexture(Color.White);
         public static Vector3 DamageWindowOutlineHue = ShaderHueTranslator.GetHueVector(32);
@@ -171,24 +171,21 @@ namespace ClassicUO.Game.UI.Gumps
         /// shows a reminder. The fetch is asynchronous, so the message is added to the pending
         /// notification batch while it is still open, otherwise printed directly once we are in-world.
         /// </summary>
-        private void QueueUnvotedPollsNotification()
-        {
-            Task.Run(async () =>
-            {
-                string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
+        private void QueueUnvotedPollsNotification() => Task.Run(async () =>
+                                                                 {
+                                                                     string message = await FirebasePollsManager.GetUnvotedNotificationAsync();
 
-                if (string.IsNullOrEmpty(message))
-                    return;
+                                                                     if (string.IsNullOrEmpty(message))
+                                                                         return;
 
-                MainThreadQueue.InvokeOnMainThread(() =>
-                {
-                    if (_userNotifications != null)
-                        _userNotifications.Add((message, Constants.HUE_WARN));
-                    else if (World.Instance != null)
-                        GameActions.Print(message, Constants.HUE_WARN);
-                });
-            });
-        }
+                                                                     MainThreadQueue.InvokeOnMainThread(() =>
+                                                                     {
+                                                                         if (_userNotifications != null)
+                                                                             _userNotifications.Add((message, Constants.HUE_WARN));
+                                                                         else if (World.Instance != null)
+                                                                             GameActions.Print(message, Constants.HUE_WARN);
+                                                                     });
+                                                                 });
 
         public override void Update()
         {
