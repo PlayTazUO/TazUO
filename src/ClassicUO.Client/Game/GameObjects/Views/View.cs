@@ -27,9 +27,10 @@ namespace ClassicUO.Game.GameObjects
         private const int ART_STATIC_OFFSET = 0x4000;
         private const float DEPTH_Z_SCALE = 0.01f;
         private const int DEPTH_Z_OFFSET = 127;
-        private const float DEPTH_RENDER_OFFSET = 0.5f;
-        private const float DEPTH_WET_BASE_OFFSET = 0.49f;
-        private const float DEPTH_SHADOW_OFFSET = 0.25f;
+        // Sub-tile depth bands live in RenderDepth. Aliases kept for readability at the call sites below.
+        private const float DEPTH_RENDER_OFFSET = RenderDepth.Surface;
+        private const float DEPTH_WET_BASE_OFFSET = RenderDepth.SurfaceWetBase;
+        private const float DEPTH_SHADOW_OFFSET = RenderDepth.ObjectShadow;
 
         // Water animation caching for performance
         private static float _cachedWaterSin;
