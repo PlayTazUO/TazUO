@@ -23,7 +23,7 @@ public static class MessageTypeFilter
         MessageType.Damage => 14,
         MessageType.Discord => 15,
         MessageType.Party => 16,
-        _ => throw new ArgumentOutOfRangeException(nameof(type), $"Unknown MessageType: {type}")
+        _ => 30
     };
 
     /// <summary>
