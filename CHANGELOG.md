@@ -81,6 +81,7 @@ All notable changes to TazUO will be recorded here.
 * Added a goto location input to the web map (accepts raw map or sextant coordinates) that sets the player's Go-To location - [P.R 708](https://github.com/PlayTazUO/TazUO/pull/708) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed the unvoted Firebase polls login notification showing even after you had already voted, caused by reading the in-memory voted-polls list before its asynchronous settings load had finished; the check now reads the persisted value directly ([bittiez](https://github.com/bittiez))
 * Fixed the nameplate overhead manager gump not resizing to fit all buttons and profile names, and now refreshes its buttons when a profile is renamed in the options window - [P.R 698](https://github.com/PlayTazUO/TazUO/pull/698) ([bittiez](https://github.com/bittiez))
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
 * Auto open doors no longer closes a door that is already open - [P.R 674](https://github.com/PlayTazUO/TazUO/pull/674) ([bittiez](https://github.com/bittiez))

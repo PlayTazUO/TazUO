@@ -184,7 +184,7 @@ public static class FirebasePollsManager
         if (polls == null || polls.Count == 0)
             return null;
 
-        int unvoted = CountUnvoted(polls);
+        int unvoted = await CountUnvotedAsync(polls);
 
         if (unvoted <= 0)
             return null;
@@ -198,13 +198,10 @@ public static class FirebasePollsManager
                 unvoted);
     }
 
-    /// <summary>Counts how many of the given polls the current profile has not yet voted on.</summary>
-    private static int CountUnvoted(Dictionary<string, Poll> polls)
+    /// <summary>Counts how many of the given polls the user has not yet voted on.</summary>
+    private static async Task<int> CountUnvotedAsync(Dictionary<string, Poll> polls)
     {
-        Profile profile = ProfileManager.CurrentProfile;
-
-        var voted = new HashSet<string>((profile?.VotedPolls ?? string.Empty)
-            .Split(';', StringSplitOptions.RemoveEmptyEntries));
+        HashSet<string> voted = await GetVotedPollIdsAsync();
 
         int count = 0;
         foreach (string pollId in polls.Keys)
@@ -214,6 +211,30 @@ public static class FirebasePollsManager
         }
 
         return count;
+    }
+
+    /// <summary>
+    /// Returns the set of poll ids the user has already voted on, read straight from the settings store.
+    ///
+    /// This deliberately does not use the in-memory <see cref="Profile.VotedPolls"/> property: that value is
+    /// populated by an asynchronous, fire-and-forget load of the Global SQL settings kicked off when the
+    /// profile loads (see <see cref="Profile.AfterLoad"/>). Because the profile is loaded as the player is
+    /// created — essentially at the same moment the poll notification is computed on entering the world — that
+    /// load may not have completed yet, leaving <see cref="Profile.VotedPolls"/> empty and making already-voted
+    /// polls look unvoted. Reading the persisted value directly avoids that race. Falls back to the in-memory
+    /// property only if the settings store is unavailable.
+    /// </summary>
+    private static async Task<HashSet<string>> GetVotedPollIdsAsync()
+    {
+        string voted;
+
+        if (Client.Settings != null)
+            voted = await Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, string.Empty);
+        else
+            voted = ProfileManager.CurrentProfile?.VotedPolls ?? string.Empty;
+
+        return new HashSet<string>((voted ?? string.Empty)
+            .Split(';', StringSplitOptions.RemoveEmptyEntries));
     }
 
     /// <summary>
