@@ -434,6 +434,7 @@ namespace ClassicUO.Game.Scenes
             SpellVisualRangeManager.Instance.Save();
             SpellVisualRangeManager.Instance.OnSceneUnload();
             AutoLootManager.Instance.OnSceneUnload();
+            GridHighlightData.Unload();
             AutoSkinningManager.Instance.OnSceneUnload();
             FriendsListManager.Instance.OnSceneUnload();
 

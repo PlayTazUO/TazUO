@@ -36,6 +36,12 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             set => allConfigs = value;
         }
 
+        public bool Enabled
+        {
+            get => _entry.Enabled;
+            set => _entry.Enabled = value;
+        }
+
         public string Name
         {
             get => _entry.Name;
@@ -211,6 +217,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             list.RemoveAt(index);
             list.Insert(up ? index - 1 : index + 1, _entry);
+        }
+
+        public static void Unload()
+        {
+            allConfigs = null;
+            _queue.Clear();
+            _queuedItems.Clear();
+            hasQueuedItems = false;
         }
 
         public static void ProcessItemOpl(World world, Item item)
@@ -628,6 +642,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             foreach (GridHighlightData config in AllConfigs)
             {
+                // Disabled configs highlight nothing and never trigger auto loot
+                if (!config.Enabled)
+                    continue;
+
                 if (!config.IsMatch(itemData))
                     continue;
 

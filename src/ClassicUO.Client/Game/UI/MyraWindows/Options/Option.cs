@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using ClassicUO.Common;
 using ClassicUO.Configuration;
+using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
@@ -39,6 +40,47 @@ internal static class Option
     /// <returns>An <see cref="OptionEntry"/> wrapping the checkbox widget</returns>
     public static OptionEntry Checkbox(string label, bool value, Action<bool> onValueChanged, string? tooltip = null, SearchMetadata? search = null) =>
         new(() => MyraCheckButton.CreateWithCallback(value, onValueChanged, label, tooltip), search ?? new SearchMetadata(label));
+
+    /// <summary>
+    /// Creates a checkbox entry bound to a <see cref="bool"/> property that displays a confirmation
+    /// warning dialog whenever the user enables it. Declining the dialog reverts the checkbox back to
+    /// its unchecked state.
+    /// </summary>
+    /// <param name="label">The checkbox label text</param>
+    /// <param name="backingProperty">Accessor for the underlying boolean value</param>
+    /// <param name="warningTitle">Title shown on the confirmation dialog</param>
+    /// <param name="warningMessage">Warning message shown in the confirmation dialog body</param>
+    /// <param name="tooltip">Optional tooltip text</param>
+    /// <param name="search">Optional search metadata; defaults to metadata seeded from <paramref name="label"/></param>
+    /// <returns>An <see cref="OptionEntry"/> wrapping the checkbox widget</returns>
+    public static OptionEntry CheckboxWithEnableWarning(
+        string label,
+        Accessor<bool> backingProperty,
+        string warningTitle,
+        string warningMessage,
+        string? tooltip = null,
+        SearchMetadata? search = null) =>
+        new(() =>
+        {
+            MyraCheckButton cb = MyraCheckButton.CreatePropBoundCheckButton(backingProperty, label, tooltip);
+
+            cb.IsCheckedChanged += (_, _) =>
+            {
+                if (!cb.IsChecked)
+                    return;
+
+                UIManager.Add(new ConfirmationModal(
+                    warningTitle,
+                    warningMessage,
+                    confirmed =>
+                    {
+                        if (!confirmed)
+                            cb.IsChecked = false;
+                    }));
+            };
+
+            return cb;
+        }, search ?? new SearchMetadata(label));
 
     /// <summary>
     /// Creates a hue-picker entry bound to a <see cref="ushort"/> hue property
