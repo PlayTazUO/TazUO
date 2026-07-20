@@ -182,6 +182,8 @@ namespace ClassicUO.Game.GameObjects
                         offY = -22;
                     }
 
+                    offY -= m.NameOverheadTextExtraHeight;
+
                     Client.Game.UO.Animations.GetAnimationDimensions(
                         m.AnimIndex,
                         m.GetGraphicForAnimation(),

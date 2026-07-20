@@ -40,8 +40,10 @@ namespace ClassicUO.Game.Managers
 
             EventSink.InvokeOPLOnReceive(null, new OPLEventArgs(serial, name, data));
 
-            Item item = _world.Items.Get(serial);
-            if (item != null)
+            Entity ent = _world.Get(serial);
+            ent?.OPLUpdated(prop);
+
+            if (ent is Item item)
             {
                 item.OPLName = name;
                 item.OPLData = data;

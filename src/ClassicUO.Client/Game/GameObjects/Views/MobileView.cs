@@ -4,6 +4,7 @@ using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -20,6 +21,15 @@ namespace ClassicUO.Game.GameObjects
         private int _characterFrameStartY;
         private int _startCharacterWaistY;
         private int _startCharacterKneesY;
+        private TextBox _nameAndTitle;
+
+        // Extra vertical space to reserve above the overhead name/title so speech and
+        // damage text drawn by other systems (Mobile.UpdateTextCoordsV, OverheadDamage)
+        // doesn't overlap it.
+        internal int NameOverheadTextExtraHeight =>
+            ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.ShowMobileNameOverhead && _nameAndTitle != null
+                ? _nameAndTitle.Height + 5
+                : 0;
 
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
         {
@@ -486,13 +496,41 @@ namespace ClassicUO.Game.GameObjects
                     }
                 }
             }
-
+            
+            // drawY + FrameInfo.Y is the top of the drawn sprite.
+            int spriteTopY = drawY + FrameInfo.Y;
+            
             if (profile.ShowMobileHealthbar)
             {
-                // FrameInfo.Y is still the raw (negative) top offset at this point, so
-                // drawY + FrameInfo.Y is the top of the drawn sprite. Place the bar just above it.
-                int barTop = drawY + FrameInfo.Y - 5;
-                DrawHealthbar(batcher, drawX, barTop, depth);
+                spriteTopY -= 5;
+                DrawHealthbar(batcher, drawX, spriteTopY, depth);
+            }
+
+            if (profile.ShowMobileNameOverhead)
+            {
+                if (_nameAndTitle == null)
+                {
+                    string nameAndTitle = Name;
+
+                    if (World.OPL.TryGetNameAndData(this, out string oplname, out string opldata))
+                        if (oplname.NotNullNotEmpty())
+                            nameAndTitle = oplname;
+
+                    if (Title.NotNullNotEmpty())
+                        nameAndTitle += "\n" + Title;
+
+                    if(nameAndTitle.NotNullNotEmpty())
+                        _nameAndTitle = TextBox.GetOne(
+                            nameAndTitle, 
+                            profile.OverheadChatFont, 
+                            profile.OverheadChatFontSize, 
+                            Notoriety.GetHue(NotorietyFlag), 
+                            TextBox.RTLOptions.DefaultCenterStroked(profile.OverheadChatWidth));
+                }
+                else
+                {
+                    _nameAndTitle.Draw(batcher, drawX - (_nameAndTitle.Width >> 1), spriteTopY - _nameAndTitle.Height, depth);
+                }
             }
 
             FrameInfo.X = Math.Abs(FrameInfo.X);
