@@ -1,6 +1,7 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
 
@@ -10,10 +11,7 @@ public static class GameplayTab
     /// <summary>Returns the tab group containing combat, mobiles, movement, layer-hiding, and paperdoll sub-tabs</summary>
     internal static IOptionSource GetContent() => GetGameplayMenuTabs();
 
-    private static OptionTabGroup GetGameplayMenuTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetGameplayMenuTabs() => new OptionTabGroup()
             .AddTab(
                 TazLang.Get("mog_combattab_combat_label"),
                 CombatTab.GetContent,
@@ -38,7 +36,36 @@ public static class GameplayTab
                 TazLang.Get("mog_layerhidingtab_label"),
                 LayerHidingTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_layerhidingtab_label"), Keywords: [TazLang.Get("mog_kw_layer"), TazLang.Get("mog_kw_hide"), TazLang.Get("mog_kw_equipment"), TazLang.Get("mog_kw_clothing")])
+            )
+            .AddTab(
+                TazLang.Get("mog_gameplaytab_misc_label"),
+                GetMiscSubTabContent,
+                new SearchMetadata(TazLang.Get("mog_gameplaytab_misc_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous")])
             );
+
+    private static IOptionSource GetMiscSubTabContent()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.Vertical(
+            OptionsUi.CheckBoxGroup(
+                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator"), TazLang.Get("mog_tazuo_healthbarindicatortooltip")),
+                Option.Slider(
+                    TazLang.Get("mog_tazuo_onlyshowbelowhp"),
+                    0,
+                    100,
+                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
+                ),
+                Option.Slider(
+                    TazLang.Get("mog_tazuo_size"),
+                    1,
+                    25,
+                    new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_size"), Keywords: [TazLang.Get("mog_kw_size")])
+                )
+            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_healthbarindicator"), Keywords: [TazLang.Get("mog_kw_indicator"), TazLang.Get("mog_kw_border")]))
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_gameplaytab_misc_label"), Tags: [TazLang.Get("mog_kw_misc")]));
     }
 
     private static IOptionSource GetTerrainAndStaticsSubTabContent()

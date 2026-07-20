@@ -11,8 +11,8 @@ public class LinkLabel : MyraLabel
     public LinkLabel(
         string text,
         string link,
-        int fontSize
-    ) : base(text, fontSize)
+        int fontSizeOffset
+    ) : base(text, fontSizeOffset)
     {
         Init(link);
     }

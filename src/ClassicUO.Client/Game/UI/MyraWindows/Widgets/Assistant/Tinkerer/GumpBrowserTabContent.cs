@@ -240,7 +240,7 @@ public static class GumpBrowserTabContent
 
         // Overlay the graphic id at the bottom of the cell so it can be read
         // at a glance without hovering for the tooltip.
-        var idLabel = new MyraLabel(id.ToString(), CELL_ID_FONT)
+        var idLabel = new MyraLabel(id.ToString(), 0)
         {
             Wrap = false,
             HorizontalAlignment = HorizontalAlignment.Center,

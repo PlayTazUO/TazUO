@@ -58,24 +58,7 @@ public static class HealthBarsTab
                         search: new SearchMetadata(TazLang.Get("mog_tazuo_belowmobilehealthbarscale"), Keywords: [TazLang.Get("mog_kw_below"), TazLang.Get("mog_kw_scale")])
                     )
                 ).AsSearchGroup()
-                .WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_mobilehealthindicator"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_scale")])),
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.EnableHealthIndicator), TazLang.Get("mog_tazuo_healthbarindicator")),
-                Option.Slider(
-                    TazLang.Get("mog_tazuo_onlyshowbelowhp"),
-                    0,
-                    100,
-                    new Accessor<float>(() => profile.ShowHealthIndicatorBelow),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_onlyshowbelowhp"), Keywords: [TazLang.Get("mog_kw_hp")])
-                ),
-                Option.Slider(
-                    TazLang.Get("mog_tazuo_size"),
-                    1,
-                    25,
-                    new Accessor<float>(() => profile.HealthIndicatorWidth, f => profile.HealthIndicatorWidth = (int)f),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_size"), Keywords: [TazLang.Get("mog_kw_size")])
-                )
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_healthbarindicator"), Keywords: [TazLang.Get("mog_kw_indicator"), TazLang.Get("mog_kw_border")]))
+                .WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_mobilehealthindicator"), Keywords: [TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_health"), TazLang.Get("mog_kw_scale")]))
         );
     }
 

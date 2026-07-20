@@ -685,7 +685,14 @@ namespace ClassicUO.Configuration
         public int NamePlateFontSize { get; set => SetProperty(ref field, value); } = 20;
 
         public bool UseNewOptionsWindow { get; set => SetProperty(ref field, value); } = true;
-        public string OptionsFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
+        public string OptionsFont
+        {
+            get; set
+            {
+                SetProperty(ref field, value);
+                MyraStyle.SetDefault();
+            }
+        } = "Roboto-Regular";
         public int OptionsFontSize { get; set => SetProperty(ref field, value); } = 18;
 
         public int TextBorderSize { get; set => SetProperty(ref field, value); } = 1;
@@ -998,6 +1005,8 @@ namespace ClassicUO.Configuration
             ];
 
             Task.WaitAll(mustWait, 5000);
+
+            MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
         }
 
         internal void LoadCharScopedSettings()
