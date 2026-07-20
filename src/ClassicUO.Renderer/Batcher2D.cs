@@ -51,6 +51,13 @@ namespace ClassicUO.Renderer
         private SamplerState _sampler;
         private bool _started;
         private DepthStencilState _stencil;
+
+        // Near/far planes used to build the orthographic projection. The world sprite depth
+        // (Position.Z) is mapped linearly from [near, far] into the depth buffer's [0,1] range.
+        // Defaults match the legacy short range; the world pass narrows them so the tile depth
+        // values fill the whole 24-bit buffer instead of only a third of it (see SetProjectionDepthRange).
+        private float _projectionZNear = short.MinValue;
+        private float _projectionZFar = short.MaxValue;
         private Matrix _transformMatrix;
         private readonly DynamicVertexBuffer _vertexBuffer;
         private readonly BasicUOEffect _basicUOEffect;
@@ -1549,8 +1556,8 @@ namespace ClassicUO.Renderer
                 GraphicsDevice.Viewport.Width,
                 GraphicsDevice.Viewport.Height,
                 0,
-                short.MinValue,
-                short.MaxValue,
+                _projectionZNear,
+                _projectionZFar,
                 out matrix
             );
             Matrix.Multiply(ref _transformMatrix, ref matrix, out matrix);
@@ -1730,6 +1737,33 @@ namespace ClassicUO.Renderer
             Flush();
 
             _stencil = stencil ?? Stencil;
+        }
+
+        /// <summary>
+        /// Overrides the near/far planes of the orthographic projection so that sprite depth
+        /// (Position.Z) values in [near, far] fill the entire depth buffer. Narrowing the range to
+        /// the world's actual depth span reclaims Z-buffer precision and reduces z-fighting.
+        /// Call <see cref="ResetProjectionDepthRange"/> to restore the default range.
+        /// </summary>
+        public void SetProjectionDepthRange(float near, float far)
+        {
+            if (_projectionZNear == near && _projectionZFar == far)
+            {
+                return;
+            }
+
+            Flush();
+
+            _projectionZNear = near;
+            _projectionZFar = far;
+        }
+
+        /// <summary>
+        /// Restores the default (legacy short-range) projection depth planes.
+        /// </summary>
+        public void ResetProjectionDepthRange()
+        {
+            SetProjectionDepthRange(short.MinValue, short.MaxValue);
         }
 
         public void SetSampler(SamplerState sampler)

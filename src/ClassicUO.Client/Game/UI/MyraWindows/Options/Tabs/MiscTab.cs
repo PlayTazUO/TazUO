@@ -104,9 +104,11 @@ public static class MiscTab
                     new Accessor<float>(() => profile.AutoOpenCorpseRange, f => profile.AutoOpenCorpseRange = (int)f),
                     search: new SearchMetadata(TazLang.Get("mog_general_corpseopendistance"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_distance")])
                 ),
-                Option.Checkbox(
+                Option.CheckboxWithEnableWarning(
                     TazLang.Get("mog_general_corpseskipempty"),
                     new Accessor<bool>(() => profile.SkipEmptyCorpse),
+                    TazLang.Get("mog_general_corpseskipemptywarningtitle"),
+                    TazLang.Get("mog_general_corpseskipemptywarning"),
                     TazLang.Get("mog_general_corpseskipemptytooltip"),
                     search: new SearchMetadata(TazLang.Get("mog_general_corpseskipempty"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_empty")])
                 ),

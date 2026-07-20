@@ -174,6 +174,13 @@ public static class ContainersTab
                     new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_view")])
                 ),
+                Option.LComboBox(
+                    TazLang.Get("mog_tazuo_corpsecontainerstyle"),
+                    new Accessor<CorpseContainerStyle>(() => profile.CorpseContainerStyle, v => profile.CorpseContainerStyle = v),
+                    "mog_tazuo_corpsestyleopt_",
+                    TazLang.Get("mog_tazuo_tooltipcorpsecontainerstyle"),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_corpsecontainerstyle"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_container")])
+                ),
                 Option.ComboBox(
                     TazLang.Get("mog_tazuo_searchstyle"),
                     profile.GridContainerSearchMode,

@@ -39,7 +39,7 @@ namespace ClassicUO.Game.Scenes
         private long _windowResizeStartTime = 0;
         private const int WINDOW_RESIZE_TIMEOUT_MS = 500;
         private const int TOLERANCE = 5;
-        private const float MAX_LAYER_DEPTH = 0x8000;
+        private const float MAX_LAYER_DEPTH = GameObjects.RenderDepth.FarPlane;
 
         private static readonly Lazy<BlendState> _darknessBlend = new Lazy<BlendState>(() =>
         {
@@ -434,6 +434,7 @@ namespace ClassicUO.Game.Scenes
             SpellVisualRangeManager.Instance.Save();
             SpellVisualRangeManager.Instance.OnSceneUnload();
             AutoLootManager.Instance.OnSceneUnload();
+            GridHighlightData.Unload();
             AutoSkinningManager.Instance.OnSceneUnload();
             FriendsListManager.Instance.OnSceneUnload();
 
@@ -1279,6 +1280,10 @@ namespace ClassicUO.Game.Scenes
             batcher.SetBrightlight(ProfileManager.CurrentProfile.TerrainShadowsLevel * 0.1f);
             batcher.SetStencil(DepthStencilState.Default);
 
+            // Map world depth [0, FarPlane] across the entire depth buffer so tile depth values use
+            // the full 24-bit precision instead of only a fraction of it. Higher depth = nearer.
+            batcher.SetProjectionDepthRange(-GameObjects.RenderDepth.FarPlane, 0f);
+
             RenderedObjectsCount = 0;
             Profiler.EnterContext("Statics");
             RenderedObjectsCount += DrawRenderList(batcher, _renderListStatics);
@@ -1324,6 +1329,9 @@ namespace ClassicUO.Game.Scenes
             }
 
             //GameController.DrawFlushCounts(batcher, 200, 200);
+
+            // Restore the default projection depth range for all other (non-world) batcher passes.
+            batcher.ResetProjectionDepthRange();
 
             batcher.End();
 
