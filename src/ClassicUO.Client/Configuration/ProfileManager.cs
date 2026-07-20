@@ -90,9 +90,9 @@ namespace ClassicUO.Configuration
             CurrentProfile.ServerName = servername;
             CurrentProfile.CharacterName = charactername;
 
-            if (CurrentProfile.GridHighlightSetup.Count == 0)
+            // Load (or migrate from the in-profile GridHighlightSetup / legacy per-list storage) the grid highlights.
+            if (GridHighlightsConfig.LoadForProfile(ProfilePath, CurrentProfile))
             {
-                GridHighLightProfile.MigrateGridHighlightToSetup(CurrentProfile);
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 
