@@ -36,6 +36,58 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public void AllFields_RoundTripThroughColumns()
+        {
+            var entry = new GridHighlightSetupEntry
+            {
+                Enabled = false,
+                Name = "everything",
+                Hue = 1234,
+                HighlightColor = "#123456",
+                AcceptExtraProperties = false,
+                Overweight = true,
+                MinimumWeight = 5,
+                MaximumWeight = 50,
+                MinimumProperty = 2,
+                MaximumProperty = 8,
+                MinimumMatchingProperty = 3,
+                MaximumMatchingProperty = 7,
+                LootOnMatch = true,
+                DestinationContainer = 0xDEADBEEF, // exercises the full uint range
+                IsHighlightProperties = false,
+                ItemNames = new List<string> { "kryss", "war fork" },
+                ExcludeNegatives = new List<string> { "cursed", "brittle" },
+                RequiredRarities = new List<string> { "Legendary Artifact" },
+                Properties = new List<GridHighlightProperty>
+                {
+                    new() { Name = "Hit Chance Increase", MinValue = 15, IsOptional = false },
+                    new() { Name = "Damage Increase", MinValue = -1, IsOptional = true }
+                },
+                GridHighlightSlot = new GridHighlightSlot
+                {
+                    Talisman = false,
+                    Ring = false,
+                    Other = true
+                    // remaining slots keep their (true) defaults
+                }
+            };
+
+            _db.Save(new List<GridHighlightSetupEntry> { entry });
+
+            GridHighlightSetupEntry loaded = _db.Load().Should().ContainSingle().Subject;
+
+            loaded.Should().BeEquivalentTo(entry, options => options
+                .Excluding(e => e.HighlightColor)); // stored/compared below case-insensitively
+
+            loaded.HighlightColor.Should().BeEquivalentTo("#123456");
+            loaded.DestinationContainer.Should().Be(0xDEADBEEF);
+            loaded.GridHighlightSlot.Talisman.Should().BeFalse();
+            loaded.GridHighlightSlot.Ring.Should().BeFalse();
+            loaded.GridHighlightSlot.Other.Should().BeTrue();
+            loaded.GridHighlightSlot.Head.Should().BeTrue();
+        }
+
+        [Fact]
         public void Constructor_WritesDatabaseIntoProfileFolder()
         {
             _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("a", 1) });

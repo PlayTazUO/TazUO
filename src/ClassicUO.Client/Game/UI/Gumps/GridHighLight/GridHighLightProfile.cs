@@ -1,6 +1,7 @@
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
@@ -60,5 +61,13 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         public string Name { get; set; }
         public int MinValue { get; set; } = -1;
         public bool IsOptional { get; set; } = false;
+    }
+
+    // Used for the file-based import/export of highlight rules (the SQLite store uses columns, not JSON).
+    [JsonSourceGenerationOptions(WriteIndented = true)]
+    [JsonSerializable(typeof(GridHighlightSetupEntry))]
+    [JsonSerializable(typeof(List<GridHighlightSetupEntry>))]
+    public partial class GridHighlightJsonContext : JsonSerializerContext
+    {
     }
 }
