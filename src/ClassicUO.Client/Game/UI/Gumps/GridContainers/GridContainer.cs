@@ -532,7 +532,21 @@ public partial class GridContainer : ResizableGump
         {
             // If the container has no stored preference and was not opened in a specific mode, use the global default
             if (_gridContainerEntry.UseOriginalContainer == null && UseOldContainerStyle == null)
+            {
+                // Corpses can override the global "open all containers in original style" preference
+                // via their own dedicated setting.
+                if (_isCorpse)
+                {
+                    switch (ProfileManager.CurrentProfile.CorpseContainerStyle)
+                    {
+                        case CorpseContainerStyle.Grid: return false;
+                        case CorpseContainerStyle.Original: return true;
+                        // CorpseContainerStyle.Default falls through to the global default
+                    }
+                }
+
                 return ProfileManager.CurrentProfile.GridContainersDefaultToOldStyleView;
+            }
 
             // Next, if the open request was made with a specific mode (i.e., useGridStyle != nul), use that,
             // otherwise, fallback to the stored preference (which, if we got here is *not* null, or we'd fall into the default case above)
