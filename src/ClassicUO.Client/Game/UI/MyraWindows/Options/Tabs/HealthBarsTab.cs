@@ -18,12 +18,18 @@ public static class HealthBarsTab
     {
         Profile profile = ProfileManager.CurrentProfile;
         string simpleHealthbar = TazLang.Get("mog_mobilestab_healthbars_simple", "Simple healthbar");
+        string showMobileNameOverhead = TazLang.Get("mog_mobilestab_shownameoverhead", "Always show name/title above mobiles");
 
         return OptionsUi.Vertical(
             Option.Checkbox(
                 simpleHealthbar,
                 new Accessor<bool>(() => profile.ShowMobileHealthbar),
                 search: new SearchMetadata(simpleHealthbar, Keywords: [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp"), TazLang.Get("mog_kw_mobile")])
+            ),
+            Option.Checkbox(
+                showMobileNameOverhead,
+                new Accessor<bool>(() => profile.ShowMobileNameOverhead),
+                search: new SearchMetadata(showMobileNameOverhead, Keywords: [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_name")])
             ),
             OptionsUi.VisualContainer(
                     new VisualContainerProps { LabelText = TazLang.Get("mog_tazuo_mobilehealthindicator") },

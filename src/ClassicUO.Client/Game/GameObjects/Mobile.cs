@@ -16,66 +16,6 @@ namespace ClassicUO.Game.GameObjects
 {
     public partial class Mobile : Entity
     {
-        //private static readonly QueuedPool<Mobile> _pool = new QueuedPool<Mobile>(
-        //    Constants.PREDICTABLE_CHUNKS,
-        //    mobile =>
-        //    {
-        //        mobile.IsDestroyed = false;
-        //        mobile.Graphic = 0;
-        //        mobile.Steps.Clear();
-        //        mobile.Offset = Vector3.Zero;
-        //        mobile.SpeedMode = CharacterSpeedType.Normal;
-        //        mobile.Race = 0;
-        //        mobile.Hits = 0;
-        //        mobile.HitsMax = 0;
-        //        mobile.Mana = 0;
-        //        mobile.ManaMax = 0;
-        //        mobile.Stamina = 0;
-        //        mobile.StaminaMax = 0;
-        //        mobile.NotorietyFlag = 0;
-        //        mobile.IsRenamable = false;
-        //        mobile.Flags = 0;
-        //        mobile.IsFemale = false;
-        //        mobile.InWarMode = false;
-        //        mobile.IsRunning = false;
-        //        mobile._animationInterval = 0;
-        //        mobile.AnimationFrameCount = 0;
-        //        mobile._animationRepeateMode = 1;
-        //        mobile._animationRepeatModeCount = 1;
-        //        mobile._animationRepeat = false;
-        //        mobile.AnimationFromServer = false;
-        //        mobile._isAnimationForwardDirection = false;
-        //        mobile.LastStepSoundTime = 0;
-        //        mobile.StepSoundOffset = 0;
-        //        mobile.Title = string.Empty;
-        //        mobile._animationGroup = 0xFF;
-        //        mobile._isDead = false;
-        //        mobile._isSA_Poisoned = false;
-        //        mobile._lastAnimationIdleDelay = 0;
-        //        mobile.X = 0;
-        //        mobile.Y = 0;
-        //        mobile.Z = 0;
-        //        mobile.Direction = 0;
-        //        mobile.LastAnimationChangeTime = Time.Ticks;
-        //        mobile.TextContainer?.Clear();
-        //        mobile.HitsPercentage = 0;
-        //        mobile.IsFlipped = false;
-        //        mobile.FrameInfo = Rectangle.Empty;
-        //        mobile.ObjectHandlesStatus = ObjectHandlesStatus.NONE;
-        //        mobile.AlphaHue = 0;
-        //        mobile.AllowedToDraw = true;
-        //        mobile.IsClicked = false;
-        //        mobile.RemoveFromTile();
-        //        mobile.Clear();
-        //        mobile.Next = null;
-        //        mobile.Previous = null;
-        //        mobile.Name = null;
-        //        mobile.ExecuteAnimation = true;
-        //        mobile.HitsRequest = HitsRequestStatus.None;
-
-        //        mobile.CalculateRandomIdleTime();
-        //    }
-        //);
 
         private static readonly byte[,] _animationIdle =
         {
@@ -116,6 +56,18 @@ namespace ClassicUO.Game.GameObjects
         public Mobile(World world) : base(world, 0) { }
 
         private readonly Item[] _equippedLayers = new Item[30];
+
+        public override void NameUpdated()
+        {
+            base.NameUpdated();
+            _nameText = null;
+        }
+
+        public override void OPLUpdated(ItemProperty newProps)
+        {
+            base.OPLUpdated(newProps);
+            _nameText = null;
+        }
 
         public override void PushToBack(LinkedObject item)
         {
@@ -1012,7 +964,7 @@ namespace ClassicUO.Game.GameObjects
                 return;
             }
 
-            int offY = NameOverheadGump.CurrentHeight;
+            int offY = NameOverheadGump.CurrentHeight + NameOverheadTextExtraHeight;
 
             bool health = ProfileManager.CurrentProfile.ShowMobilesHP;
             int alwaysHP = ProfileManager.CurrentProfile.MobileHPShowWhen;
@@ -1175,6 +1127,8 @@ namespace ClassicUO.Game.GameObjects
 
                 //_pool.ReturnOne(this);
             }
+
+            _nameText?.Dispose();
         }
 
         public struct Step

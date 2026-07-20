@@ -196,6 +196,7 @@ namespace ClassicUO.Configuration
         public bool DrawRoofs { get; set => SetProperty(ref field, value); } = true;
         public int MobileDepthSliceStep { get; set => SetProperty(ref field, value); } = 1;
         public bool ShowMobileHealthbar { get; set => SetProperty(ref field, value); } // Draws a small healthbar directly under each mobile
+        public bool ShowMobileNameOverhead { get; set => SetProperty(ref field, value); } // Always draws the mobile's name/title above their head
         public bool TreeToStumps { get; set => SetProperty(ref field, value); }
         public bool EnableCaveBorder { get; set => SetProperty(ref field, value); }
         public bool HideVegetation { get; set => SetProperty(ref field, value); }
