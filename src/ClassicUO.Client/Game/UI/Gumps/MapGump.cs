@@ -348,7 +348,8 @@ namespace ClassicUO.Game.UI.Gumps
                     new Vector2(c0.ScreenCoordinateX, c0.ScreenCoordinateY),
                     new Vector2(c1.ScreenCoordinateX, c1.ScreenCoordinateY),
                     hueVector,
-                    1
+                    1,
+                    0f
                 );
             }
 

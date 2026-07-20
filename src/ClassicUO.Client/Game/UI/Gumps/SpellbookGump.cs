@@ -200,6 +200,11 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
+            // From ClassicUO
+            // Ensure the book's property list is requested; it carries the active mastery,
+            // and its arrival triggers a rebuild that fills the right "Abilities" page.
+            World.OPL.Contains(LocalSerial);
+
             for (LinkedObject i = item.Items; i != null; i = i.Next)
             {
                 var spell = (Item)i;
@@ -357,91 +362,52 @@ namespace ClassicUO.Game.UI.Gumps
 
                         _dataBox.Add(text, page);
 
-                        if (
-                            World.OPL.TryGetNameAndData(
-                                LocalSerial,
-                                out string name,
-                                out string data
-                            )
-                        )
+                        int[] activeAbilities = SpellsMastery.GetActiveMasteryAbilities(
+                            World.OPL.GetClilocs(LocalSerial)
+                        );
+
+                        if (activeAbilities != null)
                         {
-                            data = data.ToLower();
-                            string[] buff = data.Split(
-                                new[] { '\n' },
-                                StringSplitOptions.RemoveEmptyEntries
-                            );
-
-                            for (int i = 0; i < buff.Length; i++)
+                            for (int k = 0; k < activeAbilities.Length; k++)
                             {
-                                if (buff[i] != null)
+                                int id = activeAbilities[k];
+
+                                SpellDefinition spell = SpellsMastery.GetSpell(id);
+
+                                if (spell.ID == 0)
                                 {
-                                    int index = buff[i].IndexOf(
-                                        "mastery",
-                                        StringComparison.InvariantCulture
-                                    );
+                                    continue;
+                                }
 
-                                    if (--index < 0)
-                                    {
-                                        continue;
-                                    }
+                                int iconMY = 55 + 44 * k;
 
-                                    string skillName = buff[i].Substring(0, index);
+                                var icon = new GumpPic(225, iconMY, (ushort)spell.GumpIconID, 0)
+                                {
+                                    LocalSerial = (uint)(id - 1)
+                                };
 
-                                    if (!string.IsNullOrEmpty(skillName))
-                                    {
-                                        List<int> activedSpells =
-                                            SpellsMastery.GetSpellListByGroupName(skillName);
+                                _dataBox.Add(icon, page);
+                                icon.MouseDoubleClick += OnIconDoubleClick;
+                                icon.DragBegin += OnIconDragBegin;
 
-                                        for (int k = 0; k < activedSpells.Count; k++)
-                                        {
-                                            int id = activedSpells[k];
+                                text = new Label(spell.Name, false, 0x0288, 80, 6)
+                                {
+                                    X = 225 + 44 + 4,
+                                    Y = iconMY + 2
+                                };
 
-                                            SpellDefinition spell = SpellsMastery.GetSpell(id);
+                                _dataBox.Add(text, page);
 
-                                            if (spell != null)
-                                            {
-                                                ushort iconGraphic = (ushort)spell.GumpIconID;
-                                                int toolTipCliloc =
-                                                    id >= 0 && id < 6 ? 1115689 : 1155938 - 6;
+                                int toolTipCliloc = SpellsMastery.GetSpellTooltipCliloc(id);
 
-                                                int iconMY = 55 + 44 * k;
+                                if (toolTipCliloc > 0)
+                                {
+                                    string tooltip =
+                                        Client.Game.UO.FileManager.Clilocs.GetString(
+                                            toolTipCliloc
+                                        );
 
-                                                var icon = new GumpPic(
-                                                    225,
-                                                    iconMY,
-                                                    iconGraphic,
-                                                    0
-                                                )
-                                                {
-                                                    LocalSerial = (uint)(id - 1)
-                                                };
-
-                                                _dataBox.Add(icon, page);
-                                                icon.MouseDoubleClick += OnIconDoubleClick;
-                                                icon.DragBegin += OnIconDragBegin;
-
-                                                text = new Label(spell.Name, false, 0x0288, 80, 6)
-                                                {
-                                                    X = 225 + 44 + 4,
-                                                    Y = iconMY + 2
-                                                };
-
-                                                _dataBox.Add(text, page);
-
-                                                if (toolTipCliloc > 0)
-                                                {
-                                                    string tooltip =
-                                                        Client.Game.UO.FileManager.Clilocs.GetString(
-                                                            toolTipCliloc + id
-                                                        );
-
-                                                    icon.SetTooltip(tooltip, 250);
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    break;
+                                    icon.SetTooltip(tooltip);
                                 }
                             }
                         }
@@ -758,7 +724,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (toolTipCliloc > 0)
                 {
                     string tooltip = Client.Game.UO.FileManager.Clilocs.GetString(toolTipCliloc + i);
-                    icon.SetTooltip(tooltip, 250);
+                    icon.SetTooltip(tooltip);
                 }
 
                 icon.MouseDoubleClick += OnIconDoubleClick;

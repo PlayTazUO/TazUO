@@ -1,12 +1,14 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Assets;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using MathHelper = ClassicUO.Utility.MathHelper;
@@ -35,6 +37,18 @@ namespace ClassicUO.Game.GameObjects
         public bool ShouldAutoLoot;
         public bool HighlightChecked;
         public string CustomName { get; set; }
+
+        /// <summary>
+        /// The OPL (Object Property List) name for this item, cached when OPL data is received.
+        /// May be null if OPL data has not yet been received.
+        /// </summary>
+        public string OPLName { get; set; }
+
+        /// <summary>
+        /// The OPL (Object Property List) data (tooltip body) for this item, cached when OPL data is received.
+        /// May be null if OPL data has not yet been received.
+        /// </summary>
+        public string OPLData { get; set; }
 
         public ushort DisplayedGraphic
         {
@@ -122,21 +136,21 @@ namespace ClassicUO.Game.GameObjects
         {
             get
             {
-                Item last;
-                Item item = last = this;
-
+                Item last = null;
+                Item item = this;
                 while (SerialHelper.IsItem(item.Container))
                 {
-                    last = item;
                     item = World.Items.Get(item.Container);
-
                     if (item == null)
                     {
-                        return 0;
+                        break;
                     }
+                    
+                    last = item;
                 }
 
-                return last;
+                // Never return the item itself
+                return last?.Serial ?? 0;
             }
         }
 
@@ -151,6 +165,12 @@ namespace ClassicUO.Game.GameObjects
 
         public ushort Amount;
         public uint Container = 0xFFFF_FFFF;
+
+        /// <summary>
+        /// The serial of the parent mobile this corpse belongs to.
+        /// Set via the DisplayDeath packet when this item is a corpse.
+        /// </summary>
+        public uint CorpseParent;
 
         public bool IsDamageable;
         public Layer Layer;
@@ -171,6 +191,14 @@ namespace ClassicUO.Game.GameObjects
             var i = new Item(world); // _pool.GetOne();
             i.Serial = serial;
             i.TryGetCustomName();
+
+            // If OPL data was already received before this item existed, cache it now.
+            if (world.OPL.TryGetNameAndData(serial, out string oplName, out string oplData))
+            {
+                i.OPLName = oplName;
+                i.OPLData = oplData;
+            }
+
             return i;
         }
 
@@ -178,6 +206,46 @@ namespace ClassicUO.Game.GameObjects
         {
             string name = await ItemDatabaseManager.Instance.GetItemCustomName(Serial);
             CustomName = name ?? "";
+        }
+
+        /// <summary>
+        /// Gets a display friendly name for this item, preferring the cached OPL name
+        /// (received from the server) and falling back to the item data name.
+        /// </summary>
+        /// <param name="showAmount">
+        /// When true, the stack size is prefixed to the name (e.g. "5 Gold Coins") for stacks
+        /// greater than one. When false, any leading stack size is stripped so only the name remains.
+        /// </param>
+        /// <returns>The normalized item name, or an empty string if no name is available.</returns>
+        public string GetNormalizedName(bool showAmount)
+        {
+            // Prefer the OPL name cached when OPL data was received (easier/faster lookup).
+            string name = OPLName;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                // Fall back to the server-assigned entity name, then the item data name
+                // (adjusted for plurality).
+                name = !string.IsNullOrEmpty(Name)
+                    ? Name
+                    : StringHelper.CapitalizeAllWords(StringHelper.GetPluralAdjustedString(ItemData.Name, Amount > 1));
+            }
+
+            if (string.IsNullOrEmpty(name))
+                return string.Empty;
+
+            name = name.Trim();
+
+            // OPL names (and some fallbacks) may already include a leading stack size,
+            // e.g. "5 Gold Coins". Strip it so amount display is controlled consistently.
+            string amountStr = $"{Amount.ToString(CultureInfo.InvariantCulture)} ";
+            if (name.StartsWith(amountStr, StringComparison.Ordinal))
+                name = name[amountStr.Length..];
+
+            if (showAmount && !IsCorpse && Amount > 1)
+                name = amountStr + name;
+
+            return name;
         }
 
         public override void OnGraphicSet(ushort newGraphic)

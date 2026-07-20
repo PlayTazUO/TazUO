@@ -70,6 +70,13 @@ namespace ClassicUO.Assets
                 return default;
             }
 
+            if (width <= 0 || height <= 0 || (long)width * height > int.MaxValue)
+            {
+                Log.Warn("Invalid bounds requested from MultiMap.rle");
+
+                return default;
+            }
+
             int mapSize = width * height;
 
             startx = startx >> 1;
@@ -224,6 +231,11 @@ namespace ClassicUO.Assets
 
             int pwidth = endX - startX;
             int pheight = endY - startY;
+
+            if (pwidth <= 0 || pheight <= 0 || (long)pwidth * pheight > int.MaxValue)
+            {
+                return default;
+            }
 
             uint[] pixels = new uint[pwidth * pheight];
 

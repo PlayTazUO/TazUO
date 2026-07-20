@@ -10,67 +10,50 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 /// </summary>
 public class ApiMobile : ApiEntity
 {
-    public override ushort X => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.X ?? 0);
-    public override ushort Y => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Y ?? 0);
-    public override sbyte Z => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Z ?? 0);
+    public override ushort X => Read(static m => m.X);
+    public override ushort Y => Read(static m => m.Y);
+    public override sbyte Z => Read(static m => m.Z);
 
-    public int HitsDiff => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.HitsDiff ?? 0);
-    public int ManaDiff => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.ManaDiff ?? 0);
-    public int StamDiff => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.StamDiff ?? 0);
-    public bool IsDead => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsDead ?? false);
-    public bool IsPoisoned => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsPoisoned ?? false);
-    public int HitsMax => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.HitsMax ?? 0);
-    public int Hits => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Hits ?? 0);
-    public int StaminaMax => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.StaminaMax ?? 0);
-    public int Stamina => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Stamina ?? 0);
-    public int ManaMax => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.ManaMax ?? 0);
-    public int Mana => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.Mana ?? 0);
-    public bool IsRenamable => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRenamable ?? false);
-    public bool IsHuman => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHuman ?? false);
-    public bool IsYellowHits => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsYellowHits ?? false);
-    public bool IsHidden => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsHidden ?? false);
-    public bool IsGargoyle => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsGargoyle ?? false);
-    public bool IsMounted => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsMounted ?? false);
-    public bool IsDrivingBoat => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsDrivingBoat ?? false);
-    public bool IsRunning => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.IsRunning ?? false);
+    public int HitsDiff => Read(static m => m.HitsDiff);
+    public int ManaDiff => Read(static m => m.ManaDiff);
+    public int StamDiff => Read(static m => m.StamDiff);
+    public bool IsDead => Read(static m => m.IsDead);
+    public bool IsPoisoned => Read(static m => m.IsPoisoned);
+    public int HitsMax => Read(static m => m.HitsMax);
+    public int Hits => Read(static m => m.Hits);
+    public int StaminaMax => Read(static m => m.StaminaMax);
+    public int Stamina => Read(static m => m.Stamina);
+    public int ManaMax => Read(static m => m.ManaMax);
+    public int Mana => Read(static m => m.Mana);
+    public bool IsRenamable => Read(static m => m.IsRenamable);
+    public bool IsHuman => Read(static m => m.IsHuman);
+    public bool IsYellowHits => Read(static m => m.IsYellowHits);
+    public bool IsHidden => Read(static m => m.IsHidden);
+    public bool IsGargoyle => Read(static m => m.IsGargoyle);
+    public bool IsMounted => Read(static m => m.IsMounted);
+    public bool IsDrivingBoat => Read(static m => m.IsDrivingBoat);
+    public bool IsRunning => Read(static m => m.IsRunning);
     /// <summary>
     /// Get this mobiles direction as a string, for example: "west", "east", etc
     /// </summary>
-    public string Direction => MainThreadQueue.InvokeOnMainThread(() => Utility.GetDirectionString(GetMobileUnsafe().Direction));
-    public Notoriety Notoriety => MainThreadQueue.InvokeOnMainThread(() =>
-    {
-        Mobile mob = GetMobileUnsafe();
-
-        if (mob == null) return Notoriety.Unknown;
-
-        return (Notoriety)mob.NotorietyFlag;
-    });
+    public string Direction => Read(static m => Utility.GetDirectionString(m.Direction), "");
+    public Notoriety Notoriety => Read(static m => (Notoriety)m.NotorietyFlag, Notoriety.Unknown);
 
     public virtual bool InWarMode
     {
-        get => MainThreadQueue.InvokeOnMainThread(() => GetMobileUnsafe()?.InWarMode ?? false);
+        get => Read(static m => m.InWarMode);
         set { } // Dispose of value - only overrides can set
     }
 
     /// <summary>
     /// Get the mobile's Backpack item
     /// </summary>
-    public ApiItem Backpack => MainThreadQueue.InvokeOnMainThread(() =>
-    {
-        Item backpack = GetMobileUnsafe()?.Backpack;
-
-        return backpack != null ? new ApiItem(backpack) : null;
-    });
+    public ApiItem Backpack => Read(static m => m.Backpack != null ? new ApiItem(m.Backpack) : null);
 
     /// <summary>
     /// Get the mobile's Mount item (if mounted)
     /// </summary>
-    public ApiItem Mount => MainThreadQueue.InvokeOnMainThread(() =>
-    {
-        Item mount = GetMobileUnsafe()?.Mount;
-
-        return mount != null ? new ApiItem(mount) : null;
-    });
+    public ApiItem Mount => Read(static m => m.Mount != null ? new ApiItem(m.Mount) : null);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ApiMobile"/> class from a <see cref="Mobile"/>.
@@ -95,16 +78,19 @@ public class ApiMobile : ApiEntity
     /// Gets the Mobile without thread marshalling. Must only be called from code already executing on the main thread.
     /// </summary>
     private Mobile GetMobileUnsafe()
-    {
-        if (mobile != null && mobile.Serial == Serial) return mobile;
+        => ResolveCached(ref mobile, Serial, static s => Client.Game.UO.World.Mobiles.TryGetValue(s, out Mobile m) ? m : null);
 
-        if (Client.Game.UO.World.Mobiles.TryGetValue(Serial, out Mobile m))
+    /// <summary>
+    /// Reads a single field from the backing <see cref="Mobile"/> on the main thread, returning
+    /// <paramref name="fallback"/> when the mobile is no longer available.
+    /// </summary>
+    protected T Read<T>(System.Func<Mobile, T> selector, T fallback = default)
+        => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            return mobile = m;
-        }
+            Mobile m = GetMobileUnsafe();
 
-        return null;
-    }
+            return m != null ? selector(m) : fallback;
+        });
 
     /// <summary>
     /// Gets the mobile name and properties (tooltip text).
@@ -113,26 +99,5 @@ public class ApiMobile : ApiEntity
     /// <param name="wait">True or false to wait for name and props</param>
     /// <param name="timeout">Timeout in seconds</param>
     /// <returns>Mobile name and properties, or empty string if we don't have them.</returns>
-    public string NameAndProps(bool wait = false, int timeout = 10)
-    {
-        if (wait)
-        {
-            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
-
-            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
-            {
-                System.Threading.Thread.Sleep(100);
-            }
-        }
-
-        return MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
-            {
-                return n + "\n" + d;
-            }
-
-            return string.Empty;
-        });
-    }
+    public string NameAndProps(bool wait = false, int timeout = 10) => GetNameAndProps(wait, timeout);
 }

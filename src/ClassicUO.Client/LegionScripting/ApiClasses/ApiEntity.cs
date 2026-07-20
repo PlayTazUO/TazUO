@@ -80,11 +80,50 @@ public class ApiEntity : ApiGameObject
     protected Entity entity;
     protected Entity GetEntity()
     {
-        if (entity != null && entity.Serial == Serial) return entity;
+        if (entity != null && !entity.IsDestroyed && entity.Serial == Serial) return entity;
+
+        return MainThreadQueue.InvokeOnMainThread(() => ResolveCached(ref entity, Serial, static s => Client.Game.UO.World.Get(s)));
+    }
+
+    /// <summary>
+    /// Returns the cached backing object if it still matches this wrapper's <see cref="Serial"/>
+    /// and has not been destroyed; otherwise looks it up via <paramref name="lookup"/> and caches the result.
+    /// Does not marshal to the main thread — callers that touch world state must wrap this appropriately.
+    /// </summary>
+    protected static T ResolveCached<T>(ref T cache, uint serial, System.Func<uint, T> lookup) where T : Entity
+    {
+        if (cache != null && !cache.IsDestroyed && cache.Serial == serial) return cache;
+
+        return cache = lookup(serial);
+    }
+
+    /// <summary>
+    /// Gets this entity's name and properties (tooltip text) as a single newline-joined string,
+    /// optionally waiting for the object property list (OPL) to arrive from the server.
+    /// </summary>
+    /// <param name="wait">True to wait for the name and properties to be received.</param>
+    /// <param name="timeout">Timeout in seconds while waiting.</param>
+    /// <returns>Name and properties joined by a newline, or an empty string if unavailable.</returns>
+    protected string GetNameAndProps(bool wait, int timeout)
+    {
+        if (wait)
+        {
+            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
+
+            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
+            {
+                System.Threading.Thread.Sleep(100);
+            }
+        }
 
         return MainThreadQueue.InvokeOnMainThread(() =>
         {
-            return entity = Client.Game.UO.World.Get(Serial);
+            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
+            {
+                return n + "\n" + d;
+            }
+
+            return string.Empty;
         });
     }
 }

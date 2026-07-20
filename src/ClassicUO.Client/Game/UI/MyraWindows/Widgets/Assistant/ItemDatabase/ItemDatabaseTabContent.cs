@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
@@ -46,7 +47,7 @@ public static class ItemDatabaseTabContent
         TextBox hueBox = null!;
         TextBox layerBox = null!;
         TextBox containerBox = null!;
-        MyraHSlider? maxResultsSlider = null;
+        LabeledHorizontalSlider? maxResultsSlider = null;
 
         var resultsPanel = new VerticalStackPanel { Spacing = 2 };
         var statusLabel = new MyraLabel("Ready to search", MyraLabel.TextStyle.P);
@@ -195,6 +196,56 @@ public static class ItemDatabaseTabContent
             statusLabel.Text = "Search cleared";
         }
 
+        // ── Target item info ────────────────────────────────────────────────
+        void TargetItemInfo()
+        {
+            World? world = Client.Game.UO?.World;
+            if (world == null)
+            {
+                statusLabel.Text = "World not loaded.";
+                return;
+            }
+
+            statusLabel.Text = "Target an item to view its info...";
+
+            world.TargetManager.SetTargeting(targeted =>
+            {
+                if (targeted is not Entity entity || !SerialHelper.IsItem(entity.Serial))
+                {
+                    statusLabel.Text = "That was not a valid item.";
+                    return;
+                }
+
+                uint serial = entity.Serial;
+
+                // Look the item up in the database first; if it's not there yet,
+                // fall back to the live world item so info is still shown.
+                ItemDatabaseManager.Instance.SearchItems(
+                    results =>
+                    {
+                        MainThreadQueue.EnqueueAction(() =>
+                        {
+                            if (results is { Count: > 0 })
+                            {
+                                new ItemDetailMyraWindow(results[0]);
+                                statusLabel.Text = $"Showing info for 0x{serial:X8}";
+                            }
+                            else if (world.Items?.Get(serial) is { IsDestroyed: false } item)
+                            {
+                                new ItemDetailMyraWindow(BuildItemInfo(item, world));
+                                statusLabel.Text = $"Showing info for 0x{serial:X8} (not in database)";
+                            }
+                            else
+                            {
+                                statusLabel.Text = $"No info found for 0x{serial:X8}";
+                            }
+                        });
+                    },
+                    serial: serial,
+                    limit: 1);
+            });
+        }
+
         // ── Basic search fields ─────────────────────────────────────────────
         root.Widgets.Add(new MyraLabel("Search Options:", MyraLabel.TextStyle.H3));
 
@@ -270,9 +321,9 @@ public static class ItemDatabaseTabContent
             MyraCheckButton.CreateWithCallback(false, b => currentCharOnly = b, "Current character only"));
         advancedPanel.Widgets.Add(locationCheckRow);
 
-        HorizontalStackPanel sliderWidget = MyraHSlider.SliderWithLabel(
+        HorizontalStackPanel sliderWidget = LabeledHorizontalSlider.SliderWithLabel(
             "Max results",
-            out MyraHSlider ms,
+            out LabeledHorizontalSlider ms,
             v => maxResults = (int)v,
             10, 1000, 100);
         maxResultsSlider = ms;
@@ -293,6 +344,8 @@ public static class ItemDatabaseTabContent
         // ── Action row ──────────────────────────────────────────────────────
         var actionRow = new HorizontalStackPanel { Spacing = 4 };
         actionRow.Widgets.Add(new MyraButton("Search",        () => PerformSearch()));
+        actionRow.Widgets.Add(new MyraButton("Target Item Info", () => TargetItemInfo())
+            { Tooltip = "Target an item in the world to open its item info" });
         actionRow.Widgets.Add(new MyraButton("Clear Fields",  () => ClearSearch()));
         actionRow.Widgets.Add(new MyraButton("Clear Results", () =>
         {
@@ -352,5 +405,41 @@ public static class ItemDatabaseTabContent
         root.Widgets.Add(new ScrollViewer { MaxHeight = 300, Content = resultsPanel });
 
         return root;
+    }
+
+    // Builds an ItemInfo snapshot from a live world item, used when the targeted
+    // item has not been recorded in the database yet.
+    private static ItemInfo BuildItemInfo(Item item, World world)
+    {
+        Layer layer = Layer.Invalid;
+        try
+        {
+            layer = (Layer)item.ItemData.Layer;
+        }
+        catch
+        {
+            // ItemData/TileData may not be loaded; leave layer as Invalid.
+        }
+
+        var info = new ItemInfo
+        {
+            Serial = item.Serial,
+            Graphic = item.Graphic,
+            Hue = item.Hue,
+            Name = item.GetNormalizedName(false),
+            Properties = item.OPLData,
+            Container = item.Container,
+            Layer = layer,
+            UpdatedTime = DateTime.Now,
+            Character = world.Player?.Serial ?? 0,
+            CharacterName = world.Player?.Name ?? string.Empty,
+            ServerName = ProfileManager.CurrentProfile?.ServerName ?? string.Empty,
+            X = item.X,
+            Y = item.Y,
+            OnGround = item.OnGround,
+            CustomName = item.CustomName ?? string.Empty,
+        };
+
+        return info;
     }
 }

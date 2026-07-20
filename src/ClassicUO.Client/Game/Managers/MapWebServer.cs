@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Game.Data;
@@ -134,11 +135,17 @@ namespace ClassicUO.Game.Managers
                     case "/api/maptexture":
                         ServeMapTexture(context.Response);
                         break;
+                    case "/api/markericon":
+                        ServeMarkerIcon(context.Request, context.Response);
+                        break;
                     case "/api/events":
                         ServeEventStream(context.Response);
                         break;
                     case "/api/command":
                         HandleCommand(context.Request, context.Response);
+                        break;
+                    case "/api/goto":
+                        HandleGoto(context.Request, context.Response);
                         break;
                     case "/api/journalsize":
                         if (context.Request.HttpMethod == "GET")
@@ -200,7 +207,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap(World.Instance.MapIndex);
+            Texture2D mapTexture = UI.Gumps.WorldMapGump.GetMapTextureForMap();
 
             var data = new
             {
@@ -285,6 +292,65 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        // Serves a marker icon by name. Rather than streaming a rendered GPU texture, we look up the
+        // original icon file's path on disk and send the file bytes directly. The browser references
+        // the icon via a stable URL (/api/markericon?name=...) which it can cache between requests.
+        private void ServeMarkerIcon(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                string name = request.QueryString["name"];
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    response.StatusCode = 400;
+                    response.Close();
+                    return;
+                }
+
+                string iconPath = null;
+                UI.Gumps.WorldMapGump._markerIconPaths.TryGetValue(name.ToLower(), out iconPath);
+
+                if (string.IsNullOrEmpty(iconPath) || !File.Exists(iconPath))
+                {
+                    response.StatusCode = 404;
+                    response.Close();
+                    return;
+                }
+
+                byte[] iconData = File.ReadAllBytes(iconPath);
+
+                response.ContentType = GetIconContentType(iconPath);
+                response.Headers.Add("Cache-Control", "public, max-age=86400");
+                response.ContentLength64 = iconData.Length;
+                response.OutputStream.Write(iconData, 0, iconData.Length);
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error serving marker icon: {ex.Message}");
+                try
+                {
+                    response.StatusCode = 500;
+                    response.Close();
+                }
+                catch { }
+            }
+        }
+
+        private static string GetIconContentType(string path)
+        {
+            switch (Path.GetExtension(path).ToLowerInvariant())
+            {
+                case ".png": return "image/png";
+                case ".jpg":
+                case ".jpeg": return "image/jpeg";
+                case ".ico":
+                case ".cur": return "image/x-icon";
+                default: return "application/octet-stream";
+            }
+        }
+
         private void ServeEventStream(HttpListenerResponse response)
         {
             response.ContentType = "text/event-stream";
@@ -304,30 +370,69 @@ namespace ClassicUO.Game.Managers
 
             try
             {
-                // Keep connection alive and send updates
-                while (_isRunning && World.Instance != null && World.Instance.InGame)
+                // Keep the connection alive for as long as the server is running.
+                //
+                // We intentionally do NOT break out of this loop when the player is
+                // briefly out of the world (e.g. while recalling/changing facets). The
+                // map index setter momentarily sets Map = null, so World.InGame flips to
+                // false for a frame. Previously that exited the loop and tore down the
+                // SSE connection on every facet change, and the browser did not reliably
+                // reconnect - leaving the web map frozen with stale live data. The most
+                // visible symptom was that markers from the previous facet would never
+                // refresh again ("markers gone forever" after recalling back). Instead we
+                // simply skip sending updates until the player is back in the world.
+                while (_isRunning)
                 {
-                    var data = new
+                    if (World.Instance == null || !World.Instance.InGame)
                     {
-                        mapIndex = World.Instance.MapIndex,
-                        player = new
+                        // Emit an SSE comment heartbeat so a client that disconnected
+                        // while we are out of the world surfaces as a broken pipe and
+                        // gets cleaned up promptly, instead of lingering until the next
+                        // successful data write.
+                        SendHeartbeat(response, "waiting-for-world");
+                        Thread.Sleep(500);
+                        continue;
+                    }
+
+                    string message;
+
+                    try
+                    {
+                        var data = new
                         {
-                            x = World.Instance.Player?.X ?? 0,
-                            y = World.Instance.Player?.Y ?? 0,
-                            name = World.Instance.Player?.Name ?? ""
-                        },
-                        party = GetPartyData(),
-                        guild = GetGuildData(),
-                        markers = GetMarkersData(),
-                        mobiles = GetMobilesData(),
-                        journal = MainThreadQueue.InvokeOnMainThread(() => GetNewJournalEntries(clientState))
-                    };
+                            mapIndex = World.Instance.MapIndex,
+                            player = new
+                            {
+                                x = World.Instance.Player?.X ?? 0,
+                                y = World.Instance.Player?.Y ?? 0,
+                                name = World.Instance.Player?.Name ?? ""
+                            },
+                            party = GetPartyData(),
+                            guild = GetGuildData(),
+                            markers = GetMarkersData(),
+                            mobiles = GetMobilesData(),
+                            journal = MainThreadQueue.InvokeOnMainThread(() => GetNewJournalEntries(clientState))
+                        };
 
-                    string json = JsonSerializer.Serialize(data);
+                        message = $"data: {JsonSerializer.Serialize(data)}\n\n";
+                    }
+                    catch (Exception ex)
+                    {
+                        // Gathering data can transiently fail while the world is being
+                        // rebuilt during a map change (collections such as the party,
+                        // guild and mobile lists get cleared/repopulated on another
+                        // thread). Skip this update but keep the connection alive so the
+                        // client keeps receiving fresh data once the world has settled.
+                        Log.Warn($"Map Web Server: failed to build event update: {ex.Message}");
+                        SendHeartbeat(response, "skipped-transient-update");
+                        Thread.Sleep(500);
+                        continue;
+                    }
 
-                    string message = $"data: {json}\n\n";
                     byte[] buffer = Encoding.UTF8.GetBytes(message);
 
+                    // A failure writing to the stream means the client really
+                    // disconnected; let it propagate to exit the loop and clean up.
                     response.OutputStream.Write(buffer, 0, buffer.Length);
                     response.OutputStream.Flush();
 
@@ -346,6 +451,16 @@ namespace ClassicUO.Game.Managers
                 }
                 try { response.Close(); } catch { }
             }
+        }
+
+        // Writes an SSE comment line (": ...") which carries no data event but keeps the
+        // stream active. A failed write throws, which lets the caller's loop tear the
+        // connection down and remove the stale client.
+        private static void SendHeartbeat(HttpListenerResponse response, string note)
+        {
+            byte[] heartbeat = Encoding.UTF8.GetBytes($": {note}\n\n");
+            response.OutputStream.Write(heartbeat, 0, heartbeat.Length);
+            response.OutputStream.Flush();
         }
 
         private object GetPartyData()
@@ -620,6 +735,102 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        // Matches raw map coordinates, e.g. "1639, 1532", "123 456" or "1331:745".
+        // Mirrors the point regex used by the in-game LocationGoWindow.
+        private static readonly Regex PointCoordsRegex = new Regex(@"^(?<X>\d+)\s*[,:\s]\s*(?<Y>\d+)$", RegexOptions.Compiled);
+
+        // Sets the player's Go-To location on the in-game World Map from the web map.
+        // Mirrors the "Go to location" context menu option, which calls WorldMapGump.GoToMarker.
+        // The input text accepts either raw map coordinates ("X, Y") or sextant coordinates
+        // (e.g. "100o25'S, 40o04'E"), decoded the same way as the in-game LocationGoWindow.
+        private void HandleGoto(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            try
+            {
+                if (request.HttpMethod != "POST")
+                {
+                    response.StatusCode = 405;
+                    response.Close();
+                    return;
+                }
+
+                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))
+                {
+                    string body = reader.ReadToEnd();
+                    Dictionary<string, string> gotoData = JsonSerializer.Deserialize<Dictionary<string, string>>(body);
+
+                    if (gotoData != null && gotoData.TryGetValue("text", out string text) && !string.IsNullOrWhiteSpace(text))
+                    {
+                        Point? parsedPoint = MainThreadQueue.InvokeOnMainThread<Point?>(() =>
+                        {
+                            if (World.Instance == null || !World.Instance.InGame)
+                                return null;
+
+                            if (!TryParseLocation(World.Instance.Map, text, out Point point))
+                                return null;
+
+                            UI.Gumps.WorldMapGump wmap = UIManager.GetGump<UI.Gumps.WorldMapGump>();
+                            wmap?.GoToMarker(point.X, point.Y, true);
+                            return point;
+                        });
+
+                        if (parsedPoint.HasValue)
+                        {
+                            response.StatusCode = 200;
+                            // Return the decoded coordinates so the web map can center itself on
+                            // the goto point and switch to free view, mirroring the in-game map.
+                            string json = JsonSerializer.Serialize(new Dictionary<string, int>
+                            {
+                                ["x"] = parsedPoint.Value.X,
+                                ["y"] = parsedPoint.Value.Y
+                            });
+                            byte[] buffer = Encoding.UTF8.GetBytes(json);
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                        else
+                        {
+                            response.StatusCode = 400;
+                            byte[] buffer = Encoding.UTF8.GetBytes("{\"status\":\"invalid\"}");
+                            response.ContentType = "application/json";
+                            response.ContentLength64 = buffer.Length;
+                            response.OutputStream.Write(buffer, 0, buffer.Length);
+                        }
+                    }
+                    else
+                    {
+                        response.StatusCode = 400;
+                    }
+                }
+
+                response.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error handling goto: {ex.Message}");
+                response.StatusCode = 500;
+                response.Close();
+            }
+        }
+
+        // Decodes goto input into map coordinates. Tries sextant coordinates first, then falls back
+        // to raw "X, Y" map coordinates - matching the in-game LocationGoWindow parsing order.
+        private static bool TryParseLocation(Map.Map map, string text, out Point point)
+        {
+            if (map != null && Sextant.Parse(map, text, out point))
+                return true;
+
+            point = Sextant.InvalidPoint;
+
+            Match match = PointCoordsRegex.Match(text.Trim());
+            if (!match.Success)
+                return false;
+
+            point = new Point(int.Parse(match.Groups["X"].Value), int.Parse(match.Groups["Y"].Value));
+            return true;
+        }
+
         private void GetJournalSize(HttpListenerResponse response)
         {
             try
@@ -814,6 +1025,44 @@ namespace ClassicUO.Game.Managers
         #controls input[type=""checkbox""] {
             margin-right: 8px;
         }
+        #controls .marker-search {
+            display: block;
+            width: 100%;
+            margin: 4px 0 8px 0;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        #controls .marker-search:focus {
+            border-color: #4CAF50;
+        }
+        #controls .goto-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        #controls .goto-input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+            outline: none;
+        }
+        #controls .goto-input:focus {
+            border-color: #4CAF50;
+        }
+        #controls .goto-row button {
+            margin: 0;
+        }
         #controls button {
             margin: 5px 5px 5px 0;
             padding: 8px 15px;
@@ -991,11 +1240,17 @@ namespace ClassicUO.Game.Managers
             <button onclick=""zoomOut()"">Zoom Out (-)</button>
             <button onclick=""centerOnPlayer()"">Center</button>
             <br>
+            <div class=""goto-row"">
+                <input type=""text"" id=""gotoInput"" class=""goto-input"" placeholder=""X, Y or sextant"" title=""e.g. 1639, 1532 or 100o25'S, 40o04'E"" autocomplete=""off"" />
+                <button onclick=""sendGoto()"">Go</button>
+            </div>
             <label><input type=""checkbox"" id=""followPlayer"" checked> Follow Player</label>
             <label><input type=""checkbox"" id=""rotateMap"" checked> Rotate Map 45°</label>
             <label><input type=""checkbox"" id=""showParty"" checked> Show Party</label>
             <label><input type=""checkbox"" id=""showGuild"" checked> Show Guild</label>
             <label><input type=""checkbox"" id=""showMarkers"" checked> Show Markers</label>
+            <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showMarkerIcons"" checked> Icons</label>
+            <input type=""text"" id=""markerSearch"" class=""marker-search"" placeholder=""Search markers..."" autocomplete=""off"" />
             <label><input type=""checkbox"" id=""showMobiles"" checked> Show Mobiles</label>
             <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showEnemies"" checked> Enemies</label>
             <label style=""margin-left: 20px;""><input type=""checkbox"" id=""showOthers"" checked> Other</label>
@@ -1055,6 +1310,7 @@ namespace ClassicUO.Game.Managers
         let journalMinimized = false;
         let controlsMinimized = false;
         let isResizingJournal = false;
+        let markerSearchText = '';
         let resizeStartX = 0;
         let resizeStartY = 0;
         let resizeStartWidth = 0;
@@ -1249,6 +1505,44 @@ namespace ClassicUO.Game.Managers
             }
         }
 
+        async function sendGoto() {
+            const input = document.getElementById('gotoInput');
+            const text = input.value.trim();
+
+            if (!text) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/goto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                // Server decodes both raw (X, Y) and sextant coordinates. A 400 means the
+                // input could not be parsed - flag it so the user knows to fix their input.
+                if (response.ok) {
+                    input.style.borderColor = '';
+
+                    // Mirror the in-game map: drop out of follow-player (free view) and
+                    // center the web map on the decoded goto point returned by the server.
+                    const data = await response.json();
+                    if (data && typeof data.x === 'number' && typeof data.y === 'number') {
+                        document.getElementById('followPlayer').checked = false;
+                        centerOnWorldPoint(data.x, data.y);
+                    }
+                } else {
+                    input.style.borderColor = '#f44336';
+                    console.error('Failed to set goto location (invalid coordinates?)');
+                }
+            } catch (err) {
+                console.error('Error sending goto:', err);
+            }
+        }
+
         async function loadJournalSize() {
             try {
                 const response = await fetch('/api/journalsize');
@@ -1409,6 +1703,20 @@ namespace ClassicUO.Game.Managers
             }
         });
 
+        // Handle marker search filtering
+        const markerSearchInput = document.getElementById('markerSearch');
+        markerSearchInput.addEventListener('input', () => {
+            markerSearchText = markerSearchInput.value.trim().toLowerCase();
+            draw();
+        });
+
+        // Allow pressing Enter in the goto field to trigger the goto
+        document.getElementById('gotoInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendGoto();
+            }
+        });
+
         // Handle journal input
         journalInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -1470,9 +1778,13 @@ namespace ClassicUO.Game.Managers
 
                     if (document.getElementById('followPlayer').checked) {
                         centerOnPlayer();
-                    } else {
-                        draw();
                     }
+
+                    // Always redraw after applying fresh live data. centerOnPlayer() only
+                    // updates the target offset and relies on the animation loop to redraw,
+                    // which is skipped when the player is stationary - so without this the
+                    // newly received markers/mobiles would not appear until the player moved.
+                    draw();
                 }
             };
 
@@ -1537,6 +1849,30 @@ namespace ClassicUO.Game.Managers
             ctx.fillText(text, labelX, labelY);
         }
 
+        // Cache of marker icon images keyed by icon name. Icons are fetched once from the server by
+        // their file (via /api/markericon?name=...) and reused; the browser also caches the HTTP
+        // response so switching maps/markers doesn't re-download them.
+        const markerIconCache = {};
+
+        function getMarkerIcon(name) {
+            if (!name) return null;
+
+            const key = name.toLowerCase();
+            let entry = markerIconCache[key];
+
+            if (entry === undefined) {
+                const img = new Image();
+                entry = { img: img, loaded: false, failed: false };
+                markerIconCache[key] = entry;
+
+                img.onload = () => { entry.loaded = true; draw(); };
+                img.onerror = () => { entry.failed = true; };
+                img.src = '/api/markericon?name=' + encodeURIComponent(name);
+            }
+
+            return (entry.loaded && !entry.failed) ? entry.img : null;
+        }
+
         function draw() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1593,6 +1929,11 @@ namespace ClassicUO.Game.Managers
             // Draw markers
             if (document.getElementById('showMarkers').checked && mapData.markers) {
                 mapData.markers.forEach(marker => {
+                    // Filter out markers that don't match the search text
+                    if (markerSearchText && (!marker.name || !marker.name.toLowerCase().includes(markerSearchText))) {
+                        return;
+                    }
+
                     const markerColor = `rgba(${marker.color.r}, ${marker.color.g}, ${marker.color.b}, ${marker.color.a / 255})`;
 
                     // Save state before drawing marker
@@ -1609,14 +1950,24 @@ namespace ClassicUO.Game.Managers
                     // Scale for proper sizing
                     ctx.scale(1 / zoom, 1 / zoom);
 
-                    // Draw marker circle
-                    ctx.fillStyle = markerColor;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(0, 0, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
+                    // Prefer the marker's icon (served from its file on disk) when available;
+                    // fall back to a colored circle when there's no icon or it hasn't loaded yet.
+                    const markerIcon = document.getElementById('showMarkerIcons').checked
+                        ? getMarkerIcon(marker.iconName)
+                        : null;
+
+                    if (markerIcon) {
+                        ctx.drawImage(markerIcon, -markerIcon.width / 2, -markerIcon.height / 2);
+                    } else {
+                        // Draw marker circle
+                        ctx.fillStyle = markerColor;
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
 
                     // Draw label
                     if (marker.name) {
@@ -1912,6 +2263,25 @@ namespace ClassicUO.Game.Managers
             targetOffsetX = -scaledX;
             targetOffsetY = -scaledY;
             // Animation loop will smoothly interpolate to these target values
+        }
+
+        // Centers the view on an arbitrary map coordinate (used by the goto feature).
+        // Mirrors centerOnPlayer() but for a caller-supplied world point instead of the player.
+        function centerOnWorldPoint(worldX, worldY) {
+            if (!mapImage) return;
+
+            let scaledX = (worldX - mapImage.width / 2) * zoom;
+            let scaledY = (worldY - mapImage.height / 2) * zoom;
+
+            const isRotated = document.getElementById('rotateMap').checked;
+            if (isRotated) {
+                const rotated = rotatePoint(scaledX, scaledY, Math.PI / 4);
+                scaledX = rotated.x;
+                scaledY = rotated.y;
+            }
+
+            targetOffsetX = -scaledX;
+            targetOffsetY = -scaledY;
         }
 
         function zoomIn() {

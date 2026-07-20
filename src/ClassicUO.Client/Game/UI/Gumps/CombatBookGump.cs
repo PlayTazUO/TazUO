@@ -117,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
                         };
 
                         Add(text, page);
-                        text.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(1061693 + offs), 150);
+                        text.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(1061693 + offs));
 
                         y += 15;
                         offs++;
@@ -186,7 +186,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var icon = new GumpPic(62, 40, (ushort) (0x5200 + i), 0);
                 Add(icon, pageW);
-                icon.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(1061693 + i), 150);
+                icon.SetTooltip(Client.Game.UO.FileManager.Clilocs.GetString(1061693 + i));
 
                 var text = new Label
                 (

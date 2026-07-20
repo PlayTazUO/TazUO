@@ -20,6 +20,87 @@ namespace ClassicUO.Game.Data
             new[] { 15, 16, 18, 33, 39, 42, 45 }
         };
 
+        //From ClassicUO:
+        // Property-list cliloc identifying the active mastery -> the abilities shown on the
+        // book's right "Abilities" page, in display order (passive first when present).
+        private static readonly Dictionary<int, int[]> _activeMasteryAbilities =
+            new Dictionary<int, int[]>
+            {
+                { 0x1193CA, new[] { 1, 2 } },
+                { 0x1193CB, new[] { 3, 4 } },
+                { 0x1193C9, new[] { 5, 6 } },
+                { 0x11A2BB, new[] { 15, 7, 8 } },
+                { 0x11A2BC, new[] { 15, 9, 10 } },
+                { 0x11A2BD, new[] { 15, 11, 12 } },
+                { 0x11A2BE, new[] { 15, 13, 14 } },
+                { 0x11A2BF, new[] { 18, 16, 17 } },
+                { 0x11A2C0, new[] { 18, 19, 20 } },
+                { 0x11A2C1, new[] { 18, 21, 22 } },
+                { 0x11A2C2, new[] { 33, 25, 26 } },
+                { 0x11A2C3, new[] { 33, 27, 28 } },
+                { 0x11A2C4, new[] { 33, 29, 30 } },
+                { 0x11A2C5, new[] { 33, 31, 32 } },
+                { 0x11A2C6, new[] { 36, 34, 35 } },
+                { 0x11A2C7, new[] { 39, 37, 38 } },
+                { 0x11A2C8, new[] { 42, 40, 41 } },
+                { 0x11A2C9, new[] { 45, 43, 44 } },
+                { 0x11A2CA, new[] { 33, 23, 24 } }
+            };
+
+        // Maps a mastery ability id to the cliloc used for its tooltip description.
+        // These were previously derived from an arithmetic formula but several entries
+        // did not line up with the correct description, so they are listed explicitly
+        // here to be adjusted manually as needed.
+        private static readonly Dictionary<int, int> _spellTooltipClilocs =
+            new Dictionary<int, int>
+            {
+                { 1, 1115689 },  // Inspire
+                { 2, 1115690 },  // Invigorate
+                { 3, 1115691 },  // Resilience
+                { 4, 1115692 },  // Perseverance
+                { 5, 1115693 },  // Tribulation
+                { 6, 1115694 },  // Despair
+                { 7, 1155938 },  // Death Ray
+                { 8, 1155939 },  // Ethereal Burst
+                { 9, 1155940 },  // Nether Blast
+                { 10, 1155941 }, // Mystic Weapon
+                { 11, 1155942 }, // Command Undead
+                { 12, 1155943 }, // Conduit
+                { 13, 1155944 }, // Mana Shield
+                { 14, 1155945 }, // Summon Reaper
+                { 15, 1155946 }, // Enchanted Summoning
+                { 16, 1155947 }, // Anticipate Hit
+                { 17, 1155948 }, // Warcry
+                { 18, 1155949 }, // Intuition
+                { 19, 1155950 }, // Rejuvenate
+                { 20, 1155951 }, // Holy Fist
+                { 21, 1155952 }, // Shadow
+                { 22, 1155953 }, // White Tiger Form
+                { 23, 1155954 }, // Flaming Shot
+                { 24, 1155955 }, // Playing The Odds
+                { 25, 1155956 }, // Thrust
+                { 26, 1155957 }, // Pierce
+                { 27, 1155958 }, // Stagger
+                { 28, 1155959 }, // Toughness
+                { 29, 1155960 }, // Onslaught
+                { 30, 1155961 }, // Focused Eye
+                { 31, 1155962 }, // Elemental Fury
+                { 32, 1155963 }, // Called Shot
+                { 33, 1155964 }, // Warrior's Gifts
+                { 34, 1155965 }, // Shield Bash
+                { 35, 1155966 }, // Bodyguard
+                { 36, 1155967 }, // Heighten Senses
+                { 37, 1155968 }, // Tolerance
+                { 38, 1155969 }, // Injected Strike
+                { 39, 1155970 }, // Potency
+                { 40, 1155971 }, // Rampage
+                { 41, 1155972 }, // Fists of Fury
+                { 42, 1155973 }, // Knockout
+                { 43, 1155974 }, // Whispering
+                { 44, 1155975 }, // Combat Training
+                { 45, 1155976 }  // Boarding
+            };
+
         public static readonly string SpellBookName = SpellBookType.Mastery.ToString();
 
 
@@ -700,6 +781,32 @@ namespace ClassicUO.Game.Data
 
         public static IReadOnlyDictionary<int, SpellDefinition> GetAllSpells => _spellsDict;
         internal static int MaxSpellCount => _spellsDict.Count;
+
+        public static int[] GetActiveMasteryAbilities(int[] propertyClilocs)
+        {
+            if (propertyClilocs != null)
+            {
+                for (int i = 0; i < propertyClilocs.Length; i++)
+                {
+                    if (_activeMasteryAbilities.TryGetValue(propertyClilocs[i], out int[] ids))
+                    {
+                        return ids;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static int GetSpellTooltipCliloc(int spellId)
+        {
+            if (_spellTooltipClilocs.TryGetValue(spellId, out int cliloc))
+            {
+                return cliloc;
+            }
+
+            return 0;
+        }
 
         internal static string GetUsedSkillName(int spellid)
         {

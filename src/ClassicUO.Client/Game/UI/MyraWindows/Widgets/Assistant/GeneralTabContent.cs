@@ -15,7 +15,6 @@ public static class GeneralTabContent
     public static Widget Build()
     {
         Profile profile = ProfileManager.CurrentProfile;
-        AssistantLanguage lang = Language.Instance.Assistant;
         float gameScale = Client.Game.RenderScale;
 
         var mainContent = new HorizontalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
@@ -26,16 +25,16 @@ public static class GeneralTabContent
         mainContent.Widgets.Add(rightSide);
 
 
-        leftSide.Widgets.Add(new MyraLabel(lang.VisualConfig, MyraLabel.TextStyle.H1));
-        rightSide.Widgets.Add(new MyraLabel(lang.DelayConfig, MyraLabel.TextStyle.H1));
+        leftSide.Widgets.Add(new MyraLabel(TazLang.Get("assistant_visualconfig"), MyraLabel.TextStyle.H2));
+        rightSide.Widgets.Add(new MyraLabel(TazLang.Get("assistant_delayconfig"), MyraLabel.TextStyle.H2));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.CameraSmoothing, out MyraHSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_camerasmoothing"), out LabeledHorizontalSlider _cSmoothSlider, v => profile.CameraSmoothingFactor = v, 0, 1, profile.CameraSmoothingFactor));
         _cSmoothSlider.RoundValues = false;
         _cSmoothSlider.WheelStep = 0.1f;
 
-        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.HighlightGameObjects, (b) => profile.HighlightGameObjects = b, lang.HighlightGameObjects));
+        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.HighlightGameObjects, (b) => profile.HighlightGameObjects = b, TazLang.Get("assistant_highlightgameobjects")));
 
-        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.NameOverheadToggled, (b) => profile.NameOverheadToggled = b, lang.ShowNameplates));
+        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.NameOverheadToggled, (b) => profile.NameOverheadToggled = b, TazLang.Get("assistant_shownameplates")));
 
         leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.EnablePetScaling, b =>
         {
@@ -45,17 +44,17 @@ public static class GeneralTabContent
             foreach (Mobile mob in mobs)
                 if (mob != null && mob.IsRenamable)
                     mob.Scale = b ? 0.6f : 1f;
-        }, lang.PetScaling, lang.PetScalingTooltip));
+        }, TazLang.Get("assistant_petscaling"), TazLang.Get("assistant_petscaling_tooltip")));
 
-        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b, lang.OutlineMobiles));
+        leftSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.OutlineMobilesNotoriety, (b) => profile.OutlineMobilesNotoriety = b, TazLang.Get("assistant_outlinemobiles")));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.MinGumpDragDist, out _, v => profile.MinGumpMoveDistance = (int)v, 0, 20, profile.MinGumpMoveDistance));
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_mingumpdragdist"), out _, v => profile.MinGumpMoveDistance = (int)v, 0, 20, profile.MinGumpMoveDistance));
 
-        leftSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.GameScale, out MyraHSlider gsSlider, v =>
+        leftSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_gamescale"), out LabeledHorizontalSlider gsSlider, v =>
         {
             gameScale = Math.Clamp(v / 100, Constants.MIN_GAME_SCALE, Constants.MAX_GAME_SCALE);
         }, Constants.MIN_GAME_SCALE * 100, Constants.MAX_GAME_SCALE * 100, Client.Game.RenderScale * 100));
-        gsSlider.Tooltip = lang.GameScaleTooltip;
+        gsSlider.Tooltip = TazLang.Get("assistant_gamescale_tooltip");
 
         leftSide.Widgets.Add(new MyraButton("Apply scale", () =>
         {
@@ -65,43 +64,43 @@ public static class GeneralTabContent
 
 
         //Right side
-        rightSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.TurnDelay, out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay));
+        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_turndelay"), out _, v => profile.TurnDelay = (ushort)v, 0, 150, profile.TurnDelay));
 
-        rightSide.Widgets.Add(MyraHSlider.SliderWithLabel(lang.ObjectDelay, out MyraHSlider obDelaySlider,
+        rightSide.Widgets.Add(LabeledHorizontalSlider.SliderWithLabel(TazLang.Get("assistant_objectdelay"), out LabeledHorizontalSlider obDelaySlider,
             v => profile.MoveMultiObjectDelay = (int)v, 0, 3000, profile.MoveMultiObjectDelay));
 
-        rightSide.Widgets.Add(new MyraButton(lang.AutoDelayChecker, () => AutomatedObjectDelay.Begin(() =>
+        rightSide.Widgets.Add(new MyraButton(TazLang.Get("assistant_autodelaychecker"), () => AutomatedObjectDelay.Begin(() =>
         {
             obDelaySlider?.Value = profile.MoveMultiObjectDelay;
-        })) { Tooltip = lang.AutoDelayCheckerTooltip });
+        })) { Tooltip = TazLang.Get("assistant_autodelaychecker_tooltip") });
 
         // Right side: Misc
         rightSide.Widgets.Add(new MyraSpacer(20, 15));
 
-        rightSide.Widgets.Add(new MyraLabel(lang.Misc, MyraLabel.TextStyle.H1));
+        rightSide.Widgets.Add(new MyraLabel(TazLang.Get("assistant_misc"), MyraLabel.TextStyle.H2));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.QueueManualItemMoves,
-            b => profile.QueueManualItemMoves = b, lang.QueueItemMoves, lang.QueueItemMovesTooltip));
+            b => profile.QueueManualItemMoves = b, TazLang.Get("assistant_queueitemmoves"), TazLang.Get("assistant_queueitemmoves_tooltip")));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.QueueManualItemUses,
-            b => profile.QueueManualItemUses = b, lang.QueueObjectUses, lang.QueueObjectUsesTooltip));
+            b => profile.QueueManualItemUses = b, TazLang.Get("assistant_queueobjectuses"), TazLang.Get("assistant_queueobjectuses_tooltip")));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoOpenOwnCorpse,
-            b => profile.AutoOpenOwnCorpse = b, lang.AutoOpenOwnCorpse, lang.AutoOpenOwnCorpseTooltip));
+            b => profile.AutoOpenOwnCorpse = b, TazLang.Get("assistant_autoopenowncorpse"), TazLang.Get("assistant_autoopenowncorpse_tooltip")));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.AutoUnequipForActions,
-            b => profile.AutoUnequipForActions = b, lang.AutoUnequipForActions, lang.AutoUnequipForActionsTooltip));
+            b => profile.AutoUnequipForActions = b, TazLang.Get("assistant_autounequipforactions"), TazLang.Get("assistant_autounequipforactions_tooltip")));
 
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.DisableWeather,
             b => {
                 profile.DisableWeather = b;
                 if (b) World.Instance?.Weather.Reset();
-            }, lang.DisableWeather, lang.DisableWeatherTooltip));
+            }, TazLang.Get("assistant_disableweather"), TazLang.Get("assistant_disableweather_tooltip")));
 
         var healLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickHealSpell)?.Name ??
-                                      profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };
+                                      profile.QuickHealSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = TazLang.Get("assistant_quickspelltooltip") };
 
-        rightSide.Widgets.Add(new MyraButton(lang.SetQuickHealSpell, () =>
+        rightSide.Widgets.Add(new MyraButton(TazLang.Get("assistant_setquickhealspell"), () =>
         {
             UIManager.Add(new SpellQuickSearch(World.Instance, 0, 0, s =>
             {
@@ -114,8 +113,8 @@ public static class GeneralTabContent
         }).PlaceBefore(healLabel));
 
         var cureLabel = new MyraLabel(SpellDefinition.FullIndexGetSpell(profile.QuickCureSpell)?.Name ??
-                                      profile.QuickCureSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = lang.QuickSpellTooltip };
-        rightSide.Widgets.Add(new MyraButton(lang.SetQuickCureSpell, () =>
+                                      profile.QuickCureSpell.ToString(), MyraLabel.TextStyle.P) { Tooltip = TazLang.Get("assistant_quickspelltooltip") };
+        rightSide.Widgets.Add(new MyraButton(TazLang.Get("assistant_setquickcurespell"), () =>
         {
             UIManager.Add(new SpellQuickSearch(World.Instance, 0, 0, s =>
             {
@@ -130,7 +129,7 @@ public static class GeneralTabContent
         rightSide.Widgets.Add(MyraCheckButton.CreateWithCallback(profile.SingleClickMobileSetsLastTarget,
             b => {
                 profile.SingleClickMobileSetsLastTarget = b;
-            }, lang.SingleClickLastTarg));
+            }, TazLang.Get("assistant_singleclicklasttarg")));
 
         return mainContent;
     }

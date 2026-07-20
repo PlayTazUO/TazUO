@@ -38,7 +38,14 @@ internal static class DisplayDeath
         }
 
         if (SerialHelper.IsValid(corpseSerial))
+        {
             world.CorpseManager.Add(corpseSerial, serial, owner.Direction, running != 0);
+
+            Item corpse = world.Items.Get(corpseSerial);
+
+            if (corpse != null)
+                corpse.CorpseParent = serial;
+        }
 
         Animations animations = Client.Game.UO.Animations;
         ushort gfx = owner.Graphic;

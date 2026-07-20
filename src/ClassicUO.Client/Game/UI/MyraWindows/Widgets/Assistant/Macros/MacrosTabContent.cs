@@ -1,21 +1,28 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ClassicUO.Common.Enums;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
 using SDL3;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 
 public static class MacrosTabContent
 {
     private static readonly HashSet<MacroType> _filteredMacroTypes = new() { MacroType.INVALID };
+
+    /// <summary>Macro types whose sub-type dropdown is a list of available gumps (shared sub-type range).</summary>
+    private static readonly HashSet<MacroType> _gumpListMacroTypes = new()
+    {
+        MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump
+    };
     private static readonly string[] _sortedMacroTypeNames;
     private static readonly MacroType[] _sortedMacroTypeValues;
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
@@ -41,7 +48,7 @@ public static class MacrosTabContent
             _macroTypeToDisplayIndex[macroTypes[i]] = i;
     }
 
-    public static Widget Build()
+    public static Widget Build(MyraControl owner)
     {
         Profile? profile = ProfileManager.CurrentProfile;
         if (profile == null)
@@ -204,8 +211,9 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(hotkeyRow);
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
-            // Create Macro Button
-            editorPanel.Widgets.Add(new MyraButton("Create Macro Button", () =>
+            // Create Macro Button / Button Editor
+            var macroButtonRow = new HorizontalStackPanel { Spacing = 2 };
+            macroButtonRow.Widgets.Add(new MyraButton("Create Macro Button", () =>
             {
                 foreach (IGui? gump in UIManager.Gumps)
                     if (gump is MacroButtonGump mbg && mbg.TheMacro == macro)
@@ -218,6 +226,13 @@ public static class MacrosTabContent
                 macroButtonGump.CenterYInViewPort();
                 UIManager.Add(macroButtonGump);
             }) { Tooltip = "Create a draggable macro button for this macro" });
+
+            macroButtonRow.Widgets.Add(new MyraButton("Button Editor", () =>
+            {
+                OpenMacroButtonEditor(macro);
+            }) { Tooltip = "Edit the appearance of this macro's button (label, scale, color, graphic)" });
+
+            editorPanel.Widgets.Add(macroButtonRow);
 
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
@@ -245,6 +260,27 @@ public static class MacrosTabContent
                 {
                     macro.Items = newAction;
                     newAction.Next = new MacroObject(MacroType.None, MacroSubType.MSC_NONE);
+                }
+                MarkDirty();
+                BuildActionsPanel();
+            }));
+
+            bottomRow.Widgets.Add(new MyraButton("Add Loop", () =>
+            {
+                MacroLoopContainer loopContainer = Macro.CreateLoopContainer(loopCount: 1, delayBetweenIterations: 500);
+                var scanAction = (MacroObject)macro.Items;
+                MacroObject? lastAction = null;
+                while (scanAction != null && scanAction.Code != MacroType.None)
+                {
+                    lastAction = scanAction;
+                    scanAction = (MacroObject)scanAction.Next;
+                }
+                if (lastAction != null)
+                    macro.Insert(lastAction, loopContainer);
+                else
+                {
+                    macro.Items = loopContainer;
+                    loopContainer.Next = new MacroObject(MacroType.None, MacroSubType.MSC_NONE);
                 }
                 MarkDirty();
                 BuildActionsPanel();
@@ -370,91 +406,26 @@ public static class MacrosTabContent
 
             while (action != null && action.Code != MacroType.None)
             {
-                MacroObject capturedAction = action;
-                int capturedIndex = actionIndex;
-
-                var actionRow = new HorizontalStackPanel { Spacing = 2 };
-                actionRow.Widgets.Add(new MyraLabel($"{capturedIndex + 1}.", MyraLabel.TextStyle.P));
-
-                // Action type ComboBox
-#pragma warning disable CS0612, CS0618
-                var typeCombo = new ComboBox
+                if (action is MacroLoopContainer loopContainer)
                 {
-                    Width = 160,
-                    VerticalAlignment = VerticalAlignment.Center,
-                };
-                foreach (string typeName in _sortedMacroTypeNames)
-                    typeCombo.Items.Add(new ListItem(typeName));
-
-                int displayIdx = _macroTypeToDisplayIndex.TryGetValue(capturedAction.Code, out int di) ? di : 0;
-                typeCombo.SelectedIndex = displayIdx;
-                typeCombo.SelectedIndexChanged += (_, _) =>
-                {
-                    if (typeCombo.SelectedIndex == null) return;
-                    MacroType newType = _sortedMacroTypeValues[typeCombo.SelectedIndex.Value];
-                    if (newType == capturedAction.Code) return;
-
-                    MacroObject newAction = Macro.Create(newType);
-                    macro.Insert(capturedAction, newAction);
-                    macro.Remove(capturedAction);
-                    MarkDirty();
-                    BuildActionsPanel();
-                };
-#pragma warning restore CS0612, CS0618
-                actionRow.Widgets.Add(typeCombo);
-
-                // Sub-type input
-                if (capturedAction.SubMenuType == 1)
-                {
-                    // Dropdown sub-type
-                    int subCount = 0, subOffset = 0;
-                    Macro.GetBoundByCode(capturedAction.Code, ref subCount, ref subOffset);
-
-                    string[] subNames = new string[subCount];
-                    for (int si = 0; si < subCount; si++)
-                        subNames[si] = ((MacroSubType)(si + subOffset)).ToString();
-
-                    int curSubIdx = (int)capturedAction.SubCode - subOffset;
-                    if (curSubIdx < 0 || curSubIdx >= subCount) curSubIdx = 0;
-
-#pragma warning disable CS0612, CS0618
-                    var subCombo = new ComboBox
-                    {
-                        Width = 160,
-                        VerticalAlignment = VerticalAlignment.Center,
-                    };
-
-                    foreach (string subName in subNames)
-                        subCombo.Items.Add(new ListItem(subName));
-
-                    subCombo.SelectedIndex = curSubIdx;
-                    subCombo.SelectedIndexChanged += (_, _) =>
-                    {
-                        if (subCombo.SelectedIndex == null) return;
-                        capturedAction.SubCode = (MacroSubType)(subCombo.SelectedIndex.Value + subOffset);
-                        MarkDirty();
-                    };
-#pragma warning restore CS0612, CS0618
-                    actionRow.Widgets.Add(subCombo);
+                    BuildLoopContainerWidget(loopContainer, macro, actionIndex);
+                    actionIndex++;
                 }
-                else if (capturedAction.SubMenuType == 2)
+                else
                 {
-                    // Text input
-                    string currentText = capturedAction.HasString()
-                        ? ((MacroObjectString)capturedAction).Text
-                        : "";
-                    var textBox = new MyraInputBox { Text = currentText, Width = 180 };
-                    textBox.TextChangedByUser += (_, _) =>
-                    {
-                        string newText = textBox.Text ?? "";
-                        if (capturedAction.HasString())
+                    MacroObject capturedAction = action;
+                    int capturedIndex = actionIndex;
+
+                    HorizontalStackPanel row = BuildActionRow(
+                        capturedAction,
+                        $"{capturedIndex + 1}.",
+                        onTypeReplace: newAction =>
                         {
-                            ((MacroObjectString)capturedAction).Text = newText;
-                        }
-                        else
+                            macro.Insert(capturedAction, newAction);
+                            macro.Remove(capturedAction);
+                        },
+                        onTextReplace: strAction =>
                         {
-                            // Replace with string version
-                            var strAction = new MacroObjectString(capturedAction.Code, capturedAction.SubCode, newText);
                             strAction.Next = capturedAction.Next;
                             var scan = (MacroObject)macro.Items;
                             MacroObject? prev = null;
@@ -465,28 +436,238 @@ public static class MacrosTabContent
                             }
                             if (prev != null) prev.Next = strAction;
                             else macro.Items = strAction;
-                        }
-                        MarkDirty();
-                    };
-                    actionRow.Widgets.Add(textBox);
+                        },
+                        onRemove: () => macro.Remove(capturedAction)
+                    );
+
+                    actionsPanel.Widgets.Add(row);
+                    actionIndex++;
                 }
 
-                // Remove button
-                actionRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
-                {
-                    macro.Remove(capturedAction);
-                    MarkDirty();
-                    BuildActionsPanel();
-                }) { Tooltip = "Remove this action" }));
-
-                actionsPanel.Widgets.Add(actionRow);
-
                 action = (MacroObject)action.Next;
-                actionIndex++;
             }
 
             if (actionIndex == 0)
                 actionsPanel.Widgets.Add(new MyraLabel("No actions. Click 'Add Action' to add one.", MyraLabel.TextStyle.H3));
+        }
+
+        HorizontalStackPanel BuildActionRow(
+            MacroObject action,
+            string indexLabel,
+            Action<MacroObject> onTypeReplace,   // combo changed -> swap + rebuild
+            Action<MacroObject> onTextReplace,   // text typed on non-string action -> swap silently
+            Action onRemove)
+        {
+            var row = new HorizontalStackPanel { Spacing = 2 };
+            row.Widgets.Add(new MyraLabel(indexLabel, MyraLabel.TextStyle.P));
+
+            MacroObject capturedAction = action;
+
+#pragma warning disable CS0612, CS0618
+            var typeCombo = new ComboBox
+            {
+                Width = 160,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            foreach (string typeName in _sortedMacroTypeNames)
+                typeCombo.Items.Add(new ListItem(typeName));
+
+            int displayIdx = _macroTypeToDisplayIndex.TryGetValue(capturedAction.Code, out int di) ? di : 0;
+            typeCombo.SelectedIndex = displayIdx;
+            typeCombo.SelectedIndexChanged += (_, _) =>
+            {
+                if (typeCombo.SelectedIndex == null) return;
+                MacroType newType = _sortedMacroTypeValues[typeCombo.SelectedIndex.Value];
+                if (newType == capturedAction.Code) return;
+
+                MacroObject newAction = Macro.Create(newType);
+                onTypeReplace(newAction);
+                MarkDirty();
+
+                // Close the dropdown explicitly, and defer the rebuild until this
+                // event (and the popup close) has fully finished — rebuilding the
+                // widget tree synchronously here corrupts Myra's open ComboBox popup.
+                typeCombo.Desktop?.HideContextMenu();
+                owner.Defer(BuildActionsPanel);
+            };
+#pragma warning restore CS0612, CS0618
+            row.Widgets.Add(typeCombo);
+
+            // Sub-type dropdown
+            if (capturedAction.SubMenuType == 1)
+            {
+                int subCount = 0, subOffset = 0;
+                Macro.GetBoundByCode(capturedAction.Code, ref subCount, ref subOffset);
+
+                var subValues = new MacroSubType[subCount];
+                string[] subNames = new string[subCount];
+                for (int si = 0; si < subCount; si++)
+                {
+                    subValues[si] = (MacroSubType)(si + subOffset);
+                    subNames[si] = subValues[si].ToString();
+                }
+
+                // The gump-list macro types (Open/Close/Minimize/Maximize/ToggleGump) show a list
+                // of available gumps. Sort that list the same way as the main macro list and add
+                // spacing after capitals for legibility; other sub-type lists keep their natural order.
+                if (_gumpListMacroTypes.Contains(capturedAction.Code))
+                {
+                    int[] order = Enumerable.Range(0, subCount)
+                        .OrderBy(i => subNames[i], StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    subValues = order.Select(i => subValues[i]).ToArray();
+                    subNames = order.Select(i => StringHelper.AddSpaceBeforeCapital(subNames[i])).ToArray();
+                }
+
+                int curSubIdx = Array.IndexOf(subValues, capturedAction.SubCode);
+                if (curSubIdx < 0) curSubIdx = 0;
+
+#pragma warning disable CS0612, CS0618
+                var subCombo = new ComboBox
+                {
+                    Width = 160,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+
+                foreach (string subName in subNames)
+                    subCombo.Items.Add(new ListItem(subName));
+
+                subCombo.SelectedIndex = curSubIdx;
+                subCombo.SelectedIndexChanged += (_, _) =>
+                {
+                    if (subCombo.SelectedIndex == null) return;
+                    capturedAction.SubCode = subValues[subCombo.SelectedIndex.Value];
+                    MarkDirty();
+                };
+#pragma warning restore CS0612, CS0618
+                row.Widgets.Add(subCombo);
+            }
+            // Text input
+            else if (capturedAction.SubMenuType == 2)
+            {
+                string currentText = capturedAction.HasString()
+                    ? ((MacroObjectString)capturedAction).Text
+                    : "";
+                var textBox = new MyraInputBox { Text = currentText, Width = 180 };
+                textBox.TextChangedByUser += (_, _) =>
+                {
+                    string newText = textBox.Text ?? "";
+                    if (capturedAction.HasString())
+                    {
+                        ((MacroObjectString)capturedAction).Text = newText;
+                    }
+                    else
+                    {
+                        var strAction = new MacroObjectString(capturedAction.Code, capturedAction.SubCode, newText);
+                        onTextReplace(strAction);
+                        // no BuildActionsPanel() here
+                    }
+                    MarkDirty();
+                };
+                row.Widgets.Add(textBox);
+            }
+
+            // Remove button
+            row.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove", () =>
+            {
+                onRemove();
+                MarkDirty();
+                BuildActionsPanel();
+            })
+            { Tooltip = "Remove this action" }));
+
+            return row;
+        }
+
+        void BuildLoopContainerWidget(MacroLoopContainer loopContainer, Macro macro, int loopIndex)
+        {
+            // Header row: Loop info and Edit/Remove buttons
+            var loopHeaderRow = new HorizontalStackPanel { Spacing = 4 };
+            loopHeaderRow.Widgets.Add(new MyraLabel($"Loop {loopIndex + 1}:", MyraLabel.TextStyle.P));
+
+            var loopCountBox = new MyraInputBox { Text = loopContainer.LoopCount.ToString(), Width = 50 };
+            loopCountBox.TextChangedByUser += (_, _) =>
+            {
+                if (int.TryParse(loopCountBox.Text, out int val) && val > 0)
+                {
+                    loopContainer.LoopCount = val;
+                    MarkDirty();
+                }
+            };
+            loopHeaderRow.Widgets.Add(loopCountBox);
+
+            loopHeaderRow.Widgets.Add(new MyraLabel("x  Delay (ms):", MyraLabel.TextStyle.P));
+
+            var delayBox = new MyraInputBox { Text = loopContainer.DelayBetweenIterations.ToString(), Width = 70 };
+            delayBox.TextChangedByUser += (_, _) =>
+            {
+                if (int.TryParse(delayBox.Text, out int val) && val >= 0)
+                {
+                    loopContainer.DelayBetweenIterations = val;
+                    MarkDirty();
+                }
+            };
+            loopHeaderRow.Widgets.Add(delayBox);
+
+            loopHeaderRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("Remove Loop", () =>
+            {
+                macro.Remove(loopContainer);
+                MarkDirty();
+                BuildActionsPanel();
+            })));
+
+            actionsPanel.Widgets.Add(loopHeaderRow);
+
+            // Inner actions list (indented)
+            var loopActionsPanel = new VerticalStackPanel { Spacing = 1 };
+            LinkedListNode<MacroObject>? innerAction = loopContainer.Items.First;
+            int innerIndex = 0;
+
+            while (innerAction != null)
+            {
+                MacroObject capturedInnerAction = innerAction.Value;
+                int capturedInnerIndex = innerIndex;
+
+                HorizontalStackPanel row = BuildActionRow(
+                    capturedInnerAction,
+                    $"  {loopIndex + 1}.{capturedInnerIndex + 1}.",
+                    onTypeReplace: newAction =>
+                    {
+                        LinkedListNode<MacroObject>? node = loopContainer.Items.Find(capturedInnerAction);
+                        if (node != null)
+                        {
+                            loopContainer.Items.AddBefore(node, newAction);
+                            loopContainer.Items.Remove(node);
+                        }
+                    },
+                    onTextReplace: strAction =>
+                    {
+                        LinkedListNode<MacroObject>? node = loopContainer.Items.Find(capturedInnerAction);
+                        if (node != null)
+                        {
+                            loopContainer.Items.AddBefore(node, strAction);
+                            loopContainer.Items.Remove(node);
+                        }
+                    },
+                    onRemove: () => loopContainer.Items.Remove(capturedInnerAction)
+                );
+
+                loopActionsPanel.Widgets.Add(row);
+
+                innerAction = innerAction.Next;
+                innerIndex++;
+            }
+
+            // Add to loop button
+            loopActionsPanel.Widgets.Add(new MyraButton("+ Add Action to Loop", () =>
+            {
+                MacroObject newAction = Macro.Create(MacroType.Say);
+                loopContainer.Items.AddLast(newAction);
+                MarkDirty();
+                BuildActionsPanel();
+            }));
+
+            actionsPanel.Widgets.Add(loopActionsPanel);
         }
 
         // ── Toolbar ───────────────────────────────────────────────────────────
@@ -567,5 +748,19 @@ public static class MacrosTabContent
         root.Widgets.Add(toolbar);
         root.Widgets.Add(mainArea);
         return root;
+    }
+
+    /// <summary>Opens (or brings to front) the macro button editor for the given macro.</summary>
+    private static void OpenMacroButtonEditor(Macro macro)
+    {
+        MacroButtonEditorGump? existing = UIManager.Gumps.OfType<MacroButtonEditorGump>().FirstOrDefault();
+        existing?.Dispose();
+
+        var btnEditorGump = new MacroButtonEditorGump(World.Instance, macro, 0, 0);
+        btnEditorGump.CenterXInViewPort();
+        btnEditorGump.CenterYInViewPort();
+        UIManager.Add(btnEditorGump);
+        btnEditorGump.SetInScreen();
+        btnEditorGump.BringOnTop();
     }
 }

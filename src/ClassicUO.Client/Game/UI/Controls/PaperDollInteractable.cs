@@ -397,7 +397,7 @@ namespace ClassicUO.Game.UI.Controls
         /// </summary>
         /// <param name="mob">The mobile whose's paperdoll is being rendered</param>
         /// <returns>An ordered array of layers. Note that this is a <b>copy</b> of the static member</returns>
-        private Layer[] GetOrderedLayers(Mobile mob) => GetOrderedLayersCopy(GetLayers(mob));
+        private Layer[] GetOrderedLayers(Mobile mob) => GetOrderedLayersCopy(GetLayers(mob), mob);
 
         /// <summary>
         ///     Gets the paperdoll layers in the standard order
@@ -449,9 +449,45 @@ namespace ClassicUO.Game.UI.Controls
         /// can be optimized back to using references to the static members instead
         /// </remarks>
         /// <param name="layers">The layer array to return a sorted copy of</param>
-        private static Layer[] GetOrderedLayersCopy(Layer[] layers)
+        private static Layer[] GetOrderedLayersCopy(Layer[] layers, Mobile mobile)
         {
             var copy = (Layer[])layers?.Clone();
+
+            Item torso = mobile.FindItemByLayer(Layer.Torso);
+			
+			// Female Leather Armor (0x1C06), Female Studded Armor (0x1C02)
+			// and Female Plate Armor (0x1C04) are expected to render beneath
+			// pants on the paperdoll, matching the behavior observed in other
+			// Ultima Online clients.            
+			if (torso != null && torso.Graphic is 0x1C06 or 0x1C02 or 0x1C04)
+            {
+                int pantsLayerIdx = copy.IndexOf(Layer.Pants);
+                int torsoLayerIdx = copy.IndexOf(Layer.Torso);
+
+                if (pantsLayerIdx >= 0 && torsoLayerIdx >= 0 && pantsLayerIdx < torsoLayerIdx)
+                {
+                    Array.Copy(copy, pantsLayerIdx + 1, copy, pantsLayerIdx, torsoLayerIdx - pantsLayerIdx);
+                    copy[torsoLayerIdx] = Layer.Pants;
+                }
+            }
+
+			Item arms = mobile.FindItemByLayer(Layer.Arms);
+
+			// Leather Sleeves (0x13CD), Studded Sleeves (0x13DC)
+			// and Ringmail Arms (0x13EF) are expected to render above
+			// chainmail on the paperdoll, matching the behavior observed
+			// in other Ultima Online clients.
+			if (arms != null && arms.Graphic is 0x13CD or 0x13DC or 0x13EE)
+			{
+				int armsLayerIdx = copy.IndexOf(Layer.Arms);
+				int torsoLayerIdx = copy.IndexOf(Layer.Torso);
+
+				if (armsLayerIdx >= 0 && torsoLayerIdx >= 0 && armsLayerIdx < torsoLayerIdx)
+				{
+					Array.Copy(copy, armsLayerIdx + 1, copy, armsLayerIdx, torsoLayerIdx - armsLayerIdx);
+					copy[torsoLayerIdx] = Layer.Arms;
+				}
+			}
 
             // When dealing with Eventine, the 'legs' layer is always the first one.
             // Other server-specific ordering quirks can be added here later as necessary.

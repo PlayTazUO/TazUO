@@ -2,7 +2,7 @@
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // 1. Redistributions of source code must retain the above copyright
@@ -16,7 +16,7 @@
 // 4. Neither the name of the copyright holder nor the
 //    names of its contributors may be used to endorse or promote products
 //    derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -32,10 +32,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Resources;
+using ClassicUO.Common.Enums;
 using SDL3;
 
 namespace ClassicUO.Game.UI.Controls
@@ -61,7 +64,7 @@ namespace ClassicUO.Game.UI.Controls
 
             CanMove = true;
 
-            AddLabel("Set hotkey:", 0, 0);
+            AddLabel(TazLang.Get("nameoverhead_sethotkey", "Set hotkey:"), 0, 0);
 
             _hotkeyBox = new HotkeyBox
             {
@@ -78,7 +81,7 @@ namespace ClassicUO.Game.UI.Controls
                 new NiceButton
                 (
                     0, _hotkeyBox.Height + 3, 100, 25,
-                    ButtonAction.Activate, "Uncheck all", 0, TEXT_ALIGN_TYPE.TS_LEFT
+                    ButtonAction.Activate, TazLang.Get("nameoverhead_uncheckall", "Uncheck all"), 0, TEXT_ALIGN_TYPE.TS_LEFT
                 ) { ButtonParameter = (int)ButtonType.UncheckAll, IsSelectable = false }
             );
 
@@ -87,7 +90,7 @@ namespace ClassicUO.Game.UI.Controls
                 new NiceButton
                 (
                     120, _hotkeyBox.Height + 3, 100, 25,
-                    ButtonAction.Activate, "Check all", 0, TEXT_ALIGN_TYPE.TS_LEFT
+                    ButtonAction.Activate, TazLang.Get("nameoverhead_checkall", "Check all"), 0, TEXT_ALIGN_TYPE.TS_LEFT
                 ) { ButtonParameter = (int)ButtonType.CheckAll, IsSelectable = false }
             );
 
@@ -102,55 +105,55 @@ namespace ClassicUO.Game.UI.Controls
         private void SetupOptionCheckboxes()
         {
             int y = 0;
-            AddLabel("Items", 75, y, true);
+            AddLabel(TazLang.Get("nameoverhead_items", "Items"), 75, y, true);
             y += 28;
 
-            AddCheckbox("Containers", NameOverheadOptions.Containers, 0, y);
-            AddCheckbox("Gold", NameOverheadOptions.Gold, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_containers", "Containers"), NameOverheadOptions.Containers, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_gold", "Gold"), NameOverheadOptions.Gold, 150, y);
             y += 22;
-            AddCheckbox("Stackable", NameOverheadOptions.Stackable, 0, y);
-            AddCheckbox("Locked down", NameOverheadOptions.LockedDown, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_stackable", "Stackable"), NameOverheadOptions.Stackable, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_lockeddown", "Locked down"), NameOverheadOptions.LockedDown, 150, y);
             y += 22;
-            AddCheckbox("Moveable", NameOverheadOptions.Moveable, 0, y);
-            AddCheckbox("Immoveable", NameOverheadOptions.Immoveable, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_moveable", "Moveable"), NameOverheadOptions.Moveable, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_immoveable", "Immoveable"), NameOverheadOptions.Immoveable, 150, y);
             y += 22;
-            AddCheckbox("Other items", NameOverheadOptions.Other, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_otheritems", "Other items"), NameOverheadOptions.Other, 0, y);
             y += 28;
 
-            AddLabel("Corpses", 75, y, true);
+            AddLabel(TazLang.Get("nameoverhead_corpses", "Corpses"), 75, y, true);
             y += 28;
 
-            AddCheckbox("Monster corpses", NameOverheadOptions.MonsterCorpses, 0, y);
-            AddCheckbox("Humanoid corpses", NameOverheadOptions.HumanoidCorpses, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_monstercorpses", "Monster corpses"), NameOverheadOptions.MonsterCorpses, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_humanoidcorpses", "Humanoid corpses"), NameOverheadOptions.HumanoidCorpses, 150, y);
             //y += 22;
             //AddCheckbox("Own corpses", NameOverheadOptions.OwnCorpses, 0, y);
             y += 28;
 
-            AddLabel("Mobiles by type", 75, y, true);
+            AddLabel(TazLang.Get("nameoverhead_mobilesbytype", "Mobiles by type"), 75, y, true);
             y += 28;
 
-            AddCheckbox("Humanoid", NameOverheadOptions.Humanoid, 0, y);
-            AddCheckbox("Monster", NameOverheadOptions.Monster, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_humanoid", "Humanoid"), NameOverheadOptions.Humanoid, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_monster", "Monster"), NameOverheadOptions.Monster, 150, y);
             y += 22;
-            AddCheckbox("Your Followers", NameOverheadOptions.OwnFollowers, 0, y);
-            AddCheckbox("Yourself", NameOverheadOptions.Self, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_yourfollowers", "Your Followers"), NameOverheadOptions.OwnFollowers, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_yourself", "Yourself"), NameOverheadOptions.Self, 150, y);
             y += 22;
-            AddCheckbox("Exclude yourself", NameOverheadOptions.ExcludeSelf, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_excludeyourself", "Exclude yourself"), NameOverheadOptions.ExcludeSelf, 0, y);
             y += 28;
 
-            AddLabel("Mobiles by notoriety", 75, y, true);
+            AddLabel(TazLang.Get("nameoverhead_mobilesbynotoriety", "Mobiles by notoriety"), 75, y, true);
             y += 28;
 
-            AddCheckbox("Innocent (blue)", NameOverheadOptions.Innocent, 0, y);
-            AddCheckbox("Allied (green)", NameOverheadOptions.Ally, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_innocent", "Innocent (blue)"), NameOverheadOptions.Innocent, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_allied", "Allied (green)"), NameOverheadOptions.Ally, 150, y);
             y += 22;
-            AddCheckbox("Attackable (gray)", NameOverheadOptions.Gray, 0, y);
-            AddCheckbox("Criminal (gray)", NameOverheadOptions.Criminal, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_attackable", "Attackable (gray)"), NameOverheadOptions.Gray, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_criminal", "Criminal (gray)"), NameOverheadOptions.Criminal, 150, y);
             y += 22;
-            AddCheckbox("Enemy (orange)", NameOverheadOptions.Enemy, 0, y);
-            AddCheckbox("Murderer (red)", NameOverheadOptions.Murderer, 150, y);
+            AddCheckbox(TazLang.Get("nameoverhead_enemy", "Enemy (orange)"), NameOverheadOptions.Enemy, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_murderer", "Murderer (red)"), NameOverheadOptions.Murderer, 150, y);
             y += 22;
-            AddCheckbox("Invulnerable (yellow)", NameOverheadOptions.Invulnerable, 0, y);
+            AddCheckbox(TazLang.Get("nameoverhead_invulnerable", "Invulnerable (yellow)"), NameOverheadOptions.Invulnerable, 0, y);
         }
 
         private void AddLabel(string name, int x, int y, bool scrollArea = false)
@@ -188,9 +191,9 @@ namespace ClassicUO.Game.UI.Controls
                 bool isChecked = ((Checkbox)sender).IsChecked;
 
                 if (isChecked)
-                    Option.NameOverheadOptionFlags |= (int)optionFlag;
+                    Option.NameOverheadOptionFlags |= optionFlag;
                 else
-                    Option.NameOverheadOptionFlags &= ~(int)optionFlag;
+                    Option.NameOverheadOptionFlags &= ~optionFlag;
 
                 if (NameOverHeadManager.LastActiveNameOverheadOption.Replace("\\u0026", "&") == Option.Name)
                     NameOverHeadManager.ActiveOverheadOptions = (NameOverheadOptions)Option.NameOverheadOptionFlags;
@@ -272,7 +275,8 @@ namespace ClassicUO.Game.UI.Controls
             switch ((ButtonType)buttonID)
             {
                 case ButtonType.CheckAll:
-                    Option.NameOverheadOptionFlags = int.MaxValue;
+                    // Dynamically set all flags
+                    Option.NameOverheadOptionFlags = Utility.ByteFlagHelper.AllBits<NameOverheadOptions>();
                     UpdateCheckboxesByCurrentOptionFlags();
 
                     break;

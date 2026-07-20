@@ -10,15 +10,21 @@ using ClassicUO.Utility.Logging;
 using SDL3;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
+using ClassicUO.Common.Enums;
+using ClassicUO.Game.Managers.Hotkeys;
+using ClassicUO.Game.UI.MyraWindows.Options.Editors.Profile;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.Managers
 {
     [Flags]
-    public enum NameOverheadOptions
+    public enum NameOverheadOptions : int
     {
         None = 0,
 
@@ -76,16 +82,82 @@ namespace ClassicUO.Game.Managers
 
         public static NameOverheadOptions ActiveOverheadOptions { get; set; }
 
+        /// <summary>The nameplate option that is currently active. The search filters are stored on it.</summary>
+        public static NameOverheadOption ActiveOption { get; private set; }
+
         public static bool IsPermaToggled
         {
             get => ProfileManager.CurrentProfile.NameOverheadToggled;
             private set => ProfileManager.CurrentProfile.NameOverheadToggled = value;
         }
 
-        public static string Search { get; set; } = string.Empty;
+        /// <summary>
+        /// The positive search filter for the active nameplate option. Stored on the option so it is
+        /// persisted per nameplate profile and reloaded on profile switch and log out/in.
+        /// </summary>
+        public static string Search
+        {
+            get => ActiveOption?.Search ?? string.Empty;
+            set
+            {
+                if (ActiveOption != null)
+                    ActiveOption.Search = value ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Nameplates whose text matches this filter are hidden (the opposite of <see cref="Search"/>).
+        /// Stored on the active option so it is persisted per nameplate profile.
+        /// </summary>
+        public static string NegativeSearch
+        {
+            get => ActiveOption?.NegativeSearch ?? string.Empty;
+            set
+            {
+                if (ActiveOption != null)
+                    ActiveOption.NegativeSearch = value ?? string.Empty;
+            }
+        }
+
+        /// <summary>True when either the positive or negative search filter is active.</summary>
+        public static bool HasSearchFilter => !string.IsNullOrEmpty(Search) || !string.IsNullOrEmpty(NegativeSearch);
+
+        /// <summary>
+        /// Returns true when any of the supplied text pieces matches the positive <see cref="Search"/> filter.
+        /// An empty filter matches everything. Multiple terms may be separated with ';' and are OR'd together.
+        /// </summary>
+        public static bool MatchesSearch(params string[] textPieces) => MatchesFilter(Search, textPieces, matchWhenEmpty: true);
+
+        /// <summary>
+        /// Returns true when any of the supplied text pieces matches the <see cref="NegativeSearch"/> filter.
+        /// An empty filter matches nothing. Multiple terms may be separated with ';' and are OR'd together.
+        /// </summary>
+        public static bool MatchesNegativeSearch(params string[] textPieces) => MatchesFilter(NegativeSearch, textPieces, matchWhenEmpty: false);
+
+        private static bool MatchesFilter(string filter, string[] textPieces, bool matchWhenEmpty)
+        {
+            if (string.IsNullOrEmpty(filter))
+                return matchWhenEmpty;
+
+            string[] terms = filter.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (terms.Length == 0)
+                return matchWhenEmpty;
+
+            foreach (string term in terms)
+            {
+                foreach (string piece in textPieces)
+                {
+                    if (piece != null && piece.ContainsIgnoreCase(term))
+                        return true;
+                }
+            }
+
+            return false;
+        }
 
         public static bool IsTemporarilyShowing { get; private set; }
-        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || Keyboard.Ctrl && Keyboard.Shift;
+        public static bool IsShowing => IsPermaToggled || IsTemporarilyShowing || HotKeys.IsPressed(HotKeyRegistrar.ShowNameplatesId);
 
         private static List<NameOverheadOption> Options { get; set; } = new List<NameOverheadOption>();
 
@@ -346,13 +418,12 @@ namespace ClassicUO.Game.Managers
 
         private static void CreateDefaultEntries() => Options.AddRange
             (
-                new[]
-                {
-                    new NameOverheadOption("All", int.MaxValue),
-                    new NameOverheadOption("Mobiles only", (int)NameOverheadOptions.AllMobiles),
-                    new NameOverheadOption("Items only", (int)NameOverheadOptions.AllItems),
-                    new NameOverheadOption("Mobiles & Corpses only", (int)NameOverheadOptions.MobilesAndCorpses),
-                }
+                [
+                    new NameOverheadOption("All", Utility.ByteFlagHelper.AllBits<NameOverheadOptions>()) { Deletable = false },
+                    new NameOverheadOption("Mobiles only", NameOverheadOptions.AllMobiles) { Deletable = false },
+                    new NameOverheadOption("Items only", NameOverheadOptions.AllItems) { Deletable = false },
+                    new NameOverheadOption("Mobiles & Corpses only", NameOverheadOptions.MobilesAndCorpses) { Deletable = false }
+                ]
             );
 
         public static NameOverheadOption FindOption(string name) => Options.Find(o => o.Name == name);
@@ -366,6 +437,18 @@ namespace ClassicUO.Game.Managers
         public void RemoveOption(NameOverheadOption option)
         {
             Options.Remove(option);
+            _gump?.RedrawOverheadOptions();
+        }
+
+        /// <summary>
+        ///     Refreshes the active overhead handler gump after an option was renamed so the buttons show the new name.
+        /// </summary>
+        public void HandleRenamedOption(NameOverheadOption option)
+        {
+            // The active option is persisted by name, so keep it in sync if that option was the one renamed.
+            if (option != null && option == ActiveOption)
+                LastActiveNameOverheadOption = option.Name;
+
             _gump?.RedrawOverheadOptions();
         }
 
@@ -407,6 +490,8 @@ namespace ClassicUO.Game.Managers
 
         public void SetActiveOption(NameOverheadOption option)
         {
+            ActiveOption = option;
+
             if (option == null)
             {
                 ActiveOverheadOptions = NameOverheadOptions.None;
@@ -418,18 +503,40 @@ namespace ClassicUO.Game.Managers
                 LastActiveNameOverheadOption = option.Name;
                 _gump?.UpdateCheckboxes();
             }
+
+            // Load the search filters that belong to the newly active option into the input boxes.
+            _gump?.UpdateSearchBoxes();
         }
     }
 
-    public class NameOverheadOption
+    public class NameOverheadOption : IProfile
     {
-        public NameOverheadOption(string name, SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift, int optionflagscode) : this(name)
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #region Accessors
+
+        public string Name { get; set => SetField(ref field, value); }
+        public bool Alt { get; set => SetField(ref field, value); }
+        public bool Ctrl { get; set => SetField(ref field, value); }
+        public bool Shift { get; set => SetField(ref field, value); }
+        public bool Deletable { get; set => SetField(ref field, value); } = true;
+        public SDL.SDL_Keycode Key { get; set => SetField(ref field, value); }
+
+        /// <summary>Positive search filter saved with this nameplate option.</summary>
+        public string Search { get; set => SetField(ref field, value); } = string.Empty;
+
+        /// <summary>Negative (hide) search filter saved with this nameplate option.</summary>
+        public string NegativeSearch { get; set => SetField(ref field, value); } = string.Empty;
+
+        #endregion
+
+        public NameOverheadOption(string name, SDL.SDL_Keycode key, bool alt, bool ctrl, bool shift, int optionFlagsCode) : this(name)
         {
             Key = key;
             Alt = alt;
             Ctrl = ctrl;
             Shift = shift;
-            NameOverheadOptionFlags = optionflagscode;
+            NameOverheadOptionFlags = (NameOverheadOptions)optionFlagsCode;
         }
 
         public NameOverheadOption(string name)
@@ -437,19 +544,17 @@ namespace ClassicUO.Game.Managers
             Name = name;
         }
 
-        public NameOverheadOption(string name, int optionflagcode)
+        public NameOverheadOption(string name, NameOverheadOptions optionFlagCode)
         {
             Name = name;
-            NameOverheadOptionFlags = optionflagcode;
+            NameOverheadOptionFlags = optionFlagCode;
         }
 
-        public string Name { get; }
-
-        public SDL.SDL_Keycode Key { get; set; }
-        public bool Alt { get; set; }
-        public bool Ctrl { get; set; }
-        public bool Shift { get; set; }
-        public int NameOverheadOptionFlags { get; set; }
+        public NameOverheadOptions NameOverheadOptionFlags
+        {
+            get;
+            set => SetField(ref field, value);
+        }
 
         public bool Equals(NameOverheadOption other)
         {
@@ -465,11 +570,14 @@ namespace ClassicUO.Game.Managers
         {
             writer.WriteStartElement("nameoverheadoption");
             writer.WriteAttributeString("name", Name);
+            writer.WriteAttributeString("deleteable", Deletable.ToString());
             writer.WriteAttributeString("key", ((int)Key).ToString());
             writer.WriteAttributeString("alt", Alt.ToString());
             writer.WriteAttributeString("ctrl", Ctrl.ToString());
             writer.WriteAttributeString("shift", Shift.ToString());
-            writer.WriteAttributeString("optionflagscode", NameOverheadOptionFlags.ToString());
+            writer.WriteAttributeString("optionflagscode", NameOverheadOptionFlags.ToInt().ToString());
+            writer.WriteAttributeString("search", Search ?? string.Empty);
+            writer.WriteAttributeString("negativesearch", NegativeSearch ?? string.Empty);
 
             writer.WriteEndElement();
         }
@@ -485,7 +593,24 @@ namespace ClassicUO.Game.Managers
             Alt = bool.Parse(xml.GetAttribute("alt"));
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));
-            NameOverheadOptionFlags = int.Parse(xml.GetAttribute("optionflagscode"));
+
+            NameOverheadOptionFlags = (NameOverheadOptions)int.Parse(xml.GetAttribute("optionflagscode"));
+            Deletable = !bool.TryParse(xml.GetAttribute("deleteable"), out bool deletable) || deletable;
+
+            Search = xml.GetAttribute("search") ?? string.Empty;
+            NegativeSearch = xml.GetAttribute("negativesearch") ?? string.Empty;
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        {
+            if (EqualityComparer<T>.Default.Equals(field, value))
+                return false;
+
+            field = value;
+            OnPropertyChanged(propertyName);
+            return true;
         }
     }
 }

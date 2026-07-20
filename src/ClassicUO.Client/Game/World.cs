@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.IO.Audio;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.Effects;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Map;
@@ -48,10 +49,28 @@ namespace ClassicUO.Game
             Macros = new MacroManager(this);
             CommandManager = new CommandManager(this);
             Weather = new Weather(this);
+            RippleEffect = new RippleEffect(this);
+            SplashEffect = new SplashEffect();
             InfoBars = new InfoBarManager(this);
             DurabilityManager = new DurabilityManager(this);
             OPL = new ObjectPropertiesListManager(this);
             CoolDownBarManager = new CoolDownBarManager(this);
+
+            ProfileManager.CurrentProfileChanged += OnCurrentProfileChanged;
+            ApplyWeatherFromProfile();
+        }
+
+        private void OnCurrentProfileChanged(object sender, EventArgs e) => ApplyWeatherFromProfile();
+
+        private void ApplyWeatherFromProfile()
+        {
+            bool wantsEnhanced = ProfileManager.CurrentProfile?.EnableEnhancedWeather == true;
+            bool hasEnhanced = Weather is EnhancedWeather;
+
+            if (wantsEnhanced != hasEnhanced)
+            {
+                SwitchWeather(wantsEnhanced);
+            }
         }
 
         public Point RangeSize;
@@ -107,7 +126,19 @@ namespace ClassicUO.Game
 
         public CommandManager CommandManager { get; }
 
-        public Weather Weather { get; }
+        public WeatherBase Weather { get; private set; }
+
+        internal RippleEffect RippleEffect { get; }
+
+        internal SplashEffect SplashEffect { get; }
+
+        public void SwitchWeather(bool enhanced)
+        {
+            Weather?.Reset();
+            RippleEffect?.Reset();
+            SplashEffect?.Reset();
+            Weather = enhanced ? new EnhancedWeather(this) : new Weather(this);
+        }
 
         public InfoBarManager InfoBars { get; }
 
@@ -211,6 +242,39 @@ namespace ClassicUO.Game
 
         public bool InGame => Player != null && Map != null;
 
+        public void ReloadCurrentMap()
+        {
+            if (Map == null)
+                return;
+
+            int index = Map.Index;
+
+            if (index < 0 || index >= MapLoader.MAPS_COUNT)
+                index = 0;
+
+            ushort x = Player.X;
+            ushort y = Player.Y;
+            sbyte z = Player.Z;
+
+            UnlinkEntitiesFromMap();
+
+            Map.Destroy();
+            Map = null;
+
+            Client.Game.UO.FileManager.Maps.LoadMap(index, ClientFeatures.Flags.HasFlag(CharacterListFlags.CLF_UNLOCK_FELUCCA_AREAS));
+            Map = new Map.Map(this, index);
+
+            Player.SetInWorldTile(x, y, z);
+            Player.ClearSteps();
+
+            RelinkEntitiesToMap();
+
+            if (Client.Game.UO.GameCursor != null)
+            {
+                Client.Game.UO.GameCursor.Graphic = 0xFFFF;
+            }
+        }
+
         public IsometricLight Light { get; } = new IsometricLight
         {
             Overall = 0,
@@ -237,6 +301,9 @@ namespace ClassicUO.Game
                 {
                     _corpses.Add(item);
                 }
+
+                // Reapply the looted hue if this corpse was previously looted and hued.
+                AutoLootManager.ApplyLootedHueIfNeeded(item);
             }
         }
 
@@ -950,6 +1017,54 @@ namespace ClassicUO.Game
             ActiveSpellIcons.Clear();
 
             SkillsRequested = false;
+        }
+
+        private void UnlinkEntitiesFromMap()
+        {
+            foreach (Mobile mobile in Mobiles.Values)
+            {
+                mobile.RemoveFromTile();
+            }
+
+            foreach (Item item in Items.Values)
+            {
+                if (item.OnGround)
+                {
+                    item.RemoveFromTile();
+                }
+            }
+
+            foreach (House house in HouseManager.Houses)
+            {
+                foreach (Multi component in house.Components)
+                {
+                    component.RemoveFromTile();
+                }
+            }
+        }
+
+        private void RelinkEntitiesToMap()
+        {
+            foreach (Mobile mobile in Mobiles.Values)
+            {
+                if (mobile != Player)
+                {
+                    mobile.SetInWorldTile(mobile.X, mobile.Y, mobile.Z);
+                }
+            }
+
+            foreach (Item item in Items.Values)
+            {
+                if (item.OnGround)
+                {
+                    item.SetInWorldTile(item.X, item.Y, item.Z);
+                }
+            }
+
+            foreach (House house in HouseManager.Houses)
+            {
+                house.Generate(true);
+            }
         }
 
         private void InternalMapChangeClear(bool noplayer)

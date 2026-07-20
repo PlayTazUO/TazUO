@@ -3,6 +3,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.LegionScripting.ApiClasses;
+using ClassicUO.Utility;
 
 namespace ClassicUO.LegionScripting.ApiClasses;
 
@@ -17,6 +18,11 @@ public class ApiItem : ApiEntity
     public bool Opened => GetItem()?.Opened ?? false;
     public uint Container => GetItem()?.Container ?? 0;
     public uint RootContainer => GetItem()?.RootContainer ?? 0;
+
+    /// <summary>
+    /// If this item is a corpse, the serial of the parent mobile it belongs to.
+    /// </summary>
+    public uint CorpseParent => GetItem()?.CorpseParent ?? 0;
     public bool OnGround => GetItem()?.OnGround ?? false;
 
     /// <summary>
@@ -108,15 +114,14 @@ public class ApiItem : ApiEntity
     public override string __class__ => "ApiItem";
 
     protected Item item;
-    protected Item GetItemUnsafe() => Client.Game.UO.World.Items.TryGetValue(Serial, out item) ? item : null;
+    protected Item GetItemUnsafe()
+        => ResolveCached(ref item, Serial, static s => Client.Game.UO.World.Items.TryGetValue(s, out Item i) ? i : null);
+
     protected Item GetItem()
     {
-        if (item != null && item.Serial == Serial) return item;
+        if (item != null && !item.IsDestroyed && item.Serial == Serial) return item;
 
-        return MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            return item = GetItemUnsafe();
-        });
+        return MainThreadQueue.InvokeOnMainThread(GetItemUnsafe);
     }
 
     /// <summary>
@@ -126,26 +131,5 @@ public class ApiItem : ApiEntity
     /// <param name="wait">True or false to wait for name and props</param>
     /// <param name="timeout">Timeout in seconds</param>
     /// <returns>Item name and properties, or empty string if we don't have them.</returns>
-    public string NameAndProps(bool wait = false, int timeout = 10)
-    {
-        if (wait)
-        {
-            System.DateTime expire = System.DateTime.UtcNow.AddSeconds(timeout);
-
-            while (!MainThreadQueue.InvokeOnMainThread(() => Client.Game.UO.World.OPL.Contains(Serial)) && System.DateTime.UtcNow < expire)
-            {
-                System.Threading.Thread.Sleep(100);
-            }
-        }
-
-        return MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            if (Client.Game.UO.World.OPL.TryGetNameAndData(Serial, out string n, out string d))
-            {
-                return n + "\n" + d;
-            }
-
-            return string.Empty;
-        });
-    }
+    public string NameAndProps(bool wait = false, int timeout = 10) => GetNameAndProps(wait, timeout);
 }

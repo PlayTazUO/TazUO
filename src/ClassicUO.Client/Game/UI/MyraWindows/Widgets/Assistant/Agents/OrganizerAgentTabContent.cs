@@ -85,7 +85,7 @@ public static class OrganizerAgentTabContent
                     destCell.Widgets.Clear();
                     if (captured.DestContSerial != 0)
                     {
-                        var label = new MyraLabel($"{captured.DestContSerial:X}", MyraLabel.TextStyle.P) { Tooltip = "Per-item destination" };
+                        var label = new MyraLabel($"0x{captured.DestContSerial:X4}", MyraLabel.TextStyle.P) { Tooltip = "Per-item destination" };
                         StackPanel.SetProportionType(label, ProportionType.Fill);
                         destCell.Widgets.Add(label);
                         destCell.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
@@ -107,7 +107,7 @@ public static class OrganizerAgentTabContent
                                 if (destination is Entity destEntity && SerialHelper.IsItem(destEntity))
                                 {
                                     captured.DestContSerial = destEntity.Serial;
-                                    GameActions.Print($"Per-item destination set to {destEntity.Serial:X}", Constants.HUE_SUCCESS);
+                                    GameActions.Print($"Per-item destination set to 0x{destEntity.Serial:X4}", Constants.HUE_SUCCESS);
                                     BuildDestCell();
                                 }
                                 else

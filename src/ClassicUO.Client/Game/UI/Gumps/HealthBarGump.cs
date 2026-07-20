@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Xml;
@@ -14,10 +14,21 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SDL3;
 using ClassicUO.Assets;
-using System.Text.Json.Serialization;
 
 namespace ClassicUO.Game.UI.Gumps
 {
+    /// <summary>
+    /// Controls when a health bar gump automatically closes.
+    /// Stored on the profile as an int (see Profile.CloseHealthBarType).
+    /// </summary>
+    public enum CloseHealthBarType
+    {
+        None = 0,        // Never auto-close
+        OutOfRange = 1,  // Close when the mobile no longer exists / is out of range
+        Dead = 2,        // Close when the mobile is dead (a corpse exists)
+        Both = 3         // Close when out of range or dead
+    }
+
     public abstract class BaseHealthBarGump : AnchorableGump
     {
         private bool _targetBroke;
@@ -25,6 +36,9 @@ namespace ClassicUO.Game.UI.Gumps
         public bool IsLastAttackBar { get; set; }
         public static BaseHealthBarGump LastAttackBar { get; set; }
         protected bool HasBeenBuilt { get; set; }
+
+        /// <summary>Tracks whether the gump was last built with the compact party style, so a live toggle of <see cref="Profile.UsePartyHealthBars"/> can trigger a rebuild.</summary>
+        protected bool BuiltAsPartyBar { get; set; }
         protected World _world;
 
         protected BaseHealthBarGump(World world, Entity entity) : this(world, 0, 0)
@@ -236,8 +250,16 @@ namespace ClassicUO.Game.UI.Gumps
             return max;
         }
 
+        protected override void OnDragBegin(int x, int y)
+        {
+            _world.DelayedObjectClickManager.Clear(LocalSerial);
+            base.OnDragBegin(x, y);
+        }
+
         protected override void OnDragEnd(int x, int y)
         {
+            _world.DelayedObjectClickManager.Clear(LocalSerial);
+
             // when dragging an healthbar with target on, we have to reset the dclick timer
             if (World.TargetManager.IsTargeting)
             {
@@ -269,18 +291,8 @@ namespace ClassicUO.Game.UI.Gumps
 
                 if (!ProfileManager.CurrentProfile.DisableAutoFollowAlt)
                 {
-                    _world.MessageManager.HandleMessage
-                    (
-                        World.Player,
-                        ResGeneral.NowFollowing,
-                        string.Empty,
-                        0,
-                        MessageType.Regular,
-                        3,
-                        TextType.CLIENT
-                    );
-                    ProfileManager.CurrentProfile.FollowingMode = true;
-                    ProfileManager.CurrentProfile.FollowingTarget = LocalSerial;
+                    if (_world.Mobiles.Get(LocalSerial) is Mobile mobile)
+                        mobile.Follow();
                 }
             }
         }
@@ -298,15 +310,28 @@ namespace ClassicUO.Game.UI.Gumps
                 World.TargetManager.Target(LocalSerial);
                 Mouse.LastLeftButtonClickTime = 0;
             }
-            else if (_canChangeName)
+            else if (_canChangeName && _textBox != null && _textBox.Bounds.Contains(x, y))
             {
-                if (_textBox != null)
-                {
-                    _textBox.IsEditable = false;
-                }
-
+                _textBox.IsEditable = false;
                 UIManager.KeyboardFocusControl = null;
                 UIManager.SystemChat?.SetFocus();
+            }
+            else if (!_world.Player.InWarMode)
+            {
+                if (!_world.DelayedObjectClickManager.IsEnabled)
+                {
+                    _world.DelayedObjectClickManager.Set(
+                        LocalSerial,
+                        Mouse.Position.X,
+                        Mouse.Position.Y,
+                        Time.Ticks + Mouse.MOUSE_DELAY_DOUBLE_CLICK
+                    );
+                }
+
+                if (ProfileManager.CurrentProfile.SingleClickMobileSetsLastTarget)
+                {
+                    World.TargetManager.LastTargetInfo.SetEntity(LocalSerial);
+                }
             }
 
             base.OnMouseDown(x, y, button);
@@ -317,6 +342,11 @@ namespace ClassicUO.Game.UI.Gumps
             if (button != MouseButtonType.Left)
             {
                 return false;
+            }
+
+            if (_world.DelayedObjectClickManager.IsEnabled)
+            {
+                _world.DelayedObjectClickManager.Clear(LocalSerial);
             }
 
             if (_canChangeName)
@@ -442,6 +472,39 @@ namespace ClassicUO.Game.UI.Gumps
             && mobile.IsRenamable
             && entity != World.Player
             && !World.Party.Contains(LocalSerial);
+
+        /// <summary>
+        /// Whether the heal/cure buttons should be shown for this entity's (non-party) health bar.
+        /// Always true for pets. Additionally shown when the profile enables them for every health
+        /// bar (excluding invulnerable notoriety) or for mobiles in the friends list.
+        /// </summary>
+        protected bool ShouldShowHealButtons(Entity entity)
+        {
+            if (IsPet(entity))
+                return true;
+
+            Profile profile = ProfileManager.CurrentProfile;
+
+            if (profile == null || entity is not Mobile mobile || mobile == World.Player)
+                return false;
+
+            if (profile.ShowHealCureButtonsFriends && FriendsListManager.Instance.IsFriend(LocalSerial))
+                return true;
+
+            if (profile.ShowHealCureButtonsAllHealthbars && mobile.NotorietyFlag != NotorietyFlag.Invulnerable)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Whether this bar should be drawn using the special compact party style.
+        /// Returns true only when the entity is in the party and the user has not
+        /// disabled the party health bar style via <see cref="Profile.UsePartyHealthBars"/>.
+        /// </summary>
+        protected bool ShowPartyStyleBar =>
+            World.Party.Contains(LocalSerial)
+            && (ProfileManager.CurrentProfile?.UsePartyHealthBars ?? true);
     }
 
     public class HealthBarGumpCustom : BaseHealthBarGump
@@ -497,6 +560,10 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             Children.Clear();
 
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
+
             _background = null;
             _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
@@ -521,7 +588,14 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            bool inparty = World.Party.Contains(LocalSerial);
+            if (BuiltAsPartyBar != ShowPartyStyleBar)
+            {
+                RequestUpdateContents();
+
+                return;
+            }
+
+            bool inparty = ShowPartyStyleBar;
 
 
             ushort textColor = 0x0386;
@@ -536,7 +610,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (entity == null || entity.IsDestroyed)
             {
                 bool hasCorpse = World.CorpseManager.Exists(0, LocalSerial | 0x8000_0000);
-                if (LocalSerial != World.Player && (ProfileManager.CurrentProfile.CloseHealthBarType == 1 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) || ((ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) && hasCorpse))
+
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenOutOfRange = closeType == CloseHealthBarType.OutOfRange || closeType == CloseHealthBarType.Both;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                bool shouldCloseForOutOfRange = LocalSerial != World.Player && closeWhenOutOfRange;
+                bool shouldCloseForDeath = closeWhenDead && hasCorpse;
+
+                if (shouldCloseForOutOfRange || shouldCloseForDeath)
                 {
                     //### KEEPS PARTY BAR ACTIVE WHEN PARTY MEMBER DIES & MOBILEBAR CLOSE SELECTED ###//
                     if (!inparty && CheckIfAnchoredElseDispose())
@@ -630,7 +712,10 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var mobile = entity as Mobile;
 
-                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && closeWhenDead) // is dead
                 {
                     if (!inparty && CheckIfAnchoredElseDispose())
                     {
@@ -705,7 +790,7 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     }
 
-                    if (_buttonHeal1 != null && _buttonHeal2 != null && IsPet(entity))
+                    if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
                     {
                         _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
                     }
@@ -889,8 +974,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             Entity entity = World.Get(LocalSerial);
 
+            BuiltAsPartyBar = ShowPartyStyleBar;
 
-            if (World.Party.Contains(LocalSerial))
+            if (ShowPartyStyleBar)
             {
                 Height = HPB_HEIGHT_MULTILINE;
                 Width = HPB_WIDTH;
@@ -1347,8 +1433,8 @@ namespace ClassicUO.Game.UI.Gumps
                         )
                     );
 
-                    // Add healing buttons for pets
-                    if (IsPet(entity))
+                    // Add healing buttons for pets and, when enabled, other mobiles
+                    if (ShouldShowHealButtons(entity))
                     {
                         Add(_buttonHeal1 = new Button(
                             (int)ButtonParty.Heal1,
@@ -1574,6 +1660,11 @@ namespace ClassicUO.Game.UI.Gumps
             Clear();
             Children.Clear();
 
+            _oldHits = _oldMana = _oldStam = -1;
+            _normalHits = false;
+            _poisoned = false;
+            _yellowHits = false;
+
             _background = _hpLineRed = _manaLineRed = _stamLineRed = null;
             _buttonHeal1 = _buttonHeal2 = null;
 
@@ -1594,7 +1685,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             Entity entity = World.Get(LocalSerial);
 
-            if (World.Party.Contains(LocalSerial))
+            BuiltAsPartyBar = ShowPartyStyleBar;
+
+            if (ShowPartyStyleBar)
             {
                 Add
                 (
@@ -1792,8 +1885,8 @@ namespace ClassicUO.Game.UI.Gumps
                     Width = _background.Width;
                     Height = _background.Height;
 
-                    // Add healing buttons for pets
-                    if (IsPet(entity))
+                    // Add healing buttons for pets and, when enabled, other mobiles
+                    if (ShouldShowHealButtons(entity))
                     {
                         Add(_buttonHeal1 = new Button(
                             (int)ButtonParty.Heal1,
@@ -1861,7 +1954,14 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            bool inparty = World.Party.Contains(LocalSerial);
+            if (BuiltAsPartyBar != ShowPartyStyleBar)
+            {
+                RequestUpdateContents();
+
+                return;
+            }
+
+            bool inparty = ShowPartyStyleBar;
 
 
             ushort textColor = Settings.Hue_Text;
@@ -1879,7 +1979,15 @@ namespace ClassicUO.Game.UI.Gumps
             if (entity == null || entity.IsDestroyed)
             {
                 bool hasCorpse = World.CorpseManager.Exists(0, LocalSerial | 0x8000_0000);
-                if (LocalSerial != World.Player && (ProfileManager.CurrentProfile.CloseHealthBarType == 1 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) || ((ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3) && hasCorpse))
+
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenOutOfRange = closeType == CloseHealthBarType.OutOfRange || closeType == CloseHealthBarType.Both;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                bool shouldCloseForOutOfRange = LocalSerial != World.Player && closeWhenOutOfRange;
+                bool shouldCloseForDeath = closeWhenDead && hasCorpse;
+
+                if (shouldCloseForOutOfRange || shouldCloseForDeath)
                 {
                     if (CheckIfAnchoredElseDispose())
                     {
@@ -1955,7 +2063,10 @@ namespace ClassicUO.Game.UI.Gumps
 
                 var mobile = entity as Mobile;
 
-                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && !inparty && (ProfileManager.CurrentProfile.CloseHealthBarType == 2 || ProfileManager.CurrentProfile.CloseHealthBarType == 3)) // is dead
+                var closeType = (CloseHealthBarType)ProfileManager.CurrentProfile.CloseHealthBarType;
+                bool closeWhenDead = closeType == CloseHealthBarType.Dead || closeType == CloseHealthBarType.Both;
+
+                if (!_isDead && entity != World.Player && mobile != null && mobile.IsDead && !inparty && closeWhenDead) // is dead
                 {
                     if (CheckIfAnchoredElseDispose())
                     {
@@ -2021,7 +2132,7 @@ namespace ClassicUO.Game.UI.Gumps
                             _bars[2].IsVisible = true;
                         }
                     }
-                    else if (_buttonHeal1 != null && _buttonHeal2 != null && IsPet(entity))
+                    else if (_buttonHeal1 != null && _buttonHeal2 != null && ShouldShowHealButtons(entity))
                     {
                         _buttonHeal1.IsVisible = _buttonHeal2.IsVisible = true;
                     }

@@ -125,7 +125,7 @@ namespace ClassicUO.Game.UI.Gumps
             itemSpriteInfo = Client.Game.UO.Arts.GetArt((uint)(item.DisplayedGraphic));
 
             var loot = new HitBox(0, 0, Width, Height / 2);
-            loot.Add(TextBox.GetOne("Loot", TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
+            loot.Add(TextBox.GetOne(TazLang.Get("nearbyitems_loot", "Loot"), TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
             loot.MouseUp += (s, e) =>
             {
                 if(e.Button != MouseButtonType.Left) return;
@@ -136,7 +136,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             var use = new HitBox(0, Height / 2, Width, Height / 2);
             TextBox tb;
-            use.Add(tb = TextBox.GetOne("Use", TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
+            use.Add(tb = TextBox.GetOne(TazLang.Get("nearbyitems_use", "Use"), TrueTypeLoader.EMBEDDED_FONT, 16, Color.White, TextBox.RTLOptions.DefaultCentered(Width)));
             tb.Y = use.Height - tb.MeasuredSize.Y;
             use.MouseUp += (s, e) =>
             {

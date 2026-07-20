@@ -8,49 +8,19 @@ public class ApiUiResizableStaticPic(ResizableStaticPic resizableStaticPic) : Ap
 {
     public ushort Hue
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.Hue);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.Hue = value);
-        }
+        get => GetProp(() => resizableStaticPic.Hue);
+        set => SetProp(() => resizableStaticPic.Hue = value);
     }
 
     public uint Graphic
     {
-        get
-        {
-            if (!VerifyIntegrity()) return 0;
-
-            return MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.Graphic);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.Graphic = value);
-        }
+        get => GetProp(() => resizableStaticPic.Graphic);
+        set => SetProp(() => resizableStaticPic.Graphic = value);
     }
 
     public bool DrawBorder
     {
-        get
-        {
-            if (!VerifyIntegrity()) return false;
-
-            return MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.DrawBorder);
-        }
-        set
-        {
-            if (!VerifyIntegrity()) return;
-
-            MainThreadQueue.InvokeOnMainThread(() => resizableStaticPic.DrawBorder = value);
-        }
+        get => GetProp(() => resizableStaticPic.DrawBorder);
+        set => SetProp(() => resizableStaticPic.DrawBorder = value);
     }
 }

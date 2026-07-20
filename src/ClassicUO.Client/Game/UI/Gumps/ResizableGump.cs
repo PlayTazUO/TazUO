@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -21,6 +22,9 @@ namespace ClassicUO.Game.UI.Gumps
         protected bool? _prevCanMove = null, _prevCloseWithRightClick = null, _prevBorder = null;
 
         public BorderControl BorderControl => _borderControl;
+
+        /// <summary>The drag handle in the bottom-right corner used to resize the gump.</summary>
+        protected Button ResizeButton => _button;
 
         protected ResizableGump
         (
@@ -183,7 +187,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.OnMouseUp(x, y, button);
 
-            if (button == MouseButtonType.Left && Keyboard.Alt && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
+            if (button == MouseButtonType.Left && HotKeys.IsPressed(HotKeyRegistrar.GumpModifierId) && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
                 ref readonly SpriteInfo texture = ref Client.Game.UO.Gumps.GetGump(0x82C);
                 if (texture.Texture != null)
@@ -200,7 +204,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Draw(batcher, x, y);
 
-            if (Keyboard.Alt && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
+            if (HotKeys.IsPressed(HotKeyRegistrar.GumpModifierId) && UIManager.MouseOverControl != null && (UIManager.MouseOverControl == this || UIManager.MouseOverControl.RootParent == this))
             {
                 Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 

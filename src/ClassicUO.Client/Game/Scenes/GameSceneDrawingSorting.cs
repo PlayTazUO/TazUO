@@ -49,6 +49,8 @@ namespace ClassicUO.Game.Scenes
 
         // Smooth camera following
         private Vector2 _currentSmoothedOffset = Vector2.Zero;
+        private int _smoothLastPlayerX = int.MinValue,
+            _smoothLastPlayerY = int.MinValue;
 
 
         private readonly List<GameObject> _renderListStatics = new List<GameObject>();
@@ -1171,7 +1173,18 @@ namespace ClassicUO.Game.Scenes
             var targetOffset = new Vector2(winDrawOffsetX, winDrawOffsetY);
             float smoothingFactor = ProfileManager.CurrentProfile.CameraSmoothingFactor;
 
-            if (smoothingFactor > 0f)
+            // Detect a teleport (e.g. dungeon entrance/exit, recall, gate). A normal walk step
+            // never moves the player by more than one tile between updates, so anything larger
+            // must be an instant relocation. Snap the camera instead of panning across the map.
+            bool teleported =
+                _smoothLastPlayerX != int.MinValue
+                && (Math.Abs(_world.Player.X - _smoothLastPlayerX) > 1
+                    || Math.Abs(_world.Player.Y - _smoothLastPlayerY) > 1);
+
+            _smoothLastPlayerX = _world.Player.X;
+            _smoothLastPlayerY = _world.Player.Y;
+
+            if (smoothingFactor > 0f && !teleported)
             {
                 // Calculate distance to target
                 float distance = Vector2.Distance(_currentSmoothedOffset, targetOffset);

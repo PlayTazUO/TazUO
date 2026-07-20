@@ -64,5 +64,31 @@ namespace ClassicUO.Game.UI.Gumps
                 child.ApplyScale(_gumpScale, scalePosition, scaleSize, force);
             }
         }
+
+        /// <summary>
+        /// Recursively apply <see cref="GumpScale"/> to a control and every one of its descendants.
+        /// Needed for composite controls whose visuals live in nested children (the shallow scale done
+        /// by <see cref="Add{T}"/> only touches the top-level control). The per-control InternalScale
+        /// guard makes this safe to call again on subtrees that already contain some scaled controls.
+        /// </summary>
+        /// <param name="control">Root of the subtree to scale.</param>
+        /// <param name="scaleRootPosition">Whether to scale the root's own X/Y (descendants are always positioned).</param>
+        protected void ApplyScaleRecursive(Control control, bool scaleRootPosition = true)
+        {
+            if (_gumpScale == 1.0 || control == null)
+                return;
+
+            ScaleTree(control, scaleRootPosition, _gumpScale);
+        }
+
+        private static void ScaleTree(IGui control, bool scalePosition, double scale)
+        {
+            control.ApplyScale(scale, scalePosition: scalePosition);
+
+            for (int i = 0; i < control.Children.Count; i++)
+            {
+                ScaleTree(control.Children[i], true, scale);
+            }
+        }
     }
 }

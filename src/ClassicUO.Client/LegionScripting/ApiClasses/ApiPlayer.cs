@@ -12,100 +12,95 @@ namespace ClassicUO.LegionScripting.ApiClasses;
 public class ApiPlayer : ApiMobile
 {
     // Location
-    public override ushort X => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.X ?? 0);
-    public override ushort Y => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Y ?? 0);
-    public override sbyte Z => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Z ?? 0);
+    public override ushort X => ReadPlayer(static p => p.X);
+    public override ushort Y => ReadPlayer(static p => p.Y);
+    public override sbyte Z => ReadPlayer(static p => p.Z);
 
     /// <summary>
     /// Retrieves the player's current position in the game world.
     /// This API is most useful in combination with the Legion API's `GetPath`.
     /// </summary>
-    public ApiPoint3D Position => MainThreadQueue.InvokeOnMainThread(() =>
-        {
-            PlayerMobile p = GetPlayerUnsafe();
-            return new ApiPoint3D { X = p?.X ?? 0, Y = p?.Y ?? 0, Z = p?.Z ?? 0 };
-        }
-    );
+    public ApiPoint3D Position => ReadPlayer(static p => new ApiPoint3D { X = p.X, Y = p.Y, Z = p.Z }, new ApiPoint3D());
 
 
     // Primary Stats
-    public ushort Strength => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Strength ?? 0);
-    public ushort Dexterity => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Dexterity ?? 0);
-    public ushort Intelligence => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Intelligence ?? 0);
+    public ushort Strength => ReadPlayer(static p => p.Strength);
+    public ushort Dexterity => ReadPlayer(static p => p.Dexterity);
+    public ushort Intelligence => ReadPlayer(static p => p.Intelligence);
 
     // Stat Increases
-    public short StrengthIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.StrengthIncrease ?? 0);
-    public short DexterityIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DexterityIncrease ?? 0);
-    public short IntelligenceIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IntelligenceIncrease ?? 0);
+    public short StrengthIncrease => ReadPlayer(static p => p.StrengthIncrease);
+    public short DexterityIncrease => ReadPlayer(static p => p.DexterityIncrease);
+    public short IntelligenceIncrease => ReadPlayer(static p => p.IntelligenceIncrease);
 
     // Stat Locks
-    public Lock StrLock => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.StrLock ?? Lock.Up);
-    public Lock DexLock => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DexLock ?? Lock.Up);
-    public Lock IntLock => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IntLock ?? Lock.Up);
+    public Lock StrLock => ReadPlayer(static p => p.StrLock, Lock.Up);
+    public Lock DexLock => ReadPlayer(static p => p.DexLock, Lock.Up);
+    public Lock IntLock => ReadPlayer(static p => p.IntLock, Lock.Up);
 
     // Hit/Mana/Stam Stats
-    public short HitPointsIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.HitPointsIncrease ?? 0);
-    public short ManaIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.ManaIncrease ?? 0);
-    public short StaminaIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.StaminaIncrease ?? 0);
-    public short HitPointsRegeneration => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.HitPointsRegeneration ?? 0);
-    public short ManaRegeneration => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.ManaRegeneration ?? 0);
-    public short StaminaRegeneration => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.StaminaRegeneration ?? 0);
+    public short HitPointsIncrease => ReadPlayer(static p => p.HitPointsIncrease);
+    public short ManaIncrease => ReadPlayer(static p => p.ManaIncrease);
+    public short StaminaIncrease => ReadPlayer(static p => p.StaminaIncrease);
+    public short HitPointsRegeneration => ReadPlayer(static p => p.HitPointsRegeneration);
+    public short ManaRegeneration => ReadPlayer(static p => p.ManaRegeneration);
+    public short StaminaRegeneration => ReadPlayer(static p => p.StaminaRegeneration);
 
     // Resistances
-    public short PhysicalResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.PhysicalResistance ?? 0);
-    public short FireResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.FireResistance ?? 0);
-    public short ColdResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.ColdResistance ?? 0);
-    public short PoisonResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.PoisonResistance ?? 0);
-    public short EnergyResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.EnergyResistance ?? 0);
+    public short PhysicalResistance => ReadPlayer(static p => p.PhysicalResistance);
+    public short FireResistance => ReadPlayer(static p => p.FireResistance);
+    public short ColdResistance => ReadPlayer(static p => p.ColdResistance);
+    public short PoisonResistance => ReadPlayer(static p => p.PoisonResistance);
+    public short EnergyResistance => ReadPlayer(static p => p.EnergyResistance);
 
     // Max Resistances
-    public short MaxPhysicResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPhysicResistence ?? 0);
-    public short MaxFireResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxFireResistence ?? 0);
-    public short MaxColdResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxColdResistence ?? 0);
-    public short MaxPoisonResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxPoisonResistence ?? 0);
-    public short MaxEnergyResistance => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxEnergyResistence ?? 0);
+    public short MaxPhysicResistance => ReadPlayer(static p => p.MaxPhysicResistence);
+    public short MaxFireResistance => ReadPlayer(static p => p.MaxFireResistence);
+    public short MaxColdResistance => ReadPlayer(static p => p.MaxColdResistence);
+    public short MaxPoisonResistance => ReadPlayer(static p => p.MaxPoisonResistence);
+    public short MaxEnergyResistance => ReadPlayer(static p => p.MaxEnergyResistence);
 
     // Combat Stats
-    public short DamageMin => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DamageMin ?? 0);
-    public short DamageMax => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DamageMax ?? 0);
-    public short DamageIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DamageIncrease ?? 0);
-    public short HitChanceIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.HitChanceIncrease ?? 0);
-    public short SwingSpeedIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.SwingSpeedIncrease ?? 0);
-    public short DefenseChanceIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.DefenseChanceIncrease ?? 0);
-    public short MaxDefenseChanceIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxDefenseChanceIncrease ?? 0);
-    public short ReflectPhysicalDamage => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.ReflectPhysicalDamage ?? 0);
+    public short DamageMin => ReadPlayer(static p => p.DamageMin);
+    public short DamageMax => ReadPlayer(static p => p.DamageMax);
+    public short DamageIncrease => ReadPlayer(static p => p.DamageIncrease);
+    public short HitChanceIncrease => ReadPlayer(static p => p.HitChanceIncrease);
+    public short SwingSpeedIncrease => ReadPlayer(static p => p.SwingSpeedIncrease);
+    public short DefenseChanceIncrease => ReadPlayer(static p => p.DefenseChanceIncrease);
+    public short MaxDefenseChanceIncrease => ReadPlayer(static p => p.MaxDefenseChanceIncrease);
+    public short ReflectPhysicalDamage => ReadPlayer(static p => p.ReflectPhysicalDamage);
 
     // Magic Stats
-    public short SpellDamageIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.SpellDamageIncrease ?? 0);
-    public short FasterCasting => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.FasterCasting ?? 0);
-    public short FasterCastRecovery => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.FasterCastRecovery ?? 0);
-    public short LowerManaCost => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.LowerManaCost ?? 0);
-    public short LowerReagentCost => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.LowerReagentCost ?? 0);
-    public bool IsCasting => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsCasting ?? false);
-    public bool IsRecovering => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsRecovering ?? false);
+    public short SpellDamageIncrease => ReadPlayer(static p => p.SpellDamageIncrease);
+    public short FasterCasting => ReadPlayer(static p => p.FasterCasting);
+    public short FasterCastRecovery => ReadPlayer(static p => p.FasterCastRecovery);
+    public short LowerManaCost => ReadPlayer(static p => p.LowerManaCost);
+    public short LowerReagentCost => ReadPlayer(static p => p.LowerReagentCost);
+    public bool IsCasting => ReadPlayer(static p => p.IsCasting);
+    public bool IsRecovering => ReadPlayer(static p => p.IsRecovering);
 
     // Other Stats
-    public ushort Luck => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Luck ?? 0);
-    public uint Gold => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Gold ?? 0);
-    public uint TithingPoints => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.TithingPoints ?? 0);
-    public ushort Weight => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Weight ?? 0);
-    public ushort WeightMax => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.WeightMax ?? 0);
-    public short StatsCap => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.StatsCap ?? 0);
-    public byte Followers => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.Followers ?? 0);
-    public byte FollowersMax => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.FollowersMax ?? 0);
-    public short EnhancePotions => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.EnhancePotions ?? 0);
+    public ushort Luck => ReadPlayer(static p => p.Luck);
+    public uint Gold => ReadPlayer(static p => p.Gold);
+    public uint TithingPoints => ReadPlayer(static p => p.TithingPoints);
+    public ushort Weight => ReadPlayer(static p => p.Weight);
+    public ushort WeightMax => ReadPlayer(static p => p.WeightMax);
+    public short StatsCap => ReadPlayer(static p => p.StatsCap);
+    public byte Followers => ReadPlayer(static p => p.Followers);
+    public byte FollowersMax => ReadPlayer(static p => p.FollowersMax);
+    public short EnhancePotions => ReadPlayer(static p => p.EnhancePotions);
 
     // Max Stat Increases
-    public short MaxHitPointsIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxHitPointsIncrease ?? 0);
-    public short MaxManaIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxManaIncrease ?? 0);
-    public short MaxStaminaIncrease => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.MaxStaminaIncrease ?? 0);
+    public short MaxHitPointsIncrease => ReadPlayer(static p => p.MaxHitPointsIncrease);
+    public short MaxManaIncrease => ReadPlayer(static p => p.MaxManaIncrease);
+    public short MaxStaminaIncrease => ReadPlayer(static p => p.MaxStaminaIncrease);
 
-    public bool IsHidden =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsHidden ?? false);
-    public bool IsWalking =>  MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.IsWalking ?? false);
+    public new bool IsHidden => ReadPlayer(static p => p.IsHidden);
+    public bool IsWalking => ReadPlayer(static p => p.IsWalking);
 
     public override bool InWarMode
     {
-        get => MainThreadQueue.InvokeOnMainThread(() => GetPlayerUnsafe()?.InWarMode ?? false);
+        get => ReadPlayer(static p => p.InWarMode);
         set => MainThreadQueue.InvokeOnMainThread(() =>
         {
             PlayerMobile player = GetPlayerUnsafe();
@@ -139,14 +134,17 @@ public class ApiPlayer : ApiMobile
     /// Gets the PlayerMobile without thread marshalling. Must only be called from code already executing on the main thread.
     /// </summary>
     private PlayerMobile GetPlayerUnsafe()
-    {
-        if (player != null && player.Serial == Serial) return player;
+        => ResolveCached(ref player, Serial, static _ => World.Instance.Player);
 
-        if (World.Instance.Player != null)
+    /// <summary>
+    /// Reads a single field from the backing <see cref="PlayerMobile"/> on the main thread, returning
+    /// <paramref name="fallback"/> when the player is no longer available.
+    /// </summary>
+    private T ReadPlayer<T>(System.Func<PlayerMobile, T> selector, T fallback = default)
+        => MainThreadQueue.InvokeOnMainThread(() =>
         {
-            return player = World.Instance.Player;
-        }
+            PlayerMobile p = GetPlayerUnsafe();
 
-        return null;
-    }
+            return p != null ? selector(p) : fallback;
+        });
 }

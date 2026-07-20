@@ -1,4 +1,5 @@
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
@@ -15,13 +16,18 @@ public static class MyraStyle
     public const int STANDARD_SPACING = 3;
     public const int STANDARD_BORDER_ALPHA = 125;
     public static Color GridBorderColor { get; } = new Color(0, 0, 0, STANDARD_BORDER_ALPHA);
+    public static SpriteFontBase UiFont => _uiFont;
+
+    public static int UiFontSize => ProfileManager.CurrentProfile == null ? 16 : ProfileManager.CurrentProfile.OptionsFontSize;
+    public static SpriteFontBase GetUiFont(int sizeOffset) =>
+        TrueTypeLoader.Instance.GetFont(ProfileManager.CurrentProfile == null ? EmbeddedFontNames.IBM_PLEX : ProfileManager.CurrentProfile.OptionsFont, UiFontSize + sizeOffset);
 
     private static Color TazUO_Orange = new(0.667f, 0.412f, 0.051f, 1f);
 
     private static SpriteFontBase _uiFont;
     private static NinePatchRegion _ninePatchPanel;
-    private static NinePatchRegion _ninePatchButtonUp;
-    private static NinePatchRegion _ninePatchButtonDown;
+    public static NinePatchRegion NinePatchButtonUp;
+    public static NinePatchRegion NinePatchButtonDown;
     private static NinePatchRegion _ninePatchButtonDangerUp;
     private static NinePatchRegion _ninePatchButtonDangerDown;
     private static TextureRegion _skillUpButton;
@@ -35,12 +41,12 @@ public static class MyraStyle
             ModernUIConstants.ModernUIPanel.Bounds,
             new Thickness(ModernUIConstants.ModernUIPanel_BorderSize)
         );
-        _ninePatchButtonUp = new NinePatchRegion(
+        NinePatchButtonUp = new NinePatchRegion(
             ModernUIConstants.ModernUIButtonUp,
             ModernUIConstants.ModernUIButtonUp.Bounds,
             new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
         );
-        _ninePatchButtonDown = new NinePatchRegion(
+        NinePatchButtonDown = new NinePatchRegion(
             ModernUIConstants.ModernUIButtonDown,
             ModernUIConstants.ModernUIButtonUp.Bounds,
             new Thickness(ModernUIConstants.ModernUIButton_BorderSize)
@@ -60,7 +66,7 @@ public static class MyraStyle
         _skillDownButton = new TextureRegion(ModernUIConstants.ModernUISkillDown);
         _skillLockBtn = new TextureRegion(ModernUIConstants.ModernUISkillLock);
 
-        _uiFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.IBM_PLEX, 16);
+        _uiFont = TrueTypeLoader.Instance.GetFont(ProfileManager.CurrentProfile == null ? EmbeddedFontNames.IBM_PLEX : ProfileManager.CurrentProfile.OptionsFont, UiFontSize);
 
         //Window style
         WindowStyle style = Stylesheet.Current.WindowStyle;
@@ -99,15 +105,16 @@ public static class MyraStyle
         sStyle.KnobStyle.ImageStyle.FocusedBackground = new SolidBrush(TazUO_Orange);
         sStyle.KnobStyle.ImageStyle.PressedImage = null;
         sStyle.KnobStyle.ImageStyle.Image = null;
-        sStyle.Width = 100;
-        sStyle.Height = 20;
+        sStyle.KnobStyle.ImageStyle.Height = 30;
+        sStyle.Width = 175;
+        sStyle.Height = 30;
 
         //Button
         ButtonStyle s = Stylesheet.Current.ButtonStyle;
         //s.Background = new SolidBrush(TazUO_Orange);
-        s.Background = _ninePatchButtonUp;
-        s.OverBackground = _ninePatchButtonDown;
-        s.PressedBackground = _ninePatchButtonDown;
+        s.Background = NinePatchButtonUp;
+        s.OverBackground = NinePatchButtonDown;
+        s.PressedBackground = NinePatchButtonDown;
         s.MinWidth = 1;
         s.MinHeight = 1;
         s.Padding = new Thickness(5);

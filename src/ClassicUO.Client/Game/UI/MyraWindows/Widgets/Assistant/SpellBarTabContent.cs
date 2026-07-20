@@ -26,7 +26,7 @@ public static class SpellBarTabContent
         var editPanels = new HorizontalStackPanel[10];
 
         string GetKeyDisplay(int slot) =>
-            SpellBarManager.GetKetNames(slot) is { Length: > 0 } s ? s : "None";
+            SpellBarManager.GetKetNames(slot) is { Length: > 0 } s ? s : TazLang.Get("spellbar_none");
 
         void StopListening()
         {
@@ -59,7 +59,7 @@ public static class SpellBarTabContent
             capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
             capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
-            keyLabels[slot].Text = "Press a key...";
+            keyLabels[slot].Text = TazLang.Get("spellbar_pressakey");
             normalPanels[slot].Visible = false;
             editPanels[slot].Visible = true;
 
@@ -86,7 +86,7 @@ public static class SpellBarTabContent
                 else
                     Game.UI.Gumps.SpellBar.SpellBar.Instance?.Dispose();
             },
-            "Enable spellbar", "Enable or disable the spell bar feature"));
+            TazLang.Get("spellbar_enable"), TazLang.Get("spellbar_enable_tooltip")));
 
         // Show hotkeys
         leftCol.Widgets.Add(MyraCheckButton.CreateWithCallback(
@@ -96,35 +96,35 @@ public static class SpellBarTabContent
                 profile.SpellBar_ShowHotkeys = b;
                 Game.UI.Gumps.SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
             },
-            "Display hotkeys on spellbar", "Show hotkey assignments on the spell bar buttons"));
+            TazLang.Get("spellbar_showhotkeys"), TazLang.Get("spellbar_showhotkeys_tooltip")));
 
         // Row management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Row Management", MyraLabel.TextStyle.H2));
+        leftCol.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_rowmanagement"), MyraLabel.TextStyle.H2));
         var rowBtns = new HorizontalStackPanel { Spacing = 4 };
-        rowBtns.Widgets.Add(new MyraButton("Add Row", () =>
+        rowBtns.Widgets.Add(new MyraButton(TazLang.Get("spellbar_addrow_btn"), () =>
         {
             SpellBarManager.SpellBarRows.Add(new SpellBarRow());
             Game.UI.Gumps.SpellBar.SpellBar.Instance?.Build();
-        }) { Tooltip = "Add a new spell bar row" });
-        rowBtns.Widgets.Add(new MyraButton("Remove Row", () =>
+        }) { Tooltip = TazLang.Get("spellbar_addrow_tooltip") });
+        rowBtns.Widgets.Add(new MyraButton(TazLang.Get("spellbar_removerow_btn"), () =>
         {
             if (SpellBarManager.SpellBarRows.Count > 1)
                 SpellBarManager.SpellBarRows.RemoveAt(SpellBarManager.SpellBarRows.Count - 1);
             Game.UI.Gumps.SpellBar.SpellBar.Instance?.Build();
-        }) { Tooltip = "Remove the last row. If you have 5 rows, row 5 will be removed." });
+        }) { Tooltip = TazLang.Get("spellbar_removerow_tooltip") });
         leftCol.Widgets.Add(rowBtns);
 
         // Preset management
         leftCol.Widgets.Add(new MyraSpacer(15, 5));
-        leftCol.Widgets.Add(new MyraLabel("Preset Management", MyraLabel.TextStyle.H2));
+        leftCol.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_presetmanagement"), MyraLabel.TextStyle.H2));
 
         var presetSavePanel = new VerticalStackPanel { Spacing = 4, Visible = false };
-        var presetNameBox = new MyraInputBox { MinWidth = 150, HintText = "Preset name" };
+        var presetNameBox = new MyraInputBox { MinWidth = 150, HintText = TazLang.Get("spellbar_savepreset_name") };
         var presetSaveRow = new HorizontalStackPanel { Spacing = 4 };
-        presetSaveRow.Widgets.Add(new MyraLabel("Name:", MyraLabel.TextStyle.P));
+        presetSaveRow.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_name"), MyraLabel.TextStyle.P));
         presetSaveRow.Widgets.Add(presetNameBox);
-        presetSaveRow.Widgets.Add(new MyraButton("Save", () =>
+        presetSaveRow.Widgets.Add(new MyraButton(TazLang.Get("spellbar_save"), () =>
         {
             if (!string.IsNullOrEmpty(presetNameBox.Text))
             {
@@ -133,7 +133,7 @@ public static class SpellBarTabContent
                 presetSavePanel.Visible = false;
             }
         }));
-        presetSaveRow.Widgets.Add(new MyraButton("Cancel", () =>
+        presetSaveRow.Widgets.Add(new MyraButton(TazLang.Get("spellbar_cancel"), () =>
         {
             presetNameBox.Text = "";
             presetSavePanel.Visible = false;
@@ -143,15 +143,15 @@ public static class SpellBarTabContent
         var presetLoadPanel = new VerticalStackPanel { Spacing = 4, Visible = false };
         var presetListPanel = new VerticalStackPanel { Spacing = 2 };
         presetLoadPanel.Widgets.Add(presetListPanel);
-        presetLoadPanel.Widgets.Add(new MyraButton("Cancel", () => presetLoadPanel.Visible = false));
+        presetLoadPanel.Widgets.Add(new MyraButton(TazLang.Get("spellbar_cancel"), () => presetLoadPanel.Visible = false));
 
         var presetActionBtns = new HorizontalStackPanel { Spacing = 4 };
-        presetActionBtns.Widgets.Add(new MyraButton("Save Preset...", () =>
+        presetActionBtns.Widgets.Add(new MyraButton(TazLang.Get("spellbar_savepreset_btn"), () =>
         {
             presetLoadPanel.Visible = false;
             presetSavePanel.Visible = !presetSavePanel.Visible;
-        }) { Tooltip = "Save the current spell bar row as a preset" });
-        presetActionBtns.Widgets.Add(new MyraButton("Load Preset...", () =>
+        }) { Tooltip = TazLang.Get("spellbar_savepreset_tooltip") });
+        presetActionBtns.Widgets.Add(new MyraButton(TazLang.Get("spellbar_loadpreset_btn"), () =>
         {
             presetSavePanel.Visible = false;
 
@@ -159,11 +159,11 @@ public static class SpellBarTabContent
             string[] presets = SpellBarManager.ListPresets();
             if (presets.Length == 0)
             {
-                presetListPanel.Widgets.Add(new MyraLabel("No presets available.", MyraLabel.TextStyle.P));
+                presetListPanel.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_nopresets"), MyraLabel.TextStyle.P));
             }
             else
             {
-                presetListPanel.Widgets.Add(new MyraLabel("Select a preset to load:", MyraLabel.TextStyle.P));
+                presetListPanel.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_selectpreset"), MyraLabel.TextStyle.P));
                 foreach (string preset in presets)
                 {
                     string p = preset;
@@ -176,7 +176,7 @@ public static class SpellBarTabContent
             }
 
             presetLoadPanel.Visible = !presetLoadPanel.Visible;
-        }) { Tooltip = "Load a saved preset" });
+        }) { Tooltip = TazLang.Get("spellbar_loadpreset_tooltip") });
 
         leftCol.Widgets.Add(presetActionBtns);
         leftCol.Widgets.Add(presetSavePanel);
@@ -184,7 +184,7 @@ public static class SpellBarTabContent
 
         // === Right column: hotkey configuration ===
         var rightCol = new VerticalStackPanel { Spacing = 6 };
-        rightCol.Widgets.Add(new MyraLabel("Hotkey Configuration", MyraLabel.TextStyle.H2));
+        rightCol.Widgets.Add(new MyraLabel(TazLang.Get("spellbar_hotkeyconfig"), MyraLabel.TextStyle.H2));
 
         var hotkeyGrid = new MyraGrid();
         hotkeyGrid.AddColumn(new Proportion(ProportionType.Pixels, 60));  // Slot label
@@ -200,8 +200,8 @@ public static class SpellBarTabContent
             keyLabels[slot] = new MyraLabel(GetKeyDisplay(slot), MyraLabel.TextStyle.P);
 
             normalPanels[slot] = new HorizontalStackPanel { Spacing = 4 };
-            normalPanels[slot].Widgets.Add(new MyraButton("Set", () => StartListening(slot)));
-            normalPanels[slot].Widgets.Add(new MyraButton("Clear", () =>
+            normalPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_set"), () => StartListening(slot)));
+            normalPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_clear"), () =>
             {
                 SpellBarManager.SetButtons(slot, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, []);
                 keyLabels[slot].Text = GetKeyDisplay(slot);
@@ -209,14 +209,14 @@ public static class SpellBarTabContent
             }));
 
             editPanels[slot] = new HorizontalStackPanel { Spacing = 4, Visible = false };
-            editPanels[slot].Widgets.Add(new MyraButton("Apply", () => ApplyCapturedHotkey()));
-            editPanels[slot].Widgets.Add(new MyraButton("Cancel", () => StopListening()));
+            editPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_apply"), () => ApplyCapturedHotkey()));
+            editPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_cancel"), () => StopListening()));
 
             var actionsContainer = new VerticalStackPanel();
             actionsContainer.Widgets.Add(normalPanels[slot]);
             actionsContainer.Widgets.Add(editPanels[slot]);
 
-            hotkeyGrid.AddWidget(new MyraLabel($"Slot {slot}", MyraLabel.TextStyle.P), slot, 0);
+            hotkeyGrid.AddWidget(new MyraLabel(TazLang.Get("spellbar_slot", new[] { slot.ToString() }), MyraLabel.TextStyle.P), slot, 0);
             hotkeyGrid.AddWidget(keyLabels[slot], slot, 2);
             hotkeyGrid.AddWidget(actionsContainer, slot, 4);
         }

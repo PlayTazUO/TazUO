@@ -37,8 +37,10 @@ namespace ClassicUO.Game.UI.Controls
                     return;
                 }
 
-                Width = gumpInfo.UV.Width;
-                Height = gumpInfo.UV.Height;
+                // Preserve any applied scaling - changing the graphic otherwise resets the size back
+                // to the texture's native dimensions (e.g. stat lock icons that swap graphic on click).
+                Width = (int)(gumpInfo.UV.Width * InternalScale);
+                Height = (int)(gumpInfo.UV.Height * InternalScale);
             }
         }
 

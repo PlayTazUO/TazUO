@@ -89,6 +89,7 @@ class ApiItem(ApiEntity):
     Opened: bool = None
     Container: int = None
     RootContainer: int = None
+    CorpseParent: int = None
     OnGround: bool = None
     RootEntity: ApiEntity = None
     __class__: str = None
@@ -647,6 +648,21 @@ class ApiUiGump:
         """
         pass
 
+    def LegionTextureControl(self, textureName: "str", width: "int" = 0, height: "int" = 0) -> "Any":
+        """
+         Create an image control that displays a named PNG texture loaded from a ZIP archive.
+         Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
+         Example:
+         ```py
+         # In your zip: icons/sword.png
+         img = API.Gumps.LegionTextureControl("icons/sword.png")
+         img.SetPos(10, 10)
+         g.Add(img)
+         ```
+        
+        """
+        pass
+
     def CreateGumpButton(self, text: "str" = "", hue: "int" = 996, normal: "int" = 0x00EF, pressed: "int" = 0x00F0, hover: "int" = 0x00EE) -> "ApiUiButton":
         """
          Create a button for gumps.
@@ -867,6 +883,10 @@ class ApiUiLabel(ApiUiBaseControl):
     Text: str = None
     Hue: int = None
 
+class ApiUiLegionTexture(ApiUiBaseControl):
+    ""
+    TextureName: str = None
+
 class ApiUiMenuItem:
     ""
     Index: int = None
@@ -924,7 +944,6 @@ class ApiUiNiceButton(ApiUiBaseControl):
 
 class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
     ""
-    NineSliceGump = None
     Gump: ApiUiBaseGump = None
 
     def GetHue(self) -> "int":
@@ -969,8 +988,22 @@ class ApiUiNineSliceGump(ApiUiBaseControl, IApiGump):
         """
         pass
 
+    def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
+        """
+         Set the modern gump texture and border size
+        
+        """
+        pass
+
 class ModernNineSliceGump(NineSliceGump):
     ""
+
+    def SetLegionTexture(self, texture: "str", borderSize: "int") -> None:
+        """
+         Set the modern gump texture and border size
+        
+        """
+        pass
 
     def SetResizeCallback(self, callback: "Any") -> None:
         """
@@ -1087,6 +1120,8 @@ Random = None
 LastTargetSerial: int = None
 LastTargetPos: ApiPoint3D = None
 LastTargetGraphic: int = None
+LastSpellIndex: int = None
+LastSpellName: str = None
 Found: int = None
 Profile: ApiUserProfile = None
 Gumps: ApiUiGump = None
@@ -2506,6 +2541,17 @@ def GetSoundLog(seconds: "float") -> "list[ApiSoundEntry]":
     """
     pass
 
+def PlaySound(index: "int") -> None:
+    """
+     Play a sound effect locally (only audible to you).
+     Example:
+     ```py
+     API.PlaySound(0x13E)
+     ```
+    
+    """
+    pass
+
 def InJournalAny(msgs: "list[str]", clearMatches: "bool" = False) -> "bool":
     """
      Check if the journal contains *any* of the strings in this list.
@@ -2563,6 +2609,33 @@ def Stop() -> None:
      Example:
      ```py
      API.Stop()
+     ```
+    
+    """
+    pass
+
+def OnStop(callback: "Any" = None) -> None:
+    """
+     Register an optional callback to run when this script is being stopped.
+     When set, stopping the script will be delayed until this callback has been
+     processed, or until a maximum of 5 seconds have passed.
+    
+     Callbacks only run while the script is calling `API.ProcessCallbacks`,
+     so make sure your script keeps calling it (for example in its main loop) for
+     the OnStop callback to actually run before the timeout elapses.
+    
+     Example:
+     ```py
+     def on_stop():
+       API.SysMsg("Cleaning up before stopping...")
+     API.OnStop(on_stop)
+     while True:
+       API.ProcessCallbacks()
+       API.Pause(0.1)
+     ```
+     To unregister, call with no callback:
+     ```py
+     API.OnStop()
      ```
     
     """
@@ -3131,6 +3204,49 @@ def TrackingArrow(x: "int", y: "int", identifier: "int" = 1337) -> None:
     """
     pass
 
+def GetClilocString(cliloc: "int", englishOnly: "bool" = False) -> "str":
+    """
+     Get the string for a cliloc number.
+     Example:
+     ```py
+     text = API.GetClilocString(1020000)
+     if text:
+       API.SysMsg(text)
+    
+     # Force English regardless of client language setting
+     text = API.GetClilocString(1020000, englishOnly=True)
+     ```
+    
+    """
+    pass
+
+def GetClientBounds() -> "Any":
+    """
+     Get the bounds of the client game window.
+     This covers the entire window, including all UI and the game world.
+     Coordinates are in screen pixels.
+     Example:
+     ```py
+     bounds = API.GetClientBounds()
+     API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+     ```
+    
+    """
+    pass
+
+def GetViewportBounds() -> "Any":
+    """
+     Get the bounds of the game world viewport.
+     This is the area where the game world is rendered, in screen pixel coordinates.
+     Example:
+     ```py
+     vp = API.GetViewportBounds()
+     API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+     ```
+    
+    """
+    pass
+
 class EventSinkApiDeclaration:
     ""
 
@@ -3187,7 +3303,7 @@ class EventSinkApiDeclaration:
 
     def ClilocMessageReceived(self, callback: "Any") -> None:
         """
-          Not currently used. May be removed later or put into use, not sure right now
+         Invoked when a cliloc message is received from the server
         
         """
         pass

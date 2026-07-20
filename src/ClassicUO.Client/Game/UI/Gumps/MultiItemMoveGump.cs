@@ -57,7 +57,7 @@ namespace ClassicUO.Game.UI.Gumps
         private static bool processing = false;
         private static ProcessType processType = ProcessType.None;
         private static uint _lastMoveTick;
-        private static uint tradeId, containerId;
+        private static uint tradeId, containerId, mobileId;
         private static int groundX, groundY, groundZ;
 
         // ===== UI =====
@@ -107,7 +107,7 @@ namespace ClassicUO.Game.UI.Gumps
             // "Object delay" + numeric input (right-aligned)
             int delayRowY = cy + _header.Height + 5;
 
-            Add(new Label("Object delay:", true, 0xFFFF, 150)
+            Add(new Label(TazLang.Get("multimove_objectdelay", "Object delay:"), true, 0xFFFF, 150)
             {
                 X = cx,
                 Y = delayRowY
@@ -144,8 +144,8 @@ namespace ClassicUO.Game.UI.Gumps
             NiceButton b;
 
             // Move to backpack (full width)
-            Add(b = new NiceButton(cx, rowY1, cw, 20, ButtonAction.Activate, "Move to backpack", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Move selected items to your backpack.");
+            Add(b = new NiceButton(cx, rowY1, cw, 20, ButtonAction.Activate, TazLang.Get("multimove_movetobackpack", "Move to backpack"), align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(TazLang.Get("multimove_movetobackpack_tooltip", "Move selected items to your backpack."));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -158,20 +158,20 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             // Set favorite (left)
-            Add(b = new NiceButton(cx, rowY2, halfW, 20, ButtonAction.Activate, "Set favorite bag", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Set your preferred destination container for future item moves.");
+            Add(b = new NiceButton(cx, rowY2, halfW, 20, ButtonAction.Activate, TazLang.Get("multimove_setfavoritebag", "Set favorite bag"), align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(TazLang.Get("multimove_setfavoritebag_tooltip", "Set your preferred destination container for future item moves."));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Target a container to set as your favorite.");
+                    GameActions.Print(World, TazLang.Get("multimove_targetfavorite", "Target a container to set as your favorite."));
                     World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                 }
             };
 
             // To favorite (right)
-            Add(b = new NiceButton(cx + halfW + GAP, rowY2, halfW, 20, ButtonAction.Activate, "To favorite", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Move selected items to your favorite container.");
+            Add(b = new NiceButton(cx + halfW + GAP, rowY2, halfW, 20, ButtonAction.Activate, TazLang.Get("multimove_tofavorite", "To favorite"), align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(TazLang.Get("multimove_tofavorite_tooltip", "Move selected items to your favorite container."));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -179,19 +179,19 @@ namespace ClassicUO.Game.UI.Gumps
                     uint fav = ProfileManager.CurrentProfile.SetFavoriteMoveBagSerial;
                     if (fav == 0)
                     {
-                        GameActions.Print(World, "No favorite container set. Please target one.");
+                        GameActions.Print(World, TazLang.Get("multimove_nofavorite", "No favorite container set. Please target one."));
                         World.TargetManager.SetTargeting(CursorTarget.SetFavoriteMoveBag, CursorType.Target, TargetType.Neutral);
                         return;
                     }
 
                     Item cont = World.Items.Get(fav);
                     if (cont != null) ProcessItemMoves(World, cont);
-                    else GameActions.Print(World, "Favorite container is not available.");
+                    else GameActions.Print(World, TazLang.Get("multimove_favoriteunavailable", "Favorite container is not available."));
                 }
             };
 
             // Cancel (left)
-            Add(b = new NiceButton(cx, rowY3, halfW, 20, ButtonAction.Activate, "Cancel", align: TEXT_ALIGN_TYPE.TS_CENTER));
+            Add(b = new NiceButton(cx, rowY3, halfW, 20, ButtonAction.Activate, TazLang.Get("multimove_cancel", "Cancel"), align: TEXT_ALIGN_TYPE.TS_CENTER));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
@@ -202,13 +202,13 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
             // Move to (right)
-            Add(b = new NiceButton(cx + halfW + GAP, rowY3, halfW, 20, ButtonAction.Activate, "Move to", align: TEXT_ALIGN_TYPE.TS_CENTER));
-            b.SetTooltip("Select a container or a ground tile to move these items to.");
+            Add(b = new NiceButton(cx + halfW + GAP, rowY3, halfW, 20, ButtonAction.Activate, TazLang.Get("multimove_moveto", "Move to"), align: TEXT_ALIGN_TYPE.TS_CENTER));
+            b.SetTooltip(TazLang.Get("multimove_moveto_tooltip", "Select a container, a mobile (or its name plate), or a ground tile to move these items to."));
             b.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.Print(World, "Where should we move these items?");
+                    GameActions.Print(World, TazLang.Get("multimove_wheremove", "Where should we move these items?"));
                     World.TargetManager.SetTargeting(CursorTarget.MoveItemContainer, CursorType.Target, TargetType.Neutral);
                 }
             };
@@ -256,15 +256,28 @@ namespace ClassicUO.Game.UI.Gumps
 
         public static void OnContainerTarget(World world, uint serial)
         {
+            if (SerialHelper.IsMobile(serial))
+            {
+                Mobile mobile = world.Mobiles.Get(serial);
+                if (mobile == null)
+                {
+                    GameActions.Print(world, TazLang.Get("multimove_invalidmobile", "That does not appear to be a valid mobile..."));
+                    return;
+                }
+                GameActions.Print(world, TazLang.Get("multimove_movingtomobile", "Moving items to the selected mobile.."));
+                ProcessItemMovesToMobile(world, mobile.Serial);
+                return;
+            }
+
             if (SerialHelper.IsItem(serial))
             {
                 Item moveToContainer = world.Items.Get(serial);
                 if (moveToContainer == null || !moveToContainer.ItemData.IsContainer)
                 {
-                    GameActions.Print(world, "That does not appear to be a container...");
+                    GameActions.Print(world, TazLang.Get("multimove_notcontainer", "That does not appear to be a container..."));
                     return;
                 }
-                GameActions.Print(world, "Moving items to the selected container..");
+                GameActions.Print(world, TazLang.Get("multimove_movingtocontainer", "Moving items to the selected container.."));
                 ProcessItemMoves(world, moveToContainer);
             }
         }
@@ -299,6 +312,13 @@ namespace ClassicUO.Game.UI.Gumps
         {
             tradeId = tradeID;
             processType = ProcessType.TradeWindow;
+            processing = true;
+        }
+
+        private static void ProcessItemMovesToMobile(World world, uint mobileSerial)
+        {
+            mobileId = mobileSerial;
+            processType = ProcessType.Mobile;
             processing = true;
         }
 
@@ -340,6 +360,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                         case ProcessType.Container:
                             ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, containerId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
+                            enqueued = true;
+                            break;
+
+                        case ProcessType.Mobile:
+                            ObjectActionQueue.Instance.Enqueue(new MoveRequest(moveItem.Serial, mobileId, moveItem.Amount).ToObjectActionQueueItem(), ActionPriority.MoveItem);
                             enqueued = true;
                             break;
 
@@ -391,7 +416,9 @@ namespace ClassicUO.Game.UI.Gumps
         private static string TextForHeader()
         {
             int count = SelectedCount;
-            return processing ? $"Moving {count} items." : $"Selected {count} items.";
+            return processing
+                ? TazLang.Get("multimove_header_moving", new[] { count.ToString() })
+                : TazLang.Get("multimove_header_selected", new[] { count.ToString() });
         }
 
         private static void ClearAll()
@@ -406,6 +433,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             processType = ProcessType.None;
             containerId = 0;
+            mobileId = 0;
             tradeId = 0;
             groundX = groundY = groundZ = 0;
         }
@@ -415,7 +443,8 @@ namespace ClassicUO.Game.UI.Gumps
             None = 0,
             Container,
             Ground,
-            TradeWindow
+            TradeWindow,
+            Mobile
         }
     }
 }

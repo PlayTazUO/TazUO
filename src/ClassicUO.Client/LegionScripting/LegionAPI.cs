@@ -13,6 +13,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Managers.Structs;
+using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
@@ -43,6 +44,10 @@ namespace ClassicUO.LegionScripting
 
         private uint _timedCallbackCurrentId;
         private readonly ConcurrentDictionary<uint, TimedCallback> _timedCallbacks = new();
+
+        private volatile object _onStopCallback;
+        private volatile bool _onStopScheduled;
+        private volatile bool _onStopCompleted;
         private readonly ConcurrentDictionary<string, bool> _pressedKeys = new();
         private readonly ConcurrentDictionary<string, string> _keyToHotkeyMap = new();
 
@@ -164,6 +169,60 @@ namespace ClassicUO.LegionScripting
                     break;
             }
         }
+
+        #endregion
+
+        #region OnStop Callback
+
+        /// <summary>
+        /// Returns true if an OnStop callback is registered that still needs to run.
+        /// </summary>
+        internal bool HasPendingStopCallback => !_disposed && _onStopCallback != null && !_onStopCompleted;
+
+        /// <summary>
+        /// Returns true once a registered OnStop callback has finished running (or no callback was set).
+        /// </summary>
+        internal bool OnStopCompleted => _onStopCompleted;
+
+        /// <summary>
+        /// Schedules the registered OnStop callback so it will run on the next call to
+        /// <see cref="ProcessCallbacks"/>. This is idempotent: it only schedules once and
+        /// returns true only on the first call so callers can start a single wait/timeout.
+        /// </summary>
+        internal bool BeginStopCallback()
+        {
+            if (_onStopScheduled)
+                return false;
+
+            _onStopScheduled = true;
+
+            object callback = _onStopCallback;
+            if (callback == null)
+            {
+                _onStopCompleted = true;
+                return true;
+            }
+
+            ScheduleCallbackActions([WrapStopCallback(callback)]);
+            return true;
+        }
+
+        private Action WrapStopCallback(object callback) =>
+            () =>
+            {
+                try
+                {
+                    CallbackChannel.Invoke(callback);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"OnStop callback error: {ex}");
+                }
+                finally
+                {
+                    _onStopCompleted = true;
+                }
+            };
 
         #endregion
 
@@ -327,6 +386,24 @@ namespace ClassicUO.LegionScripting
         /// The graphic of the last targeting object
         /// </summary>
         public ushort LastTargetGraphic => OnMain(() => World.TargetManager.LastTargetInfo.Graphic);
+
+        /// <summary>
+        /// The index of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
+        /// ```
+        /// </summary>
+        public int LastSpellIndex => OnMain(() => GameActions.LastSpellIndex);
+
+        /// <summary>
+        /// The name of the last spell cast by the player.
+        /// Example:
+        /// ```py
+        /// API.SysMsg("Last spell: " + API.LastSpellName)
+        /// ```
+        /// </summary>
+        public string LastSpellName => OnMain(() => Game.Data.SpellDefinition.FullIndexGetSpell(GameActions.LastSpellIndex).Name);
 
         /// <summary>
         /// The serial of the last item or mobile from the various findtype/mobile methods
@@ -1783,24 +1860,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
                     return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
 
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
@@ -1846,23 +1915,16 @@ namespace ClassicUO.LegionScripting
 
             DateTime expire = DateTime.Now.AddSeconds(timeout);
 
-            while (OnMain(() => World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding()))
+            while (OnMain(() => World.Player.Pathfinder.AutoWalking))
             {
                 if (DateTime.Now >= expire)
                 {
-                    OnMain(() =>
-                    {
-                        World.Player.Pathfinder.StopAutoWalk();
-                        LongDistancePathfinder.StopPathfinding();
-                    });                    return false;
+                    OnMain(() => World.Player.Pathfinder.StopAutoWalk());
+                    return false;
                 }
             }
 
-            OnMain(() =>
-            {
-                World.Player.Pathfinder.StopAutoWalk();
-                LongDistancePathfinder.StopPathfinding();
-            });
+            OnMain(() => World.Player.Pathfinder.StopAutoWalk());
             return OnMain(() => World.Player.DistanceFrom(new Vector2(x, y)) <= distance);
         }
 
@@ -1881,7 +1943,7 @@ namespace ClassicUO.LegionScripting
                 if (World == null || World.Player == null)
                     return false;
 
-                return World.Player.Pathfinder.AutoWalking || LongDistancePathfinder.IsPathfinding();
+                return World.Player.Pathfinder.AutoWalking || WorldMapPathfinder.IsRunning;
             }
         );
 
@@ -1896,7 +1958,7 @@ namespace ClassicUO.LegionScripting
         public void CancelPathfinding() => OnMain(() =>
         {
             World?.Player?.Pathfinder?.StopAutoWalk();
-            LongDistancePathfinder.StopPathfinding();
+            WorldMapPathfinder.Cancel();
         });
 
         /// <summary>
@@ -1942,8 +2004,8 @@ namespace ClassicUO.LegionScripting
         public void AutoFollow(uint mobile) => OnMain
         (() =>
             {
-                ProfileManager.CurrentProfile.FollowingMode = true;
-                ProfileManager.CurrentProfile.FollowingTarget = mobile;
+                if (World.Mobiles.Get(mobile) is Mobile m)
+                    m.Follow(false);
             }
         );
 
@@ -3093,6 +3155,16 @@ namespace ClassicUO.LegionScripting
         }
 
         /// <summary>
+        /// Play a sound effect locally (only audible to you).
+        /// Example:
+        /// ```py
+        /// API.PlaySound(0x13E)
+        /// ```
+        /// </summary>
+        /// <param name="index">The sound effect ID to play</param>
+        public void PlaySound(int index) => OnMain(() => Client.Game.Audio.PlaySound(index));
+
+        /// <summary>
         /// Check if the journal contains *any* of the strings in this list.
         /// Can be regex, prepend your msgs with $
         /// Example:
@@ -3244,6 +3316,32 @@ namespace ClassicUO.LegionScripting
         /// </summary>
         public void Stop() =>
             MainThreadQueue.InvokeOnMainThread(() => { LegionScripting.StopScript(_scriptFile); });
+
+        /// <summary>
+        /// Register an optional callback to run when this script is being stopped.
+        /// When set, stopping the script will be delayed until this callback has been
+        /// processed, or until a maximum of 5 seconds have passed.
+        ///
+        /// Callbacks only run while the script is calling `API.ProcessCallbacks`,
+        /// so make sure your script keeps calling it (for example in its main loop) for
+        /// the OnStop callback to actually run before the timeout elapses.
+        ///
+        /// Example:
+        /// ```py
+        /// def on_stop():
+        ///   API.SysMsg("Cleaning up before stopping...")
+        /// API.OnStop(on_stop)
+        /// while True:
+        ///   API.ProcessCallbacks()
+        ///   API.Pause(0.1)
+        /// ```
+        /// To unregister, call with no callback:
+        /// ```py
+        /// API.OnStop()
+        /// ```
+        /// </summary>
+        /// <param name="callback">The function to invoke when the script is stopping, or `null` to unregister.</param>
+        public void OnStop(object callback = null) => _onStopCallback = callback;
 
         /// <summary>
         /// Toggle autolooting on or off.
@@ -4175,6 +4273,52 @@ namespace ClassicUO.LegionScripting
                 UIManager.Add(arrow);
             }
         });
+
+        /// <summary>
+        /// Get the string for a cliloc number.
+        /// Example:
+        /// ```py
+        /// text = API.GetClilocString(1020000)
+        /// if text:
+        ///   API.SysMsg(text)
+        ///
+        /// # Force English regardless of client language setting
+        /// text = API.GetClilocString(1020000, englishOnly=True)
+        /// ```
+        /// </summary>
+        /// <param name="cliloc">The cliloc number</param>
+        /// <param name="englishOnly">True to always return the English string, ignoring the client language setting</param>
+        /// <returns>The cliloc string, or null if not found</returns>
+        public string GetClilocString(int cliloc, bool englishOnly = false) => OnMain(() =>
+            englishOnly
+                ? Client.Game.UO.FileManager.Clilocs.GetEnglishString(cliloc)
+                : Client.Game.UO.FileManager.Clilocs.GetString(cliloc)
+        );
+
+        /// <summary>
+        /// Get the bounds of the client game window.
+        /// This covers the entire window, including all UI and the game world.
+        /// Coordinates are in screen pixels.
+        /// Example:
+        /// ```py
+        /// bounds = API.GetClientBounds()
+        /// API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+        /// ```
+        /// </summary>
+        /// <returns>A Rectangle with X, Y, Width and Height of the client window in screen pixels.</returns>
+        public Rectangle GetClientBounds() => OnMain(() => Client.Game.Window.ClientBounds);
+
+        /// <summary>
+        /// Get the bounds of the game world viewport.
+        /// This is the area where the game world is rendered, in screen pixel coordinates.
+        /// Example:
+        /// ```py
+        /// vp = API.GetViewportBounds()
+        /// API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+        /// ```
+        /// </summary>
+        /// <returns>A Rectangle with X, Y, Width and Height of the game viewport in screen pixels, or an empty Rectangle if the game scene is not active.</returns>
+        public Rectangle GetViewportBounds() => OnMain(() => Client.Game.GetScene<GameScene>()?.Camera.Bounds ?? Rectangle.Empty);
 
         #endregion
     }

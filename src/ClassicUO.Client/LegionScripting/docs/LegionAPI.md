@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `5/21/26`.*
+*This was generated on `7/20/26`.*
 
 ## Properties
 ### `Events`
@@ -103,6 +103,28 @@ You can now type `-updateapi` in game to download the latest API.py file.
 **Type:** `ushort`
 
  The graphic of the last targeting object
+
+
+### `LastSpellIndex`
+
+**Type:** `int`
+
+ The index of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell index: " + str(API.LastSpellIndex))
+ ```
+
+
+### `LastSpellName`
+
+**Type:** `string`
+
+ The name of the last spell cast by the player.
+ Example:
+ ```py
+ API.SysMsg("Last spell: " + API.LastSpellName)
+ ```
 
 
 ### `Found`
@@ -237,7 +259,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | --- | --- | --- | --- |
 | `delayMs` | `uint` | ❌ No | The delay, in milliseconds, after which to invoke the callback.<br>         <br/>  The minimum delay is 5ms. |
 | `callback` | `Action` | ❌ No | The callback to invoke |
-| `timesToRepeat` | `int` | ✅ Yes | The number of times the callback the callback should be repeated after the initial invocation.<br>         Repeated invocations respect the requested delay.<br>         A negative number means "forever", 0 means "do not repeat" (i.e., invoke once) and positive numbers mean "repeat N times".<br>         A repeat of '9', for example, will result in 10 total invocations (1 initial + 9 repeats). |
+| `timesToRepeat` | `int` | ✅ Yes | The number of times the callback should be repeated after the initial invocation.<br>         Repeated invocations respect the requested delay.<br>         A negative number means "forever", 0 means "do not repeat" (i.e., invoke once), and positive numbers mean "repeat N times".<br>         A repeat of '9', for example, will result in 10 total invocations (1 initial + 9 repeats). |
 
 **Return Type:** `uint`
 
@@ -2424,6 +2446,25 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### PlaySound
+`(index)`
+ Play a sound effect locally (only audible to you).
+ Example:
+ ```py
+ API.PlaySound(0x13E)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `index` | `int` | ❌ No | The sound effect ID to play |
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
 ### InJournalAny
 `(msgs, clearMatches)`
  Check if the journal contains *any* of the strings in this list.
@@ -2517,6 +2558,41 @@ You can now type `-updateapi` in game to download the latest API.py file.
  API.Stop()
  ```
 
+
+**Return Type:** `void` *(Does not return anything)*
+
+---
+
+### OnStop
+`(callback)`
+ Register an optional callback to run when this script is being stopped.
+ When set, stopping the script will be delayed until this callback has been
+ processed, or until a maximum of 5 seconds have passed.
+
+ Callbacks only run while the script is calling `API.ProcessCallbacks`,
+ so make sure your script keeps calling it (for example in its main loop) for
+ the OnStop callback to actually run before the timeout elapses.
+
+ Example:
+ ```py
+ def on_stop():
+   API.SysMsg("Cleaning up before stopping...")
+ API.OnStop(on_stop)
+ while True:
+   API.ProcessCallbacks()
+   API.Pause(0.1)
+ ```
+ To unregister, call with no callback:
+ ```py
+ API.OnStop()
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `callback` | `object` | ✅ Yes | The function to invoke when the script is stopping, or `null` to unregister. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3554,6 +3630,62 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `identifier` | `uint` | ✅ Yes | An identified number if you want multiple arrows. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### GetClilocString
+`(cliloc, englishOnly)`
+ Get the string for a cliloc number.
+ Example:
+ ```py
+ text = API.GetClilocString(1020000)
+ if text:
+   API.SysMsg(text)
+
+ # Force English regardless of client language setting
+ text = API.GetClilocString(1020000, englishOnly=True)
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `cliloc` | `int` | ❌ No | The cliloc number |
+| `englishOnly` | `bool` | ✅ Yes | True to always return the English string, ignoring the client language setting |
+
+**Return Type:** `string`
+
+---
+
+### GetClientBounds
+
+ Get the bounds of the client game window.
+ This covers the entire window, including all UI and the game world.
+ Coordinates are in screen pixels.
+ Example:
+ ```py
+ bounds = API.GetClientBounds()
+ API.SysMsg(f"Window is {bounds.Width}x{bounds.Height} at {bounds.X},{bounds.Y}")
+ ```
+
+
+**Return Type:** `Rectangle`
+
+---
+
+### GetViewportBounds
+
+ Get the bounds of the game world viewport.
+ This is the area where the game world is rendered, in screen pixel coordinates.
+ Example:
+ ```py
+ vp = API.GetViewportBounds()
+ API.SysMsg(f"Viewport at {vp.X},{vp.Y} size {vp.Width}x{vp.Height}")
+ ```
+
+
+**Return Type:** `Rectangle`
 
 ---
 

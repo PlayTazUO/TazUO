@@ -15,6 +15,7 @@ using ClassicUO.Network.Encryption;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
+using ClassicUO.Utility.Platforms;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -48,6 +49,7 @@ namespace ClassicUO
         private Texture2D _background;
         private bool _pluginsInitialized;
         private Rectangle bufferRect = Rectangle.Empty;
+        private bool _fullscreenBorderless;
         private RenderTarget2D _screenRenderTarget;
         private bool _useScreenRenderTarget = true; // Re-enabling to debug rendering issues
 
@@ -89,12 +91,15 @@ namespace ClassicUO
             SDL.SDL_StartTextInput(Window.Handle);
         }
 
-        private float _renderScale = 1f;
+        public readonly float MinRenderScale = 0.1f;
+        public readonly float MaxRenderScale = 1.75f;
+
         public float RenderScale
         {
-            get => _renderScale;
-            set => _renderScale = Math.Max(value, 0.1f);
-        }
+            get;
+            set => field = Math.Clamp(value, MinRenderScale, MaxRenderScale);
+        } = 1f;
+
         public Scene Scene { get; private set; }
         public AudioManager Audio { get; private set; }
         public UltimaOnline UO { get; } = new UltimaOnline();
@@ -123,7 +128,15 @@ namespace ClassicUO
             SetRefreshRate(Settings.GlobalSettings.FPS);
             SupportedRefreshRate = Settings.GlobalSettings.FPS;
 
-            _uoSpriteBatch = new UltimaBatcher2D(GraphicsDevice);
+            try
+            {
+                _uoSpriteBatch = new UltimaBatcher2D(GraphicsDevice);
+            }
+            catch (Exception ex) when (Client.IsShaderCompileFailure(ex))
+            {
+                Client.ShowErrorMessage(Client.GraphicsShaderHelpMessage);
+                throw; // preserve existing crash logging / report
+            }
 
             _filter = HandleSdlEvent;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
@@ -143,8 +156,17 @@ namespace ClassicUO
             base.Initialize();
         }
 
-        private void PreloadSettings() => _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, false,
-                (b) => { if (b) ZLib.SetForceManagedZlib(b); });
+        private void PreloadSettings()
+        {
+            bool platformDefault = PlatformHelper.IsLinux;
+            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, platformDefault, (b) =>
+            {
+                if (ZLib.CommandLineOverride)
+                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.MANAGED_ZLIB, true);
+                else
+                    ZLib.SetForceManagedZlib(b);
+            });
+        }
 
         private const int MAX_PACKETS_PER_FRAME = 25;
 
@@ -153,16 +175,12 @@ namespace ClassicUO
             int packetsProcessed = 0;
             while (packetsProcessed < MAX_PACKETS_PER_FRAME)
             {
-                Profiler.EnterContext("DEQUEUE");
                 bool hasPacket = AsyncNetClient.Socket.TryDequeuePacket(out byte[] message);
-                Profiler.ExitContext("DEQUEUE");
 
                 if (!hasPacket)
                     break;
 
-                Profiler.EnterContext("PARSE");
                 int c = PacketParser.Instance.ParsePackets(Client.Game.UO.World, message);
-                Profiler.ExitContext("PARSE");
 
                 AsyncNetClient.Socket.Statistics.TotalPacketsReceived += (uint)c;
                 packetsProcessed++;
@@ -193,6 +211,7 @@ namespace ClassicUO
             MyraEnvironment.Game = this;
             MyraEnvironment.SetMouseCursorFromWidget = false;
             MyraEnvironment.MouseInfoGetter = Mouse.GetMyraMouseInfo;
+            MyraEnvironment.DefaultDebugFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.ROBOTO, 16);
             MyraStyle.SetDefault(); //Must occur after png loading
 
             Audio.Initialize();
@@ -361,17 +380,17 @@ namespace ClassicUO
 
         public void SetWindowBorderless(bool borderless)
         {
-            var flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
-
-            if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) != 0 && borderless)
+            // Track fullscreen-borderless with an explicit flag rather than reading the
+            // SDL_WINDOW_BORDERLESS flag: the plain borderless-window mode also toggles
+            // that flag, so it can no longer tell the two modes apart. Without this, a
+            // normal borderless window would be resized to display bounds when leaving
+            // fullscreen, and entering fullscreen from a borderless window would no-op.
+            if (_fullscreenBorderless == borderless)
             {
                 return;
             }
 
-            if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) == 0 && !borderless)
-            {
-                return;
-            }
+            _fullscreenBorderless = borderless;
 
             SDL_SetWindowBordered(Window.Handle, !borderless);
 
@@ -407,6 +426,21 @@ namespace ClassicUO
                 viewport.Y = -5;
             }
             bufferRect = new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight);
+        }
+
+        /// <summary>
+        /// Toggles the window border (title bar and edges) while keeping the window in a
+        /// normal windowed state. Unlike <see cref="SetWindowBorderless"/>, this does not
+        /// resize the window to fill the display. Because stripping the border from a
+        /// maximized window makes it cover the whole screen (borderless fullscreen), the
+        /// window is first restored to a normal size when removing the border.
+        /// </summary>
+        public void SetWindowBordered(bool bordered)
+        {
+            if (!bordered && IsWindowMaximized())
+                SDL_RestoreWindow(Window.Handle);
+
+            SDL_SetWindowBordered(Window.Handle, bordered);
         }
 
         public void MaximizeWindow()
@@ -445,29 +479,42 @@ namespace ClassicUO
 
         protected override void Update(GameTime gameTime)
         {
-            Profiler.ExitContext("OutOfContext");
+            Profiler.EnterContext("Update");
 
             Time.Ticks = (uint)gameTime.TotalGameTime.TotalMilliseconds;
             Time.Delta = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
+            Profiler.EnterContext("Mouse");
             Mouse.Update();
+            Profiler.ExitContext("Mouse");
 
+            Profiler.EnterContext("ProcessNetworkPackets");
             ProcessNetworkPackets();
+            Profiler.ExitContext("ProcessNetworkPackets");
 
             if(_pluginsInitialized)
+            {
+                Profiler.EnterContext("PluginTick");
                 Plugin.Tick();
+                Profiler.ExitContext("PluginTick");
+            }
 
             if(drawScene)
             {
-                Profiler.EnterContext("Update");
+                Profiler.EnterContext("SceneUpdate");
                 Scene.Update();
-                Profiler.ExitContext("Update");
+                Profiler.ExitContext("SceneUpdate");
             }
 
+            Profiler.EnterContext("UIManagerUpdate");
             UIManager.Update();
+            Profiler.ExitContext("UIManagerUpdate");
 
+            Profiler.EnterContext("MainThreadQueue");
             MainThreadQueue.ProcessQueue();
+            Profiler.ExitContext("MainThreadQueue");
 
+            Profiler.EnterContext("FpsTiming");
             _totalElapsed += gameTime.ElapsedGameTime.TotalMilliseconds;
             _currentFpsTime += gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -502,11 +549,19 @@ namespace ClassicUO
                     Thread.Sleep(1);
                 }
             }
+            Profiler.ExitContext("FpsTiming");
 
+            Profiler.EnterContext("GameCursor");
             UO.GameCursor?.Update();
+            Profiler.ExitContext("GameCursor");
+
+            Profiler.EnterContext("Audio");
             Audio?.Update();
+            Profiler.ExitContext("Audio");
 
             base.Update(gameTime);
+
+            Profiler.ExitContext("Update");
         }
 
         public static void UpdateBackgroundHueShader()
@@ -559,22 +614,25 @@ namespace ClassicUO
 
         protected override void Draw(GameTime gameTime)
         {
+            Profiler.EnterContext("Draw");
+
             Profiler.EndFrame();
 
+            Profiler.EnterContext("PreDraw");
             UIManager.PreDraw();
+            Profiler.ExitContext("PreDraw");
 
             Profiler.BeginFrame();
 
+            Profiler.EnterContext("RenderSetup");
             _totalFrames++;
 
             bool useRenderTarget = false;
 
             if (_useScreenRenderTarget)
             {
-                // Ensure render target is created and properly sized
                 EnsureScreenRenderTarget();
 
-                // Check if we should use render target or render directly
                 useRenderTarget = _screenRenderTarget != null && !_screenRenderTarget.IsDisposed;
 
                 if (!useRenderTarget)
@@ -585,59 +643,48 @@ namespace ClassicUO
 
             if (useRenderTarget)
             {
-                // Render everything to the render target
                 GraphicsDevice.SetRenderTarget(_screenRenderTarget);
                 GraphicsDevice.Clear(Color.Black);
             }
             else
             {
-                // Render directly to back buffer (original behavior)
                 GraphicsDevice.Clear(Color.Black);
             }
+            Profiler.ExitContext("RenderSetup");
+
+            Profiler.EnterContext("SceneRender");
 
             _uoSpriteBatch.Begin();
             _uoSpriteBatch.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
             _uoSpriteBatch.End();
-            Profiler.ExitContext("OutOfContext");
 
-            Profiler.EnterContext("Draw-Scene");
             if (drawScene)
                 Scene.Draw(_uoSpriteBatch);
-            Profiler.ExitContext("Draw-Scene");
 
-            Profiler.EnterContext("Draw-UI");
             UIManager.Draw(_uoSpriteBatch);
-            Profiler.ExitContext("Draw-UI");
 
-            Profiler.EnterContext("Game Cursor");
             SelectedObject.HealthbarObject = null;
             SelectedObject.SelectedContainer = null;
 
             _uoSpriteBatch.Begin();
             UO.GameCursor?.Draw(_uoSpriteBatch);
             _uoSpriteBatch.End();
-            Profiler.ExitContext("Game Cursor");
 
-            // Render ImGui and plugins to the render target (for consistent scaling)
+            Profiler.ExitContext("SceneRender");
+
+            Profiler.EnterContext("PluginRender");
             if (useRenderTarget)
             {
                 if(_pluginsInitialized)
-                {
-                    Profiler.EnterContext("Plugins");
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
-                    Profiler.ExitContext("Plugins");
-                }
 
-                // Set back to back buffer and composite the render target
                 GraphicsDevice.SetRenderTarget(null);
                 GraphicsDevice.Clear(Color.Black);
 
-                // Source and destination rectangles (full render target to full back buffer)
                 var srcRect = new Rectangle(0, 0, _screenRenderTarget.Width, _screenRenderTarget.Height);
                 Rectangle destRect = srcRect;
 
                 _uoSpriteBatch.Begin();
-                // Match GameScene's composite pattern - use source rectangle overload
                 if(RenderScale != 1.0f)
                 {
                     destRect = new Rectangle(0, 0, (int)(_screenRenderTarget.Width * RenderScale), (int)(_screenRenderTarget.Height * RenderScale));
@@ -651,9 +698,11 @@ namespace ClassicUO
                 if(_pluginsInitialized)
                     Plugin.ProcessDrawCmdList(GraphicsDevice);
             }
+            Profiler.ExitContext("PluginRender");
 
-            Profiler.EnterContext("OutOfContext");
             base.Draw(gameTime);
+
+            Profiler.ExitContext("Draw");
         }
 
         protected override bool BeginDraw() => !_suppressedDraw && base.BeginDraw();
@@ -736,6 +785,9 @@ namespace ClassicUO
                     break;
 
                 case SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST:
+                    // Drop tracked key state so a key held while we lose focus doesn't stick "pressed"
+                    // for polled hotkeys (the key-up may never reach us).
+                    ClassicUO.Game.Managers.Hotkeys.HotKeys.ClearHeldKeys();
                     if (_pluginsInitialized)
                         Plugin.OnFocusLost();
                     break;
@@ -859,6 +911,8 @@ namespace ClassicUO
                 case SDL_EventType.SDL_EVENT_MOUSE_WHEEL when Scene is not null:
                     Mouse.Update();
                     bool isScrolledUp = sdlEvent->wheel.y > 0;
+
+                    Mouse.RaiseWheelEvent(isScrolledUp);
 
                     if (_pluginsInitialized)
                         Plugin.ProcessMouse(0, (int)sdlEvent->wheel.y);

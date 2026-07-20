@@ -1,6 +1,5 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using ClassicUO.Configuration;
@@ -179,9 +178,14 @@ namespace ClassicUO.Game.UI.Gumps.Login
             scrollArea.ScissorRectangle.Y = 16;
             scrollArea.ScissorRectangle.Height = -32;
 
+            int index = loginScene.GetServerIndexFromSettings();
+            ServerListEntry selected = null;
+
             foreach (ServerListEntry server in loginScene.Servers)
             {
                 databox.Add(new ServerEntryGump(server, 5, NORMAL_COLOR, SELECTED_COLOR));
+                if(server.Index == index)
+                    selected = server;
             }
 
             databox.ReArrangeChildren();
@@ -191,11 +195,12 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             if (loginScene.Servers.Length != 0)
             {
-                int index = loginScene.GetServerIndexFromSettings();
+                if (selected == null)
+                    selected = loginScene.Servers[0];
 
                 Add
                 (
-                    new Label(loginScene.Servers[index].Name, false, 0x0481, font: 9)
+                    new Label(selected.Name, false, 0x0481, font: 9)
                     {
                         X = 243,
                         Y = 420
@@ -223,12 +228,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                     case Buttons.Next:
                     case Buttons.Earth:
 
-                        if (loginScene.Servers.Length != 0)
-                        {
-                            int index = loginScene.GetServerIndexFromSettings();
-
-                            loginScene.SelectServer((byte) loginScene.Servers[index].Index);
-                        }
+                        SelectServerFromSettings(loginScene);
 
                         break;
 
@@ -247,12 +247,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             {
                 LoginScene loginScene = Client.Game.GetScene<LoginScene>();
 
-                if (loginScene.Servers?.Any(s => s != null) ?? false)
-                {
-                    int index = loginScene.GetServerIndexFromSettings();
-
-                    loginScene.SelectServer((byte)loginScene.Servers[index].Index);
-                }
+                SelectServerFromSettings(loginScene);
             }
         }
 
@@ -262,13 +257,29 @@ namespace ClassicUO.Game.UI.Gumps.Login
             {
                 LoginScene loginScene = Client.Game.GetScene<LoginScene>();
 
-                if (loginScene.Servers?.Any(s => s != null) ?? false)
-                {
-                    int index = loginScene.GetServerIndexFromSettings();
-
-                    loginScene.SelectServer((byte) loginScene.Servers[index].Index);
-                }
+                SelectServerFromSettings(loginScene);
             }
+        }
+
+        private static void SelectServerFromSettings(LoginScene loginScene)
+        {
+            if (loginScene.Servers == null || loginScene.Servers.Length == 0)
+                return;
+
+            int index = loginScene.GetServerIndexFromSettings();
+
+            // 'index' is a server Index value (not an array position) and may not
+            // exist in the list, so resolve it to a valid server before selecting.
+            ServerListEntry target = null;
+            foreach (ServerListEntry s in loginScene.Servers)
+                if (s.Index == index)
+                {
+                    target = s;
+                    break;
+                }
+
+            target ??= loginScene.Servers[0];
+            loginScene.SelectServer((byte)target.Index);
         }
 
         private enum Buttons
@@ -403,17 +414,17 @@ namespace ClassicUO.Game.UI.Gumps.Login
                         case IPStatus.DestinationProtocolUnreachable:
                         case IPStatus.DestinationPortUnreachable:
                         case IPStatus.DestinationUnreachable:
-                            _server_ping.Text = "unreach.";
+                            _server_ping.Text = TazLang.Get("serverping_unreachable");
 
                             break;
 
                         case IPStatus.TimedOut:
-                            _server_ping.Text = "time out";
+                            _server_ping.Text = TazLang.Get("serverping_timeout");
 
                             break;
 
                         default:
-                            _server_ping.Text = $"unk. [{(int) _entry.PingStatus}]";
+                            _server_ping.Text = TazLang.Get("serverping_unknown", [((int) _entry.PingStatus).ToString()]);
 
                             break;
                     }

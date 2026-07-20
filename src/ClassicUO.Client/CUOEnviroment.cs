@@ -18,6 +18,7 @@ namespace ClassicUO
         public static bool IsHighDPI;
         public static uint CurrentRefreshRate;
         public static bool SkipLoginScreen;
+        public static bool SkipServerSelect;
         public static bool NoServerPing;
         public static Assembly Assembly => Assembly.GetEntryAssembly();
 

@@ -43,7 +43,7 @@ namespace ClassicUO.Game.UI.Gumps
             _allConfigs.AddRange(DressAgentManager.Instance.OtherCharacterConfigs);
 
             // Config selection dropdown
-            Add(new Label("Select Config:", true, 0xFFFF, font: 1)
+            Add(new Label(TazLang.Get("dressagent_selectconfig", "Select Config:"), true, 0xFFFF, font: 1)
             {
                 X = 20,
                 Y = 20
@@ -67,7 +67,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(_configCombobox);
 
             // Create Config button
-            var createButton = new NiceButton(380, 20, 80, 25, ButtonAction.Default, "Create New") { IsSelectable = false, DisplayBorder = true };
+            var createButton = new NiceButton(380, 20, 80, 25, ButtonAction.Default, TazLang.Get("dressagent_createnew", "Create New")) { IsSelectable = false, DisplayBorder = true };
             createButton.MouseUp += (s, e) =>
             {
                 CreateNewConfig();
@@ -75,7 +75,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(createButton);
 
             // Title with rename functionality
-            Add(new Label("Config Name:", true, 0xFFFF, font: 1)
+            Add(new Label(TazLang.Get("dressagent_configname", "Config Name:"), true, 0xFFFF, font: 1)
             {
                 X = 20,
                 Y = 50
@@ -118,7 +118,7 @@ namespace ClassicUO.Game.UI.Gumps
             // KR Packet option
             if (!_readOnly)
             {
-                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, "Use Equip Packets (faster)", 1, 0xFFFF, true)
+                var krPacketCheckbox = new Checkbox(0x00D2, 0x00D3, TazLang.Get("dressagent_krpacket", "Use Equip Packets (faster)"), 1, 0xFFFF, true)
                 {
                     X = 300,
                     Y = 75,
@@ -129,7 +129,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _config.UseKREquipPacket = krPacketCheckbox.IsChecked;
                     DressAgentManager.Instance.Save();
                 };
-                krPacketCheckbox.SetTooltip("Not all servers support this.");
+                krPacketCheckbox.SetTooltip(TazLang.Get("dressagent_krpacket_tooltip", "Not all servers support this."));
                 Add(krPacketCheckbox);
             }
 
@@ -142,9 +142,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (!_readOnly)
             {
-                AddButton("Add Item (Target)", () =>
+                AddButton(TazLang.Get("dressagent_additem", "Add Item (Target)"), () =>
                 {
-                    GameActions.Print(World, "Target item to add to dress config");
+                    GameActions.Print(World, TazLang.Get("dressagent_targetitem", "Target item to add to dress config"));
                     World.TargetManager.SetTargeting((obj) =>
                     {
                         if (obj != null && obj is Entity objEntity && SerialHelper.IsItem(objEntity.Serial))
@@ -155,21 +155,21 @@ namespace ClassicUO.Game.UI.Gumps
                     });
                 });
 
-                AddButton("Add All Equipped", () =>
+                AddButton(TazLang.Get("dressagent_addallequipped", "Add All Equipped"), () =>
                 {
                     DressAgentManager.Instance.AddCurrentlyEquippedItems(_config);
                     RefreshItemsList();
                 });
 
-                AddButton("Clear All Items", () =>
+                AddButton(TazLang.Get("dressagent_clearitems", "Clear All Items"), () =>
                 {
                     DressAgentManager.Instance.ClearConfig(_config);
                     RefreshItemsList();
                 });
 
-                AddButton("Set Undress Bag", () =>
+                AddButton(TazLang.Get("dressagent_setundressbag", "Set Undress Bag"), () =>
                 {
-                    GameActions.Print(World, "Target container for undress items");
+                    GameActions.Print(World, TazLang.Get("dressagent_targetcontainer", "Target container for undress items"));
                     World.TargetManager.SetTargeting((obj) =>
                     {
                         if (obj != null && obj is Entity objEntity && SerialHelper.IsItem(objEntity.Serial))
@@ -182,30 +182,30 @@ namespace ClassicUO.Game.UI.Gumps
                 });
             }
 
-            AddButton("Dress", 63, () =>
+            AddButton(TazLang.Get("dressagent_dress", "Dress"), 63, () =>
             {
                 DressAgentManager.Instance.DressFromConfig(_config);
             });
 
-            AddButton("Undress", 49, () =>
+            AddButton(TazLang.Get("dressagent_undress", "Undress"), 49, () =>
             {
                 DressAgentManager.Instance.UndressFromConfig(_config);
             });
 
             if(!_readOnly) {
-                AddButton("Create Dress Macro", () =>
+                AddButton(TazLang.Get("dressagent_createdressmacro", "Create Dress Macro"), () =>
                 {
                     DressAgentManager.Instance.CreateDressMacro(_config.Name);
                     GameActions.Print(World, $"Created dress macro: Dress: {_config.Name}");
                 });
 
-                AddButton("Create Undress Macro", () =>
+                AddButton(TazLang.Get("dressagent_createundressmacro", "Create Undress Macro"), () =>
                 {
                     DressAgentManager.Instance.CreateUndressMacro(_config.Name);
                     GameActions.Print(World, $"Created undress macro: Undress: {_config.Name}");
                 });
 
-                AddButton("Delete Config", 33, () =>
+                AddButton(TazLang.Get("dressagent_deleteconfig", "Delete Config"), 33, () =>
                 {
                     DeleteCurrentConfig();
                 });
@@ -263,7 +263,7 @@ namespace ClassicUO.Game.UI.Gumps
         private void CreateNewConfig()
         {
             // Generate a unique name for the new config
-            string baseName = "New Config";
+            string baseName = TazLang.Get("dressagent_newconfigname", "New Config");
             string newName = baseName;
             int counter = 1;
 
@@ -357,7 +357,7 @@ namespace ClassicUO.Game.UI.Gumps
                     // Delete button
                     if (!_readOnly)
                     {
-                        var deleteButton = new NiceButton(itemArea.Width - 25, 2, 20, 20, ButtonAction.Default, "X") { IsSelectable = false, DisplayBorder = true };
+                        var deleteButton = new NiceButton(itemArea.Width - 25, 2, 20, 20, ButtonAction.Default, TazLang.Get("dressagent_deleteitem", "X")) { IsSelectable = false, DisplayBorder = true };
                         deleteButton.MouseUp += (s, e) =>
                         {
                             DressAgentManager.Instance.RemoveItemFromConfig(_config, item.Serial);
@@ -371,10 +371,10 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                _itemsList.Add(new Label("No items configured.", true, 0xFFFF, font: 1));
+                _itemsList.Add(new Label(TazLang.Get("dressagent_noitems", "No items configured."), true, 0xFFFF, font: 1));
                 if (!_readOnly)
                 {
-                    _itemsList.Add(new Label("Use the buttons on the left to add items.", true, 0xFFFF, font: 1));
+                    _itemsList.Add(new Label(TazLang.Get("dressagent_additemshelp", "Use the buttons on the left to add items."), true, 0xFFFF, font: 1));
                 }
             }
 
@@ -387,7 +387,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
             else
             {
-                _itemsList.Add(new Label("Undress Bag: Player Backpack (default)", true, 0xFFFF, font: 1));
+                _itemsList.Add(new Label(TazLang.Get("dressagent_defaultbag", "Undress Bag: Player Backpack (default)"), true, 0xFFFF, font: 1));
             }
         }
     }

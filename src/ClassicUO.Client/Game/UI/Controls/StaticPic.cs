@@ -96,6 +96,6 @@ namespace ClassicUO.Game.UI.Controls
             return base.Draw(batcher, x, y);
         }
 
-        public override bool Contains(int x, int y) => Client.Game.UO.Arts.PixelCheck(Graphic, x - Offset.X, y - Offset.Y);
+        public override bool Contains(int x, int y) => Client.Game.UO.Arts.PixelCheck(Graphic, x - Offset.X, y - Offset.Y, InternalScale);
     }
 }

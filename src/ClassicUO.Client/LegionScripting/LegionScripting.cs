@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -199,6 +200,9 @@ namespace ClassicUO.LegionScripting
 
             foreach (string file in subgroups)
                 HandleScriptsInDirectory(file); //No third level supported, ignore directories
+
+            foreach (ScriptFile sf in LoadedScripts)
+                sf.ReadFromFile();
         }
 
         private static void AddScriptFromFile(string path)
@@ -238,10 +242,55 @@ namespace ClassicUO.LegionScripting
                     AddScriptFromFile(file);
                     loadedScripts.Add(file);
                 }
+                else if (file.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) && File.Exists(file))
+                    HandleScriptsInZip(file, loadedScripts);
                 else if (Directory.Exists(file)) groups.Add(file);
             }
 
             return groups;
+        }
+
+        private static void HandleScriptsInZip(string zipPath, HashSet<string> loadedScripts)
+        {
+            try
+            {
+                using var archive = ZipFile.OpenRead(zipPath);
+
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                    if (string.IsNullOrEmpty(entry.Name)) continue; // directory entry
+
+                    string entryName = entry.FullName.Replace('\\', '/');
+                    string ext = Path.GetExtension(entry.Name);
+
+                    if (!ext.Equals(".py", StringComparison.OrdinalIgnoreCase) &&
+                        !ext.Equals(".cs", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    string[] segments = entryName.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    if (segments.Length == 0 || segments.Length > 3) continue;
+
+                    // Skip if any path segment (dir or file) starts with _ or .
+                    bool hasHiddenSegment = false;
+                    foreach (string seg in segments)
+                        if (seg.StartsWith("_") || seg.StartsWith(".")) { hasHiddenSegment = true; break; }
+                    if (hasHiddenSegment || entry.Name == "API.py") continue;
+
+                    string group    = segments.Length >= 2 ? segments[0] : string.Empty;
+                    string subGroup = segments.Length == 3 ? segments[1] : string.Empty;
+
+                    string syntheticKey = $"{zipPath}::{entryName}";
+                    if (loadedScripts.Contains(syntheticKey)) continue;
+
+                    LoadedScripts.Add(new ZipScriptFile(_world, zipPath, entryName, group, subGroup));
+                    loadedScripts.Add(syntheticKey);
+                }
+
+                ClassicUO.Assets.PNGLoader.Instance.RegisterZipPNGs(archive);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error loading scripts from zip '{zipPath}': {ex}");
+            }
         }
 
         public static void SetAutoPlay(ScriptFile script, bool global, bool enabled)
@@ -382,7 +431,7 @@ namespace ClassicUO.LegionScripting
         public static void Unload()
         {
             while (RunningScripts.Count > 0)
-                StopScript(RunningScripts[0]);
+                StopScript(RunningScripts[0], force: true);
 
             PyThreads.Clear();
 
@@ -497,6 +546,8 @@ namespace ClassicUO.LegionScripting
                 MatchCollection matches = exParserRx.Matches(formattedEx);
                 var errorLocations = new List<ScriptErrorLocation>();
 
+                ScriptErrorLocation? last = null;
+
                 bool first = true;
                 foreach (Match match in matches)
                 {
@@ -515,7 +566,12 @@ namespace ClassicUO.LegionScripting
                     if (filePath.TryReadFileLines(out string[] fileLines))
                         lineContent = GetContents(fileLines, first? lineNumber - 1 : lineNumber);
 
-                    errorLocations.Add(new ScriptErrorLocation(fileName, filePath, lineNumber, lineContent));
+                    var sel = new ScriptErrorLocation(fileName, filePath, lineNumber, lineContent);
+
+                    if(last != null && !sel.Equals(last))
+                        errorLocations.Add(sel);
+                    
+                    last = sel;
 
                     first = false;
                 }
@@ -651,18 +707,33 @@ namespace ClassicUO.LegionScripting
             }
         }
 
-        public static void StopScript(ScriptFile script)
+        public static void StopScript(ScriptFile script, bool force = false)
         {
             if (script == null) return;
+
+            LegionAPI api = script.ScopedApi;
+
+            // If the script registered an OnStop callback, give it a chance to run before we
+            // tear everything down. The callback only runs while the script keeps calling
+            // API.ProcessCallbacks, so we can't force it - we wait for it to complete or for a
+            // maximum of 5 seconds, whichever comes first. Skipped when force is requested
+            // (e.g. during client shutdown).
+            if (!force && script.ScriptThread is { IsAlive: true } && api is { StopRequested: false } && api.HasPendingStopCallback)
+            {
+                if (api.BeginStopCallback())
+                    WaitForStopCallbackThenStop(script);
+
+                return;
+            }
 
             RunningScripts.Remove(script);
 
             if (script.ScriptThread is { IsAlive: true })
             {
-                if (script.ScopedApi != null)
+                if (api != null)
                 {
-                    script.ScopedApi.StopRequested = true;
-                    script.ScopedApi.CancellationToken.Cancel();
+                    api.StopRequested = true;
+                    api.CancellationToken.Cancel();
                 }
 
                 if (script.PythonEngine != null)
@@ -684,6 +755,45 @@ namespace ClassicUO.LegionScripting
                 script.ScriptThread = null;
                 ScriptStopped?.Invoke(null, script);
             }
+        }
+
+        /// <summary>
+        /// Waits (without blocking the main thread) for a script's OnStop callback to finish,
+        /// or for a maximum of 5 seconds, then performs the actual stop.
+        /// </summary>
+        private static void WaitForStopCallbackThenStop(ScriptFile script)
+        {
+            LegionAPI api = script.ScopedApi;
+            DateTime start = DateTime.UtcNow;
+
+            var timer = new System.Timers.Timer(100) { AutoReset = true };
+
+            timer.Elapsed += (_, _) =>
+            {
+                bool completed = api == null || api.OnStopCompleted;
+                bool timedOut = (DateTime.UtcNow - start).TotalSeconds >= 5;
+
+                if (!completed && !timedOut)
+                    return;
+
+                timer.Stop();
+                timer.Dispose();
+
+                MainThreadQueue.EnqueueAction(() =>
+                {
+                    // The script may have already stopped on its own during the grace period.
+                    if (!RunningScripts.Contains(script))
+                        return;
+
+                    // Ensure the delayed path is not taken again on the follow-up stop.
+                    if (script.ScopedApi != null)
+                        script.ScopedApi.StopRequested = true;
+
+                    StopScript(script);
+                });
+            };
+
+            timer.Start();
         }
 
         /// <summary>

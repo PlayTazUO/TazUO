@@ -1,504 +1,411 @@
 using System;
+using System.Collections.Generic;
+using ClassicUO.Configuration;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
-using ClassicUO.Renderer;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using ClassicUO.Game.Data;
-using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.UI.MyraWindows;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D.UI;
+using Myra.Graphics2D.UI.WrapPanel;
 
 namespace ClassicUO.Game.UI.Gumps.GridHighLight
 {
-    public class GridHighlightProperties : NineSliceGump
+    /// <summary>
+    /// Myra-based editor for a single grid highlight configuration. Exposes the matching options
+    /// (allowed extra properties, auto loot, match/property counts), the item name list, the property
+    /// rules, the equipment slot filter and the disqualifying/rarity lists. Structural changes
+    /// (adding/removing rows) rebuild the scrollable body in place.
+    /// </summary>
+    public class GridHighlightProperties : MyraControl
     {
-        private const int WIDTH = 400, HEIGHT = 540;
-        private ScrollArea mainScrollArea;
-        GridHighlightData data;
-        private readonly int keyLoc;
-        private readonly Dictionary<string, Checkbox> slotCheckboxes = new();
-        public GridHighlightProperties(World world, int keyLoc, int x, int y) : base(world, x, y, WIDTH, HEIGHT, ModernUIConstants.ModernUIPanel, ModernUIConstants.ModernUIPanel_BorderSize, true, WIDTH, HEIGHT)
+        private static readonly Func<char, bool> IntInputFilter = c => char.IsDigit(c) || c == '-';
+
+        private readonly World _world;
+        private readonly int _keyLoc;
+        private readonly GridHighlightData _data;
+
+        private readonly VerticalStackPanel _content = new() { Spacing = MyraStyle.STANDARD_SPACING };
+
+        public GridHighlightProperties(World world, int keyLoc) : base(TazLang.Get("gridhighlight_properties"))
         {
-            data = GridHighlightData.GetGridHighlightData(keyLoc);
-            CanMove = true;
-            AcceptMouseInput = true;
-            CanCloseWithRightClick = true;
-            this.keyLoc = keyLoc;
-            Build();
+            _world = world;
+            _keyLoc = keyLoc;
+            _data = GridHighlightData.GetGridHighlightData(keyLoc);
+
+            SetRootContent(new ScrollViewer { MaxHeight = 560, Content = _content });
+            Rebuild();
+            CenterInViewPort();
         }
 
-        protected override void OnResize(int oldWidth, int oldHeight, int newWidth, int newHeight)
+        public static void Show(World world, int keyLoc)
         {
-            base.OnResize(oldWidth, oldHeight, newWidth, newHeight);
-            Build();
+            foreach (IGui gump in UIManager.Gumps)
+            {
+                if (gump is GridHighlightProperties w && !w.IsDisposed && w._keyLoc == keyLoc)
+                {
+                    w.BringOnTop();
+                    return;
+                }
+            }
+
+            UIManager.Add(new GridHighlightProperties(world, keyLoc));
         }
 
-        private void Build()
+        private void Rebuild()
         {
-            Clear();
-            Positioner pos = new();
-            IGui temp;
+            _content.Widgets.Clear();
 
-            // Scroll area
-            Add(mainScrollArea = new ScrollArea(BorderSize, BorderSize, Width - (BorderSize * 2), Height - (BorderSize * 2), true) { ScrollbarBehaviour = ScrollbarBehaviour.ShowAlways });
+            BuildMatchingOptions();
+            _content.Widgets.Add(Divider());
+            BuildItemNames();
+            _content.Widgets.Add(Divider());
+            BuildProperties();
+            _content.Widgets.Add(Divider());
+            BuildEquipmentSlots();
+            _content.Widgets.Add(Divider());
+            BuildNegatives();
+            _content.Widgets.Add(Divider());
+            BuildRarities();
 
-            // Accept extra properties checkbox
-            string acceptExtraPropertiesTooltip =
-                "Highlight items with properties beyond your configuration.\n" +
-                "When checked: The item must match all configured properties and may have extra ones.\n" +
-                "When un-checked: The item must match all configured properties and must not have any extra properties.";
+            ForceSizeUpdate();
+        }
 
-            Checkbox acceptExtraPropertiesCheckbox;
-            mainScrollArea.Add(pos.Position(acceptExtraPropertiesCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.AcceptExtraProperties }));
-            acceptExtraPropertiesCheckbox.SetTooltip(acceptExtraPropertiesTooltip);
-            acceptExtraPropertiesCheckbox.ValueChanged += (s, e) =>
+        #region Matching options
+
+        private void BuildMatchingOptions()
+        {
+            _content.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                _data.AcceptExtraProperties,
+                v => _data.AcceptExtraProperties = v,
+                TazLang.Get("gridhighlight_allowextra"),
+                TazLang.Get("gridhighlight_acceptextra_tooltip")));
+
+            _content.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                _data.LootOnMatch,
+                v => _data.LootOnMatch = v,
+                TazLang.Get("gridhighlight_lootonmatch"),
+                TazLang.Get("gridhighlight_lootonmatch_tooltip")));
+
+            // Destination container + target picker
+            var destRow = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            var destInput = new MyraInputBox
             {
-                data.AcceptExtraProperties = acceptExtraPropertiesCheckbox.IsChecked;
+                Text = _data.DestinationContainer == 0 ? "" : $"0x{_data.DestinationContainer:X}",
+                Width = 110,
+                Tooltip = TazLang.Get("gridhighlight_destcontainer_tooltip")
             };
-
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Allow extra properties", true, 0xffff), acceptExtraPropertiesCheckbox));
-
-            // Loot on match checkbox
-            string lootOnMatchTooltip =
-                "Automatically loot items that match this highlight configuration.\n" +
-                "When checked: Items matching this configuration will be added to the auto loot queue.";
-
-            Checkbox lootOnMatchCheckbox;
-            mainScrollArea.Add(pos.Position(lootOnMatchCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.LootOnMatch }));
-            lootOnMatchCheckbox.SetTooltip(lootOnMatchTooltip);
-            lootOnMatchCheckbox.ValueChanged += (s, e) =>
+            destInput.TextChangedByUser += (_, _) =>
             {
-                data.LootOnMatch = lootOnMatchCheckbox.IsChecked;
+                if (string.IsNullOrWhiteSpace(destInput.Text))
+                    _data.DestinationContainer = 0;
+                else if (uint.TryParse(destInput.Text.Replace("0x", "").Replace("0X", ""), System.Globalization.NumberStyles.HexNumber, null, out uint destSerial))
+                    _data.DestinationContainer = destSerial;
             };
-
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Auto loot on match", true, 0xffff), lootOnMatchCheckbox));
-
-            // Destination container input and target button
-            InputField destinationInput;
-            mainScrollArea.Add(pos.Position(destinationInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 100, 20)));
-            string destStr = data.DestinationContainer == 0 ? "" : $"0x{data.DestinationContainer:X}";
-            destinationInput.SetText(destStr);
-            destinationInput.SetTooltip("Optional destination container serial (leave empty to use default grab bag)");
-            destinationInput.TextChanged += (s, e) =>
+            destRow.Widgets.Add(destInput);
+            destRow.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_loottocontainer"), MyraLabel.TextStyle.P));
+            destRow.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_target"), () =>
             {
-                if (string.IsNullOrWhiteSpace(destinationInput.Text))
+                _world.TargetManager.SetTargeting(targeted =>
                 {
-                    data.DestinationContainer = 0;
-                }
-                else if (uint.TryParse(destinationInput.Text.Replace("0x", "").Replace("0X", ""), System.Globalization.NumberStyles.HexNumber, null, out uint destSerial))
-                {
-                    data.DestinationContainer = destSerial;
-                }
-            };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Loot to container", true, 0xffff), destinationInput));
-
-            NiceButton targetContainerBtn;
-            mainScrollArea.Add(pos.PositionRightOf(targetContainerBtn = new NiceButton(0, 0, 60, 20, ButtonAction.Activate, "Target") { IsSelectable = false }, temp, 10));
-            targetContainerBtn.SetTooltip("Target a container to loot items into");
-            targetContainerBtn.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    World.Instance.TargetManager.SetTargeting((targetedContainer) =>
+                    if (targeted is Entity entity && SerialHelper.IsItem(entity))
                     {
-                        if (targetedContainer != null && targetedContainer is Entity targetedEntity)
-                        {
-                            if (SerialHelper.IsItem(targetedEntity))
-                            {
-                                data.DestinationContainer = targetedEntity.Serial;
-                                destinationInput.SetText($"0x{targetedEntity.Serial:X}");
-                            }
-                        }
-                    });
-                }
-            };
-
-            InputField minMatchingInput;
-            mainScrollArea.Add(pos.Position(minMatchingInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
-            minMatchingInput.SetText(data.MinimumMatchingProperty.ToString());
-            minMatchingInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(minMatchingInput.Text, out int val))
-                {
-                    data.MinimumMatchingProperty = val;
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-                else
-                {
-                    minMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min. matching count", true, 0xffff), minMatchingInput));
-
-            InputField maxMatchingInput;
-            mainScrollArea.Add(pos.PositionRightOf(maxMatchingInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20), temp, 20));
-            maxMatchingInput.SetText(data.MaximumMatchingProperty.ToString());
-            maxMatchingInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(maxMatchingInput.Text, out int val))
-                {
-                    data.MaximumMatchingProperty = val;
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-                else
-                {
-                    maxMatchingInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. matching count", true, 0xffff), maxMatchingInput));
-
-            InputField minPropertiesInput;
-            mainScrollArea.Add(pos.Position(minPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20)));
-            minPropertiesInput.SetText(data.MinimumProperty.ToString());
-            minPropertiesInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(minPropertiesInput.Text, out int val))
-                {
-                    data.MinimumProperty = val;
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-                else
-                {
-                    minPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min. property count", true, 0xffff), minPropertiesInput));
-
-            InputField maxPropertiesInput;
-            mainScrollArea.Add(pos.PositionRightOf(maxPropertiesInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20), temp, 20));
-            maxPropertiesInput.SetText(data.MaximumProperty.ToString());
-            maxPropertiesInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(maxPropertiesInput.Text, out int val))
-                {
-                    data.MaximumProperty = val;
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-                else
-                {
-                    maxPropertiesInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max. property count", true, 0xffff), maxPropertiesInput));
-
-            #region Name
-
-            mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(pos.Position(new Label("Item name", true, 0xffff, 120)));
-
-            for (int i = 0; i < data.ItemNames.Count; i++)
-            {
-                AddOther(data.ItemNames, i, pos.Y);
-                pos.Y += 25;
-            }
-
-            NiceButton addItemNameBtn;
-            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Item Name") { IsSelectable = false }));
-            addItemNameBtn.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    data.ItemNames.Add("");
-                    Build();
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-            };
-
-            #endregion
-
-            #region Properties
-
-            mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(new Label("Property name", true, 0xffff, 120) { X = 0, Y = pos.Y });
-            mainScrollArea.Add(new Label("Min value", true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63 - 75, Y = pos.Y });
-            mainScrollArea.Add(new Label("Optional", true, 0xffff, 120) { X = mainScrollArea.Width - 38 - 63, Y = pos.Y });
-            pos.Y += 20;
-
-            for (int i = 0; i < data.Properties.Count; i++)
-            {
-                AddProperty(data.Properties, i, pos.Y, [GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties]);
-                pos.Y += 25;
-            }
-
-            NiceButton addPropBtn;
-            mainScrollArea.Add(pos.Position(addPropBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Property") { IsSelectable = false }));
-            addPropBtn.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false });
-                    data.InvalidateCache();
-                    Build();
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-            };
-
-            #endregion Properties
-
-            #region Equipment slot
-
-            mainScrollArea.Add(pos.Position(SectionDivider()));
-            string[] slotNames = new[] { "Talisman", "RightHand", "LeftHand", "Head", "Earring", "Neck", "Chest", "Shirt", "Back", "Robe", "Arms", "Hands", "Bracelet", "Ring", "Belt", "Skirt", "Legs", "Footwear" };
-
-            mainScrollArea.Add(temp = pos.Position(new Label("Select equipment slots", true, 0xffff)));
-            Checkbox otherCheckbox;
-            mainScrollArea.Add(pos.PositionRightOf(otherCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = (bool)typeof(GridHighlightSlot).GetProperty("Other").GetValue(data.EquipmentSlots) }, temp, 20));
-            otherCheckbox.ValueChanged += (s, e) =>
-            {
-                foreach (string slotName in slotNames)
-                {
-                    typeof(GridHighlightSlot).GetProperty(slotName).SetValue(data.EquipmentSlots, !otherCheckbox.IsChecked);
-
-                    if (slotCheckboxes.TryGetValue(slotName, out Checkbox cb))
-                    {
-                        cb.IsChecked = !otherCheckbox.IsChecked;
+                        _data.DestinationContainer = entity.Serial;
+                        destInput.Text = $"0x{entity.Serial:X}";
                     }
-                }
-                data.EquipmentSlots.Other = otherCheckbox.IsChecked;
-            };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Other / No Slot Assigned", true, 0xffff), otherCheckbox));
+                });
+            }) { Tooltip = TazLang.Get("gridhighlight_target_tooltip") });
+            _content.Widgets.Add(destRow);
 
-            int columns = Math.Max(1, (mainScrollArea.Width - 18) / 110);
+            // Match count / property count ranges
+            var countRow = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalSpacing = 8, VerticalSpacing = 4 };
+            countRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_minmatchcount"), _data.MinimumMatchingProperty, v => { _data.MinimumMatchingProperty = v; GridHighlightData.RecheckMatchStatus(); }));
+            countRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_maxmatchcount"), _data.MaximumMatchingProperty, v => { _data.MaximumMatchingProperty = v; GridHighlightData.RecheckMatchStatus(); }));
+            _content.Widgets.Add(countRow);
 
-            pos.StartTable(columns, mainScrollArea.Width / columns, 0);
+            var propCountRow = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalSpacing = 8, VerticalSpacing = 4 };
+            propCountRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_minpropcount"), _data.MinimumProperty, v => { _data.MinimumProperty = v; GridHighlightData.RecheckMatchStatus(); }));
+            propCountRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_maxpropcount"), _data.MaximumProperty, v => { _data.MaximumProperty = v; GridHighlightData.RecheckMatchStatus(); }));
+            _content.Widgets.Add(propCountRow);
+        }
 
-            for (int i = 0; i < slotNames.Length; i++)
+        #endregion
+
+        #region Item names
+
+        private void BuildItemNames()
+        {
+            _content.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_itemname"), MyraLabel.TextStyle.P));
+
+            for (int i = 0; i < _data.ItemNames.Count; i++)
+                _content.Widgets.Add(BuildStringRow(_data.ItemNames, i, null));
+
+            _content.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_additemname"), () =>
             {
-                string slotName = slotNames[i];
-                bool isChecked = (bool)typeof(GridHighlightSlot).GetProperty(slotName).GetValue(data.EquipmentSlots);
-
-                var cb = new Checkbox(0x00D2, 0x00D3) { IsChecked = isChecked };
-                cb.ValueChanged += (s, e) =>
-                {
-                    typeof(GridHighlightSlot).GetProperty(slotName).SetValue(data.EquipmentSlots, cb.IsChecked);
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                };
-                slotCheckboxes[slotName] = cb;
-
-                var label = new Label(SplitCamelCase(slotName), true, 0xFFFF);
-
-                mainScrollArea.Add(pos.Position(cb));
-                mainScrollArea.Add(pos.PositionRightOf(label, cb));
-            }
-            pos.EndTable();
-
-            #endregion Equipment slot
-
-
-            #region Negative
-
-            mainScrollArea.Add(pos.Position(SectionDivider()));
-            mainScrollArea.Add(pos.Position(new Label("Disqualifying Properties", true, 0xffff)));
-
-            // Weight filter
-            Checkbox weightCheckbox;
-            mainScrollArea.Add(pos.Position(weightCheckbox = new Checkbox(0x00D2, 0x00D3) { IsChecked = data.Overweight }));
-            string weightTooltip = "Enable weight-based filtering.\n" +
-                "Items with weight outside the specified range will be excluded.\n" +
-                "Set to 0 to disable min or max check.";
-            weightCheckbox.SetTooltip(weightTooltip);
-            weightCheckbox.ValueChanged += (s, e) =>
-            {
-                data.Overweight = weightCheckbox.IsChecked;
+                _data.ItemNames.Add("");
+                Rebuild();
                 GridHighlightData.RecheckMatchStatus();
-            };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Weight filter", true, 0xffff), weightCheckbox));
-
-            InputField minWeightInput;
-            mainScrollArea.Add(pos.PositionRightOf(minWeightInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { NumbersOnly = true }, temp, 10));
-            minWeightInput.SetText(data.MinimumWeight.ToString());
-            minWeightInput.SetTooltip("Minimum weight (0 = no minimum)");
-            minWeightInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(minWeightInput.Text, out int val))
-                {
-                    data.MinimumWeight = val;
-                    GridHighlightData.RecheckMatchStatus();
-                }
-                else
-                {
-                    minWeightInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(temp = pos.PositionRightOf(new Label("Min", true, 0xffff), minWeightInput));
-
-            InputField maxWeightInput;
-            mainScrollArea.Add(pos.PositionRightOf(maxWeightInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 40, 20) { NumbersOnly = true }, temp, 10));
-            maxWeightInput.SetText(data.MaximumWeight.ToString());
-            maxWeightInput.SetTooltip("Maximum weight (0 = no maximum)");
-            maxWeightInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(maxWeightInput.Text, out int val))
-                {
-                    data.MaximumWeight = val;
-                    GridHighlightData.RecheckMatchStatus();
-                }
-                else
-                {
-                    maxWeightInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-            mainScrollArea.Add(pos.PositionRightOf(new Label("Max", true, 0xffff), maxWeightInput));
-
-            mainScrollArea.Add(pos.Position(new Label("Items with any of these properties will be excluded", true, 0xffff)));
-
-            for (int i = 0; i < data.ExcludeNegatives.Count; i++)
-            {
-                AddOther(data.ExcludeNegatives, i, pos.Y, [GridHighlightRules.NegativeProperties, GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties]);
-                pos.Y += 25;
-            }
-
-            mainScrollArea.Add(pos.Position(addItemNameBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Disqualifying Property") { IsSelectable = false }));
-            addItemNameBtn.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    data.ExcludeNegatives.Add("");
-                    data.InvalidateCache();
-                    Build();
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-            };
-
-            #endregion Negative
-
-            #region Rarity
-
-            mainScrollArea.Add(pos.Position(SectionDivider()));
-
-            mainScrollArea.Add(pos.Position(new Label("Item Rarity Filters", true, 0xffff)));
-            mainScrollArea.Add(pos.Position(new Label("Only items with at least one of these rarities will match", true, 0xffff)));
-
-            for (int i = 0; i < data.RequiredRarities.Count; i++)
-            {
-                AddOther(data.RequiredRarities, i, pos.Y, [GridHighlightRules.RarityProperties]);
-                pos.Y += 25;
-            }
-
-            NiceButton addRarityBtn;
-            mainScrollArea.Add(pos.Position(addRarityBtn = new NiceButton(0, 0, 180, 20, ButtonAction.Activate, "Add Rarity Filter") { IsSelectable = false }));
-            addRarityBtn.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    data.RequiredRarities.Add("");
-                    data.InvalidateCache();
-                    Build();
-                    GridHighlightData.RecheckMatchStatus(); //Request new opl data and re-check item matches
-                }
-            };
-
-            #endregion Rarity
+            }));
         }
 
-        private Control SectionDivider() => new Line(0, 0, mainScrollArea.Width - 20, 1, Color.Gray.PackedValue);
+        #endregion
 
-        private string SplitCamelCase(string input) => System.Text.RegularExpressions.Regex.Replace(input, "(\\B[A-Z])", " $1");
+        #region Properties
 
-        private void AddOther(List<string> others, int index, int y, HashSet<string>[] propertySets = null)
+        private void BuildProperties()
         {
-            while (others.Count <= index)
-            {
-                others.Add("");
-            }
+            string[] values = GridHighlightRules.FlattenAndDistinctParameters(
+                GridHighlightRules.Properties, GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties);
 
-            InputField propInput;
-            propInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, mainScrollArea.Width - 65, 25) { Y = y };
-            if (propertySets != null)
-            {
-                string[] values = GridHighlightRules.FlattenAndDistinctParameters(propertySets);
-                Combobox propCombobox;
-                mainScrollArea.Add(propCombobox = new Combobox(0, y, propInput.Width + 15, values, 0, 200, true) { });
-                propCombobox.OnOptionSelected += (s, e) =>
-                {
-                    int tVal = propCombobox.SelectedIndex;
+            // A grid keeps the header labels aligned above their columns (a plain stack sizes each
+            // label to its own text width, so the titles drift out of line with the fields).
+            var grid = new MyraGrid();
+            grid.SetupWithHeaders(
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_propertyname")),
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_minvalue")),
+                GridColumnInfo.Auto(TazLang.Get("gridhighlight_optional")),
+                GridColumnInfo.Auto("")
+            );
 
-                    string v = values[tVal];
-                    propInput.SetText(v);
-                };
-            }
+            for (int i = 0; i < _data.Properties.Count; i++)
+                AddPropertyRow(grid, i + 1, i, values);
 
-            mainScrollArea.Add(propInput);
-            propInput.SetText(others[index]);
-            propInput.TextChanged += (s, e) =>
-            {
-                others[index] = propInput.Text;
-            };
+            _content.Widgets.Add(grid);
 
-            NiceButton _del;
-            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, "X") { IsSelectable = false });
-            _del.SetTooltip("Delete this property");
-            _del.MouseUp += (s, e) =>
+            _content.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_addproperty"), () =>
             {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    others.RemoveAt(index);
-                    Build();
-                }
-            };
+                _data.Properties.Add(new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false });
+                _data.InvalidateCache();
+                Rebuild();
+                GridHighlightData.RecheckMatchStatus();
+            }));
         }
 
-        private void AddProperty(List<GridHighlightProperty> properties, int index, int y, HashSet<string>[] propertySets)
+        private void AddPropertyRow(MyraGrid grid, int row, int index, string[] values)
         {
-            while (properties.Count <= index)
+            GridHighlightProperty property = _data.Properties[index];
+
+            var nameInput = new MyraInputBox { Text = property.Name ?? "", Width = 170 };
+            nameInput.TextChangedByUser += (_, _) => property.Name = nameInput.Text ?? "";
+
+            // Property picker: a suggestion dropdown that fills the editable name box next to it.
+            var propCell = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            propCell.Widgets.Add(SuggestionCombo(values, v => nameInput.Text = v));
+            propCell.Widgets.Add(nameInput);
+            grid.AddWidget(propCell, row, 0);
+
+            var minInput = new MyraInputBox { Text = property.MinValue.ToString(), Width = 55, InputFilter = IntInputFilter };
+            minInput.TextChangedByUser += (_, _) =>
             {
-                var property = new GridHighlightProperty { Name = "", MinValue = -1, IsOptional = false, };
-                properties.Add(property);
+                if (int.TryParse(minInput.Text, out int v))
+                    property.MinValue = v;
+            };
+            grid.AddWidget(minInput, row, 1);
+
+            grid.AddWidget(MyraCheckButton.CreateWithCallback(property.IsOptional, v => property.IsOptional = v), row, 2);
+
+            grid.AddWidget(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+            {
+                _data.Properties.RemoveAt(index);
+                _data.InvalidateCache();
+                Rebuild();
+                GridHighlightData.RecheckMatchStatus();
+            }) { Tooltip = TazLang.Get("gridhighlight_deleteproperty_tooltip") }), row, 3);
+        }
+
+        #endregion
+
+        #region Equipment slots
+
+        private void BuildEquipmentSlots()
+        {
+            (string Label, Func<GridHighlightSlot, bool> Get, Action<GridHighlightSlot, bool> Set)[] slots =
+            {
+                ("Talisman",   s => s.Talisman,  (s, v) => s.Talisman = v),
+                ("Right Hand", s => s.RightHand, (s, v) => s.RightHand = v),
+                ("Left Hand",  s => s.LeftHand,  (s, v) => s.LeftHand = v),
+                ("Head",       s => s.Head,      (s, v) => s.Head = v),
+                ("Earring",    s => s.Earring,   (s, v) => s.Earring = v),
+                ("Neck",       s => s.Neck,      (s, v) => s.Neck = v),
+                ("Chest",      s => s.Chest,     (s, v) => s.Chest = v),
+                ("Shirt",      s => s.Shirt,     (s, v) => s.Shirt = v),
+                ("Back",       s => s.Back,      (s, v) => s.Back = v),
+                ("Robe",       s => s.Robe,      (s, v) => s.Robe = v),
+                ("Arms",       s => s.Arms,      (s, v) => s.Arms = v),
+                ("Hands",      s => s.Hands,     (s, v) => s.Hands = v),
+                ("Bracelet",   s => s.Bracelet,  (s, v) => s.Bracelet = v),
+                ("Ring",       s => s.Ring,      (s, v) => s.Ring = v),
+                ("Belt",       s => s.Belt,      (s, v) => s.Belt = v),
+                ("Skirt",      s => s.Skirt,     (s, v) => s.Skirt = v),
+                ("Legs",       s => s.Legs,      (s, v) => s.Legs = v),
+                ("Footwear",   s => s.Footwear,  (s, v) => s.Footwear = v),
+            };
+
+            var headerRow = new HorizontalStackPanel { Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+            headerRow.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_selectslots"), MyraLabel.TextStyle.P));
+
+            var slotChecks = new List<MyraCheckButton>(slots.Length);
+
+            headerRow.Widgets.Add(MyraCheckButton.CreateWithCallback(_data.EquipmentSlots.Other, otherChecked =>
+            {
+                // Checking "Other" clears every individual slot; the slot checkboxes push their own
+                // value into the data via their callbacks when we flip IsChecked below.
+                foreach (MyraCheckButton cb in slotChecks)
+                    cb.IsChecked = !otherChecked;
+
+                _data.EquipmentSlots.Other = otherChecked;
+                GridHighlightData.RecheckMatchStatus();
+            }, TazLang.Get("gridhighlight_otherslot")));
+
+            _content.Widgets.Add(headerRow);
+
+            var wrap = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalSpacing = 12, VerticalSpacing = 2, Width = 380 };
+
+            foreach ((string label, Func<GridHighlightSlot, bool> get, Action<GridHighlightSlot, bool> set) in slots)
+            {
+                Action<GridHighlightSlot, bool> capturedSet = set;
+                MyraCheckButton cb = MyraCheckButton.CreateWithCallback(get(_data.EquipmentSlots), v =>
+                {
+                    capturedSet(_data.EquipmentSlots, v);
+                    GridHighlightData.RecheckMatchStatus();
+                }, label);
+
+                slotChecks.Add(cb);
+                wrap.Widgets.Add(cb);
             }
 
-            Combobox propCombobox;
-            InputField propInput;
-            propInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, mainScrollArea.Width - 38 - 63 - 97, 25) { Y = y };
-            string[] values = GridHighlightRules.FlattenAndDistinctParameters(propertySets);
-            mainScrollArea.Add(propCombobox = new Combobox(0, y, mainScrollArea.Width - 38 - 63 - 80, values, 0, 200, true) { });
-            propCombobox.OnOptionSelected += (s, e) =>
-            {
-                int tVal = propCombobox.SelectedIndex;
-
-                string v = values[tVal];
-                propInput.SetText(v);
-            };
-
-            mainScrollArea.Add(propInput);
-            propInput.SetText(properties[index].Name);
-            propInput.TextChanged += (s, e) =>
-            {
-                properties[index].Name = propInput.Text;
-            };
-
-            InputField valInput;
-            mainScrollArea.Add(valInput = new InputField(0x0BB8, 0xFF, 0xFFFF, true, 60, 25) { X = mainScrollArea.Width - 38 - 63 - 75, Y = y, NumbersOnly = true });
-            valInput.SetText(properties[index].MinValue.ToString());
-            valInput.TextChanged += (s, e) =>
-            {
-                if (int.TryParse(valInput.Text, out int val))
-                {
-                    properties[index].MinValue = val;
-                }
-                else
-                {
-                    valInput.Add(new FadingLabel(20, "Couldn't parse number", true, 0xff) { X = 0, Y = 0 });
-                }
-            };
-
-            Checkbox isOptionalCheckbox;
-            mainScrollArea.Add(isOptionalCheckbox = new Checkbox(0x00D2, 0x00D3) { X = mainScrollArea.Width - 38 - 63, Y = y + 2, IsChecked = properties[index].IsOptional });
-            isOptionalCheckbox.ValueChanged += (s, e) =>
-            {
-                properties[index].IsOptional = isOptionalCheckbox.IsChecked;
-            };
-
-            NiceButton _del;
-            mainScrollArea.Add(_del = new NiceButton(mainScrollArea.Width - 38, y, 20, 20, ButtonAction.Activate, "X") { IsSelectable = false });
-            _del.SetTooltip("Delete this property");
-            _del.MouseUp += (s, e) =>
-            {
-                if (e.Button == Input.MouseButtonType.Left)
-                {
-                    properties.RemoveAt(index);
-                    Build();
-                }
-            };
+            _content.Widgets.Add(wrap);
         }
+
+        #endregion
+
+        #region Negatives
+
+        private void BuildNegatives()
+        {
+            _content.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_disqualifying"), MyraLabel.TextStyle.P));
+
+            var weightRow = new WrapPanel { Orientation = Orientation.Horizontal, HorizontalSpacing = 8, VerticalSpacing = 4 };
+            weightRow.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                _data.Overweight,
+                v => { _data.Overweight = v; GridHighlightData.RecheckMatchStatus(); },
+                TazLang.Get("gridhighlight_weightfilter"),
+                TazLang.Get("gridhighlight_weight_tooltip")));
+
+            weightRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_min"), _data.MinimumWeight,
+                v => { _data.MinimumWeight = v; GridHighlightData.RecheckMatchStatus(); }, tooltip: TazLang.Get("gridhighlight_minweight_tooltip")));
+            weightRow.Widgets.Add(LabeledNumber(TazLang.Get("gridhighlight_max"), _data.MaximumWeight,
+                v => { _data.MaximumWeight = v; GridHighlightData.RecheckMatchStatus(); }, tooltip: TazLang.Get("gridhighlight_maxweight_tooltip")));
+            _content.Widgets.Add(weightRow);
+
+            _content.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_excludedesc"), MyraLabel.TextStyle.P));
+
+            string[] values = GridHighlightRules.FlattenAndDistinctParameters(
+                GridHighlightRules.NegativeProperties, GridHighlightRules.Properties,
+                GridHighlightRules.SuperSlayerProperties, GridHighlightRules.SlayerProperties);
+
+            for (int i = 0; i < _data.ExcludeNegatives.Count; i++)
+                _content.Widgets.Add(BuildStringRow(_data.ExcludeNegatives, i, values));
+
+            _content.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_adddisqualifying"), () =>
+            {
+                _data.ExcludeNegatives.Add("");
+                _data.InvalidateCache();
+                Rebuild();
+                GridHighlightData.RecheckMatchStatus();
+            }));
+        }
+
+        #endregion
+
+        #region Rarities
+
+        private void BuildRarities()
+        {
+            _content.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_rarityfilters"), MyraLabel.TextStyle.P));
+            _content.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_raritydesc"), MyraLabel.TextStyle.P));
+
+            string[] values = GridHighlightRules.FlattenAndDistinctParameters(GridHighlightRules.RarityProperties);
+
+            for (int i = 0; i < _data.RequiredRarities.Count; i++)
+                _content.Widgets.Add(BuildStringRow(_data.RequiredRarities, i, values));
+
+            _content.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_addrarity"), () =>
+            {
+                _data.RequiredRarities.Add("");
+                _data.InvalidateCache();
+                Rebuild();
+                GridHighlightData.RecheckMatchStatus();
+            }));
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>Builds a row for a plain string list (item names / negatives / rarities) with an
+        /// optional suggestion dropdown, an editable text box and a delete button.</summary>
+        private Widget BuildStringRow(List<string> list, int index, string[] suggestions)
+        {
+            var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+            var input = new MyraInputBox { Text = list[index] ?? "", Width = 230 };
+            input.TextChangedByUser += (_, _) => list[index] = input.Text ?? "";
+
+            if (suggestions != null && suggestions.Length > 0)
+                row.Widgets.Add(SuggestionCombo(suggestions, v => input.Text = v));
+
+            row.Widgets.Add(input);
+
+            row.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
+            {
+                list.RemoveAt(index);
+                _data.InvalidateCache();
+                Rebuild();
+                GridHighlightData.RecheckMatchStatus();
+            }) { Tooltip = TazLang.Get("gridhighlight_deleteproperty_tooltip") }));
+
+            return row;
+        }
+
+        /// <summary>A numeric input followed by its label, committing valid integers as the user types.</summary>
+        private static Widget LabeledNumber(string label, int value, Action<int> onChanged, string tooltip = null)
+        {
+            var box = new MyraInputBox { Text = value.ToString(), Width = 55, Tooltip = tooltip, InputFilter = IntInputFilter };
+            box.TextChangedByUser += (_, _) =>
+            {
+                if (int.TryParse(box.Text, out int v))
+                    onChanged(v);
+            };
+
+            var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            row.Widgets.Add(box);
+            row.Widgets.Add(new MyraLabel(label, MyraLabel.TextStyle.P) { Tooltip = tooltip });
+            return row;
+        }
+
+        private static Widget SuggestionCombo(string[] values, Action<string> onSelect)
+        {
+#pragma warning disable CS0612, CS0618
+            var combo = new ComboBox { VerticalAlignment = VerticalAlignment.Center };
+
+            foreach (string value in values)
+                combo.Items.Add(new ListItem(value));
+
+            combo.SelectedIndexChanged += (_, _) =>
+            {
+                if (combo.SelectedIndex.HasValue)
+                    onSelect(values[combo.SelectedIndex.Value]);
+            };
+#pragma warning restore CS0612, CS0618
+            return combo;
+        }
+
+        private static Widget Divider() =>
+            new HorizontalSeparator { Thickness = 2, Color = new Color(0, 0, 0, 75) };
+
+        #endregion
     }
 }

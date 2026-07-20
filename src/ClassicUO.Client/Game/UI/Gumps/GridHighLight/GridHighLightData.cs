@@ -29,11 +29,17 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 if (allConfigs != null)
                     return allConfigs;
 
-                List<GridHighlightSetupEntry> setup = ProfileManager.CurrentProfile.GridHighlightSetup;
+                List<GridHighlightSetupEntry> setup = GridHighlightsConfig.Current.Highlights;
                 allConfigs = setup.Select(entry => new GridHighlightData(entry)).ToArray();
                 return allConfigs;
             }
             set => allConfigs = value;
+        }
+
+        public bool Enabled
+        {
+            get => _entry.Enabled;
+            set => _entry.Enabled = value;
         }
 
         public string Name
@@ -195,13 +201,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public void Delete()
         {
-            ProfileManager.CurrentProfile.GridHighlightSetup.Remove(_entry);
+            GridHighlightsConfig.Current.Highlights.Remove(_entry);
+            GridHighlightsConfig.Current.Save();
             allConfigs = null;
         }
 
         public void Move(bool up)
         {
-            List<GridHighlightSetupEntry> list = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> list = GridHighlightsConfig.Current.Highlights;
             int index = list.IndexOf(_entry);
             if (index == -1) return; // Not found
 
@@ -211,6 +218,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             list.RemoveAt(index);
             list.Insert(up ? index - 1 : index + 1, _entry);
+            GridHighlightsConfig.Current.Save();
+        }
+
+        public static void Unload()
+        {
+            allConfigs = null;
+            _queue.Clear();
+            _queuedItems.Clear();
+            hasQueuedItems = false;
         }
 
         public static void ProcessItemOpl(World world, Item item)
@@ -315,13 +331,15 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         public static GridHighlightData GetGridHighlightData(int index)
         {
-            List<GridHighlightSetupEntry> list = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> list = GridHighlightsConfig.Current.Highlights;
             GridHighlightData data = index >= 0 && index < list.Count ? new GridHighlightData(list[index]) : null;
 
             if (data == null)
             {
-                list.Add(new GridHighlightSetupEntry());
-                data = new GridHighlightData(list[index]);
+                var newEntry = new GridHighlightSetupEntry();
+                list.Add(newEntry);
+                GridHighlightsConfig.Current.Save();
+                data = new GridHighlightData(newEntry);
             }
 
             return data;
@@ -628,6 +646,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             foreach (GridHighlightData config in AllConfigs)
             {
+                // Disabled configs highlight nothing and never trigger auto loot
+                if (!config.Enabled)
+                    continue;
+
                 if (!config.IsMatch(itemData))
                     continue;
 

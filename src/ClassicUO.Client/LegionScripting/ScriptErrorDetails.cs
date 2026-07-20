@@ -8,6 +8,8 @@ public struct ScriptErrorLocation(string fileName, string filePath, int lineNumb
     public string FilePath    { get; } = filePath;
     public int    LineNumber  { get; } = lineNumber;
     public string LineContent { get; } = lineContent;
+
+    public bool Equals(ScriptErrorLocation other) => other.FileName == FileName && other.FilePath == FilePath && other.LineNumber == LineNumber && other.LineContent == LineContent;
 }
 
 public struct ScriptErrorDetails(string errorMsg, List<ScriptErrorLocation> locations, ScriptFile script)

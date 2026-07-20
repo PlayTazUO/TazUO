@@ -94,7 +94,7 @@ public class EventSink
     internal static void InvokeRawMessageReceived(object sender, MessageEventArgs e) => RawMessageReceived?.Invoke(sender, e);
 
     /// <summary>
-    ///  Not currently used. May be removed later or put into use, not sure right now
+    /// Invoked when a cliloc message is received from the server
     /// </summary>
     [ApiEvent]
     internal static event EventHandler<MessageEventArgs> ClilocMessageReceived;

@@ -16,9 +16,11 @@ namespace ClassicUO.Game.UI.Gumps
         private BorderControl borderControl;
         private GumpPicTiled backgroundTexture;
         private Area area;
+        private readonly bool _isClickable;
 
         private const int ROWS = 20;
         private const int COLUMNS = 10;
+        private int _pages = 14;
         private readonly Action<ushort> hueChanged;
         private readonly uint serial;
         private int _cPage = 0;
@@ -29,10 +31,10 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (value < 0)
                 {
-                    _cPage = 14;
+                    _cPage = _pages;
                     return;
                 }
-                if (value > 14)
+                if (value > _pages)
                 {
                     _cPage = 0;
                     return;
@@ -42,8 +44,14 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
-        public ModernColorPicker(World world, Action<ushort> hueChanged, uint serial = 0) : base(world, 0, 0)
+        public ModernColorPicker(
+            World world,
+            Action<ushort> hueChanged,
+            uint serial = 0,
+            bool isClickable = false
+            ) : base(world, 0, 0)
         {
+            _pages = (int)Math.Ceiling((double)(Client.Game.UO.FileManager.Hues.HuesCount / (ROWS * COLUMNS)));
             CanCloseWithRightClick = true;
             CanMove = true;
             AcceptMouseInput = true;
@@ -51,6 +59,7 @@ namespace ClassicUO.Game.UI.Gumps
             this.serial = serial;
             borderControl = new BorderControl(0, 0, WIDTH, HEIGHT, 10);
             int graphic = 9270, borderSize = 10;
+            _isClickable = isClickable;
             backgroundTexture = new GumpPicTiled(borderSize, borderSize, WIDTH - borderSize * 2, HEIGHT - borderSize * 2, (ushort)(graphic + 4));
 
             borderControl.T_Left = (ushort)graphic;
@@ -94,8 +103,14 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 for (int row = 1; row < ROWS + 1; row++)
                 {
-                    int _ = row + ((col - 1) * ROWS);
-                    area.Add(new HueDisplay(World, (ushort)(_ + (page * (ROWS * COLUMNS)) - 1), hueChanged, sendSysMessage: serial == 8787 ? true : false) { X = (col - 1) * 18, Y = (row - 1) * 18 });
+                    int _ = row + (col - 1) * ROWS;
+                    area.Add(new HueDisplay(
+                        World,
+                        (ushort)(_ + page * ROWS * COLUMNS - 1),
+                        hueChanged,
+                        _isClickable,
+                        serial == 8787
+                    ) { X = (col - 1) * 18, Y = (row - 1) * 18 });
                 }
             }
         }

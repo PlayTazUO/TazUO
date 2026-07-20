@@ -38,6 +38,23 @@ namespace ClassicUO.Game.Managers
         }
         public List<AutoLootConfigEntry> AutoLootList { get => _autoLootItems; set => _autoLootItems = value; }
 
+        /// <summary>
+        /// The hue applied to corpses after they have been auto looted.
+        /// </summary>
+        public const ushort LootedCorpseHue = 73;
+
+        /// <summary>
+        /// Max number of looted corpse serials to remember before evicting the oldest.
+        /// </summary>
+        private const int MaxLootedCorpseHistory = 10000;
+
+        /// <summary>
+        /// Serials of corpses that have been looted and hued. Persists across corpse
+        /// recreation (e.g. walking out of and back into view) so the looted hue is reapplied.
+        /// </summary>
+        private static readonly HashSet<uint> _huedCorpses = new();
+        private static readonly Queue<uint> _huedCorpseOrder = new();
+
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
         private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), AutoLootPriority> _lootItems = new ();
@@ -45,7 +62,7 @@ namespace ClassicUO.Game.Managers
         private bool _loaded = false;
         private readonly string _savePath;
         private long _nextLootTime = Time.Ticks;
-        private long _nextClearRecents = Time.Ticks + 5000;
+        private long _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         private ProgressBarGump _progressBarGump;
         private int _currentLootTotalCount = 0;
         private bool IsEnabled => ProfileManager.CurrentProfile.EnableAutoLoot;
@@ -74,7 +91,7 @@ namespace ClassicUO.Game.Managers
                 priority = entry.Priority;
             _lootItems.Enqueue((item, entry), priority);
             _currentLootTotalCount++;
-            _nextClearRecents = Time.Ticks + 5000;
+            _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
         }
 
         public void ForceLootContainer(uint serial)
@@ -158,7 +175,7 @@ namespace ClassicUO.Game.Managers
         {
             if (corpse is not { IsCorpse: true }) return;
 
-            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
+            if (corpse.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
             {
                 World.Instance?.Player?.AutoOpenedCorpses.Remove(corpse); //Retry if the distance was too great to loot
                 return;
@@ -170,7 +187,38 @@ namespace ClassicUO.Game.Managers
                 CheckAndLoot((Item)i);
 
             if(ProfileManager.CurrentProfile.HueCorpseAfterAutoloot)
-                corpse.Hue = 73;
+            {
+                corpse.Hue = LootedCorpseHue;
+                MarkCorpseHued(corpse.Serial);
+            }
+        }
+
+        /// <summary>
+        /// Records a corpse serial as having been looted and hued, so the looted hue can be
+        /// reapplied if the corpse is recreated. Evicts the oldest entry once the history
+        /// reaches <see cref="MaxLootedCorpseHistory"/>.
+        /// </summary>
+        public static void MarkCorpseHued(uint serial)
+        {
+            if (serial == 0) return;
+
+            if (!_huedCorpses.Add(serial)) return;
+
+            _huedCorpseOrder.Enqueue(serial);
+
+            while (_huedCorpseOrder.Count > MaxLootedCorpseHistory && _huedCorpseOrder.TryDequeue(out uint oldest))
+                _huedCorpses.Remove(oldest);
+        }
+
+        /// <summary>
+        /// Applies the looted hue to a corpse if it was previously looted and hued.
+        /// Intended to be called when a corpse is (re)added to the world.
+        /// </summary>
+        public static void ApplyLootedHueIfNeeded(Item corpse)
+        {
+            if (corpse == null || !_huedCorpses.Contains(corpse.Serial)) return;
+
+            corpse.Hue = LootedCorpseHue;
         }
 
         public void TryRemoveAutoLootEntry(string uid)
@@ -299,7 +347,7 @@ namespace ClassicUO.Game.Managers
                 if (Time.Ticks > _nextClearRecents)
                 {
                     _recentlyLooted.Clear();
-                    _nextClearRecents = Time.Ticks + 5000;
+                    _nextClearRecents = Time.Ticks + (ProfileManager.CurrentProfile?.AutoLootRetryDelay ?? 5000);
                 }
                 return;
             }
@@ -326,7 +374,7 @@ namespace ClassicUO.Game.Managers
                 Item rc = _world.Items.Get(moveItem.RootContainer);
                 if (rc != null && rc.Distance > ProfileManager.CurrentProfile.AutoOpenCorpseRange)
                 {
-                    if (rc.IsCorpse)
+                    if (rc.IsCorpse && !ProfileManager.CurrentProfile.DisableAutolootCorpseRetry)
                         World.Instance?.Player?.AutoOpenedCorpses.Remove(rc); //Allow reopening this corpse, we got too far away to finish looting..
                     _recentlyLooted.Remove(item);
                     return;
@@ -612,11 +660,15 @@ namespace ClassicUO.Game.Managers
 
             private bool RegexCheck(World world, Item compareTo)
             {
-                string search = "";
-                if (world.OPL.TryGetNameAndData(compareTo, out string name, out string data))
-                    search += name + data;
+                string search;
+
+                if (compareTo.OPLName.NotNullNotEmpty())
+                    search = compareTo.OPLName;
                 else
-                    search = StringHelper.GetPluralAdjustedString(compareTo.ItemData.Name);
+                    search = compareTo.GetNormalizedName(false);
+
+                if (compareTo.OPLData.NotNullNotEmpty())
+                    search += compareTo.OPLData;
 
                 return RegexHelper.GetRegex(RegexSearch, RegexOptions.Multiline).IsMatch(search);
             }

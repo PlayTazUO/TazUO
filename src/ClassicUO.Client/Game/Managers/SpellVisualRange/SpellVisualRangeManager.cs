@@ -38,6 +38,14 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
         private SpellRangeInfo currentSpell { get; set; }
 
         /// <summary>
+        /// Monotonic tick of the last time the server reported a cast failure (a <see cref="stopAtClilocs"/>
+        /// message: concentration disturbed, insufficient mana/reagents, frozen, etc.). Consumers can compare
+        /// this against when they issued a cast to know it genuinely failed — vs. a benign casting-flag drop —
+        /// and react immediately instead of waiting out a timeout.
+        /// </summary>
+        public long LastCastFailedTick { get; private set; }
+
+        /// <summary>
         /// An instance of a cast timer bar. May be null, depending on profile settings
         /// </summary>
         private static CastTimerProgressBar _castTimerBar;
@@ -75,7 +83,14 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
         public void OnClilocReceived(int cliloc) =>
             Task.Factory.StartNew(() =>
             {
-                if (isCasting && stopAtClilocs.Contains(cliloc)) ClearCasting();
+                if (stopAtClilocs.Contains(cliloc))
+                {
+                    // Record the failure regardless of our isCasting flag: a damage packet may have
+                    // already cleared isCasting before this disrupt cliloc arrives (packet ordering),
+                    // and consumers still need to know the cast just failed.
+                    LastCastFailedTick = ClassicUO.Time.Ticks;
+                    if (isCasting) ClearCasting();
+                }
             });
 
         private void SetCasting(SpellRangeInfo spell)
@@ -153,7 +168,7 @@ namespace ClassicUO.Game.Managers.SpellVisualRange
                 return;
 
             _castTimerBar = new CastTimerProgressBar(World);
-            UIManager.Add(_castTimerBar);
+            UIManager.Add(_castTimerBar, false);
         }
 
         public bool IsTargetingAfterCasting()

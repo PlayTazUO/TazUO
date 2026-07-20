@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -19,7 +20,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public DurabilityGumpMinimized(World world) : base(world, 0, 0)
         {
-            SetTooltip("Open Equipment Durability Tracker");
+            SetTooltip(TazLang.Get("durability_minimize_tooltip", "Open Equipment Durability Tracker"));
 
             WantUpdateSize = true;
             AcceptMouseInput = true;
@@ -112,7 +113,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void BuildHeader()
         {
-            Label l = new ("Equipment Durability", true, 0xFF);
+            Label l = new (TazLang.Get("durability_title", "Equipment Durability"), true, 0xFF);
             l.X = (Width >> 1) - (l.Width >> 1);
             l.Y = (l.Height >> 1) >> 1;
 

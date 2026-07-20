@@ -170,6 +170,24 @@ public class ApiUiGump(LegionAPI api)
     }
 
     /// <summary>
+    /// Create an image control that displays a named PNG texture loaded from a ZIP archive.
+    /// Place the PNG anywhere inside the ZIP (outside gumps/ and art/ folders) and reference it by its path within the archive.
+    /// Example:
+    /// ```py
+    /// # In your zip: icons/sword.png
+    /// img = API.Gumps.LegionTextureControl("icons/sword.png")
+    /// img.SetPos(10, 10)
+    /// g.Add(img)
+    /// ```
+    /// </summary>
+    /// <param name="textureName">The PNG path within the ZIP, e.g. "icons/sword.png" or just "sword.png" if at the root</param>
+    /// <param name="width">Display width in pixels; 0 uses the image's natural width</param>
+    /// <param name="height">Display height in pixels; 0 uses the image's natural height</param>
+    /// <returns>A LegionTexture control</returns>
+    public ApiUiLegionTexture LegionTextureControl(string textureName, int width = 0, int height = 0) =>
+        new ApiUiLegionTexture(new LegionTexturePic(textureName, width, height));
+
+    /// <summary>
     /// Create a button for gumps.
     /// Example:
     /// ```py
@@ -279,7 +297,11 @@ public class ApiUiGump(LegionAPI api)
     /// <param name="multiline"></param>
     /// <returns></returns>
     public ApiUiTtfTextInputField CreateGumpTextBox(string text = "", int width = 200, int height = 30, bool multiline = false) =>
-        new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true });
+        // Construct on the main thread: TTFTextInputField builds FontStashSharp-backed TextBoxes whose
+        // shared font caches are not thread-safe. Building them here (a script background thread) while
+        // the main thread measures/draws the same fonts corrupts those caches and crashes.
+        MainThreadQueue.InvokeOnMainThread(() =>
+            new ApiUiTtfTextInputField(new TTFTextInputField(width, height, text: text, multiline: multiline, convertHtmlColors: false) { CanMove = true }));
 
     /// <summary>
     /// Create a TTF label with advanced options.
@@ -324,7 +346,11 @@ public class ApiUiGump(LegionAPI api)
         if (maxWidth > 0)
             opts.Width = maxWidth;
 
-        return new ApiUiTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts));
+        // Construct on the main thread: TextBox measures its text through FontStashSharp, whose shared
+        // font caches (glyph/kerning) are not thread-safe. Measuring here (a script background thread)
+        // while the main thread measures/draws the same fonts corrupts those caches and crashes.
+        return MainThreadQueue.InvokeOnMainThread(() =>
+            new ApiUiTextBox(TextBox.GetOne(text, font, size, Utility.GetColorFromHex(color), opts)));
     }
 
     /// <summary>

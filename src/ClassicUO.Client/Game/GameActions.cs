@@ -4,6 +4,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Managers.SpellVisualRange;
 using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.Scenes;
@@ -15,11 +16,12 @@ using ClassicUO.LegionScripting;
 using ClassicUO.Network;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
-using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using static ClassicUO.Network.AsyncNetClient;
 
 namespace ClassicUO.Game;
+
+using NewOptionsWindow = UI.MyraWindows.Options.OptionsWindow;
 
 internal static class GameActions
 {
@@ -64,9 +66,9 @@ internal static class GameActions
     {
         ScriptManagerWindow window = ScriptManagerWindow.Instance;
 
-        if (window != null && window.IsVisible)
+        if (window != null && window.IsVisible && !window.IsDisposed)
         {
-            window.IsVisible = false;
+            window.Dispose();
             return true;
         }
 
@@ -161,23 +163,52 @@ internal static class GameActions
     }
 
     /// <summary>
-    ///
+    /// Closes a currently opened settings window.
+    /// Note that this method attempts to close only the setting window currently defined as 'in-use' by the <see cref="Profile.UseNewOptionsWindow"/> property
     /// </summary>
     /// <returns>False if no settings are open</returns>
-    internal static bool CloseSettings()
+    internal static bool CloseSettings() =>
+        ProfileManager.CurrentProfile?.UseNewOptionsWindow == false
+            ? CloseSingletonGump<ModernOptionsGump>()
+            : CloseSingletonGump<NewOptionsWindow>();
+
+    private static bool CloseSingletonGump<TGump>() where TGump : class, IGui
     {
-        Gump g = UIManager.GetGump<ModernOptionsGump>();
+        TGump g = UIManager.GetGump<TGump>();
+        if (g == null)
+            return false;
 
-        if (g != null)
-        {
-            g.Dispose();
-            return true;
-        }
-
-        return false;
+        g.Dispose();
+        return true;
     }
 
     internal static void OpenSettings(World world, int page = 0)
+    {
+        // Default to new window if unset
+        if (ProfileManager.CurrentProfile?.UseNewOptionsWindow == false)
+            ShowLegacyOptionsGump(world, page);
+        else
+            ShowNewOptionsGump();
+    }
+
+    /// <summary>
+    /// Creates or opens the new options window
+    /// </summary>
+    public static void ShowNewOptionsGump()
+    {
+        NewOptionsWindow existing = UIManager.GetGump<NewOptionsWindow>();
+        if (existing == null)
+            UIManager.Add(new NewOptionsWindow());
+        else
+            existing.BringOnTop();
+    }
+
+    /// <summary>
+    /// Creates or opens the legacy options window
+    /// </summary>
+    /// <param name="world">The world instance the gump belongs to</param>
+    /// <param name="page">The specific page to open</param>
+    public static void ShowLegacyOptionsGump(World world, int page = 0)
     {
         ModernOptionsGump opt = UIManager.GetGump<ModernOptionsGump>();
 
@@ -653,6 +684,10 @@ internal static class GameActions
                 if (!intercepted)
                     // Run the actual send only if the interceptor yielded control back, otherwise, the auto manager would have handled the 'send' part
                     Socket.Send_DoubleClick(serial);
+
+                // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+                if (!ignoreQueue)
+                    GlobalActionCooldown.BeginCooldown();
             }
         }
 
@@ -845,7 +880,7 @@ internal static class GameActions
 
         if (amount <= -1 && item.Amount > 1 && item.ItemData.IsStackable)
         {
-            if (ProfileManager.CurrentProfile.HoldShiftToSplitStack == Keyboard.Shift)
+            if (ProfileManager.CurrentProfile.HoldShiftToSplitStack == HotKeys.IsPressed(HotKeyRegistrar.SplitStackId))
             {
                 SplitMenuGump gump = UIManager.GetGump<SplitMenuGump>(item);
 
@@ -877,7 +912,13 @@ internal static class GameActions
         Client.Game.UO.GameCursor.ItemHold.IsGumpTexture = isGump;
 
         if (!ProfileManager.CurrentProfile.QueueManualItemMoves || skipQueue)
+        {
             Socket.Send_PickUpRequest(item, (ushort)amount);
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            if (!skipQueue)
+                GlobalActionCooldown.BeginCooldown();
+        }
 
         ScriptingInfoGump.AddOrUpdateInfo("Last Picked Up Item", $"0x{item.Serial:X}");
         ScriptingInfoGump.AddOrUpdateInfo("Last Object Graphic", $"0x{item.Graphic:X}");
@@ -930,6 +971,11 @@ internal static class GameActions
                                             (sbyte)z,
                                             container);
             }
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            // 'force' drops come from the queue itself (MoveRequest.Execute), which already manages the cooldown.
+            if (!force)
+                GlobalActionCooldown.BeginCooldown();
         }
     }
 
@@ -950,6 +996,9 @@ internal static class GameActions
             Client.Game.UO.GameCursor.ItemHold.Enabled = false;
             Client.Game.UO.GameCursor.ItemHold.Dropped = true;
             Client.Game.UO.GameCursor.ItemHold.Clear();
+
+            // Even when manual queueing is disabled, keep the action queue timer in sync so forced-queue actions remain properly spaced.
+            GlobalActionCooldown.BeginCooldown();
         }
     }
 
