@@ -336,9 +336,10 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             if (data == null)
             {
-                list.Add(new GridHighlightSetupEntry());
+                var newEntry = new GridHighlightSetupEntry();
+                list.Add(newEntry);
                 GridHighlightsConfig.Current.Save();
-                data = new GridHighlightData(list[index]);
+                data = new GridHighlightData(newEntry);
             }
 
             return data;
