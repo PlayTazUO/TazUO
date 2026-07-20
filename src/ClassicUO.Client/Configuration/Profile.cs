@@ -1064,8 +1064,8 @@ namespace ClassicUO.Configuration
             // Save profile settings
             ConfigurationResolver.Save(this, filePath, ProfileJsonContext.DefaultToUse.Profile);
 
-            // Persist the grid-highlight rules to their SQLite store (no longer part of profile.json).
-            GridHighlightDatabase.Instance.SaveForProfile(this);
+            // Persist the grid-highlight rules to this profile's SQLite store (no longer part of profile.json).
+            GridHighlightDatabase.GetForProfilePath(path)?.SaveForProfile(this);
 
             // Save opened gumps
             if (saveGumps)

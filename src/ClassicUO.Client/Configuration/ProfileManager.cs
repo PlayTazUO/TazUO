@@ -90,9 +90,9 @@ namespace ClassicUO.Configuration
             CurrentProfile.ServerName = servername;
             CurrentProfile.CharacterName = charactername;
 
-            // Load the grid-highlight rules from their SQLite store, migrating any legacy profile.json
-            // (or older parallel-list) storage on first load.
-            if (GridHighlightDatabase.Instance.LoadForProfile(CurrentProfile))
+            // Load the grid-highlight rules from this profile's SQLite store, migrating any legacy
+            // profile.json (or older parallel-list) storage on first load.
+            if (GridHighlightDatabase.Current?.LoadForProfile(CurrentProfile) == true)
             {
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }

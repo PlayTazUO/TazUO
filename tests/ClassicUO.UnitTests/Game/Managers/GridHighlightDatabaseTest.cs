@@ -36,6 +36,13 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public void Constructor_WritesDatabaseIntoProfileFolder()
+        {
+            _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("a", 1) });
+            File.Exists(Path.Combine(_tempDir, "gridhighlights.db")).Should().BeTrue();
+        }
+
+        [Fact]
         public void Save_Then_Load_RoundTripsEntriesInOrder()
         {
             var entries = new List<GridHighlightSetupEntry>
@@ -44,9 +51,9 @@ namespace ClassicUO.UnitTests.Game.Managers
                 MakeEntry("second", 20, "war fork", "spear")
             };
 
-            _db.Save("profileA", entries);
+            _db.Save(entries);
 
-            List<GridHighlightSetupEntry> loaded = _db.Load("profileA");
+            List<GridHighlightSetupEntry> loaded = _db.Load();
 
             loaded.Should().HaveCount(2);
             loaded[0].Name.Should().Be("first");
@@ -63,7 +70,7 @@ namespace ClassicUO.UnitTests.Game.Managers
         [Fact]
         public void Save_ReplacesPreviousEntries()
         {
-            _db.Save("profileA", new List<GridHighlightSetupEntry>
+            _db.Save(new List<GridHighlightSetupEntry>
             {
                 MakeEntry("a", 1),
                 MakeEntry("b", 2),
@@ -71,35 +78,46 @@ namespace ClassicUO.UnitTests.Game.Managers
             });
 
             // A shorter set must fully replace the old one, leaving no stale rows.
-            _db.Save("profileA", new List<GridHighlightSetupEntry> { MakeEntry("only", 9) });
+            _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("only", 9) });
 
-            List<GridHighlightSetupEntry> loaded = _db.Load("profileA");
+            List<GridHighlightSetupEntry> loaded = _db.Load();
             loaded.Should().ContainSingle().Which.Name.Should().Be("only");
         }
 
         [Fact]
-        public void Save_IsScopedPerProfileKey()
+        public void SeparateProfileFolders_HaveIndependentDatabases()
         {
-            _db.Save("profileA", new List<GridHighlightSetupEntry> { MakeEntry("a", 1) });
-            _db.Save("profileB", new List<GridHighlightSetupEntry> { MakeEntry("b1", 2), MakeEntry("b2", 3) });
+            string otherDir = Path.Combine(Path.GetTempPath(), "tazuo_gridhl_test_" + Guid.NewGuid().ToString("N"));
+            using var other = new GridHighlightDatabase(otherDir);
 
-            _db.Load("profileA").Should().ContainSingle().Which.Name.Should().Be("a");
-            _db.Load("profileB").Should().HaveCount(2);
+            try
+            {
+                _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("mine", 1) });
+                other.Save(new List<GridHighlightSetupEntry> { MakeEntry("theirs1", 2), MakeEntry("theirs2", 3) });
+
+                _db.Load().Should().ContainSingle().Which.Name.Should().Be("mine");
+                other.Load().Should().HaveCount(2);
+            }
+            finally
+            {
+                other.Dispose();
+                try { Directory.Delete(otherDir, true); } catch { /* best effort */ }
+            }
         }
 
         [Fact]
-        public void Load_UnknownProfile_ReturnsEmpty()
+        public void Load_EmptyDatabase_ReturnsEmpty()
         {
-            _db.Load("nobody").Should().BeEmpty();
+            _db.Load().Should().BeEmpty();
         }
 
         [Fact]
-        public void Save_EmptyList_ClearsProfile()
+        public void Save_EmptyList_ClearsDatabase()
         {
-            _db.Save("profileA", new List<GridHighlightSetupEntry> { MakeEntry("a", 1) });
-            _db.Save("profileA", new List<GridHighlightSetupEntry>());
+            _db.Save(new List<GridHighlightSetupEntry> { MakeEntry("a", 1) });
+            _db.Save(new List<GridHighlightSetupEntry>());
 
-            _db.Load("profileA").Should().BeEmpty();
+            _db.Load().Should().BeEmpty();
         }
 
         public void Dispose()

@@ -202,7 +202,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 {
                     ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
                     SaveProfile();
-                    GridHighlightDatabase.Instance.SaveForProfile(ProfileManager.CurrentProfile);
+                    GridHighlightDatabase.Current?.SaveForProfile(ProfileManager.CurrentProfile);
 
                     foreach (IGui gump in UIManager.Gumps)
                     {
