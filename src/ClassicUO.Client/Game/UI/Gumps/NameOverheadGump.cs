@@ -903,7 +903,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Point pos = GetPosition(m, height, centerY);
 
                     x = pos.X;
-                    y = pos.Y;
+                    y = pos.Y - m.NameOverheadTextExtraHeight;
                 }
             }
             else if (SerialHelper.IsItem(LocalSerial))

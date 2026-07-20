@@ -21,14 +21,14 @@ namespace ClassicUO.Game.GameObjects
         private int _characterFrameStartY;
         private int _startCharacterWaistY;
         private int _startCharacterKneesY;
-        private TextBox _nameAndTitle;
+        private TextBox _nameText;
 
         // Extra vertical space to reserve above the overhead name/title so speech and
         // damage text drawn by other systems (Mobile.UpdateTextCoordsV, OverheadDamage)
         // doesn't overlap it.
         internal int NameOverheadTextExtraHeight =>
-            ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.ShowMobileNameOverhead && _nameAndTitle != null
-                ? _nameAndTitle.Height + 5
+            ProfileManager.CurrentProfile != null && ProfileManager.CurrentProfile.ShowMobileNameOverhead && _nameText != null
+                ? _nameText.Height + 5
                 : 0;
 
         public override bool Draw(UltimaBatcher2D batcher, int posX, int posY, float depth)
@@ -508,20 +508,17 @@ namespace ClassicUO.Game.GameObjects
 
             if (profile.ShowMobileNameOverhead)
             {
-                if (_nameAndTitle == null)
+                if (_nameText == null)
                 {
-                    string nameAndTitle = Name;
+                    string name = Name;
 
                     if (World.OPL.TryGetNameAndData(this, out string oplname, out string opldata))
                         if (oplname.NotNullNotEmpty())
-                            nameAndTitle = oplname;
+                            name = oplname;
 
-                    if (Title.NotNullNotEmpty())
-                        nameAndTitle += "\n" + Title;
-
-                    if(nameAndTitle.NotNullNotEmpty())
-                        _nameAndTitle = TextBox.GetOne(
-                            nameAndTitle, 
+                    if(name.NotNullNotEmpty())
+                        _nameText = TextBox.GetOne(
+                            name, 
                             profile.OverheadChatFont, 
                             profile.OverheadChatFontSize, 
                             Notoriety.GetHue(NotorietyFlag), 
@@ -529,7 +526,7 @@ namespace ClassicUO.Game.GameObjects
                 }
                 else
                 {
-                    _nameAndTitle.Draw(batcher, drawX - (_nameAndTitle.Width >> 1), spriteTopY - _nameAndTitle.Height, depth);
+                    _nameText.Draw(batcher, drawX - (_nameText.Width >> 1), spriteTopY - _nameText.Height, depth);
                 }
             }
 

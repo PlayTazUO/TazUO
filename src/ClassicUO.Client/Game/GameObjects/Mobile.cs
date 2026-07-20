@@ -60,13 +60,13 @@ namespace ClassicUO.Game.GameObjects
         public override void NameUpdated()
         {
             base.NameUpdated();
-            _nameAndTitle = null;
+            _nameText = null;
         }
 
         public override void OPLUpdated(ItemProperty newProps)
         {
             base.OPLUpdated(newProps);
-            _nameAndTitle = null;
+            _nameText = null;
         }
 
         public override void PushToBack(LinkedObject item)
@@ -1128,7 +1128,7 @@ namespace ClassicUO.Game.GameObjects
                 //_pool.ReturnOne(this);
             }
 
-            _nameAndTitle?.Dispose();
+            _nameText?.Dispose();
         }
 
         public struct Step
