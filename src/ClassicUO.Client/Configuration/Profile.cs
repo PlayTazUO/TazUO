@@ -613,6 +613,10 @@ namespace ClassicUO.Configuration
         public List<List<bool>> GridHighlight_IsOptionalProperties { get; set => SetProperty(ref field, value); } = new List<List<bool>>();
         public List<List<string>> GridHighlight_ExcludeNegatives { get; set => SetProperty(ref field, value); } = new List<List<string>>();
         public List<List<string>> GridHighlight_RequiredRarities { get; set => SetProperty(ref field, value); } = new();
+
+        // GridHighlightSetup has been superseded by grid_highlights.json (see GridHighlightsConfig) and is
+        // retained only so existing profiles can be migrated on load. Do not use it in new code.
+        [Obsolete("Migrated to grid_highlights.json (GridHighlightsConfig); retained only for one-time migration of existing profiles.")]
         public List<GridHighlightSetupEntry> GridHighlightSetup { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableProperties { get; set => SetProperty(ref field, value); } = new();
         public List<string> ConfigurableResistances { get; set => SetProperty(ref field, value); } = new();
@@ -1051,6 +1055,11 @@ namespace ClassicUO.Configuration
 
             // Save profile settings
             ConfigurationResolver.Save(this, filePath, ProfileJsonContext.DefaultToUse.Profile);
+
+            // Grid highlights live in a separate grid_highlights.json (see GridHighlightsConfig); persist
+            // them alongside the profile so in-place rule edits are saved on the same cadence as before.
+            if (ReferenceEquals(this, ProfileManager.CurrentProfile))
+                GridHighlightsConfig.Current.Save();
 
             // Save opened gumps
             if (saveGumps)

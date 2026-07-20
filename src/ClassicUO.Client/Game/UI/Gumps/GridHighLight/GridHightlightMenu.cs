@@ -67,7 +67,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             toolbar.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_add"), () =>
             {
                 // Passing the current count appends a fresh entry, then we redraw the list.
-                GridHighlightData.GetGridHighlightData(ProfileManager.CurrentProfile.GridHighlightSetup.Count);
+                GridHighlightData.GetGridHighlightData(GridHighlightsConfig.Current.Highlights.Count);
                 RebuildList();
             }));
 
@@ -88,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             _listPanel.Widgets.Clear();
 
-            int count = ProfileManager.CurrentProfile.GridHighlightSetup.Count;
+            int count = GridHighlightsConfig.Current.Highlights.Count;
             if (count == 0)
             {
                 _listPanel.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_settings_desc"), MyraLabel.TextStyle.P));
@@ -168,7 +168,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private static void ExportGridHighlightSettings(World world)
         {
-            List<GridHighlightSetupEntry> data = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> data = GridHighlightsConfig.Current.Highlights;
 
             RunFileDialog(world, true, TazLang.Get("gridhighlight_export_dialog"), file =>
             {
@@ -200,7 +200,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
                 if (imported != null)
                 {
-                    ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
+                    GridHighlightsConfig.Current.Highlights.AddRange(imported);
+                    GridHighlightsConfig.Current.Save();
                     SaveProfile();
 
                     foreach (IGui gump in UIManager.Gumps)
