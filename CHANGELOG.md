@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added an option to strip the leading "<id>" prefix from chat usernames (e.g. "<36475858>username" -> "username") - [P.R 751](https://github.com/PlayTazUO/TazUO/pull/751) ([bittiez](https://github.com/bittiez))
 * Added an option to draw overheads (names, health bars, overhead text) at a constant size regardless of the camera zoom - [P.R 730](https://github.com/PlayTazUO/TazUO/pull/730) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
