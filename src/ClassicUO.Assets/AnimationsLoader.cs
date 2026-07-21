@@ -37,7 +37,7 @@ namespace ClassicUO.Assets
 
     public unsafe sealed class AnimationsLoader : UOFileLoader
     {
-        public const int MAX_ACTIONS = 80; // gargoyle is like 78
+        public const int MAX_ACTIONS = 100; // gargoyle is like 78
         public const int MAX_DIRECTIONS = 5;
 
 
