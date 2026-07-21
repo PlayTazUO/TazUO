@@ -48,6 +48,11 @@ internal static class SpeechTab
                     disableSysChatWhileJournal,
                     new Accessor<bool>(() => profile.DisableSystemChatWhileJournalOpen),
                     search: new SearchMetadata(disableSysChatWhileJournal)
+                ),
+                Option.Checkbox(
+                    TazLang.Get("mog_chattab_speech_stripchatusernameid"),
+                    new Accessor<bool>(() => profile.StripChatUsernameId),
+                    search: new SearchMetadata(TazLang.Get("mog_chattab_speech_stripchatusernameid"))
                 )
             ),
             GetActivationSection(),

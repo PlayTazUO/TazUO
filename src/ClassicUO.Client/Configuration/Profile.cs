@@ -499,6 +499,8 @@ namespace ClassicUO.Configuration
 
         public bool DisableSystemChatWhileJournalOpen { get; set => SetProperty(ref field, value); }
 
+        public bool StripChatUsernameId { get; set => SetProperty(ref field, value); }
+
         public bool UsePromptPopup { get; set => SetProperty(ref field, value); } = true;
 
         public uint SetFavoriteMoveBagSerial { get; set => SetProperty(ref field, value); }
