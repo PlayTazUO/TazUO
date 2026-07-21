@@ -305,11 +305,75 @@ namespace ClassicUO.Game.Managers
 
         public static IGui LastControlMouseDown(MouseButtonType button) => _mouseDownControls[(int)button];
 
-        public static void SavePosition(uint serverSerial, Point point) => _gumpPositionCache[serverSerial] = point;
+        public static void SavePosition(uint serverSerial, Point point)
+        {
+            _gumpPositionCache[serverSerial] = point;
+
+            // Keep the on-disk copy in sync whenever a pinned gump is moved, so its permanent
+            // position always reflects where the user last left it.
+            if (_persistentPositionSerials.Contains(serverSerial))
+                _ = GumpPositionSQLManager.Instance.UpdatePositionAsync(serverSerial, point.X, point.Y);
+        }
 
         public static bool RemovePosition(uint serverSerial) => _gumpPositionCache.Remove(serverSerial, out _);
 
         public static bool GetGumpCachePosition(uint id, out Point pos) => _gumpPositionCache.TryGetValue(id, out pos);
+
+        #region Persistent gump positions
+
+        // Serials whose positions are permanently saved to the GumpPositionSQLManager database and are
+        // reloaded into the in-memory position cache on startup.
+        private static readonly HashSet<uint> _persistentPositionSerials = new();
+
+        /// <summary>
+        /// Seeds the in-memory gump position cache from the permanent database. Idempotent - safe to call
+        /// on each profile load. Pinned positions become the cache values so the affected gumps reopen at
+        /// their saved location.
+        /// </summary>
+        public static void LoadPersistentPositions()
+        {
+            try
+            {
+                foreach (SavedGumpPosition saved in GumpPositionSQLManager.Instance.GetAll())
+                {
+                    _persistentPositionSerials.Add(saved.Serial);
+                    _gumpPositionCache[saved.Serial] = new Point(saved.X, saved.Y);
+                }
+            }
+            catch (Exception ex)
+            {
+                ClassicUO.Utility.Logging.Log.Error($"Failed loading persistent gump positions: {ex.Message}");
+            }
+        }
+
+        /// <summary>Whether the given gump serial currently has a permanently saved position.</summary>
+        public static bool IsPositionPersistent(uint serial) => _persistentPositionSerials.Contains(serial);
+
+        /// <summary>
+        /// Permanently saves a gump's position under a friendly name, updating both the in-memory cache
+        /// and the backing database.
+        /// </summary>
+        public static void SetPositionPersistent(uint serial, string name, Point point)
+        {
+            if (serial == 0)
+                return;
+
+            _persistentPositionSerials.Add(serial);
+            _gumpPositionCache[serial] = point;
+            _ = GumpPositionSQLManager.Instance.SaveAsync(serial, name, point.X, point.Y);
+        }
+
+        /// <summary>
+        /// Removes a gump's permanently saved position from the database. The current in-memory cache
+        /// entry is left untouched so the gump keeps its position for the rest of the session.
+        /// </summary>
+        public static void RemovePersistentPosition(uint serial)
+        {
+            if (_persistentPositionSerials.Remove(serial))
+                _ = GumpPositionSQLManager.Instance.RemoveAsync(serial);
+        }
+
+        #endregion
 
         public static void ShowContextMenu(ContextMenuShowMenu menu)
         {

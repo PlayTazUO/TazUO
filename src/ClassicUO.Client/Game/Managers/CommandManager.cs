@@ -249,6 +249,8 @@ namespace ClassicUO.Game.Managers
                 Task.Run(() => SpellDefinition.SaveAllSpellsToJson(_world));
             });
 
+            Register("gumppositions", (s) => Game.UI.MyraWindows.GumpPositionManagerWindow.Show());
+
             Register("setinscreen", (s) =>
             {
                 for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)
