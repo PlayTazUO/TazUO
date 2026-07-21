@@ -896,7 +896,7 @@ namespace ClassicUO.Assets
                         uint frameCount = reader.ReadUInt32LE();
                         int newGroup = reader.ReadInt32LE();
 
-                        if (frameCount == 0)
+                        if (frameCount == 0 && oldGroup >= 0 && oldGroup < MAX_ACTIONS)
                         {
                             uopInfo.ReplacedAnimations[oldGroup] = newGroup;
                         }
