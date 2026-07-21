@@ -171,4 +171,9 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEADS_SCALE_WITH_ZOOM, true)]
         public partial bool OverheadsScaleWithZoom { get; set; }
+
+        // When true, strips the leading "<id>" prefix from chat usernames (e.g. "<36475858>username" -> "username").
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "strip_chat_username_id", false)]
+        public partial bool StripChatUsernameId { get; set; }
 }
