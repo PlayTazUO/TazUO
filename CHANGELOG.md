@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Features
+* Added an option to draw overheads (names, health bars, overhead text) at a constant size regardless of the camera zoom - [P.R 730](https://github.com/PlayTazUO/TazUO/pull/730) ([bittiez](https://github.com/bittiez))
+
 ### Fixes
 * Fixed a startup crash (IndexOutOfRangeException) in the animations loader when AnimationSequence.uop contained an out-of-range animation group index - [P.R 749](https://github.com/PlayTazUO/TazUO/pull/749) ([bittiez](https://github.com/bittiez))
 * Fixed a crash when a Legion Python script was stopped at the exact moment it was displaying an error, caused by a thread interrupt surfacing while IronPython formatted the exception - [P.R 748](https://github.com/PlayTazUO/TazUO/pull/748) ([bittiez](https://github.com/bittiez))
