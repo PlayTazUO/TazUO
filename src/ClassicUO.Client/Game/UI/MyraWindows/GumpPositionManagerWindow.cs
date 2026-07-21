@@ -61,7 +61,7 @@ public sealed class GumpPositionManagerWindow : MyraControl
     {
         var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING, Width = 460 };
 
-        _openHeader = new MyraLabel("Currently Open Gumps", MyraLabel.TextStyle.H4);
+        _openHeader = new MyraLabel("Open Server Gumps", MyraLabel.TextStyle.H4);
         _savedHeader = new MyraLabel("Saved Gump Positions", MyraLabel.TextStyle.H4);
 
         _openTable = new RulebaseTableView<OpenGumpRow>(_openColumns, _openStyle);
@@ -195,16 +195,16 @@ public sealed class GumpPositionManagerWindow : MyraControl
             if (gui is not Gump gump || gump.IsDisposed)
                 continue;
 
-            uint key = gump.ServerSerial != 0 ? gump.ServerSerial : gump.LocalSerial;
-            if (key == 0)
+            // Only server gumps participate in the server-serial position cache this feature manages.
+            if (gump.ServerSerial == 0)
                 continue;
 
             string name = gump.GumpType != Gumps.GumpType.None ? gump.GumpType.ToString() : gump.GetType().Name;
-            rows.Add(new OpenGumpRow(gump, key, name));
+            rows.Add(new OpenGumpRow(gump, gump.ServerSerial, name));
         }
 
         _openTable.SetRules(rows);
-        _openHeader.Text = $"Currently Open Gumps ({rows.Count})";
+        _openHeader.Text = $"Open Server Gumps ({rows.Count})";
     }
 
     private void RefreshSavedList()
