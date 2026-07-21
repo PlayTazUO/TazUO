@@ -47,7 +47,7 @@ namespace ClassicUO.Game.GameObjects
         public const float ObjectShadow = 0.25f;
 
         /// <summary>Land / terrain tile surface.</summary>
-        public const float Land = 0.50f;
+        public const float Land = 0.49f;
 
         /// <summary>Base layer of the animated-water effect, drawn just under <see cref="Surface"/> to avoid z-fighting with the animated top layer.</summary>
         public const float SurfaceWetBase = 0.49f;
