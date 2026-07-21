@@ -36,15 +36,30 @@ namespace ClassicUO.Game.Managers
             int mouseX = Mouse.Position.X;
             int mouseY = Mouse.Position.Y;
 
-            // World overhead text is stored in world/game coordinates and drawn under the
-            // camera's ViewTransformMatrix, so the raw screen mouse position no longer lines up
-            // with it. Use the mouse position translated into that same world space (the value
-            // every other world hit-test uses) so the clickable region matches the drawn text.
-            // Gump text is in screen coordinates, so the raw mouse position is correct there.
+            // When true, world overhead text is drawn under the camera's ViewTransformMatrix and
+            // therefore scales with the camera zoom. When false, it is drawn in screen space at a
+            // constant size and each object's world anchor is converted to screen coordinates
+            // below so it still follows the zoomed world.
+            bool scaleWithZoom = isGump || (ProfileManager.CurrentProfile?.OverheadsScaleWithZoom ?? true);
+            Camera camera = Client.Game.Scene?.Camera;
+
+            // World overhead text is stored in world/game coordinates. When it scales with the zoom
+            // it is drawn under the camera's ViewTransformMatrix, so hit-test against the mouse
+            // translated into that same world space. When it is drawn in screen space at a constant
+            // size, hit-test against the raw viewport-relative mouse position instead. Gump text is
+            // already in screen coordinates, so the raw mouse position is correct there too.
             if (!isGump)
             {
-                mouseX = SelectedObject.TranslatedMousePositionByViewport.X;
-                mouseY = SelectedObject.TranslatedMousePositionByViewport.Y;
+                if (scaleWithZoom)
+                {
+                    mouseX = SelectedObject.TranslatedMousePositionByViewport.X;
+                    mouseY = SelectedObject.TranslatedMousePositionByViewport.Y;
+                }
+                else if (camera != null)
+                {
+                    mouseX = Mouse.Position.X - camera.Bounds.X;
+                    mouseY = Mouse.Position.Y - camera.Bounds.Y;
+                }
             }
 
             for (TextObject o = DrawPointer; o != null; o = o.DLeft)
@@ -67,6 +82,21 @@ namespace ClassicUO.Game.Managers
                 }
 
                 Point pos = o.RealScreenPosition;
+
+                if (!scaleWithZoom && camera != null)
+                {
+                    // RealScreenPosition already bakes in this text's own centering (half width)
+                    // and vertical stacking. Recover the object's world anchor, convert only that
+                    // anchor to screen space, then re-apply the centering/stacking at native size
+                    // so the text stays glued to the object without scaling with the zoom.
+                    int halfWidth = o.TextBox.Width >> 1;
+                    int stack = o.OffsetY + o.TextBox.Height;
+
+                    Point anchor = camera.WorldToScreen(new Point(pos.X + halfWidth, pos.Y + stack));
+
+                    pos.X = anchor.X - halfWidth;
+                    pos.Y = anchor.Y - stack;
+                }
 
                 if (o.TextBox.PixelCheck(mouseX - pos.X - startX, mouseY - pos.Y - startY))
                 {

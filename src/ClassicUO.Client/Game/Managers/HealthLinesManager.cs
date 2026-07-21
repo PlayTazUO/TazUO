@@ -48,6 +48,12 @@ namespace ClassicUO.Game.Managers
             Renderer.Animations.Animations animations = Client.Game.UO.Animations;
             bool isEnabled = IsEnabled;
 
+            // When false, health bars/overhead text are drawn in screen space at a constant size
+            // (see GameScene.DrawOverheads). Their sprite-relative anchors are converted from world
+            // to screen space below so they still follow the zoomed world, but their own pixel
+            // dimensions no longer scale with the camera zoom.
+            bool scaleWithZoom = ProfileManager.CurrentProfile.OverheadsScaleWithZoom;
+
             foreach (Mobile mobile in _world.Mobiles.Values)
             {
                 if (mobile.IsDestroyed)
@@ -131,13 +137,20 @@ namespace ClassicUO.Game.Managers
                                     p1.Y += 22;
                                 }
 
-                                // NOTE: Do NOT call Camera.WorldToScreen here. This overhead pass is
-                                // already drawn through a batcher begun with Camera.ViewTransformMatrix
-                                // (see GameScene.DrawOverheads), so the camera transform is applied
-                                // automatically. The health bar below uses world coordinates directly for
-                                // the same reason. Applying WorldToScreen manually transforms the position a
-                                // second time, which made the percent text drift in a radius around the
-                                // mobile as the zoom level changed instead of staying centered on top.
+                                // When scaling with zoom, this overhead pass is drawn through a batcher
+                                // begun with Camera.ViewTransformMatrix (see GameScene.DrawOverheads), so
+                                // the camera transform is applied automatically and world coordinates are
+                                // used directly. Applying WorldToScreen manually in that case transforms the
+                                // position a second time, which made the percent text drift in a radius
+                                // around the mobile as the zoom changed instead of staying centered on top.
+                                // When NOT scaling with zoom the pass is drawn in screen space, so the
+                                // sprite-relative anchor must be converted here (before the native texture
+                                // offsets below) so the text stays glued to the mobile at a constant size.
+                                if (!scaleWithZoom)
+                                {
+                                    p1 = camera.WorldToScreen(p1);
+                                }
+
                                 p1.X -= (mobile.HitsTexture.Width >> 1) + 5;
                                 p1.Y -= mobile.HitsTexture.Height;
 
@@ -169,7 +182,15 @@ namespace ClassicUO.Game.Managers
                 }
 
                 p.X -= 5;
-                //p = Client.Game.Scene.Camera.WorldToScreen(p);
+
+                // See the note above: only convert the sprite anchor to screen space when the pass
+                // is drawn in screen space (constant size). The bar's own pixel dimensions below are
+                // applied afterwards so they stay native.
+                if (!scaleWithZoom)
+                {
+                    p = camera.WorldToScreen(p);
+                }
+
                 p.X -= BAR_WIDTH_HALF;
                 p.Y -= BAR_HEIGHT_HALF;
 
