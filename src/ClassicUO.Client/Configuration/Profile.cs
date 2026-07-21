@@ -1174,6 +1174,10 @@ namespace ClassicUO.Configuration
             var gumps = new List<Gump>();
             List<(Gump gump, GumpType type, int x, int y, uint serial, uint parent, XmlElement xml)> nestedGumps = new();
 
+            // Seed the in-memory gump position cache from the permanent (database-backed) positions so
+            // pinned gumps reopen at their saved location. Seeded before the XML gumps are restored below.
+            UIManager.LoadPersistentPositions();
+
             // load skillsgroup
             world.SkillsGroupManager.Load();
 

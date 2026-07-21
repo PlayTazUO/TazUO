@@ -584,6 +584,9 @@ internal static class GumpHelpers
         gump.Update();
         gump.SetInScreen();
 
+        // Persist this server gump's position immediately if the user opted to save all gumps.
+        UIManager.AutoSaveGumpPositionIfEnabled(gump);
+
         if (CUOEnviroment.Debug)
             GameActions.Print(world, $"GumpID: {gumpID}");
 
