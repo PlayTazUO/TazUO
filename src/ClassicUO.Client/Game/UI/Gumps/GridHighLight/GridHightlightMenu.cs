@@ -172,20 +172,28 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
             RunFileDialog(world, true, TazLang.Get("gridhighlight_export_dialog"), file =>
             {
-                if (Directory.Exists(file))
+                try
                 {
-                    // If the path is a directory, append default filename
-                    file = Path.Combine(file, "highlights.json");
-                }
-                else if (!Path.HasExtension(file))
-                {
-                    // If it's not a directory and has no extension, assume they meant a file name
-                    file += ".json";
-                }
+                    if (Directory.Exists(file))
+                    {
+                        // If the path is a directory, append default filename
+                        file = Path.Combine(file, "highlights.json");
+                    }
+                    else if (!Path.HasExtension(file))
+                    {
+                        // If it's not a directory and has no extension, assume they meant a file name
+                        file += ".json";
+                    }
 
-                string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(file, json);
-                GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
+                    string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(file, json);
+                    GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
+                }
+                catch (Exception ex)
+                {
+                    GameActions.Print(world, TazLang.Get("gridhighlight_export_error"), Constants.HUE_ERROR);
+                    Log.Error(ex.ToString());
+                }
             });
         }
 
