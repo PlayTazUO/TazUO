@@ -374,6 +374,11 @@ namespace ClassicUO.Utility
 
         public static string GetPluralAdjustedString(string str, bool plural = false)
         {
+            if (string.IsNullOrEmpty(str))
+            {
+                return str;
+            }
+
             if (str.Contains("%"))
             {
                 string[] parts = str.Split(new[] { '%' }, System.StringSplitOptions.RemoveEmptyEntries);
