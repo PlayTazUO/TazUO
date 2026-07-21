@@ -191,8 +191,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             nameInput.TextChangedByUser += (_, _) => property.Name = nameInput.Text ?? "";
 
             // Property picker: a suggestion dropdown that fills the editable name box next to it.
+            // Setting Text programmatically doesn't raise TextChangedByUser, so commit the value to
+            // the model here too or the picked property is shown but never saved.
             var propCell = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            propCell.Widgets.Add(SuggestionCombo(values, v => nameInput.Text = v));
+            propCell.Widgets.Add(SuggestionCombo(values, v =>
+            {
+                nameInput.Text = v;
+                property.Name = v;
+            }));
             propCell.Widgets.Add(nameInput);
             grid.AddWidget(propCell, row, 0);
 
@@ -354,8 +360,14 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             var input = new MyraInputBox { Text = list[index] ?? "", Width = 230 };
             input.TextChangedByUser += (_, _) => list[index] = input.Text ?? "";
 
+            // Setting Text programmatically doesn't raise TextChangedByUser, so commit the value to
+            // the model here too or the picked value is shown but never saved.
             if (suggestions != null && suggestions.Length > 0)
-                row.Widgets.Add(SuggestionCombo(suggestions, v => input.Text = v));
+                row.Widgets.Add(SuggestionCombo(suggestions, v =>
+                {
+                    input.Text = v;
+                    list[index] = v;
+                }));
 
             row.Widgets.Add(input);
 
