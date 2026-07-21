@@ -19,8 +19,7 @@ namespace ClassicUO.Game.GameObjects
     /// it (e.g. a mobile in front of a wall).</description></item>
     /// </list>
     ///
-    /// To add a "between-layer" effect, pick the appropriate band. For example, a ground decal that must
-    /// sit on top of the land but below statics uses <see cref="LandOverlay"/>; an effect that must sit
+    /// To add a "between-layer" effect, pick the appropriate band. For example an effect that must sit
     /// on top of statics but below mobiles uses <see cref="SurfaceOverlay"/>.
     /// </summary>
     public static class RenderDepth
@@ -48,13 +47,7 @@ namespace ClassicUO.Game.GameObjects
         public const float ObjectShadow = 0.25f;
 
         /// <summary>Land / terrain tile surface.</summary>
-        public const float Land = 0.30f;
-
-        /// <summary>
-        /// NEW band: on top of the land but below statics. Use for ground decals, spell/AoE tile
-        /// indicators, footprints, terrain glows, etc.
-        /// </summary>
-        public const float LandOverlay = 0.40f;
+        public const float Land = 0.50f;
 
         /// <summary>Base layer of the animated-water effect, drawn just under <see cref="Surface"/> to avoid z-fighting with the animated top layer.</summary>
         public const float SurfaceWetBase = 0.49f;
