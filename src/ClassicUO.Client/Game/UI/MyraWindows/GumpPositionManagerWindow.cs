@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
@@ -83,7 +84,22 @@ public sealed class GumpPositionManagerWindow : MyraControl
         }));
         toolbar.Widgets.Add(new MyraLabel("Tick a gump to keep its position permanently.", MyraLabel.TextStyle.P));
 
+        bool autoSave = ProfileManager.CurrentProfile?.AutoSaveGumpPositions == true;
+        var autoSaveCheck = MyraCheckButton.CreateWithCallback(
+            autoSave,
+            OnToggleAutoSaveAll,
+            "Save all gumps automatically");
+
+        var warning = new MyraLabel(
+            "Some servers may send a significant amount of unique gumps, use with caution",
+            MyraLabel.TextStyle.P)
+        {
+            TextColor = new Color(230, 170, 60)
+        };
+
         root.Widgets.Add(toolbar);
+        root.Widgets.Add(autoSaveCheck);
+        root.Widgets.Add(warning);
         root.Widgets.Add(_openHeader);
         root.Widgets.Add(new ScrollViewer
         {
@@ -190,6 +206,25 @@ public sealed class GumpPositionManagerWindow : MyraControl
             UIManager.RemovePersistentPosition(row.Serial);
 
         RefreshSavedList();
+    }
+
+    private void OnToggleAutoSaveAll(bool enabled)
+    {
+        if (ProfileManager.CurrentProfile != null)
+            ProfileManager.CurrentProfile.AutoSaveGumpPositions = enabled;
+
+        // Enabling it immediately pins every server gump that is already open.
+        if (enabled)
+        {
+            foreach (IGui gui in UIManager.Gumps)
+            {
+                if (gui is Gump { IsDisposed: false } gump)
+                    UIManager.AutoSaveGumpPositionIfEnabled(gump);
+            }
+        }
+
+        RefreshSavedList();
+        RefreshOpenList();
     }
 
     private void CenterGump(OpenGumpRow row)

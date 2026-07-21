@@ -349,6 +349,28 @@ namespace ClassicUO.Game.Managers
         /// <summary>Whether the given gump serial currently has a permanently saved position.</summary>
         public static bool IsPositionPersistent(uint serial) => _persistentPositionSerials.Contains(serial);
 
+        /// <summary>A friendly display name for a gump used when persisting its position.</summary>
+        public static string GetGumpDisplayName(Gump gump) =>
+            gump.GumpType != Game.UI.Gumps.GumpType.None ? gump.GumpType.ToString() : gump.GetType().Name;
+
+        /// <summary>
+        /// When the "save all gumps automatically" profile option is enabled, permanently saves an open
+        /// server gump's position (once). No-op for non-server gumps or gumps already saved.
+        /// </summary>
+        public static void AutoSaveGumpPositionIfEnabled(Gump gump)
+        {
+            if (gump == null || gump.ServerSerial == 0)
+                return;
+
+            if (ProfileManager.CurrentProfile?.AutoSaveGumpPositions != true)
+                return;
+
+            if (_persistentPositionSerials.Contains(gump.ServerSerial))
+                return;
+
+            SetPositionPersistent(gump.ServerSerial, GetGumpDisplayName(gump), gump.Location);
+        }
+
         /// <summary>
         /// Permanently saves a gump's position under a friendly name, updating both the in-memory cache
         /// and the backing database.

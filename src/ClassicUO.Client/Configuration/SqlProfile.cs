@@ -176,4 +176,10 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "strip_chat_username_id", false)]
         public partial bool StripChatUsernameId { get; set; }
+
+        // When true, every server gump's position is permanently saved automatically (see the Gump
+        // Position Manager). The backing database is global, so this setting is global too.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "auto_save_gump_positions", false)]
+        public partial bool AutoSaveGumpPositions { get; set; }
 }
