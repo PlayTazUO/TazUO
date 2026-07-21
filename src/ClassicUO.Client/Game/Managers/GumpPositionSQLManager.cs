@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
-using Dapper;
+using Dapper.Contrib.Extensions;
 
 namespace ClassicUO.Game.Managers
 {
@@ -46,6 +46,16 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
+        [Table("gump_positions")]
+        private sealed class GumpPositionRecord
+        {
+            [ExplicitKey]
+            public long Serial { get; set; }
+            public string Name { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+        }
+
         private const string DB_FILE = "gump_positions.db";
 
         private static readonly SqliteTableSchema PositionsSchema = new("gump_positions",
@@ -59,6 +69,9 @@ namespace ClassicUO.Game.Managers
             InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        // Table creation/migration goes through the base class's schema reconciliation; row-level CRUD
+        // below goes through Dapper.Contrib's typed helpers (Get/GetAll/Insert/Update/Delete) instead of
+        // hand-written SQL, matching the FriendliesSQLManager conventions.
         private async Task InitializeAsync()
         {
             try
@@ -80,13 +93,16 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(connection => connection.ExecuteAsync(
-                    """
-                    INSERT INTO gump_positions (serial, name, x, y)
-                    VALUES (@Serial, @Name, @X, @Y)
-                    ON CONFLICT(serial) DO UPDATE SET name = excluded.name, x = excluded.x, y = excluded.y
-                    """,
-                    new { Serial = (long)serial, Name = name ?? string.Empty, X = x, Y = y })).ConfigureAwait(false);
+                await WithConnectionAsync(async connection =>
+                {
+                    GumpPositionRecord record = new() { Serial = serial, Name = name ?? string.Empty, X = x, Y = y };
+                    GumpPositionRecord existing = await connection.GetAsync<GumpPositionRecord>((long)serial).ConfigureAwait(false);
+
+                    if (existing == null)
+                        await connection.InsertAsync(record).ConfigureAwait(false);
+                    else
+                        await connection.UpdateAsync(record).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -102,9 +118,17 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(connection => connection.ExecuteAsync(
-                    "UPDATE gump_positions SET x = @X, y = @Y WHERE serial = @Serial",
-                    new { Serial = (long)serial, X = x, Y = y })).ConfigureAwait(false);
+                await WithConnectionAsync(async connection =>
+                {
+                    GumpPositionRecord existing = await connection.GetAsync<GumpPositionRecord>((long)serial).ConfigureAwait(false);
+
+                    if (existing == null)
+                        return;
+
+                    existing.X = x;
+                    existing.Y = y;
+                    await connection.UpdateAsync(existing).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -117,9 +141,8 @@ namespace ClassicUO.Game.Managers
         {
             try
             {
-                await WithConnectionAsync(connection => connection.ExecuteAsync(
-                    "DELETE FROM gump_positions WHERE serial = @Serial",
-                    new { Serial = (long)serial })).ConfigureAwait(false);
+                await WithConnectionAsync(connection =>
+                    connection.DeleteAsync(new GumpPositionRecord { Serial = serial })).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -134,9 +157,7 @@ namespace ClassicUO.Game.Managers
             {
                 return await WithConnectionAsync(async connection =>
                 {
-                    IEnumerable<PositionRow> rows = await connection.QueryAsync<PositionRow>(
-                        "SELECT serial AS Serial, name AS Name, x AS X, y AS Y FROM gump_positions").ConfigureAwait(false);
-
+                    IEnumerable<GumpPositionRecord> rows = await connection.GetAllAsync<GumpPositionRecord>().ConfigureAwait(false);
                     return rows.Select(r => new SavedGumpPosition((uint)r.Serial, r.Name, r.X, r.Y)).ToList();
                 }).ConfigureAwait(false);
             }
@@ -160,15 +181,6 @@ namespace ClassicUO.Game.Managers
 
             if (ReferenceEquals(Instance, this))
                 Instance = null;
-        }
-
-        // Dapper materialization target; the public API exposes the immutable SavedGumpPosition instead.
-        private sealed class PositionRow
-        {
-            public long Serial { get; set; }
-            public string Name { get; set; }
-            public int X { get; set; }
-            public int Y { get; set; }
         }
     }
 }
