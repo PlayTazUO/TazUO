@@ -165,4 +165,10 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, "")]
         public partial string VotedPolls { get; set; }
+
+        // When false, overheads (names, health bars, overhead text) keep a constant on-screen size
+        // regardless of the camera zoom. Their positions still follow the zoomed world.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEADS_SCALE_WITH_ZOOM, true)]
+        public partial bool OverheadsScaleWithZoom { get; set; }
 }

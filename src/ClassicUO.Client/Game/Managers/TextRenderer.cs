@@ -36,16 +36,30 @@ namespace ClassicUO.Game.Managers
             int mouseX = Mouse.Position.X;
             int mouseY = Mouse.Position.Y;
 
-            // World overhead text is drawn in screen space at a constant size (see
-            // GameScene.DrawOverheads), so it is hit-tested against the raw viewport-relative mouse
-            // position. Gump text is already in screen coordinates, so the raw mouse position is
-            // correct there too.
+            // When true, world overhead text is drawn under the camera's ViewTransformMatrix and
+            // therefore scales with the camera zoom. When false, it is drawn in screen space at a
+            // constant size and each object's world anchor is converted to screen coordinates
+            // below so it still follows the zoomed world.
+            bool scaleWithZoom = isGump || (ProfileManager.CurrentProfile?.OverheadsScaleWithZoom ?? true);
             Camera camera = Client.Game.Scene?.Camera;
 
-            if (!isGump && camera != null)
+            // World overhead text is stored in world/game coordinates. When it scales with the zoom
+            // it is drawn under the camera's ViewTransformMatrix, so hit-test against the mouse
+            // translated into that same world space. When it is drawn in screen space at a constant
+            // size, hit-test against the raw viewport-relative mouse position instead. Gump text is
+            // already in screen coordinates, so the raw mouse position is correct there too.
+            if (!isGump)
             {
-                mouseX = Mouse.Position.X - camera.Bounds.X;
-                mouseY = Mouse.Position.Y - camera.Bounds.Y;
+                if (scaleWithZoom)
+                {
+                    mouseX = SelectedObject.TranslatedMousePositionByViewport.X;
+                    mouseY = SelectedObject.TranslatedMousePositionByViewport.Y;
+                }
+                else if (camera != null)
+                {
+                    mouseX = Mouse.Position.X - camera.Bounds.X;
+                    mouseY = Mouse.Position.Y - camera.Bounds.Y;
+                }
             }
 
             for (TextObject o = DrawPointer; o != null; o = o.DLeft)
@@ -69,7 +83,7 @@ namespace ClassicUO.Game.Managers
 
                 Point pos = o.RealScreenPosition;
 
-                if (!isGump && camera != null)
+                if (!scaleWithZoom && camera != null)
                 {
                     // RealScreenPosition already bakes in this text's own centering (half width)
                     // and vertical stacking. Recover the object's world anchor, convert only that
