@@ -339,7 +339,7 @@ namespace ClassicUO.Game
             if (ProfileManager.CurrentProfile == null)
             {
                 string lastChar = LastCharacterManager.GetLastCharacter(LoginScene.Account, ServerName);
-                ProfileManager.Load(ServerName, LoginScene.Account, lastChar);
+                ProfileManager.Load(ServerName, LoginScene.Account, lastChar, serial);
             }
 
             if (Player != null)

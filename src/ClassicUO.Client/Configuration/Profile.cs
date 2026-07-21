@@ -125,6 +125,7 @@ namespace ClassicUO.Configuration
         [JsonIgnore] public string Username { get; set => SetProperty(ref field, value); }
         [JsonIgnore] public string ServerName { get; set => SetProperty(ref field, value); }
         [JsonIgnore] public string CharacterName { get; set => SetProperty(ref field, value); }
+        [JsonIgnore] public uint Serial { get; set => SetProperty(ref field, value); }
 
         // voice recognition
         public bool VoiceRecognitionEnabled { get; set => SetProperty(ref field, value); } = false;
@@ -242,19 +243,6 @@ namespace ClassicUO.Configuration
         // the central hotkey system (hotkeys.json); this per-profile list records which scripts to
         // re-register on load. Entries whose script no longer exists are pruned on load.
         public List<string> ScriptHotkeys { get; set => SetProperty(ref field, value); } = new List<string>();
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
-        public partial bool BandageAgentUseJournalTrigger { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
-        public partial string BandageAgentJournalMessages { get; set; }
-
-        // Semicolon-separated list of poll ids the user has already voted on (see PollsWindow / FirebasePollsManager).
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, "")]
-        public partial string VotedPolls { get; set; }
 
         public bool EnableDeathScreen { get; set => SetProperty(ref field, value); } = true;
         public bool EnableBlackWhiteEffect { get; set => SetProperty(ref field, value); } = true;
@@ -467,26 +455,12 @@ namespace ClassicUO.Configuration
         public bool WorldMapAllowPositionalTarget { get; set => SetProperty(ref field, value); } = true;
 
         [JsonIgnore]
-        public int WebMapServerPort
-        {
-            get;
-            set
-            {
-                if (SetProperty(ref field, value))
-                    Client.Settings?.SetAsync(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, value);
-            }
-        }
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, 8088)]
+        public partial int WebMapServerPort { get; set; }
 
         [JsonIgnore]
-        public bool WebMapAutoStart
-        {
-            get;
-            set
-            {
-                if (SetProperty(ref field, value))
-                    Client.Settings?.SetAsync(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_AUTO_START, value);
-            }
-        }
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_AUTO_START, false)]
+        public partial bool WebMapAutoStart { get; set; }
 
         public int AutoFollowDistance { get; set => SetProperty(ref field, value); } = 1;
         public bool DisableAutoFollowAlt { get; set => SetProperty(ref field, value); } = false;
@@ -868,114 +842,65 @@ namespace ClassicUO.Configuration
         public int BuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
         public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
-        public bool ControllerEnabled { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableScavenger { get; set => SetProperty(ref field, value); } = true;
-        public bool CounterGumpLocked { get; set => SetProperty(ref field, value); }
-        public bool NearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
-        public bool SpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
-        public byte ForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
-        public ushort ForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
-        public bool ForceHouseTransparency { get; set => SetProperty(ref field, value); }
-        public ulong HideHudGumpFlags { get; set => SetProperty(ref field, value); }
-        public bool DisableGrayEnemies { get; set => SetProperty(ref field, value); }
-        public bool EnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
-        public ushort PostProcessingType { get; set => SetProperty(ref field, value); }
-        public bool DisableHotkeys { get; set => SetProperty(ref field, value); }
-        public bool DisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
-        public bool EnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete]
+        [JsonPropertyName("controller_enabled")]
+        public bool OldControllerEnabled { get; set => SetProperty(ref field, value); } = true;
 
-        // SQL-backed settings — property implementations are source-generated into Profile.SqlSettings.g.cs
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_WEATHER, false)]
-        public partial bool DisableWeather { get; set; }
+        [Obsolete]
+        [JsonPropertyName("enable_scavenger")]
+        public bool OldEnableScavenger { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.SCALE_PETS_ENABLED, false)]
-        public partial bool EnablePetScaling { get; set; }
+        [Obsolete]
+        [JsonPropertyName("counter_gump_locked")]
+        public bool OldCounterGumpLocked { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_UNEQUIP_FOR_ACTIONS, false)]
-        public partial bool AutoUnequipForActions { get; set; }
+        [Obsolete]
+        [JsonPropertyName("nearby_loot_conceals_container_on_open")]
+        public bool OldNearbyLootConcealsContainerOnOpen { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.MIN_GUMP_MOVE_DIST, 5)]
-        public partial int MinGumpMoveDistance { get; set; }
+        [Obsolete]
+        [JsonPropertyName("spell_bar__show_hotkeys")]
+        public bool OldSpellBar_ShowHotkeys { get; set => SetProperty(ref field, value); } = true;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_HEAL_SPELL, 29)]
-        public partial int QuickHealSpell { get; set; }
+        [Obsolete]
+        [JsonPropertyName("forced_house_transparency")]
+        public byte OldForcedHouseTransparency { get; set => SetProperty(ref field, value); } = 40;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_CURE_SPELL, 11)]
-        public partial int QuickCureSpell { get; set; }
+        [Obsolete]
+        [JsonPropertyName("forced_transparency_house_tile_hue")]
+        public ushort OldForcedTransparencyHouseTileHue { get; set => SetProperty(ref field, value); } = 0;
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.QUEUE_MANUAL_ITEM_MOVES, false)]
-        public partial bool QueueManualItemMoves { get; set; }
+        [Obsolete]
+        [JsonPropertyName("force_house_transparency")]
+        public bool OldForceHouseTransparency { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_OPEN_DOORS_HIDDEN, true)]
-        public partial bool AutoOpenDoorsIfHidden { get; set; }
+        [Obsolete]
+        [JsonPropertyName("hide_hud_gump_flags")]
+        public ulong OldHideHudGumpFlags { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.QUEUE_MANUAL_ITEM_USES, false)]
-        public partial bool QueueManualItemUses { get; set; }
+        [Obsolete]
+        [JsonPropertyName("disable_gray_enemies")]
+        public bool OldDisableGrayEnemies { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.HUE_CORPSE_AFTER_AUTOLOOT, false)]
-        public partial bool HueCorpseAfterAutoloot { get; set; }
+        [Obsolete]
+        [JsonPropertyName("enable_post_processing_effects")]
+        public bool OldEnablePostProcessingEffects { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_RETRY_DELAY, 5000)]
-        public partial int AutoLootRetryDelay { get; set; }
+        [Obsolete]
+        [JsonPropertyName("post_processing_type")]
+        public ushort OldPostProcessingType { get; set => SetProperty(ref field, value); }
 
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
-        public partial int PathfindingZLevelDiff { get; set; }
+        [Obsolete]
+        [JsonPropertyName("disable_hotkeys")]
+        public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
+        
+        [Obsolete]
+        [JsonPropertyName("disable_dismount_in_war_mode")]
+        public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
 
-        // Maximum number of A* nodes the local (in-game) pathfinder will expand before giving up.
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
-        public partial int PathfindingMaxNodes { get; set; }
-
-        // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_NODES, 1000000)]
-        public partial int WorldMapPathfindingMaxNodes { get; set; }
-
-        // How many times world map navigation will replan around a blocked tile before giving up.
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_RETRIES, 3)]
-        public partial int WorldMapPathfindingMaxRetries { get; set; }
-
-        // Wall-clock cap (milliseconds) on a single world map pathfinding search.
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_TIMEOUT, 5000)]
-        public partial int WorldMapPathfindingTimeout { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.SINGLE_CLICK_SET_LAST_TARG, true)]
-        public partial bool SingleClickMobileSetsLastTarget { get; set; }
-
-        // Hand-written: has side-effect beyond SetAsync
-        [JsonIgnore]
-        public bool OutlineMobilesNotoriety
-        {
-            get;
-            set
-            {
-                if (SetProperty(ref field, value))
-                    _ = Client.Settings.SetAsync(SettingsScope.Global, Constants.SqlSettings.OUTLINE_NOTORIETIES, value);
-            }
-        }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
-        public partial uint DisabledOverheadMessageTypes { get; set; }
-
-        [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_AUTOLOOT_RETRY_CORPSE, false)]
-        public partial bool DisableAutolootCorpseRetry { get; set; } = false;
+        [Obsolete]
+        [JsonPropertyName("enable_a_sync_map_loading")]
+        public bool OldEnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
 
         private long lastSave;
 
@@ -987,38 +912,49 @@ namespace ClassicUO.Configuration
                 return;
             }
 
-            //These are fine if we continue without loading them yet (non-Char scoped)
-            Client.Settings.GetAllAsync(SettingsScope.Global).ContinueWith(t =>
+            Task<Dictionary<string, string>> globalTask = Client.Settings.GetAllAsync(SettingsScope.Global);
+            Task<Dictionary<string, string>> accountTask = Client.Settings.GetAllAsync(SettingsScope.Account);
+            Task<Dictionary<string, string>> serverTask = Client.Settings.GetAllAsync(SettingsScope.Server);
+            Task<Dictionary<string, string>> charTask = Client.Settings.GetAllAsync(SettingsScope.Char);
+
+            Task.WhenAll(globalTask, accountTask, serverTask, charTask).ContinueWith(_ =>
             {
-                Dictionary<string, string> kvp = t.Result;
                 MainThreadQueue.EnqueueAction(() =>
                 {
-                    LoadGeneratedGlobalSqlSettings(kvp);
+                    LoadGeneratedGlobalSqlSettings(globalTask.Result);
+                    LoadGeneratedAccountSqlSettings(accountTask.Result);
+                    LoadGeneratedServerSqlSettings(serverTask.Result);
+                    LoadGeneratedCharSqlSettings(charTask.Result);
+
+                    HandleMigration();
                 });
-            });
-
-            //These must be waited before continue for various purposes elsewhere
-            Task[] mustWait = [
-                Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_AUTO_START, false, b => WebMapAutoStart = b),
-                Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.WEB_MAP_PORT, 8088, p => WebMapServerPort = p),
-                Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.OUTLINE_NOTORIETIES, false, p => OutlineMobilesNotoriety = p)
-            ];
-
-            Task.WaitAll(mustWait, 5000);
+            }).Wait(10000);
 
             MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
         }
 
-        internal void LoadCharScopedSettings()
+        private void HandleMigration()
         {
-            if (Client.Settings == null)
+            if (ProfileMigrationVersion < 1) //0
             {
-                Log.Error("Warning, char scoped SQL settings failed to load!");
-                return;
-            }
+                EnableASyncMapLoading = OldEnableASyncMapLoading;
+                DisableDismountInWarMode = OldDisableDismountInWarMode;
+                DisableHotkeys = OldDisableHotkeys;
+                ControllerEnabled = OldControllerEnabled;
+                EnableScavenger = OldEnableScavenger;
+                CounterGumpLocked = OldCounterGumpLocked;
+                NearbyLootConcealsContainerOnOpen = OldNearbyLootConcealsContainerOnOpen;
+                SpellBar_ShowHotkeys = OldSpellBar_ShowHotkeys;
+                ForcedTransparencyHouseTileHue = OldForcedTransparencyHouseTileHue;
+                ForceHouseTransparency = OldForceHouseTransparency;
+                DisableGrayEnemies = OldDisableGrayEnemies;
+                EnablePostProcessingEffects = OldEnablePostProcessingEffects;
+                PostProcessingType = OldPostProcessingType;
+                ForcedHouseTransparency = OldForcedHouseTransparency;
+                HideHudGumpFlags = OldHideHudGumpFlags;
 
-            //Load Char-scoped settings after player is created (when serial is available)
-            LoadGeneratedCharSqlSettings();
+                ProfileMigrationVersion++;
+            }
         }
 
         internal void Save(World world, string path, bool saveGumps = true)

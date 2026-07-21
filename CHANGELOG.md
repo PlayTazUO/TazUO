@@ -7,6 +7,9 @@ All notable changes to TazUO will be recorded here.
 ### Fixes
 * Fixed a crash when exporting grid highlight settings to an invalid or inaccessible file path; the client now shows an error message instead - [P.R 747](https://github.com/PlayTazUO/TazUO/pull/747) ([bittiez](https://github.com/bittiez))
 
+### Misc
+* Began migrating settings from profile.json to settings.db, this will take some time. - ([bittiez](https://github.com/bittiez))
+
 ## V5.4.0
 
 ### Features

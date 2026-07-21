@@ -178,7 +178,7 @@ namespace ClassicUO.Game.Managers
             {
                 case SettingsScope.Char:
                     return ProfileManager.CurrentProfile != null
-                        ? $"{ProfileManager.CurrentProfile.ServerName}_{ProfileManager.CurrentProfile.Username}_{World.Instance?.Player?.Serial ?? 0}"
+                        ? $"{ProfileManager.CurrentProfile.ServerName}_{ProfileManager.CurrentProfile.Username}_{ProfileManager.CurrentProfile.Serial}"
                         : "CHAR";
                 case SettingsScope.Account:
                     return ProfileManager.CurrentProfile != null
