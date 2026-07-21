@@ -88,7 +88,7 @@ namespace ClassicUO.Game.Managers
             try
             {
                 await EnsureTableAsync(PositionsSchema).ConfigureAwait(false);
-                await BackfillAndPurgeAsync().ConfigureAwait(false);
+                await PurgeStaleAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -98,14 +98,12 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>
-        /// One-time housekeeping run at startup: stamps a "last seen" on rows migrated from the old
-        /// schema (so an upgrade doesn't instantly purge them) and deletes any pinned position that has
-        /// not been seen within the retention window.
+        /// Startup housekeeping: deletes any pinned position that has not been seen within the retention
+        /// window (120 days).
         /// </summary>
-        private Task BackfillAndPurgeAsync()
+        private Task PurgeStaleAsync()
         {
-            long now = NowUnix();
-            long cutoff = now - RETENTION_SECONDS;
+            long cutoff = NowUnix() - RETENTION_SECONDS;
 
             return WithConnectionAsync(async connection =>
             {
@@ -113,16 +111,8 @@ namespace ClassicUO.Game.Managers
 
                 foreach (GumpPositionRecord row in rows)
                 {
-                    if (row.last_seen == 0)
-                    {
-                        // Row predates the last_seen column; treat it as just seen rather than ancient.
-                        row.last_seen = now;
-                        await connection.UpdateAsync(row).ConfigureAwait(false);
-                    }
-                    else if (row.last_seen < cutoff)
-                    {
+                    if (row.last_seen < cutoff)
                         await connection.DeleteAsync(row).ConfigureAwait(false);
-                    }
                 }
             });
         }
