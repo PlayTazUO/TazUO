@@ -31,6 +31,14 @@ public sealed class GumpPositionManagerWindow : MyraControl
     private MyraLabel _openHeader = null!;
     private MyraLabel _savedHeader = null!;
 
+    // Identify blink state: toggles _identifyGump.IsVisible on/off IDENTIFY_TOGGLES times, one toggle
+    // every IDENTIFY_STEP_MS, driven off Time.Ticks from this window's Update().
+    private const int IDENTIFY_TOGGLES = 10; // 5 off/on cycles
+    private const int IDENTIFY_STEP_MS = 300; // 10 * 300ms = 3 seconds
+    private Gump? _identifyGump;
+    private int _identifyTogglesLeft;
+    private uint _identifyNextToggle;
+
     public GumpPositionManagerWindow() : base("Gump Position Manager")
     {
         BuildColumns();
@@ -77,9 +85,19 @@ public sealed class GumpPositionManagerWindow : MyraControl
 
         root.Widgets.Add(toolbar);
         root.Widgets.Add(_openHeader);
-        root.Widgets.Add(new ScrollViewer { MaxHeight = 230, Content = _openTable });
+        root.Widgets.Add(new ScrollViewer
+        {
+            MaxHeight = 230,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Content = _openTable
+        });
         root.Widgets.Add(_savedHeader);
-        root.Widgets.Add(new ScrollViewer { MaxHeight = 230, Content = _savedTable });
+        root.Widgets.Add(new ScrollViewer
+        {
+            MaxHeight = 230,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Content = _savedTable
+        });
 
         SetRootContent(root);
     }
@@ -122,6 +140,14 @@ public sealed class GumpPositionManagerWindow : MyraControl
             Proportion = new Proportion(ProportionType.Auto),
             CellContentAlignment = HorizontalAlignment.Center,
             CellFactory = row => new MyraButton("Center", () => CenterGump(row))
+        });
+        _openColumns.Add(new RulebaseColumn<OpenGumpRow>
+        {
+            Header = "Identify",
+            HeaderTooltip = "Flash this gump on and off so you can spot it",
+            Proportion = new Proportion(ProportionType.Auto),
+            CellContentAlignment = HorizontalAlignment.Center,
+            CellFactory = row => new MyraButton("Identify", () => StartIdentify(row.Gump))
         });
 
         _savedColumns.Add(new RulebaseColumn<SavedGumpRow>
@@ -182,7 +208,62 @@ public sealed class GumpPositionManagerWindow : MyraControl
         RefreshOpenList();
     }
 
+    /// <summary>Begins the identify blink for a gump (finishing any blink already in progress first).</summary>
+    private void StartIdentify(Gump gump)
+    {
+        // Restore any previously blinking gump before switching targets.
+        if (_identifyGump != null && !_identifyGump.IsDisposed)
+            _identifyGump.IsVisible = true;
+
+        _identifyGump = gump;
+        _identifyTogglesLeft = IDENTIFY_TOGGLES;
+        _identifyNextToggle = Time.Ticks;
+    }
+
     #endregion
+
+    /// <summary>Drives the identify blink off the game clock so it needs no background thread.</summary>
+    public override void Update()
+    {
+        base.Update();
+
+        if (IsDisposed)
+            return;
+
+        if (_identifyGump == null)
+            return;
+
+        if (_identifyGump.IsDisposed)
+        {
+            _identifyGump = null;
+            return;
+        }
+
+        if (Time.Ticks < _identifyNextToggle)
+            return;
+
+        if (_identifyTogglesLeft <= 0)
+        {
+            // Always leave the gump visible when the blink finishes.
+            _identifyGump.IsVisible = true;
+            _identifyGump = null;
+            return;
+        }
+
+        _identifyGump.IsVisible = !_identifyGump.IsVisible;
+        _identifyTogglesLeft--;
+        _identifyNextToggle = Time.Ticks + IDENTIFY_STEP_MS;
+    }
+
+    public override void Dispose()
+    {
+        // Don't leave a gump hidden if the window is closed mid-blink.
+        if (_identifyGump != null && !_identifyGump.IsDisposed)
+            _identifyGump.IsVisible = true;
+
+        _identifyGump = null;
+        base.Dispose();
+    }
 
     #region Refresh
 
