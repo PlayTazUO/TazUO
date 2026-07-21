@@ -9,6 +9,7 @@ All notable changes to TazUO will be recorded here.
 * Added an option to draw overheads (names, health bars, overhead text) at a constant size regardless of the camera zoom - [P.R 730](https://github.com/PlayTazUO/TazUO/pull/730) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed an IndexOutOfRangeException crash in FontStashSharp caused by CustomToolTip building and measuring tooltip text on a background thread; the retry now runs on the main thread so the shared, non-thread-safe font caches aren't corrupted - [P.R 753](https://github.com/PlayTazUO/TazUO/pull/753) ([bittiez](https://github.com/bittiez))
 * Fixed an ArgumentNullException crash in TrueTypeLoader.GetFont when called with a null or empty font name; it now falls back to the default embedded font - [P.R 750](https://github.com/PlayTazUO/TazUO/pull/750) ([bittiez](https://github.com/bittiez))
 * Fixed a startup crash (IndexOutOfRangeException) in the animations loader when AnimationSequence.uop contained an out-of-range animation group index - [P.R 749](https://github.com/PlayTazUO/TazUO/pull/749) ([bittiez](https://github.com/bittiez))
 * Fixed a crash when a Legion Python script was stopped at the exact moment it was displaying an error, caused by a thread interrupt surfacing while IronPython formatted the exception - [P.R 748](https://github.com/PlayTazUO/TazUO/pull/748) ([bittiez](https://github.com/bittiez))
