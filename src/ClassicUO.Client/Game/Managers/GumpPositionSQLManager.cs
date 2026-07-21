@@ -55,8 +55,10 @@ namespace ClassicUO.Game.Managers
             public int X { get; set; }
             public int Y { get; set; }
 
-            /// <summary>When this position was last saved/seen, as Unix time in seconds.</summary>
-            public long LastSeen { get; set; }
+            // Dapper.Contrib maps a property straight onto a column of the same name (there is no
+            // column-rename attribute in 2.0.78), so this property is named to match the "last_seen"
+            // column exactly. When this position was last saved/seen, as Unix time in seconds.
+            public long last_seen { get; set; }
         }
 
         private const string DB_FILE = "gump_positions.db";
@@ -111,13 +113,13 @@ namespace ClassicUO.Game.Managers
 
                 foreach (GumpPositionRecord row in rows)
                 {
-                    if (row.LastSeen == 0)
+                    if (row.last_seen == 0)
                     {
                         // Row predates the last_seen column; treat it as just seen rather than ancient.
-                        row.LastSeen = now;
+                        row.last_seen = now;
                         await connection.UpdateAsync(row).ConfigureAwait(false);
                     }
-                    else if (row.LastSeen < cutoff)
+                    else if (row.last_seen < cutoff)
                     {
                         await connection.DeleteAsync(row).ConfigureAwait(false);
                     }
@@ -135,7 +137,7 @@ namespace ClassicUO.Game.Managers
             {
                 await WithConnectionAsync(async connection =>
                 {
-                    GumpPositionRecord record = new() { Serial = serial, Name = name ?? string.Empty, X = x, Y = y, LastSeen = NowUnix() };
+                    GumpPositionRecord record = new() { Serial = serial, Name = name ?? string.Empty, X = x, Y = y, last_seen = NowUnix() };
                     GumpPositionRecord existing = await connection.GetAsync<GumpPositionRecord>((long)serial).ConfigureAwait(false);
 
                     if (existing == null)
@@ -167,7 +169,7 @@ namespace ClassicUO.Game.Managers
 
                     existing.X = x;
                     existing.Y = y;
-                    existing.LastSeen = NowUnix();
+                    existing.last_seen = NowUnix();
                     await connection.UpdateAsync(existing).ConfigureAwait(false);
                 }).ConfigureAwait(false);
             }
