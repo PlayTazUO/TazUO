@@ -29,7 +29,7 @@ namespace ClassicUO.Renderer.Gumps
             if (spriteInfo.Texture == null)
             {
                 GumpInfo gumpInfo = PNGLoader.Instance.LoadGumpTexture(idx);
-                bool loadedFromPNG = gumpInfo.Pixels != null && !gumpInfo.Pixels.IsEmpty;
+                bool loadedFromPNG = !gumpInfo.Pixels.IsEmpty;
 
                 if (gumpInfo.Pixels.IsEmpty)
                 {

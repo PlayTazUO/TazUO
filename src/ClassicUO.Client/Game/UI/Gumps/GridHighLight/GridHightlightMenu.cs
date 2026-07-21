@@ -67,7 +67,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             toolbar.Widgets.Add(new MyraButton(TazLang.Get("gridhighlight_add"), () =>
             {
                 // Passing the current count appends a fresh entry, then we redraw the list.
-                GridHighlightData.GetGridHighlightData(ProfileManager.CurrentProfile.GridHighlightSetup.Count);
+                GridHighlightData.GetGridHighlightData(GridHighlightsConfig.Current.Highlights.Count);
                 RebuildList();
             }));
 
@@ -88,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
         {
             _listPanel.Widgets.Clear();
 
-            int count = ProfileManager.CurrentProfile.GridHighlightSetup.Count;
+            int count = GridHighlightsConfig.Current.Highlights.Count;
             if (count == 0)
             {
                 _listPanel.Widgets.Add(new MyraLabel(TazLang.Get("gridhighlight_settings_desc"), MyraLabel.TextStyle.P));
@@ -168,24 +168,32 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private static void ExportGridHighlightSettings(World world)
         {
-            List<GridHighlightSetupEntry> data = ProfileManager.CurrentProfile.GridHighlightSetup;
+            List<GridHighlightSetupEntry> data = GridHighlightsConfig.Current.Highlights;
 
             RunFileDialog(world, true, TazLang.Get("gridhighlight_export_dialog"), file =>
             {
-                if (Directory.Exists(file))
+                try
                 {
-                    // If the path is a directory, append default filename
-                    file = Path.Combine(file, "highlights.json");
-                }
-                else if (!Path.HasExtension(file))
-                {
-                    // If it's not a directory and has no extension, assume they meant a file name
-                    file += ".json";
-                }
+                    if (Directory.Exists(file))
+                    {
+                        // If the path is a directory, append default filename
+                        file = Path.Combine(file, "highlights.json");
+                    }
+                    else if (!Path.HasExtension(file))
+                    {
+                        // If it's not a directory and has no extension, assume they meant a file name
+                        file += ".json";
+                    }
 
-                string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(file, json);
-                GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
+                    string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+                    File.WriteAllText(file, json);
+                    GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
+                }
+                catch (Exception ex)
+                {
+                    GameActions.Print(world, TazLang.Get("gridhighlight_export_error"), Constants.HUE_ERROR);
+                    Log.Error(ex.ToString());
+                }
             });
         }
 
@@ -200,7 +208,8 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
                 if (imported != null)
                 {
-                    ProfileManager.CurrentProfile.GridHighlightSetup.AddRange(imported);
+                    GridHighlightsConfig.Current.Highlights.AddRange(imported);
+                    GridHighlightsConfig.Current.Save();
                     SaveProfile();
 
                     foreach (IGui gump in UIManager.Gumps)

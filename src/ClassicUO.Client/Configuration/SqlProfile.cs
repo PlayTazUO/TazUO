@@ -1,0 +1,168 @@
+using System.Text.Json.Serialization;
+using ClassicUO.Game;
+
+namespace ClassicUO.Configuration;
+
+public sealed partial class Profile
+{
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.QUEUE_MANUAL_ITEM_MOVES, false)]
+        public partial bool QueueManualItemMoves { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_OPEN_DOORS_HIDDEN, true)]
+        public partial bool AutoOpenDoorsIfHidden { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.QUEUE_MANUAL_ITEM_USES, false)]
+        public partial bool QueueManualItemUses { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.HUE_CORPSE_AFTER_AUTOLOOT, false)]
+        public partial bool HueCorpseAfterAutoloot { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.AUTOLOOT_RETRY_DELAY, 5000)]
+        public partial int AutoLootRetryDelay { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATH_Z_LEVEL, 10)]
+        public partial int PathfindingZLevelDiff { get; set; }
+
+        // Maximum number of A* nodes the local (in-game) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
+        public partial int PathfindingMaxNodes { get; set; }
+
+        // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_NODES, 1000000)]
+        public partial int WorldMapPathfindingMaxNodes { get; set; }
+
+        // How many times world map navigation will replan around a blocked tile before giving up.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_RETRIES, 3)]
+        public partial int WorldMapPathfindingMaxRetries { get; set; }
+
+        // Wall-clock cap (milliseconds) on a single world map pathfinding search.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_TIMEOUT, 5000)]
+        public partial int WorldMapPathfindingTimeout { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.SINGLE_CLICK_SET_LAST_TARG, true)]
+        public partial bool SingleClickMobileSetsLastTarget { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OUTLINE_NOTORIETIES, false)]
+        public partial bool OutlineMobilesNotoriety { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.OVERHEAD_MESSAGE_TYPES_HIDDEN, (uint)0)]
+        public partial uint DisabledOverheadMessageTypes { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_AUTOLOOT_RETRY_CORPSE, false)]
+        public partial bool DisableAutolootCorpseRetry { get; set; } = false;
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "profile_migration_version", 0)]
+        public partial int ProfileMigrationVersion { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "enable_a_sync_map_loading", true)]
+        public partial bool EnableASyncMapLoading { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.DISABLE_WEATHER, false)]
+        public partial bool DisableWeather { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.SCALE_PETS_ENABLED, false)]
+        public partial bool EnablePetScaling { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.AUTO_UNEQUIP_FOR_ACTIONS, false)]
+        public partial bool AutoUnequipForActions { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.MIN_GUMP_MOVE_DIST, 5)]
+        public partial int MinGumpMoveDistance { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_HEAL_SPELL, 29)]
+        public partial int QuickHealSpell { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.QUICK_CURE_SPELL, 11)]
+        public partial int QuickCureSpell { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "disable_dismount_in_war_mode", true)]
+        public partial bool DisableDismountInWarMode { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "disable_hotkeys", false)]
+        public partial bool DisableHotkeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "post_processing_type", (ushort)0)]
+        public partial ushort PostProcessingType { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "enable_post_processing_effects", false)]
+        public partial bool EnablePostProcessingEffects { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "disable_gray_enemies", false)]
+        public partial bool DisableGrayEnemies { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "hide_hud_gump_flags", (ulong)0)]
+        public partial ulong HideHudGumpFlags { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "force_house_transparency", false)]
+        public partial bool ForceHouseTransparency { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "forced_transparency_house_tile_hue", (ushort)0)]
+        public partial ushort ForcedTransparencyHouseTileHue { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "forced_house_transparency", (byte)40)]
+        public partial byte ForcedHouseTransparency { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "spell_bar__show_hotkeys", true)]
+        public partial bool SpellBar_ShowHotkeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "nearby_loot_conceals_container_on_open", true)]
+        public partial bool NearbyLootConcealsContainerOnOpen { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "counter_gump_locked", false)]
+        public partial bool CounterGumpLocked { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "enable_scavenger", true)]
+        public partial bool EnableScavenger { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "controller_enabled", true)]
+        public partial bool ControllerEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_TRIGGER, false)]
+        public partial bool BandageAgentUseJournalTrigger { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, Constants.SqlSettings.BANDAGE_JOURNAL_MESSAGES, "")]
+        public partial string BandageAgentJournalMessages { get; set; }
+
+        // Semicolon-separated list of poll ids the user has already voted on (see PollsWindow / FirebasePollsManager).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.VOTED_POLLS, "")]
+        public partial string VotedPolls { get; set; }
+}

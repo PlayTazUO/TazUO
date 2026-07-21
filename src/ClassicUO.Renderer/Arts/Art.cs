@@ -55,7 +55,7 @@ namespace ClassicUO.Renderer.Arts
         private ArtInfo LoadSourceArtInfo(uint idx, out bool loadedFromPNG)
         {
             ArtInfo artInfo = PNGLoader.Instance.LoadArtTexture(idx);
-            loadedFromPNG = artInfo.Pixels != null && !artInfo.Pixels.IsEmpty;
+            loadedFromPNG = !artInfo.Pixels.IsEmpty;
 
             if (artInfo.Pixels.IsEmpty)
             {

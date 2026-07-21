@@ -3,7 +3,6 @@
 using System;
 using System.ComponentModel;
 using System.IO;
-using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -22,16 +21,6 @@ namespace ClassicUO.Configuration
         /// Occurs when a property of the current <see cref="Profile"/> has changed.
         /// </summary>
         public static event PropertyChangedEventHandler CurrentProfilePropertyChanged;
-
-        static ProfileManager()
-        {
-            // Subscribe to player creation event to load Char-scoped settings
-            EventSink.OnPlayerCreated += OnPlayerCreated;
-        }
-
-        private static void OnPlayerCreated(object sender, System.EventArgs e) =>
-            // Load Char-scoped settings after player is created (when serial is available)
-            CurrentProfile?.LoadCharScopedSettings();
 
         public static Profile CurrentProfile
         {
@@ -78,7 +67,7 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public static void Load(string servername, string username, string charactername)
+        public static void Load(string servername, string username, string charactername, uint serial)
         {
             string path = FileSystemHelper.CreateFolderIfNotExists(RootPath, username.Trim(), servername.Trim(), charactername.Trim());
             string fileToLoad = Path.Combine(path, "profile.json");
@@ -89,10 +78,11 @@ namespace ClassicUO.Configuration
             CurrentProfile.Username = username;
             CurrentProfile.ServerName = servername;
             CurrentProfile.CharacterName = charactername;
+            CurrentProfile.Serial = serial;
 
-            if (CurrentProfile.GridHighlightSetup.Count == 0)
+            // Load (or migrate from the in-profile GridHighlightSetup / legacy per-list storage) the grid highlights.
+            if (GridHighlightsConfig.LoadForProfile(ProfilePath, CurrentProfile))
             {
-                GridHighLightProfile.MigrateGridHighlightToSetup(CurrentProfile);
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 

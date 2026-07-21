@@ -20,6 +20,7 @@ using ClassicUO.Common.Enums;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.LegionScripting;
 using static SDL3.SDL;
+using ClassicUO.Game.UI;
 
 namespace ClassicUO.Game.Managers
 {
@@ -104,7 +105,7 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        public void Save(string? path = null)
+        public void Save(string path = null)
         {
             List<Macro> list = GetAllMacros();
 
@@ -2561,7 +2562,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         private Item GetHoveredItem()
         {
-            for (var control = UIManager.MouseOverControl; control != null && control is not Gump; control = control.Parent)
+            for (IGui control = UIManager.MouseOverControl; control != null && control is not Gump; control = control.Parent)
             {
                 if (!SerialHelper.IsItem(control.LocalSerial))
                     continue;

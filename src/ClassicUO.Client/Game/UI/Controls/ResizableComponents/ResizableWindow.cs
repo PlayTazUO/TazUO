@@ -433,7 +433,7 @@ public class ResizableWindow : Window, IDisposable
         if (_minMaxButton != null)
             return;
 
-        _minMaxButtonLabel = new MyraLabel(MinMaxButtonText, 24)
+        _minMaxButtonLabel = new MyraLabel(MinMaxButtonText, 6)
         {
             Font = MinMaxButtonFont,
             Wrap = false,

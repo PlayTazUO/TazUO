@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using ClassicUO.Assets;
 using Microsoft.Xna.Framework;
 using Myra.Events;
 using Myra.Graphics2D.UI;
@@ -77,7 +76,7 @@ public class LabeledHorizontalSlider : Grid
         _valueLabel.Text = "0";
         _valueLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _valueLabel.VerticalAlignment = VerticalAlignment.Center;
-        _valueLabel.Font = TrueTypeLoader.Instance.GetFont(TrueTypeLoader.EMBEDDED_FONT, 14);
+        _valueLabel.Font = MyraStyle.GetUiFont(-2);
 
         _slider.WheelAdjustment = true;
         _slider.WheelStep = 1f;

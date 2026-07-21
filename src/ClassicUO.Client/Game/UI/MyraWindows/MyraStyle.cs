@@ -1,4 +1,5 @@
 using ClassicUO.Assets;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using FontStashSharp;
 using Microsoft.Xna.Framework;
@@ -16,6 +17,10 @@ public static class MyraStyle
     public const int STANDARD_BORDER_ALPHA = 125;
     public static Color GridBorderColor { get; } = new Color(0, 0, 0, STANDARD_BORDER_ALPHA);
     public static SpriteFontBase UiFont => _uiFont;
+
+    public static int UiFontSize => ProfileManager.CurrentProfile == null ? 16 : ProfileManager.CurrentProfile.OptionsFontSize;
+    public static SpriteFontBase GetUiFont(int sizeOffset) =>
+        TrueTypeLoader.Instance.GetFont(ProfileManager.CurrentProfile == null ? EmbeddedFontNames.IBM_PLEX : ProfileManager.CurrentProfile.OptionsFont, UiFontSize + sizeOffset);
 
     private static Color TazUO_Orange = new(0.667f, 0.412f, 0.051f, 1f);
 
@@ -61,7 +66,7 @@ public static class MyraStyle
         _skillDownButton = new TextureRegion(ModernUIConstants.ModernUISkillDown);
         _skillLockBtn = new TextureRegion(ModernUIConstants.ModernUISkillLock);
 
-        _uiFont = TrueTypeLoader.Instance.GetFont(EmbeddedFontNames.IBM_PLEX, 16);
+        _uiFont = TrueTypeLoader.Instance.GetFont(ProfileManager.CurrentProfile == null ? EmbeddedFontNames.IBM_PLEX : ProfileManager.CurrentProfile.OptionsFont, UiFontSize);
 
         //Window style
         WindowStyle style = Stylesheet.Current.WindowStyle;
@@ -100,8 +105,9 @@ public static class MyraStyle
         sStyle.KnobStyle.ImageStyle.FocusedBackground = new SolidBrush(TazUO_Orange);
         sStyle.KnobStyle.ImageStyle.PressedImage = null;
         sStyle.KnobStyle.ImageStyle.Image = null;
-        sStyle.Width = 100;
-        sStyle.Height = 20;
+        sStyle.KnobStyle.ImageStyle.Height = 30;
+        sStyle.Width = 175;
+        sStyle.Height = 30;
 
         //Button
         ButtonStyle s = Stylesheet.Current.ButtonStyle;

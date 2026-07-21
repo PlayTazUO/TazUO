@@ -17,7 +17,7 @@ public class ApiUiBaseGump(Gump gump) : ApiUiBaseControl(gump), IApiGump
     /// Returns true if the gump is disposed or no longer exists.
     /// Used in python API
     /// </summary>
-    public bool IsDisposed => GetProp(() => Gump.IsDisposed, true);
+    public new bool IsDisposed => GetProp(() => Gump.IsDisposed, true);
 
     /// <summary>
     /// Gets the original packet text that was used to create this gump.

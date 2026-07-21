@@ -28,7 +28,31 @@ public static class MobilesTab
                 TazLang.Get("mog_buttonhealthbars"),
                 HealthBarsTab.GetContent,
                 new SearchMetadata(TazLang.Get("mog_buttonhealthbars"), [TazLang.Get("mog_kw_healthbar"), TazLang.Get("mog_kw_hp")])
+            )
+            .AddTab(
+                TazLang.Get("mog_mobilestab_misc_label"),
+                GetMiscSection,
+                new SearchMetadata(TazLang.Get("mog_mobilestab_misc_label"), Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous")])
             );
+    }
+
+    private static IOptionSource GetMiscSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.Vertical(
+            Option.Checkbox(
+                TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"),
+                new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
+                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"),
+                new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
+                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
+            ),
+            GetPlayerVisibilitySection()
+        ).WithSearch(new SearchMetadata(TazLang.Get("mog_mobilestab_misc_label"), Tags: [TazLang.Get("mog_kw_misc")]));
     }
 
     private static IOptionSource GetHighlightingSection()
@@ -60,16 +84,6 @@ public static class MobilesTab
                     new SearchMetadata(TazLang.Get("mog_general_invulhighlightcolor"), Keywords: [TazLang.Get("mog_kw_invulnerable"), TazLang.Get("mog_kw_hue")])
                 )
             ).WithSearch(new SearchMetadata(Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_invulnerable")])),
-            Option.Checkbox(
-                TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"),
-                new Accessor<bool>(() => profile.ShowNewMobileNameIncoming),
-                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingmobiles"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_mobile")])
-            ),
-            Option.Checkbox(
-                TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"),
-                new Accessor<bool>(() => profile.ShowNewCorpseNameIncoming),
-                search: new SearchMetadata(TazLang.Get("mog_mobilestab_highlighting_incomingcorpses"), Keywords: [TazLang.Get("mog_kw_incoming"), TazLang.Get("mog_kw_corpse")])
-            ),
             Option.ComboBox(
                 TazLang.Get("mog_mobilestab_highlighting_auraunderfeet"),
                 profile.AuraUnderFeetType,
@@ -151,8 +165,7 @@ public static class MobilesTab
                     new SearchMetadata(TazLang.Get("mog_combattab_spells_enemy"), Keywords: [TazLang.Get("mog_kw_notoriety"), TazLang.Get("mog_kw_enemy")])
                 )
             ).WithSearch(new SearchMetadata(Tags: [TazLang.Get("mog_kw_mobile"), TazLang.Get("mog_kw_notoriety")])),
-            GetDamageHuesSection(),
-            GetPlayerVisibilitySection()
+            GetDamageHuesSection()
         );
     }
 

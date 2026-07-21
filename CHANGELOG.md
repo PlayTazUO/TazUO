@@ -4,6 +4,16 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Fixes
+* Fixed a startup crash (IndexOutOfRangeException) in the animations loader when AnimationSequence.uop contained an out-of-range animation group index - [P.R 749](https://github.com/PlayTazUO/TazUO/pull/749) ([bittiez](https://github.com/bittiez))
+* Fixed a crash when a Legion Python script was stopped at the exact moment it was displaying an error, caused by a thread interrupt surfacing while IronPython formatted the exception - [P.R 748](https://github.com/PlayTazUO/TazUO/pull/748) ([bittiez](https://github.com/bittiez))
+* Fixed a crash when exporting grid highlight settings to an invalid or inaccessible file path; the client now shows an error message instead - [P.R 747](https://github.com/PlayTazUO/TazUO/pull/747) ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Began migrating settings from profile.json to settings.db, this will take some time. - ([bittiez](https://github.com/bittiez))
+
+## V5.4.0
+
 ### Features
 * Rebuilt the grid highlight menu, per-rule property editor, and shared property-list config as Myra windows - [P.R 735](https://github.com/PlayTazUO/TazUO/pull/735) ([bittiez](https://github.com/bittiez))
 * Added a corpse container style setting to grid containers, allowing corpses to open in Grid or Original style independently of the global "open new containers in the original view" option - [P.R 733](https://github.com/PlayTazUO/TazUO/pull/733) ([bittiez](https://github.com/bittiez))
@@ -81,6 +91,7 @@ All notable changes to TazUO will be recorded here.
 * Added a goto location input to the web map (accepts raw map or sextant coordinates) that sets the player's Go-To location - [P.R 708](https://github.com/PlayTazUO/TazUO/pull/708) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed the unvoted Firebase polls login notification showing even after you had already voted, caused by reading the in-memory voted-polls list before its asynchronous settings load had finished; the check now reads the persisted value directly ([bittiez](https://github.com/bittiez))
 * Fixed the nameplate overhead manager gump not resizing to fit all buttons and profile names, and now refreshes its buttons when a profile is renamed in the options window - [P.R 698](https://github.com/PlayTazUO/TazUO/pull/698) ([bittiez](https://github.com/bittiez))
 * Fixed client crash ("pointer being freed was not allocated") when deleting map markers in the marker manager, caused by leaked marker list controls whose graphics textures were freed off the render thread by the GC finalizer - [P.R 678](https://github.com/PlayTazUO/TazUO/pull/678) ([bittiez](https://github.com/bittiez))
 * Auto open doors no longer closes a door that is already open - [P.R 674](https://github.com/PlayTazUO/TazUO/pull/674) ([bittiez](https://github.com/bittiez))

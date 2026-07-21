@@ -397,7 +397,14 @@ namespace ClassicUO.Game.UI.Controls
             return Draw(batcher, x, y, _color);
         }
 
-        public bool Draw(UltimaBatcher2D batcher, int x, int y, Color color)
+        public bool Draw(UltimaBatcher2D batcher, int x, int y, float depth)
+        {
+            base.Draw(batcher, x, y);
+
+            return Draw(batcher, x, y, _color, depth);
+        }
+
+        public bool Draw(UltimaBatcher2D batcher, int x, int y, Color color, float depth = 0f)
         {
             if (IsDisposed)
             {
@@ -413,7 +420,7 @@ namespace ClassicUO.Game.UI.Controls
                 x += Width;
             }
 
-            _rtl.Draw(batcher, new Vector2(x, y), color * Alpha, horizontalAlignment: Options.Align);
+            _rtl.Draw(batcher, new Vector2(x, y), color * Alpha, horizontalAlignment: Options.Align, layerDepth: depth);
 
             return true;
         }

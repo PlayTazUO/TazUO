@@ -245,9 +245,6 @@ namespace ClassicUO.Game.Scenes
             if(ProfileManager.CurrentProfile.EnableCaveBorder)
                 StaticFilters.ApplyCaveTileBorder();
 
-            // if(!ProfileManager.CurrentProfile.DisableConnectToIrcOnLogin)
-            //     TazUOChatManager.Instance.Init();
-
             if (ProfileManager.CurrentProfile.VoiceRecognitionEnabled)
                 VoiceRecognitionManager.Instance.InitializeAsync(ProfileManager.CurrentProfile.VoiceModelPath, startListeningAfter: true);
         }
@@ -375,8 +372,6 @@ namespace ClassicUO.Game.Scenes
             }
 
             Instance = null;
-
-            TazUOChatManager.Instance.Dispose();
 
             GridContainerSaveData.Instance.Save();
             GridContainerSaveData.Reset();

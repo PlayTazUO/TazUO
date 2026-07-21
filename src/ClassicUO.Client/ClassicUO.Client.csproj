@@ -5,8 +5,8 @@
     <ApplicationIcon>cuoicon.ico</ApplicationIcon>
     <AssemblyName>TazUO</AssemblyName>
     <RootNamespace>ClassicUO</RootNamespace>
-    <AssemblyVersion>5.3.62</AssemblyVersion>
-    <FileVersion>5.3.62</FileVersion>
+    <AssemblyVersion>5.4.5</AssemblyVersion>
+    <FileVersion>5.4.5</FileVersion>
     <PackageProjectUrl>https://github.com/PlayTazUO/TazUO</PackageProjectUrl>
     <PublishAot>false</PublishAot>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -50,7 +50,6 @@
     <ProjectReference Include="..\ClassicUO.CUOAPI\ClassicUO.CUOAPI.csproj" />
     <ProjectReference Include="..\..\tools\EventGenerator\EventGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\ClassicUO.SourceGenerators\ClassicUO.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\Async.IRC\Async.IRC.csproj" />
     <ProjectReference Include="..\..\external\Myra\src\Myra\Myra.FNA.Core.csproj" />
   </ItemGroup>
 
@@ -103,44 +102,28 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
     <PackageReference Include="IronPython" Version="3.4.2" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.12.0" />
     <PackageReference Include="Vosk" Version="0.3.38" />
   </ItemGroup>
 
   <PropertyGroup>
     <!-- Windows: use RuntimeIdentifier if set, otherwise fall back -->
-    <_IsWindows Condition="
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND
-     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')
-    OR
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND
-     $(RuntimeIdentifier.StartsWith('win')) )
-  ">true</_IsWindows>
+    <_IsWindows Condition="&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND&#xA;     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true')&#xA;    OR&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND&#xA;     $(RuntimeIdentifier.StartsWith('win')) )&#xA;  ">true</_IsWindows>
 
     <!-- MacOS -->
-    <_IsMacOS Condition="
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND
-     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true')
-    OR
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND
-     $(RuntimeIdentifier.StartsWith('osx')) )
-  ">true</_IsMacOS>
+    <_IsMacOS Condition="&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND&#xA;     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true')&#xA;    OR&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND&#xA;     $(RuntimeIdentifier.StartsWith('osx')) )&#xA;  ">true</_IsMacOS>
 
     <!-- Linux -->
-    <_IsLinux Condition="
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND
-     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')
-    OR
-    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND
-     $(RuntimeIdentifier.StartsWith('linux')) )
-  ">true</_IsLinux>
+    <_IsLinux Condition="&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'true' AND&#xA;     '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true')&#xA;    OR&#xA;    ('$([System.String]::IsNullOrEmpty($(RuntimeIdentifier)))' == 'false' AND&#xA;     $(RuntimeIdentifier.StartsWith('linux')) )&#xA;  ">true</_IsLinux>
   </PropertyGroup>
 
   <Target Name="IncludeGeneratedFiles" BeforeTargets="BeforeBuild">
     <ItemGroup>
-      <None Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" CopyToOutputDirectory="PreserveNewest"/>
+      <None Include="$(BaseIntermediateOutputPath)/generated/EventGenerator/**/*.Api.Decl.g.cs" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
@@ -157,7 +140,7 @@
 
   <Target Name="GenerateDocs" AfterTargets="Build">
     <Message Text="Running: dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj $(DocFileArgs)" />
-    <Exec Command='dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj "$(ProjectDir)/LegionScripting/docs" $(DocFileArgs)' />
+    <Exec Command="dotnet run --project ../APIToMarkdown/APIToMarkdown.csproj &quot;$(ProjectDir)/LegionScripting/docs&quot; $(DocFileArgs)" />
   </Target>
 
   <Target Name="CreateVersionFile" AfterTargets="Build">

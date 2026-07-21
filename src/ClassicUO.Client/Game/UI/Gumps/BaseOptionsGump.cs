@@ -865,7 +865,7 @@ public class BaseOptionsGump : Gump
 
         public void SetText(string text) => _textbox.SetText(text);
 
-        public void SetTooltip(string text)
+        public new void SetTooltip(string text)
         {
             base.SetTooltip(text);
             _textbox.SetTooltip(text);

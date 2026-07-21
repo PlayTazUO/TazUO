@@ -296,7 +296,7 @@ namespace ClassicUO.Game.UI.Gumps
             Height = l.Height;
         }
 
-        public new void SetHeight(int h)
+        public void SetHeight(int h)
         {
             _resizePic.Height = h;
             Width = _resizePic.Width;
