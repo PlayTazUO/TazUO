@@ -54,20 +54,29 @@ namespace ClassicUO.Game.Managers
             public string Name { get; set; }
             public int X { get; set; }
             public int Y { get; set; }
+
+            /// <summary>When this position was last saved/seen, as Unix time in seconds.</summary>
+            public long LastSeen { get; set; }
         }
 
         private const string DB_FILE = "gump_positions.db";
+
+        // Pinned positions untouched for this long are purged on startup.
+        private const long RETENTION_SECONDS = 120L * 24 * 60 * 60;
 
         private static readonly SqliteTableSchema PositionsSchema = new("gump_positions",
             SqliteColumn.Int("serial", primaryKey: true),
             SqliteColumn.Str("name"),
             SqliteColumn.Int("x", notNull: true, def: "0"),
-            SqliteColumn.Int("y", notNull: true, def: "0"));
+            SqliteColumn.Int("y", notNull: true, def: "0"),
+            SqliteColumn.Int("last_seen", notNull: true, def: "0"));
 
         public GumpPositionSQLManager() : base(DB_FILE)
         {
             InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
+
+        private static long NowUnix() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         // Table creation/migration goes through the base class's schema reconciliation; row-level CRUD
         // below goes through Dapper.Contrib's typed helpers (Get/GetAll/Insert/Update/Delete) instead of
@@ -77,12 +86,43 @@ namespace ClassicUO.Game.Managers
             try
             {
                 await EnsureTableAsync(PositionsSchema).ConfigureAwait(false);
+                await BackfillAndPurgeAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error initializing GumpPositionSQLManager: {ex.Message}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// One-time housekeeping run at startup: stamps a "last seen" on rows migrated from the old
+        /// schema (so an upgrade doesn't instantly purge them) and deletes any pinned position that has
+        /// not been seen within the retention window.
+        /// </summary>
+        private Task BackfillAndPurgeAsync()
+        {
+            long now = NowUnix();
+            long cutoff = now - RETENTION_SECONDS;
+
+            return WithConnectionAsync(async connection =>
+            {
+                List<GumpPositionRecord> rows = (await connection.GetAllAsync<GumpPositionRecord>().ConfigureAwait(false)).ToList();
+
+                foreach (GumpPositionRecord row in rows)
+                {
+                    if (row.LastSeen == 0)
+                    {
+                        // Row predates the last_seen column; treat it as just seen rather than ancient.
+                        row.LastSeen = now;
+                        await connection.UpdateAsync(row).ConfigureAwait(false);
+                    }
+                    else if (row.LastSeen < cutoff)
+                    {
+                        await connection.DeleteAsync(row).ConfigureAwait(false);
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -95,7 +135,7 @@ namespace ClassicUO.Game.Managers
             {
                 await WithConnectionAsync(async connection =>
                 {
-                    GumpPositionRecord record = new() { Serial = serial, Name = name ?? string.Empty, X = x, Y = y };
+                    GumpPositionRecord record = new() { Serial = serial, Name = name ?? string.Empty, X = x, Y = y, LastSeen = NowUnix() };
                     GumpPositionRecord existing = await connection.GetAsync<GumpPositionRecord>((long)serial).ConfigureAwait(false);
 
                     if (existing == null)
@@ -127,6 +167,7 @@ namespace ClassicUO.Game.Managers
 
                     existing.X = x;
                     existing.Y = y;
+                    existing.LastSeen = NowUnix();
                     await connection.UpdateAsync(existing).ConfigureAwait(false);
                 }).ConfigureAwait(false);
             }

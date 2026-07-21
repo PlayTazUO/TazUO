@@ -34,7 +34,7 @@ public sealed class GumpPositionManagerWindow : MyraControl
     // Identify blink state: toggles _identifyGump.IsVisible on/off IDENTIFY_TOGGLES times, one toggle
     // every IDENTIFY_STEP_MS, driven off Time.Ticks from this window's Update().
     private const int IDENTIFY_TOGGLES = 10; // 5 off/on cycles
-    private const int IDENTIFY_STEP_MS = 300; // 10 * 300ms = 3 seconds
+    private const int IDENTIFY_STEP_MS = 150; // 10 * 150ms = 1.5 seconds
     private Gump? _identifyGump;
     private int _identifyTogglesLeft;
     private uint _identifyNextToggle;
