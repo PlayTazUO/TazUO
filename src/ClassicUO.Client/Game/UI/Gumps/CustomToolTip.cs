@@ -99,7 +99,12 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     Task.Delay(1500).Wait();
                     attempt++;
-                    LoadOPLData(attempt);
+                    // Re-run on the main thread: once the OPL data arrives, LoadOPLData builds and
+                    // measures a TextBox through FontStashSharp, whose shared font caches are not
+                    // thread-safe. Measuring here (a background task thread) while the main thread
+                    // measures/draws the same fonts corrupts those caches and crashes
+                    // (IndexOutOfRangeException in FontStashSharp's Int32Map).
+                    MainThreadQueue.InvokeOnMainThread(() => LoadOPLData(attempt));
                 });
             }
 
