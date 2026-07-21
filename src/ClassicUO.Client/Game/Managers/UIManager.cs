@@ -311,19 +311,30 @@ namespace ClassicUO.Game.Managers
 
             // Keep the on-disk copy in sync whenever a pinned gump is moved, so its permanent
             // position always reflects where the user last left it.
-            if (_persistentPositionSerials.Contains(serverSerial))
+            if (_persistentPositionSerials.ContainsKey(serverSerial))
                 _ = GumpPositionSQLManager.Instance.UpdatePositionAsync(serverSerial, point.X, point.Y);
         }
 
-        public static bool RemovePosition(uint serverSerial) => _gumpPositionCache.Remove(serverSerial, out _);
+        public static bool RemovePosition(uint serverSerial)
+        {
+            // A permanently pinned position must survive transient "forget this position" requests
+            // (e.g. a non-movable server gump closing). Removing the cache entry here would let the next
+            // open re-seed it with the server default and overwrite the saved position in the database.
+            if (_persistentPositionSerials.ContainsKey(serverSerial))
+                return false;
+
+            return _gumpPositionCache.Remove(serverSerial, out _);
+        }
 
         public static bool GetGumpCachePosition(uint id, out Point pos) => _gumpPositionCache.TryGetValue(id, out pos);
 
         #region Persistent gump positions
 
-        // Serials whose positions are permanently saved to the GumpPositionSQLManager database and are
-        // reloaded into the in-memory position cache on startup.
-        private static readonly HashSet<uint> _persistentPositionSerials = new();
+        // Serials whose positions are permanently saved to the GumpPositionSQLManager database, mapped to
+        // their friendly display name. This is the authoritative in-memory view of the saved set (kept in
+        // sync on every change) so the manager UI never has to block on the database to render its list.
+        // Seeded from the database on startup.
+        private static readonly Dictionary<uint, string> _persistentPositionSerials = new();
 
         /// <summary>
         /// Seeds the in-memory gump position cache from the permanent database. Idempotent - safe to call
@@ -336,7 +347,7 @@ namespace ClassicUO.Game.Managers
             {
                 foreach (SavedGumpPosition saved in GumpPositionSQLManager.Instance.GetAll())
                 {
-                    _persistentPositionSerials.Add(saved.Serial);
+                    _persistentPositionSerials[saved.Serial] = saved.Name;
                     _gumpPositionCache[saved.Serial] = new Point(saved.X, saved.Y);
                 }
             }
@@ -347,7 +358,24 @@ namespace ClassicUO.Game.Managers
         }
 
         /// <summary>Whether the given gump serial currently has a permanently saved position.</summary>
-        public static bool IsPositionPersistent(uint serial) => _persistentPositionSerials.Contains(serial);
+        public static bool IsPositionPersistent(uint serial) => _persistentPositionSerials.ContainsKey(serial);
+
+        /// <summary>
+        /// Snapshot of every permanently saved position, built from in-memory state (name + current cached
+        /// location) so callers get an immediately consistent view without a blocking database read.
+        /// </summary>
+        public static List<SavedGumpPosition> GetPersistentPositions()
+        {
+            var list = new List<SavedGumpPosition>(_persistentPositionSerials.Count);
+
+            foreach ((uint serial, string name) in _persistentPositionSerials)
+            {
+                Point point = _gumpPositionCache.TryGetValue(serial, out Point p) ? p : Point.Zero;
+                list.Add(new SavedGumpPosition(serial, name, point.X, point.Y));
+            }
+
+            return list;
+        }
 
         /// <summary>A friendly display name for a gump used when persisting its position.</summary>
         public static string GetGumpDisplayName(Gump gump) =>
@@ -365,7 +393,7 @@ namespace ClassicUO.Game.Managers
             if (ProfileManager.CurrentProfile?.AutoSaveGumpPositions != true)
                 return;
 
-            if (_persistentPositionSerials.Contains(gump.ServerSerial))
+            if (_persistentPositionSerials.ContainsKey(gump.ServerSerial))
                 return;
 
             SetPositionPersistent(gump.ServerSerial, GetGumpDisplayName(gump), gump.Location);
@@ -380,7 +408,7 @@ namespace ClassicUO.Game.Managers
             if (serial == 0)
                 return;
 
-            _persistentPositionSerials.Add(serial);
+            _persistentPositionSerials[serial] = name;
             _gumpPositionCache[serial] = point;
             _ = GumpPositionSQLManager.Instance.SaveAsync(serial, name, point.X, point.Y);
         }

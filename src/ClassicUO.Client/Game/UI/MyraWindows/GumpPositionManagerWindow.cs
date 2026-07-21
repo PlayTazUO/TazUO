@@ -42,6 +42,10 @@ public sealed class GumpPositionManagerWindow : MyraControl
 
     public GumpPositionManagerWindow() : base("Gump Position Manager")
     {
+        // The title-bar close button disposes via base.Update()/PreDraw() without routing through this
+        // window's Dispose() override, so restore any blinking gump the moment a close is requested.
+        _rootWindow.Closed += (_, _) => RestoreIdentifyGump();
+
         BuildColumns();
         Build();
         RefreshOpenList();
@@ -144,10 +148,7 @@ public sealed class GumpPositionManagerWindow : MyraControl
             HeaderTooltip = "Permanently save this gump's position",
             Proportion = new Proportion(ProportionType.Auto),
             CellContentAlignment = HorizontalAlignment.Center,
-            CellFactory = row => MyraCheckButton.CreateWithCallback(
-                UIManager.IsPositionPersistent(row.Serial),
-                isChecked => TogglePersistent(row, isChecked),
-                tooltip: "Permanently save this gump's position")
+            CellFactory = BuildSavedCheckbox
         });
         _openColumns.Add(new RulebaseColumn<OpenGumpRow>
         {
@@ -198,6 +199,25 @@ public sealed class GumpPositionManagerWindow : MyraControl
 
     #region Actions
 
+    private Widget BuildSavedCheckbox(OpenGumpRow row)
+    {
+        // While "save all gumps automatically" is on it re-pins every server gump, so per-gump control
+        // would be overridden anyway - show it locked on rather than letting the user toggle it futilely.
+        if (ProfileManager.CurrentProfile?.AutoSaveGumpPositions == true)
+        {
+            return new MyraCheckButton(true)
+            {
+                Enabled = false,
+                Tooltip = "Managed by \"Save all gumps automatically\""
+            };
+        }
+
+        return MyraCheckButton.CreateWithCallback(
+            UIManager.IsPositionPersistent(row.Serial),
+            isChecked => TogglePersistent(row, isChecked),
+            tooltip: "Permanently save this gump's position");
+    }
+
     private void TogglePersistent(OpenGumpRow row, bool isChecked)
     {
         if (isChecked)
@@ -233,6 +253,8 @@ public sealed class GumpPositionManagerWindow : MyraControl
         // Persist the new location (only actually written to the DB when the gump is pinned).
         UIManager.SavePosition(row.Serial, new Point(row.Gump.X, row.Gump.Y));
         RefreshOpenList();
+        // The saved-list position for a pinned gump just changed, so refresh it too.
+        RefreshSavedList();
     }
 
     private void DeleteSaved(SavedGumpRow row)
@@ -253,6 +275,15 @@ public sealed class GumpPositionManagerWindow : MyraControl
         _identifyGump = gump;
         _identifyTogglesLeft = IDENTIFY_TOGGLES;
         _identifyNextToggle = Time.Ticks;
+    }
+
+    /// <summary>Leaves the currently blinking gump visible and clears the blink state.</summary>
+    private void RestoreIdentifyGump()
+    {
+        if (_identifyGump != null && !_identifyGump.IsDisposed)
+            _identifyGump.IsVisible = true;
+
+        _identifyGump = null;
     }
 
     #endregion
@@ -293,10 +324,7 @@ public sealed class GumpPositionManagerWindow : MyraControl
     public override void Dispose()
     {
         // Don't leave a gump hidden if the window is closed mid-blink.
-        if (_identifyGump != null && !_identifyGump.IsDisposed)
-            _identifyGump.IsVisible = true;
-
-        _identifyGump = null;
+        RestoreIdentifyGump();
         base.Dispose();
     }
 
@@ -315,8 +343,7 @@ public sealed class GumpPositionManagerWindow : MyraControl
             if (gump.ServerSerial == 0)
                 continue;
 
-            string name = gump.GumpType != Gumps.GumpType.None ? gump.GumpType.ToString() : gump.GetType().Name;
-            rows.Add(new OpenGumpRow(gump, gump.ServerSerial, name));
+            rows.Add(new OpenGumpRow(gump, gump.ServerSerial, UIManager.GetGumpDisplayName(gump)));
         }
 
         _openTable.SetRules(rows);
@@ -325,7 +352,9 @@ public sealed class GumpPositionManagerWindow : MyraControl
 
     private void RefreshSavedList()
     {
-        List<SavedGumpRow> rows = GumpPositionSQLManager.Instance.GetAll()
+        // Read from UIManager's in-memory snapshot rather than the database: it is always consistent
+        // with the writes just made (which persist asynchronously) and needs no blocking DB read.
+        List<SavedGumpRow> rows = UIManager.GetPersistentPositions()
             .OrderBy(s => s.Name)
             .Select(s => new SavedGumpRow(s.Serial, s.Name, s.X, s.Y))
             .ToList();
