@@ -482,7 +482,16 @@ namespace ClassicUO.LegionScripting
             catch (OperationCanceledException) { }
             catch (Exception e)
             {
-                ShowScriptError(script, e);
+                try
+                {
+                    ShowScriptError(script, e);
+                }
+                // Formatting the error runs IronPython dynamic code that takes internal locks.
+                // If the script is stopped at that exact moment (StopScript -> Thread.Interrupt),
+                // the interrupt surfaces here as a ThreadInterruptedException/ThreadAbortException.
+                // Swallow it so tearing down an already-errored script never crashes the client.
+                catch (ThreadInterruptedException) { }
+                catch (ThreadAbortException) { }
             }
 
             MainThreadQueue.EnqueueAction(() => { StopScript(script); });
