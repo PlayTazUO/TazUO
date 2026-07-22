@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## V5.5.0
 
 ### Features
 * Added a Gump Position Manager (More > Tools > Gump Positions) to permanently save server gump positions in a database, with per-gump save/center/identify actions, a "save all gumps automatically" option, and a list of saved positions to delete - [P.R 752](https://github.com/PlayTazUO/TazUO/pull/752) ([bittiez](https://github.com/bittiez))
