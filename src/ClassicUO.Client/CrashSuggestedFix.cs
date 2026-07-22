@@ -95,6 +95,11 @@ namespace ClassicUO
                 {
                     return pluginFix;
                 }
+
+                if (TryGetMapLoaderCrashFix(exception, out string mapFix))
+                {
+                    return mapFix;
+                }
             }
             catch
             {
@@ -102,6 +107,38 @@ namespace ClassicUO
             }
 
             return null;
+        }
+
+        private static bool TryGetMapLoaderCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // ToString() on the top-level exception includes the stack traces of any inner
+            // (and aggregated) exceptions, so we can inspect the whole chain in one string.
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            // A crash inside MapLoader.LoadMap almost always means one of the map data files
+            // (mapN.mul/.uop, staidxN.mul or staticsN.mul) is missing, truncated, or from a
+            // mismatched client version - the loader ends up dereferencing a reader that was
+            // never opened for that map.
+            if (!details.Contains("ClassicUO.Assets.MapLoader.LoadMap"))
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO crashed while loading the map data files.");
+            sb.AppendLine("This usually means one of the map files is missing, incomplete, or does not match your client version.");
+            sb.AppendLine("The affected files are named like map0.mul (or map0.uop), staidx0.mul and statics0.mul, with the number matching the facet you were entering.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Make sure TazUO is pointed at a complete Ultima Online data directory that contains all of the map, staidx and statics files.");
+            sb.AppendLine("2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
+            sb.AppendLine("3. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
+            sb.AppendLine("4. Confirm the client version configured in TazUO matches the version of your UO data files.");
+            fix = sb.ToString();
+            return true;
         }
 
         private static bool TryGetPluginCrashFix(Exception e, out string fix)
