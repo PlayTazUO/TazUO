@@ -422,21 +422,26 @@ public class TrueTypeLoader
     /// </returns>
     public SpriteFontBase GetFont(string name, float size)
     {
-        // Try standard fonts first
-        if (_fonts.TryGetValue(name, out FontSystem font))
-            return font.GetFont(size);
-
-        // If the font isn't present in the loaded ones but is available on the system, try to load it
-        if (_availableSystemFontFamilyNames.Contains(name))
+        // A null or empty name can't be looked up (Dictionary.TryGetValue throws on a null key),
+        // so skip straight to the fallback font below.
+        if (!string.IsNullOrEmpty(name))
         {
-            if (TryGetSystemFont(name, size, out SpriteFontBase sysFont))
-                return sysFont;
+            // Try standard fonts first
+            if (_fonts.TryGetValue(name, out FontSystem font))
+                return font.GetFont(size);
 
-            // This is to prevent repeated disk hits if a font is botched or otherwise unusable.
-            // We can also note in cache that this font family is problematic, but if we've gotten here,
-            // it means the initial cache population run concluded that this font is valid.
-            Log.Warn($"Could not load system font '{name}'. Family will be ignored");
-            _availableSystemFontFamilyNames.Remove(name);
+            // If the font isn't present in the loaded ones but is available on the system, try to load it
+            if (_availableSystemFontFamilyNames.Contains(name))
+            {
+                if (TryGetSystemFont(name, size, out SpriteFontBase sysFont))
+                    return sysFont;
+
+                // This is to prevent repeated disk hits if a font is botched or otherwise unusable.
+                // We can also note in cache that this font family is problematic, but if we've gotten here,
+                // it means the initial cache population run concluded that this font is valid.
+                Log.Warn($"Could not load system font '{name}'. Family will be ignored");
+                _availableSystemFontFamilyNames.Remove(name);
+            }
         }
 
         // Use the default embedded font as a fallback

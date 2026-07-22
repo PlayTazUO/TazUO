@@ -1,23 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using ClassicUO.Utility.Logging;
+using Dapper;
 using Microsoft.Data.Sqlite;
 
 namespace ClassicUO.Game.Managers
 {
     /// <summary>
-    /// Base class that removes the boilerplate of working with a SQLite database. Subclass it, pass a
-    /// database file name to the constructor, then use the declarative schema helpers
-    /// (<see cref="EnsureTableAsync"/>, <see cref="EnsureColumnsAsync"/>, <see cref="EnsureIndexAsync"/>)
-    /// and the row write helpers (<see cref="AddRowAsync"/>, <see cref="AddOrUpdateAsync"/>).
+    /// Base class that removes the boilerplate of working with a SQLite database: resolving the data
+    /// directory, building the connection string, and serializing access behind a lock. Subclass it,
+    /// pass a database file name to the constructor, then use <see cref="WithConnectionAsync{T}"/> /
+    /// <see cref="WithConnectionAsync"/> together with Dapper's connection extension methods
+    /// (<c>ExecuteAsync</c>, <c>QueryAsync</c>, <c>ExecuteScalarAsync</c>, ...) to run SQL.
     /// <para>
-    /// All operations are serialized behind a <see cref="SemaphoreSlim"/> and open a short-lived
-    /// connection per call, matching the conventions used by the other SQLite managers in the project.
-    /// Values are always bound as SQL parameters, never interpolated.
+    /// Each call opens and disposes a short-lived connection while holding a <see cref="SemaphoreSlim"/>,
+    /// matching the conventions used by the other SQLite managers in the project.
     /// </para>
     /// <example>
     /// <code>
@@ -25,23 +26,21 @@ namespace ClassicUO.Game.Managers
     /// {
     ///     public MyThingDb() : base("mything.db")
     ///     {
-    ///         EnsureTableAsync("things",
-    ///             SqliteColumn.Int("id", primaryKey: true),
-    ///             SqliteColumn.Str("name", notNull: true, def: "''")
-    ///         ).GetAwaiter().GetResult();
+    ///         WithConnectionAsync(c => c.ExecuteAsync(
+    ///             "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"
+    ///         )).GetAwaiter().GetResult();
     ///     }
     ///
-    ///     public Task SaveAsync(int id, string name) =>
-    ///         AddOrUpdateAsync("things", new SqliteRow { { "id", id }, { "name", name } });
+    ///     public Task SaveAsync(int id, string name) => WithConnectionAsync(c => c.ExecuteAsync(
+    ///         "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = id, Name = name }));
     /// }
     /// </code>
     /// </example>
     /// </summary>
     public abstract class SqliteDatabase : IDisposable
     {
-        private const int MAX_BACKUPS = 3;
-
         private readonly SemaphoreSlim _dbLock = new(1, 1);
+        private bool _disposed;
 
         /// <summary>The directory that contains the database file.</summary>
         protected string DataDirectory { get; }
@@ -51,8 +50,6 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>The connection string used to open connections to this database.</summary>
         protected string ConnectionString { get; }
-
-        private bool _disposed;
 
         /// <summary>
         /// Creates the base database. The containing directory is created if it does not exist.
@@ -79,35 +76,67 @@ namespace ClassicUO.Game.Managers
             }.ToString();
         }
 
-        private async Task<SqliteConnection> OpenConnectionAsync()
-        {
-            SqliteConnection connection = new(ConnectionString);
-            await connection.OpenAsync().ConfigureAwait(false);
-            return connection;
-        }
-
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(GetType().Name);
-        }
-
         /// <summary>
-        /// Ensures a table exists, creating it (<c>CREATE TABLE IF NOT EXISTS</c>) with the given
-        /// columns if necessary. If more than one column is flagged as a primary key, a composite
-        /// table-level PRIMARY KEY is emitted.
+        /// Runs an operation against a freshly opened connection while holding the database lock, and
+        /// returns its result. The connection is opened and disposed for you. Use this with Dapper's
+        /// connection extension methods for reads (<c>QueryAsync</c>, <c>ExecuteScalarAsync</c>, ...).
         /// </summary>
-        /// <param name="tableName">The table name.</param>
-        /// <param name="columns">The columns that define the table.</param>
-        public async Task EnsureTableAsync(string tableName, params SqliteColumn[] columns)
+        protected async Task<T> WithConnectionAsync<T>(Func<SqliteConnection, Task<T>> operation)
         {
             ThrowIfDisposed();
 
-            if (columns == null || columns.Length == 0)
-                throw new ArgumentException("At least one column is required.", nameof(columns));
+            await _dbLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                await using SqliteConnection connection = new(ConnectionString);
+                await connection.OpenAsync().ConfigureAwait(false);
+                return await operation(connection).ConfigureAwait(false);
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+        }
 
+        /// <summary>
+        /// Runs an operation against a freshly opened connection while holding the database lock. The
+        /// connection is opened and disposed for you. Use this with Dapper's <c>ExecuteAsync</c> for
+        /// writes/DDL.
+        /// </summary>
+        protected async Task WithConnectionAsync(Func<SqliteConnection, Task> operation)
+        {
+            ThrowIfDisposed();
+
+            await _dbLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                await using SqliteConnection connection = new(ConnectionString);
+                await connection.OpenAsync().ConfigureAwait(false);
+                await operation(connection).ConfigureAwait(false);
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// Ensures a table matches the given <see cref="SqliteTableSchema"/>: creates it
+        /// (<c>CREATE TABLE IF NOT EXISTS</c>) if it does not exist, otherwise reconciles its columns
+        /// against the schema - adding any that are missing (<c>ALTER TABLE ... ADD COLUMN</c>) and
+        /// dropping any that are no longer declared (<c>ALTER TABLE ... DROP COLUMN</c>, requires
+        /// SQLite 3.35+). Safe to call on every startup for schema migrations.
+        /// <para>
+        /// This only reconciles column presence. It does not detect or migrate a column's type,
+        /// nullability, default, or PRIMARY KEY status changing - SQLite cannot alter those in place,
+        /// so changing them requires a manual table rebuild.
+        /// </para>
+        /// </summary>
+        /// <param name="schema">The desired table name and columns.</param>
+        protected Task EnsureTableAsync(SqliteTableSchema schema) => WithConnectionAsync(async connection =>
+        {
             List<string> primaryKeys = new();
-            foreach (SqliteColumn c in columns)
+            foreach (SqliteColumn c in schema.Columns)
             {
                 if (c.PrimaryKey)
                     primaryKeys.Add(c.Name);
@@ -116,222 +145,72 @@ namespace ClassicUO.Game.Managers
             // Inline "PRIMARY KEY" only works for a single-column key; otherwise use a table constraint.
             bool compositeKey = primaryKeys.Count > 1;
 
-            StringBuilder sb = new();
-            sb.Append("CREATE TABLE IF NOT EXISTS ");
-            sb.Append(QuoteIdentifier(tableName));
-            sb.Append(" (");
+            StringBuilder createSql = new();
+            createSql.Append("CREATE TABLE IF NOT EXISTS ");
+            createSql.Append(QuoteIdentifier(schema.Name));
+            createSql.Append(" (");
 
-            for (int i = 0; i < columns.Length; i++)
+            for (int i = 0; i < schema.Columns.Count; i++)
             {
                 if (i > 0)
-                    sb.Append(", ");
+                    createSql.Append(", ");
 
-                sb.Append(columns[i].ToDefinition(includePrimaryKey: !compositeKey));
+                createSql.Append(schema.Columns[i].ToDefinition(includePrimaryKey: !compositeKey));
             }
 
             if (compositeKey)
             {
-                sb.Append(", PRIMARY KEY (");
+                createSql.Append(", PRIMARY KEY (");
                 for (int i = 0; i < primaryKeys.Count; i++)
                 {
                     if (i > 0)
-                        sb.Append(", ");
+                        createSql.Append(", ");
 
-                    sb.Append(QuoteIdentifier(primaryKeys[i]));
+                    createSql.Append(QuoteIdentifier(primaryKeys[i]));
                 }
-                sb.Append(')');
+                createSql.Append(')');
             }
 
-            sb.Append(')');
+            createSql.Append(')');
 
-            await ExecuteNonQueryAsync(sb.ToString()).ConfigureAwait(false);
-        }
+            await connection.ExecuteAsync(createSql.ToString()).ConfigureAwait(false);
+
+            // Reconcile columns against the schema using the pragma_table_info table-valued function,
+            // so the existing-column read goes through Dapper rather than a hand-rolled data reader loop.
+            List<string> existingColumns = (await connection.QueryAsync<string>(
+                $"SELECT name FROM pragma_table_info({QuoteLiteral(schema.Name)})").ConfigureAwait(false)).ToList();
+
+            HashSet<string> existingSet = new(existingColumns, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> desiredSet = new(StringComparer.OrdinalIgnoreCase);
+            foreach (SqliteColumn column in schema.Columns)
+                desiredSet.Add(column.Name);
+
+            foreach (SqliteColumn column in schema.Columns)
+            {
+                if (existingSet.Contains(column.Name))
+                    continue;
+
+                // A primary key cannot be added via ALTER TABLE, so never inline it here.
+                await connection.ExecuteAsync(
+                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}"
+                ).ConfigureAwait(false);
+            }
+
+            foreach (string existingColumn in existingColumns)
+            {
+                if (desiredSet.Contains(existingColumn))
+                    continue;
+
+                await connection.ExecuteAsync(
+                    $"ALTER TABLE {QuoteIdentifier(schema.Name)} DROP COLUMN {QuoteIdentifier(existingColumn)}"
+                ).ConfigureAwait(false);
+            }
+        });
 
         /// <summary>
-        /// Ensures each given column exists on a table, adding any that are missing via
-        /// <c>ALTER TABLE ... ADD COLUMN</c>. Existing columns are detected up front (via
-        /// <c>PRAGMA table_info</c>) and skipped, so this is safe to call on every startup for schema
-        /// migrations. Unlike a blanket exception swallow, a genuine ALTER failure is not hidden - it
-        /// surfaces and is logged.
-        /// </summary>
-        /// <param name="tableName">The table to add columns to.</param>
-        /// <param name="columns">The columns to ensure exist.</param>
-        public async Task EnsureColumnsAsync(string tableName, params SqliteColumn[] columns)
-        {
-            ThrowIfDisposed();
-
-            if (columns == null || columns.Length == 0)
-                return;
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                await using SqliteConnection connection = await OpenConnectionAsync().ConfigureAwait(false);
-
-                // Determine which columns already exist so we only ALTER the missing ones. This avoids
-                // swallowing SqliteExceptions blindly (which would hide real schema/SQL errors).
-                HashSet<string> existing = new(StringComparer.OrdinalIgnoreCase);
-                await using (SqliteCommand info = connection.CreateCommand())
-                {
-                    info.CommandText = $"PRAGMA table_info({QuoteIdentifier(tableName)})";
-                    await using SqliteDataReader reader = await info.ExecuteReaderAsync().ConfigureAwait(false);
-                    while (await reader.ReadAsync().ConfigureAwait(false))
-                    {
-                        // PRAGMA table_info columns: cid(0), name(1), type(2), ...
-                        existing.Add(reader.GetString(1));
-                    }
-                }
-
-                foreach (SqliteColumn column in columns)
-                {
-                    if (existing.Contains(column.Name))
-                        continue;
-
-                    await using SqliteCommand cmd = connection.CreateCommand();
-                    // A primary key cannot be added via ALTER TABLE, so never inline it here.
-                    cmd.CommandText = $"ALTER TABLE {QuoteIdentifier(tableName)} ADD COLUMN {column.ToDefinition(includePrimaryKey: false)}";
-                    await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error($@"Error ensuring columns on table '{tableName}': {ex.Message}");
-            }
-            finally
-            {
-                _dbLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// Ensures an index exists (<c>CREATE INDEX IF NOT EXISTS</c>) over the given columns.
-        /// </summary>
-        /// <param name="indexName">The index name.</param>
-        /// <param name="tableName">The table the index is on.</param>
-        /// <param name="columns">The columns to index.</param>
-        public async Task EnsureIndexAsync(string indexName, string tableName, params string[] columns)
-        {
-            ThrowIfDisposed();
-
-            if (columns == null || columns.Length == 0)
-                throw new ArgumentException("At least one column is required.", nameof(columns));
-
-            string quotedColumns = string.Join(", ", Array.ConvertAll(columns, QuoteIdentifier));
-            string sql = $"CREATE INDEX IF NOT EXISTS {QuoteIdentifier(indexName)} ON {QuoteIdentifier(tableName)} ({quotedColumns})";
-            await ExecuteNonQueryAsync(sql).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Inserts a new row (<c>INSERT INTO</c>) built from the given <see cref="SqliteRow"/>.
-        /// </summary>
-        /// <param name="tableName">The table to insert into.</param>
-        /// <param name="row">The column/value pairs to insert.</param>
-        public Task AddRowAsync(string tableName, SqliteRow row) => WriteRowAsync(tableName, row, orReplace: false);
-
-        /// <summary>
-        /// Inserts or replaces a row (<c>INSERT OR REPLACE INTO</c>) built from the given
-        /// <see cref="SqliteRow"/>. Requires the table to have a PRIMARY KEY or UNIQUE constraint for
-        /// the replace to take effect.
-        /// </summary>
-        /// <param name="tableName">The table to write to.</param>
-        /// <param name="row">The column/value pairs to write.</param>
-        public Task AddOrUpdateAsync(string tableName, SqliteRow row) => WriteRowAsync(tableName, row, orReplace: true);
-
-        private async Task WriteRowAsync(string tableName, SqliteRow row, bool orReplace)
-        {
-            ThrowIfDisposed();
-
-            if (row.Count == 0)
-                throw new ArgumentException("Row has no columns.", nameof(row));
-
-            StringBuilder columnList = new();
-            StringBuilder valueList = new();
-            List<KeyValuePair<string, object>> parameters = new(row.Count);
-
-            int i = 0;
-            foreach (KeyValuePair<string, object> pair in row.Columns)
-            {
-                if (i > 0)
-                {
-                    columnList.Append(", ");
-                    valueList.Append(", ");
-                }
-
-                string paramName = $"$p{i}";
-                columnList.Append(QuoteIdentifier(pair.Key));
-                valueList.Append(paramName);
-                parameters.Add(new KeyValuePair<string, object>(paramName, pair.Value ?? DBNull.Value));
-                i++;
-            }
-
-            string verb = orReplace ? "INSERT OR REPLACE INTO" : "INSERT INTO";
-            string sql = $"{verb} {QuoteIdentifier(tableName)} ({columnList}) VALUES ({valueList})";
-
-            await ExecuteNonQueryAsync(sql, parameters).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Executes a non-query statement (INSERT/UPDATE/DELETE/DDL) and returns the number of rows
-        /// affected. Available to subclasses for statements the helpers do not cover.
-        /// </summary>
-        protected async Task<int> ExecuteNonQueryAsync(string sql, IEnumerable<KeyValuePair<string, object>> parameters = null)
-        {
-            ThrowIfDisposed();
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                await using SqliteConnection connection = await OpenConnectionAsync().ConfigureAwait(false);
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = sql;
-                AddParameters(cmd, parameters);
-                return await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($@"Error executing SQL '{sql}': {ex.Message}");
-                return 0;
-            }
-            finally
-            {
-                _dbLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// Executes a query and returns the first column of the first row, or null. Available to
-        /// subclasses for simple scalar reads.
-        /// </summary>
-        protected async Task<object> ExecuteScalarAsync(string sql, IEnumerable<KeyValuePair<string, object>> parameters = null)
-        {
-            ThrowIfDisposed();
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                await using SqliteConnection connection = await OpenConnectionAsync().ConfigureAwait(false);
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = sql;
-                AddParameters(cmd, parameters);
-                object result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
-                return result == DBNull.Value ? null : result;
-            }
-            catch (Exception ex)
-            {
-                Log.Error($@"Error executing scalar SQL '{sql}': {ex.Message}");
-                return null;
-            }
-            finally
-            {
-                _dbLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// Quotes a SQLite identifier (table/column/index name) so it cannot break out of the
-        /// surrounding SQL. Identifiers cannot be passed as bound parameters, so callers that build
-        /// SQL from identifiers must quote them; embedded double quotes are doubled per the SQLite
-        /// grammar.
+        /// Quotes a SQLite identifier (table/column name) so it cannot break out of the surrounding
+        /// SQL. Identifiers cannot be passed as bound parameters, so callers that build SQL from
+        /// identifiers must quote them; embedded double quotes are doubled per the SQLite grammar.
         /// </summary>
         protected static string QuoteIdentifier(string identifier)
         {
@@ -341,80 +220,17 @@ namespace ClassicUO.Game.Managers
             return "\"" + identifier.Replace("\"", "\"\"") + "\"";
         }
 
-        private static void AddParameters(SqliteCommand cmd, IEnumerable<KeyValuePair<string, object>> parameters)
-        {
-            if (parameters == null)
-                return;
-
-            foreach (KeyValuePair<string, object> p in parameters)
-                cmd.Parameters.AddWithValue(p.Key, p.Value ?? DBNull.Value);
-        }
-
         /// <summary>
-        /// Rotates up to <see cref="MAX_BACKUPS"/> copies of the database file (<c>.db.1</c>,
-        /// <c>.db.2</c>, ...). Opt-in: a subclass may call this from its constructor before creating
-        /// its schema if it wants startup backups.
+        /// Quotes a string as a SQLite text literal (e.g. for use as a table-valued function argument,
+        /// where a bound parameter or double-quoted identifier cannot be used).
         /// </summary>
-        protected void CreateBackups()
+        private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
+
+        /// <summary>Throws <see cref="ObjectDisposedException"/> if this database has already been disposed.</summary>
+        protected void ThrowIfDisposed()
         {
-            try
-            {
-                if (!File.Exists(DatabasePath))
-                    return;
-
-                // Rotate existing backups: .3 -> delete, .2 -> .3, .1 -> .2
-                for (int i = MAX_BACKUPS; i > 0; i--)
-                {
-                    string backupPath = $"{DatabasePath}.{i}";
-
-                    if (i == MAX_BACKUPS)
-                    {
-                        if (File.Exists(backupPath))
-                            File.Delete(backupPath);
-                    }
-                    else
-                    {
-                        string nextBackupPath = $"{DatabasePath}.{i + 1}";
-                        if (File.Exists(backupPath))
-                        {
-                            if (File.Exists(nextBackupPath))
-                                File.Delete(nextBackupPath);
-                            File.Move(backupPath, nextBackupPath);
-                        }
-                    }
-                }
-
-                string firstBackupPath = $"{DatabasePath}.1";
-                if (File.Exists(firstBackupPath))
-                    File.Delete(firstBackupPath);
-
-                File.Copy(DatabasePath, firstBackupPath);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($@"Warning: Failed to create database backups for '{DatabasePath}': {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Runs an arbitrary operation against an open connection while holding the database lock. Use
-        /// this from a subclass for reads/queries that the built-in helpers do not cover (e.g. running
-        /// a <see cref="SqliteDataReader"/>). The connection is opened and disposed for you.
-        /// </summary>
-        protected async Task<T> ExecuteAsync<T>(Func<SqliteConnection, Task<T>> operation)
-        {
-            ThrowIfDisposed();
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                await using SqliteConnection connection = await OpenConnectionAsync().ConfigureAwait(false);
-                return await operation(connection).ConfigureAwait(false);
-            }
-            finally
-            {
-                _dbLock.Release();
-            }
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().Name);
         }
 
         /// <summary>Releases resources used by the database.</summary>

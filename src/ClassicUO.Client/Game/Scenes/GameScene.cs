@@ -1186,8 +1186,21 @@ namespace ClassicUO.Game.Scenes
             }
 
             Profiler.EnterContext("DrawOverlays");
-            batcher.Begin(null, Camera.ViewTransformMatrix);
+
+            // Overheads (names, health bars, overhead text) can optionally be drawn in screen
+            // space (identity transform) so they keep a constant on-screen size regardless of the
+            // camera zoom. Their world anchors are converted to screen space per-object so they
+            // still follow the zoomed world. When scaling is enabled they are drawn under the
+            // camera transform exactly as before. This only affects the camera zoom scale, not any
+            // other (global) game scaling.
+            bool overheadsScaleWithZoom = ProfileManager.CurrentProfile?.OverheadsScaleWithZoom ?? true;
+
+            batcher.Begin(null, overheadsScaleWithZoom ? Camera.ViewTransformMatrix : Matrix.Identity);
             DrawOverheads(batcher);
+            batcher.End();
+
+            // The selection rectangle always tracks the world, so keep it under the camera transform.
+            batcher.Begin(null, Camera.ViewTransformMatrix);
             DrawSelection(batcher);
             batcher.End();
 

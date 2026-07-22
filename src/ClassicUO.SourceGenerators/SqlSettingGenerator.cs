@@ -110,10 +110,12 @@ namespace ClassicUO.Configuration
             switch (st)
             {
                 case SpecialType.System_Boolean: return "bool";
+                case SpecialType.System_Byte:    return "byte";
                 case SpecialType.System_Int32:   return "int";
                 case SpecialType.System_UInt32:  return "uint";
                 case SpecialType.System_Int16:   return "short";
                 case SpecialType.System_UInt16:  return "ushort";
+                case SpecialType.System_UInt64:  return "ulong";
                 case SpecialType.System_Single:  return "float";
                 case SpecialType.System_Double:  return "double";
                 case SpecialType.System_String:  return "string";
@@ -127,10 +129,12 @@ namespace ClassicUO.Configuration
             switch (typeName)
             {
                 case "bool":
+                case "byte":
                 case "int":
                 case "uint":
                 case "short":
                 case "ushort":
+                case "ulong":
                 case "float":
                 case "double":
                 case "string":
@@ -186,10 +190,12 @@ namespace ClassicUO.Configuration
             switch (typeName)
             {
                 case "bool":   return $"bool.TryParse({rawVar}, out bool {varName})";
+                case "byte":   return $"byte.TryParse({rawVar}, out byte {varName})";
                 case "int":    return $"int.TryParse({rawVar}, out int {varName})";
                 case "uint":   return $"uint.TryParse({rawVar}, out uint {varName})";
                 case "short":  return $"short.TryParse({rawVar}, out short {varName})";
                 case "ushort": return $"ushort.TryParse({rawVar}, out ushort {varName})";
+                case "ulong":  return $"ulong.TryParse({rawVar}, out ulong {varName})";
                 case "float":  return $"float.TryParse({rawVar}, out float {varName})";
                 case "double": return $"double.TryParse({rawVar}, out double {varName})";
                 case "string": return null; // no TryParse needed
@@ -290,11 +296,12 @@ namespace ClassicUO.Configuration
             // Group by scope ordinal
             var byScope = valid.GroupBy(m => m.ScopeOrdinal).ToDictionary(g => g.Key, g => g.ToList());
 
-            // Global / Account / Server: bulk dict load
-            foreach (int scopeOrdinal in new[] { 3, 1, 2 }) // Global, Account, Server
+            // All 4 scopes: bulk dict load. Always emit all four methods (even if empty)
+            // so callers can unconditionally load every scope without checking which ones are in use.
+            foreach (int scopeOrdinal in new[] { 3, 1, 2, 0 }) // Global, Account, Server, Char
             {
                 if (!byScope.TryGetValue(scopeOrdinal, out List<SqlSettingModel> group))
-                    continue;
+                    group = new List<SqlSettingModel>();
 
                 string scopeName = ScopeName(scopeOrdinal);
                 sb.AppendLine($"        internal void LoadGenerated{scopeName}SqlSettings(System.Collections.Generic.Dictionary<string, string> kvp)");
@@ -317,19 +324,6 @@ namespace ClassicUO.Configuration
                     }
                 }
 
-                sb.AppendLine("        }");
-                sb.AppendLine();
-            }
-
-            // Char: individual async loads
-            if (byScope.TryGetValue(0, out List<SqlSettingModel> charGroup))
-            {
-                sb.AppendLine("        internal void LoadGeneratedCharSqlSettings()");
-                sb.AppendLine("        {");
-                foreach (SqlSettingModel m in charGroup)
-                {
-                    sb.AppendLine($"            _ = Client.Settings.GetAsyncOnMainThread(SettingsScope.Char, \"{m.Key}\", {m.DefaultValueLiteral}, _v => {{ {m.PropertyName} = _v; }});");
-                }
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }

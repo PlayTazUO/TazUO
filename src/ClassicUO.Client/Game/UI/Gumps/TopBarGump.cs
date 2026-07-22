@@ -257,6 +257,7 @@ namespace ClassicUO.Game.UI.Gumps
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_openboatcontrol", "Open boat control"), () => { UIManager.Add(new BoatControl(World) { X = 200, Y = 200 }); }));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_nearbyloot", "Nearby loot"), () => { UIManager.Add(new NearbyLootGump(World)); }));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("healthbarcollector_title", "Healthbar Collector"), () => { UIManager.Add(new HealthbarCollectorGump(World) { X = 100, Y = 100 }); }));
+            submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_gumppositions", "Gump Positions"), MyraWindows.GumpPositionManagerWindow.Show));
             submenu.Add(new ContextMenuItemEntry(TazLang.Get("topbargump_retrievegumps", "Retrieve gumps"), () =>
             {
                 for (LinkedListNode<IGui> last = UIManager.Gumps.Last; last != null; last = last.Previous)

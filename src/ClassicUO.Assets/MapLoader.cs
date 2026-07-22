@@ -461,14 +461,21 @@ namespace ClassicUO.Assets
                 ulong staticPos = 0ul;
                 uint staticCount = 0u;
 
-                fileidx.Seek(block * staticidxblocksize, SeekOrigin.Begin);
-
-                StaidxBlock st = fileidx.Read<StaidxBlock>();
-
-                if (st.Size > 0 && st.Position != 0xFFFF_FFFF)
+                // The statics index (staidx) file can be missing/unavailable for a map (for
+                // example a custom or incomplete data set). When it is, there are simply no
+                // statics for this block - the map itself is still usable - so skip the lookup
+                // instead of dereferencing a null reader.
+                if (fileidx != null)
                 {
-                    staticPos = st.Position;
-                    staticCount = Math.Min(1024, (uint)(st.Size / staticblocksize));
+                    fileidx.Seek(block * staticidxblocksize, SeekOrigin.Begin);
+
+                    StaidxBlock st = fileidx.Read<StaidxBlock>();
+
+                    if (st.Size > 0 && st.Position != 0xFFFF_FFFF)
+                    {
+                        staticPos = st.Position;
+                        staticCount = Math.Min(1024, (uint)(st.Size / staticblocksize));
+                    }
                 }
 
                 ref IndexMap data = ref BlockData[i][block];

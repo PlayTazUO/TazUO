@@ -11,7 +11,7 @@ namespace ClassicUO.Game.UI.MyraWindows.Options;
 /// an <see cref="OptionFragment"/>, or an <see cref="OptionTabGroup"/> at a position in an option layout.
 /// Implicit conversions eliminate explicit wrapping at every call site.
 /// </summary>
-internal readonly struct OptionContent
+internal struct OptionContent : IOptionSource
 {
     private readonly object? _content;
 
@@ -22,7 +22,7 @@ internal readonly struct OptionContent
     /// When <see langword="true"/>, the effective search metadata is the merge of <see cref="Search"/>
     /// and any metadata inherited from the parent. When <see langword="false"/>, only <see cref="Search"/> is used.
     /// </summary>
-    public bool InheritsSearch { get; init; } = true;
+    public bool InheritsSearch { get; set; } = true;
 
     private OptionContent(object content)
     {
@@ -98,6 +98,13 @@ internal readonly struct OptionContent
     /// <summary>Wraps an <see cref="OptionTabGroup"/> in an <see cref="OptionContent"/></summary>
     /// <param name="group">The tab group to wrap</param>
     public static implicit operator OptionContent(OptionTabGroup group)
+    {
+        return new OptionContent(group);
+    }
+
+    /// <summary>Wraps an <see cref="OptionPageGroup"/> in an <see cref="OptionContent"/></summary>
+    /// <param name="group">The page group to wrap</param>
+    public static implicit operator OptionContent(OptionPageGroup group)
     {
         return new OptionContent(group);
     }

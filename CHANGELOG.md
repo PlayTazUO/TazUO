@@ -2,6 +2,26 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## V5.5.0
+
+### Features
+* Added a Gump Position Manager (More > Tools > Gump Positions) to permanently save server gump positions in a database, with per-gump save/center/identify actions, a "save all gumps automatically" option, and a list of saved positions to delete - [P.R 752](https://github.com/PlayTazUO/TazUO/pull/752) ([bittiez](https://github.com/bittiez))
+* Added an option to strip the leading "<id>" prefix from chat usernames (e.g. "<36475858>username" -> "username") - [P.R 751](https://github.com/PlayTazUO/TazUO/pull/751) ([bittiez](https://github.com/bittiez))
+* Added an option to draw overheads (names, health bars, overhead text) at a constant size regardless of the camera zoom - [P.R 730](https://github.com/PlayTazUO/TazUO/pull/730) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Fixed the world map border being tied to the top-most state; the border now follows the lock state (hidden while locked, visible while unlocked) and the top-most/layer-order option has been removed - [P.R 757](https://github.com/PlayTazUO/TazUO/pull/757) ([bittiez](https://github.com/bittiez))
+* Fixed a NullReferenceException crash in MapLoader.LoadMap when a map's statics index (staidx) file was missing/unavailable; the loader now skips the static lookup for that block instead of crashing on entering the world, and a suggested crash fix explains that the map data files may be missing, incomplete, or version-mismatched - [P.R 756](https://github.com/PlayTazUO/TazUO/pull/756) ([bittiez](https://github.com/bittiez))
+* Fixed a NullReferenceException crash in StringHelper.GetPluralAdjustedString when an item's data name was null (e.g. while adding items to a container); it now guards against null/empty input - [P.R 755](https://github.com/PlayTazUO/TazUO/pull/755) ([bittiez](https://github.com/bittiez))
+* Fixed an IndexOutOfRangeException crash in FontStashSharp caused by CustomToolTip building and measuring tooltip text on a background thread; the retry now runs on the main thread so the shared, non-thread-safe font caches aren't corrupted - [P.R 753](https://github.com/PlayTazUO/TazUO/pull/753) ([bittiez](https://github.com/bittiez))
+* Fixed an ArgumentNullException crash in TrueTypeLoader.GetFont when called with a null or empty font name; it now falls back to the default embedded font - [P.R 750](https://github.com/PlayTazUO/TazUO/pull/750) ([bittiez](https://github.com/bittiez))
+* Fixed a startup crash (IndexOutOfRangeException) in the animations loader when AnimationSequence.uop contained an out-of-range animation group index - [P.R 749](https://github.com/PlayTazUO/TazUO/pull/749) ([bittiez](https://github.com/bittiez))
+* Fixed a crash when a Legion Python script was stopped at the exact moment it was displaying an error, caused by a thread interrupt surfacing while IronPython formatted the exception - [P.R 748](https://github.com/PlayTazUO/TazUO/pull/748) ([bittiez](https://github.com/bittiez))
+* Fixed a crash when exporting grid highlight settings to an invalid or inaccessible file path; the client now shows an error message instead - [P.R 747](https://github.com/PlayTazUO/TazUO/pull/747) ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Began migrating settings from profile.json to settings.db, this will take some time. - ([bittiez](https://github.com/bittiez))
+
 ## V5.4.0
 
 ### Features

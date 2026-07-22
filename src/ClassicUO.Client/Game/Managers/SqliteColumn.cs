@@ -12,10 +12,9 @@ namespace ClassicUO.Game.Managers
     }
 
     /// <summary>
-    /// Describes a single column for use with <see cref="SqliteDatabase.EnsureTableAsync"/> and
-    /// <see cref="SqliteDatabase.EnsureColumnsAsync"/>. Use the static factory helpers
-    /// (<see cref="Int"/>, <see cref="Str"/>, <see cref="Number"/>, <see cref="Binary"/>) for terse
-    /// declarations, e.g. <c>SqliteColumn.Int("id", primaryKey: true)</c>.
+    /// Describes a single column for use with <see cref="SqliteTableSchema"/>. Use the static factory
+    /// helpers (<see cref="Int"/>, <see cref="Str"/>, <see cref="Number"/>, <see cref="Binary"/>) for
+    /// terse declarations, e.g. <c>SqliteColumn.Int("id", primaryKey: true)</c>.
     /// </summary>
     public readonly struct SqliteColumn
     {
@@ -72,11 +71,12 @@ namespace ClassicUO.Game.Managers
         };
 
         /// <summary>
-        /// Builds the DDL fragment for this column, e.g. <c>Name TEXT NOT NULL DEFAULT ''</c>.
+        /// Builds the DDL fragment for this column, e.g. <c>"name" TEXT NOT NULL DEFAULT ''</c>.
         /// </summary>
         /// <param name="includePrimaryKey">
         /// When true, an inline <c>PRIMARY KEY</c> is appended for single-column primary keys.
-        /// Set false when the primary key is declared separately as a table-level constraint.
+        /// Set false when the primary key is declared separately as a table-level constraint, or when
+        /// building an <c>ALTER TABLE ... ADD COLUMN</c> fragment (SQLite forbids a PRIMARY KEY there).
         /// </param>
         public string ToDefinition(bool includePrimaryKey = true)
         {

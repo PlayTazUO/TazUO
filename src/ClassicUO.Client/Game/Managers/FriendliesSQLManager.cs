@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
+using System.Linq;
 using System.Threading.Tasks;
 using ClassicUO.Utility.Logging;
-using Microsoft.Data.Sqlite;
+using Dapper;
+using Dapper.Contrib.Extensions;
 
 namespace ClassicUO.Game.Managers
 {
-    public class FriendliesSQLManager : IDisposable
+    public class FriendliesSQLManager : SqliteDatabase
     {
         public static FriendliesSQLManager Instance
         {
@@ -21,69 +21,44 @@ namespace ClassicUO.Game.Managers
             private set => field = value;
         }
 
-        private const string DB_FILE = "friendlies.db";
-        private const int MAX_BACKUPS = 3;
-
-        private readonly SemaphoreSlim _dbLock = new(1, 1);
-        private readonly string _dataDir;
-        private readonly string _dataPath;
-        private readonly string _connectionString;
-        private bool _disposed;
-
-        public FriendliesSQLManager()
+        [Table("friendlies")]
+        private sealed class FriendlyRecord
         {
-            _dataDir = Path.Combine(CUOEnviroment.ExecutablePath, "Data");
-            _dataPath = Path.Combine(_dataDir, DB_FILE);
+            [ExplicitKey]
+            public long Serial { get; set; }
+            public string Name { get; set; }
+        }
 
-            _connectionString = new SqliteConnectionStringBuilder
-            {
-                DataSource = _dataPath,
-                Mode = SqliteOpenMode.ReadWriteCreate,
-                Cache = SqliteCacheMode.Shared
-            }.ToString();
+        private const string DB_FILE = "friendlies.db";
 
+        private static readonly SqliteTableSchema FriendliesSchema = new("friendlies",
+            SqliteColumn.Int("serial", primaryKey: true),
+            SqliteColumn.Str("name", notNull: true));
+
+        public FriendliesSQLManager() : base(DB_FILE)
+        {
             InitializeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        // Table creation/migration goes through the base class's schema reconciliation. The index
+        // is unrelated to table structure, so it's still created directly. Row-level CRUD below goes
+        // through Dapper.Contrib's typed helpers (Get/GetAll/Insert/Update/Delete/DeleteAll) instead
+        // of hand-written SQL.
         private async Task InitializeAsync()
         {
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                if (!Directory.Exists(_dataDir))
-                {
-                    Directory.CreateDirectory(_dataDir);
-                }
+                await EnsureTableAsync(FriendliesSchema).ConfigureAwait(false);
 
-                // Create/open database and initialize table
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand createTableCmd = connection.CreateCommand();
-                createTableCmd.CommandText = """
-                                             CREATE TABLE IF NOT EXISTS friendlies (
-                                                 serial INTEGER PRIMARY KEY,
-                                                 name TEXT NOT NULL
-                                             )
-                                             """;
-                await createTableCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-
-                // Create index for faster name lookups
-                await using SqliteCommand createIndexCmd = connection.CreateCommand();
-                createIndexCmd.CommandText = """
-                                             CREATE INDEX IF NOT EXISTS idx_name
-                                             ON friendlies(name)
-                                             """;
-                await createIndexCmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await WithConnectionAsync(connection => connection.ExecuteAsync("""
+                                                                                 CREATE INDEX IF NOT EXISTS idx_name
+                                                                                 ON friendlies(name)
+                                                                                 """)).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error initializing FriendliesSQLManager: {ex.Message}");
                 throw;
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
@@ -96,32 +71,22 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task AddAsync(uint serial, string name)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
+                await WithConnectionAsync(async connection =>
+                {
+                    FriendlyRecord record = new() { Serial = serial, Name = name ?? string.Empty };
+                    FriendlyRecord existing = await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false);
 
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  INSERT OR REPLACE INTO friendlies (serial, name)
-                                  VALUES ($serial, $name)
-                                  """;
-                cmd.Parameters.AddWithValue("$serial", serial);
-                cmd.Parameters.AddWithValue("$name", name ?? string.Empty);
-
-                await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                    if (existing == null)
+                        await connection.InsertAsync(record).ConfigureAwait(false);
+                    else
+                        await connection.UpdateAsync(record).ConfigureAwait(false);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error adding friendly {serial} ('{name}'): {ex.Message}");
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
@@ -133,31 +98,14 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task RemoveAsync(uint serial)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  DELETE FROM friendlies
-                                  WHERE serial = $serial
-                                  """;
-                cmd.Parameters.AddWithValue("$serial", serial);
-
-                await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await WithConnectionAsync(connection =>
+                    connection.DeleteAsync(new FriendlyRecord { Serial = serial })).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error removing friendly {serial}: {ex.Message}");
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
@@ -169,33 +117,16 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task<bool> ContainsAsync(uint serial)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  SELECT COUNT(*) FROM friendlies
-                                  WHERE serial = $serial
-                                  """;
-                cmd.Parameters.AddWithValue("$serial", serial);
-
-                long count = (long)await cmd.ExecuteScalarAsync().ConfigureAwait(false);
-                return count > 0;
+                return await WithConnectionAsync(async connection =>
+                    await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false) != null)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error checking friendly {serial}: {ex.Message}");
                 return false;
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
@@ -207,33 +138,18 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task<string> GetNameAsync(uint serial)
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  SELECT name FROM friendlies
-                                  WHERE serial = $serial
-                                  """;
-                cmd.Parameters.AddWithValue("$serial", serial);
-
-                object result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
-                return result?.ToString();
+                return await WithConnectionAsync(async connection =>
+                {
+                    FriendlyRecord existing = await connection.GetAsync<FriendlyRecord>((long)serial).ConfigureAwait(false);
+                    return existing?.Name;
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error getting name for friendly {serial}: {ex.Message}");
                 return null;
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
@@ -244,40 +160,18 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task<Dictionary<uint, string>> GetAllAsync()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            Dictionary<uint, string> result = new();
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  SELECT serial, name FROM friendlies
-                                  """;
-
-                await using SqliteDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
-                while (await reader.ReadAsync().ConfigureAwait(false))
+                return await WithConnectionAsync(async connection =>
                 {
-                    uint serial = (uint)(long)reader.GetValue(0);
-                    string name = reader.GetString(1);
-                    result[serial] = name;
-                }
-
-                return result;
+                    IEnumerable<FriendlyRecord> rows = await connection.GetAllAsync<FriendlyRecord>().ConfigureAwait(false);
+                    return rows.ToDictionary(r => (uint)r.Serial, r => r.Name);
+                }).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error getting all friendlies: {ex.Message}");
-                return result;
-            }
-            finally
-            {
-                _dbLock.Release();
+                return new Dictionary<uint, string>();
             }
         }
 
@@ -288,52 +182,25 @@ namespace ClassicUO.Game.Managers
         /// <exception cref="ObjectDisposedException">Thrown if the manager has been disposed</exception>
         public async Task ClearAsync()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FriendliesSQLManager));
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(_connectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-
-                await using SqliteCommand cmd = connection.CreateCommand();
-                cmd.CommandText = """
-                                  DELETE FROM friendlies
-                                  """;
-
-                await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await WithConnectionAsync(connection => connection.DeleteAllAsync<FriendlyRecord>()).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error($@"Error clearing friendlies: {ex.Message}");
-            }
-            finally
-            {
-                _dbLock.Release();
             }
         }
 
         /// <summary>
         /// Releases resources used by the FriendliesSQLManager.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
         {
-            if (_disposed)
-                return;
+            base.Dispose();
 
-            _dbLock.Wait();
-            try
-            {
-                _disposed = true;
-            }
-            finally
-            {
-                _dbLock.Release();
-                _dbLock.Dispose();
-            }
-
-            Instance = null;
+            if (ReferenceEquals(Instance, this))
+                Instance = null;
         }
     }
 }
