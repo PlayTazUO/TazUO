@@ -182,4 +182,10 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "auto_save_gump_positions", false)]
         public partial bool AutoSaveGumpPositions { get; set; }
+
+        // When enabled (alongside TreeToStumps), trees are only rendered as stumps while they
+        // are within the circle of transparency radius from the player.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.TREE_TO_STUMPS_WITHIN_RADIUS, false)]
+        public partial bool TreeToStumpsWithinRadius { get; set; }
 }
