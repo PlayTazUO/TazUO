@@ -1997,15 +1997,25 @@ public class WorldMapGump : ResizableGump
                                             continue;
                                         }
 
-                                        var marker = new WMapMarker
+                                        WMapMarker marker;
+
+                                        try
                                         {
-                                            X = int.Parse(splits[0]),
-                                            Y = int.Parse(splits[1]),
-                                            MapId = int.Parse(splits[2]),
-                                            Name = string.Join(" ", splits, 3, splits.Length - 3),
-                                            Color = Color.White,
-                                            ZoomIndex = 3
-                                        };
+                                            marker = new WMapMarker
+                                            {
+                                                X = int.Parse(splits[0]),
+                                                Y = int.Parse(splits[1]),
+                                                MapId = int.Parse(splits[2]),
+                                                Name = string.Join(" ", splits, 3, splits.Length - 3),
+                                                Color = Color.White,
+                                                ZoomIndex = 3
+                                            };
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFile)}: \"{line}\" ({ex.Message})");
+                                            continue;
+                                        }
 
                                         string[] iconSplits = icon.Split(' ');
 
@@ -2050,16 +2060,26 @@ public class WorldMapGump : ResizableGump
                                         continue;
                                     }
 
-                                    var marker = new WMapMarker
+                                    WMapMarker marker;
+
+                                    try
                                     {
-                                        X = int.Parse(splits[0]),
-                                        Y = int.Parse(splits[1]),
-                                        MapId = int.Parse(splits[2]),
-                                        Name = splits[3],
-                                        MarkerIconName = splits[4].ToLower(),
-                                        Color = GetColor(splits[5]),
-                                        ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
-                                    };
+                                        marker = new WMapMarker
+                                        {
+                                            X = int.Parse(splits[0]),
+                                            Y = int.Parse(splits[1]),
+                                            MapId = int.Parse(splits[2]),
+                                            Name = splits[3],
+                                            MarkerIconName = splits[4].ToLower(),
+                                            Color = GetColor(splits[5]),
+                                            ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
+                                        };
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFile)}: \"{line}\" ({ex.Message})");
+                                        continue;
+                                    }
 
                                     if (_markerIcons.TryGetValue(splits[4].ToLower(), out Texture2D value))
                                     {
@@ -2290,7 +2310,15 @@ public class WorldMapGump : ResizableGump
                 {
                     continue;
                 }
-                tempList.Add(ParseMarker(splits));
+
+                try
+                {
+                    tempList.Add(ParseMarker(splits));
+                }
+                catch (Exception ex)
+                {
+                    Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(UserMarkersFilePath)}: \"{line}\" ({ex.Message})");
+                }
             }
         }
 
