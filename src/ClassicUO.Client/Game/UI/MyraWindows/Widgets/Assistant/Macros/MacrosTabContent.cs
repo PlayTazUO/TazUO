@@ -4,10 +4,8 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
-using ClassicUO.Input;
 using ClassicUO.Utility;
 using Myra.Graphics2D.UI;
-using SDL3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,20 +14,13 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant.Macros;
 
 public static class MacrosTabContent
 {
-    private static readonly HashSet<MacroType> _filteredMacroTypes = new() { MacroType.INVALID };
+    private static readonly HashSet<MacroType> _filteredMacroTypes = [MacroType.INVALID];
 
     /// <summary>Macro types whose sub-type dropdown is a list of available gumps (shared sub-type range).</summary>
-    private static readonly HashSet<MacroType> _gumpListMacroTypes = new()
-    {
-        MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump
-    };
+    private static readonly HashSet<MacroType> _gumpListMacroTypes = [MacroType.Open, MacroType.Close, MacroType.Minimize, MacroType.Maximize, MacroType.ToggleGump];
     private static readonly string[] _sortedMacroTypeNames;
     private static readonly MacroType[] _sortedMacroTypeValues;
     private static readonly Dictionary<MacroType, int> _macroTypeToDisplayIndex;
-
-    private static Action? _cleanupAction;
-    /// <summary>Call when the owning window closes to unsubscribe any active hotkey-capture handler and re-enable hotkeys.</summary>
-    public static void Cleanup() => _cleanupAction?.Invoke();
 
     static MacrosTabContent()
     {
@@ -58,11 +49,6 @@ public static class MacrosTabContent
         Macro? selectedMacro = null;
         string filterText = "";
 
-        bool isListening = false;
-        SDL.SDL_Keycode capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-        SDL.SDL_Keymod capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-        Action<string>? captureHandler = null;
-
         // ── Panel references ─────────────────────────────────────────────────
         var macroListPanel = new VerticalStackPanel { Spacing = 1 };
         var editorPanel    = new VerticalStackPanel { Spacing = 4 };
@@ -72,79 +58,18 @@ public static class MacrosTabContent
         // ── Helpers ──────────────────────────────────────────────────────────
         void MarkDirty() => World.Instance?.Macros?.Save();
 
-        string GetHotkeyString(Macro macro)
-        {
-            if (macro.ControllerButtons is { Length: > 0 })
-                return Controller.GetButtonNames(macro.ControllerButtons);
-
-            SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-            if (macro.Alt)   mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
-            if (macro.Ctrl)  mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
-            if (macro.Shift) mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
-
-            if (macro.Key != SDL.SDL_Keycode.SDLK_UNKNOWN)
-                return KeysTranslator.TryGetKey(macro.Key, mod);
-            if (macro.MouseButton != MouseButtonType.None)
-                return KeysTranslator.GetMouseButton(macro.MouseButton, mod);
-            if (macro.WheelScroll)
-                return KeysTranslator.GetMouseWheel(macro.WheelUp, mod);
-
-            return "None";
-        }
-
-        void CancelCapture()
-        {
-            isListening = false;
-            capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-            capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-            if (captureHandler != null)
-            {
-                Keyboard.KeyDownEvent -= captureHandler;
-                captureHandler = null;
-            }
-            if (profile != null) profile.DisableHotkeys = false;
-        }
-
-        void ApplyCapturedHotkey()
-        {
-            if (selectedMacro == null || capturedKey == SDL.SDL_Keycode.SDLK_UNKNOWN) return;
-
-            bool ctrl  = (capturedMod & SDL.SDL_Keymod.SDL_KMOD_CTRL)  != 0;
-            bool alt   = (capturedMod & SDL.SDL_Keymod.SDL_KMOD_ALT)   != 0;
-            bool shift = (capturedMod & SDL.SDL_Keymod.SDL_KMOD_SHIFT) != 0;
-
-            Macro? existing = World.Instance?.Macros?.FindMacro(capturedKey, alt, ctrl, shift);
-            if (existing != null && existing != selectedMacro)
-            {
-                GameActions.Print(World.Instance, $"Hotkey already used by macro: {existing.Name}", 32);
-                CancelCapture();
-                return;
-            }
-
-            selectedMacro.Key              = capturedKey;
-            selectedMacro.Alt              = alt;
-            selectedMacro.Ctrl             = ctrl;
-            selectedMacro.Shift            = shift;
-            selectedMacro.MouseButton      = MouseButtonType.None;
-            selectedMacro.WheelScroll      = false;
-            selectedMacro.ControllerButtons = null;
-
-            CancelCapture();
-            MarkDirty();
-        }
-
         // ── BuildMacroList ────────────────────────────────────────────────────
         void BuildMacroList()
         {
             macroListPanel.Widgets.Clear();
 
-            List<Macro> allMacros = World.Instance?.Macros?.GetAllMacros() ?? new List<Macro>();
+            List<Macro> allMacros = World.Instance?.Macros?.GetAllMacros() ?? [];
 
             List<Macro> display = string.IsNullOrWhiteSpace(filterText)
                 ? allMacros
                 : allMacros.Where(m =>
                     m.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
-                    GetHotkeyString(m).Contains(filterText, StringComparison.OrdinalIgnoreCase))
+                    m.GetBinding().Describe().Contains(filterText, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
             if (display.Count == 0)
@@ -166,7 +91,7 @@ public static class MacrosTabContent
                 Macro captured = macro;
 
                 grid.AddWidget(new MyraLabel(macro.Name, MyraLabel.TextStyle.P), dataRow, 0);
-                grid.AddWidget(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P), dataRow, 1);
+                grid.AddWidget(new MyraLabel(macro.GetBinding().Describe(), MyraLabel.TextStyle.P), dataRow, 1);
                 grid.AddWidget(new MyraButton("Edit", () =>
                 {
                     selectedMacro = captured;
@@ -182,7 +107,6 @@ public static class MacrosTabContent
         // ── BuildEditor ───────────────────────────────────────────────────────
         void BuildEditor()
         {
-            CancelCapture();
             editorPanel.Widgets.Clear();
 
             if (selectedMacro == null)
@@ -308,89 +232,34 @@ public static class MacrosTabContent
         void BuildHotkeyRow()
         {
             hotkeyRow.Widgets.Clear();
-            hotkeyRow.Widgets.Add(new MyraLabel("Hotkey:", MyraLabel.TextStyle.P));
 
             if (selectedMacro == null) return;
             Macro macro = selectedMacro;
 
-            if (isListening)
-            {
-                string captureDisplay = capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN
-                    ? KeysTranslator.TryGetKey(capturedKey, capturedMod)
-                    : "Listening...";
-                hotkeyRow.Widgets.Add(new MyraLabel(captureDisplay, MyraLabel.TextStyle.P));
-
-                if (capturedKey != SDL.SDL_Keycode.SDLK_UNKNOWN)
-                    hotkeyRow.Widgets.Add(new MyraButton("Apply", () =>
-                    {
-                        ApplyCapturedHotkey();
-                        BuildHotkeyRow();
-                        BuildMacroList();
-                    }));
-
-                hotkeyRow.Widgets.Add(new MyraButton("Cancel", () =>
+            var hotkeyInput = new HotkeyInput.HotkeyInput(
+                "Hotkey:",
+                macro.GetBinding(),
+                e =>
                 {
-                    CancelCapture();
-                    BuildHotkeyRow();
-                }));
-            }
-            else
-            {
-                hotkeyRow.Widgets.Add(new MyraLabel(GetHotkeyString(macro), MyraLabel.TextStyle.P));
-
-                hotkeyRow.Widgets.Add(new MyraButton("Capture", () =>
-                {
-                    isListening = true;
-                    capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-                    capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-                    if (profile != null) profile.DisableHotkeys = true;
-
-                    captureHandler = hotkeyStr =>
-                    {
-                        // Parse: "CTRL+SHIFT+SDLK_F1" → keycode + mod
-                        SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-                        SDL.SDL_Keymod mod  = SDL.SDL_Keymod.SDL_KMOD_NONE;
-                        foreach (string part in hotkeyStr.Split('+'))
-                        {
-                            switch (part)
-                            {
-                                case "CTRL":  mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;  break;
-                                case "SHIFT": mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT; break;
-                                case "ALT":   mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;   break;
-                                default:
-                                    Enum.TryParse<SDL.SDL_Keycode>(part, true, out key);
-                                    break;
-                            }
-                        }
-
-                        if (key == SDL.SDL_Keycode.SDLK_ESCAPE)
-                        {
-                            CancelCapture();
-                            BuildHotkeyRow();
-                            return;
-                        }
-
-                        capturedKey = key;
-                        capturedMod = mod;
-                        BuildHotkeyRow();
-                    };
-
-                    Keyboard.KeyDownEvent += captureHandler;
-                    BuildHotkeyRow();
-                }) { Tooltip = "Click then press a key to assign as hotkey" });
-
-                hotkeyRow.Widgets.Add(new MyraButton("Clear", () =>
-                {
-                    macro.Key               = SDL.SDL_Keycode.SDLK_UNKNOWN;
-                    macro.MouseButton       = MouseButtonType.None;
-                    macro.WheelScroll       = false;
-                    macro.ControllerButtons = null;
-                    macro.Alt = macro.Ctrl = macro.Shift = false;
+                    macro.ApplyBinding(e.NewValue);
                     MarkDirty();
-                    BuildHotkeyRow();
                     BuildMacroList();
-                }) { Tooltip = "Remove the hotkey from this macro" });
-            }
+                },
+                true,
+                newBinding =>
+                {
+                    Macro? conflict = World.Instance?.Macros?.GetAllMacros()
+                        .FirstOrDefault(m => m != macro && m.GetBinding().Matches(newBinding));
+
+                    if (conflict == null)
+                        return true;
+
+                    GameActions.Print(World.Instance, $"Hotkey already used by macro: {conflict.Name}", Constants.HUE_ERROR);
+                    return false;
+                }
+            );
+
+            hotkeyRow.Widgets.Add(hotkeyInput);
         }
 
         // ── BuildActionsPanel ─────────────────────────────────────────────────
@@ -708,7 +577,7 @@ public static class MacrosTabContent
 
         toolbar.Widgets.Add(new MyraButton("Import", () =>
         {
-            string? xml = Utility.Clipboard.GetClipboardText();
+            string? xml = Clipboard.GetClipboardText();
             if (xml.NotNullNotEmpty() && World.Instance?.Macros?.ImportFromXml(xml) == true)
             {
                 BuildMacroList();
@@ -741,8 +610,6 @@ public static class MacrosTabContent
 
         BuildMacroList();
         BuildEditor();
-
-        _cleanupAction = CancelCapture;
 
         var root = new VerticalStackPanel { Spacing = 2 };
         root.Widgets.Add(toolbar);

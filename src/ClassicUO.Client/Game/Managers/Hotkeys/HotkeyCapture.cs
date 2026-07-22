@@ -93,8 +93,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             });
         }
 
-        private void OnWheel(bool up)
-        {
+        private void OnWheel(bool up) =>
             Capture(new HotkeyBinding
             {
                 WheelScroll = true,
@@ -103,7 +102,6 @@ namespace ClassicUO.Game.Managers.Hotkeys
                 Shift = Keyboard.Shift,
                 Alt = Keyboard.Alt
             });
-        }
 
         private void OnBareModifier(SDL.SDL_Keymod mods)
         {
@@ -132,7 +130,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             // Capture every button held at this instant so chords (e.g. LB + A) can be bound.
             SDL.SDL_GamepadButton[] pressed = Controller.PressedButtons();
             if (pressed.Length == 0)
-                pressed = new[] { button };
+                pressed = [button];
 
             Capture(new HotkeyBinding { ControllerButtons = pressed });
         }

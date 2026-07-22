@@ -22,14 +22,11 @@ public static class NameplatesTab
     /// <summary>Returns the tab group containing general nameplate settings and profile sub-tabs</summary>
     internal static IOptionSource GetContent() => GetNameplatesMenuTabs();
 
-    private static OptionTabGroup GetNameplatesMenuTabs()
-    {
-
-        return new OptionTabGroup()
+    private static OptionTabGroup GetNameplatesMenuTabs() =>
+        new OptionTabGroup()
             .AddTab(TazLang.Get("mog_buttongeneral"), GetGeneralNameplatesSubTabContent, new SearchMetadata(TazLang.Get("mog_buttongeneral"), Keywords: [TazLang.Get("mog_kw_general")]))
             .AddTab(TazLang.Get("mog_buttonprofiles"), GetProfilesSubTabContentSource,
                 new SearchMetadata()); // Empty metadata to disable search; Doesn't render well in the results page.
-    }
 
     #region Profiles
 
@@ -94,7 +91,11 @@ public static class NameplatesTab
                         existingSelection: currentHotkey,
                         onSelectionChanged: e => OnProfileHotkeyChanged(profile, e),
                         capturesMouseEvents: false
-                    ) { Padding = new Thickness(MyraStyle.STANDARD_SPACING, 0, 0, 0) }
+                    )
+                    {
+                        Padding = new Thickness(MyraStyle.STANDARD_SPACING, 0, 0, 0),
+                        Tooltip = TazLang.Get("mog_nameplates_optionstab_hotkeyinputtooltip")
+                    }
                 ],
                 [
                     OptionTabCommons.StyledVerticalSeparator(),
@@ -173,10 +174,8 @@ public static class NameplatesTab
         );
     }
 
-    private static VisualContainer GetItemsBoxesPanel(NameOverheadOption profile)
-    {
-
-        return new VisualContainer(
+    private static VisualContainer GetItemsBoxesPanel(NameOverheadOption profile) =>
+        new(
             new VisualContainerProps { LabelText = TazLang.Get("mog_nameplates_optionstab_items") },
             OptionsFactory.CreatePropBoundBitFlagCheckBox(
                 TazLang.Get("mog_nameplates_optionstab_containers"),
@@ -214,11 +213,9 @@ public static class NameplatesTab
                 NameOverheadOptions.Immoveable
             )
         );
-    }
 
-    private static VisualContainer GetCorpseBoxesPanel(NameOverheadOption profile)
-    {
-        return new VisualContainer(
+    private static VisualContainer GetCorpseBoxesPanel(NameOverheadOption profile) =>
+        new(
             new VisualContainerProps { LabelText = TazLang.Get("mog_nameplates_optionstab_corpses") },
             OptionsFactory.CreatePropBoundBitFlagCheckBox(
                 TazLang.Get("mog_nameplates_optionstab_monster"),
@@ -231,12 +228,9 @@ public static class NameplatesTab
                 NameOverheadOptions.HumanoidCorpses
             )
         );
-    }
 
-    private static VisualContainer GetMobilesByTypeBoxesPanel(NameOverheadOption profile)
-    {
-
-        return new VisualContainer(
+    private static VisualContainer GetMobilesByTypeBoxesPanel(NameOverheadOption profile) =>
+        new(
             new VisualContainerProps { LabelText = TazLang.Get("mog_nameplates_optionstab_mobilesbytype") },
             OptionsFactory.CreatePropBoundBitFlagCheckBox(
                 TazLang.Get("mog_nameplates_optionstab_humanoid"),
@@ -264,11 +258,9 @@ public static class NameplatesTab
                 NameOverheadOptions.Self
             )
         );
-    }
 
-    private static VisualContainer GetMobilesByNotorietyBoxesPanel(NameOverheadOption profile)
-    {
-        return new VisualContainer(
+    private static VisualContainer GetMobilesByNotorietyBoxesPanel(NameOverheadOption profile) =>
+        new(
             new VisualContainerProps { LabelText = TazLang.Get("mog_nameplates_optionstab_mobilesbynotoriety") },
             OptionsFactory.CreatePropBoundBitFlagCheckBox(
                 TazLang.Get("mog_nameplates_optionstab_innocent"),
@@ -306,18 +298,14 @@ public static class NameplatesTab
                 NameOverheadOptions.Murderer
             )
         );
-    }
 
     #endregion Profiles
 
     #region General Sub-Tab
 
-    private static IOptionSource GetGeneralNameplatesSubTabContent()
-    {
-
-        return OptionsUi.Horizontal(GeneralSettingsLeftSide(), GeneralSettingsRightSide())
+    private static IOptionSource GetGeneralNameplatesSubTabContent() =>
+        OptionsUi.Horizontal(GeneralSettingsLeftSide(), GeneralSettingsRightSide())
             .WithSearch(new SearchMetadata(TazLang.Get("mog_buttongeneral"), [TazLang.Get("mog_kw_nameplate"), TazLang.Get("mog_kw_general")]));
-    }
 
     private static OptionFragment GeneralSettingsLeftSide()
     {

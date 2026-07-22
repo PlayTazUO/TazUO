@@ -43,6 +43,8 @@ public class HotkeyInput : Panel
 
     private HotkeyBinding _selection;
 
+    public Func<HotkeyBinding, bool>? BindingValidator { get; set; }
+
     /// <summary>
     /// Gets or sets the currently recorded hotkey binding.
     /// Setting a value equal to the current one is a no-op; any change raises
@@ -78,14 +80,18 @@ public class HotkeyInput : Panel
     /// When <see langword="true"/> the underlying <see cref="HotkeyCapture"/> also records mouse
     /// button presses as part of the binding.
     /// </param>
+    /// <param name="bindingValidator">An optional binding validator. Called when a hotkey is captured by the component. A <see langword="true"/> result indicates the hotkey is valid,
+    /// a <see langword="false"/> result indicates the hotkey is invalid and should be rejected</param>
     public HotkeyInput(
         string? labelText = null,
         HotkeyBinding? existingSelection = null,
         Action<SelectionChangedEventArgs>? onSelectionChanged = null,
-        bool capturesMouseEvents = true
+        bool capturesMouseEvents = true,
+        Func<HotkeyBinding, bool>? bindingValidator = null
     )
     {
         _onSelectionChanged = onSelectionChanged;
+        BindingValidator = bindingValidator;
 
         _capturer = new HotkeyCapture { CapturesMouseEvents = capturesMouseEvents };
 
@@ -98,11 +104,12 @@ public class HotkeyInput : Panel
 
         _input = new TextBox
         {
-            Tooltip = TazLang.Get("mog_nameplates_optionstab_hotkeyinputtooltip"),
+            Tooltip = Tooltip,
             Width = 150,
             Cursor = null,
             Selection = null,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Readonly = true
         };
 
         _input.TouchDown += StartRecording;
@@ -149,6 +156,12 @@ public class HotkeyInput : Panel
 
         _capturer.Start(newBinding =>
         {
+            if (BindingValidator?.Invoke(newBinding) != true)
+            {
+                UpdateText(); // Have to manually reset state here since the 'Selection' change event usually takes care of that
+                return;
+            }
+
             Selection = newBinding; // This auto stops upon capture
         });
 
