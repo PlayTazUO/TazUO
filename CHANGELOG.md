@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Fixes
+* Fixed a FormatException crash when loading a world map marker file that contained a malformed line; malformed lines are now logged and skipped instead of crashing the client, and a warning is shown in-game noting how many lines were skipped - [P.R 763](https://github.com/PlayTazUO/TazUO/pull/763) ([bittiez](https://github.com/bittiez))
 * Fixed an IndexOutOfRangeException crash when the server sent a map change (ExtendedCommand 0x08) with an out-of-range map index while no map was loaded; the index is now clamped before the map is constructed - [P.R 762](https://github.com/PlayTazUO/TazUO/pull/762) ([bittiez](https://github.com/bittiez))
 
 ## V5.5.0
