@@ -182,4 +182,16 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "auto_save_gump_positions", false)]
         public partial bool AutoSaveGumpPositions { get; set; }
+
+        // Which container style newly opened (non-corpse) containers use. Backing store for the
+        // <see cref="ContainerStyle"/> enum: 0 = Grid (default), 1 = Original.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "container_style", 0)]
+        public partial int ContainerStyleValue { get; set; }
+
+        // Which container style corpses open in. Backing store for the
+        // <see cref="CorpseContainerStyle"/> enum: 0 = Grid (default), 1 = Original, 2 = Old Grid Loot.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "corpse_container_style", 0)]
+        public partial int CorpseContainerStyleValue { get; set; }
 }

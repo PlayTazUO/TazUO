@@ -382,8 +382,6 @@ namespace ClassicUO.Configuration
 
         public uint GrabBagSerial { get; set => SetProperty(ref field, value); }
 
-        public int GridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
-
         public bool ReduceFPSWhenInactive { get; set => SetProperty(ref field, value); }
 
         public bool EnableVSync { get; set => SetProperty(ref field, value); } = true;
@@ -504,9 +502,30 @@ namespace ClassicUO.Configuration
         public uint SetFavoriteMoveBagSerial { get; set => SetProperty(ref field, value); }
 
         #region GRID CONTAINER
-        public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
+
+        /// <summary>
+        ///     Which container style newly opened (non-corpse) containers use. Persisted via the
+        ///     <see cref="ContainerStyleValue"/> SQL setting.
+        /// </summary>
+        [JsonIgnore]
+        public ContainerStyle ContainerStyle
+        {
+            get => (ContainerStyle)ContainerStyleValue;
+            set => ContainerStyleValue = (int)value;
+        }
+
+        /// <summary>
+        ///     Which container style corpses open in. Persisted via the
+        ///     <see cref="CorpseContainerStyleValue"/> SQL setting.
+        /// </summary>
+        [JsonIgnore]
+        public CorpseContainerStyle CorpseContainerStyle
+        {
+            get => (CorpseContainerStyle)CorpseContainerStyleValue;
+            set => CorpseContainerStyleValue = (int)value;
+        }
+
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
-        public CorpseContainerStyle CorpseContainerStyle { get; set => SetProperty(ref field, value); } = CorpseContainerStyle.Default;
         public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
         public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 0;
         public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;
@@ -902,6 +921,19 @@ namespace ClassicUO.Configuration
         [JsonPropertyName("enable_a_sync_map_loading")]
         public bool OldEnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
 
+        [Obsolete]
+        [JsonPropertyName("use_grid_layout_container_gumps")]
+        public bool OldUseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("grid_loot_type")]
+        public int OldGridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
+
+        // Stored as the old CorpseContainerStyle enum ordinal: 0 = Default, 1 = Grid, 2 = Original
+        [Obsolete]
+        [JsonPropertyName("corpse_container_style")]
+        public int OldCorpseContainerStyle { get; set => SetProperty(ref field, value); }
+
         private long lastSave;
 
         internal void AfterLoad()
@@ -952,6 +984,36 @@ namespace ClassicUO.Configuration
                 PostProcessingType = OldPostProcessingType;
                 ForcedHouseTransparency = OldForcedHouseTransparency;
                 HideHudGumpFlags = OldHideHudGumpFlags;
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 2) //1
+            {
+                // The old "Enable grid containers" toggle becomes the new Container Style dropdown.
+                ContainerStyle = OldUseGridLayoutContainerGumps ? ContainerStyle.Grid : ContainerStyle.Original;
+
+                // The old grid loot type and corpse container style settings are merged into a single
+                // Corpse Container Style dropdown. Grid loot took precedence when it was enabled.
+                if (OldGridLootType == 1 || OldGridLootType == 2)
+                {
+                    CorpseContainerStyle = CorpseContainerStyle.OldGridLoot;
+                }
+                else
+                {
+                    switch (OldCorpseContainerStyle)
+                    {
+                        case 1: // old CorpseContainerStyle.Grid
+                            CorpseContainerStyle = CorpseContainerStyle.Grid;
+                            break;
+                        case 2: // old CorpseContainerStyle.Original
+                            CorpseContainerStyle = CorpseContainerStyle.Original;
+                            break;
+                        default: // old CorpseContainerStyle.Default followed the global container style
+                            CorpseContainerStyle = OldUseGridLayoutContainerGumps ? CorpseContainerStyle.Grid : CorpseContainerStyle.Original;
+                            break;
+                    }
+                }
 
                 ProfileMigrationVersion++;
             }

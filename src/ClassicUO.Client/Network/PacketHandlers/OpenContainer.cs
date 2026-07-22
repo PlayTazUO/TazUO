@@ -132,18 +132,13 @@ internal static class OpenContainer
                 {
                     if (
                         item.IsCorpse
-                        && (
-                            ProfileManager.CurrentProfile.GridLootType == 1
-                            || ProfileManager.CurrentProfile.GridLootType == 2
-                        )
+                        && ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.OldGridLoot
                     )
                     {
                         UIManager.GetGump<GridLootGump>(serial)?.Dispose();
                         UIManager.Add(new GridLootGump(world, serial));
                         Helpers.SharedStore.RequestedGridLoot = serial;
-
-                        if (ProfileManager.CurrentProfile.GridLootType == 1)
-                            return;
+                        return;
                     }
 
                     if (
@@ -153,8 +148,11 @@ internal static class OpenContainer
                     )
                         UpdateLargeContainerGraphics(ref graphic);
 
+                    bool useGridContainer = item.IsCorpse
+                        ? ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.Grid
+                        : ProfileManager.CurrentProfile.ContainerStyle == ContainerStyle.Grid;
 
-                    if (ProfileManager.CurrentProfile.UseGridLayoutContainerGumps && graphic != 0x091A)
+                    if (useGridContainer && graphic != 0x091A)
                         GridContainer.OpenOrUpdate(serial, graphic);
                     else
                     {
@@ -317,18 +315,13 @@ internal static class OpenContainer
                 {
                     if (
                         item.IsCorpse
-                        && (
-                            ProfileManager.CurrentProfile.GridLootType == 1
-                            || ProfileManager.CurrentProfile.GridLootType == 2
-                        )
+                        && ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.OldGridLoot
                     )
                     {
                         UIManager.GetGump<GridLootGump>(serial)?.Dispose();
                         UIManager.Add(new GridLootGump(world, serial));
                         Helpers.SharedStore.RequestedGridLoot = serial;
-
-                        if (ProfileManager.CurrentProfile.GridLootType == 1)
-                            return;
+                        return;
                     }
                     bool canuse = graphic == 1009 || graphic == 1081 || graphic == 1278 || graphic == 2417 || (graphic >= 1060 && graphic <= 1068) || (graphic >= 1071 && graphic <= 1079) || (graphic >= 1258 && graphic <= 1270) || (graphic >= 1282 && graphic <= 1291) || (graphic >= 1071 && graphic <= 1079);
 
@@ -351,7 +344,11 @@ internal static class OpenContainer
 
                     }
 
-                    if (ProfileManager.CurrentProfile.UseGridLayoutContainerGumps && !canuse && !isvendor && graphic != 0x091A)
+                    bool useGridContainer = item.IsCorpse
+                        ? ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.Grid
+                        : ProfileManager.CurrentProfile.ContainerStyle == ContainerStyle.Grid;
+
+                    if (useGridContainer && !canuse && !isvendor && graphic != 0x091A)
                     {
                         GridContainer.OpenOrUpdate(serial, graphic);
                     }

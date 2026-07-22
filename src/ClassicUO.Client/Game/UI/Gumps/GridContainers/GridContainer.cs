@@ -541,7 +541,7 @@ public partial class GridContainer : ResizableGump
                     {
                         case CorpseContainerStyle.Grid: return false;
                         case CorpseContainerStyle.Original: return true;
-                        // CorpseContainerStyle.Default falls through to the global default
+                        // CorpseContainerStyle.OldGridLoot falls through to the global default
                     }
                 }
 

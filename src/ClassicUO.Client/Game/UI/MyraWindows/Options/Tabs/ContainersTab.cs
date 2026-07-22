@@ -22,6 +22,11 @@ public static class ContainersTab
 
         return new OptionTabGroup()
             .AddTab(
+                TazLang.Get("mog_containers_labelgeneral"),
+                GetGeneralContainerSection,
+                new SearchMetadata(TazLang.Get("mog_containers_labelgeneral"), Keywords: [TazLang.Get("mog_kw_general")])
+            )
+            .AddTab(
                 TazLang.Get("mog_containers_labeloriginalcontainers"),
                 GetStandardContainerSection,
                 new SearchMetadata(TazLang.Get("mog_containers_labeloriginalcontainers"), Keywords: [TazLang.Get("mog_kw_original"), TazLang.Get("mog_kw_standard")])
@@ -31,6 +36,29 @@ public static class ContainersTab
                 GetGridContainerSection,
                 new SearchMetadata(TazLang.Get("mog_containers_labelgridcontainers"), Keywords: [TazLang.Get("mog_kw_grid")])
             );
+    }
+
+    private static IOptionSource GetGeneralContainerSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.VisualContainer(
+                new VisualContainerProps { LabelText = TazLang.Get("mog_containers_labelgeneral") },
+                Option.LComboBox(
+                    TazLang.Get("mog_general_containerstyle"),
+                    new Accessor<ContainerStyle>(() => profile.ContainerStyle, v => profile.ContainerStyle = v),
+                    "mog_containerstyleopt_",
+                    search: new SearchMetadata(TazLang.Get("mog_general_containerstyle"), Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_style")])
+                ),
+                Option.LComboBox(
+                    TazLang.Get("mog_tazuo_corpsecontainerstyle"),
+                    new Accessor<CorpseContainerStyle>(() => profile.CorpseContainerStyle, v => profile.CorpseContainerStyle = v),
+                    "mog_tazuo_corpsestyleopt_",
+                    TazLang.Get("mog_tazuo_tooltipcorpsecontainerstyle"),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_corpsecontainerstyle"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_container")])
+                )
+            )
+            .WithSearch(new SearchMetadata(TazLang.Get("mog_containers_labelgeneral"), Tags: [TazLang.Get("mog_kw_container")], Keywords: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_style")]));
     }
 
     private static IOptionSource GetStandardContainerSection()
@@ -167,53 +195,54 @@ public static class ContainersTab
                 LabelText = TazLang.Get("mog_containers_labelgridcontainerswiki"),
                 LabelLink = "https://tazuo.org/wiki/tazuogrid-containers/"
             },
-            OptionsUi.CheckBoxGroup(
-                new PropertyBinder(new Accessor<bool>(() => profile.UseGridLayoutContainerGumps), TazLang.Get("mog_tazuo_enablegridcontainers")),
-                Option.Checkbox(
-                    TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"),
-                    new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_view")])
+            Option.Checkbox(
+                TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"),
+                new Accessor<bool>(() => profile.GridContainersDefaultToOldStyleView),
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_gridcontainersdefaulttooldstyleview"), Keywords: [TazLang.Get("mog_kw_old"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_view")])
+            ),
+            Option.ComboBox(
+                TazLang.Get("gridcontainer_defaultview", "Default container view"),
+                profile.GridContainerViewMode,
+                [TazLang.Get("gridcontainer_view_grid_short", "Grid"), TazLang.Get("gridcontainer_view_list_short", "List")],
+                i =>
+                {
+                    profile.GridContainerViewMode = i;
+                    GridContainer.UpdateAllGridContainers();
+                },
+                search: new SearchMetadata(TazLang.Get("gridcontainer_defaultview", "Default container view"), Keywords: [TazLang.Get("mog_kw_view"), TazLang.Get("mog_kw_grid")])
+            ),
+            Option.ComboBox(
+                TazLang.Get("mog_tazuo_searchstyle"),
+                profile.GridContainerSearchMode,
+                [TazLang.Get("mog_tazuo_onlyshow"), TazLang.Get("mog_tazuo_highlight")],
+                i => profile.GridContainerSearchMode = i,
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_searchstyle"), Keywords: [TazLang.Get("mog_kw_search"), TazLang.Get("mog_kw_style")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_tazuo_enablecontainerpreview"),
+                new Accessor<bool>(() => profile.GridEnableContPreview),
+                TazLang.Get("mog_tazuo_tooltippreview"),
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_enablecontainerpreview"), Keywords: [TazLang.Get("mog_kw_preview")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_tazuo_makeanchorable"),
+                new Accessor<bool>(
+                    () => profile.EnableGridContainerAnchor,
+                    b =>
+                    {
+                        profile.EnableGridContainerAnchor = b;
+                        GridContainer.UpdateAllGridContainers();
+                    }
                 ),
-                Option.LComboBox(
-                    TazLang.Get("mog_tazuo_corpsecontainerstyle"),
-                    new Accessor<CorpseContainerStyle>(() => profile.CorpseContainerStyle, v => profile.CorpseContainerStyle = v),
-                    "mog_tazuo_corpsestyleopt_",
-                    TazLang.Get("mog_tazuo_tooltipcorpsecontainerstyle"),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_corpsecontainerstyle"), Keywords: [TazLang.Get("mog_kw_corpse"), TazLang.Get("mog_kw_style"), TazLang.Get("mog_kw_container")])
-                ),
-                Option.ComboBox(
-                    TazLang.Get("mog_tazuo_searchstyle"),
-                    profile.GridContainerSearchMode,
-                    [TazLang.Get("mog_tazuo_onlyshow"), TazLang.Get("mog_tazuo_highlight")],
-                    i => profile.GridContainerSearchMode = i,
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_searchstyle"), Keywords: [TazLang.Get("mog_kw_search"), TazLang.Get("mog_kw_style")])
-                ),
-                Option.Checkbox(
-                    TazLang.Get("mog_tazuo_enablecontainerpreview"),
-                    new Accessor<bool>(() => profile.GridEnableContPreview),
-                    TazLang.Get("mog_tazuo_tooltippreview"),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_enablecontainerpreview"), Keywords: [TazLang.Get("mog_kw_preview")])
-                ),
-                Option.Checkbox(
-                    TazLang.Get("mog_tazuo_makeanchorable"),
-                    new Accessor<bool>(
-                        () => profile.EnableGridContainerAnchor,
-                        b =>
-                        {
-                            profile.EnableGridContainerAnchor = b;
-                            GridContainer.UpdateAllGridContainers();
-                        }
-                    ),
-                    TazLang.Get("mog_tazuo_tooltipgridanchor"),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_makeanchorable"), Keywords: [TazLang.Get("mog_kw_anchor")])
-                ),
-                Option.Checkbox(
-                    TazLang.Get("mog_tazuo_griddisabletargeting"),
-                    new Accessor<bool>(() => profile.DisableTargetingGridContainers),
-                    search: new SearchMetadata(TazLang.Get("mog_tazuo_griddisabletargeting"), Keywords: [TazLang.Get("mog_kw_targeting"), TazLang.Get("mog_kw_disable")])
-                ),
-                GetGridContainerStylingSection()
-            ).WithSearch(new SearchMetadata(TazLang.Get("mog_containers_labelgridcontainers"), Tags: [TazLang.Get("mog_kw_container"), TazLang.Get("mog_kw_grid")], Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("mog_kw_container")]))
+                TazLang.Get("mog_tazuo_tooltipgridanchor"),
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_makeanchorable"), Keywords: [TazLang.Get("mog_kw_anchor")])
+            ),
+            Option.Checkbox(
+                TazLang.Get("mog_tazuo_griddisabletargeting"),
+                new Accessor<bool>(() => profile.DisableTargetingGridContainers),
+                search: new SearchMetadata(TazLang.Get("mog_tazuo_griddisabletargeting"), Keywords: [TazLang.Get("mog_kw_targeting"), TazLang.Get("mog_kw_disable")])
+            ),
+            GetGridContainerStylingSection()
         );
     }
 
