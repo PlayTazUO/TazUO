@@ -76,7 +76,6 @@ public class WorldMapGump : ResizableGump
     private bool _freeView;
     private List<string> _hiddenMarkerFiles;
     private bool _isScrolling;
-    private bool _isTopMost;
     private bool _mapMarkersLoaded;
     private List<string> _hiddenZoneFiles;
     private ZoneSets _zoneSets = new ZoneSets();
@@ -122,7 +121,6 @@ public class WorldMapGump : ResizableGump
     private WorldMapDoubleClickAction _doubleClickAction = WorldMapDoubleClickAction.ToggleLock;
     private bool _isFullscreen;
     private Rectangle _preFullscreenBounds;
-    private bool _preFullscreenTopMost;
 
     private GumpPic _northIcon;
 
@@ -171,7 +169,7 @@ public class WorldMapGump : ResizableGump
         if (ProfileManager.CurrentProfile != null)
         {
             _last_position = ProfileManager.CurrentProfile.WorldMapPosition;
-            IsLocked = ProfileManager.CurrentProfile.WorldMapLocked;
+            SetLockStatus(ProfileManager.CurrentProfile.WorldMapLocked);
         }
 
         X = _last_position.X;
@@ -192,29 +190,6 @@ public class WorldMapGump : ResizableGump
 
     public override GumpType GumpType => GumpType.WorldMap;
     public float Zoom => _zooms[_zoomIndex];
-
-    public bool TopMost
-    {
-        get => _isTopMost;
-        set => SetTopMost(value, true);
-    }
-
-    private void SetTopMost(bool value, bool save)
-    {
-        if (_isTopMost != value)
-        {
-            _isTopMost = value;
-
-            if (save)
-            {
-                SaveSettings();
-            }
-        }
-
-        ShowBorder = _isTopMost;
-
-        LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
-    }
 
     public bool FreeView
     {
@@ -296,7 +271,6 @@ public class WorldMapGump : ResizableGump
         _showGridIfZoomed = ProfileManager.CurrentProfile.WorldMapShowGridIfZoomed;
         _allowPositionalTarget = ProfileManager.CurrentProfile.WorldMapAllowPositionalTarget;
         _doubleClickAction = ProfileManager.CurrentProfile.WorldMapDoubleClickAction;
-        TopMost = ProfileManager.CurrentProfile.WorldMapTopMost;
         FreeView = ProfileManager.CurrentProfile.WorldMapFreeView;
     }
 
@@ -314,7 +288,6 @@ public class WorldMapGump : ResizableGump
         ProfileManager.CurrentProfile.WorldMapHeight = _isFullscreen ? _preFullscreenBounds.Height : Height;
 
         ProfileManager.CurrentProfile.WorldMapFlipMap = _flipMap;
-        ProfileManager.CurrentProfile.WorldMapTopMost = TopMost;
         ProfileManager.CurrentProfile.WorldMapFreeView = FreeView;
         ProfileManager.CurrentProfile.WorldMapShowParty = _showPartyMembers;
 
@@ -408,8 +381,6 @@ public class WorldMapGump : ResizableGump
                     null
                 )
         );
-
-        _options["top_most"] = new ContextMenuItemEntry(ResGumps.TopMost, () => { TopMost = !TopMost; }, true, _isTopMost);
 
         _options["free_view"] = new ContextMenuItemEntry(ResGumps.FreeView, () => { FreeView = !FreeView; }, true, FreeView);
 
@@ -722,7 +693,6 @@ public class WorldMapGump : ResizableGump
         ContextMenu.Add(_options["goto_location"]);
         ContextMenu.Add(_options["pathfind_location"]);
         ContextMenu.Add(_options["flip_map"]);
-        ContextMenu.Add(_options["top_most"]);
 
         var doubleClickEntry = new ContextMenuItemEntry(TazLang.Get("map_doubleclick_action", "Double click action"));
         doubleClickEntry.Add(new ContextMenuItemEntry(TazLang.Get("map_doubleclick_toggle_lock", "Toggle lock state"),
@@ -4062,7 +4032,6 @@ public class WorldMapGump : ResizableGump
             case WorldMapDoubleClickAction.ToggleLock:
             default:
                 SetLockStatus(!IsLocked);
-                TopMost = !IsLocked;
                 break;
         }
 
@@ -4085,12 +4054,9 @@ public class WorldMapGump : ResizableGump
     {
         if (!_isFullscreen)
         {
-            // Remember the current windowed bounds and top-most state so we can restore them later.
+            // Remember the current windowed bounds so we can restore them later.
             _preFullscreenBounds = new Rectangle(X, Y, Width, Height);
-            _preFullscreenTopMost = _isTopMost;
             _isFullscreen = true;
-
-            SetTopMost(true, false);
 
             X = 0;
             Y = 0;
@@ -4099,8 +4065,6 @@ public class WorldMapGump : ResizableGump
         else
         {
             _isFullscreen = false;
-
-            SetTopMost(_preFullscreenTopMost, false);
 
             X = _preFullscreenBounds.X;
             Y = _preFullscreenBounds.Y;
