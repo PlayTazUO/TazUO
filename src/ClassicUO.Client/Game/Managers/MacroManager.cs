@@ -2403,14 +2403,14 @@ namespace ClassicUO.Game.Managers
                 case MacroType.CloseCorpses:
                     CorpseContainerStyle corpseStyle = ProfileManager.CurrentProfile?.CorpseContainerStyle ?? CorpseContainerStyle.Grid;
 
-                    if (corpseStyle == CorpseContainerStyle.Original)
+                    if (corpseStyle is CorpseContainerStyle.Original or CorpseContainerStyle.OldGridLootAndContainer)
                         UIManager.ForEach<ContainerGump>(g =>
                         {
                             if (g.Graphic == ContainerGump.CORPSES_GUMP)
                                 g.Dispose();
                         });
 
-                    if (corpseStyle == CorpseContainerStyle.OldGridLoot)
+                    if (corpseStyle is CorpseContainerStyle.OldGridLoot or CorpseContainerStyle.OldGridLootAndContainer)
                         UIManager.ForEach<GridLootGump>(g =>
                         {
                             g.Dispose();

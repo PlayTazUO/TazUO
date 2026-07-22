@@ -536,7 +536,7 @@ namespace ClassicUO.Game.UI.Gumps
                     new string[]
                     {
                         TazLang.Get("mog_tazuo_corpsestyleopt_grid"), TazLang.Get("mog_tazuo_corpsestyleopt_original"),
-                        TazLang.Get("mog_tazuo_corpsestyleopt_oldgridloot")
+                        TazLang.Get("mog_tazuo_corpsestyleopt_oldgridloot"), TazLang.Get("mog_tazuo_corpsestyleopt_oldgridlootandcontainer")
                     }, (int)profile.CorpseContainerStyle,
                     (s, n) => { profile.CorpseContainerStyle = (CorpseContainerStyle)s; }
                 ), true, page

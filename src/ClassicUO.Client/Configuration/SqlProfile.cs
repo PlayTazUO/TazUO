@@ -186,12 +186,13 @@ public sealed partial class Profile
         // Which container style newly opened (non-corpse) containers use. Backing store for the
         // <see cref="ContainerStyle"/> enum: 0 = Grid (default), 1 = Original.
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "container_style", 0)]
+        [SqlSetting(SettingsScope.Global, "container_style", 0)]
         public partial int ContainerStyleValue { get; set; }
 
         // Which container style corpses open in. Backing store for the
-        // <see cref="CorpseContainerStyle"/> enum: 0 = Grid (default), 1 = Original, 2 = Old Grid Loot.
+        // <see cref="CorpseContainerStyle"/> enum: 0 = Grid (default), 1 = Original, 2 = Old Grid Loot,
+        // 3 = Old Grid Loot + Container.
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Char, "corpse_container_style", 0)]
+        [SqlSetting(SettingsScope.Global, "corpse_container_style", 0)]
         public partial int CorpseContainerStyleValue { get; set; }
 }

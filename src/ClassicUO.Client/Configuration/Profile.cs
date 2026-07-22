@@ -994,10 +994,15 @@ namespace ClassicUO.Configuration
                 ContainerStyle = OldUseGridLayoutContainerGumps ? ContainerStyle.Grid : ContainerStyle.Original;
 
                 // The old grid loot type and corpse container style settings are merged into a single
-                // Corpse Container Style dropdown. Grid loot took precedence when it was enabled.
-                if (OldGridLootType == 1 || OldGridLootType == 2)
+                // Corpse Container Style dropdown. Grid loot took precedence when it was enabled; the
+                // old "both" mode (2) is preserved as the combined loot-gump-plus-container style.
+                if (OldGridLootType == 1)
                 {
                     CorpseContainerStyle = CorpseContainerStyle.OldGridLoot;
+                }
+                else if (OldGridLootType == 2)
+                {
+                    CorpseContainerStyle = CorpseContainerStyle.OldGridLootAndContainer;
                 }
                 else
                 {

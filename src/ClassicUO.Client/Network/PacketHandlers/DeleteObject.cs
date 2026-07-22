@@ -72,7 +72,7 @@ internal static class DeleteObject
                 if (top != null && top.Graphic == 0x2006)
                 {
                     UIManager.GetGump<NearbyLootGump>()?.RequestUpdateContents();
-                    if (ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.OldGridLoot)
+                    if (ProfileManager.CurrentProfile.CorpseContainerStyle is CorpseContainerStyle.OldGridLoot or CorpseContainerStyle.OldGridLootAndContainer)
                         UIManager.GetGump<GridLootGump>(cont)?.RequestUpdateContents();
                 }
 

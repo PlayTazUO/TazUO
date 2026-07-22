@@ -120,7 +120,7 @@ internal static class ItemHelpers
 
                     #endregion
 
-                    if (ProfileManager.CurrentProfile.CorpseContainerStyle == CorpseContainerStyle.OldGridLoot)
+                    if (ProfileManager.CurrentProfile.CorpseContainerStyle is CorpseContainerStyle.OldGridLoot or CorpseContainerStyle.OldGridLootAndContainer)
                     {
                         GridLootGump grid_gump = UIManager.GetGump<GridLootGump>(
                             containerSerial
