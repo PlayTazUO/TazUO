@@ -1938,6 +1938,8 @@ public class WorldMapGump : ResizableGump
                             markerFile.Hidden = true;
                         }
 
+                        int skippedMarkers = 0;
+
                         if (mapFile != null && Path.GetExtension(mapFile).ToLower().Equals(".xml")) // Ultima Mapper
                         {
                             using (var reader = new XmlTextReader(File.Open(mapFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
@@ -1997,15 +1999,26 @@ public class WorldMapGump : ResizableGump
                                             continue;
                                         }
 
-                                        var marker = new WMapMarker
+                                        WMapMarker marker;
+
+                                        try
                                         {
-                                            X = int.Parse(splits[0]),
-                                            Y = int.Parse(splits[1]),
-                                            MapId = int.Parse(splits[2]),
-                                            Name = string.Join(" ", splits, 3, splits.Length - 3),
-                                            Color = Color.White,
-                                            ZoomIndex = 3
-                                        };
+                                            marker = new WMapMarker
+                                            {
+                                                X = int.Parse(splits[0]),
+                                                Y = int.Parse(splits[1]),
+                                                MapId = int.Parse(splits[2]),
+                                                Name = string.Join(" ", splits, 3, splits.Length - 3),
+                                                Color = Color.White,
+                                                ZoomIndex = 3
+                                            };
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            skippedMarkers++;
+                                            Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFile)}: \"{line}\" ({ex.Message})");
+                                            continue;
+                                        }
 
                                         string[] iconSplits = icon.Split(' ');
 
@@ -2023,7 +2036,7 @@ public class WorldMapGump : ResizableGump
                         }
                         else if (mapFile != null && Path.GetExtension(mapFile).ToLower().Equals(".usr"))
                         {
-                            markerFile.Markers = LoadUserMarkers();
+                            markerFile.Markers = LoadUserMarkers(out skippedMarkers);
                             markerFile.IsEditable = true;
                         }
                         else if (mapFile != null) //CSV x,y,mapindex,name of marker,iconname,color,zoom
@@ -2050,16 +2063,27 @@ public class WorldMapGump : ResizableGump
                                         continue;
                                     }
 
-                                    var marker = new WMapMarker
+                                    WMapMarker marker;
+
+                                    try
                                     {
-                                        X = int.Parse(splits[0]),
-                                        Y = int.Parse(splits[1]),
-                                        MapId = int.Parse(splits[2]),
-                                        Name = splits[3],
-                                        MarkerIconName = splits[4].ToLower(),
-                                        Color = GetColor(splits[5]),
-                                        ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
-                                    };
+                                        marker = new WMapMarker
+                                        {
+                                            X = int.Parse(splits[0]),
+                                            Y = int.Parse(splits[1]),
+                                            MapId = int.Parse(splits[2]),
+                                            Name = splits[3],
+                                            MarkerIconName = splits[4].ToLower(),
+                                            Color = GetColor(splits[5]),
+                                            ZoomIndex = splits.Length == 7 ? int.Parse(splits[6]) : 3
+                                        };
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        skippedMarkers++;
+                                        Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(mapFile)}: \"{line}\" ({ex.Message})");
+                                        continue;
+                                    }
 
                                     if (_markerIcons.TryGetValue(splits[4].ToLower(), out Texture2D value))
                                     {
@@ -2075,6 +2099,12 @@ public class WorldMapGump : ResizableGump
                         {
                             GameActions.Print(World, $"..{Path.GetFileName(mapFile)} ({markerFile.Markers.Count})", 0x2B);
                         }
+
+                        if (skippedMarkers > 0)
+                        {
+                            GameActions.Print(World, $"..{Path.GetFileName(mapFile)}: skipped {skippedMarkers} malformed marker line(s), see log for details", Constants.HUE_WARN);
+                        }
+
                         _markerFiles.Add(markerFile);
                     }
                 }
@@ -2271,7 +2301,18 @@ public class WorldMapGump : ResizableGump
     /// <returns>List of loaded Markers</returns>
     internal static List<WMapMarker> LoadUserMarkers()
     {
+        return LoadUserMarkers(out _);
+    }
+
+    /// <summary>
+    /// Load User Markers to List of Markers, reporting how many malformed lines were skipped.
+    /// </summary>
+    /// <param name="skippedLines">Number of malformed lines that were skipped.</param>
+    /// <returns>List of loaded Markers</returns>
+    internal static List<WMapMarker> LoadUserMarkers(out int skippedLines)
+    {
         var tempList = new List<WMapMarker>();
+        skippedLines = 0;
 
         using (var reader = new StreamReader(UserMarkersFilePath))
         {
@@ -2290,7 +2331,16 @@ public class WorldMapGump : ResizableGump
                 {
                     continue;
                 }
-                tempList.Add(ParseMarker(splits));
+
+                try
+                {
+                    tempList.Add(ParseMarker(splits));
+                }
+                catch (Exception ex)
+                {
+                    skippedLines++;
+                    Utility.Logging.Log.Warn($"Skipping malformed marker line in {Path.GetFileName(UserMarkersFilePath)}: \"{line}\" ({ex.Message})");
+                }
             }
         }
 
