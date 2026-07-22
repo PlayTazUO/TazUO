@@ -346,6 +346,19 @@ namespace ClassicUO.Game.Data
             return false;
         }
 
+        /// <summary>
+        /// Determines whether an object at the given screen position falls within the configured
+        /// circle of transparency radius from the player. Used to optionally limit the
+        /// tree-to-stumps replacement to nearby trees only.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsWithinStumpRadius(Vector2 objectScreenPos, Vector2 playerScreenPos)
+        {
+            int radius = ProfileManager.CurrentProfile?.CircleOfTransparencyRadius ?? 0;
+
+            return Vector2.Distance(objectScreenPos, playerScreenPos) <= radius;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsVegetation(ushort g) => (_filteredTiles[g] & STATIC_TILES_FILTER_FLAGS.STFF_VEGETATION) != 0;
 

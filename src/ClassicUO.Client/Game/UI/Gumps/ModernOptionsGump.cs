@@ -772,6 +772,12 @@ namespace ClassicUO.Game.UI.Gumps
             (new CheckboxWithLabel(TazLang.Get("mog_general_treestostump"), isChecked: profile.TreeToStumps, valueChanged: (b) => { profile.TreeToStumps = b; }),
                 true, page);
 
+            content.Indent();
+            content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_general_treestostumpradius"), isChecked: profile.TreeToStumpsWithinRadius, valueChanged: (b) => { profile.TreeToStumpsWithinRadius = b; }),
+                true, page);
+            content.RemoveIndent();
+
             content.BlankLine();
 
             content.AddToRight
