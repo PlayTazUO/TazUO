@@ -2102,7 +2102,7 @@ public class WorldMapGump : ResizableGump
 
                         if (skippedMarkers > 0)
                         {
-                            GameActions.Print(World, $"..{Path.GetFileName(mapFile)}: skipped {skippedMarkers} malformed marker line(s), see log for details", 0x35);
+                            GameActions.Print(World, $"..{Path.GetFileName(mapFile)}: skipped {skippedMarkers} malformed marker line(s), see log for details", Constants.HUE_WARN);
                         }
 
                         _markerFiles.Add(markerFile);
