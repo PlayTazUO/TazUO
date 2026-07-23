@@ -56,6 +56,12 @@ namespace ClassicUO.Game.Managers
         public AutoLootList CurrentList => _currentList;
 
         /// <summary>
+        /// True once the config file has finished loading. Mutating operations are ignored until
+        /// this is true so the background load cannot overwrite user changes.
+        /// </summary>
+        public bool IsLoaded => _loaded;
+
+        /// <summary>
         /// The hue applied to corpses after they have been auto looted.
         /// </summary>
         public const ushort LootedCorpseHue = 73;
@@ -80,7 +86,7 @@ namespace ClassicUO.Game.Managers
         private readonly HashSet<uint> _quickContainsLookup = new ();
         private readonly HashSet<uint> _recentlyLooted = new();
         private static readonly PriorityQueue<(uint item, AutoLootConfigEntry entry), AutoLootPriority> _lootItems = new ();
-        private static readonly List<AutoLootConfigEntry> _fallbackEntries = new ();
+        private readonly List<AutoLootConfigEntry> _fallbackEntries = new ();
         private AutoLootData _data = new ();
         private AutoLootList _currentList;
         private bool _loaded = false;
@@ -177,6 +183,8 @@ namespace ClassicUO.Game.Managers
         /// <returns></returns>
         public AutoLootConfigEntry AddAutoLootEntry(ushort graphic = 0, ushort hue = ushort.MaxValue, string name = "")
         {
+            if (!_loaded) return null;
+
             var item = new AutoLootConfigEntry() { Graphic = graphic, Hue = hue, Name = name };
 
             foreach (AutoLootConfigEntry entry in AutoLootEntries)
@@ -248,6 +256,8 @@ namespace ClassicUO.Game.Managers
 
         public void TryRemoveAutoLootEntry(string uid)
         {
+            if (!_loaded) return;
+
             List<AutoLootConfigEntry> entries = AutoLootEntries;
             int removeAt = -1;
 
@@ -286,7 +296,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public void SelectList(AutoLootList list)
         {
-            if (list == null || !_data.Lists.Contains(list) || _currentList == list) return;
+            if (!_loaded || list == null || !_data.Lists.Contains(list) || _currentList == list) return;
 
             _currentList = list;
             _data.SelectedUid = list.Uid;
@@ -298,6 +308,8 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public AutoLootList AddList(string name)
         {
+            if (!_loaded) return null;
+
             var list = new AutoLootList { Name = string.IsNullOrWhiteSpace(name) ? "New List" : name.Trim() };
 
             _data.Lists.Add(list);
@@ -315,7 +327,7 @@ namespace ClassicUO.Game.Managers
         /// <returns>True if the list was deleted.</returns>
         public bool DeleteList(AutoLootList list)
         {
-            if (list == null || _data.Lists.Count <= 1 || !_data.Lists.Remove(list)) return false;
+            if (!_loaded || list == null || _data.Lists.Count <= 1 || !_data.Lists.Remove(list)) return false;
 
             if (_currentList == list)
             {
@@ -332,7 +344,7 @@ namespace ClassicUO.Game.Managers
         /// </summary>
         public void RenameList(AutoLootList list, string newName)
         {
-            if (list == null || string.IsNullOrWhiteSpace(newName)) return;
+            if (!_loaded || list == null || string.IsNullOrWhiteSpace(newName)) return;
 
             list.Name = newName.Trim();
             Save();

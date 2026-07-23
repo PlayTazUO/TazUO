@@ -441,6 +441,8 @@ public static class AutoLootAgentTabContent
                     hue = ushort.MaxValue;
 
                 AutoLootManager.AutoLootConfigEntry? entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, newNameBox.Text);
+                if (entry == null) return;
+
                 entry.RegexSearch = newRegexBox.Text;
 
                 newNameBox.Text = "";
