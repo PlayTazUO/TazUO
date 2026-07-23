@@ -542,11 +542,6 @@ namespace ClassicUO.LegionScripting
         /// <param name="e">The thrown error</param>
         private static void ShowScriptError(ScriptFile script, Exception e)
         {
-            // This runs on the script's background thread. GameActions.Print and ScriptErrorWindow
-            // build UI that measures text through FontStashSharp, whose glyph/kerning caches are not
-            // thread-safe against the render thread. Touching them off the main thread corrupts the
-            // internal caches and throws (e.g. IndexOutOfRangeException in Int32Map), so every
-            // UI-producing call below is marshaled onto the main thread.
             MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered an error.", Constants.HUE_ERROR));
 
             ExceptionOperations eo = script.PythonEngine.GetService<ExceptionOperations>();
@@ -629,9 +624,6 @@ namespace ClassicUO.LegionScripting
 
         private static void ShowCSharpCompilationError(ScriptFile script, CompilationErrorException e)
         {
-            // Runs on the script's background thread - see the threading note in ShowScriptError.
-            // All UI-producing calls are marshaled onto the main thread to avoid corrupting
-            // FontStashSharp's non-thread-safe glyph/kerning caches.
             MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' has compilation errors.", Constants.HUE_ERROR));
 
             var errorLocations = new List<ScriptErrorLocation>();
@@ -675,9 +667,6 @@ namespace ClassicUO.LegionScripting
 
         private static void ShowCSharpRuntimeError(ScriptFile script, Exception e)
         {
-            // Runs on the script's background thread - see the threading note in ShowScriptError.
-            // All UI-producing calls are marshaled onto the main thread to avoid corrupting
-            // FontStashSharp's non-thread-safe glyph/kerning caches.
             MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered a runtime error.", Constants.HUE_ERROR));
 
             // Unwrap AggregateException if present

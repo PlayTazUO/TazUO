@@ -118,20 +118,11 @@ namespace ClassicUO
         {
             fix = null;
 
-            // ToString() on the top-level exception includes the stack traces of any inner
-            // (and aggregated) exceptions, so we can inspect the whole chain in one string.
             string details = e.ToString();
 
             if (string.IsNullOrEmpty(details))
                 return false;
 
-            // FontStashSharp's glyph and kerning caches (Int32Map, GetGlyphKernAdvance, and the
-            // measuring/layout code that feeds them) are not thread-safe. When text is measured or
-            // rendered from a background thread at the same time the render thread is using the same
-            // font, the shared caches get corrupted and throw - most commonly an
-            // IndexOutOfRangeException deep inside Int32Map.Insert. The usual source is a Legion
-            // script that builds UI or prints messages from its own thread instead of marshaling
-            // the work onto the main thread.
             bool crashedInFontCache =
                 details.Contains("FontStashSharp.Rasterizers.StbTrueTypeSharp.Int32Map") ||
                 details.Contains("GetGlyphKernAdvance") ||
