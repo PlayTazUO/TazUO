@@ -148,7 +148,7 @@ public class HotkeyInput : Panel
     private void DetachAsNecessary()
     {
         // Check if we're still being rendered
-        if (Desktop != null || Visible)
+        if (Desktop != null && Visible)
             return;
 
         // A capture can only be started by clicking the input, so the TouchDown handler can stay

@@ -28,8 +28,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
         public static string FilePath => Path.Combine(ProfileManager.ProfilePath, "hotkeys.json");
 
         /// <summary>
-        /// True when all hotkeys are globally disabled (the shared Profile.DisableHotkeys flag,
-        /// toggled by the global shutoff hotkey). Entries flagged
+        /// True when all hotkeys are globally disabled (the shared Profile.HotkeysSuppressed state —
+        /// the persistent shutoff hotkey or a temporary capture suppression). Entries flagged
         /// <see cref="HotKeyEntry.IgnoresGlobalDisable"/> ignore this.
         /// </summary>
         public static bool GloballyDisabled => ProfileManager.CurrentProfile?.HotkeysSuppressed ?? false;
