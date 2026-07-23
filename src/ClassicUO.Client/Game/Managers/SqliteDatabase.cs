@@ -68,6 +68,8 @@ namespace ClassicUO.Game.Managers
             if (!Directory.Exists(DataDirectory))
                 Directory.CreateDirectory(DataDirectory);
 
+            ClearReadOnlyAttribute(DatabasePath);
+
             ConnectionString = new SqliteConnectionStringBuilder
             {
                 DataSource = DatabasePath,
@@ -225,6 +227,32 @@ namespace ClassicUO.Game.Managers
         /// where a bound parameter or double-quoted identifier cannot be used).
         /// </summary>
         private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
+
+        /// <summary>
+        /// Best-effort clearing of the read-only file attribute on an existing database file. A file
+        /// flagged read-only (commonly by cloud-sync clients like OneDrive, antivirus, or restoring the
+        /// Data folder from a backup/zip) can still be opened with <see cref="SqliteOpenMode.ReadWriteCreate"/>,
+        /// but any write fails with <c>SQLite Error 8: 'attempt to write a readonly database'</c>. Clearing
+        /// the attribute up front lets writes succeed; failures here are swallowed so a locked-down file
+        /// never turns database construction into a crash.
+        /// </summary>
+        private static void ClearReadOnlyAttribute(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return;
+
+                FileAttributes attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+            }
+            catch
+            {
+                // Best-effort: if the attribute can't be read or cleared, fall through and let the
+                // normal connection path surface any resulting error.
+            }
+        }
 
         /// <summary>Throws <see cref="ObjectDisposedException"/> if this database has already been disposed.</summary>
         protected void ThrowIfDisposed()
