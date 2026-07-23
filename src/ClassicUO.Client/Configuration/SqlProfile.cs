@@ -188,4 +188,23 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "auto_save_gump_positions", false)]
         public partial bool AutoSaveGumpPositions { get; set; }
+
+        // Which container style newly opened (non-corpse) containers use. Backing store for the
+        // <see cref="ContainerStyle"/> enum: 0 = Grid (default), 1 = Original.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "container_style", 0)]
+        public partial int ContainerStyleValue { get; set; }
+
+        // Which container style corpses open in. Backing store for the
+        // <see cref="CorpseContainerStyle"/> enum: 0 = Grid (default), 1 = Original, 2 = Old Grid Loot,
+        // 3 = Old Grid Loot + Container.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "corpse_container_style", 0)]
+        public partial int CorpseContainerStyleValue { get; set; }
+
+        // When enabled (alongside TreeToStumps), trees are only rendered as stumps while they
+        // are within the circle of transparency radius from the player.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.TREE_TO_STUMPS_WITHIN_RADIUS, false)]
+        public partial bool TreeToStumpsWithinRadius { get; set; }
 }

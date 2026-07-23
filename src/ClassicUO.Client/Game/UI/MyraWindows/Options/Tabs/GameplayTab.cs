@@ -85,6 +85,11 @@ public static class GameplayTab
                 search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_treestostump"), Keywords: [TazLang.Get("mog_kw_tree"), TazLang.Get("mog_kw_stump")])
             ),
             Option.Checkbox(
+                TazLang.Get("mog_gameplaytab_terrain_treestostumpradius"),
+                new Accessor<bool>(() => profile.TreeToStumpsWithinRadius),
+                search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_treestostumpradius"), Keywords: [TazLang.Get("mog_kw_tree"), TazLang.Get("mog_kw_stump")])
+            ),
+            Option.Checkbox(
                 TazLang.Get("mog_gameplaytab_terrain_hidevegetation"),
                 new Accessor<bool>(() => profile.HideVegetation),
                 search: new SearchMetadata(TazLang.Get("mog_gameplaytab_terrain_hidevegetation"), Keywords: [TazLang.Get("mog_kw_vegetation")])

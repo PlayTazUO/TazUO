@@ -98,15 +98,7 @@ namespace ClassicUO.Game.UI
                         align = FontStashSharp.RichText.TextHorizontalAlignment.Center;
                 }
 
-                string finalString = _textHTML;
-                if (SerialHelper.IsItem(Serial))
-                {
-                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(_world, Serial);
-                    finalString ??= _textHTML;
-                }
-
-                if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(_textHTML)) //Fix for vendor search
-                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(_textHTML);
+                string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML);
 
                 if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
                     finalString = $"[{_item.CustomName}]\n" + finalString;

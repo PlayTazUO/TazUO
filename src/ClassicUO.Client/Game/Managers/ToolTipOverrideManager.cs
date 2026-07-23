@@ -242,6 +242,9 @@ namespace ClassicUO.Game.Managers
         private static IEnumerable<ToolTipOverrideData> FilteredOverrides(
             ToolTipOverrideData[] all, byte itemLayer)
         {
+            if (all == null)
+                yield break;
+
             foreach (ToolTipOverrideData data in all)
             {
                 if (data == null)
@@ -288,7 +291,7 @@ namespace ClassicUO.Game.Managers
                 );
             }
 
-            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
+            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile is { GridHighlightProperties: true } ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
 
             foreach (ItemPropertiesData.SinglePropertyData property in itemPropertiesData.singlePropertyData)
             {
@@ -363,7 +366,7 @@ namespace ClassicUO.Game.Managers
                 sb.AppendLine(finalLine);
             }
 
-            if (ProfileManager.CurrentProfile.GridHighlightShowRuleName && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
+            if (ProfileManager.CurrentProfile is { GridHighlightShowRuleName: true } && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
             {
                 sb.AppendLine($"/c[gray]Matched Rule: {bestGridHighlightData.Name}/cd");
             }
@@ -385,6 +388,31 @@ namespace ClassicUO.Game.Managers
         {
             var itemPropertiesData = new ItemPropertiesData(text);
             return BuildTooltip(itemPropertiesData);
+        }
+
+        /// <summary>
+        /// Resolve the final tooltip text for a hovered object, applying any configured overrides.
+        /// Items that exist in the world are resolved by serial. Items shown in server-sent gumps
+        /// (and vendor search results) are referenced by serial but aren't real world items, so the
+        /// serial lookup returns null - in that case the override is applied to the raw OPL text
+        /// (<paramref name="rawHtml"/>) instead. Falls back to the raw text only when no override
+        /// produced any output.
+        /// </summary>
+        public static string ResolveTooltipText(World world, uint serial, string rawHtml)
+        {
+            string finalString = null;
+
+            if (SerialHelper.IsItem(serial))
+                finalString = ProcessTooltipText(world, serial);
+
+            //Fix for vendor search and items shown in server gumps that aren't real world items.
+            if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(rawHtml))
+                finalString = ProcessTooltipText(rawHtml);
+
+            if (string.IsNullOrEmpty(finalString))
+                finalString = rawHtml;
+
+            return finalString;
         }
 
         private static bool CheckLayers(TooltipLayers overrideLayer, byte itemLayer)
