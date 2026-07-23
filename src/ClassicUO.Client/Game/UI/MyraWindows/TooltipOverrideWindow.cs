@@ -1,0 +1,292 @@
+#nullable enable
+using System;
+using System.Collections.Generic;
+using ClassicUO.Configuration;
+using ClassicUO.Game.Data;
+using ClassicUO.Game.Managers;
+using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.MyraWindows.Widgets;
+using Microsoft.Xna.Framework;
+using Myra.Graphics2D;
+using Myra.Graphics2D.Brushes;
+using Myra.Graphics2D.UI;
+
+namespace ClassicUO.Game.UI.MyraWindows;
+
+/// <summary>
+/// Myra-based replacement for the legacy <c>TooltipConfigGump</c>. Lists the current profile's
+/// tooltip override rules with per-row search/format text, min/max value ranges and a layer
+/// filter, plus toolbar actions to add, import, export, refresh and clear all overrides.
+///
+/// Each edit is committed straight to the profile's override lists through the shared
+/// <see cref="ToolTipOverrideData"/> model, and structural changes (add/delete/clear) rebuild
+/// the lightweight widget list rather than tearing down per-label textures like the old gump.
+/// </summary>
+public sealed class TooltipOverrideWindow : MyraControl
+{
+    private static readonly Array LayerValues = Enum.GetValues(typeof(TooltipLayers));
+    private static readonly string[] LayerNames = Enum.GetNames(typeof(TooltipLayers));
+
+    private readonly World _world;
+    private readonly VerticalStackPanel _rowsPanel = new() { Spacing = MyraStyle.STANDARD_SPACING };
+
+    private MyraLabel _statusLabel = null!;
+    private DateTime _statusUntil = DateTime.MinValue;
+
+    public TooltipOverrideWindow(World world) : base(TazLang.Get("tooltipconfig_title", "Tooltip Override Configuration"))
+    {
+        _world = world;
+        Build();
+        CenterInViewPort();
+    }
+
+    /// <summary>Opens the window, focusing an existing instance instead of stacking duplicates.</summary>
+    public static void Show(World world)
+    {
+        foreach (IGui gump in UIManager.Gumps)
+        {
+            if (gump is TooltipOverrideWindow w && !w.IsDisposed)
+            {
+                w.BringOnTop();
+                return;
+            }
+        }
+
+        UIManager.Add(new TooltipOverrideWindow(world));
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+        if (_statusLabel.Visible && DateTime.Now > _statusUntil)
+            _statusLabel.Visible = false;
+    }
+
+    private void Build()
+    {
+        var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+
+        root.Widgets.Add(new LinkLabel(
+            TazLang.Get("tooltipconfig_wiki", "Tooltip Overrides Wiki"),
+            "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override",
+            MyraLabel.TextStyle.P));
+
+        root.Widgets.Add(BuildToolbar());
+
+        BuildRows();
+        root.Widgets.Add(new ScrollViewer { MaxHeight = 450, MinWidth = 620, Content = _rowsPanel });
+
+        SetRootContent(root);
+    }
+
+    private Widget BuildToolbar()
+    {
+        var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_add", "Add +"), AddNewOverride));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_export", "Export"),
+            () => ToolTipOverrideData.ExportOverrideSettings(_world)));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_import", "Import"),
+            ToolTipOverrideData.ImportOverrideSettings));
+        toolbar.Widgets.Add(new MyraButton(TazLang.Get("tooltipconfig_refresh", "Refresh"), BuildRows));
+
+        MyraButton deleteAll = new(TazLang.Get("tooltipconfig_deleteall", "Delete All"), ConfirmDeleteAll)
+        {
+            Tooltip = TazLang.Get("tooltipconfig_deleteall_tooltip",
+                "/c[red]This will remove ALL tooltip override settings.\nThis is not reversible.")
+        };
+        MyraStyle.ApplyButtonDangerStyle(deleteAll);
+        toolbar.Widgets.Add(deleteAll);
+
+        _statusLabel = new MyraLabel("", MyraLabel.TextStyle.P) { Visible = false };
+        toolbar.Widgets.Add(_statusLabel);
+
+        return toolbar;
+    }
+
+    private void BuildRows()
+    {
+        _rowsPanel.Widgets.Clear();
+
+        int count = ProfileManager.CurrentProfile?.ToolTipOverride_SearchText.Count ?? 0;
+
+        if (count == 0)
+        {
+            _rowsPanel.Widgets.Add(new MyraLabel(
+                TazLang.Get("tooltipconfig_empty", "No tooltip overrides yet. Use \"Add +\" to create one."),
+                MyraLabel.TextStyle.P));
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+            _rowsPanel.Widgets.Add(BuildRow(ToolTipOverrideData.Get(i)));
+    }
+
+    private Widget BuildRow(ToolTipOverrideData data)
+    {
+        var body = new VerticalStackPanel
+        {
+            Spacing = 4,
+            Border = new SolidBrush(MyraStyle.GridBorderColor),
+            BorderThickness = new Thickness(1),
+            Background = new SolidBrush(new Color(0, 0, 0, 25)),
+            Padding = new Thickness(4)
+        };
+
+        // Row 1: delete button, search text and format text.
+        var row1 = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+        MyraButton deleteButton = new("X", () =>
+        {
+            data.Delete();
+            BuildRows();
+        })
+        {
+            Tooltip = TazLang.Get("tooltipconfig_deleterow", "Delete this override")
+        };
+        MyraStyle.ApplyButtonDangerStyle(deleteButton);
+        row1.Widgets.Add(deleteButton);
+
+        var searchBox = new MyraInputBox
+        {
+            Text = data.SearchText,
+            Width = 220,
+            Tooltip = TazLang.Get("tooltipconfig_searchtext_tooltip",
+                "This is the search text for matching tooltip lines.")
+        };
+        searchBox.TextChangedByUser += (_, _) =>
+        {
+            // The override is unusable without search text, so only commit non-empty values (matches the legacy gump).
+            if (string.IsNullOrEmpty(searchBox.Text))
+                return;
+
+            data.SearchText = searchBox.Text;
+            data.Save();
+            ShowSaved();
+        };
+        row1.Widgets.Add(searchBox);
+
+        var formatBox = new MyraInputBox
+        {
+            Text = data.FormattedText,
+            Width = 300,
+            Tooltip = TazLang.Get("tooltipconfig_formattext_tooltip",
+                "This is what the matching tooltip line will be replaced with. See the wiki for more details!")
+        };
+        formatBox.TextChangedByUser += (_, _) =>
+        {
+            data.FormattedText = formatBox.Text ?? "";
+            data.Save();
+            ShowSaved();
+        };
+        row1.Widgets.Add(formatBox);
+
+        body.Widgets.Add(row1);
+
+        // Row 2: two min/max value ranges and the layer filter.
+        var row2 = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+        row2.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig_minmax", "Min/Max"), MyraLabel.TextStyle.P));
+        row2.Widgets.Add(NumericBox(data.Min1, v => { data.Min1 = v; data.Save(); ShowSaved(); }));
+        row2.Widgets.Add(NumericBox(data.Max1, v => { data.Max1 = v; data.Save(); ShowSaved(); }));
+
+        row2.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig_minmax", "Min/Max"), MyraLabel.TextStyle.P));
+        row2.Widgets.Add(NumericBox(data.Min2, v => { data.Min2 = v; data.Save(); ShowSaved(); }));
+        row2.Widgets.Add(NumericBox(data.Max2, v => { data.Max2 = v; data.Save(); ShowSaved(); }));
+
+        row2.Widgets.Add(BuildLayerCombo(data));
+
+        body.Widgets.Add(row2);
+
+        return body;
+    }
+
+    private static Widget NumericBox(int value, Action<int> onChanged)
+    {
+        var box = new MyraInputBox
+        {
+            Text = value.ToString(),
+            Width = 55,
+            InputFilter = c => char.IsDigit(c) || c == '-'
+        };
+        box.TextChangedByUser += (_, _) =>
+        {
+            if (int.TryParse(box.Text, out int v))
+                onChanged(v);
+        };
+        return box;
+    }
+
+    private Widget BuildLayerCombo(ToolTipOverrideData data)
+    {
+        var combo = new ComboView { MinWidth = 130, VerticalAlignment = VerticalAlignment.Center };
+
+        for (int i = 0; i < LayerNames.Length; i++)
+            combo.ListView.Widgets.Add(new Myra.Graphics2D.UI.Label { Text = LayerNames[i], Tag = i });
+
+        combo.ListView.SelectedIndex = Array.IndexOf(LayerValues, data.ItemLayer);
+        combo.ListView.SelectedIndexChanged += (_, _) =>
+        {
+            if (combo.ListView.SelectedIndex is not int idx)
+                return;
+
+            data.ItemLayer = (TooltipLayers)LayerValues.GetValue(idx)!;
+            data.Save();
+            ShowSaved();
+        };
+
+        return combo;
+    }
+
+    private void AddNewOverride()
+    {
+        // Requesting the next (out-of-range) index makes ToolTipOverrideData create and persist a
+        // new default entry, so we just rebuild the list afterwards to show it.
+        if (ProfileManager.CurrentProfile == null)
+            return;
+
+        ToolTipOverrideData.Get(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count);
+        BuildRows();
+    }
+
+    private void ConfirmDeleteAll()
+    {
+        new MyraDialog(
+            TazLang.Get("tooltipconfig_deleteall", "Delete All"),
+            new MyraLabel(
+                TazLang.Get("tooltipconfig_deleteall_confirm",
+                    "This will remove ALL tooltip override settings.\nThis is not reversible."),
+                MyraLabel.TextStyle.P),
+            ok =>
+            {
+                if (!ok)
+                    return;
+
+                ClearAll();
+                BuildRows();
+            });
+    }
+
+    private static void ClearAll()
+    {
+        Profile? profile = ProfileManager.CurrentProfile;
+        if (profile == null)
+            return;
+
+        profile.ToolTipOverride_SearchText = new List<string>();
+        profile.ToolTipOverride_NewFormat = new List<string>();
+        profile.ToolTipOverride_MinVal1 = new List<int>();
+        profile.ToolTipOverride_MinVal2 = new List<int>();
+        profile.ToolTipOverride_MaxVal1 = new List<int>();
+        profile.ToolTipOverride_MaxVal2 = new List<int>();
+        profile.ToolTipOverride_Layer = new List<byte>();
+    }
+
+    private void ShowSaved()
+    {
+        _statusLabel.Text = TazLang.Get("tooltipconfig_saved", "Saved");
+        _statusLabel.Visible = true;
+        _statusUntil = DateTime.Now.AddSeconds(1);
+    }
+}
