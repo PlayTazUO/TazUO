@@ -195,4 +195,10 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "corpse_container_style", 0)]
         public partial int CorpseContainerStyleValue { get; set; }
+
+        // When enabled (alongside TreeToStumps), trees are only rendered as stumps while they
+        // are within the circle of transparency radius from the player.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.TREE_TO_STUMPS_WITHIN_RADIUS, false)]
+        public partial bool TreeToStumpsWithinRadius { get; set; }
 }
