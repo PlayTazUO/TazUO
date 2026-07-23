@@ -127,6 +127,19 @@ namespace ClassicUO.Configuration
         [JsonIgnore] public string CharacterName { get; set => SetProperty(ref field, value); }
         [JsonIgnore] public uint Serial { get; set => SetProperty(ref field, value); }
 
+        /// <summary>
+        /// An ephemeral flag used to temporarily disable hotkeys
+        /// </summary>
+        [JsonIgnore] public bool TemporarilySuppressHotkeys { get; set => SetProperty(ref field, value); } = false;
+
+        /// <summary>
+        ///     A readonly property used to determine whether hotkeys are currently suppressed.
+        /// <p>
+        ///     Hotkeys are suppressed if either the <see cref="TemporarilySuppressHotkeys"/> or SQL <see cref="PersistentDisableHotkeys"/> flags are set.
+        /// </p>
+        /// </summary>
+        [JsonIgnore] public bool HotkeysSuppressed { get => TemporarilySuppressHotkeys || PersistentDisableHotkeys; }
+
         // voice recognition
         public bool VoiceRecognitionEnabled { get; set => SetProperty(ref field, value); } = false;
         public string VoiceModelPath { get; set => SetProperty(ref field, value); } = string.Empty;
@@ -893,7 +906,7 @@ namespace ClassicUO.Configuration
         [Obsolete]
         [JsonPropertyName("disable_hotkeys")]
         public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
-        
+
         [Obsolete]
         [JsonPropertyName("disable_dismount_in_war_mode")]
         public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
@@ -939,7 +952,7 @@ namespace ClassicUO.Configuration
             {
                 EnableASyncMapLoading = OldEnableASyncMapLoading;
                 DisableDismountInWarMode = OldDisableDismountInWarMode;
-                DisableHotkeys = OldDisableHotkeys;
+                PersistentDisableHotkeys = OldDisableHotkeys;
                 ControllerEnabled = OldControllerEnabled;
                 EnableScavenger = OldEnableScavenger;
                 CounterGumpLocked = OldCounterGumpLocked;

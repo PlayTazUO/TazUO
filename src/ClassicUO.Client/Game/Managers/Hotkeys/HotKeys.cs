@@ -32,7 +32,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
         /// toggled by the global shutoff hotkey). Entries flagged
         /// <see cref="HotKeyEntry.IgnoresGlobalDisable"/> ignore this.
         /// </summary>
-        public static bool GloballyDisabled => ProfileManager.CurrentProfile?.DisableHotkeys ?? false;
+        public static bool GloballyDisabled => ProfileManager.CurrentProfile?.HotkeysSuppressed ?? false;
 
         /// <summary>
         /// Load the active profile's saved bindings and re-apply them to any already-registered

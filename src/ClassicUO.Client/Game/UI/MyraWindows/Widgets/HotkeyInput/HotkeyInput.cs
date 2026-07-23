@@ -46,6 +46,17 @@ public class HotkeyInput : Panel
     public Func<HotkeyBinding, bool>? BindingValidator { get; set; }
 
     /// <summary>
+    /// Gets or sets the tooltip shown on the input box. Hides <see cref="Widget.Tooltip"/> so the
+    /// hint lands on the box itself rather than the surrounding panel; defaults to a generic
+    /// usage hint.
+    /// </summary>
+    public new string Tooltip
+    {
+        get => _input.Tooltip;
+        set => _input.Tooltip = value;
+    }
+
+    /// <summary>
     /// Gets or sets the currently recorded hotkey binding.
     /// Setting a value equal to the current one is a no-op; any change raises
     /// <see cref="SelectionChanged"/> and invokes the optional callback supplied at construction.
@@ -104,7 +115,7 @@ public class HotkeyInput : Panel
 
         _input = new TextBox
         {
-            Tooltip = Tooltip,
+            Tooltip = TazLang.Get("uicommons_hotkeyinputtooltip"),
             Width = 150,
             Cursor = null,
             Selection = null,
@@ -131,8 +142,8 @@ public class HotkeyInput : Panel
     public override void OnVisibleChanged() => DetachAsNecessary();
 
     /// <summary>
-    /// Stops the capturer and detaches event handlers when the widget leaves the desktop or
-    /// becomes invisible, preventing stale captures after the widget is no longer rendered.
+    /// Stops the capturer when the widget leaves the desktop or becomes invisible, preventing a
+    /// capture session from staying subscribed to global input after the widget stops rendering.
     /// </summary>
     private void DetachAsNecessary()
     {
@@ -140,9 +151,10 @@ public class HotkeyInput : Panel
         if (Desktop != null || Visible)
             return;
 
-        // Detach everything
+        // A capture can only be started by clicking the input, so the TouchDown handler can stay
+        // subscribed; the widget may be placed again later.
         _capturer.Stop();
-        _input.TouchDown -= StartRecording;
+        UpdateText();
     }
 
     /// <summary>
@@ -154,16 +166,19 @@ public class HotkeyInput : Panel
         if (_capturer.IsActive)
             return;
 
-        _capturer.Start(newBinding =>
-        {
-            if (BindingValidator?.Invoke(newBinding) != true)
+        _capturer.Start(
+            newBinding =>
             {
-                UpdateText(); // Have to manually reset state here since the 'Selection' change event usually takes care of that
-                return;
-            }
+                if (BindingValidator?.Invoke(newBinding) == false)
+                {
+                    UpdateText(); // Have to manually reset state here since the 'Selection' change event usually takes care of that
+                    return;
+                }
 
-            Selection = newBinding; // This auto stops upon capture
-        });
+                Selection = newBinding; // This auto stops upon capture
+            },
+            UpdateText
+        ); // Escape cancels the capture, so the prompt has to be cleared
 
         UpdateText();
     }

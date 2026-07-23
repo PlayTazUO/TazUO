@@ -101,9 +101,15 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "disable_dismount_in_war_mode", true)]
         public partial bool DisableDismountInWarMode { get; set; }
 
+        /// <summary>
+        ///     Persistently disable hotkey usage.
+        ///     <p>
+        ///         To merely temporarily disable hotkeys, use <see cref="TemporarilySuppressHotkeys" />.
+        ///     </p>
+        /// </summary>
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "disable_hotkeys", false)]
-        public partial bool DisableHotkeys { get; set; }
+        public partial bool PersistentDisableHotkeys { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "post_processing_type", (ushort)0)]

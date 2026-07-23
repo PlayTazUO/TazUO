@@ -2491,8 +2491,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.ToggleHotkeys:
-                    ProfileManager.CurrentProfile.DisableHotkeys = !ProfileManager.CurrentProfile.DisableHotkeys;
-                    GameActions.Print($"Hotkeys {(ProfileManager.CurrentProfile.DisableHotkeys ? "disabled" : "enabled")}.");
+                    HotKeyRegistrar.ToggleHotkeysEnabled();
                     break;
 
 
