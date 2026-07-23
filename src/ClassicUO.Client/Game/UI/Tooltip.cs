@@ -98,15 +98,18 @@ namespace ClassicUO.Game.UI
                         align = FontStashSharp.RichText.TextHorizontalAlignment.Center;
                 }
 
-                string finalString = _textHTML;
+                string finalString = null;
                 if (SerialHelper.IsItem(Serial))
-                {
                     finalString = Managers.ToolTipOverrideData.ProcessTooltipText(_world, Serial);
-                    finalString ??= _textHTML;
-                }
 
-                if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(_textHTML)) //Fix for vendor search
+                //Fix for vendor search and items shown in server gumps that aren't real world items:
+                //the serial based lookup above returns null when the item isn't in world.Items, so
+                //apply the override using the raw OPL text instead of skipping it entirely.
+                if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(_textHTML))
                     finalString = Managers.ToolTipOverrideData.ProcessTooltipText(_textHTML);
+
+                if (string.IsNullOrEmpty(finalString))
+                    finalString = _textHTML;
 
                 if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
                     finalString = $"[{_item.CustomName}]\n" + finalString;
