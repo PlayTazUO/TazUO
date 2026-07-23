@@ -229,12 +229,9 @@ namespace ClassicUO.Game.Managers
         private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
 
         /// <summary>
-        /// Best-effort clearing of the read-only file attribute on an existing database file. A file
-        /// flagged read-only (commonly by cloud-sync clients like OneDrive, antivirus, or restoring the
-        /// Data folder from a backup/zip) can still be opened with <see cref="SqliteOpenMode.ReadWriteCreate"/>,
-        /// but any write fails with <c>SQLite Error 8: 'attempt to write a readonly database'</c>. Clearing
-        /// the attribute up front lets writes succeed; failures here are swallowed so a locked-down file
-        /// never turns database construction into a crash.
+        /// Best-effort clearing of the read-only file attribute on an existing database file. A read-only
+        /// file (set by cloud-sync, antivirus, or a backup restore) opens fine but fails every write with
+        /// "SQLite Error 8: attempt to write a readonly database". Failures here are swallowed.
         /// </summary>
         private static void ClearReadOnlyAttribute(string path)
         {
@@ -249,8 +246,7 @@ namespace ClassicUO.Game.Managers
             }
             catch
             {
-                // Best-effort: if the attribute can't be read or cleared, fall through and let the
-                // normal connection path surface any resulting error.
+                // Fall through and let the normal connection path surface any resulting error.
             }
         }
 

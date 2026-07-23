@@ -147,13 +147,11 @@ namespace ClassicUO.UnitTests.Game.Managers
         [Fact]
         public async Task Constructor_ClearsReadOnlyAttribute_AndAllowsWrites()
         {
-            // Create the database file and leave a table in place.
             await _db.RunAsync(c => c.ExecuteAsync(
                 "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
             _db.Dispose();
 
-            // Flag the file read-only, mimicking OneDrive/antivirus/backup-restore. Opening it and
-            // writing would otherwise fail with "attempt to write a readonly database".
+            // Flag the file read-only; writes would otherwise fail with "attempt to write a readonly database".
             string dbPath = Path.Combine(_tempDir, "test.db");
             File.SetAttributes(dbPath, File.GetAttributes(dbPath) | FileAttributes.ReadOnly);
             (File.GetAttributes(dbPath) & FileAttributes.ReadOnly).Should().NotBe(0);
