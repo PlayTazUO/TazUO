@@ -532,17 +532,17 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 c = new ComboBoxWithLabel
                 (World,
-                    TazLang.Get("mog_general_gridloot"), 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    TazLang.Get("mog_tazuo_corpsecontainerstyle"), 0, ThemeSettings.COMBO_BOX_WIDTH,
                     new string[]
                     {
-                        TazLang.Get("mog_general_gridlootoptdisable"), TazLang.Get("mog_general_gridlootoptonly"),
-                        TazLang.Get("mog_general_gridlootoptboth")
-                    }, profile.GridLootType,
-                    (s, n) => { profile.GridLootType = s; }
+                        TazLang.Get("mog_tazuo_corpsestyleopt_grid"), TazLang.Get("mog_tazuo_corpsestyleopt_original"),
+                        TazLang.Get("mog_tazuo_corpsestyleopt_oldgridloot"), TazLang.Get("mog_tazuo_corpsestyleopt_oldgridlootandcontainer")
+                    }, (int)profile.CorpseContainerStyle,
+                    (s, n) => { profile.CorpseContainerStyle = (CorpseContainerStyle)s; }
                 ), true, page
             );
 
-            c.SetTooltip(TazLang.Get("mog_general_gridloottooltip"));
+            c.SetTooltip(TazLang.Get("mog_tazuo_tooltipcorpsecontainerstyle"));
 
             content.BlankLine();
 
@@ -3110,8 +3110,15 @@ namespace ClassicUO.Game.UI.Gumps
 
             content.AddToRight
             (
-                new CheckboxWithLabel(TazLang.Get("mog_tazuo_enablegridcontainers"), 0, profile.UseGridLayoutContainerGumps,
-                    (b) => { profile.UseGridLayoutContainerGumps = b; }), true, page
+                new ComboBoxWithLabel
+                (World,
+                    TazLang.Get("mog_general_containerstyle"), 0, ThemeSettings.COMBO_BOX_WIDTH,
+                    new string[]
+                    {
+                        TazLang.Get("mog_containerstyleopt_grid"), TazLang.Get("mog_containerstyleopt_original")
+                    }, (int)profile.ContainerStyle,
+                    (s, n) => { profile.ContainerStyle = (ContainerStyle)s; }
+                ), true, page
             );
 
             content.BlankLine();

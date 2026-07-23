@@ -15,6 +15,25 @@ namespace ClassicUO.Network.PacketHandlers;
 
 internal static class OpenContainer
 {
+    /// <summary>Whether the given corpse style opens the old grid loot gump (on its own or alongside a container).</summary>
+    private static bool CorpseUsesOldGridLoot(CorpseContainerStyle style) =>
+        style is CorpseContainerStyle.OldGridLoot or CorpseContainerStyle.OldGridLootAndContainer;
+
+    /// <summary>
+    ///     Determines whether a newly opened container/corpse should use a grid container gump.
+    ///     Corpses follow their dedicated <see cref="CorpseContainerStyle"/>; the "old grid loot + container"
+    ///     mode falls back to the global <see cref="ContainerStyle"/> for the accompanying container.
+    /// </summary>
+    private static bool ShouldUseGridContainer(Profile profile, bool isCorpse) =>
+        isCorpse
+            ? profile.CorpseContainerStyle switch
+            {
+                CorpseContainerStyle.Grid => true,
+                CorpseContainerStyle.Original => false,
+                _ => profile.ContainerStyle == ContainerStyle.Grid
+            }
+            : profile.ContainerStyle == ContainerStyle.Grid;
+
     public static void Receive(World world, ref StackDataReader p)
     {
         if (world.Player == null)
@@ -130,19 +149,16 @@ internal static class OpenContainer
             {
                 if (!NearbyLootGump.IsCorpseRequested(serial))
                 {
-                    if (
-                        item.IsCorpse
-                        && (
-                            ProfileManager.CurrentProfile.GridLootType == 1
-                            || ProfileManager.CurrentProfile.GridLootType == 2
-                        )
-                    )
+                    CorpseContainerStyle corpseStyle = ProfileManager.CurrentProfile.CorpseContainerStyle;
+
+                    if (item.IsCorpse && CorpseUsesOldGridLoot(corpseStyle))
                     {
                         UIManager.GetGump<GridLootGump>(serial)?.Dispose();
                         UIManager.Add(new GridLootGump(world, serial));
                         Helpers.SharedStore.RequestedGridLoot = serial;
 
-                        if (ProfileManager.CurrentProfile.GridLootType == 1)
+                        // "Old grid loot only" shows just the loot gump; the combined mode also opens the container.
+                        if (corpseStyle == CorpseContainerStyle.OldGridLoot)
                             return;
                     }
 
@@ -153,8 +169,9 @@ internal static class OpenContainer
                     )
                         UpdateLargeContainerGraphics(ref graphic);
 
+                    bool useGridContainer = ShouldUseGridContainer(ProfileManager.CurrentProfile, item.IsCorpse);
 
-                    if (ProfileManager.CurrentProfile.UseGridLayoutContainerGumps && graphic != 0x091A)
+                    if (useGridContainer && graphic != 0x091A)
                         GridContainer.OpenOrUpdate(serial, graphic);
                     else
                     {
@@ -315,19 +332,16 @@ internal static class OpenContainer
             {
                 if (!NearbyLootGump.IsCorpseRequested(serial))
                 {
-                    if (
-                        item.IsCorpse
-                        && (
-                            ProfileManager.CurrentProfile.GridLootType == 1
-                            || ProfileManager.CurrentProfile.GridLootType == 2
-                        )
-                    )
+                    CorpseContainerStyle corpseStyle = ProfileManager.CurrentProfile.CorpseContainerStyle;
+
+                    if (item.IsCorpse && CorpseUsesOldGridLoot(corpseStyle))
                     {
                         UIManager.GetGump<GridLootGump>(serial)?.Dispose();
                         UIManager.Add(new GridLootGump(world, serial));
                         Helpers.SharedStore.RequestedGridLoot = serial;
 
-                        if (ProfileManager.CurrentProfile.GridLootType == 1)
+                        // "Old grid loot only" shows just the loot gump; the combined mode also opens the container.
+                        if (corpseStyle == CorpseContainerStyle.OldGridLoot)
                             return;
                     }
                     bool canuse = graphic == 1009 || graphic == 1081 || graphic == 1278 || graphic == 2417 || (graphic >= 1060 && graphic <= 1068) || (graphic >= 1071 && graphic <= 1079) || (graphic >= 1258 && graphic <= 1270) || (graphic >= 1282 && graphic <= 1291) || (graphic >= 1071 && graphic <= 1079);
@@ -351,7 +365,9 @@ internal static class OpenContainer
 
                     }
 
-                    if (ProfileManager.CurrentProfile.UseGridLayoutContainerGumps && !canuse && !isvendor && graphic != 0x091A)
+                    bool useGridContainer = ShouldUseGridContainer(ProfileManager.CurrentProfile, item.IsCorpse);
+
+                    if (useGridContainer && !canuse && !isvendor && graphic != 0x091A)
                     {
                         GridContainer.OpenOrUpdate(serial, graphic);
                     }

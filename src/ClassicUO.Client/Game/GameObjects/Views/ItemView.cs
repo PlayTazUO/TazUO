@@ -7,6 +7,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.IO;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
@@ -391,7 +392,7 @@ namespace ClassicUO.Game.GameObjects
                 }
                 else
                 {
-                    if ((ProfileManager.CurrentProfile.GridLootType > 0 || ProfileManager.CurrentProfile.UseGridLayoutContainerGumps) && SelectedObject.CorpseObject == owner)
+                    if (ProfileManager.CurrentProfile.CorpseContainerStyle != CorpseContainerStyle.Original && SelectedObject.CorpseObject == owner)
                     {
                         color = 0x0034;
                     }
