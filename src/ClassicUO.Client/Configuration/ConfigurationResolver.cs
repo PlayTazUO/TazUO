@@ -36,6 +36,27 @@ namespace ClassicUO.Configuration
             {
                 return JsonSerializer.Deserialize(text, ctx);
             }
+            catch (JsonException e)
+            {
+                // The configuration file is corrupt or malformed (e.g. truncated write,
+                // manual edit, disk corruption). Rather than crashing the client at boot,
+                // back up the bad file so it isn't silently overwritten and return null so
+                // the caller can fall back to sane defaults.
+                Log.Error($"Failed to load configuration file '{file}' - {e}");
+
+                try
+                {
+                    string backup = file + ".corrupt";
+                    File.Copy(file, backup, true);
+                    Log.Warn($"Corrupt configuration file backed up to '{backup}'.");
+                }
+                catch (Exception backupError)
+                {
+                    Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
+                }
+
+                return null;
+            }
             catch (Exception e)
             {
                 Log.Error($"Failed to load configuration file '{file}' - {e}");
