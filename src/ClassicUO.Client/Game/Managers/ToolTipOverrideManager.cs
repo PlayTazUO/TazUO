@@ -387,6 +387,31 @@ namespace ClassicUO.Game.Managers
             return BuildTooltip(itemPropertiesData);
         }
 
+        /// <summary>
+        /// Resolve the final tooltip text for a hovered object, applying any configured overrides.
+        /// Items that exist in the world are resolved by serial. Items shown in server-sent gumps
+        /// (and vendor search results) are referenced by serial but aren't real world items, so the
+        /// serial lookup returns null - in that case the override is applied to the raw OPL text
+        /// (<paramref name="rawHtml"/>) instead. Falls back to the raw text only when no override
+        /// produced any output.
+        /// </summary>
+        public static string ResolveTooltipText(World world, uint serial, string rawHtml)
+        {
+            string finalString = null;
+
+            if (SerialHelper.IsItem(serial))
+                finalString = ProcessTooltipText(world, serial);
+
+            //Fix for vendor search and items shown in server gumps that aren't real world items.
+            if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(rawHtml))
+                finalString = ProcessTooltipText(rawHtml);
+
+            if (string.IsNullOrEmpty(finalString))
+                finalString = rawHtml;
+
+            return finalString;
+        }
+
         private static bool CheckLayers(TooltipLayers overrideLayer, byte itemLayer)
         {
             if (overrideLayer == TooltipLayers.Any)
