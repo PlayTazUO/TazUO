@@ -90,7 +90,7 @@ description:  Represents a Python-accessible item in the game world.  Inherits e
 
 ### GetContainerGump
 
- If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
+ If this item is a container ( item.IsContainer ) and is open, this will return the grid container, container gump, or grid loot gump for it.
 
 
 **Return Type:** `ApiUiBaseControl`
