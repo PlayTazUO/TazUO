@@ -105,6 +105,11 @@ namespace ClassicUO
                 {
                     return mapFix;
                 }
+
+                if (TryGetZlibVersionMismatchCrashFix(exception, out string zlibFix))
+                {
+                    return zlibFix;
+                }
             }
             catch
             {
@@ -173,6 +178,37 @@ namespace ClassicUO
             sb.AppendLine("2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
             sb.AppendLine("3. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
             sb.AppendLine("4. Confirm the client version configured in TazUO matches the version of your UO data files.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        private static bool TryGetZlibVersionMismatchCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // A MissingMethodException naming a ZLib entry point means the loaded
+            // ClassicUO.Utility.dll is older than the client executable expects - the two
+            // were not updated together (a partial update or files copied over an old
+            // install). This most commonly surfaces from the -zlib launch argument, which
+            // calls into the newer ZLib API.
+            if (e is not MissingMethodException)
+                return false;
+
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details) ||
+                !details.Contains("ClassicUO.Utility.ZLib"))
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO could not start because its files do not all match.");
+            sb.AppendLine("The bundled zlib helper library (ClassicUO.Utility.dll) is older than this build of TazUO expects, which usually happens after a partial update or when new files were copied over an old installation.");
+            sb.AppendLine("This crash is triggered by the '-zlib' launch argument, which uses a newer zlib feature that the out-of-date file does not have.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Remove the '-zlib' launch argument. Instead, enable managed zlib from the Options menu on the login screen (Misc tab) - it does the same thing and is saved for you.");
+            sb.AppendLine("2. Reinstall or re-download TazUO so every file is updated together, then try again.");
+            sb.AppendLine("3. If you copied files manually, make sure ClassicUO.Utility.dll was replaced along with the rest of the client.");
             fix = sb.ToString();
             return true;
         }
