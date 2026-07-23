@@ -39,7 +39,7 @@ public class HotkeyInput : Panel
     private readonly Action<SelectionChangedEventArgs>? _onSelectionChanged;
     private readonly Color _defaultTextColor;
 
-    private readonly HotkeyCapture _capturer;
+    private readonly HotkeyCapture? _capturer;
 
     private HotkeyBinding _selection;
 
@@ -147,8 +147,9 @@ public class HotkeyInput : Panel
     /// </summary>
     private void DetachAsNecessary()
     {
-        // Check if we're still being rendered
-        if (Desktop != null && Visible)
+        // Check if we're still being rendered.
+        // Note that the capturer may be null here since the OnPlacedChanged/OnVisibleChanged gets called BEFORE our constructor is actually called!
+        if (Desktop != null && Visible || _capturer == null)
             return;
 
         // A capture can only be started by clicking the input, so the TouchDown handler can stay
@@ -163,7 +164,7 @@ public class HotkeyInput : Panel
     /// </summary>
     private void StartRecording(object? sender, EventArgs e)
     {
-        if (_capturer.IsActive)
+        if (_capturer!.IsActive)
             return;
 
         _capturer.Start(
@@ -189,7 +190,7 @@ public class HotkeyInput : Panel
     public void Clear()
     {
         Selection = new HotkeyBinding();
-        _capturer.Stop();
+        _capturer!.Stop();
     }
 
     /// <summary>
@@ -199,7 +200,7 @@ public class HotkeyInput : Panel
     /// </summary>
     private void UpdateText()
     {
-        if (_capturer.IsActive)
+        if (_capturer!.IsActive)
         {
             _input.Text = TazLang.Get("uicommons_pressanykey");
             _input.TextColor = Color.DarkGoldenrod;
