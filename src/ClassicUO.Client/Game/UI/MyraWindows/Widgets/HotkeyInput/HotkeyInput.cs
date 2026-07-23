@@ -149,7 +149,7 @@ public class HotkeyInput : Panel
     {
         // Check if we're still being rendered.
         // Note that the capturer may be null here since the OnPlacedChanged/OnVisibleChanged gets called BEFORE our constructor is actually called!
-        if (Desktop != null && Visible || _capturer == null)
+        if (_capturer == null || (Desktop != null && Visible))
             return;
 
         // A capture can only be started by clicking the input, so the TouchDown handler can stay
