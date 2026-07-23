@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Reworked the container options into a new General tab with a "Container Style" dropdown (Grid/Original) and a "Corpse Container Style" dropdown (Grid/Original/Old Grid Loot/Old Grid Loot + Container), replacing the old "Enable grid containers" toggle and "Original Style Grid Loot" setting; moved "Default container view" to the Grid tab and migrated existing preferences - [P.R 761](https://github.com/PlayTazUO/TazUO/pull/761) ([bittiez](https://github.com/bittiez))
 * Added an option to only apply the trees-to-stumps replacement to trees within the circle of transparency radius, leaving farther trees at their normal appearance - [P.R 765](https://github.com/PlayTazUO/TazUO/pull/765) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
