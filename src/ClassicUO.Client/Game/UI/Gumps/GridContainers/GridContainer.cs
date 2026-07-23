@@ -74,6 +74,7 @@ public partial class GridContainer : ResizableGump
         public bool IsLockSlot => (_hkLockSlot ??= HotKeys.Get(HotKeyRegistrar.GridLockSlotId))?.IsPressed() ?? false;
         public bool IsCompare => (_hkCompare ??= HotKeys.Get(HotKeyRegistrar.GridCompareId))?.IsPressed() ?? false;
         public bool QuickLootThisContainer => _quickLootThisContainer;
+        internal ushort BackgroundGraphic => _backgroundTexture is { IsVisible: true } ? _backgroundTexture.Graphic : (ushort)0;
         #endregion
 
         #region private vars

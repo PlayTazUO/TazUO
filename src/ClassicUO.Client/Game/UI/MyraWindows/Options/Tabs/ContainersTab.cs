@@ -300,6 +300,13 @@ public static class ContainersTab
                         newValue => profile.GridHighlightLowContrastItemsStyle = (int)newValue
                     ),
                     search: new SearchMetadata(TazLang.Get("mog_tazuo_lowcontrasthighlightstyle"), Keywords: [TazLang.Get("mog_kw_style")])
+                ),
+                Option.Slider(
+                    TazLang.Get("mog_tazuo_minimumitemcontrast"),
+                    (byte)1,
+                    (byte)10,
+                    new Accessor<byte>(() => profile.GridHighlightLowContrastMinimum, value => profile.GridHighlightLowContrastMinimum = value),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_minimumitemcontrast"), Keywords: [TazLang.Get("mog_kw_low"), TazLang.Get("mog_kw_contrast"), TazLang.Get("mog_kw_item")])
                 )
             ).WithSearch(new SearchMetadata(TazLang.Get("mog_tazuo_highlightlowcontrastitems"), Keywords: [TazLang.Get("mog_kw_highlight"), TazLang.Get("mog_kw_low"), TazLang.Get("mog_kw_contrast"), TazLang.Get("mog_kw_item")])),
             Option.Slider(
