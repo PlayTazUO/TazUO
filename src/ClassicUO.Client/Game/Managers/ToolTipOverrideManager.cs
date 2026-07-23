@@ -242,6 +242,9 @@ namespace ClassicUO.Game.Managers
         private static IEnumerable<ToolTipOverrideData> FilteredOverrides(
             ToolTipOverrideData[] all, byte itemLayer)
         {
+            if (all == null)
+                yield break;
+
             foreach (ToolTipOverrideData data in all)
             {
                 if (data == null)
@@ -288,7 +291,7 @@ namespace ClassicUO.Game.Managers
                 );
             }
 
-            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile.GridHighlightProperties ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
+            GridHighlightData bestGridHighlightData = ProfileManager.CurrentProfile is { GridHighlightProperties: true } ? GridHighlightData.GetBestMatch(itemPropertiesData) : null;
 
             foreach (ItemPropertiesData.SinglePropertyData property in itemPropertiesData.singlePropertyData)
             {
@@ -363,7 +366,7 @@ namespace ClassicUO.Game.Managers
                 sb.AppendLine(finalLine);
             }
 
-            if (ProfileManager.CurrentProfile.GridHighlightShowRuleName && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
+            if (ProfileManager.CurrentProfile is { GridHighlightShowRuleName: true } && bestGridHighlightData != null && !string.IsNullOrEmpty(bestGridHighlightData.Name))
             {
                 sb.AppendLine($"/c[gray]Matched Rule: {bestGridHighlightData.Name}/cd");
             }
