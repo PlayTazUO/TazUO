@@ -28,6 +28,9 @@ namespace ClassicUO.Game.UI
 
         private bool _dirty = false;
 
+        // Background hue requested by a matched tooltip override (-1 = use the profile default).
+        private int _backgroundHueOverride = -1;
+
         public static bool IsEnabled = false;
 
         public static int X, Y;
@@ -98,7 +101,7 @@ namespace ClassicUO.Game.UI
                         align = FontStashSharp.RichText.TextHorizontalAlignment.Center;
                 }
 
-                string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML);
+                string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML, out _backgroundHueOverride);
 
                 if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
                     finalString = $"[{_item.CustomName}]\n" + finalString;
@@ -167,7 +170,9 @@ namespace ClassicUO.Game.UI
 
             Vector3 hue_vec = ShaderHueTranslator.GetHueVector(1, false, alpha);
 
-            if (ProfileManager.CurrentProfile != null)
+            if (_backgroundHueOverride >= 0)
+                hue_vec.X = _backgroundHueOverride;
+            else if (ProfileManager.CurrentProfile != null)
                 hue_vec.X = ProfileManager.CurrentProfile.ToolTipBGHue;
 
             batcher.Draw
@@ -207,6 +212,7 @@ namespace ClassicUO.Game.UI
             _textHTML = Text = null;
             _textBox?.Dispose();
             _textBox = null;
+            _backgroundHueOverride = -1;
             IsEnabled = false;
         }
 

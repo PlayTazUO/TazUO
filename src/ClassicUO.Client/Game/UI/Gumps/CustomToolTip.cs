@@ -19,6 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
         private TextBox text;
         private readonly uint hue = 0xFFFF;
 
+        // Background hue requested by a matched tooltip override (-1 = use the profile default).
+        private int backgroundHueOverride = -1;
+
         public event FinishedLoadingEvent OnOPLLoaded;
 
         public CustomToolTip(World world, Item item, int x, int y, Control hoverReference, string prepend = "", string append = "", Item compareTo = null) : base(world, 0, 0)
@@ -70,7 +73,7 @@ namespace ClassicUO.Game.UI.Gumps
                 string finalString = FormatTooltip(name, data);
                 if (SerialHelper.IsItem(item.Serial))
                 {
-                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, compareTo == null ? uint.MinValue : compareTo.Serial);
+                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, out backgroundHueOverride, compareTo == null ? uint.MinValue : compareTo.Serial);
                     if (finalString == null)
                         finalString = FormatTooltip(name, data);
                     finalString = prepend + finalString + append;
@@ -158,7 +161,9 @@ namespace ClassicUO.Game.UI.Gumps
 
             Vector3 hue_vec = ShaderHueTranslator.GetHueVector(1, false, alpha);
 
-            if (ProfileManager.CurrentProfile != null)
+            if (backgroundHueOverride >= 0)
+                hue_vec.X = backgroundHueOverride;
+            else if (ProfileManager.CurrentProfile != null)
                 hue_vec.X = ProfileManager.CurrentProfile.ToolTipBGHue;
 
             batcher.Draw

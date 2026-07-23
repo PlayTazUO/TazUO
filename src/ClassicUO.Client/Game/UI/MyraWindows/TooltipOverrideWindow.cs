@@ -195,12 +195,68 @@ public sealed class TooltipOverrideWindow : MyraControl
         row2.Widgets.Add(NumericBox(data.Min2, v => { data.Min2 = v; data.Save(); ShowSaved(); }));
         row2.Widgets.Add(NumericBox(data.Max2, v => { data.Max2 = v; data.Save(); ShowSaved(); }));
 
+        row2.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig_layer", "Layer"), MyraLabel.TextStyle.P));
         row2.Widgets.Add(BuildLayerCombo(data));
 
         body.Widgets.Add(row2);
 
+        // Row 3: optional custom tooltip background color applied when this rule matches.
+        body.Widgets.Add(BuildBackgroundColor(data));
+
         return body;
     }
+
+    private Widget BuildBackgroundColor(ToolTipOverrideData data)
+    {
+        var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+
+        row.Widgets.Add(new MyraLabel(TazLang.Get("tooltipconfig_bgcolor", "Match BG Color:"), MyraLabel.TextStyle.P)
+        {
+            Tooltip = TazLang.Get("tooltipconfig_bgcolor_tooltip",
+                "Optional. When this rule matches, the whole tooltip background is recolored with this hue.")
+        });
+
+        ushort swatchHue = data.HasBackgroundHue ? (ushort)data.BackgroundHue : (ushort)0;
+        var swatch = new MyraArtTexture(0x0FAB, swatchHue, 20) { Tooltip = BackgroundSwatchTooltip(data) };
+
+        swatch.TouchUp += (_, _) =>
+        {
+            if (!swatch.Enabled)
+                return;
+
+            UIManager.GetGump<ClassicUO.Game.UI.Gumps.ModernColorPicker>()?.Dispose();
+            UIManager.Add(new ClassicUO.Game.UI.Gumps.ModernColorPicker(World.Instance, newHue =>
+            {
+                data.BackgroundHue = newHue;
+                data.Save();
+                swatch.SetColorByHue(newHue);
+                swatch.Tooltip = BackgroundSwatchTooltip(data);
+                ShowSaved();
+            }, isClickable: true));
+        };
+        row.Widgets.Add(swatch);
+
+        MyraButton clear = new(TazLang.Get("tooltipconfig_bgcolor_clear", "Clear"), () =>
+        {
+            data.BackgroundHue = -1;
+            data.Save();
+            swatch.SetColorByHue(0);
+            swatch.Tooltip = BackgroundSwatchTooltip(data);
+            ShowSaved();
+        })
+        {
+            Tooltip = TazLang.Get("tooltipconfig_bgcolor_clear_tooltip", "Remove the custom background color for this rule")
+        };
+        MyraStyle.ApplyButtonDangerStyle(clear);
+        row.Widgets.Add(clear);
+
+        return row;
+    }
+
+    private static string BackgroundSwatchTooltip(ToolTipOverrideData data) =>
+        data.HasBackgroundHue
+            ? string.Format(TazLang.Get("tooltipconfig_bgcolor_set_tooltip", "Custom background hue: {0}. Click to change."), data.BackgroundHue)
+            : TazLang.Get("tooltipconfig_bgcolor_none_tooltip", "No custom background. Click to choose a color.");
 
     private static Widget NumericBox(int value, Action<int> onChanged)
     {
