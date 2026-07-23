@@ -91,6 +91,11 @@ namespace ClassicUO
                     }
                 }
 
+                if (TryGetFontRenderingCrashFix(exception, out string fontFix))
+                {
+                    return fontFix;
+                }
+
                 if (TryGetPluginCrashFix(exception, out string pluginFix))
                 {
                     return pluginFix;
@@ -107,6 +112,37 @@ namespace ClassicUO
             }
 
             return null;
+        }
+
+        private static bool TryGetFontRenderingCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            bool crashedInFontCache =
+                details.Contains("FontStashSharp.Rasterizers.StbTrueTypeSharp.Int32Map") ||
+                details.Contains("GetGlyphKernAdvance") ||
+                (details.Contains("FontStashSharp") && details.Contains("GetKerning"));
+
+            if (!crashedInFontCache)
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO crashed inside the font rendering code (FontStashSharp) while measuring or drawing text.");
+            sb.AppendLine("The font glyph/kerning caches are not thread-safe, so this happens when text is created from a background thread at the same time the game is drawing.");
+            sb.AppendLine("This is almost always triggered by a Legion script that shows messages or builds UI directly from its own thread.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. If you were running a script when this happened, note which one and update it to the latest version.");
+            sb.AppendLine("2. In custom scripts, avoid printing messages or creating gumps/controls directly - use the provided API (for example API.SysMsg) which safely marshals the work onto the main thread.");
+            sb.AppendLine("3. Try reproducing without any scripts running to confirm a script is the cause.");
+            sb.AppendLine("4. If it still crashes with no scripts, please report it with this crash log so it can be investigated.");
+            fix = sb.ToString();
+            return true;
         }
 
         private static bool TryGetMapLoaderCrashFix(Exception e, out string fix)
