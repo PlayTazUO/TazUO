@@ -28,8 +28,8 @@ namespace ClassicUO.Game.UI
 
         private bool _dirty = false;
 
-        // Background hue requested by a matched tooltip override (-1 = use the profile default).
-        private int _backgroundHueOverride = -1;
+        // Border hue requested by a matched tooltip override (-1 = default border).
+        private int _borderHueOverride = -1;
 
         public static bool IsEnabled = false;
 
@@ -101,7 +101,7 @@ namespace ClassicUO.Game.UI
                         align = FontStashSharp.RichText.TextHorizontalAlignment.Center;
                 }
 
-                string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML, out _backgroundHueOverride);
+                string finalString = Managers.ToolTipOverrideData.ResolveTooltipText(_world, Serial, _textHTML, out _borderHueOverride);
 
                 if (_item?.CustomName.NotNullNotEmpty() == true) //Add custom item name
                     finalString = $"[{_item.CustomName}]\n" + finalString;
@@ -170,9 +170,7 @@ namespace ClassicUO.Game.UI
 
             Vector3 hue_vec = ShaderHueTranslator.GetHueVector(1, false, alpha);
 
-            if (_backgroundHueOverride >= 0)
-                hue_vec.X = _backgroundHueOverride;
-            else if (ProfileManager.CurrentProfile != null)
+            if (ProfileManager.CurrentProfile != null)
                 hue_vec.X = ProfileManager.CurrentProfile.ToolTipBGHue;
 
             batcher.Draw
@@ -188,17 +186,34 @@ namespace ClassicUO.Game.UI
                 hue_vec
             );
 
-            hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            int borderWidth = 1;
+            var borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
 
-            batcher.DrawRectangle
-            (
-                SolidColorTextureCache.GetTexture(Color.Gray),
-                x - 4,
-                y - 2,
-                (int)(z_width * zoom),
-                (int)(z_height * zoom),
-                hue_vec
-            );
+            // A matched tooltip override can recolor the border with a custom hue and widen it.
+            if (_borderHueOverride >= 0)
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(_borderHueOverride, false, alpha);
+                borderTexture = SolidColorTextureCache.GetTexture(Color.White);
+                borderWidth = Managers.ToolTipOverrideData.BorderWidth;
+            }
+            else
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            }
+
+            // Draw the border as nested 1px rectangles so it reads as a solid band at any width.
+            for (int i = 0; i < borderWidth; i++)
+            {
+                batcher.DrawRectangle
+                (
+                    borderTexture,
+                    x - 4 + i,
+                    y - 2 + i,
+                    (int)(z_width * zoom) - (i * 2),
+                    (int)(z_height * zoom) - (i * 2),
+                    hue_vec
+                );
+            }
 
             _textBox.Draw(batcher, x, y);
 
@@ -212,7 +227,7 @@ namespace ClassicUO.Game.UI
             _textHTML = Text = null;
             _textBox?.Dispose();
             _textBox = null;
-            _backgroundHueOverride = -1;
+            _borderHueOverride = -1;
             IsEnabled = false;
         }
 

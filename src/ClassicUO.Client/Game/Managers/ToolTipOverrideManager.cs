@@ -25,7 +25,7 @@ namespace ClassicUO.Game.Managers
     public class ToolTipOverrideData
     {
         public ToolTipOverrideData() { }
-        public ToolTipOverrideData(int index, string searchText, string formattedText, int min1, int max1, int min2, int max2, byte layer, int backgroundHue = -1)
+        public ToolTipOverrideData(int index, string searchText, string formattedText, int min1, int max1, int min2, int max2, byte layer, int borderHue = -1)
         {
             Index = index;
             SearchText = DecodeUnicodeEscapes(searchText).Trim();
@@ -35,7 +35,7 @@ namespace ClassicUO.Game.Managers
             Min2 = min2;
             Max2 = max2;
             ItemLayer = (TooltipLayers)layer;
-            BackgroundHue = backgroundHue;
+            BorderHue = borderHue;
         }
 
         public int Index { get; }
@@ -48,14 +48,17 @@ namespace ClassicUO.Game.Managers
         public TooltipLayers ItemLayer { get; set; }
 
         /// <summary>
-        /// Optional UO hue used to recolor the entire tooltip background when this override matches.
-        /// A value of -1 means "no override" and the profile's default background hue is used instead.
+        /// Optional UO hue used to draw a custom-colored border around the tooltip when this override
+        /// matches. A value of -1 means "no override" and the default tooltip border is drawn instead.
         /// </summary>
-        public int BackgroundHue { get; set; } = -1;
+        public int BorderHue { get; set; } = -1;
 
-        /// <summary>Whether this override specifies a custom tooltip background hue.</summary>
+        /// <summary>Whether this override specifies a custom tooltip border hue.</summary>
         [JsonIgnore]
-        public bool HasBackgroundHue => BackgroundHue >= 0;
+        public bool HasBorderHue => BorderHue >= 0;
+
+        /// <summary>Pixel width of the custom border drawn when <see cref="HasBorderHue"/> is set.</summary>
+        public const int BorderWidth = 5;
 
         public bool IsNew { get; set; } = false;
 
@@ -67,7 +70,7 @@ namespace ClassicUO.Game.Managers
                 string searchText = "Weapon Damage", formattedText = "DMG /c[orange]{1} /cd- /c[red]{2}";
                 int min1 = -1, max1 = 99, min2 = -1, max2 = 99;
                 byte layer = (byte)TooltipLayers.Any;
-                int backgroundHue = -1;
+                int borderHue = -1;
 
                 if (ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count > index)
                     searchText = ProfileManager.CurrentProfile.ToolTipOverride_SearchText[index];
@@ -97,11 +100,11 @@ namespace ClassicUO.Game.Managers
                     layer = ProfileManager.CurrentProfile.ToolTipOverride_Layer[index];
                 else isNew = true;
 
-                if (ProfileManager.CurrentProfile.ToolTipOverride_BackgroundHue.Count > index)
-                    backgroundHue = ProfileManager.CurrentProfile.ToolTipOverride_BackgroundHue[index];
+                if (ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Count > index)
+                    borderHue = ProfileManager.CurrentProfile.ToolTipOverride_BorderHue[index];
                 else isNew = true;
 
-                var data = new ToolTipOverrideData(index, searchText, formattedText, min1, max1, min2, max2, layer, backgroundHue);
+                var data = new ToolTipOverrideData(index, searchText, formattedText, min1, max1, min2, max2, layer, borderHue);
 
                 if (isNew)
                 {
@@ -143,9 +146,9 @@ namespace ClassicUO.Game.Managers
                 ProfileManager.CurrentProfile.ToolTipOverride_Layer[Index] = (byte)ItemLayer;
             else ProfileManager.CurrentProfile.ToolTipOverride_Layer.Add((byte)ItemLayer);
 
-            if (ProfileManager.CurrentProfile.ToolTipOverride_BackgroundHue.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_BackgroundHue[Index] = BackgroundHue;
-            else ProfileManager.CurrentProfile.ToolTipOverride_BackgroundHue.Add(BackgroundHue);
+            if (ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Count > Index)
+                ProfileManager.CurrentProfile.ToolTipOverride_BorderHue[Index] = BorderHue;
+            else ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Add(BorderHue);
         }
 
         public void Delete()
@@ -175,8 +178,8 @@ namespace ClassicUO.Game.Managers
             if (Index < profile.ToolTipOverride_Layer.Count)
                 profile.ToolTipOverride_Layer.RemoveAt(Index);
 
-            if (Index < profile.ToolTipOverride_BackgroundHue.Count)
-                profile.ToolTipOverride_BackgroundHue.RemoveAt(Index);
+            if (Index < profile.ToolTipOverride_BorderHue.Count)
+                profile.ToolTipOverride_BorderHue.RemoveAt(Index);
         }
 
         public static ToolTipOverrideData[] GetAllToolTipOverrides()
@@ -236,7 +239,7 @@ namespace ClassicUO.Game.Managers
                                                                         ToolTipOverrideData[] imported = JsonSerializer.Deserialize<ToolTipOverrideData[]>(result);
 
                                                                         foreach (ToolTipOverrideData importedData in imported)
-                                                                            new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BackgroundHue).Save();
+                                                                            new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BorderHue).Save();
 
                                                                         GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
                                                                     }
@@ -280,9 +283,9 @@ namespace ClassicUO.Game.Managers
             }
         }
 
-        private static string BuildTooltip(ItemPropertiesData itemPropertiesData, out int backgroundHue, uint compareTo = uint.MinValue)
+        private static string BuildTooltip(ItemPropertiesData itemPropertiesData, out int borderHue, uint compareTo = uint.MinValue)
         {
-            backgroundHue = -1;
+            borderHue = -1;
 
             if (!itemPropertiesData.HasData)
                 return null;
@@ -300,9 +303,9 @@ namespace ClassicUO.Game.Managers
                         itemPropertiesData.Name, "", "", "", "", ""
                     ));
 
-                    // The first matching rule that sets a background hue wins for the whole tooltip.
-                    if (backgroundHue < 0 && overrideData.HasBackgroundHue)
-                        backgroundHue = overrideData.BackgroundHue;
+                    // The first matching rule that sets a border hue wins for the whole tooltip.
+                    if (borderHue < 0 && overrideData.HasBorderHue)
+                        borderHue = overrideData.BorderHue;
 
                     headerHandled = true;
                     break;
@@ -342,9 +345,9 @@ namespace ClassicUO.Game.Managers
                         {
                             matchedOverride = overrideData;
 
-                            // The first matching rule that sets a background hue wins for the whole tooltip.
-                            if (backgroundHue < 0 && overrideData.HasBackgroundHue)
-                                backgroundHue = overrideData.BackgroundHue;
+                            // The first matching rule that sets a border hue wins for the whole tooltip.
+                            if (borderHue < 0 && overrideData.HasBorderHue)
+                                borderHue = overrideData.BorderHue;
 
                             break;
                         }
@@ -414,29 +417,29 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// As <see cref="ProcessTooltipText(World, uint, uint)"/>, additionally reporting the
-        /// background hue requested by the matched override (-1 when none applies).
+        /// border hue requested by the matched override (-1 when none applies).
         /// </summary>
-        public static string ProcessTooltipText(World world, uint serial, out int backgroundHue, uint compareTo = uint.MinValue)
+        public static string ProcessTooltipText(World world, uint serial, out int borderHue, uint compareTo = uint.MinValue)
         {
             ItemPropertiesData itemPropertiesData =
                 compareTo != uint.MinValue
                 ? new ItemPropertiesData(world, world.Items.Get(serial), world.Items.Get(compareTo))
                 : new ItemPropertiesData(world, world.Items.Get(serial));
 
-            return BuildTooltip(itemPropertiesData, out backgroundHue, compareTo);
+            return BuildTooltip(itemPropertiesData, out borderHue, compareTo);
         }
 
         public static string ProcessTooltipText(string text)
             => ProcessTooltipText(text, out _);
 
         /// <summary>
-        /// As <see cref="ProcessTooltipText(string)"/>, additionally reporting the background hue
+        /// As <see cref="ProcessTooltipText(string)"/>, additionally reporting the border hue
         /// requested by the matched override (-1 when none applies).
         /// </summary>
-        public static string ProcessTooltipText(string text, out int backgroundHue)
+        public static string ProcessTooltipText(string text, out int borderHue)
         {
             var itemPropertiesData = new ItemPropertiesData(text);
-            return BuildTooltip(itemPropertiesData, out backgroundHue);
+            return BuildTooltip(itemPropertiesData, out borderHue);
         }
 
         /// <summary>
@@ -452,20 +455,20 @@ namespace ClassicUO.Game.Managers
 
         /// <summary>
         /// As <see cref="ResolveTooltipText(World, uint, string)"/>, additionally reporting the
-        /// background hue requested by the matched override (-1 when none applies) so the renderer
-        /// can recolor the tooltip background.
+        /// border hue requested by the matched override (-1 when none applies) so the renderer
+        /// can draw a custom-colored tooltip border.
         /// </summary>
-        public static string ResolveTooltipText(World world, uint serial, string rawHtml, out int backgroundHue)
+        public static string ResolveTooltipText(World world, uint serial, string rawHtml, out int borderHue)
         {
-            backgroundHue = -1;
+            borderHue = -1;
             string finalString = null;
 
             if (SerialHelper.IsItem(serial))
-                finalString = ProcessTooltipText(world, serial, out backgroundHue);
+                finalString = ProcessTooltipText(world, serial, out borderHue);
 
             //Fix for vendor search and items shown in server gumps that aren't real world items.
             if (string.IsNullOrEmpty(finalString) && !string.IsNullOrEmpty(rawHtml))
-                finalString = ProcessTooltipText(rawHtml, out backgroundHue);
+                finalString = ProcessTooltipText(rawHtml, out borderHue);
 
             if (string.IsNullOrEmpty(finalString))
                 finalString = rawHtml;
