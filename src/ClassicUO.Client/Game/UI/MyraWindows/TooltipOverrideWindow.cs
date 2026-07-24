@@ -69,7 +69,7 @@ public sealed class TooltipOverrideWindow : MyraControl
 
         root.Widgets.Add(new LinkLabel(
             TazLang.Get("tooltipconfig_wiki", "Tooltip Overrides Wiki"),
-            "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override",
+            "https://tazuo.org?q=tooltip+override",
             MyraLabel.TextStyle.P));
 
         root.Widgets.Add(BuildToolbar());
