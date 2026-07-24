@@ -19,6 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
         private TextBox text;
         private readonly uint hue = 0xFFFF;
 
+        // Border hue requested by a matched tooltip override (-1 = default border).
+        private int borderHueOverride = -1;
+
         public event FinishedLoadingEvent OnOPLLoaded;
 
         public CustomToolTip(World world, Item item, int x, int y, Control hoverReference, string prepend = "", string append = "", Item compareTo = null) : base(world, 0, 0)
@@ -70,7 +73,7 @@ namespace ClassicUO.Game.UI.Gumps
                 string finalString = FormatTooltip(name, data);
                 if (SerialHelper.IsItem(item.Serial))
                 {
-                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, compareTo == null ? uint.MinValue : compareTo.Serial);
+                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, out borderHueOverride, compareTo == null ? uint.MinValue : compareTo.Serial);
                     if (finalString == null)
                         finalString = FormatTooltip(name, data);
                     finalString = prepend + finalString + append;
@@ -174,17 +177,35 @@ namespace ClassicUO.Game.UI.Gumps
                 hue_vec
             );
 
-            hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            int borderWidth = 1;
+            var borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
 
-            batcher.DrawRectangle
-            (
-                SolidColorTextureCache.GetTexture(Color.Gray),
-                x - 4,
-                y - 2,
-                (int)(Width + 8),
-                (int)(Height + 8),
-                hue_vec
-            );
+            // A matched tooltip override can recolor the border with a custom hue and widen it.
+            if (borderHueOverride >= 0)
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(borderHueOverride, false, alpha);
+                borderTexture = SolidColorTextureCache.GetTexture(Color.White);
+                borderWidth = Managers.ToolTipOverrideData.BorderWidth;
+            }
+            else
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            }
+
+            // Draw the border as concentric 1px rectangles expanding outward from the tooltip
+            // edge, so a thick custom border sits outside the background rather than over it.
+            for (int i = 0; i < borderWidth; i++)
+            {
+                batcher.DrawRectangle
+                (
+                    borderTexture,
+                    x - 4 - i,
+                    y - 2 - i,
+                    (int)(Width + 8) + (i * 2),
+                    (int)(Height + 8) + (i * 2),
+                    hue_vec
+                );
+            }
 
             text.Draw(batcher, x, y);
 

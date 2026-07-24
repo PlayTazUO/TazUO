@@ -131,6 +131,13 @@ namespace ClassicUO.Game.UI.Gumps
                 _userNotifications.Add(("Warning: It looks like your UO folder is stored inside TazUO, this is discouraged as you may accidentally have your UO files deleted.", Constants.HUE_ERROR));
             }
 
+            while (ConfigurationResolver.CorruptFiles.TryDequeue(out string corruptFile))
+            {
+                _userNotifications ??= new();
+                _userNotifications.Add(($"Warning: The configuration file '{Path.GetFileName(corruptFile)}' was corrupt and could not be loaded. " +
+                                        $"Default settings were used and a backup was saved to '{Path.GetFileName(corruptFile)}.corrupt'.", Constants.HUE_ERROR));
+            }
+
             // Community poll reminder is fetched asynchronously; kick it off before starting the flush
             // timer so a fast result lands in the same batch as the notifications above.
             QueueUnvotedPollsNotification();

@@ -83,20 +83,20 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         private static void RegisterGlobal()
         {
-            // Unbound by default. Pressing it toggles the shared Profile.DisableHotkeys flag, turning
-            // every other hotkey off/on. It is exempt from that flag so it can always toggle back on.
-            HotKeyEntry entry = HotKeys.Register(GlobalToggleId, "Toggle all hotkeys", new HotkeyBinding(), "Global", ToggleAllHotkeys);
+            // Unbound by default. Pressing it toggles the shared Profile.PersistentDisableHotkeys flag,
+            // turning every other hotkey off/on. It is exempt from that flag so it can always toggle back on.
+            HotKeyEntry entry = HotKeys.Register(GlobalToggleId, "Toggle all hotkeys", new HotkeyBinding(), "Global", ToggleHotkeysEnabled);
             entry.IgnoresGlobalDisable = true;
         }
 
-        private static void ToggleAllHotkeys()
+        public static void ToggleHotkeysEnabled()
         {
             Profile p = ProfileManager.CurrentProfile;
             if (p == null)
                 return;
 
-            p.DisableHotkeys = !p.DisableHotkeys;
-            GameActions.Print($"Hotkeys {(p.DisableHotkeys ? "disabled" : "enabled")}.");
+            p.PersistentDisableHotkeys = !p.PersistentDisableHotkeys;
+            GameActions.Print($"Hotkeys {(p.PersistentDisableHotkeys ? "disabled" : "enabled")}.");
         }
 
         private static void RegisterGridContainer()

@@ -703,6 +703,109 @@ namespace ClassicUO.UnitTests.Game.Managers
 
         #endregion
 
+        #region AutoLootList / AutoLootData Tests
+
+        [Fact]
+        public void AutoLootList_DefaultValues_ShouldBeCorrect()
+        {
+            // Arrange & Act
+            var list = new AutoLootManager.AutoLootList();
+
+            // Assert
+            list.Name.Should().BeEmpty();
+            list.Entries.Should().NotBeNull();
+            list.Entries.Should().BeEmpty();
+            list.Uid.Should().NotBeEmpty();
+            Guid.TryParse(list.Uid, out _).Should().BeTrue();
+        }
+
+        [Fact]
+        public void AutoLootList_Uid_ShouldBeUnique()
+        {
+            // Arrange & Act
+            var list1 = new AutoLootManager.AutoLootList();
+            var list2 = new AutoLootManager.AutoLootList();
+
+            // Assert
+            list1.Uid.Should().NotBe(list2.Uid);
+        }
+
+        [Fact]
+        public void AutoLootData_DefaultValues_ShouldBeCorrect()
+        {
+            // Arrange & Act
+            var data = new AutoLootManager.AutoLootData();
+
+            // Assert
+            data.Lists.Should().NotBeNull();
+            data.Lists.Should().BeEmpty();
+            data.SelectedUid.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void AutoLootData_Serialization_ShouldPreserveListsAndSelection()
+        {
+            // Arrange
+            var data = new AutoLootManager.AutoLootData
+            {
+                SelectedUid = "selected-uid"
+            };
+            data.Lists.Add(new AutoLootManager.AutoLootList
+            {
+                Name = "Default",
+                Uid = "list-1",
+                Entries =
+                {
+                    new AutoLootManager.AutoLootConfigEntry { Name = "Gold", Graphic = 3821, Hue = 0 }
+                }
+            });
+            data.Lists.Add(new AutoLootManager.AutoLootList
+            {
+                Name = "Gems",
+                Uid = "list-2"
+            });
+
+            // Act
+            string json = JsonSerializer.Serialize(data, AutoLootJsonContext.Default.AutoLootData);
+            AutoLootManager.AutoLootData deserialized = JsonSerializer.Deserialize(json, AutoLootJsonContext.Default.AutoLootData);
+
+            // Assert
+            deserialized.Should().NotBeNull();
+            deserialized.SelectedUid.Should().Be("selected-uid");
+            deserialized.Lists.Should().HaveCount(2);
+            deserialized.Lists[0].Name.Should().Be("Default");
+            deserialized.Lists[0].Uid.Should().Be("list-1");
+            deserialized.Lists[0].Entries.Should().HaveCount(1);
+            deserialized.Lists[0].Entries[0].Name.Should().Be("Gold");
+            deserialized.Lists[0].Entries[0].Graphic.Should().Be(3821);
+            deserialized.Lists[1].Name.Should().Be("Gems");
+            deserialized.Lists[1].Entries.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void AutoLootData_LegacyListFormat_ShouldStillDeserialize()
+        {
+            // Arrange - a legacy config file is a flat JSON array of entries.
+            var legacy = new List<AutoLootManager.AutoLootConfigEntry>
+            {
+                new() { Name = "Item 1", Graphic = 100 },
+                new() { Name = "Item 2", Graphic = 200 }
+            };
+            string legacyJson = JsonSerializer.Serialize(legacy, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
+
+            // Act - the legacy array is migrated into a single "Default" list.
+            List<AutoLootManager.AutoLootConfigEntry> entries = JsonSerializer.Deserialize(legacyJson, AutoLootJsonContext.Default.ListAutoLootConfigEntry);
+            var migrated = new AutoLootManager.AutoLootData();
+            migrated.Lists.Add(new AutoLootManager.AutoLootList { Name = AutoLootManager.DefaultListName, Entries = entries });
+
+            // Assert
+            migrated.Lists.Should().HaveCount(1);
+            migrated.Lists[0].Name.Should().Be("Default");
+            migrated.Lists[0].Entries.Should().HaveCount(2);
+        }
+
+        #endregion
+
         #region Empty and Null String Tests
 
         [Fact]
