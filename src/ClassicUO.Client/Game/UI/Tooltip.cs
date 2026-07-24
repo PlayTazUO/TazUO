@@ -201,16 +201,17 @@ namespace ClassicUO.Game.UI
                 hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
             }
 
-            // Draw the border as nested 1px rectangles so it reads as a solid band at any width.
+            // Draw the border as concentric 1px rectangles expanding outward from the tooltip
+            // edge, so a thick custom border sits outside the background rather than over it.
             for (int i = 0; i < borderWidth; i++)
             {
                 batcher.DrawRectangle
                 (
                     borderTexture,
-                    x - 4 + i,
-                    y - 2 + i,
-                    (int)(z_width * zoom) - (i * 2),
-                    (int)(z_height * zoom) - (i * 2),
+                    x - 4 - i,
+                    y - 2 - i,
+                    (int)(z_width * zoom) + (i * 2),
+                    (int)(z_height * zoom) + (i * 2),
                     hue_vec
                 );
             }
