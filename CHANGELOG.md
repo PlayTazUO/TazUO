@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added named auto loot lists so you can quickly swap between multiple loot configurations; a "Loot Lists" selector with New/Rename/Delete controls was added to the Auto Loot agent, existing entries are migrated into a "Default" list, and at least one list is always kept - [P.R 766](https://github.com/PlayTazUO/TazUO/pull/766) ([bittiez](https://github.com/bittiez))
 * Replaced the tooltip override configuration gump with a new Myra window, and added an optional per-rule custom tooltip border color (drawn as a thick border around the tooltip when the rule matches) - [P.R 768](https://github.com/PlayTazUO/TazUO/pull/768) ([bittiez](https://github.com/bittiez))
 * Reworked the container options into a new General tab with a "Container Style" dropdown (Grid/Original) and a "Corpse Container Style" dropdown (Grid/Original/Old Grid Loot/Old Grid Loot + Container), replacing the old "Enable grid containers" toggle and "Original Style Grid Loot" setting; moved "Default container view" to the Grid tab and migrated existing preferences - [P.R 761](https://github.com/PlayTazUO/TazUO/pull/761) ([bittiez](https://github.com/bittiez))
 * Added an option to only apply the trees-to-stumps replacement to trees within the circle of transparency radius, leaving farther trees at their normal appearance - [P.R 765](https://github.com/PlayTazUO/TazUO/pull/765) ([bittiez](https://github.com/bittiez))
