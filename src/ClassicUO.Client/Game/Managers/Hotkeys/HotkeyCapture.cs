@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using ClassicUO.Configuration;
 using ClassicUO.Input;
 using SDL3;
 
@@ -32,7 +31,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             IsActive = true;
 
             // Suppress hotkeys globally until the capture is stopped
-            ProfileManager.CurrentProfile?.TemporarilySuppressHotkeys = true;
+            HotKeys.RequestDisableHotkeys();
 
             Keyboard.KeyDownEvent += OnKey;
             Keyboard.BareModifierEvent += OnBareModifier;
@@ -61,7 +60,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             _onCancelled = null;
             _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
 
-            ProfileManager.CurrentProfile?.TemporarilySuppressHotkeys = false;
+            HotKeys.ReleaseDisableHotkeys();
         }
 
         private void OnKey(string hotkey)

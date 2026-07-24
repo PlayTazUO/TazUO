@@ -104,7 +104,7 @@ public sealed partial class Profile
         /// <summary>
         ///     Persistently disable hotkey usage.
         ///     <p>
-        ///         To merely temporarily disable hotkeys, use <see cref="TemporarilySuppressHotkeys" />.
+        ///         To merely temporarily disable hotkeys, use <see cref="Game.Managers.Hotkeys.HotKeys.RequestDisableHotkeys" />.
         ///     </p>
         /// </summary>
         [JsonIgnore]

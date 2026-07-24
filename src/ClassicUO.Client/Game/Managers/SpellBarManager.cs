@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
 using ClassicUO.Utility.Logging;
@@ -53,7 +54,7 @@ public class SpellBarManager
 
     public static void ControllerInput(SDL.SDL_GamepadButton button)
     {
-        if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.HotkeysSuppressed)
+        if (!enabled || !spellBarSettings.Enabled || HotKeys.GloballyDisabled)
             return;
 
         for (int i = 0; i < 10; i++) //Currently 10 spells per row supported
@@ -68,7 +69,7 @@ public class SpellBarManager
 
     public static void KeyPress(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
     {
-        if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.HotkeysSuppressed)
+        if (!enabled || !spellBarSettings.Enabled || HotKeys.GloballyDisabled)
             return;
 
         // Remove lock keys from modifier checks (these shouldn't affect hotkey matching)
