@@ -59,6 +59,26 @@ namespace ClassicUO
                     return Client.GraphicsShaderHelpMessage;
                 }
 
+                if (exception is InvalidOperationException noFna3DDriverException &&
+                    noFna3DDriverException.Message.Contains("No supported FNA3D driver found!"))
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("TazUO could not start because FNA3D was unable to find a supported graphics driver.");
+                    sb.AppendLine("This means none of the available rendering backends (Direct3D 11, Vulkan or OpenGL) could be initialized on your system.");
+                    sb.AppendLine("It usually means your graphics drivers are missing or out of date, or you are running in an environment without proper GPU access (for example a remote desktop, virtual machine, or a system that fell back to a software renderer).");
+                    sb.AppendLine();
+                    sb.AppendLine("Suggested fixes:");
+                    sb.AppendLine("1. Update your graphics card drivers to the latest version, then restart your computer.");
+                    sb.AppendLine("2. Make sure you are running TazUO on the machine's real display and not through a remote desktop session that blocks GPU access.");
+                    sb.AppendLine("3. Try forcing a specific graphics driver by adding one of the following command-line arguments:");
+                    sb.AppendLine("     -force_driver 1   (OpenGL)");
+                    sb.AppendLine("     -force_driver 2   (Vulkan)");
+                    sb.AppendLine("     -force_driver 3   (SDL/FNA auto-select)");
+                    sb.AppendLine("   Try each one in turn until the client starts successfully.");
+                    sb.AppendLine("4. If you are running inside a virtual machine, enable 3D/GPU acceleration for it or run TazUO on physical hardware.");
+                    return sb.ToString();
+                }
+
                 if (exception is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException noSuitableGraphicsDeviceException)
                 {
                     if (noSuitableGraphicsDeviceException.Message.Contains("OpenGL 2.1 support is required!"))
