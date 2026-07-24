@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using System;
 using System.IO;
@@ -204,7 +205,7 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Directory.CreateDirectory(_seasonsFilePath);
+            FileSystemHelper.CreateFolderIfNotExists(_seasonsFilePath);
 
             using (var writer = new StreamWriter(_seasonsFile))
             {
