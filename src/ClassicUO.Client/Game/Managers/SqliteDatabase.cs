@@ -68,6 +68,8 @@ namespace ClassicUO.Game.Managers
             if (!Directory.Exists(DataDirectory))
                 Directory.CreateDirectory(DataDirectory);
 
+            ClearReadOnlyAttribute(DatabasePath);
+
             ConnectionString = new SqliteConnectionStringBuilder
             {
                 DataSource = DatabasePath,
@@ -225,6 +227,28 @@ namespace ClassicUO.Game.Managers
         /// where a bound parameter or double-quoted identifier cannot be used).
         /// </summary>
         private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
+
+        /// <summary>
+        /// Best-effort clearing of the read-only file attribute on an existing database file. A read-only
+        /// file (set by cloud-sync, antivirus, or a backup restore) opens fine but fails every write with
+        /// "SQLite Error 8: attempt to write a readonly database". Failures here are swallowed.
+        /// </summary>
+        private static void ClearReadOnlyAttribute(string path)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                    return;
+
+                FileAttributes attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(path, attributes & ~FileAttributes.ReadOnly);
+            }
+            catch
+            {
+                // Fall through and let the normal connection path surface any resulting error.
+            }
+        }
 
         /// <summary>Throws <see cref="ObjectDisposedException"/> if this database has already been disposed.</summary>
         protected void ThrowIfDisposed()

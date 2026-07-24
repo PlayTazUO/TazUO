@@ -145,6 +145,27 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public async Task Constructor_ClearsReadOnlyAttribute_AndAllowsWrites()
+        {
+            await _db.RunAsync(c => c.ExecuteAsync(
+                "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
+            _db.Dispose();
+
+            // Flag the file read-only; writes would otherwise fail with "attempt to write a readonly database".
+            string dbPath = Path.Combine(_tempDir, "test.db");
+            File.SetAttributes(dbPath, File.GetAttributes(dbPath) | FileAttributes.ReadOnly);
+            (File.GetAttributes(dbPath) & FileAttributes.ReadOnly).Should().NotBe(0);
+
+            // A new instance must clear the attribute so writes succeed.
+            using var db = new TestDatabase(_tempDir);
+            (File.GetAttributes(dbPath) & FileAttributes.ReadOnly).Should().Be(0);
+
+            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync(
+                "INSERT OR REPLACE INTO things (id, name) VALUES (@Id, @Name)", new { Id = 1, Name = "written" }));
+            await act.Should().NotThrowAsync();
+        }
+
+        [Fact]
         public async Task Operations_AfterDispose_Throw()
         {
             var db = new TestDatabase(_tempDir);
