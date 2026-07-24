@@ -1126,10 +1126,15 @@ namespace ClassicUO.Game.Scenes
 
         private float GetActiveScale() => Math.Max(0.0001f, Camera.Zoom);
 
+        public override bool DrawsOwnBackground => true;
+
         public override bool Draw(UltimaBatcher2D batcher)
         {
             if (!_world.InGame)
             {
+                // No world/light targets are rendered on this path, so nothing discards the screen
+                // target - draw the background directly (GameController skips it for this scene).
+                Client.Game.DrawWindowBackground(batcher);
                 return false;
             }
 
@@ -1234,6 +1239,11 @@ namespace ClassicUO.Game.Scenes
             Profiler.EnterContext("PrepareLights");
             bool canDrawLights = PrepareLightsRendering(batcher, ref _worldRtMatrix);
             Profiler.ExitContext("PrepareLights");
+
+            // The world/light render-target swaps above rebind (and discard) the screen target,
+            // wiping any background drawn before the scene. Redraw it now - behind the world
+            // composite below and all gumps drawn afterwards.
+            Client.Game.DrawWindowBackground(batcher);
 
             gd.Viewport = cameraViewport;
 
@@ -1637,6 +1647,10 @@ namespace ClassicUO.Game.Scenes
             {
                 return false;
             }
+
+            // Death-splash path returns early without rendering the world, so nothing discards the
+            // screen target here - draw the background so the splash sits on it like every other path.
+            Client.Game.DrawWindowBackground(batcher);
 
             batcher.Begin();
             _youAreDeadText.Draw(

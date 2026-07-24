@@ -7,7 +7,6 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI;
-using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
@@ -570,6 +569,20 @@ namespace ClassicUO
                 bgHueShader = ShaderHueTranslator.GetHueVector(ProfileManager.CurrentProfile.MainWindowBackgroundHue, false, bgHueShader.Z);
         }
 
+        /// <summary>
+        /// Draws the tiled window background (behind the world and all gumps) using the configured
+        /// <see cref="Profile.MainWindowBackgroundHue"/>. Sets a full-window viewport so it fills the
+        /// whole target regardless of any camera viewport the caller had active. Must be called while
+        /// the intended render target is bound.
+        /// </summary>
+        public void DrawWindowBackground(UltimaBatcher2D batcher)
+        {
+            GraphicsDevice.Viewport = new Viewport(bufferRect);
+            batcher.Begin();
+            batcher.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
+            batcher.End();
+        }
+
         private void EnsureScreenRenderTarget()
         {
             int width = GraphicManager.PreferredBackBufferWidth;
@@ -654,9 +667,12 @@ namespace ClassicUO
 
             Profiler.EnterContext("SceneRender");
 
-            _uoSpriteBatch.Begin();
-            _uoSpriteBatch.DrawTiled(_background, bufferRect, _background.Bounds, bgHueShader);
-            _uoSpriteBatch.End();
+            // Scenes that swap render targets (e.g. GameScene's world/light targets) discard this
+            // DiscardContents target, wiping an early background draw. Those scenes redraw the
+            // background themselves at the correct point via DrawWindowBackground; everyone else
+            // gets it here.
+            if (Scene is not { DrawsOwnBackground: true })
+                DrawWindowBackground(_uoSpriteBatch);
 
             if (drawScene)
                 Scene.Draw(_uoSpriteBatch);
