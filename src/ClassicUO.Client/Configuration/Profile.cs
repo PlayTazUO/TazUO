@@ -914,7 +914,7 @@ namespace ClassicUO.Configuration
         [Obsolete]
         [JsonPropertyName("disable_hotkeys")]
         public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
-        
+
         [Obsolete]
         [JsonPropertyName("disable_dismount_in_war_mode")]
         public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
@@ -973,7 +973,7 @@ namespace ClassicUO.Configuration
             {
                 EnableASyncMapLoading = OldEnableASyncMapLoading;
                 DisableDismountInWarMode = OldDisableDismountInWarMode;
-                DisableHotkeys = OldDisableHotkeys;
+                PersistentDisableHotkeys = OldDisableHotkeys;
                 ControllerEnabled = OldControllerEnabled;
                 EnableScavenger = OldEnableScavenger;
                 CounterGumpLocked = OldCounterGumpLocked;
