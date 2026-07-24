@@ -73,13 +73,6 @@ namespace ClassicUO.Configuration
         {
             Dictionary<string, string> embedded = ReadEmbedded();
 
-            int embeddedVersion = ParseVersion(embedded);
-            int userVersion = ParseVersion(userDict);
-
-            if (userVersion >= embeddedVersion)
-                return false;
-
-            bool anyAdded = false;
             foreach (KeyValuePair<string, string> kv in embedded)
             {
                 if (kv.Key == "_version")
@@ -89,7 +82,15 @@ namespace ClassicUO.Configuration
                     userDict[kv.Key] = kv.Value;
             }
 
-            userDict["_version"] = embeddedVersion.ToString();
+            // Remove user keys that don't exist in embedded version
+            List<string> removal = new();
+
+            foreach (KeyValuePair<string, string> kv in userDict)
+                if (!embedded.ContainsKey(kv.Key))
+                    removal.Add(kv.Key);
+            
+            foreach (string k in removal)
+                userDict.Remove(k);
 
             // Rewrite the file, preserving leading comment lines
             var lines = new List<string>();
@@ -105,7 +106,6 @@ namespace ClassicUO.Configuration
                 }
             }
 
-            lines.Add($"_version={embeddedVersion}");
             lines.Add("");
 
             foreach (KeyValuePair<string, string> kv in userDict)
@@ -117,13 +117,6 @@ namespace ClassicUO.Configuration
 
             File.WriteAllLines(userFilePath, lines, Encoding.UTF8);
             return true;
-        }
-
-        private static int ParseVersion(Dictionary<string, string> dict)
-        {
-            if (dict.TryGetValue("_version", out string v) && int.TryParse(v, out int n))
-                return n;
-            return 0;
         }
 
         private static string Unescape(string value)

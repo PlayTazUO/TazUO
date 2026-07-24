@@ -10,6 +10,9 @@ All notable changes to TazUO will be recorded here.
 * Reworked the container options into a new General tab with a "Container Style" dropdown (Grid/Original) and a "Corpse Container Style" dropdown (Grid/Original/Old Grid Loot/Old Grid Loot + Container), replacing the old "Enable grid containers" toggle and "Original Style Grid Loot" setting; moved "Default container view" to the Grid tab and migrated existing preferences - [P.R 761](https://github.com/PlayTazUO/TazUO/pull/761) ([bittiez](https://github.com/bittiez))
 * Added an option to only apply the trees-to-stumps replacement to trees within the circle of transparency radius, leaving farther trees at their normal appearance - [P.R 765](https://github.com/PlayTazUO/TazUO/pull/765) ([bittiez](https://github.com/bittiez))
 
+### Misc
+* language.ini is no longer versioned, it will be checked every run for correctness ([bittiez](https://github.com/bittiez))
+
 ### Fixes
 * Fixed Ninjitsu toggle moves (e.g. Backstab, Ki Attack, Surprise Attack, Focus Attack, Death Strike) placed on the spell bar not turning red/highlighted when activated; the active-toggle state is now populated from the server packet regardless of whether a floating spell button is on screen, and spell-bar slots highlight to match - [P.R 775](https://github.com/PlayTazUO/TazUO/pull/775) ([bittiez](https://github.com/bittiez))
 * Fixed a JsonException crash on startup when a configuration file (e.g. settings.json or a profile) was corrupt or malformed; the corrupt file is now backed up to a `.corrupt` file and default settings are used instead of crashing, and the user is notified in-world which file was affected - [P.R 773](https://github.com/PlayTazUO/TazUO/pull/773) ([bittiez](https://github.com/bittiez))
