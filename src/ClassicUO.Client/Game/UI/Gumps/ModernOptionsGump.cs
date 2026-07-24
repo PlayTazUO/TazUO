@@ -4355,7 +4355,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 if (e.Button == Input.MouseButtonType.Left)
                 {
-                    UIManager.Add(new TooltipConfigGump());
+                    MyraWindows.TooltipOverrideWindow.Show(World.Instance);
                 }
             };
 

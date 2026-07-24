@@ -670,6 +670,14 @@ public class SpellBar : Gump
                     SetTooltip(string.Empty);
                 }
             }
+            else if (slot != null && slot.Type == SpellBarSlotType.Spell)
+            {
+                // Toggle moves (e.g. Ninjitsu Backstab, Ki Attack) report on/off via ActiveSpellIcons; keep the highlight in sync.
+                bool active = World.ActiveSpellIcons.IsActive((ushort)slot.CurrentSpellID);
+                ushort wanted = (ushort)(active ? 38 : 0);
+                if (icon.Hue != wanted)
+                    icon.Hue = wanted;
+            }
 
             if (!base.Draw(batcher, x, y))
                 return false;
