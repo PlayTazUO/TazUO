@@ -473,16 +473,40 @@ namespace ClassicUO.Game.Data
         }
 
         /// <summary>
+        /// Buffer (in screen pixels) applied as a hysteresis deadband around the tree-to-stumps
+        /// radius. The player's screen position bobs up and down slightly during walk/run
+        /// animations, so without a buffer trees sitting right at the radius boundary would flip
+        /// between tree and stump every frame. A tree only becomes a stump once inside the radius
+        /// and only reverts once beyond the radius plus this buffer.
+        /// </summary>
+        private const int STUMP_RADIUS_BUFFER = 50;
+
+        /// <summary>
         /// Determines whether an object at the given screen position falls within the configured
         /// circle of transparency radius from the player. Used to optionally limit the
-        /// tree-to-stumps replacement to nearby trees only.
+        /// tree-to-stumps replacement to nearby trees only. Applies a hysteresis buffer via
+        /// <paramref name="withinRadius"/> so trees near the boundary don't flash as the player's
+        /// animated screen position bobs slightly.
         /// </summary>
+        /// <param name="objectScreenPos">The object's screen position.</param>
+        /// <param name="playerScreenPos">The player's screen position.</param>
+        /// <param name="withinRadius">
+        /// The object's current within-radius state. Read to determine the active threshold and
+        /// updated in place with the new state.
+        /// </param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsWithinStumpRadius(Vector2 objectScreenPos, Vector2 playerScreenPos)
+        public static bool IsWithinStumpRadius(Vector2 objectScreenPos, Vector2 playerScreenPos, ref bool withinRadius)
         {
             int radius = ProfileManager.CurrentProfile?.CircleOfTransparencyRadius ?? 0;
 
-            return Vector2.Distance(objectScreenPos, playerScreenPos) <= radius;
+            // Use the outer threshold when already inside so a small bob past the radius doesn't
+            // immediately revert the tree; use the inner threshold when outside so it only converts
+            // once genuinely within the radius.
+            int threshold = withinRadius ? radius + STUMP_RADIUS_BUFFER : radius;
+
+            withinRadius = Vector2.Distance(objectScreenPos, playerScreenPos) <= threshold;
+
+            return withinRadius;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

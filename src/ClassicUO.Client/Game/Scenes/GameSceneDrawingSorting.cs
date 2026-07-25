@@ -505,7 +505,7 @@ namespace ClassicUO.Game.Scenes
 
             if (profile.TreeToStumpsWithinRadius)
             {
-                return StaticFilters.IsWithinStumpRadius(obj.GetScreenPosition(), playerScreePos);
+                return StaticFilters.IsWithinStumpRadius(obj.GetScreenPosition(), playerScreePos, ref obj.WithinStumpRadius);
             }
 
             return true;
