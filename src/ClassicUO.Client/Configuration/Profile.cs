@@ -834,35 +834,6 @@ namespace ClassicUO.Configuration
 
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
-        public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double SkillsGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double ContextMenuScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double TradeGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        /// <summary>
-        /// Scale applied to every server created gump (and all of its controls).
-        /// </summary>
-        public double ServerGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
-
-        public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
-        public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
-        public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
-        public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
-        public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
-        public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
-        public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
-        public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-        public bool BuyAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int BuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int BuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
         public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         [Obsolete]
@@ -937,6 +908,86 @@ namespace ClassicUO.Configuration
         [Obsolete]
         [JsonPropertyName("corpse_container_style")]
         public int OldCorpseContainerStyle { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("modern_paperdoll_anchor_enabled")]
+        public bool OldModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("journal_anchor_enabled")]
+        public bool OldJournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
+
+        [Obsolete]
+        [JsonPropertyName("enable_auto_loot_progress_bar")]
+        public bool OldEnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("use_w_a_s_d_instead_arrow_keys")]
+        public bool OldUseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("nearby_loot_gump_height")]
+        public int OldNearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
+
+        [Obsolete]
+        [JsonPropertyName("force_tooltips_on_old_clients")]
+        public bool OldForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("nearby_loot_opens_human_corpses")]
+        public bool OldNearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("turn_delay")]
+        public ushort OldTurnDelay { get; set => SetProperty(ref field, value); } = 100;
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_enabled")]
+        public bool OldSellAgentEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_max_uniques")]
+        public int OldSellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_max_items")]
+        public int OldSellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_enabled")]
+        public bool OldBuyAgentEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_max_uniques")]
+        public int OldBuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_max_items")]
+        public int OldBuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+
+        [Obsolete]
+        [JsonPropertyName("s_o_s_gump_i_d")]
+        public uint OldSOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
+
+        [Obsolete]
+        [JsonPropertyName("status_gump_scale")]
+        public double OldStatusGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("skills_gump_scale")]
+        public double OldSkillsGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("context_menu_scale")]
+        public double OldContextMenuScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("trade_gump_scale")]
+        public double OldTradeGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("server_gump_scale")]
+        public double OldServerGumpScale { get; set => SetProperty(ref field, value); } = 1f;
 
         private long lastSave;
 
@@ -1023,6 +1074,32 @@ namespace ClassicUO.Configuration
                             break;
                     }
                 }
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 3) //2
+            {
+                ModernPaperdollAnchorEnabled = OldModernPaperdollAnchorEnabled;
+                JournalAnchorEnabled = OldJournalAnchorEnabled;
+                EnableAutoLootProgressBar = OldEnableAutoLootProgressBar;
+                UseWASDInsteadArrowKeys = OldUseWASDInsteadArrowKeys;
+                NearbyLootGumpHeight = OldNearbyLootGumpHeight;
+                ForceTooltipsOnOldClients = OldForceTooltipsOnOldClients;
+                NearbyLootOpensHumanCorpses = OldNearbyLootOpensHumanCorpses;
+                TurnDelay = OldTurnDelay;
+                SellAgentEnabled = OldSellAgentEnabled;
+                SellAgentMaxUniques = OldSellAgentMaxUniques;
+                SellAgentMaxItems = OldSellAgentMaxItems;
+                BuyAgentEnabled = OldBuyAgentEnabled;
+                BuyAgentMaxUniques = OldBuyAgentMaxUniques;
+                BuyAgentMaxItems = OldBuyAgentMaxItems;
+                SOSGumpID = OldSOSGumpID;
+                StatusGumpScale = OldStatusGumpScale;
+                SkillsGumpScale = OldSkillsGumpScale;
+                ContextMenuScale = OldContextMenuScale;
+                TradeGumpScale = OldTradeGumpScale;
+                ServerGumpScale = OldServerGumpScale;
 
                 ProfileMigrationVersion++;
             }
