@@ -41,9 +41,11 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading;
 using ClassicUO.IO.Persistency;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
 using FontStashSharp.RichText;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Assets;
 
@@ -109,6 +111,17 @@ public class TrueTypeLoader
         // encountered (e.g. a user-typed InfoBar label). Resolving here reuses the normal font
         // lookup, which safely falls back to an embedded font when the requested one is unavailable.
         RichTextDefaults.FontResolver ??= ResolveRichTextFont;
+        RichTextDefaults.ImageResolver ??= ImageResolver;
+    }
+
+    private IRenderable ImageResolver(string arg) => DummyRenderable.Instance;
+
+    private class DummyRenderable : IRenderable
+    {
+        public static readonly DummyRenderable Instance = new DummyRenderable();
+
+            public Point Size => Point.Zero;
+            public void Draw(FSRenderContext context, Vector2 position, Color color) {}
     }
 
     /// <summary>
