@@ -479,7 +479,7 @@ namespace ClassicUO.Game.Data
         /// between tree and stump every frame. A tree only becomes a stump once inside the radius
         /// and only reverts once beyond the radius plus this buffer.
         /// </summary>
-        private const int STUMP_RADIUS_BUFFER = 10;
+        private const int STUMP_RADIUS_BUFFER = 50;
 
         /// <summary>
         /// Determines whether an object at the given screen position falls within the configured
