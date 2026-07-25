@@ -110,7 +110,12 @@ public partial class GridContainer : ResizableGump
             get
             {
                 string status = GetEnabledDisabledText(_autoSortContainer);
-                string sortModeText = _sortMode == GridSortMode.Name ? TazLang.Get("gridcontainer_sortmode_name", "Name") : TazLang.Get("gridcontainer_sortmode_graphichue", "Graphic + Hue");
+                string sortModeText = _sortMode switch
+                {
+                    GridSortMode.Name => TazLang.Get("gridcontainer_sortmode_name", "Name"),
+                    GridSortMode.Layer => TazLang.Get("gridcontainer_sortmode_layer", "Layer"),
+                    _ => TazLang.Get("gridcontainer_sortmode_graphichue", "Graphic + Hue")
+                };
                 return TazLang.Get("gridcontainer_sort_tooltip", new string[] { sortModeText, status });
             }
         }
@@ -706,6 +711,15 @@ public partial class GridContainer : ResizableGump
                 UpdateItems(true);
                 _gridContainerEntry.UpdateSaveDataEntry(this);
             }, true, _sortMode == GridSortMode.Name));
+
+            control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_sortbylayer", "Sort by Layer"), () =>
+            {
+                _sortMode = GridSortMode.Layer;
+                _sortContents.ContextMenu = GenSortContextMenu();
+                _sortContents.SetTooltip(SortButtonTooltip);
+                UpdateItems(true);
+                _gridContainerEntry.UpdateSaveDataEntry(this);
+            }, true, _sortMode == GridSortMode.Layer));
 
             return control;
         }
