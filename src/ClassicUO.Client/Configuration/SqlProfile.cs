@@ -225,43 +225,43 @@ public sealed partial class Profile
         public partial bool UseWASDInsteadArrowKeys { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "nearby_loot_gump_height", 550)]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_gump_height", 550)]
         public partial int NearbyLootGumpHeight { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "force_tooltips_on_old_clients", true)]
+        [SqlSetting(SettingsScope.Server, "force_tooltips_on_old_clients", true)]
         public partial bool ForceTooltipsOnOldClients { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "nearby_loot_opens_human_corpses", false)]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_opens_human_corpses", false)]
         public partial bool NearbyLootOpensHumanCorpses { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "turn_delay", (ushort)100)]
+        [SqlSetting(SettingsScope.Server, "turn_delay", (ushort)80)]
         public partial ushort TurnDelay { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "sell_agent_enabled", false)]
+        [SqlSetting(SettingsScope.Char, "sell_agent_enabled", false)]
         public partial bool SellAgentEnabled { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "sell_agent_max_uniques", 50)]
+        [SqlSetting(SettingsScope.Server, "sell_agent_max_uniques", 50)]
         public partial int SellAgentMaxUniques { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "sell_agent_max_items", 0)]
+        [SqlSetting(SettingsScope.Server, "sell_agent_max_items", 0)]
         public partial int SellAgentMaxItems { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "buy_agent_enabled", false)]
+        [SqlSetting(SettingsScope.Char, "buy_agent_enabled", false)]
         public partial bool BuyAgentEnabled { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "buy_agent_max_uniques", 50)]
+        [SqlSetting(SettingsScope.Server, "buy_agent_max_uniques", 50)]
         public partial int BuyAgentMaxUniques { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "buy_agent_max_items", 0)]
+        [SqlSetting(SettingsScope.Server, "buy_agent_max_items", 0)]
         public partial int BuyAgentMaxItems { get; set; }
 
         [JsonIgnore]
