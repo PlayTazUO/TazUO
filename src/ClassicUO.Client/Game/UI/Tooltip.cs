@@ -186,34 +186,32 @@ namespace ClassicUO.Game.UI
                 hue_vec
             );
 
-            int borderWidth = 1;
             var borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
 
-            // A matched tooltip override can recolor the border with a custom hue and widen it.
+            int bgX = x - 4;
+            int bgY = y - 2;
+            int bgWidth = (int)(z_width * zoom);
+            int bgHeight = (int)(z_height * zoom);
+
+            // A matched tooltip override draws a colored accent border on the left and top edges only.
             if (_borderHueOverride >= 0)
             {
                 hue_vec = ShaderHueTranslator.GetHueVector(_borderHueOverride, false, alpha);
                 borderTexture = SolidColorTextureCache.GetTexture(Color.White);
-                borderWidth = Managers.ToolTipOverrideData.BorderWidth;
+
+                const int leftWidth = 2;
+                int topHeight = Managers.ToolTipOverrideData.BorderWidth;
+
+                // Both edges sit just outside the background so they don't cover the tooltip text.
+                // Top edge spans the width plus the top-left corner.
+                batcher.Draw(borderTexture, new Rectangle(bgX - leftWidth, bgY - topHeight, bgWidth + leftWidth, topHeight), hue_vec);
+                // Left edge.
+                batcher.Draw(borderTexture, new Rectangle(bgX - leftWidth, bgY, leftWidth, bgHeight), hue_vec);
             }
             else
             {
                 hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
-            }
-
-            // Draw the border as concentric 1px rectangles expanding outward from the tooltip
-            // edge, so a thick custom border sits outside the background rather than over it.
-            for (int i = 0; i < borderWidth; i++)
-            {
-                batcher.DrawRectangle
-                (
-                    borderTexture,
-                    x - 4 - i,
-                    y - 2 - i,
-                    (int)(z_width * zoom) + (i * 2),
-                    (int)(z_height * zoom) + (i * 2),
-                    hue_vec
-                );
+                batcher.DrawRectangle(borderTexture, bgX, bgY, bgWidth, bgHeight, hue_vec);
             }
 
             _textBox.Draw(batcher, x, y);
