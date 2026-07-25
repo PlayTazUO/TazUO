@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added support for in-game art using /i[0x0000] format in FSS text - [P.R 789](https://github.com/PlayTazUO/TazUO/pull/789) ([bittiez](https://github.com/bittiez))
 * Added a "Sort by Layer" option to the grid container sort menu, ordering items by their equipment layer (graphic and hue as tiebreakers) - [P.R 785](https://github.com/PlayTazUO/TazUO/pull/785) ([bittiez](https://github.com/bittiez))
 * Added an optional toggle (enabled by default) to ignore tooltip overrides for mobiles, so their raw tooltip text is shown instead of override-formatted text - [P.R 784](https://github.com/PlayTazUO/TazUO/pull/784) ([bittiez](https://github.com/bittiez))
 * The grid container top/label section now accepts target cursors to select the container (bag) itself, matching how clicking an empty grid slot behaves - [P.R 781](https://github.com/PlayTazUO/TazUO/pull/781) ([bittiez](https://github.com/bittiez))
