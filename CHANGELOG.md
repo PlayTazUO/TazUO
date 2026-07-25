@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## V5.12.0
 
 ### Features
 * Added support for in-game art using /i[0x0000] format in FSS text - [P.R 789](https://github.com/PlayTazUO/TazUO/pull/789) ([bittiez](https://github.com/bittiez))
