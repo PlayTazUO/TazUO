@@ -834,49 +834,6 @@ namespace ClassicUO.Configuration
 
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
-        // Clamped [0.5, 3.0] wrapper over the SQL-backed StatusGumpScaleValue.
-        [JsonIgnore]
-        public double StatusGumpScale
-        {
-            get => StatusGumpScaleValue;
-            set => StatusGumpScaleValue = Math.Clamp(value, 0.5d, 3.0d);
-        }
-
-        // Clamped [0.5, 3.0] wrapper over the SQL-backed SkillsGumpScaleValue.
-        [JsonIgnore]
-        public double SkillsGumpScale
-        {
-            get => SkillsGumpScaleValue;
-            set => SkillsGumpScaleValue = Math.Clamp(value, 0.5d, 3.0d);
-        }
-
-        // Clamped [0.5, 3.0] wrapper over the SQL-backed ContextMenuScaleValue.
-        [JsonIgnore]
-        public double ContextMenuScale
-        {
-            get => ContextMenuScaleValue;
-            set => ContextMenuScaleValue = Math.Clamp(value, 0.5d, 3.0d);
-        }
-
-        // Clamped [0.5, 3.0] wrapper over the SQL-backed TradeGumpScaleValue.
-        [JsonIgnore]
-        public double TradeGumpScale
-        {
-            get => TradeGumpScaleValue;
-            set => TradeGumpScaleValue = Math.Clamp(value, 0.5d, 3.0d);
-        }
-
-        /// <summary>
-        /// Scale applied to every server created gump (and all of its controls).
-        /// </summary>
-        // Clamped [0.5, 3.0] wrapper over the SQL-backed ServerGumpScaleValue.
-        [JsonIgnore]
-        public double ServerGumpScale
-        {
-            get => ServerGumpScaleValue;
-            set => ServerGumpScaleValue = Math.Clamp(value, 0.5d, 3.0d);
-        }
-
         public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         [Obsolete]

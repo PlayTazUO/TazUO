@@ -268,28 +268,29 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "s_o_s_gump_i_d", (uint)1915258020)]
         public partial uint SOSGumpID { get; set; }
 
-        // Backing store for the clamped <see cref="StatusGumpScale"/> wrapper (0.5 - 3.0).
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "status_gump_scale", 1d)]
-        public partial double StatusGumpScaleValue { get; set; }
+        [SqlSetting(SettingsScope.Global, "status_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double StatusGumpScale { get; set; }
 
-        // Backing store for the clamped <see cref="SkillsGumpScale"/> wrapper (0.5 - 3.0).
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "skills_gump_scale", 1d)]
-        public partial double SkillsGumpScaleValue { get; set; }
+        [SqlSetting(SettingsScope.Global, "skills_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double SkillsGumpScale { get; set; }
 
-        // Backing store for the clamped <see cref="ContextMenuScale"/> wrapper (0.5 - 3.0).
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "context_menu_scale", 1d)]
-        public partial double ContextMenuScaleValue { get; set; }
+        [SqlSetting(SettingsScope.Global, "context_menu_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double ContextMenuScale { get; set; }
 
-        // Backing store for the clamped <see cref="TradeGumpScale"/> wrapper (0.5 - 3.0).
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "trade_gump_scale", 1d)]
-        public partial double TradeGumpScaleValue { get; set; }
+        [SqlSetting(SettingsScope.Global, "trade_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double TradeGumpScale { get; set; }
 
-        // Backing store for the clamped <see cref="ServerGumpScale"/> wrapper (0.5 - 3.0).
+        /// <summary>
+        /// Scale applied to every server created gump (and all of its controls).
+        /// </summary>
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "server_gump_scale", 1d)]
-        public partial double ServerGumpScaleValue { get; set; }
+        [SqlSetting(SettingsScope.Global, "server_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double ServerGumpScale { get; set; }
+
+        // Clamp used by the gump-scale SQL settings above (see their OnSet).
+        private static double ClampGumpScale(double value) => System.Math.Clamp(value, 0.5d, 3.0d);
 }
