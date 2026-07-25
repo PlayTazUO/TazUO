@@ -122,6 +122,14 @@ namespace ClassicUO.Game.GameObjects
             }
         }
         public Vector3 Offset;
+
+        /// <summary>
+        /// Tracks whether this object is currently treated as within the tree-to-stumps radius.
+        /// Used to apply hysteresis so trees near the radius boundary don't flash when the
+        /// player's screen position bobs slightly during walk/run animations.
+        /// </summary>
+        public bool WithinStumpRadius;
+
         public short PriorityZ;
         public GameObject TNext;
         public GameObject TPrevious;

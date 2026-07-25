@@ -29,7 +29,7 @@ namespace ClassicUO.Game.GameObjects
             {
                 if (_profile.TreeToStumpsWithinRadius
                     && World.Player != null
-                    && !StaticFilters.IsWithinStumpRadius(GetScreenPosition(), World.Player.GetScreenPosition()))
+                    && !StaticFilters.IsWithinStumpRadius(GetScreenPosition(), World.Player.GetScreenPosition(), ref WithinStumpRadius))
                 {
                     return graphic;
                 }
