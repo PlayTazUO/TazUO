@@ -38,8 +38,10 @@ public class HotkeyInput : Panel
     private readonly TextBox _input;
     private readonly Action<SelectionChangedEventArgs>? _onSelectionChanged;
     private readonly Color _defaultTextColor;
+    private readonly bool _capturesMouseEvents;
+    private readonly string? _labelText;
 
-    private readonly HotkeyCapture? _capturer;
+    private HotkeyCaptureWindow? _captureWindow;
 
     private HotkeyBinding _selection;
 
@@ -103,8 +105,8 @@ public class HotkeyInput : Panel
     {
         _onSelectionChanged = onSelectionChanged;
         BindingValidator = bindingValidator;
-
-        _capturer = new HotkeyCapture { CapturesMouseEvents = capturesMouseEvents };
+        _capturesMouseEvents = capturesMouseEvents;
+        _labelText = labelText;
 
         StackPanel panel = OptionTabCommons.StyledStackPanel(Orientation.Horizontal);
         if (!string.IsNullOrEmpty(labelText))
@@ -143,71 +145,66 @@ public class HotkeyInput : Panel
     public override void OnVisibleChanged() => DetachAsNecessary();
 
     /// <summary>
-    /// Stops the capturer when the widget leaves the desktop or becomes invisible, preventing a
-    /// capture session from staying subscribed to global input after the widget stops rendering.
+    /// Closes any open capture window when the widget leaves the desktop or becomes invisible,
+    /// so a capture session cannot outlive the widget that spawned it.
     /// </summary>
     private void DetachAsNecessary()
     {
-        // Check if we're still being rendered.
-        // Note that the capturer may be null here since the OnPlacedChanged/OnVisibleChanged gets called BEFORE our constructor is actually called!
-        if (_capturer == null || (Desktop != null && Visible))
+        // OnPlacedChanged/OnVisibleChanged can fire before the constructor body runs, so the backing
+        // field may not exist yet.
+        if (_input == null)
             return;
 
-        // A capture can only be started by clicking the input, so the TouchDown handler can stay
-        // subscribed; the widget may be placed again later.
-        _capturer.Stop();
+        if (Desktop != null && Visible)
+            return;
+
+        CloseCaptureWindow();
         UpdateText();
     }
 
     /// <summary>
-    /// Begins hotkey recording when the user clicks the input box.
-    /// Does nothing if a capture session is already active.
+    /// Opens the shared <see cref="HotkeyCaptureWindow"/> to record a new binding. Does nothing if a
+    /// capture window is already open for this input.
     /// </summary>
     private void StartRecording()
     {
-        if (_capturer!.IsActive)
+        if (_captureWindow is { IsDisposed: false })
+        {
+            _captureWindow.BringOnTop();
             return;
+        }
 
-        _capturer.Start(
-            newBinding =>
-            {
-                if (BindingValidator?.Invoke(newBinding) == false)
-                {
-                    UpdateText(); // Have to manually reset state here since the 'Selection' change event usually takes care of that
-                    return;
-                }
+        _captureWindow = new HotkeyCaptureWindow(
+            prompt: _labelText,
+            existing: _selection,
+            onSaved: newBinding => Selection = newBinding,
+            capturesMouseEvents: _capturesMouseEvents,
+            bindingValidator: BindingValidator
+        );
+    }
 
-                Selection = newBinding; // This auto stops upon capture
-            },
-            UpdateText
-        ); // Escape cancels the capture, so the prompt has to be cleared
+    private void CloseCaptureWindow()
+    {
+        if (_captureWindow is { IsDisposed: false })
+            _captureWindow.Dispose();
 
-        UpdateText();
+        _captureWindow = null;
     }
 
     /// <summary>
-    /// Resets <see cref="Selection"/> to an empty binding and stops any in-progress capture.
+    /// Resets <see cref="Selection"/> to an empty binding and closes any open capture window.
     /// </summary>
     public void Clear()
     {
         Selection = new HotkeyBinding();
-        _capturer!.Stop();
+        CloseCaptureWindow();
     }
 
     /// <summary>
-    /// Refreshes the text box to reflect the current capture state or binding value.
-    /// Shows a "press any key" prompt while recording, or the binding string (or "no hotkey set")
-    /// when idle.
+    /// Refreshes the text box to reflect the current binding value (or a "no hotkey set" prompt).
     /// </summary>
     private void UpdateText()
     {
-        if (_capturer!.IsActive)
-        {
-            _input.Text = TazLang.Get("uicommons_pressanykey");
-            _input.TextColor = Color.DarkGoldenrod;
-            return;
-        }
-
         _input.TextColor = _defaultTextColor;
 
         if (Selection.IsEmpty)

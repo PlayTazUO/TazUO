@@ -1,6 +1,8 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using ClassicUO.Game.Managers.Hotkeys;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -9,20 +11,24 @@ using SDL3;
 
 namespace ClassicUO.Game.UI.Controls
 {
+    /// <summary>
+    /// A compact label that shows the currently assigned hotkey and, when clicked, opens the shared
+    /// <see cref="HotkeyCaptureWindow"/> to record a new one. All input capture happens inside that
+    /// single window; this control only displays the result and raises <see cref="HotkeyChanged"/>
+    /// (or <see cref="HotkeyCancelled"/> when the binding is cleared).
+    /// </summary>
     public class HotkeyBox : Control
     {
-        private bool _actived;
-        private readonly Button _buttonOK, _buttonCancel;
         private readonly HoveredLabel _label;
+        private HotkeyCaptureWindow _captureWindow;
 
         public HotkeyBox()
         {
             CanMove = false;
             AcceptMouseInput = true;
-            AcceptKeyboardInput = true;
+            AcceptKeyboardInput = false;
 
-
-            Width = 210;
+            Width = 150;
             Height = 25;
 
             ResizePic pic;
@@ -32,8 +38,7 @@ namespace ClassicUO.Game.UI.Controls
                 pic = new ResizePic(0x0BB8)
                 {
                     Width = 150,
-                    Height = Height,
-                    AcceptKeyboardInput = true
+                    Height = Height
                 }
             );
 
@@ -58,30 +63,9 @@ namespace ClassicUO.Game.UI.Controls
                 }
             );
 
-
             _label.MouseUp += LabelOnMouseUp;
 
-            Add
-            (
-                _buttonOK = new Button((int) ButtonState.Ok, 0x0481, 0x0483, 0x0482)
-                {
-                    X = 152,
-                    ButtonAction = ButtonAction.Activate
-                }
-            );
-
-
-            Add
-            (
-                _buttonCancel = new Button((int) ButtonState.Cancel, 0x047E, 0x0480, 0x047F)
-                {
-                    X = 182,
-                    ButtonAction = ButtonAction.Activate
-                }
-            );
-
             WantUpdateSize = false;
-            IsActive = false;
         }
 
         public SDL.SDL_Keycode Key { get; private set; }
@@ -91,44 +75,7 @@ namespace ClassicUO.Game.UI.Controls
         public bool WheelUp { get; private set; }
         public SDL.SDL_Keymod Mod { get; private set; }
 
-        public bool IsActive
-        {
-            get => _actived;
-            set
-            {
-                _actived = value;
-
-                if (value)
-                {
-                    _buttonOK.IsVisible = _buttonCancel.IsVisible = true;
-                    _buttonOK.IsEnabled = _buttonCancel.IsEnabled = true;
-                }
-                else
-                {
-                    _buttonOK.IsVisible = _buttonCancel.IsVisible = false;
-                    _buttonOK.IsEnabled = _buttonCancel.IsEnabled = false;
-                }
-            }
-        }
-
         public event EventHandler HotkeyChanged, HotkeyCancelled;
-
-
-        protected override void OnControllerButtonDown(SDL.SDL_GamepadButton button)
-        {
-            if(IsActive)
-            {
-                SetButtons(Controller.PressedButtons());
-            }
-        }
-
-        public override void OnKeyDown(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
-        {
-            if (IsActive)
-            {
-                SetKey(key, mod);
-            }
-        }
 
         public void SetButtons(SDL.SDL_GamepadButton[] buttons)
         {
@@ -161,31 +108,6 @@ namespace ClassicUO.Game.UI.Controls
             }
         }
 
-        public override void OnMouseDown(int x, int y, MouseButtonType button)
-        {
-            if (button == MouseButtonType.Middle || button == MouseButtonType.XButton1 || button == MouseButtonType.XButton2)
-            {
-                SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-                if (Keyboard.Alt)
-                {
-                    mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
-                }
-
-                if (Keyboard.Shift)
-                {
-                    mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
-                }
-
-                if (Keyboard.Ctrl)
-                {
-                    mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
-                }
-
-                SetMouseButton(button, mod);
-            }
-        }
-
         public void SetMouseButton(MouseButtonType button, SDL.SDL_Keymod mod)
         {
             string newvalue = KeysTranslator.GetMouseButton(button, mod);
@@ -197,35 +119,6 @@ namespace ClassicUO.Game.UI.Controls
                 MouseButton = button;
                 Mod = mod;
                 _label.Text = newvalue;
-            }
-        }
-
-        public override void OnMouseWheel(MouseEventType delta)
-        {
-            SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-            if (Keyboard.Alt)
-            {
-                mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;
-            }
-
-            if (Keyboard.Shift)
-            {
-                mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT;
-            }
-
-            if (Keyboard.Ctrl)
-            {
-                mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;
-            }
-
-            if (delta == MouseEventType.WheelScrollUp)
-            {
-                SetMouseWheel(true, mod);
-            }
-            else if (delta == MouseEventType.WheelScrollDown)
-            {
-                SetMouseWheel(false, mod);
             }
         }
 
@@ -249,45 +142,84 @@ namespace ClassicUO.Game.UI.Controls
             Key = 0;
             MouseButton = MouseButtonType.None;
             WheelScroll = false;
+            WheelUp = false;
             Mod = 0;
             _label.Text = string.Empty;
             Buttons = null;
         }
 
+        /// <summary>Builds a <see cref="HotkeyBinding"/> from the currently displayed binding.</summary>
+        private HotkeyBinding ToBinding() => new()
+        {
+            Key = Key,
+            Ctrl = (Mod & SDL.SDL_Keymod.SDL_KMOD_CTRL) != 0,
+            Shift = (Mod & SDL.SDL_Keymod.SDL_KMOD_SHIFT) != 0,
+            Alt = (Mod & SDL.SDL_Keymod.SDL_KMOD_ALT) != 0,
+            MouseButton = MouseButton,
+            WheelScroll = WheelScroll,
+            WheelUp = WheelUp,
+            ControllerButtons = Buttons
+        };
+
+        /// <summary>Applies a captured <see cref="HotkeyBinding"/> back into this control's fields.</summary>
+        private void ApplyBinding(HotkeyBinding binding)
+        {
+            SDL.SDL_Keymod mod = binding.Mod;
+
+            if (binding.HasController)
+                SetButtons(binding.ControllerButtons);
+            else if (binding.HasMouseButton)
+                SetMouseButton(binding.MouseButton, mod);
+            else if (binding.WheelScroll)
+                SetMouseWheel(binding.WheelUp, mod);
+            else if (binding.HasKey)
+                SetKey(binding.Key, mod);
+            else
+                ResetBinding();
+        }
+
         private void LabelOnMouseUp(object sender, MouseEventArgs e)
         {
-            IsActive = true;
-            SetKeyboardFocus();
-        }
-
-
-        public override void OnButtonClick(int buttonID)
-        {
-            switch ((ButtonState) buttonID)
+            if (_captureWindow is { IsDisposed: false })
             {
-                case ButtonState.Ok:
-                    HotkeyChanged.Raise(this);
-
-                    break;
-
-                case ButtonState.Cancel:
-                    _label.Text = string.Empty;
-
-                    HotkeyCancelled.Raise(this);
-
-                    Key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-                    Mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-                    break;
+                _captureWindow.BringOnTop();
+                return;
             }
 
-            IsActive = false;
+            _captureWindow = new HotkeyCaptureWindow(
+                prompt: null,
+                existing: ToBinding(),
+                onSaved: OnBindingSaved,
+                capturesMouseEvents: true
+            );
         }
 
-        private enum ButtonState
+        private void OnBindingSaved(HotkeyBinding binding)
         {
-            Ok,
-            Cancel
+            // This control only dispatches key, mouse, wheel or controller bindings; a bare
+            // modifier-only capture (or an empty one) is treated as clearing the binding.
+            bool usable = binding.HasController || binding.HasMouseButton || binding.WheelScroll || binding.HasKey;
+
+            if (!usable)
+            {
+                ResetBinding();
+                Key = SDL.SDL_Keycode.SDLK_UNKNOWN;
+                Mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
+                HotkeyCancelled.Raise(this);
+                return;
+            }
+
+            ApplyBinding(binding);
+            HotkeyChanged.Raise(this);
+        }
+
+        public override void Dispose()
+        {
+            if (_captureWindow is { IsDisposed: false })
+                _captureWindow.Dispose();
+
+            _captureWindow = null;
+            base.Dispose();
         }
     }
 }
