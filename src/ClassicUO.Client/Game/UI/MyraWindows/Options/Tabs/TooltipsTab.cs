@@ -1,7 +1,6 @@
 using ClassicUO.Common;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
-using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 
 namespace ClassicUO.Game.UI.MyraWindows.Options.Tabs;
@@ -66,9 +65,14 @@ public static class TooltipsTab
                     LabelText = TazLang.Get("mog_tooltips_labeltooltipoverrides"),
                     LabelLink = "https://tazuo.org/wiki/tooltip-override/"
                 },
+                Option.Checkbox(
+                    TazLang.Get("mog_tazuo_ignoretooltipoverridesformobiles"),
+                    new Accessor<bool>(() => profile.ToolTipOverride_IgnoreMobiles),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_ignoretooltipoverridesformobiles"), Keywords: [TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_mobile")])
+                ),
                 Option.Button(
                     TazLang.Get("mog_tooltips_labelopenoverridesconfig"),
-                    () => UIManager.Add(new TooltipConfigGump()),
+                    () => TooltipOverrideWindow.Show(World.Instance),
                     search: new SearchMetadata(TazLang.Get("mog_tooltips_labelopenoverridesconfig"), Keywords: [TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_config")])
                 )
             )

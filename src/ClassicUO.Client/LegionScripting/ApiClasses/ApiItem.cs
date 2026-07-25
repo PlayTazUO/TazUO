@@ -77,7 +77,7 @@ public class ApiItem : ApiEntity
     public bool MatchesHighlight;
 
     /// <summary>
-    /// If this item is a container ( item.IsContainer ) and is open, this will return the grid container or container gump for it.
+    /// If this item is a container ( item.IsContainer ) and is open, this will return the grid container, container gump, or grid loot gump for it.
     /// </summary>
     /// <returns></returns>
     public ApiUiBaseControl GetContainerGump()
@@ -87,7 +87,7 @@ public class ApiItem : ApiEntity
 
         Gump result = MainThreadQueue.InvokeOnMainThread(() => UIManager.GetGump(item.Serial));
 
-        if (result is GridContainer || result is ContainerGump)
+        if (result is GridContainer || result is ContainerGump || result is GridLootGump)
             return new ApiUiBaseControl(result);
 
         return null;

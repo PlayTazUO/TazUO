@@ -1,6 +1,7 @@
 ﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -133,6 +134,46 @@ namespace ClassicUO.Utility
             catch (Exception ex)
             {
                 Log.Error($"Error opening directory '{dirOrFilePath}': {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Safely write a file in try/catch.
+        /// Will log the error on failure.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="lines"></param>
+        /// <returns>true/false</returns>
+        public static bool WriteAllLinesSafe(string filePath, List<string> lines)
+        {
+            try 
+            {
+                File.WriteAllLines(filePath, lines, Encoding.UTF8);
+                return true;
+            } catch(Exception e)
+            {
+                Log.Error(e.ToString());
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Safely write a file in try/catch.
+        /// Will log the error on failure.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="lines"></param>
+        /// <returns>true/false</returns>
+        public static bool WriteAllTextSafe(string filePath, string text)
+        {
+            try 
+            {
+                File.WriteAllText(filePath, text, Encoding.UTF8);
+                return true;
+            } catch(Exception e)
+            {
+                Log.Error(e.ToString());
                 return false;
             }
         }

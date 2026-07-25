@@ -76,7 +76,7 @@ namespace ClassicUO.Game.Managers
             if (repeat) return;
 
             Profile p = ProfileManager.CurrentProfile;
-            if (p == null || !p.SelfHeal_Enabled || p.DisableHotkeys)
+            if (p == null || !p.SelfHeal_Enabled || HotKeys.GloballyDisabled)
                 return;
 
             HotKeyEntry entry = HotKeys.Get(SelfHealHotkeyId);
@@ -112,7 +112,7 @@ namespace ClassicUO.Game.Managers
                 get
                 {
                     Profile p = ProfileManager.CurrentProfile;
-                    if (p == null || !p.SelfHeal_Enabled || p.DisableHotkeys)
+                    if (p == null || !p.SelfHeal_Enabled || HotKeys.GloballyDisabled)
                         return false;
 
                     var player = Client.Game?.UO?.World?.Player;

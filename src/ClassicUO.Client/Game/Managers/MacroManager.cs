@@ -2,6 +2,7 @@
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
@@ -2401,16 +2402,16 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.CloseCorpses:
-                    int? gridLootType = ProfileManager.CurrentProfile?.GridLootType; // 0 = none, 1 = only grid, 2 = both
+                    CorpseContainerStyle corpseStyle = ProfileManager.CurrentProfile?.CorpseContainerStyle ?? CorpseContainerStyle.Grid;
 
-                    if (gridLootType == 0 || gridLootType == 2)
+                    if (corpseStyle is CorpseContainerStyle.Original or CorpseContainerStyle.OldGridLootAndContainer)
                         UIManager.ForEach<ContainerGump>(g =>
                         {
                             if (g.Graphic == ContainerGump.CORPSES_GUMP)
                                 g.Dispose();
                         });
 
-                    if (gridLootType == 1 || gridLootType == 2)
+                    if (corpseStyle is CorpseContainerStyle.OldGridLoot or CorpseContainerStyle.OldGridLootAndContainer)
                         UIManager.ForEach<GridLootGump>(g =>
                         {
                             g.Dispose();
@@ -2490,8 +2491,7 @@ namespace ClassicUO.Game.Managers
                     break;
 
                 case MacroType.ToggleHotkeys:
-                    ProfileManager.CurrentProfile.DisableHotkeys = !ProfileManager.CurrentProfile.DisableHotkeys;
-                    GameActions.Print($"Hotkeys {(ProfileManager.CurrentProfile.DisableHotkeys ? "disabled" : "enabled")}.");
+                    HotKeyRegistrar.ToggleHotkeysEnabled();
                     break;
 
 
@@ -2717,6 +2717,31 @@ namespace ClassicUO.Game.Managers
         public bool Alt { get; set; }
         public bool Ctrl { get; set; }
         public bool Shift { get; set; }
+
+        public HotkeyBinding GetBinding() => new()
+        {
+            Key = Key,
+            Ctrl = Ctrl,
+            Shift = Shift,
+            Alt = Alt,
+            MouseButton = MouseButton,
+            WheelScroll = WheelScroll,
+            WheelUp = WheelUp,
+            ControllerButtons = ControllerButtons
+        };
+
+        public void ApplyBinding(HotkeyBinding binding)
+        {
+            Key = binding.Key;
+            Ctrl = binding.Ctrl;
+            Shift = binding.Shift;
+            Alt = binding.Alt;
+            MouseButton = binding.MouseButton;
+            WheelScroll = binding.WheelScroll;
+            WheelUp = binding.WheelUp;
+            ControllerButtons = binding.ControllerButtons;
+        }
+
         public bool HideLabel = false;
         public ushort Hue = 0x00;
         public ushort? Graphic = null;
@@ -2829,7 +2854,12 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Key = (SDL_Keycode)int.Parse(xml.GetAttribute("key"));
+            if (!Enum.TryParse(xml.GetAttribute("key"), out SDL_Keycode mainKey))
+                mainKey = (int)SDL_Keycode.SDLK_UNKNOWN;
+            
+
+
+            Key = mainKey;
             Alt = bool.Parse(xml.GetAttribute("alt"));
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));

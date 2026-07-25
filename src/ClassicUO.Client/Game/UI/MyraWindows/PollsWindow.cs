@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.Controls.ResizableComponents;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Utility.Platforms;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D;
 using Myra.Graphics2D.Brushes;
@@ -24,6 +26,7 @@ public sealed class PollsWindow : MyraControl
     private readonly VerticalStackPanel _contentPanel = new() { Spacing = 8 };
     private Dictionary<string, Poll> _polls;
     private bool _loading;
+    private ScrollViewer _mainScroll;
 
     public PollsWindow() : base(TazLang.Get("polls_title", "TazUO Polls"))
     {
@@ -55,9 +58,17 @@ public sealed class PollsWindow : MyraControl
         toolbar.Widgets.Add(new MyraButton(TazLang.Get("polls_refresh", "Refresh"), LoadPolls));
         root.Widgets.Add(toolbar);
 
-        root.Widgets.Add(new ScrollViewer { MaxHeight = 500, Content = _contentPanel });
+        root.Widgets.Add(_mainScroll = new ScrollViewer { MaxHeight = 500, Content = _contentPanel });
 
         SetRootContent(root);
+
+        _rootWindow.Resized += OnResized;
+    }
+
+    private void OnResized(object sender, ResizeEventArgs e)
+    {
+        _mainScroll.MaxHeight = _rootWindow.Height;
+        RebuildList();
     }
 
     private void LoadPolls()
@@ -119,7 +130,7 @@ public sealed class PollsWindow : MyraControl
             Background = new SolidBrush(new Color(0, 0, 0, 60)),
             Border = new SolidBrush(MyraStyle.GridBorderColor),
             BorderThickness = new Thickness(1),
-            Width = 340
+            MaxWidth = 1000
         };
 
         panel.Widgets.Add(new MyraLabel(poll.Question, MyraLabel.TextStyle.H4));
@@ -159,7 +170,12 @@ public sealed class PollsWindow : MyraControl
                     break;
 
                 case AttachmentType.Image:
-                    panel.Widgets.Add(new MyraExternalImage(attachment.Data, 320));
+                    var img = new MyraExternalImage(attachment.Data, 1000);
+                    img.TouchLeft += (s, e) =>
+                    {
+                        PlatformHelper.LaunchBrowser(attachment.Data);
+                    };
+                    panel.Widgets.Add(img);
                     break;
             }
         }

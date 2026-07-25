@@ -490,6 +490,27 @@ namespace ClassicUO.Game.Scenes
             return false;
         }
 
+        /// <summary>
+        /// Determines whether a foliage object should be hidden as part of the tree-to-stumps
+        /// feature. When <see cref="Profile.TreeToStumpsWithinRadius"/> is enabled the foliage is
+        /// only hidden while it is within the circle of transparency radius from the player.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool HideFoliageForStumps(GameObject obj, Profile profile, ref Vector2 playerScreePos)
+        {
+            if (!profile.TreeToStumps)
+            {
+                return false;
+            }
+
+            if (profile.TreeToStumpsWithinRadius)
+            {
+                return StaticFilters.IsWithinStumpRadius(obj.GetScreenPosition(), playerScreePos, ref obj.WithinStumpRadius);
+            }
+
+            return true;
+        }
+
         private static bool CalculateAlpha(ref byte alphaHue, int maxAlpha)
         {
             if (
@@ -745,7 +766,7 @@ namespace ClassicUO.Game.Scenes
                             }
 
                             //we avoid to hide impassable foliage or bushes, if present...
-                            if (itemData.IsFoliage && profile.TreeToStumps)
+                            if (itemData.IsFoliage && HideFoliageForStumps(obj, profile, ref playerScreePos))
                             {
                                 continue;
                             }
@@ -834,7 +855,7 @@ namespace ClassicUO.Game.Scenes
 
                             if (!itemData.IsMultiMovable)
                             {
-                                if (itemData.IsFoliage && profile.TreeToStumps)
+                                if (itemData.IsFoliage && HideFoliageForStumps(obj, profile, ref playerScreePos))
                                 {
                                     continue;
                                 }
@@ -981,7 +1002,7 @@ namespace ClassicUO.Game.Scenes
                             if (
                                 !itemData.IsMultiMovable
                                 && itemData.IsFoliage
-                                && profile.TreeToStumps
+                                && HideFoliageForStumps(obj, profile, ref playerScreePos)
                             )
                             {
                                 continue;

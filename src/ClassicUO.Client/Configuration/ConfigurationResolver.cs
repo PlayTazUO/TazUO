@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,6 +13,12 @@ namespace ClassicUO.Configuration
 {
     internal static class ConfigurationResolver
     {
+        /// <summary>
+        /// Corrupt configuration files detected during load, recorded here so the UI can notify the
+        /// user once they are in-world. Detection happens at boot, long before the viewport exists.
+        /// </summary>
+        public static readonly ConcurrentQueue<string> CorruptFiles = new();
+
         public static T Load<T>(string file, JsonTypeInfo<T> ctx) where T : class
         {
             if (!File.Exists(file))
@@ -35,6 +42,29 @@ namespace ClassicUO.Configuration
             try
             {
                 return JsonSerializer.Deserialize(text, ctx);
+            }
+            catch (JsonException e)
+            {
+                // The configuration file is corrupt or malformed (e.g. truncated write,
+                // manual edit, disk corruption). Rather than crashing the client at boot,
+                // back up the bad file so it isn't silently overwritten and return null so
+                // the caller can fall back to sane defaults.
+                Log.Error($"Failed to load configuration file '{file}' - {e}");
+
+                try
+                {
+                    string backup = file + ".corrupt";
+                    File.Copy(file, backup, true);
+                    Log.Warn($"Corrupt configuration file backed up to '{backup}'.");
+                }
+                catch (Exception backupError)
+                {
+                    Log.Error($"Failed to back up corrupt configuration file '{file}' - {backupError}");
+                }
+
+                CorruptFiles.Enqueue(file);
+
+                return null;
             }
             catch (Exception e)
             {

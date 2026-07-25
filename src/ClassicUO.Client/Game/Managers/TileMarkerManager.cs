@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Map;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.Managers
 {
@@ -78,7 +79,7 @@ namespace ClassicUO.Game.Managers
                 Directory.CreateDirectory(Path.GetDirectoryName(SavePath));
                 var entries = markedTiles.Select(kvp => new TileMarkerEntry { Location = kvp.Key, Hue = kvp.Value }).ToList();
                 string json = JsonSerializer.Serialize(entries, TileMarkerJsonContext.Default.ListTileMarkerEntry);
-                File.WriteAllText(SavePath, json);
+                FileSystemHelper.WriteAllTextSafe(SavePath, json);
             }
             catch (Exception ex)
             {

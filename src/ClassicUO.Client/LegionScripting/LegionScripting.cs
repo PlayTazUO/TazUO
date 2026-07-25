@@ -542,7 +542,7 @@ namespace ClassicUO.LegionScripting
         /// <param name="e">The thrown error</param>
         private static void ShowScriptError(ScriptFile script, Exception e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered an error.", Constants.HUE_ERROR);
+            MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered an error.", Constants.HUE_ERROR));
 
             ExceptionOperations eo = script.PythonEngine.GetService<ExceptionOperations>();
             if (eo != null)
@@ -588,10 +588,10 @@ namespace ClassicUO.LegionScripting
                 if (errorLocations.Count > 0)
                     MainThreadQueue.EnqueueAction(() => { new ScriptErrorWindow(new ScriptErrorDetails(e.Message, errorLocations, script)); });
                 else
-                    GameActions.Print(_world, formattedEx, Constants.HUE_ERROR);
+                    MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, formattedEx, Constants.HUE_ERROR));
             }
             else
-                GameActions.Print(_world, e.Message, Constants.HUE_ERROR);
+                MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, e.Message, Constants.HUE_ERROR));
 
             if (e.InnerException != null)
                 ShowScriptError(script, e.InnerException);
@@ -624,7 +624,7 @@ namespace ClassicUO.LegionScripting
 
         private static void ShowCSharpCompilationError(ScriptFile script, CompilationErrorException e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' has compilation errors.", Constants.HUE_ERROR);
+            MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' has compilation errors.", Constants.HUE_ERROR));
 
             var errorLocations = new List<ScriptErrorLocation>();
 
@@ -657,17 +657,17 @@ namespace ClassicUO.LegionScripting
                     .Where(d => d.Severity == DiagnosticSeverity.Error)
                     .Select(d => d.GetMessage()));
 
-                new ScriptErrorWindow(new ScriptErrorDetails(errorMsg, errorLocations, script));
+                MainThreadQueue.EnqueueAction(() => { new ScriptErrorWindow(new ScriptErrorDetails(errorMsg, errorLocations, script)); });
             }
             else
             {
-                GameActions.Print(_world, e.Message, Constants.HUE_ERROR);
+                MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, e.Message, Constants.HUE_ERROR));
             }
         }
 
         private static void ShowCSharpRuntimeError(ScriptFile script, Exception e)
         {
-            GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered a runtime error.", Constants.HUE_ERROR);
+            MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, $"Legion Script '{script.FileName}' encountered a runtime error.", Constants.HUE_ERROR));
 
             // Unwrap AggregateException if present
             Exception actualException = e;
@@ -708,11 +708,11 @@ namespace ClassicUO.LegionScripting
 
             if (errorLocations.Count > 0)
             {
-                new ScriptErrorWindow(new ScriptErrorDetails(actualException.Message, errorLocations, script));
+                MainThreadQueue.EnqueueAction(() => { new ScriptErrorWindow(new ScriptErrorDetails(actualException.Message, errorLocations, script)); });
             }
             else
             {
-                GameActions.Print(_world, actualException.Message, Constants.HUE_ERROR);
+                MainThreadQueue.EnqueueAction(() => GameActions.Print(_world, actualException.Message, Constants.HUE_ERROR));
             }
         }
 
@@ -909,15 +909,8 @@ namespace ClassicUO.LegionScripting
                                   </Project>
                                   """;
 
-            try
-            {
-                File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "_ScriptContext.cs"), scriptContext);
-                File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "LegionScripts.csproj"), csProj);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-            }
+            FileSystemHelper.WriteAllTextSafe(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "_ScriptContext.cs"), scriptContext);
+            FileSystemHelper.WriteAllTextSafe(Path.Combine(CUOEnviroment.ExecutablePath, "LegionScripts", "LegionScripts.csproj"), csProj);
         }
     }
 }

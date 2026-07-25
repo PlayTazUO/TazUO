@@ -137,16 +137,105 @@ public static class AutoLootAgentTabContent
         skinGraphicsRow.Widgets.Add(skinGraphicsBox);
         root.Widgets.Add(skinGraphicsRow);
 
+        // Entries panel (declared early so the loot-list selector callbacks can rebuild it).
+        var entriesPanel = new VerticalStackPanel { Spacing = 4 };
+
+        // Loot list selection
+        root.Widgets.Add(new MyraSpacer(15, 5));
+        root.Widgets.Add(new MyraLabel("Loot Lists:", MyraLabel.TextStyle.H2));
+
+        var listSelectRow = new HorizontalStackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
+
+        var listCombo = new ComboView { MinWidth = 160, VerticalAlignment = VerticalAlignment.Center };
+        bool suppressListEvent = false;
+        MyraButton deleteListBtn = null!;
+
+        void RefreshListCombo()
+        {
+            suppressListEvent = true;
+            listCombo.ListView.Widgets.Clear();
+
+            IReadOnlyList<AutoLootManager.AutoLootList> lists = AutoLootManager.Instance.Lists;
+            int selectedIdx = 0;
+            for (int i = 0; i < lists.Count; i++)
+            {
+                listCombo.ListView.Widgets.Add(new Label { Text = lists[i].Name });
+                if (lists[i] == AutoLootManager.Instance.CurrentList) selectedIdx = i;
+            }
+
+            if (lists.Count > 0) listCombo.ListView.SelectedIndex = selectedIdx;
+            if (deleteListBtn != null) deleteListBtn.Enabled = lists.Count > 1;
+            suppressListEvent = false;
+        }
+
+        listCombo.ListView.SelectedIndexChanged += (_, _) =>
+        {
+            if (suppressListEvent) return;
+
+            int? idx = listCombo.ListView.SelectedIndex;
+            IReadOnlyList<AutoLootManager.AutoLootList> lists = AutoLootManager.Instance.Lists;
+            if (idx.HasValue && idx.Value >= 0 && idx.Value < lists.Count)
+            {
+                AutoLootManager.Instance.SelectList(lists[idx.Value]);
+                BuildEntriesList();
+            }
+        };
+        listSelectRow.Widgets.Add(listCombo);
+
+        listSelectRow.Widgets.Add(new MyraButton("New", () =>
+        {
+            var nameBox = new MyraInputBox { HintText = "List name", Width = 220 };
+            new MyraDialog("New Loot List", nameBox, ok =>
+            {
+                if (!ok) return;
+                AutoLootManager.Instance.AddList(nameBox.Text);
+                RefreshListCombo();
+                BuildEntriesList();
+            });
+        }) { Tooltip = "Create a new loot list and switch to it." });
+
+        listSelectRow.Widgets.Add(new MyraButton("Rename", () =>
+        {
+            AutoLootManager.AutoLootList current = AutoLootManager.Instance.CurrentList;
+            var nameBox = new MyraInputBox { Text = current.Name, HintText = "List name", Width = 220 };
+            new MyraDialog("Rename Loot List", nameBox, ok =>
+            {
+                if (!ok || string.IsNullOrWhiteSpace(nameBox.Text)) return;
+                AutoLootManager.Instance.RenameList(current, nameBox.Text);
+                RefreshListCombo();
+            });
+        }) { Tooltip = "Rename the selected loot list." });
+
+        deleteListBtn = new MyraButton("Delete List", () =>
+        {
+            if (AutoLootManager.Instance.Lists.Count <= 1)
+            {
+                GameActions.Print("You must have at least one loot list.", Constants.HUE_ERROR);
+                return;
+            }
+
+            AutoLootManager.AutoLootList current = AutoLootManager.Instance.CurrentList;
+            new MyraDialog("Delete Loot List",
+                new MyraLabel($"Delete list \"{current.Name}\" and all of its entries?", MyraLabel.TextStyle.P),
+                ok =>
+                {
+                    if (!ok || !AutoLootManager.Instance.DeleteList(current)) return;
+                    RefreshListCombo();
+                    BuildEntriesList();
+                });
+        }) { Tooltip = "Delete the selected loot list. At least one list must remain." };
+        listSelectRow.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(deleteListBtn));
+
+        root.Widgets.Add(listSelectRow);
+
         // Entries section
         root.Widgets.Add(new MyraSpacer(15, 5));
         root.Widgets.Add(new MyraLabel("Entries:", MyraLabel.TextStyle.H2));
 
-        var entriesPanel = new VerticalStackPanel { Spacing = 4 };
-
         void BuildEntriesList()
         {
             entriesPanel.Widgets.Clear();
-            List<AutoLootManager.AutoLootConfigEntry>? entries = AutoLootManager.Instance.AutoLootList;
+            List<AutoLootManager.AutoLootConfigEntry>? entries = AutoLootManager.Instance.AutoLootEntries;
 
             if (entries.Count == 0)
             {
@@ -318,6 +407,7 @@ public static class AutoLootAgentTabContent
         }
 
         BuildEntriesList();
+        RefreshListCombo();
 
         // Add entry inline panel
         var addEntryPanel = new VerticalStackPanel { Visible = false, Spacing = 4 };
@@ -351,6 +441,8 @@ public static class AutoLootAgentTabContent
                     hue = ushort.MaxValue;
 
                 AutoLootManager.AutoLootConfigEntry? entry = AutoLootManager.Instance.AddAutoLootEntry((ushort)graphic, hue, newNameBox.Text);
+                if (entry == null) return;
+
                 entry.RegexSearch = newRegexBox.Text;
 
                 newNameBox.Text = "";

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ClassicUO.Configuration;
 using ClassicUO.Input;
 using SDL3;
@@ -25,14 +26,48 @@ namespace ClassicUO.Game.Managers.Hotkeys
         private static readonly HashSet<SDL.SDL_Keycode> _heldKeys = new();
         private static bool _subscribed;
 
+        // Refcount of active temporary suppressions (e.g. in-progress hotkey captures). Multiple
+        // suppressors can overlap, so this counts rather than using a shared bool that whichever
+        // suppressor finishes first would clear out from under the others.
+        private static int _suppressCount;
+
         public static string FilePath => Path.Combine(ProfileManager.ProfilePath, "hotkeys.json");
 
         /// <summary>
-        /// True when all hotkeys are globally disabled (the shared Profile.DisableHotkeys flag,
-        /// toggled by the global shutoff hotkey). Entries flagged
+        /// True when all hotkeys are globally disabled: either the persistent shutoff flag
+        /// (<see cref="Profile.PersistentDisableHotkeys"/>) is set, or one or more temporary
+        /// suppressions are active (see <see cref="RequestDisableHotkeys"/>). Entries flagged
         /// <see cref="HotKeyEntry.IgnoresGlobalDisable"/> ignore this.
         /// </summary>
-        public static bool GloballyDisabled => ProfileManager.CurrentProfile?.DisableHotkeys ?? false;
+        public static bool GloballyDisabled =>
+            Volatile.Read(ref _suppressCount) > 0 || (ProfileManager.CurrentProfile?.PersistentDisableHotkeys ?? false);
+
+        /// <summary>
+        /// Temporarily suppress all hotkey dispatch until a matching <see cref="ReleaseDisableHotkeys"/>.
+        /// Refcounted and thread-safe, so overlapping suppressors compose correctly. Every call must be
+        /// balanced by exactly one release.
+        /// </summary>
+        public static void RequestDisableHotkeys() => Interlocked.Increment(ref _suppressCount);
+
+        /// <summary>
+        /// Release one suppression acquired via <see cref="RequestDisableHotkeys"/>. Never drops below zero.
+        /// </summary>
+        public static void ReleaseDisableHotkeys()
+        {
+            // Clamp defensively so an unbalanced release can't drive the count negative and wedge hotkeys permanently on.
+            //
+            // To clarify, this is a CAS loop; It basically forces the updater to retry the decrement until it, and it alone, succeeds.
+            // Honestly, very much an overkill for this particular use case.
+            int updated;
+            do
+            {
+                int current = Volatile.Read(ref _suppressCount);
+                if (current == 0)
+                    return;
+                updated = current - 1;
+            }
+            while (Interlocked.CompareExchange(ref _suppressCount, updated, updated + 1) != updated + 1);
+        }
 
         /// <summary>
         /// Load the active profile's saved bindings and re-apply them to any already-registered

@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 
@@ -73,7 +74,7 @@ public class GridContainerSaveData
                 GridContainerSerializerContext.Default.GridContainerEntryArray);
 
             tempPath = Path.GetTempFileName();
-            File.WriteAllText(tempPath, output);
+            FileSystemHelper.WriteAllTextSafe(tempPath, output);
 
             // Rotate backups: backup2 -> backup3, backup1 -> backup2, main -> backup1
             string backup3Path = GetBackupSavePath(3);

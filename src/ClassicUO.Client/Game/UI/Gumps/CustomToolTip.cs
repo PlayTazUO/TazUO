@@ -19,6 +19,9 @@ namespace ClassicUO.Game.UI.Gumps
         private TextBox text;
         private readonly uint hue = 0xFFFF;
 
+        // Border hue requested by a matched tooltip override (-1 = default border).
+        private int borderHueOverride = -1;
+
         public event FinishedLoadingEvent OnOPLLoaded;
 
         public CustomToolTip(World world, Item item, int x, int y, Control hoverReference, string prepend = "", string append = "", Item compareTo = null) : base(world, 0, 0)
@@ -70,7 +73,7 @@ namespace ClassicUO.Game.UI.Gumps
                 string finalString = FormatTooltip(name, data);
                 if (SerialHelper.IsItem(item.Serial))
                 {
-                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, compareTo == null ? uint.MinValue : compareTo.Serial);
+                    finalString = Managers.ToolTipOverrideData.ProcessTooltipText(World, item.Serial, out borderHueOverride, compareTo == null ? uint.MinValue : compareTo.Serial);
                     if (finalString == null)
                         finalString = FormatTooltip(name, data);
                     finalString = prepend + finalString + append;
@@ -174,17 +177,33 @@ namespace ClassicUO.Game.UI.Gumps
                 hue_vec
             );
 
-            hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+            var borderTexture = SolidColorTextureCache.GetTexture(Color.Gray);
 
-            batcher.DrawRectangle
-            (
-                SolidColorTextureCache.GetTexture(Color.Gray),
-                x - 4,
-                y - 2,
-                (int)(Width + 8),
-                (int)(Height + 8),
-                hue_vec
-            );
+            int bgX = x - 4;
+            int bgY = y - 2;
+            int bgWidth = (int)(Width + 8);
+            int bgHeight = (int)(Height + 8);
+
+            // A matched tooltip override draws a colored accent border on the left and top edges only.
+            if (borderHueOverride >= 0)
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(borderHueOverride, false, alpha);
+                borderTexture = SolidColorTextureCache.GetTexture(Color.White);
+
+                const int leftWidth = 2;
+                int topHeight = Managers.ToolTipOverrideData.BorderWidth;
+
+                // Both edges sit just outside the background so they don't cover the tooltip text.
+                // Top edge spans the width plus the top-left corner.
+                batcher.Draw(borderTexture, new Rectangle(bgX - leftWidth, bgY - topHeight, bgWidth + leftWidth, topHeight), hue_vec);
+                // Left edge.
+                batcher.Draw(borderTexture, new Rectangle(bgX - leftWidth, bgY, leftWidth, bgHeight), hue_vec);
+            }
+            else
+            {
+                hue_vec = ShaderHueTranslator.GetHueVector(0, false, alpha);
+                batcher.DrawRectangle(borderTexture, bgX, bgY, bgWidth, bgHeight, hue_vec);
+            }
 
             text.Draw(batcher, x, y);
 

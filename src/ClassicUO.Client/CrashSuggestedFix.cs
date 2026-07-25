@@ -59,6 +59,26 @@ namespace ClassicUO
                     return Client.GraphicsShaderHelpMessage;
                 }
 
+                if (exception is InvalidOperationException noFna3DDriverException &&
+                    noFna3DDriverException.Message.Contains("No supported FNA3D driver found!"))
+                {
+                    var sb = new StringBuilder();
+                    sb.AppendLine("TazUO could not start because FNA3D was unable to find a supported graphics driver.");
+                    sb.AppendLine("This means none of the available rendering backends (Direct3D 11, Vulkan or OpenGL) could be initialized on your system.");
+                    sb.AppendLine("It usually means your graphics drivers are missing or out of date, or you are running in an environment without proper GPU access (for example a remote desktop, virtual machine, or a system that fell back to a software renderer).");
+                    sb.AppendLine();
+                    sb.AppendLine("Suggested fixes:");
+                    sb.AppendLine("1. Update your graphics card drivers to the latest version, then restart your computer.");
+                    sb.AppendLine("2. Make sure you are running TazUO on the machine's real display and not through a remote desktop session that blocks GPU access.");
+                    sb.AppendLine("3. Try forcing a specific graphics driver by adding one of the following command-line arguments:");
+                    sb.AppendLine("     -force_driver 1   (OpenGL)");
+                    sb.AppendLine("     -force_driver 2   (Vulkan)");
+                    sb.AppendLine("     -force_driver 3   (SDL/FNA auto-select)");
+                    sb.AppendLine("   Try each one in turn until the client starts successfully.");
+                    sb.AppendLine("4. If you are running inside a virtual machine, enable 3D/GPU acceleration for it or run TazUO on physical hardware.");
+                    return sb.ToString();
+                }
+
                 if (exception is Microsoft.Xna.Framework.Graphics.NoSuitableGraphicsDeviceException noSuitableGraphicsDeviceException)
                 {
                     if (noSuitableGraphicsDeviceException.Message.Contains("OpenGL 2.1 support is required!"))
@@ -91,6 +111,11 @@ namespace ClassicUO
                     }
                 }
 
+                if (TryGetFontRenderingCrashFix(exception, out string fontFix))
+                {
+                    return fontFix;
+                }
+
                 if (TryGetPluginCrashFix(exception, out string pluginFix))
                 {
                     return pluginFix;
@@ -100,6 +125,11 @@ namespace ClassicUO
                 {
                     return mapFix;
                 }
+
+                if (TryGetZlibVersionMismatchCrashFix(exception, out string zlibFix))
+                {
+                    return zlibFix;
+                }
             }
             catch
             {
@@ -107,6 +137,37 @@ namespace ClassicUO
             }
 
             return null;
+        }
+
+        private static bool TryGetFontRenderingCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details))
+                return false;
+
+            bool crashedInFontCache =
+                details.Contains("FontStashSharp.Rasterizers.StbTrueTypeSharp.Int32Map") ||
+                details.Contains("GetGlyphKernAdvance") ||
+                (details.Contains("FontStashSharp") && details.Contains("GetKerning"));
+
+            if (!crashedInFontCache)
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO crashed inside the font rendering code (FontStashSharp) while measuring or drawing text.");
+            sb.AppendLine("The font glyph/kerning caches are not thread-safe, so this happens when text is created from a background thread at the same time the game is drawing.");
+            sb.AppendLine("This is almost always triggered by a Legion script that shows messages or builds UI directly from its own thread.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. If you were running a script when this happened, note which one and update it to the latest version.");
+            sb.AppendLine("2. In custom scripts, avoid printing messages or creating gumps/controls directly - use the provided API (for example API.SysMsg) which safely marshals the work onto the main thread.");
+            sb.AppendLine("3. Try reproducing without any scripts running to confirm a script is the cause.");
+            sb.AppendLine("4. If it still crashes with no scripts, please report it with this crash log so it can be investigated.");
+            fix = sb.ToString();
+            return true;
         }
 
         private static bool TryGetMapLoaderCrashFix(Exception e, out string fix)
@@ -137,6 +198,37 @@ namespace ClassicUO
             sb.AppendLine("2. Verify/repair your UO installation (for example through the official installer or your shard's patcher) to restore any missing or corrupt files.");
             sb.AppendLine("3. If you copied the data files manually, re-copy them and confirm none were skipped or truncated.");
             sb.AppendLine("4. Confirm the client version configured in TazUO matches the version of your UO data files.");
+            fix = sb.ToString();
+            return true;
+        }
+
+        private static bool TryGetZlibVersionMismatchCrashFix(Exception e, out string fix)
+        {
+            fix = null;
+
+            // A MissingMethodException naming a ZLib entry point means the loaded
+            // ClassicUO.Utility.dll is older than the client executable expects - the two
+            // were not updated together (a partial update or files copied over an old
+            // install). This most commonly surfaces from the -zlib launch argument, which
+            // calls into the newer ZLib API.
+            if (e is not MissingMethodException)
+                return false;
+
+            string details = e.ToString();
+
+            if (string.IsNullOrEmpty(details) ||
+                !details.Contains("ClassicUO.Utility.ZLib"))
+                return false;
+
+            var sb = new StringBuilder();
+            sb.AppendLine("TazUO could not start because its files do not all match.");
+            sb.AppendLine("The bundled zlib helper library (ClassicUO.Utility.dll) is older than this build of TazUO expects, which usually happens after a partial update or when new files were copied over an old installation.");
+            sb.AppendLine("This crash is triggered by the '-zlib' launch argument, which uses a newer zlib feature that the out-of-date file does not have.");
+            sb.AppendLine();
+            sb.AppendLine("Suggested fixes:");
+            sb.AppendLine("1. Remove the '-zlib' launch argument. Instead, enable managed zlib from the Options menu on the login screen (Misc tab) - it does the same thing and is saved for you.");
+            sb.AppendLine("2. Reinstall or re-download TazUO so every file is updated together, then try again.");
+            sb.AppendLine("3. If you copied files manually, make sure ClassicUO.Utility.dll was replaced along with the rest of the client.");
             fix = sb.ToString();
             return true;
         }

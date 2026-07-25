@@ -101,9 +101,15 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, "disable_dismount_in_war_mode", true)]
         public partial bool DisableDismountInWarMode { get; set; }
 
+        /// <summary>
+        ///     Persistently disable hotkey usage.
+        ///     <p>
+        ///         To merely temporarily disable hotkeys, use <see cref="Game.Managers.Hotkeys.HotKeys.RequestDisableHotkeys" />.
+        ///     </p>
+        /// </summary>
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "disable_hotkeys", false)]
-        public partial bool DisableHotkeys { get; set; }
+        public partial bool PersistentDisableHotkeys { get; set; }
 
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "post_processing_type", (ushort)0)]
@@ -182,4 +188,109 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, "auto_save_gump_positions", false)]
         public partial bool AutoSaveGumpPositions { get; set; }
+
+        // Which container style newly opened (non-corpse) containers use. Backing store for the
+        // <see cref="ContainerStyle"/> enum: 0 = Grid (default), 1 = Original.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "container_style", 0)]
+        public partial int ContainerStyleValue { get; set; }
+
+        // Which container style corpses open in. Backing store for the
+        // <see cref="CorpseContainerStyle"/> enum: 0 = Grid (default), 1 = Original, 2 = Old Grid Loot,
+        // 3 = Old Grid Loot + Container.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "corpse_container_style", 0)]
+        public partial int CorpseContainerStyleValue { get; set; }
+
+        // When enabled (alongside TreeToStumps), trees are only rendered as stumps while they
+        // are within the circle of transparency radius from the player.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.TREE_TO_STUMPS_WITHIN_RADIUS, false)]
+        public partial bool TreeToStumpsWithinRadius { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "modern_paperdoll_anchor_enabled", false)]
+        public partial bool ModernPaperdollAnchorEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "journal_anchor_enabled", false)]
+        public partial bool JournalAnchorEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "enable_auto_loot_progress_bar", true)]
+        public partial bool EnableAutoLootProgressBar { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "use_w_a_s_d_instead_arrow_keys", false)]
+        public partial bool UseWASDInsteadArrowKeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_gump_height", 550)]
+        public partial int NearbyLootGumpHeight { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "force_tooltips_on_old_clients", true)]
+        public partial bool ForceTooltipsOnOldClients { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "nearby_loot_opens_human_corpses", false)]
+        public partial bool NearbyLootOpensHumanCorpses { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "turn_delay", (ushort)80)]
+        public partial ushort TurnDelay { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "sell_agent_enabled", false)]
+        public partial bool SellAgentEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "sell_agent_max_uniques", 50)]
+        public partial int SellAgentMaxUniques { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "sell_agent_max_items", 0)]
+        public partial int SellAgentMaxItems { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "buy_agent_enabled", false)]
+        public partial bool BuyAgentEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "buy_agent_max_uniques", 50)]
+        public partial int BuyAgentMaxUniques { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "buy_agent_max_items", 0)]
+        public partial int BuyAgentMaxItems { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "s_o_s_gump_i_d", (uint)1915258020)]
+        public partial uint SOSGumpID { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "status_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double StatusGumpScale { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "skills_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double SkillsGumpScale { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "context_menu_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double ContextMenuScale { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "trade_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double TradeGumpScale { get; set; }
+
+        /// <summary>
+        /// Scale applied to every server created gump (and all of its controls).
+        /// </summary>
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "server_gump_scale", 1d, OnSet = nameof(ClampGumpScale))]
+        public partial double ServerGumpScale { get; set; }
+
+        // Clamp used by the gump-scale SQL settings above (see their OnSet).
+        private static double ClampGumpScale(double value) => System.Math.Clamp(value, 0.5d, 3.0d);
 }

@@ -15,10 +15,9 @@ namespace ClassicUO.Game.Managers.Hotkeys
     {
         private Action<HotkeyBinding>? _onCaptured;
         private Action? _onCancelled;
-        private bool _active;
         private SDL.SDL_Keymod _modAccum;
 
-        public bool IsActive => _active;
+        public bool IsActive { get; private set; }
 
         public bool CapturesMouseEvents { get; set; } = true;
 
@@ -29,7 +28,10 @@ namespace ClassicUO.Game.Managers.Hotkeys
             _onCaptured = onCaptured;
             _onCancelled = onCancelled;
             _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
-            _active = true;
+            IsActive = true;
+
+            // Suppress hotkeys globally until the capture is stopped
+            HotKeys.RequestDisableHotkeys();
 
             Keyboard.KeyDownEvent += OnKey;
             Keyboard.BareModifierEvent += OnBareModifier;
@@ -45,10 +47,10 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         public void Stop()
         {
-            if (!_active)
+            if (!IsActive)
                 return;
 
-            _active = false;
+            IsActive = false;
             Keyboard.KeyDownEvent -= OnKey;
             Keyboard.BareModifierEvent -= OnBareModifier;
             Mouse.ButtonDownEvent -= OnMouseButton;
@@ -57,6 +59,8 @@ namespace ClassicUO.Game.Managers.Hotkeys
             _onCaptured = null;
             _onCancelled = null;
             _modAccum = SDL.SDL_Keymod.SDL_KMOD_NONE;
+
+            HotKeys.ReleaseDisableHotkeys();
         }
 
         private void OnKey(string hotkey)
@@ -79,9 +83,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         private void OnMouseButton(MouseButtonType button)
         {
-            // Left/Right operate the UI (including the "Set" button that started capture), so only the
-            // middle and extra buttons can be bound — matching the legacy HotkeyBox.
-            if (button != MouseButtonType.Middle && button != MouseButtonType.XButton1 && button != MouseButtonType.XButton2)
+            if (button == MouseButtonType.Left || button == MouseButtonType.Right)
                 return;
 
             Capture(new HotkeyBinding
@@ -93,8 +95,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             });
         }
 
-        private void OnWheel(bool up)
-        {
+        private void OnWheel(bool up) =>
             Capture(new HotkeyBinding
             {
                 WheelScroll = true,
@@ -103,7 +104,6 @@ namespace ClassicUO.Game.Managers.Hotkeys
                 Shift = Keyboard.Shift,
                 Alt = Keyboard.Alt
             });
-        }
 
         private void OnBareModifier(SDL.SDL_Keymod mods)
         {
@@ -132,7 +132,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
             // Capture every button held at this instant so chords (e.g. LB + A) can be bound.
             SDL.SDL_GamepadButton[] pressed = Controller.PressedButtons();
             if (pressed.Length == 0)
-                pressed = new[] { button };
+                pressed = [button];
 
             Capture(new HotkeyBinding { ControllerButtons = pressed });
         }

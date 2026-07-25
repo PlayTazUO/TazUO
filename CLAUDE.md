@@ -211,4 +211,3 @@ The scripting API documentation is automatically generated during build via the 
 
 - All json serialize and deserialize need to have context generated for them.
 - Don't put a licsense at the top of files you create.
-- When adding or changing keys in `src/ClassicUO.Client/Configuration/language.ini`, increment the `_version` value at the top of the file. Missing keys are only auto-appended to a user's existing copy when this file's version is newer than theirs.

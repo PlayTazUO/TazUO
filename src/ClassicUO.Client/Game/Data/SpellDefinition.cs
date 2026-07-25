@@ -557,7 +557,7 @@ namespace ClassicUO.Game.Data
                 list.Add(spellJson);
             }
 
-            File.WriteAllText(Path.Combine(CUOEnviroment.ExecutablePath, "Data", "spelldef.json"),JsonSerializer.Serialize(list, SpellJsonContext.Default.ListSpellJson));
+            FileSystemHelper.WriteAllTextSafe(Path.Combine(CUOEnviroment.ExecutablePath, "Data", "spelldef.json"),JsonSerializer.Serialize(list, SpellJsonContext.Default.ListSpellJson));
 
             GameActions.Print(world, $"Saved all spells as a json file at {Path.Combine(CUOEnviroment.ExecutablePath, "Data", "spelldef.json")}");
         }

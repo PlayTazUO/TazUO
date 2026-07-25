@@ -1224,7 +1224,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (macro.Items is MacroObject mac)
                     {
-                        if (ProfileManager.CurrentProfile.DisableHotkeys && mac.Code != MacroType.ToggleHotkeys)
+                        if (HotKeys.GloballyDisabled && mac.Code != MacroType.ToggleHotkeys)
                         {
                             return false;
                         }
@@ -1497,7 +1497,7 @@ namespace ClassicUO.Game.Scenes
                 {
                     if (macro.Items is MacroObject mac)
                     {
-                        if (ProfileManager.CurrentProfile.DisableHotkeys && mac.Code != MacroType.ToggleHotkeys)
+                        if (HotKeys.GloballyDisabled && mac.Code != MacroType.ToggleHotkeys)
                         { //Disable hotkeys for all macros unless it's the toggle hotkey macro
                         }
                         else if (mac.Code == MacroType.LookAtMouse)
@@ -1756,7 +1756,7 @@ namespace ClassicUO.Game.Scenes
                 Macro macro = _world.Macros.FindMacro((SDL.SDL_GamepadButton)e.button);
                 if (macro != null && macro.Items is MacroObject mac)
                 {
-                    if (ProfileManager.CurrentProfile.DisableHotkeys && mac.Code != MacroType.ToggleHotkeys)
+                    if (HotKeys.GloballyDisabled && mac.Code != MacroType.ToggleHotkeys)
                     {
                     }
                     else

@@ -382,8 +382,6 @@ namespace ClassicUO.Configuration
 
         public uint GrabBagSerial { get; set => SetProperty(ref field, value); }
 
-        public int GridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
-
         public bool ReduceFPSWhenInactive { get; set => SetProperty(ref field, value); }
 
         public bool EnableVSync { get; set => SetProperty(ref field, value); } = true;
@@ -504,9 +502,30 @@ namespace ClassicUO.Configuration
         public uint SetFavoriteMoveBagSerial { get; set => SetProperty(ref field, value); }
 
         #region GRID CONTAINER
-        public bool UseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
+
+        /// <summary>
+        ///     Which container style newly opened (non-corpse) containers use. Persisted via the
+        ///     <see cref="ContainerStyleValue"/> SQL setting.
+        /// </summary>
+        [JsonIgnore]
+        public ContainerStyle ContainerStyle
+        {
+            get => (ContainerStyle)ContainerStyleValue;
+            set => ContainerStyleValue = (int)value;
+        }
+
+        /// <summary>
+        ///     Which container style corpses open in. Persisted via the
+        ///     <see cref="CorpseContainerStyleValue"/> SQL setting.
+        /// </summary>
+        [JsonIgnore]
+        public CorpseContainerStyle CorpseContainerStyle
+        {
+            get => (CorpseContainerStyle)CorpseContainerStyleValue;
+            set => CorpseContainerStyleValue = (int)value;
+        }
+
         public bool GridContainersDefaultToOldStyleView { get; set => SetProperty(ref field, value); } = false;
-        public CorpseContainerStyle CorpseContainerStyle { get; set => SetProperty(ref field, value); } = CorpseContainerStyle.Default;
         public int GridContainerViewMode { get; set => SetProperty(ref field, value); } = 0; // 0 = Grid, 1 = List
         public int GridContainerSearchMode { get; set => SetProperty(ref field, value); } = 0;
         public bool EnableGridContainerAnchor { get; set => SetProperty(ref field, value); } = false;
@@ -703,6 +722,10 @@ namespace ClassicUO.Configuration
         public List<int> ToolTipOverride_MaxVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
         public List<int> ToolTipOverride_MaxVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
         public List<byte> ToolTipOverride_Layer { get; set => SetProperty(ref field, value); } = new List<byte>() { (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any };
+        /// <summary>Optional per-override border hue drawn around the tooltip when the rule matches; -1 means no override.</summary>
+        public List<int> ToolTipOverride_BorderHue { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
+        /// <summary>When enabled, tooltip overrides are not applied to mobile tooltips.</summary>
+        public bool ToolTipOverride_IgnoreMobiles { get; set => SetProperty(ref field, value); } = true;
         #endregion
 
         public string TooltipHeaderFormat { get; set => SetProperty(ref field, value); } = "/c[yellow]{0}";
@@ -811,35 +834,6 @@ namespace ClassicUO.Configuration
 
         public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
-        public double StatusGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double SkillsGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double ContextMenuScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public double TradeGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        /// <summary>
-        /// Scale applied to every server created gump (and all of its controls).
-        /// </summary>
-        public double ServerGumpScale { get; set => SetProperty(ref field, Math.Clamp(value, 0.5d, 3.0d)); } = 1f;
-
-        public uint SOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
-
-        public bool ModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
-        public bool JournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
-        public bool EnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
-        public bool UseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
-        public int NearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
-        public bool ForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
-        public bool NearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
-        public ushort TurnDelay { get; set => SetProperty(ref field, value); } = 100;
-        public bool SellAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int SellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int SellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
-        public bool BuyAgentEnabled { get; set => SetProperty(ref field, value); }
-        public int BuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
-        public int BuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
         public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
         public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         [Obsolete]
@@ -893,7 +887,7 @@ namespace ClassicUO.Configuration
         [Obsolete]
         [JsonPropertyName("disable_hotkeys")]
         public bool OldDisableHotkeys { get; set => SetProperty(ref field, value); }
-        
+
         [Obsolete]
         [JsonPropertyName("disable_dismount_in_war_mode")]
         public bool OldDisableDismountInWarMode { get; set => SetProperty(ref field, value); } = true;
@@ -901,6 +895,99 @@ namespace ClassicUO.Configuration
         [Obsolete]
         [JsonPropertyName("enable_a_sync_map_loading")]
         public bool OldEnableASyncMapLoading { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("use_grid_layout_container_gumps")]
+        public bool OldUseGridLayoutContainerGumps { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("grid_loot_type")]
+        public int OldGridLootType { get; set => SetProperty(ref field, value); } // 0 = none, 1 = only grid, 2 = both
+
+        // Stored as the old CorpseContainerStyle enum ordinal: 0 = Default, 1 = Grid, 2 = Original
+        [Obsolete]
+        [JsonPropertyName("corpse_container_style")]
+        public int OldCorpseContainerStyle { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("modern_paperdoll_anchor_enabled")]
+        public bool OldModernPaperdollAnchorEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("journal_anchor_enabled")]
+        public bool OldJournalAnchorEnabled { get; set => SetProperty(ref field, value); } = false;
+
+        [Obsolete]
+        [JsonPropertyName("enable_auto_loot_progress_bar")]
+        public bool OldEnableAutoLootProgressBar { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("use_w_a_s_d_instead_arrow_keys")]
+        public bool OldUseWASDInsteadArrowKeys { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("nearby_loot_gump_height")]
+        public int OldNearbyLootGumpHeight { get; set => SetProperty(ref field, value); } = 550;
+
+        [Obsolete]
+        [JsonPropertyName("force_tooltips_on_old_clients")]
+        public bool OldForceTooltipsOnOldClients { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("nearby_loot_opens_human_corpses")]
+        public bool OldNearbyLootOpensHumanCorpses { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("turn_delay")]
+        public ushort OldTurnDelay { get; set => SetProperty(ref field, value); } = 100;
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_enabled")]
+        public bool OldSellAgentEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_max_uniques")]
+        public int OldSellAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+
+        [Obsolete]
+        [JsonPropertyName("sell_agent_max_items")]
+        public int OldSellAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_enabled")]
+        public bool OldBuyAgentEnabled { get; set => SetProperty(ref field, value); }
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_max_uniques")]
+        public int OldBuyAgentMaxUniques { get; set => SetProperty(ref field, value); } = 50;
+
+        [Obsolete]
+        [JsonPropertyName("buy_agent_max_items")]
+        public int OldBuyAgentMaxItems { get; set => SetProperty(ref field, value); } = 0;
+
+        [Obsolete]
+        [JsonPropertyName("s_o_s_gump_i_d")]
+        public uint OldSOSGumpID { get; set => SetProperty(ref field, value); } = 1915258020;
+
+        [Obsolete]
+        [JsonPropertyName("status_gump_scale")]
+        public double OldStatusGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("skills_gump_scale")]
+        public double OldSkillsGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("context_menu_scale")]
+        public double OldContextMenuScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("trade_gump_scale")]
+        public double OldTradeGumpScale { get; set => SetProperty(ref field, value); } = 1f;
+
+        [Obsolete]
+        [JsonPropertyName("server_gump_scale")]
+        public double OldServerGumpScale { get; set => SetProperty(ref field, value); } = 1f;
 
         private long lastSave;
 
@@ -939,7 +1026,7 @@ namespace ClassicUO.Configuration
             {
                 EnableASyncMapLoading = OldEnableASyncMapLoading;
                 DisableDismountInWarMode = OldDisableDismountInWarMode;
-                DisableHotkeys = OldDisableHotkeys;
+                PersistentDisableHotkeys = OldDisableHotkeys;
                 ControllerEnabled = OldControllerEnabled;
                 EnableScavenger = OldEnableScavenger;
                 CounterGumpLocked = OldCounterGumpLocked;
@@ -952,6 +1039,67 @@ namespace ClassicUO.Configuration
                 PostProcessingType = OldPostProcessingType;
                 ForcedHouseTransparency = OldForcedHouseTransparency;
                 HideHudGumpFlags = OldHideHudGumpFlags;
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 2) //1
+            {
+                // The old "Enable grid containers" toggle becomes the new Container Style dropdown.
+                ContainerStyle = OldUseGridLayoutContainerGumps ? ContainerStyle.Grid : ContainerStyle.Original;
+
+                // The old grid loot type and corpse container style settings are merged into a single
+                // Corpse Container Style dropdown. Grid loot took precedence when it was enabled; the
+                // old "both" mode (2) is preserved as the combined loot-gump-plus-container style.
+                if (OldGridLootType == 1)
+                {
+                    CorpseContainerStyle = CorpseContainerStyle.OldGridLoot;
+                }
+                else if (OldGridLootType == 2)
+                {
+                    CorpseContainerStyle = CorpseContainerStyle.OldGridLootAndContainer;
+                }
+                else
+                {
+                    switch (OldCorpseContainerStyle)
+                    {
+                        case 1: // old CorpseContainerStyle.Grid
+                            CorpseContainerStyle = CorpseContainerStyle.Grid;
+                            break;
+                        case 2: // old CorpseContainerStyle.Original
+                            CorpseContainerStyle = CorpseContainerStyle.Original;
+                            break;
+                        default: // old CorpseContainerStyle.Default followed the global container style
+                            CorpseContainerStyle = OldUseGridLayoutContainerGumps ? CorpseContainerStyle.Grid : CorpseContainerStyle.Original;
+                            break;
+                    }
+                }
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 3) //2
+            {
+                ModernPaperdollAnchorEnabled = OldModernPaperdollAnchorEnabled;
+                JournalAnchorEnabled = OldJournalAnchorEnabled;
+                EnableAutoLootProgressBar = OldEnableAutoLootProgressBar;
+                UseWASDInsteadArrowKeys = OldUseWASDInsteadArrowKeys;
+                NearbyLootGumpHeight = OldNearbyLootGumpHeight;
+                ForceTooltipsOnOldClients = OldForceTooltipsOnOldClients;
+                NearbyLootOpensHumanCorpses = OldNearbyLootOpensHumanCorpses;
+                TurnDelay = OldTurnDelay;
+                SellAgentEnabled = OldSellAgentEnabled;
+                SellAgentMaxUniques = OldSellAgentMaxUniques;
+                SellAgentMaxItems = OldSellAgentMaxItems;
+                BuyAgentEnabled = OldBuyAgentEnabled;
+                BuyAgentMaxUniques = OldBuyAgentMaxUniques;
+                BuyAgentMaxItems = OldBuyAgentMaxItems;
+                SOSGumpID = OldSOSGumpID;
+                StatusGumpScale = OldStatusGumpScale;
+                SkillsGumpScale = OldSkillsGumpScale;
+                ContextMenuScale = OldContextMenuScale;
+                TradeGumpScale = OldTradeGumpScale;
+                ServerGumpScale = OldServerGumpScale;
 
                 ProfileMigrationVersion++;
             }
