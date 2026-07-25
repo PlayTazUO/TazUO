@@ -83,9 +83,7 @@ namespace ClassicUO.Game.Managers.Hotkeys
 
         private void OnMouseButton(MouseButtonType button)
         {
-            // Left/Right operate the UI (including the "Set" button that started capture), so only the
-            // middle and extra buttons can be bound — matching the legacy HotkeyBox.
-            if (button != MouseButtonType.Middle && button != MouseButtonType.XButton1 && button != MouseButtonType.XButton2)
+            if (button == MouseButtonType.Left || button == MouseButtonType.Right)
                 return;
 
             Capture(new HotkeyBinding

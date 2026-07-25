@@ -123,10 +123,11 @@ public class HotkeyInput : Panel
             Readonly = true
         };
 
-        _input.TouchDown += StartRecording;
+        //_input.TouchDown += StartRecording;
         _defaultTextColor = _input.TextColor;
 
         panel.Widgets.Add(_input);
+        panel.Widgets.Add(new MyraButton(TazLang.Get("mog_kw_set"), StartRecording));
         panel.Widgets.Add(new MyraButton(TazLang.Get("mog_kw_clear"), Clear));
 
         _selection = existingSelection ?? new HotkeyBinding();
@@ -162,7 +163,7 @@ public class HotkeyInput : Panel
     /// Begins hotkey recording when the user clicks the input box.
     /// Does nothing if a capture session is already active.
     /// </summary>
-    private void StartRecording(object? sender, EventArgs e)
+    private void StartRecording()
     {
         if (_capturer!.IsActive)
             return;

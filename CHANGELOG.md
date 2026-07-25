@@ -17,7 +17,8 @@ All notable changes to TazUO will be recorded here.
 * language.ini is no longer versioned, it will be checked every run for correctness ([bittiez](https://github.com/bittiez))
 
 ### Fixes
-* Fixed a failed macro load when the main key was not a valid entry - [P.R 780](https://github.com/PlayTazUO/TazUO/pull/787) ([bittiez](https://github.com/bittiez))
+* Changed macro hotkey input to not accept clicks, added Set button instead - [P.R 788](https://github.com/PlayTazUO/TazUO/pull/788) ([bittiez](https://github.com/bittiez))
+* Fixed a failed macro load when the main key was not a valid entry - [P.R 787](https://github.com/PlayTazUO/TazUO/pull/787) ([bittiez](https://github.com/bittiez))
 * Fixed an issue in which the Window Background Color setting was ignored - [P.R 778](https://github.com/PlayTazUO/TazUO/pull/778) ([yuval-po](https://github.com/yuval-po)) 
 * Fixed an IO_SharingViolation IOException crash on startup when the default `vegetation.txt` (or `cave.txt`/`tree.txt`) filter file could not be written or read - e.g. a second client instance generating it at the same time, or a read-only/locked `Data/Client` folder; generating and reading these files is now best-effort and the tile filters fall back to in-memory defaults instead of crashing - [P.R 780](https://github.com/PlayTazUO/TazUO/pull/780) ([bittiez](https://github.com/bittiez))
 * Fixed an "No supported FNA3D driver found!" InvalidOperationException crash on startup when FNA3D could not initialize any rendering backend (Direct3D 11, Vulkan, or OpenGL); a suggested crash fix now explains the cause and advises updating graphics drivers, avoiding remote-desktop/VM GPU limitations, or trying the `-force_driver 1`, `2`, or `3` launch args - [P.R 779](https://github.com/PlayTazUO/TazUO/pull/779) ([bittiez](https://github.com/bittiez))
