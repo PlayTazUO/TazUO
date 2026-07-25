@@ -2854,7 +2854,12 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
-            Key = (SDL_Keycode)int.Parse(xml.GetAttribute("key"));
+            if (!Enum.TryParse(xml.GetAttribute("key"), out SDL_Keycode mainKey))
+                mainKey = (int)SDL_Keycode.SDLK_UNKNOWN;
+            
+
+
+            Key = mainKey;
             Alt = bool.Parse(xml.GetAttribute("alt"));
             Ctrl = bool.Parse(xml.GetAttribute("ctrl"));
             Shift = bool.Parse(xml.GetAttribute("shift"));
