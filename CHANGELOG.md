@@ -2,6 +2,11 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## In Development
+
+### Fixes
+* Fixed potential crashes with FSS text generation - ([bittiez](https://github.com/bittiez))
+
 ## V5.12.0
 
 ### Features
