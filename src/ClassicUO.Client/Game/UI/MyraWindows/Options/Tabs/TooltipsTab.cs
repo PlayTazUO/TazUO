@@ -65,6 +65,11 @@ public static class TooltipsTab
                     LabelText = TazLang.Get("mog_tooltips_labeltooltipoverrides"),
                     LabelLink = "https://tazuo.org/wiki/tooltip-override/"
                 },
+                Option.Checkbox(
+                    TazLang.Get("mog_tazuo_ignoretooltipoverridesformobiles"),
+                    new Accessor<bool>(() => profile.ToolTipOverride_IgnoreMobiles),
+                    search: new SearchMetadata(TazLang.Get("mog_tazuo_ignoretooltipoverridesformobiles"), Keywords: [TazLang.Get("mog_kw_override"), TazLang.Get("mog_kw_mobile")])
+                ),
                 Option.Button(
                     TazLang.Get("mog_tooltips_labelopenoverridesconfig"),
                     () => TooltipOverrideWindow.Show(World.Instance),

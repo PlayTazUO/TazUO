@@ -4,17 +4,40 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Fixes
+* Fixed potential crashes with FSS text generation - ([bittiez](https://github.com/bittiez))
+
+## V5.12.0
+
 ### Features
+* Added support for in-game art using /i[0x0000] format in FSS text - [P.R 789](https://github.com/PlayTazUO/TazUO/pull/789) ([bittiez](https://github.com/bittiez))
+* Added a "Sort by Layer" option to the grid container sort menu, ordering items by their equipment layer (graphic and hue as tiebreakers) - [P.R 785](https://github.com/PlayTazUO/TazUO/pull/785) ([bittiez](https://github.com/bittiez))
+* Added an optional toggle (enabled by default) to ignore tooltip overrides for mobiles, so their raw tooltip text is shown instead of override-formatted text - [P.R 784](https://github.com/PlayTazUO/TazUO/pull/784) ([bittiez](https://github.com/bittiez))
+* The grid container top/label section now accepts target cursors to select the container (bag) itself, matching how clicking an empty grid slot behaves - [P.R 781](https://github.com/PlayTazUO/TazUO/pull/781) ([bittiez](https://github.com/bittiez))
 * Added named auto loot lists so you can quickly swap between multiple loot configurations; a "Loot Lists" selector with New/Rename/Delete controls was added to the Auto Loot agent, existing entries are migrated into a "Default" list, and at least one list is always kept - [P.R 766](https://github.com/PlayTazUO/TazUO/pull/766) ([bittiez](https://github.com/bittiez))
 * Replaced the tooltip override configuration gump with a new Myra window, and added an optional per-rule custom tooltip border color (drawn as a thick border around the tooltip when the rule matches) - [P.R 768](https://github.com/PlayTazUO/TazUO/pull/768) ([bittiez](https://github.com/bittiez))
 * Reworked the container options into a new General tab with a "Container Style" dropdown (Grid/Original) and a "Corpse Container Style" dropdown (Grid/Original/Old Grid Loot/Old Grid Loot + Container), replacing the old "Enable grid containers" toggle and "Original Style Grid Loot" setting; moved "Default container view" to the Grid tab and migrated existing preferences - [P.R 761](https://github.com/PlayTazUO/TazUO/pull/761) ([bittiez](https://github.com/bittiez))
 * Added an option to only apply the trees-to-stumps replacement to trees within the circle of transparency radius, leaving farther trees at their normal appearance - [P.R 765](https://github.com/PlayTazUO/TazUO/pull/765) ([bittiez](https://github.com/bittiez))
 
+### Misc
+* language.ini is no longer versioned, it will be checked every run for correctness ([bittiez](https://github.com/bittiez))
+
 ### Fixes
+* Fixed a crash when we fail to write text to a file - ([bittiez](https://github.com/bittiez))
+* Fixed a crash where image resolver was not set in fonts - ([bittiez](https://github.com/bittiez))
+* Changed macro hotkey input to not accept clicks, added Set button instead - [P.R 788](https://github.com/PlayTazUO/TazUO/pull/788) ([bittiez](https://github.com/bittiez))
+* Fixed a failed macro load when the main key was not a valid entry - [P.R 787](https://github.com/PlayTazUO/TazUO/pull/787) ([bittiez](https://github.com/bittiez))
+* Fixed an issue in which the Window Background Color setting was ignored - [P.R 778](https://github.com/PlayTazUO/TazUO/pull/778) ([yuval-po](https://github.com/yuval-po)) 
+* Fixed an IO_SharingViolation IOException crash on startup when the default `vegetation.txt` (or `cave.txt`/`tree.txt`) filter file could not be written or read - e.g. a second client instance generating it at the same time, or a read-only/locked `Data/Client` folder; generating and reading these files is now best-effort and the tile filters fall back to in-memory defaults instead of crashing - [P.R 780](https://github.com/PlayTazUO/TazUO/pull/780) ([bittiez](https://github.com/bittiez))
+* Fixed an "No supported FNA3D driver found!" InvalidOperationException crash on startup when FNA3D could not initialize any rendering backend (Direct3D 11, Vulkan, or OpenGL); a suggested crash fix now explains the cause and advises updating graphics drivers, avoiding remote-desktop/VM GPU limitations, or trying the `-force_driver 1`, `2`, or `3` launch args - [P.R 779](https://github.com/PlayTazUO/TazUO/pull/779) ([bittiez](https://github.com/bittiez))
+* Fixed a TypeInitializationException crash on entering the world when the `Data/Client` directory was missing; the SeasonManager now creates the directory before writing the default `seasons.txt` and degrades gracefully (season graphics fall back to their originals) instead of crashing if the seasons file can't be loaded - [P.R 777](https://github.com/PlayTazUO/TazUO/pull/777) ([bittiez](https://github.com/bittiez))
+* Fixed Ninjitsu toggle moves (e.g. Backstab, Ki Attack, Surprise Attack, Focus Attack, Death Strike) placed on the spell bar not turning red/highlighted when activated; the active-toggle state is now populated from the server packet regardless of whether a floating spell button is on screen, and spell-bar slots highlight to match - [P.R 775](https://github.com/PlayTazUO/TazUO/pull/775) ([bittiez](https://github.com/bittiez))
 * Fixed a JsonException crash on startup when a configuration file (e.g. settings.json or a profile) was corrupt or malformed; the corrupt file is now backed up to a `.corrupt` file and default settings are used instead of crashing, and the user is notified in-world which file was affected - [P.R 773](https://github.com/PlayTazUO/TazUO/pull/773) ([bittiez](https://github.com/bittiez))
 * Fixed a "SQLite Error 8: attempt to write a readonly database" crash on entering the world when the persistent vars database file was flagged read-only (e.g. by OneDrive/cloud-sync, antivirus, or restoring the Data folder from a backup); the read-only attribute is now cleared before opening any SQLite database - [P.R 772](https://github.com/PlayTazUO/TazUO/pull/772) ([bittiez](https://github.com/bittiez))
 * Fixed a MissingMethodException crash on startup when launching with the `-zlib` argument against a mismatched/out-of-date ClassicUO.Utility.dll (e.g. after a partial update); the `-zlib` argument now falls back gracefully instead of crashing, and a suggested crash fix explains the file mismatch and points to enabling managed zlib from the Options menu or reinstalling - [P.R 771](https://github.com/PlayTazUO/TazUO/pull/771) ([bittiez](https://github.com/bittiez))
 * Fixed an IndexOutOfRangeException crash in FontStashSharp caused by Legion script error handlers printing messages and building error windows on the script's background thread; those UI calls now run on the main thread so the shared, non-thread-safe font caches aren't corrupted - [P.R 770](https://github.com/PlayTazUO/TazUO/pull/770) ([bittiez](https://github.com/bittiez))
+* Fixed missing mouse binding support for Assistant -> Macro hotkeys - [P.R 764](https://github.com/PlayTazUO/TazUO/pull/764) ([yuval-po](https://github.com/yuval-po))
+* Localized Assistant -> Macro tab - [P.R 764](https://github.com/PlayTazUO/TazUO/pull/764) ([yuval-po](https://github.com/yuval-po))
 * Fixed a NullReferenceException crash while drawing a tooltip when no profile was loaded (e.g. during login/logout transitions); the tooltip override builder now guards against a null override list and null profile instead of crashing the client - [P.R 769](https://github.com/PlayTazUO/TazUO/pull/769) ([bittiez](https://github.com/bittiez))
 * Fixed tooltip overrides no longer applying to items shown in server-sent gumps (which aren't real world items, like vendor search results); the override now falls back to the item's OPL text instead of showing the raw tooltip - [P.R 767](https://github.com/PlayTazUO/TazUO/pull/767) ([bittiez](https://github.com/bittiez))
 * Fixed a FormatException crash when loading a world map marker file that contained a malformed line; malformed lines are now logged and skipped instead of crashing the client, and a warning is shown in-game noting how many lines were skipped - [P.R 763](https://github.com/PlayTazUO/TazUO/pull/763) ([bittiez](https://github.com/bittiez))

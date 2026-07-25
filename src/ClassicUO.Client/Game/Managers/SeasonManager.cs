@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
+using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 using System;
 using System.IO;
 
@@ -42,11 +44,32 @@ namespace ClassicUO.Game.Managers
             _winterGraphic = new ushort[ArtLoader.MAX_STATIC_DATA_INDEX_COUNT];
             _desolationGraphic = new ushort[ArtLoader.MAX_STATIC_DATA_INDEX_COUNT];
 
-            if (!File.Exists(_seasonsFile))
+            // The season arrays above are fully initialized before we touch the disk, so any
+            // failure here still leaves the manager usable (season graphics fall back to their
+            // originals). Guard the whole file operation so a missing/unwritable Data\Client
+            // directory can never turn into a fatal TypeInitializationException from the cctor.
+            try
             {
-                CreateDefaultSeasonsFile();
-            }
+                if (!File.Exists(_seasonsFile))
+                {
+                    CreateDefaultSeasonsFile();
+                }
 
+                if (!File.Exists(_seasonsFile))
+                {
+                    return;
+                }
+
+                ParseSeasonFile();
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Failed to load seasons file '{_seasonsFile}': {e}");
+            }
+        }
+
+        private static void ParseSeasonFile()
+        {
             using (var reader = new StreamReader(_seasonsFile))
             {
                 while (!reader.EndOfStream)
@@ -181,6 +204,8 @@ namespace ClassicUO.Game.Managers
             {
                 return;
             }
+
+            FileSystemHelper.CreateFolderIfNotExists(_seasonsFilePath);
 
             using (var writer = new StreamWriter(_seasonsFile))
             {

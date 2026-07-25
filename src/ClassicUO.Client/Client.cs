@@ -196,7 +196,7 @@ namespace ClassicUO
 
             try
             {
-                FileManager.Load(Settings.GlobalSettings.UseVerdata, Settings.GlobalSettings.Language, Settings.GlobalSettings.MapsLayouts);
+                FileManager.Load(Settings.GlobalSettings.UseVerdata, Settings.GlobalSettings.Language, Client.Game.GraphicsDevice, Settings.GlobalSettings.MapsLayouts);
             }
             catch (FileNotFoundException ex)
             {

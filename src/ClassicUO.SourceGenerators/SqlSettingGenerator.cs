@@ -29,6 +29,14 @@ namespace ClassicUO.Configuration
         public SettingsScope Scope { get; }
         public string Key { get; }
         public object DefaultValue { get; }
+
+        /// <summary>
+        ///     Optional name of a method (static or instance, on the Profile class) invoked on the
+        ///     incoming value before it is stored, e.g. to clamp it. The method must take a single
+        ///     parameter of the property type and return the property type:
+        ///     <c>T OnSet(T value)</c>. The generated setter runs it before the change comparison.
+        /// </summary>
+        public string OnSet { get; set; }
     }
 }
 ";
@@ -72,6 +80,14 @@ namespace ClassicUO.Configuration
             // Argument 2: default value (typed constant, boxed)
             object defaultRaw = attr.ConstructorArguments[2].Value;
 
+            // Optional named argument: OnSet = name of a transform/clamp method.
+            string onSet = null;
+            foreach (KeyValuePair<string, TypedConstant> na in attr.NamedArguments)
+            {
+                if (na.Key == "OnSet" && na.Value.Value is string s && s.Length > 0)
+                    onSet = s;
+            }
+
             string typeName = prop.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
             string fullTypeName = prop.Type.SpecialType != SpecialType.None
                 ? GetPrimitiveTypeName(prop.Type.SpecialType)
@@ -87,7 +103,8 @@ namespace ClassicUO.Configuration
                     Key = key,
                     DefaultValueLiteral = "default",
                     ContainingNamespace = containingType.ContainingNamespace?.ToDisplayString() ?? "ClassicUO.Configuration",
-                    IsUnsupportedType = true
+                    IsUnsupportedType = true,
+                    OnSetMethod = onSet
                 };
             }
 
@@ -101,7 +118,8 @@ namespace ClassicUO.Configuration
                 Key = key,
                 DefaultValueLiteral = defaultLiteral,
                 ContainingNamespace = containingType.ContainingNamespace?.ToDisplayString() ?? "ClassicUO.Configuration",
-                IsUnsupportedType = false
+                IsUnsupportedType = false,
+                OnSetMethod = onSet
             };
         }
 
@@ -277,6 +295,8 @@ namespace ClassicUO.Configuration
                 sb.AppendLine("            get;");
                 sb.AppendLine("            set");
                 sb.AppendLine("            {");
+                if (!string.IsNullOrEmpty(m.OnSetMethod))
+                    sb.AppendLine($"                value = {m.OnSetMethod}(value);");
                 sb.AppendLine("                if (field != value)");
                 sb.AppendLine("                {");
                 sb.AppendLine($"                    _ = Client.Settings.SetAsync(SettingsScope.{scopeName}, \"{m.Key}\", value);");
@@ -344,5 +364,6 @@ namespace ClassicUO.Configuration
         public string DefaultValueLiteral { get; set; }
         public string ContainingNamespace { get; set; }
         public bool IsUnsupportedType { get; set; }
+        public string OnSetMethod { get; set; }
     }
 }

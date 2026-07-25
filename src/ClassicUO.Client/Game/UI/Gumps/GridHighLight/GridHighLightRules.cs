@@ -1,4 +1,5 @@
 using ClassicUO.Configuration;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
@@ -43,15 +44,9 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
             };
 
             string path = Path.Combine(CUOEnviroment.ExecutablePath, "Data", CONFIG_FILE_NAME);
-            try
-            {
-                string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(path, json);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("Failed to save GridHighlightConfiguration: " + ex.Message);
-            }
+
+            string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+            FileSystemHelper.WriteAllTextSafe(path, json);
         }
 
         public static void LoadGridHighlightConfiguration()

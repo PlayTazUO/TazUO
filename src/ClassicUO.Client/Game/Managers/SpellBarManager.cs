@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using SDL3;
 
@@ -52,7 +55,7 @@ public class SpellBarManager
 
     public static void ControllerInput(SDL.SDL_GamepadButton button)
     {
-        if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.DisableHotkeys)
+        if (!enabled || !spellBarSettings.Enabled || HotKeys.GloballyDisabled)
             return;
 
         for (int i = 0; i < 10; i++) //Currently 10 spells per row supported
@@ -67,7 +70,7 @@ public class SpellBarManager
 
     public static void KeyPress(SDL.SDL_Keycode key, SDL.SDL_Keymod mod)
     {
-        if (!enabled || !spellBarSettings.Enabled || ProfileManager.CurrentProfile.DisableHotkeys)
+        if (!enabled || !spellBarSettings.Enabled || HotKeys.GloballyDisabled)
             return;
 
         // Remove lock keys from modifier checks (these shouldn't affect hotkey matching)
@@ -185,7 +188,7 @@ public class SpellBarManager
             if (!Directory.Exists(presetPath))
                 Directory.CreateDirectory(presetPath);
 
-            File.WriteAllText(path, JsonSerializer.Serialize(SpellBarRows[CurrentRow], SpellBarRowsContext.Default.SpellBarRow));
+            FileSystemHelper.WriteAllTextSafe(path, JsonSerializer.Serialize(SpellBarRows[CurrentRow], SpellBarRowsContext.Default.SpellBarRow));
             GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_savedrow", new[] { name }));
         }
         catch (Exception e)
@@ -281,8 +284,8 @@ public class SpellBarManager
     {
         try
         {
-            File.WriteAllText(fullSavePath, JsonSerializer.Serialize(SpellBarRows, SpellBarRowsContext.Default.ListSpellBarRow));
-            File.WriteAllText(Path.Combine(charPath, "SpellBarSettings.json"), JsonSerializer.Serialize(spellBarSettings, SpellBarSettingsContext.Default.SpellBarSettings));
+            FileSystemHelper.WriteAllTextSafe(fullSavePath, JsonSerializer.Serialize(SpellBarRows, SpellBarRowsContext.Default.ListSpellBarRow));
+            FileSystemHelper.WriteAllTextSafe(Path.Combine(charPath, "SpellBarSettings.json"), JsonSerializer.Serialize(spellBarSettings, SpellBarSettingsContext.Default.SpellBarSettings));
         }
         catch(Exception e)
         {
@@ -356,11 +359,11 @@ public class SpellBarSlot
     {
         get
         {
-            var skills = Client.Game?.UO?.FileManager?.Skills?.Skills;
+            List<SkillEntry> skills = Client.Game?.UO?.FileManager?.Skills?.Skills;
             if (skills == null)
                 return string.Empty;
 
-            foreach (var s in skills)
+            foreach (SkillEntry s in skills)
                 if (s.Index == SkillIndex)
                     return s.Name;
 
@@ -598,7 +601,7 @@ public class SpellBarRow()
 
     private static SpellBarSlot[] NormalizeSlots(SpellBarSlot[] value)
     {
-        var slots = CreateEmptySlots();
+        SpellBarSlot[] slots = CreateEmptySlots();
 
         if (value == null)
             return slots;
