@@ -463,6 +463,10 @@ namespace ClassicUO.Game.Managers
             borderHue = -1;
             string finalString = null;
 
+            // Optionally skip overrides entirely for mobiles, returning their raw tooltip text.
+            if (SerialHelper.IsMobile(serial) && ProfileManager.CurrentProfile is { ToolTipOverride_IgnoreMobiles: true })
+                return rawHtml;
+
             if (SerialHelper.IsItem(serial))
                 finalString = ProcessTooltipText(world, serial, out borderHue);
 

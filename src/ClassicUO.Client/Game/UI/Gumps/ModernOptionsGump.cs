@@ -4340,6 +4340,12 @@ namespace ClassicUO.Game.UI.Gumps
             content.BlankLine();
 
             content.AddToRight
+            (new CheckboxWithLabel(TazLang.Get("mog_tazuo_ignoretooltipoverridesformobiles"), 0, profile.ToolTipOverride_IgnoreMobiles, b => { profile.ToolTipOverride_IgnoreMobiles = b; }),
+                true, page);
+
+            content.BlankLine();
+
+            content.AddToRight
             (new HttpClickableLink("Tooltip Overrides Wiki", "https://github.com/PlayTazUO/TazUO/wiki/TazUO.Tooltip-Override", ThemeSettings.TEXT_FONT_COLOR),
                 true, page);
 
