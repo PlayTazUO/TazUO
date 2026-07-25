@@ -207,4 +207,89 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.TREE_TO_STUMPS_WITHIN_RADIUS, false)]
         public partial bool TreeToStumpsWithinRadius { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "modern_paperdoll_anchor_enabled", false)]
+        public partial bool ModernPaperdollAnchorEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "journal_anchor_enabled", false)]
+        public partial bool JournalAnchorEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "enable_auto_loot_progress_bar", true)]
+        public partial bool EnableAutoLootProgressBar { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "use_w_a_s_d_instead_arrow_keys", false)]
+        public partial bool UseWASDInsteadArrowKeys { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "nearby_loot_gump_height", 550)]
+        public partial int NearbyLootGumpHeight { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "force_tooltips_on_old_clients", true)]
+        public partial bool ForceTooltipsOnOldClients { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "nearby_loot_opens_human_corpses", false)]
+        public partial bool NearbyLootOpensHumanCorpses { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "turn_delay", (ushort)100)]
+        public partial ushort TurnDelay { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "sell_agent_enabled", false)]
+        public partial bool SellAgentEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "sell_agent_max_uniques", 50)]
+        public partial int SellAgentMaxUniques { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "sell_agent_max_items", 0)]
+        public partial int SellAgentMaxItems { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "buy_agent_enabled", false)]
+        public partial bool BuyAgentEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "buy_agent_max_uniques", 50)]
+        public partial int BuyAgentMaxUniques { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "buy_agent_max_items", 0)]
+        public partial int BuyAgentMaxItems { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "s_o_s_gump_i_d", (uint)1915258020)]
+        public partial uint SOSGumpID { get; set; }
+
+        // Backing store for the clamped <see cref="StatusGumpScale"/> wrapper (0.5 - 3.0).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "status_gump_scale", 1d)]
+        public partial double StatusGumpScaleValue { get; set; }
+
+        // Backing store for the clamped <see cref="SkillsGumpScale"/> wrapper (0.5 - 3.0).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "skills_gump_scale", 1d)]
+        public partial double SkillsGumpScaleValue { get; set; }
+
+        // Backing store for the clamped <see cref="ContextMenuScale"/> wrapper (0.5 - 3.0).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "context_menu_scale", 1d)]
+        public partial double ContextMenuScaleValue { get; set; }
+
+        // Backing store for the clamped <see cref="TradeGumpScale"/> wrapper (0.5 - 3.0).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "trade_gump_scale", 1d)]
+        public partial double TradeGumpScaleValue { get; set; }
+
+        // Backing store for the clamped <see cref="ServerGumpScale"/> wrapper (0.5 - 3.0).
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "server_gump_scale", 1d)]
+        public partial double ServerGumpScaleValue { get; set; }
 }
