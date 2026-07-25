@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
@@ -69,7 +69,7 @@ namespace ClassicUO.Game
         public byte CurrentCount { get; private set; }
         public byte Temperature{ get; private set; }
         public sbyte Wind { get; private set; }
-        private Texture2D rainImage = PNGLoader.Instance.GetImageTexture(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "rain.png"));
+        private Texture2D rainImage = ExternalImageLoader.Instance.GetImageTexture(System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "rain.png"));
 
 
         private static float SinOscillate(float freq, int range, uint current_tick)

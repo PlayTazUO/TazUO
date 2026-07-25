@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
@@ -129,7 +129,7 @@ namespace ClassicUO.Assets
                 Log.Panic("Loading files timeout.");
             }
 
-            PNGLoader.Instance.Load();
+            ExternalImageLoader.Instance.Load();
 
             Read_Art_def();
 

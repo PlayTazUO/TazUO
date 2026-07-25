@@ -1,4 +1,4 @@
-﻿using ClassicUO.Assets;
+using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Renderer;
@@ -26,7 +26,7 @@ namespace ClassicUO.Game.UI.Gumps
         };
         private AlphaBlendControl _background;
 
-        private Texture2D image = PNGLoader.Instance.GetImageTexture(Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "tazuo.png"));
+        private Texture2D image = ExternalImageLoader.Instance.GetImageTexture(Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "tazuo.png"));
 
         private Label[] supporterLabels = new Label[SUPPORTERS.Length];
 

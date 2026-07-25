@@ -111,7 +111,7 @@ public class DiscordUserListItem : Control
 
         if(user.GameActivity() != null) //In TUO
         {
-            PNGLoader.Instance.TryGetEmbeddedTexture("TazUOSM.png", out var tuoTexture);
+            ExternalImageLoader.Instance.TryGetEmbeddedTexture("TazUOSM.png", out var tuoTexture);
             var tuo = new EmbeddedGumpPic(Width - 75, 2, tuoTexture);
             Add(tuo);
         }

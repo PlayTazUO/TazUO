@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 
 // Copyright (c) 2021, andreakarasho
 // All rights reserved.
@@ -206,8 +206,8 @@ namespace ClassicUO
 
             Fonts.Initialize(GraphicsDevice);
             SolidColorTextureCache.Initialize(GraphicsDevice);
-            PNGLoader.Instance.GraphicsDevice = GraphicsDevice;
-            System.Threading.Tasks.Task loadResourceAssets = PNGLoader.Instance.LoadResourceAssets();
+            ExternalImageLoader.Instance.GraphicsDevice = GraphicsDevice;
+            System.Threading.Tasks.Task loadResourceAssets = ExternalImageLoader.Instance.LoadResourceAssets();
 
             Animations = new Renderer.Animations.Animations(GraphicsDevice);
             Arts = new Renderer.Arts.Art(GraphicsDevice);

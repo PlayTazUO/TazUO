@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ClassicUO.Assets
 {
-    public class PNGLoader
+    public class ExternalImageLoader
     {
         private const string IMAGES_FOLDER = "ExternalImages", GUMP_EXTERNAL_FOLDER = "gumps", ART_EXTERNAL_FOLDER = "art";
 
@@ -16,16 +16,16 @@ namespace ClassicUO.Assets
         private Dictionary<string, Texture2D> EmbeddedArt = new Dictionary<string, Texture2D>();
         private Texture2D _emptyTexture;
 
-        private uint[] gump_availableIDs;
+        private Dictionary<uint, string> gump_availableFilePaths = new Dictionary<uint, string>();
         private Dictionary<uint, (uint[] pixels, int width, int height)> gump_textureCache = new Dictionary<uint, (uint[], int, int)>();
 
-        private uint[] art_availableIDs;
+        private Dictionary<uint, string> art_availableFilePaths = new Dictionary<uint, string>();
         private Dictionary<uint, (uint[] pixels, int width, int height)> art_textureCache = new Dictionary<uint, (uint[], int, int)>();
 
         public GraphicsDevice GraphicsDevice { set; get; }
 
-        public static PNGLoader _instance;
-        public static PNGLoader Instance => _instance ?? (_instance = new PNGLoader());
+        public static ExternalImageLoader _instance;
+        public static ExternalImageLoader Instance => _instance ?? (_instance = new ExternalImageLoader());
 
         public bool TryGetEmbeddedTexture(string name, out Texture2D texture)
         {
@@ -65,10 +65,8 @@ namespace ClassicUO.Assets
 
         public GumpInfo LoadGumpTexture(uint graphic)
         {
-            if (gump_availableIDs == null)
+            if (!gump_availableFilePaths.TryGetValue(graphic, out string fullImagePath))
                 return new GumpInfo();
-            int index = Array.IndexOf(gump_availableIDs, graphic);
-            if (index == -1) return new GumpInfo();
 
             if (gump_textureCache.TryGetValue(graphic, out var cached))
             {
@@ -80,15 +78,25 @@ namespace ClassicUO.Assets
                 };
             }
 
-            if (exePath != null && GraphicsDevice != null)
+            if (GraphicsDevice != null && File.Exists(fullImagePath))
             {
-                string fullImagePath = Path.Combine(exePath, IMAGES_FOLDER, GUMP_EXTERNAL_FOLDER, ((int)graphic).ToString() + ".png");
-
-                if (File.Exists(fullImagePath))
+                try
                 {
-                    FileStream titleStream = File.OpenRead(fullImagePath);
-                    Texture2D tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
-                    titleStream.Close();
+                    Texture2D tempTexture;
+                    if (fullImagePath.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tempTexture = LoadBmp(GraphicsDevice, fullImagePath);
+                    }
+                    else
+                    {
+                        FileStream titleStream = File.OpenRead(fullImagePath);
+                        tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
+                        titleStream.Close();
+                    }
+
+                    if (tempTexture == null)
+                        return new GumpInfo();
+
                     FixPNGAlpha(ref tempTexture);
 
                     uint[] pixels = GetPixels(tempTexture);
@@ -104,6 +112,10 @@ namespace ClassicUO.Assets
                         Height = height
                     };
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to load gump image '{fullImagePath}': {ex.Message}");
+                }
             }
 
             return new GumpInfo();
@@ -111,11 +123,8 @@ namespace ClassicUO.Assets
 
         public ArtInfo LoadArtTexture(uint graphic)
         {
-            if (art_availableIDs == null)
+            if (!art_availableFilePaths.TryGetValue(graphic, out string fullImagePath))
                 return new ArtInfo();
-
-            int index = Array.IndexOf(art_availableIDs, graphic);
-            if (index == -1) return new ArtInfo();
 
             if (art_textureCache.TryGetValue(graphic, out var cached))
             {
@@ -127,18 +136,26 @@ namespace ClassicUO.Assets
                 };
             }
 
-            if (exePath != null && GraphicsDevice != null)
+            if (GraphicsDevice != null && File.Exists(fullImagePath))
             {
-                uint fileGraphic = graphic - 0x4000;
-                string fullImagePath = Path.Combine(exePath, IMAGES_FOLDER, ART_EXTERNAL_FOLDER, fileGraphic.ToString() + ".png");
-
-                if (File.Exists(fullImagePath))
+                try
                 {
                     Texture2D tempTexture;
-                    using (FileStream titleStream = File.OpenRead(fullImagePath))
+                    if (fullImagePath.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase))
                     {
-                        tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
+                        tempTexture = LoadBmp(GraphicsDevice, fullImagePath);
                     }
+                    else
+                    {
+                        using (FileStream titleStream = File.OpenRead(fullImagePath))
+                        {
+                            tempTexture = Texture2D.FromStream(GraphicsDevice, titleStream);
+                        }
+                    }
+
+                    if (tempTexture == null)
+                        return new ArtInfo();
+
                     FixPNGAlpha(ref tempTexture);
 
                     uint[] pixels = GetPixels(tempTexture);
@@ -154,9 +171,65 @@ namespace ClassicUO.Assets
                         Height = height
                     };
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to load art image '{fullImagePath}': {ex.Message}");
+                }
             }
 
             return new ArtInfo();
+        }
+
+        private static Texture2D LoadBmp(GraphicsDevice gd, string path)
+        {
+            byte[] file = File.ReadAllBytes(path);
+            if (file.Length < 54 || file[0] != 'B' || file[1] != 'M')
+                return null;
+
+            int dataOffset = BitConverter.ToInt32(file, 10);
+            int headerSize = BitConverter.ToInt32(file, 14);
+            if (headerSize < 40)
+                return null;
+
+            int width = BitConverter.ToInt32(file, 18);
+            int rawHeight = BitConverter.ToInt32(file, 22);
+            bool topDown = rawHeight < 0;
+            int height = Math.Abs(rawHeight);
+            short bpp = BitConverter.ToInt16(file, 28);
+
+            if (bpp != 24 && bpp != 32)
+            {
+                Console.WriteLine($"Unsupported BMP bit depth {bpp} in '{path}'");
+                return null;
+            }
+
+            int bytesPerPixel = bpp / 8;
+            int rowStride = width * bytesPerPixel;
+            int rowPadding = (4 - (rowStride % 4)) % 4;
+            int rowBytes = rowStride + rowPadding;
+
+            var texture = new Texture2D(gd, width, height);
+            var pixels = new Color[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                int srcRow = topDown ? y : (height - 1 - y);
+                int srcOffset = dataOffset + srcRow * rowBytes;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int srcIdx = srcOffset + x * bytesPerPixel;
+                    byte b = file[srcIdx];
+                    byte g = file[srcIdx + 1];
+                    byte r = file[srcIdx + 2];
+                    byte a = (bytesPerPixel == 4) ? file[srcIdx + 3] : (byte)255;
+
+                    pixels[y * width + x] = new Color(r, g, b, a);
+                }
+            }
+
+            texture.SetData(pixels);
+            return texture;
         }
 
         private uint[] GetPixels(Texture2D texture)
@@ -178,6 +251,21 @@ namespace ClassicUO.Assets
             return pixels;
         }
 
+        private static string[] FindImageFiles(string directory)
+        {
+            var results = new List<string>();
+            results.AddRange(Directory.GetFiles(directory, "*.png", SearchOption.AllDirectories));
+            results.AddRange(Directory.GetFiles(directory, "*.bmp", SearchOption.AllDirectories));
+            return results.ToArray();
+        }
+
+        private static bool TryParseId(string value, out uint result)
+        {
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return uint.TryParse(value.Substring(2), System.Globalization.NumberStyles.HexNumber, null, out result);
+            return uint.TryParse(value, out result);
+        }
+
         public void Load()
         {
             string strExeFilePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
@@ -186,13 +274,14 @@ namespace ClassicUO.Assets
             string gumpPath = Path.Combine(exePath, IMAGES_FOLDER, GUMP_EXTERNAL_FOLDER);
             if (Directory.Exists(gumpPath))
             {
-                string[] files = Directory.GetFiles(gumpPath, "*.png", SearchOption.TopDirectoryOnly);
-                gump_availableIDs = new uint[files.Length];
+                string[] files = FindImageFiles(gumpPath);
 
                 for (int i = 0; i < files.Length; i++)
                 {
                     string fname = Path.GetFileName(files[i]);
-                    uint.TryParse(fname.Substring(0, fname.Length - 4), out gump_availableIDs[i]);
+                    string baseName = Path.GetFileNameWithoutExtension(fname);
+                    if (TryParseId(baseName, out uint id))
+                        gump_availableFilePaths[id] = files[i];
                 }
             }
             else
@@ -203,15 +292,15 @@ namespace ClassicUO.Assets
             string artPath = Path.Combine(exePath, IMAGES_FOLDER, ART_EXTERNAL_FOLDER);
             if (Directory.Exists(artPath))
             {
-                string[] files = Directory.GetFiles(artPath, "*.png", SearchOption.TopDirectoryOnly);
-                art_availableIDs = new uint[files.Length];
+                string[] files = FindImageFiles(artPath);
 
                 for (int i = 0; i < files.Length; i++)
                 {
                     string fname = Path.GetFileName(files[i]);
-                    if (uint.TryParse(fname.Substring(0, fname.Length - 4), out uint gfx))
+                    string baseName = Path.GetFileNameWithoutExtension(fname);
+                    if (TryParseId(baseName, out uint gfx))
                     {
-                        art_availableIDs[i] = gfx + 0x4000;
+                        art_availableFilePaths[gfx + 0x4000] = files[i];
                     }
                 }
             }
@@ -264,17 +353,8 @@ namespace ClassicUO.Assets
 
 
                                 //Increase available gump id's
-                                if (gump_availableIDs != null)
-                                {
-                                    uint[] availableIDs = new uint[gump_availableIDs.Length + 1];
-                                    gump_availableIDs.CopyTo(availableIDs, 0);
-                                    availableIDs[availableIDs.Length - 1] = i;
-                                    gump_availableIDs = availableIDs;
-                                }
-                                else
-                                {
-                                    gump_availableIDs = [i];
-                                }
+                                if (!gump_availableFilePaths.ContainsKey(i))
+                                    gump_availableFilePaths[i] = $"0x{i:X}";
 
                                 stream.Dispose();
                             }

@@ -115,10 +115,10 @@ public class SpellBar : Gump
         rowLabel.Y = (Height - rowLabel.Height) >> 1;
         Add(rowLabel);
 
-        PNGLoader.Instance.TryGetEmbeddedTexture("upicon.png", out var upTexture);
+        ExternalImageLoader.Instance.TryGetEmbeddedTexture("upicon.png", out var upTexture);
         var up = new EmbeddedGumpPic(Width - 31, 0, upTexture, 148);
         up.MouseUp += (sender, e) => { ChangeRow(false); };
-        PNGLoader.Instance.TryGetEmbeddedTexture("downicon.png", out var downTexture);
+        ExternalImageLoader.Instance.TryGetEmbeddedTexture("downicon.png", out var downTexture);
         var down = new EmbeddedGumpPic(Width - 31, Height - 16, downTexture, 148);
         down.MouseUp += (sender, e) => { ChangeRow(true); };
 
