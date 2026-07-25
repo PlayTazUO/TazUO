@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using ClassicUO.Utility;
+using ClassicUO.Utility.Logging;
 
 namespace ClassicUO.Configuration
 {
@@ -115,7 +117,8 @@ namespace ClassicUO.Configuration
                 lines.Add($"{kv.Key}={Escape(kv.Value)}");
             }
 
-            File.WriteAllLines(userFilePath, lines, Encoding.UTF8);
+            FileSystemHelper.WriteAllLinesSafe(userFilePath, lines);
+
             return true;
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.Managers
 {
@@ -96,7 +97,7 @@ namespace ClassicUO.Game.Managers
                     // Convert dictionary to list for serialization
                     var filterList = new List<GraphicChangeFilter>(graphicChangeFilters.Values);
 
-                    File.WriteAllText(
+                    FileSystemHelper.WriteAllTextSafe(
                         GetSavePath(),
                         JsonSerializer.Serialize(
                             filterList,

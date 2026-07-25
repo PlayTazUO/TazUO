@@ -17,6 +17,7 @@ All notable changes to TazUO will be recorded here.
 * language.ini is no longer versioned, it will be checked every run for correctness ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Fixed a crash when we fail to write text to a file - ([bittiez](https://github.com/bittiez))
 * Fixed a crash where image resolver was not set in fonts - ([bittiez](https://github.com/bittiez))
 * Changed macro hotkey input to not accept clicks, added Set button instead - [P.R 788](https://github.com/PlayTazUO/TazUO/pull/788) ([bittiez](https://github.com/bittiez))
 * Fixed a failed macro load when the main key was not a valid entry - [P.R 787](https://github.com/PlayTazUO/TazUO/pull/787) ([bittiez](https://github.com/bittiez))

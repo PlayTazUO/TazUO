@@ -12,6 +12,7 @@ using ClassicUO.Game.Managers.Structs;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
+using ClassicUO.Utility;
 
 namespace ClassicUO.Game.Managers
 {
@@ -200,7 +201,7 @@ namespace ClassicUO.Game.Managers
 
                 string json = JsonSerializer.Serialize(CurrentPlayerConfigs, DressAgentJsonContext.Default.ListDressConfig);
                 string savePath = Path.Combine(ProfileManager.ProfilePath, _saveFileName);
-                File.WriteAllText(savePath, json);
+                FileSystemHelper.WriteAllTextSafe(savePath, json);
             }
             catch (Exception ex)
             {

@@ -10,6 +10,7 @@ using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.Input;
 using ClassicUO.LegionScripting;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using SDL3;
 
@@ -187,7 +188,7 @@ public class SpellBarManager
             if (!Directory.Exists(presetPath))
                 Directory.CreateDirectory(presetPath);
 
-            File.WriteAllText(path, JsonSerializer.Serialize(SpellBarRows[CurrentRow], SpellBarRowsContext.Default.SpellBarRow));
+            FileSystemHelper.WriteAllTextSafe(path, JsonSerializer.Serialize(SpellBarRows[CurrentRow], SpellBarRowsContext.Default.SpellBarRow));
             GameActions.Print(Client.Game.UO.World, TazLang.Get("spellbar_savedrow", new[] { name }));
         }
         catch (Exception e)
@@ -283,8 +284,8 @@ public class SpellBarManager
     {
         try
         {
-            File.WriteAllText(fullSavePath, JsonSerializer.Serialize(SpellBarRows, SpellBarRowsContext.Default.ListSpellBarRow));
-            File.WriteAllText(Path.Combine(charPath, "SpellBarSettings.json"), JsonSerializer.Serialize(spellBarSettings, SpellBarSettingsContext.Default.SpellBarSettings));
+            FileSystemHelper.WriteAllTextSafe(fullSavePath, JsonSerializer.Serialize(SpellBarRows, SpellBarRowsContext.Default.ListSpellBarRow));
+            FileSystemHelper.WriteAllTextSafe(Path.Combine(charPath, "SpellBarSettings.json"), JsonSerializer.Serialize(spellBarSettings, SpellBarSettingsContext.Default.SpellBarSettings));
         }
         catch(Exception e)
         {

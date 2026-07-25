@@ -12,6 +12,7 @@ using ClassicUO.Utility.Logging;
 namespace ClassicUO.Game.Managers
 {
     using System.Text.Json.Serialization;
+    using ClassicUO.Utility;
 
     [JsonSerializable(typeof(List<BuySellItemConfig>))]
     [JsonSerializable(typeof(BuySellItemConfig))]
@@ -150,13 +151,13 @@ namespace ClassicUO.Game.Managers
                 if (Instance.sellItems != null)
                 {
                     string savePath = Path.Combine(ProfileManager.ProfilePath, "SellAgentConfig.json");
-                    File.WriteAllText(savePath, JsonSerializer.Serialize(Instance.sellItems, BuySellAgentJsonContext.Default.ListBuySellItemConfig));
+                    FileSystemHelper.WriteAllTextSafe(savePath, JsonSerializer.Serialize(Instance.sellItems, BuySellAgentJsonContext.Default.ListBuySellItemConfig));
                 }
 
                 if (Instance.buyItems != null)
                 {
                     string savePath = Path.Combine(ProfileManager.ProfilePath, "BuyAgentConfig.json");
-                    File.WriteAllText(savePath, JsonSerializer.Serialize(Instance.buyItems, BuySellAgentJsonContext.Default.ListBuySellItemConfig));
+                    FileSystemHelper.WriteAllTextSafe(savePath, JsonSerializer.Serialize(Instance.buyItems, BuySellAgentJsonContext.Default.ListBuySellItemConfig));
                 }
             }
 

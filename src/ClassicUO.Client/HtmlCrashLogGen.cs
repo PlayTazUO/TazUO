@@ -167,7 +167,7 @@ public static class HtmlCrashLogGen
 
       // Create unique filename with proper path handling (avoids race condition)
       string filePath = Path.Combine(Path.GetTempPath(), $"TazUO_Crash_{Guid.NewGuid():N}.html");
-      File.WriteAllText(filePath, html);
+      FileSystemHelper.WriteAllTextSafe(filePath, html);
 
       // Launch browser with proper file path (skipValidation: true for local files)
       Utility.Platforms.PlatformHelper.LaunchBrowser(filePath, skipValidation: true);
