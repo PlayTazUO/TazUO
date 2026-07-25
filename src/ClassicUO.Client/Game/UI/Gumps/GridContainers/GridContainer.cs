@@ -888,23 +888,30 @@ public partial class GridContainer : ResizableGump
         /// <param name="e">The mouse event's arguments</param>
         private void OnBackgroundMouseUp(object sender, MouseEventArgs e)
         {
-            // Check whether we're trying to drop an item on the background
-            if (e.Button != MouseButtonType.Left || !Client.Game.UO.GameCursor.ItemHold.Enabled)
+            if (e.Button != MouseButtonType.Left)
                 return;
 
             // Verify the sender is actually what we expect it to be
             if (sender is not Control { MouseIsOver: true })
                 return;
 
-            // Issue a direct drop item command and let the underlying `UpdateContainerItem`
-            // mechanisms take care of actual placement
-            GameActions.DropItem(
-                Client.Game.UO.GameCursor.ItemHold.Serial,
-                0xFFFF,
-                0xFFFF,
-                0,
-                LocalSerial
-            );
+            if (Client.Game.UO.GameCursor.ItemHold.Enabled)
+            {
+                // Issue a direct drop item command and let the underlying `UpdateContainerItem`
+                // mechanisms take care of actual placement
+                GameActions.DropItem(
+                    Client.Game.UO.GameCursor.ItemHold.Serial,
+                    0xFFFF,
+                    0xFFFF,
+                    0,
+                    LocalSerial
+                );
+            }
+            else if (World.TargetManager.IsTargeting && !ProfileManager.CurrentProfile.DisableTargetingGridContainers)
+            {
+                // Let a target cursor pick the bag itself, matching how an empty grid slot behaves
+                World.TargetManager.Target(LocalSerial);
+            }
         }
 
         protected override void OnMouseExit(int x, int y)
