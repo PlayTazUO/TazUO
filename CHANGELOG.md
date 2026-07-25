@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Features
+* Replaced the old Myra window style with a new themed one. Thank you NewYears! - [P.R 774](https://github.com/PlayTazUO/TazUO/pull/774) ([bittiez](https://github.com/bittiez))
+
 ### Fixes
 * Fixed potential crashes with FSS text generation - ([bittiez](https://github.com/bittiez))
 
