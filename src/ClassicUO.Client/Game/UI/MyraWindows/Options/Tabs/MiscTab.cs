@@ -26,6 +26,15 @@ public static class MiscTab
         GetExperimentalSection
     );
 
+    private static OptionPageGroup GetPages() => new(
+        new SearchMetadata(Keywords: [TazLang.Get("mog_kw_misc"), TazLang.Get("mog_kw_miscellaneous"), TazLang.Get("mog_kw_other")],
+            Tags: [TazLang.Get("mog_kw_misc")]),
+        GetPage1,
+        GetPage2,
+        GetPage3,
+        GetExperimentalSection
+    );
+
     private static OptionFragment GetPage1()
     {
         Profile profile = ProfileManager.CurrentProfile;
