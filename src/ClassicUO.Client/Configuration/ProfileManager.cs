@@ -92,6 +92,9 @@ namespace ClassicUO.Configuration
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 
+            // Load the grid-container band layout rules for this profile.
+            GridContainerBandsConfig.LoadForProfile(ProfilePath);
+
             // Load the tooltip overrides for this profile (migration from the legacy profile lists is
             // handled in Profile.HandleMigration).
             TooltipOverridesConfig.Load(ProfilePath);
@@ -140,7 +143,12 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public static void UnLoadProfile() => CurrentProfile = null;
+        public static void UnLoadProfile()
+        {
+            CurrentProfile = null;
+            // Drop profile-scoped caches so edits can't be saved against the previous profile's path.
+            GridContainerBandsConfig.Reset();
+        }
 
         private static void OnCurrentProfilePropertyChanged(object sender, PropertyChangedEventArgs e) => CurrentProfilePropertyChanged?.Invoke(sender, e);
     }
