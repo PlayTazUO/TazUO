@@ -73,6 +73,7 @@ namespace ClassicUO.Game.Managers
                 {
                     SetMacroToExecute(macroObject);
                     WaitForTargetTimer = 0;
+                    break;
                 }
             }
         }
