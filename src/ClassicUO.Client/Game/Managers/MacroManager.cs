@@ -69,7 +69,7 @@ namespace ClassicUO.Game.Managers
 
             for (var macro = (Macro)Items; macro != null; macro = (Macro)macro.Next)
             {
-                if (macro.MatchesJournalTrigger(e.Text) && macro.Items is MacroObject macroObject)
+                if (macro.HasJournalTriggers && macro.MatchesJournalTrigger(e.Text) && macro.Items is MacroObject macroObject)
                 {
                     SetMacroToExecute(macroObject);
                     WaitForTargetTimer = 0;
@@ -2739,23 +2739,39 @@ namespace ClassicUO.Game.Managers
         public bool Ctrl { get; set; }
         public bool Shift { get; set; }
 
+        private string _journalTriggers = string.Empty;
+
         /// <summary>
         /// Semicolon (;) separated list of journal messages that will trigger this macro when received.
         /// A macro is triggered when a journal entry contains any one of these substrings (case-insensitive).
         /// </summary>
-        public string JournalTriggers { get; set; } = string.Empty;
+        public string JournalTriggers
+        {
+            get => _journalTriggers;
+            set
+            {
+                _journalTriggers = value ?? string.Empty;
+                HasJournalTriggers = !string.IsNullOrWhiteSpace(_journalTriggers);
+            }
+        }
+
+        /// <summary>
+        /// Cached flag indicating this macro has at least one journal trigger configured.
+        /// Used as a cheap pre-check so journal processing can skip macros without triggers.
+        /// </summary>
+        public bool HasJournalTriggers { get; private set; }
 
         /// <summary>
         /// Returns true when the given journal text matches one of this macro's configured journal triggers.
         /// </summary>
         public bool MatchesJournalTrigger(string text)
         {
-            if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(JournalTriggers))
+            if (!HasJournalTriggers || string.IsNullOrEmpty(text))
             {
                 return false;
             }
 
-            string[] triggers = JournalTriggers.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string[] triggers = _journalTriggers.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             foreach (string trigger in triggers)
             {
