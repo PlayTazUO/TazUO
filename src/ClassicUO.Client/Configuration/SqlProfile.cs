@@ -338,7 +338,7 @@ public sealed partial class Profile
         public partial bool UseOneHPBarForLastAttack { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "force_resync_on_hang", false)]
+        [SqlSetting(SettingsScope.Server, "force_resync_on_hang", false)]
         public partial bool ForceResyncOnHang { get; set; }
 
         [JsonIgnore]
@@ -350,11 +350,11 @@ public sealed partial class Profile
         public partial bool UseLastMovedCooldownPosition { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "last_journal_tab", 0)]
+        [SqlSetting(SettingsScope.Char, "last_journal_tab", 0)]
         public partial int LastJournalTab { get; set; }
 
         [JsonIgnore]
-        [SqlSetting(SettingsScope.Global, "info_bar_locked", false)]
+        [SqlSetting(SettingsScope.Char, "info_bar_locked", false)]
         public partial bool InfoBarLocked { get; set; }
 
         [JsonIgnore]
