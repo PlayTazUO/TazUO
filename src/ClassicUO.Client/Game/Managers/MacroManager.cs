@@ -720,6 +720,27 @@ namespace ClassicUO.Game.Managers
 
                     break;
 
+                case MacroType.PrivateSay:
+
+                    if (macro is MacroObjectString { Text: { } msg })
+                    {
+                        _world.MessageManager.HandleMessage
+                        (
+                            _world.Player,
+                            msg,
+                            _world.Player.Name ?? "Me",
+                            ProfileManager.CurrentProfile.SpeechHue,
+                            MessageType.Regular,
+                            3,
+                            TextType.OBJECT,
+                            true,
+                            Settings.GlobalSettings.Language,
+                            true
+                        );
+                    }
+
+                    break;
+
                 case MacroType.Walk:
                     byte dt = (byte)Direction.Up;
 
@@ -3068,6 +3089,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:
                 case MacroType.SetZoomLevel:
+                case MacroType.PrivateSay:
                     obj = new MacroObjectString(code, MacroSubType.MSC_NONE);
 
                     break;
@@ -3266,6 +3288,7 @@ namespace ClassicUO.Game.Managers
                 case MacroType.UseType:
                 case MacroType.SetOrganizerSource:
                 case MacroType.SetZoomLevel:
+                case MacroType.PrivateSay:
                     SubMenuType = 2;
 
                     break;
