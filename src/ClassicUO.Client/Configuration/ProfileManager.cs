@@ -92,6 +92,9 @@ namespace ClassicUO.Configuration
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 
+            // Load the grid-container band layout rules for this profile.
+            GridContainerBandsConfig.LoadForProfile(ProfilePath);
+
             ValidateFields(CurrentProfile);
 
             CurrentProfile.AfterLoad();

@@ -35,6 +35,13 @@ public class GridItem : Control
 
     public bool ItemGridLocked { get; set; }
     public bool Highlight { get; set; }
+
+    /// <summary>Index of the band group this slot belongs to when band layout is active, or -1 otherwise.</summary>
+    public int BandGroup { get; set; } = -1;
+
+    private const float DEFAULT_BG_ALPHA = 0.25f;
+    private const float BAND_BG_ALPHA = 0.55f;
+
     public static int GridItemSize => (int)Math.Round(50 * (ProfileManager.CurrentProfile.GridContainersScale / 100f));
 
     public Item SlotItem
@@ -83,6 +90,26 @@ public class GridItem : Control
         Add(_listLabel);
 
         SetGridItem(_item);
+    }
+
+    /// <summary>
+    /// Sets the grid slot's background color for band layout. Pass <see langword="null"/> to revert
+    /// to the default (subtle black) slot background.
+    /// </summary>
+    public void SetBandColor(Color? color)
+    {
+        if (color.HasValue)
+        {
+            _background.BaseColor = color.Value;
+            _background.Hue = 0;
+            _background.Alpha = BAND_BG_ALPHA;
+        }
+        else
+        {
+            _background.BaseColor = Color.Black;
+            _background.Hue = 0;
+            _background.Alpha = DEFAULT_BG_ALPHA;
+        }
     }
 
     public void AddText(string text, ushort hue)
@@ -170,6 +197,8 @@ public class GridItem : Control
             _hasItem = false;
             _shouldDraw = !_gridContainer.IsCorpse;
             _hasLastLowContrastCacheKey = false;
+            BandGroup = -1;
+            SetBandColor(null);
             return;
         }
 

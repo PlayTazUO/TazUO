@@ -541,6 +541,7 @@ namespace ClassicUO.Configuration
         public int Grid_DefaultRows { get; set => SetProperty(ref field, value); } = 5;
         public bool Grid_UseContainerHue { get; set => SetProperty(ref field, value); } = false;
         public bool Grid_HideBorder { get; set => SetProperty(ref field, value); } = false;
+        public bool EnableGridContainerBands { get; set => SetProperty(ref field, value); } = false;
         #endregion
 
         #region COOLDOWNS
