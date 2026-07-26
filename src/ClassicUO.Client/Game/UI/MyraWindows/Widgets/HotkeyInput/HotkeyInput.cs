@@ -117,7 +117,7 @@ public class HotkeyInput : Panel
 
         _input = new TextBox
         {
-            Tooltip = TazLang.Get("uicommons_hotkeyinputtooltip"),
+            Tooltip = TazLang.Get("uicommons_hotkeyinputtooltip_new"),
             Width = 150,
             Cursor = null,
             Selection = null,

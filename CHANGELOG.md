@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Features
+* Added a new reusable hotkey setting window, all hotkey assignment goes through this window now - [P.R 793](https://github.com/PlayTazUO/TazUO/pull/793) ([bittiez](https://github.com/bittiez))
 * Replaced the old Myra window style with a new themed one. Thank you NewYears! - [P.R 774](https://github.com/PlayTazUO/TazUO/pull/774) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
