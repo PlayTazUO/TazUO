@@ -22,6 +22,7 @@ namespace ClassicUO.Game.UI.Controls
         private readonly DataBox _databox;
         private readonly HotkeyBox _hotkeyBox;
         private readonly Gumps.Gump _gump;
+        private InputField _journalTriggersInput;
 
         private enum buttonsOption
         {
@@ -54,12 +55,45 @@ namespace ClassicUO.Game.UI.Controls
 
             Add(_hotkeyBox);
 
+            // Journal triggers row (skipped in the compact fast-assign popup)
+            int jtOffset = 0;
+
+            if (!isFastAssign)
+            {
+                jtOffset = 50;
+
+                Add(new Label
+                    (
+                        TazLang.Get("macrocontrol_journaltriggers", "Journal triggers (separate with ;):"),
+                        true,
+                        0xFFFF,
+                        320,
+                        0xFF,
+                        FontStyle.BlackBorder | FontStyle.Cropped
+                    )
+                    { X = 0, Y = _hotkeyBox.Height + 3 });
+
+                _journalTriggersInput = new InputField
+                (
+                    0x0BB8,
+                    0xFF,
+                    0xFFFF,
+                    true,
+                    300,
+                    26,
+                    300
+                )
+                { X = 0, Y = _hotkeyBox.Height + 22 };
+
+                Add(_journalTriggersInput);
+            }
+
             Add
             (
                 new NiceButton
                 (
                     0,
-                    _hotkeyBox.Height + 3,
+                    _hotkeyBox.Height + 3 + jtOffset,
                     150,
                     25,
                     ButtonAction.Activate,
@@ -73,7 +107,7 @@ namespace ClassicUO.Game.UI.Controls
                 new NiceButton
                 (
                     170,
-                    _hotkeyBox.Height + 3,
+                    _hotkeyBox.Height + 3 + jtOffset,
                     150,
                     25,
                     ButtonAction.Activate,
@@ -89,7 +123,7 @@ namespace ClassicUO.Game.UI.Controls
                 new Line
                 (
                     0,
-                    _hotkeyBox.Height + 30,
+                    _hotkeyBox.Height + 30 + jtOffset,
                     325,
                     1,
                     Color.Gray.PackedValue
@@ -103,7 +137,7 @@ namespace ClassicUO.Game.UI.Controls
                     new NiceButton
                     (
                         0,
-                        _hotkeyBox.Height + 35,
+                        _hotkeyBox.Height + 35 + jtOffset,
                         50,
                         25,
                         ButtonAction.Activate,
@@ -118,7 +152,7 @@ namespace ClassicUO.Game.UI.Controls
                     new NiceButton
                     (
                         0,
-                        _hotkeyBox.Height + 30,
+                        _hotkeyBox.Height + 30 + jtOffset,
                         170,
                         25,
                         ButtonAction.Activate,
@@ -128,13 +162,13 @@ namespace ClassicUO.Game.UI.Controls
                 );
             }
 
-            int scrollAreaH = isFastAssign ? 80 : 280;
+            int scrollAreaH = isFastAssign ? 80 : 230;
             int scrollAreaW = 280;
 
             var area = new ScrollArea
             (
                 10,
-                _hotkeyBox.Bounds.Bottom + 70,
+                _hotkeyBox.Bounds.Bottom + 70 + jtOffset,
                 scrollAreaW,
                 scrollAreaH,
                 true
@@ -150,6 +184,12 @@ namespace ClassicUO.Game.UI.Controls
 
 
             Macro = _gump.World.Macros.FindMacro(name) ?? Macro.CreateEmptyMacro(name);
+
+            if (_journalTriggersInput != null)
+            {
+                _journalTriggersInput.SetText(Macro.JournalTriggers ?? string.Empty);
+                _journalTriggersInput.TextChanged += (sender, e) => Macro.JournalTriggers = _journalTriggersInput.Text;
+            }
 
             SetupKeyByDefault();
             SetupMacroUI();
