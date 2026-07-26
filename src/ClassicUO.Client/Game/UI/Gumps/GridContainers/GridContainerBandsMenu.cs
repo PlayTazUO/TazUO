@@ -72,6 +72,18 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
         {
             var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
+            toolbar.Widgets.Add(MyraCheckButton.CreateWithCallback(
+                ProfileManager.CurrentProfile?.EnableGridContainerBands ?? false,
+                isChecked =>
+                {
+                    if (ProfileManager.CurrentProfile != null)
+                        ProfileManager.CurrentProfile.EnableGridContainerBands = isChecked;
+
+                    GridContainer.UpdateAllGridContainers();
+                },
+                text: TazLang.Get("gridbands_enable", "Enable grid container bands"),
+                tooltip: TazLang.Get("gridbands_enable_tooltip", "Group items in grid containers into bands by layer and/or graphic.")));
+
             toolbar.Widgets.Add(new MyraButton(TazLang.Get("gridbands_add", "Add Band"), () =>
             {
                 List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
