@@ -143,7 +143,12 @@ namespace ClassicUO.Configuration
             }
         }
 
-        public static void UnLoadProfile() => CurrentProfile = null;
+        public static void UnLoadProfile()
+        {
+            CurrentProfile = null;
+            // Drop profile-scoped caches so edits can't be saved against the previous profile's path.
+            GridContainerBandsConfig.Reset();
+        }
 
         private static void OnCurrentProfilePropertyChanged(object sender, PropertyChangedEventArgs e) => CurrentProfilePropertyChanged?.Invoke(sender, e);
     }

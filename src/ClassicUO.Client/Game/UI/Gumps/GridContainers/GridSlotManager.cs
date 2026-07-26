@@ -274,7 +274,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 for (int b = 0; b < bands.Count; b++)
                 {
                     GridContainerBand band = bands[b];
-                    if (!band.Enabled)
+                    if (band is not { Enabled: true })
                         continue;
 
                     if (band.Matches(item.Graphic, item.Hue, item.ItemData.Layer))

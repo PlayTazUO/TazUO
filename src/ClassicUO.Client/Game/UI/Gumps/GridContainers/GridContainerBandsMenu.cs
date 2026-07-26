@@ -203,6 +203,9 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
             row.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
             {
+                // Close any open editors for this band so they don't keep mutating a detached instance.
+                GridContainerBandLayerPicker.CloseFor(band);
+                GridContainerBandGraphicsEditor.CloseFor(band);
                 group.Bands.RemoveAt(index);
                 SaveAndRefresh();
                 rebuild();
@@ -266,6 +269,19 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             }
 
             UIManager.Add(new GridContainerBandLayerPicker(band));
+        }
+
+        /// <summary>Closes an open layer picker if it is editing the given band.</summary>
+        public static void CloseFor(GridContainerBand band)
+        {
+            foreach (IGui gump in UIManager.Gumps)
+            {
+                if (gump is GridContainerBandLayerPicker w && !w.IsDisposed && ReferenceEquals(w._band, band))
+                {
+                    w.Dispose();
+                    break;
+                }
+            }
         }
 
         private void Build()
@@ -350,6 +366,19 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             }
 
             UIManager.Add(new GridContainerBandGraphicsEditor(world, band));
+        }
+
+        /// <summary>Closes an open graphics editor if it is editing the given band.</summary>
+        public static void CloseFor(GridContainerBand band)
+        {
+            foreach (IGui gump in UIManager.Gumps)
+            {
+                if (gump is GridContainerBandGraphicsEditor w && !w.IsDisposed && ReferenceEquals(w._band, band))
+                {
+                    w.Dispose();
+                    break;
+                }
+            }
         }
 
         private void Build()

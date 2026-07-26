@@ -89,6 +89,12 @@ namespace ClassicUO.Configuration
             return _current;
         }
 
+        /// <summary>
+        /// Clears the cached config so it is reloaded for the next profile. Called when a profile is
+        /// unloaded so edits can't be saved against the previous profile's path after logout.
+        /// </summary>
+        public static void Reset() => _current = null;
+
         public void Save()
         {
             string file = GetFilePath();
@@ -110,11 +116,11 @@ namespace ClassicUO.Configuration
         /// <summary>True if this group is enabled and has at least one enabled band.</summary>
         public bool HasActiveBands()
         {
-            if (!Enabled)
+            if (!Enabled || Bands == null)
                 return false;
 
             foreach (GridContainerBand band in Bands)
-                if (band.Enabled)
+                if (band is { Enabled: true })
                     return true;
 
             return false;
@@ -143,7 +149,7 @@ namespace ClassicUO.Configuration
         /// <summary>Item graphic (with optional hue) filters included in this band.</summary>
         public List<GridContainerBandGraphic> Graphics { get; set; } = new();
 
-        public Color GetBackgroundColor() => BackgroundColor.FromHtmlHex();
+        public Color GetBackgroundColor() => (BackgroundColor ?? "").FromHtmlHex();
 
         public void SetBackgroundColor(Color color) => BackgroundColor = color.ToHtmlHex();
 
@@ -160,7 +166,7 @@ namespace ClassicUO.Configuration
             {
                 foreach (GridContainerBandGraphic g in Graphics)
                 {
-                    if (g.Graphic == graphic && (g.Hue < 0 || g.Hue == hue))
+                    if (g != null && g.Graphic == graphic && (g.Hue < 0 || g.Hue == hue))
                         return true;
                 }
             }
