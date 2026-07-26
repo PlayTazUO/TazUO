@@ -1064,9 +1064,15 @@ namespace ClassicUO.Configuration
             Task<Dictionary<string, string>> serverTask = Client.Settings.GetAllAsync(SettingsScope.Server);
             Task<Dictionary<string, string>> charTask = Client.Settings.GetAllAsync(SettingsScope.Char);
 
-            Task.WhenAll(globalTask, accountTask, serverTask, charTask).ContinueWith(_ =>
+            // Wait for the database reads to finish, then apply the settings on the main thread and
+            // block until that is done. This must complete synchronously here (before AfterLoad
+            // returns) because saved gumps are read later during login (see LoginComplete/ReadGumps)
+            // and they need the SQL settings to already be in place. Previously the apply was queued
+            // via MainThreadQueue.EnqueueAction, so it ran on a later frame - after the gumps had
+            // already been created with stale/default setting values.
+            if (Task.WhenAll(globalTask, accountTask, serverTask, charTask).Wait(10000))
             {
-                MainThreadQueue.EnqueueAction(() =>
+                MainThreadQueue.BubblingInvokeOnMainThread(() =>
                 {
                     LoadGeneratedGlobalSqlSettings(globalTask.Result);
                     LoadGeneratedAccountSqlSettings(accountTask.Result);
@@ -1075,7 +1081,11 @@ namespace ClassicUO.Configuration
 
                     HandleMigration();
                 });
-            }).Wait(10000);
+            }
+            else
+            {
+                Log.Error("SQL settings failed to load within the timeout; using defaults.");
+            }
 
             MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
 
