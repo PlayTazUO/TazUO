@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -173,8 +174,8 @@ namespace ClassicUO.Configuration
             switch (typeName)
             {
                 case "bool":   return (bool)value ? "true" : "false";
-                case "float":  return ((float)(double)value).ToString("R") + "f";
-                case "double": return ((double)value).ToString("R") + "d";
+                case "float":  return Convert.ToSingle(value).ToString("R") + "f";
+                case "double": return Convert.ToDouble(value).ToString("R") + "d";
                 case "string": return "\"" + value.ToString().Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
                 default:       return value.ToString();
             }
