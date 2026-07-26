@@ -39,10 +39,10 @@ public class CooldownBarRule : IRule, INotifyPropertyChanged
     public string Name { get; set => SetField(ref field, value); } = string.Empty;
 
     /// <summary>Duration of the cooldown bar in seconds</summary>
-    public uint Cooldown { get; set => SetField(ref field, value); }
+    public uint Cooldown { get; set => SetField(ref field, value); } = 10;
 
     /// <summary>The cooldown bar's hue (color)</summary>
-    public ushort Hue { get; set => SetField(ref field, value); }
+    public ushort Hue { get; set => SetField(ref field, value); } = 42;
 
     /// <summary>The message substring that triggers this cooldown bar when received</summary>
     public string TriggerMessage { get; set => SetField(ref field, value); } = string.Empty;
