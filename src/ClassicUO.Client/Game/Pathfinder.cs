@@ -1116,6 +1116,29 @@ namespace ClassicUO.Game
             return _path.Count != 0;
         }
 
+        /// <summary>
+        /// Recomputes the active auto-walk path from the player's current position to the
+        /// same target that <see cref="WalkTo"/> was last called with. Intended to be called
+        /// when world geometry changes underneath a walk in progress — most notably when a
+        /// house/multi is loaded via packet and its (previously absent) components now block
+        /// tiles the current path runs through. Re-running the A* search from where the player
+        /// stands lets it route around the newly-appeared blocker.
+        ///
+        /// No-op unless a local A* auto-walk is currently in progress. Computed paths
+        /// (WorldMap navigation via <see cref="StartComputedPath"/>) are skipped — they have
+        /// their own dynamic-block replanning via <see cref="OnComputedPathStepFailed"/>.
+        /// </summary>
+        public void RecalculatePath()
+        {
+            if (!AutoWalking || _computedPathActive || _world.Player == null || _world.Player.IsParalyzed)
+            {
+                return;
+            }
+
+            // Re-run from the player's present position to the previously requested target.
+            WalkTo(_endPoint.X, _endPoint.Y, _endPointZ, _pathfindDistance);
+        }
+
         public void ProcessAutoWalk()
         {
             if (AutoWalking && _world.InGame && _world.Player.Walker.StepsCount < Constants.MAX_STEP_COUNT && _world.Player.Walker.LastStepRequestTime <= Time.Ticks)
