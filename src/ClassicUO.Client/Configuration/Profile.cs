@@ -1117,7 +1117,59 @@ namespace ClassicUO.Configuration
 
                 ProfileMigrationVersion++;
             }
+
+            if (ProfileMigrationVersion < 4) //3
+            {
+                MigrateToolTipOverrides();
+
+                ProfileMigrationVersion++;
+            }
         }
+
+        /// <summary>
+        /// Moves the legacy parallel <c>ToolTipOverride_*</c> lists into the dedicated
+        /// tooltip_overrides.json (see <see cref="TooltipOverridesConfig"/>) and clears them. The config
+        /// list is rebuilt (not appended) so re-running the migration - e.g. if the profile isn't saved
+        /// before the next launch - stays idempotent.
+        /// </summary>
+#pragma warning disable CS0618 // Reading the obsolete legacy lists is the whole point of migration.
+        private void MigrateToolTipOverrides()
+        {
+            int count = ToolTipOverride_SearchText.Count;
+            if (count == 0)
+                return;
+
+            var overrides = new List<ToolTipOverrideData>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                overrides.Add(new ToolTipOverrideData(
+                    i,
+                    ToolTipOverride_SearchText[i],
+                    ToolTipOverride_NewFormat.ElementAtOrDefault(i) ?? string.Empty,
+                    i < ToolTipOverride_MinVal1.Count ? ToolTipOverride_MinVal1[i] : -1,
+                    i < ToolTipOverride_MaxVal1.Count ? ToolTipOverride_MaxVal1[i] : 100,
+                    i < ToolTipOverride_MinVal2.Count ? ToolTipOverride_MinVal2[i] : -1,
+                    i < ToolTipOverride_MaxVal2.Count ? ToolTipOverride_MaxVal2[i] : 100,
+                    i < ToolTipOverride_Layer.Count ? ToolTipOverride_Layer[i] : (byte)TooltipLayers.Any,
+                    i < ToolTipOverride_BorderHue.Count ? ToolTipOverride_BorderHue[i] : -1));
+            }
+
+            TooltipOverridesConfig config = TooltipOverridesConfig.Current;
+            config.Overrides = overrides;
+            config.Save();
+
+            // Clear the legacy lists so tooltip overrides live only in tooltip_overrides.json going forward.
+            ToolTipOverride_SearchText.Clear();
+            ToolTipOverride_NewFormat.Clear();
+            ToolTipOverride_MinVal1.Clear();
+            ToolTipOverride_MinVal2.Clear();
+            ToolTipOverride_MaxVal1.Clear();
+            ToolTipOverride_MaxVal2.Clear();
+            ToolTipOverride_Layer.Clear();
+            ToolTipOverride_BorderHue.Clear();
+        }
+#pragma warning restore CS0618
 
         internal void Save(World world, string path, bool saveGumps = true)
         {
