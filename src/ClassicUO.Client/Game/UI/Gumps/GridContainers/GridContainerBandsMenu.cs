@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
+using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
@@ -296,10 +297,12 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
     /// <summary>Popup with a multiline text box for editing a band's item-graphic filter.</summary>
     internal class GridContainerBandGraphicsEditor : MyraControl
     {
+        private readonly World _world;
         private readonly int _bandIndex;
 
         private GridContainerBandGraphicsEditor(World world, int bandIndex) : base(TazLang.Get("gridbands_graphics_title", "Band Graphics"))
         {
+            _world = world;
             _bandIndex = bandIndex;
             Build();
             CenterInViewPort();
@@ -349,6 +352,31 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             };
 
             root.Widgets.Add(new ScrollViewer { MaxHeight = 260, Content = input });
+
+            root.Widgets.Add(new MyraButton(TazLang.Get("gridbands_target", "Target Item"), () =>
+            {
+                // Commit any typed edits first so the targeted graphic is appended, not lost.
+                band.Graphics = ParseGraphics(input.Text);
+
+                _world?.TargetManager.SetTargeting(o =>
+                {
+                    if (o is not GameObject go || go.Graphic == 0)
+                        return;
+
+                    ushort graphic = go.Graphic;
+                    if (!band.Graphics.Contains(graphic))
+                    {
+                        band.Graphics.Add(graphic);
+                        GridContainerBandsMenu.SaveAndRefresh();
+                    }
+
+                    // Rebuild so the text box reflects the newly added graphic.
+                    Defer(Build);
+                });
+            })
+            {
+                Tooltip = TazLang.Get("gridbands_target_tooltip", "Target an item in the world to add its graphic to this band")
+            });
 
             SetRootContent(root);
         }
