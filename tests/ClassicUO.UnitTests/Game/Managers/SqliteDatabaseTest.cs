@@ -145,6 +145,31 @@ namespace ClassicUO.UnitTests.Game.Managers
         }
 
         [Fact]
+        public async Task WithConnectionAsync_RecoversFromCorruptDatabaseFile()
+        {
+            // Release the fixture instance so it doesn't hold a pooled handle to the file we're about to
+            // clobber, then write bytes that SQLite cannot recognize as a database at all.
+            _db.Dispose();
+
+            string dbPath = Path.Combine(_tempDir, "test.db");
+            await File.WriteAllTextAsync(dbPath, "this is not a valid sqlite database");
+
+            using var db = new TestDatabase(_tempDir);
+
+            // The first operation should detect the corruption, move the bad file aside, and succeed
+            // against a freshly created database rather than throwing.
+            Func<Task> act = () => db.RunAsync(c => c.ExecuteAsync(
+                "CREATE TABLE IF NOT EXISTS things (id INTEGER PRIMARY KEY, name TEXT NOT NULL)"));
+            await act.Should().NotThrowAsync();
+
+            // The corrupt copy is preserved for inspection and the new database is usable.
+            File.Exists(dbPath + ".corrupt").Should().BeTrue();
+
+            long count = await db.RunAsync(c => c.ExecuteScalarAsync<long>("SELECT COUNT(*) FROM things"));
+            count.Should().Be(0);
+        }
+
+        [Fact]
         public async Task Constructor_ClearsReadOnlyAttribute_AndAllowsWrites()
         {
             await _db.RunAsync(c => c.ExecuteAsync(

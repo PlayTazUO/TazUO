@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ClassicUO.Utility.Logging;
 using Dapper;
 using Microsoft.Data.Sqlite;
 
@@ -90,9 +91,16 @@ namespace ClassicUO.Game.Managers
             await _dbLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                await using SqliteConnection connection = new(ConnectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
-                return await operation(connection).ConfigureAwait(false);
+                try
+                {
+                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                }
+                catch (SqliteException ex) when (IsCorruptionError(ex) && QuarantineCorruptDatabase(ex))
+                {
+                    // The file was corrupt and has been quarantined; a fresh database will be created
+                    // on this retry. Only one retry is attempted - if it fails again the error propagates.
+                    return await OpenAndRunAsync(operation).ConfigureAwait(false);
+                }
             }
             finally
             {
@@ -105,21 +113,19 @@ namespace ClassicUO.Game.Managers
         /// connection is opened and disposed for you. Use this with Dapper's <c>ExecuteAsync</c> for
         /// writes/DDL.
         /// </summary>
-        protected async Task WithConnectionAsync(Func<SqliteConnection, Task> operation)
-        {
-            ThrowIfDisposed();
-
-            await _dbLock.WaitAsync().ConfigureAwait(false);
-            try
+        protected Task WithConnectionAsync(Func<SqliteConnection, Task> operation) =>
+            WithConnectionAsync(async connection =>
             {
-                await using SqliteConnection connection = new(ConnectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
                 await operation(connection).ConfigureAwait(false);
-            }
-            finally
-            {
-                _dbLock.Release();
-            }
+                return true;
+            });
+
+        /// <summary>Opens a fresh connection, runs the operation, and disposes the connection.</summary>
+        private async Task<T> OpenAndRunAsync<T>(Func<SqliteConnection, Task<T>> operation)
+        {
+            await using SqliteConnection connection = new(ConnectionString);
+            await connection.OpenAsync().ConfigureAwait(false);
+            return await operation(connection).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -227,6 +233,80 @@ namespace ClassicUO.Game.Managers
         /// where a bound parameter or double-quoted identifier cannot be used).
         /// </summary>
         private static string QuoteLiteral(string value) => "'" + value.Replace("'", "''") + "'";
+
+        /// <summary>
+        /// Returns true if the exception indicates the database file itself is corrupt/unreadable
+        /// (a malformed schema or a file that is not a database) rather than a transient or usage error.
+        /// These are the only conditions that quarantining and recreating the file can recover from.
+        /// </summary>
+        private static bool IsCorruptionError(SqliteException ex) =>
+            ex.SqliteErrorCode == SQLITE_CORRUPT || ex.SqliteErrorCode == SQLITE_NOTADB;
+
+        // SQLite primary result codes (see https://www.sqlite.org/rescode.html). A malformed database
+        // schema, "database disk image is malformed" all report SQLITE_CORRUPT (11); a file whose header
+        // is not recognizable as a SQLite database reports SQLITE_NOTADB (26).
+        private const int SQLITE_CORRUPT = 11;
+        private const int SQLITE_NOTADB = 26;
+
+        /// <summary>
+        /// Moves a corrupt database file (and its WAL/SHM/journal sidecars) aside so a fresh, empty
+        /// database can be created in its place, letting the client keep running instead of crashing on
+        /// startup. The corrupt copy is preserved with a <c>.corrupt</c> suffix for later inspection.
+        /// Returns true only if the primary file was successfully moved out of the way, meaning the
+        /// caller can safely retry the operation against a clean database.
+        /// </summary>
+        private bool QuarantineCorruptDatabase(SqliteException ex)
+        {
+            try
+            {
+                // Pooled connections keep the file handle open; without clearing the pool the move/delete
+                // below fails on Windows because the file is still in use.
+                SqliteConnection.ClearAllPools();
+
+                if (!File.Exists(DatabasePath))
+                    return false;
+
+                string quarantinePath = DatabasePath + ".corrupt";
+
+                MoveAside(DatabasePath, quarantinePath);
+                // The sidecar files belong to the corrupt database; discard them so they cannot be
+                // paired with the new file. Best-effort - a fresh database recreates them as needed.
+                TryDelete(DatabasePath + "-wal");
+                TryDelete(DatabasePath + "-shm");
+                TryDelete(DatabasePath + "-journal");
+
+                Log.Warn($"Corrupt SQLite database '{DatabasePath}' detected ({ex.Message.Trim()}). " +
+                         $"Moved it to '{quarantinePath}' and recreating an empty database.");
+
+                return !File.Exists(DatabasePath);
+            }
+            catch (Exception cleanupEx)
+            {
+                Log.Error($"Failed to quarantine corrupt SQLite database '{DatabasePath}': {cleanupEx.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>Moves <paramref name="source"/> to <paramref name="destination"/>, overwriting any existing quarantine copy.</summary>
+        private static void MoveAside(string source, string destination)
+        {
+            TryDelete(destination);
+            File.Move(source, destination);
+        }
+
+        /// <summary>Best-effort deletion of a file that may or may not exist.</summary>
+        private static void TryDelete(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+            }
+            catch
+            {
+                // Best-effort - a leftover sidecar is harmless once the primary file is gone.
+            }
+        }
 
         /// <summary>
         /// Best-effort clearing of the read-only file attribute on an existing database file. A read-only
