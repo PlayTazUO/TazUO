@@ -7,6 +7,7 @@ All notable changes to TazUO will be recorded here.
 ### Features
 * Added journal triggers for macros - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
 * Added .bmp support to external images loader - [P.R 796](https://github.com/PlayTazUO/TazUO/pull/796) ([credzba](https://github.com/credzba))
+* Added a grid container band system that groups items into configurable, color-coded sections (by item layer and/or graphic), with separate configurations for corpses, backpack, and other containers and a per-container opt-out - [P.R 795](https://github.com/PlayTazUO/TazUO/pull/795) ([bittiez](https://github.com/bittiez))
 * Added a new reusable hotkey setting window, all hotkey assignment goes through this window now - [P.R 793](https://github.com/PlayTazUO/TazUO/pull/793) ([bittiez](https://github.com/bittiez))
 * Replaced the old Myra window style with a new themed one. Thank you NewYears! - [P.R 774](https://github.com/PlayTazUO/TazUO/pull/774) ([bittiez](https://github.com/bittiez))
 
