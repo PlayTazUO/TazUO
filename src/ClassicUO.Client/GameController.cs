@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
@@ -204,8 +204,8 @@ namespace ClassicUO
 #else
             UO.Load(this);
 
-            PNGLoader.Instance.GraphicsDevice = GraphicsDevice;
-            PNGLoader.Instance.LoadResourceAssets(Client.Game.UO.Gumps.GetGumpsLoader);
+            ExternalImageLoader.Instance.GraphicsDevice = GraphicsDevice;
+            ExternalImageLoader.Instance.LoadResourceAssets(Client.Game.UO.Gumps.GetGumpsLoader);
 
             MyraEnvironment.Game = this;
             MyraEnvironment.SetMouseCursorFromWidget = false;

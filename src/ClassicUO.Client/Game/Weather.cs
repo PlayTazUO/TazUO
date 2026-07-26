@@ -17,7 +17,7 @@ namespace ClassicUO.Game
         private const float SIMULATION_TIME = 37.0f;
 
         private readonly WeatherEffect[] _effects = new WeatherEffect[MAX_WEATHER_EFFECT];
-        private readonly Texture2D _rainImage = PNGLoader.Instance.GetImageTexture(
+        private readonly Texture2D _rainImage = ExternalImageLoader.Instance.GetImageTexture(
             System.IO.Path.Combine(CUOEnviroment.ExecutablePath, "ExternalImages", "rain.png"));
 
         public Weather(World world) : base(world)

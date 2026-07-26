@@ -152,7 +152,7 @@ internal class ModernNineSliceGump : NineSliceGump
     /// <param name="borderSize"></param>
     public void SetLegionTexture(string texture, int borderSize)
     {
-        if (PNGLoader.Instance.TryGetNamedZipTexture(texture, out Texture2D tex) && tex != null && !tex.IsDisposed)
+        if (ExternalImageLoader.Instance.TryGetNamedZipTexture(texture, out Texture2D tex) && tex != null && !tex.IsDisposed)
         {
             borderSize = Math.Clamp(borderSize, 1, tex.Width);
             borderSize = Math.Clamp(borderSize, 1, tex.Height);

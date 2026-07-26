@@ -42,7 +42,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
             ResolveInitialSelection(loginScene);
 
-            PNGLoader.Instance.TryGetEmbeddedTexture("CharSelectBG.png", out Microsoft.Xna.Framework.Graphics.Texture2D upTexture);
+            ExternalImageLoader.Instance.TryGetEmbeddedTexture("CharSelectBG.png", out Microsoft.Xna.Framework.Graphics.Texture2D upTexture);
             Add
             (
                 new EmbeddedGumpPic(AREA_X, AREA_Y, upTexture),

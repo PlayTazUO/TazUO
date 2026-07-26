@@ -46,7 +46,7 @@ namespace ClassicUO.Renderer.Arts
 
             if (loadedFromPNG)
             {
-                PNGLoader.Instance.ClearArtPixelCache(loadedIdx);
+                ExternalImageLoader.Instance.ClearArtPixelCache(loadedIdx);
             }
 
             return artInfo;
@@ -54,7 +54,7 @@ namespace ClassicUO.Renderer.Arts
 
         private ArtInfo LoadSourceArtInfo(uint idx, out bool loadedFromPNG)
         {
-            ArtInfo artInfo = PNGLoader.Instance.LoadArtTexture(idx);
+            ArtInfo artInfo = ExternalImageLoader.Instance.LoadArtTexture(idx);
             loadedFromPNG = !artInfo.Pixels.IsEmpty;
 
             if (artInfo.Pixels.IsEmpty)
@@ -98,7 +98,7 @@ namespace ClassicUO.Renderer.Arts
                     // Clear the pixel cache from PNG Loader since it's now in the atlas
                     if (loadedFromPNG)
                     {
-                        PNGLoader.Instance.ClearArtPixelCache(idx);
+                        ExternalImageLoader.Instance.ClearArtPixelCache(idx);
                     }
 
                     if (idx > 0x4000)
