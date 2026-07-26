@@ -427,6 +427,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         {
             int usableWidth = Math.Max(0, _area.Width - GridScrollArea.SCROLLBAR_WIDTH);
             int columns = Math.Max(1, (usableWidth - X_SPACING) / (GridItemSize + X_SPACING));
+            int bandPadding = Math.Max(0, GridContainerBandsConfig.Current.BandPadding);
 
             int x = X_SPACING, y = 0, col = 0;
             int prevGroup = int.MinValue;
@@ -449,7 +450,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 else if (group != prevGroup)
                 {
                     // New band: drop to a fresh row and add the band gap.
-                    y += GridItemSize + Y_SPACING + BAND_SPACING;
+                    y += GridItemSize + Y_SPACING + bandPadding;
                     x = X_SPACING;
                     col = 0;
                 }

@@ -29,9 +29,15 @@ namespace ClassicUO.Configuration
     {
         public const string FileName = "grid_container_bands.json";
 
+        /// <summary>Default vertical gap (px) inserted between bands in the grid band layout.</summary>
+        public const int DefaultBandPadding = 15;
+
         public GridContainerBandGroup Corpses { get; set; } = new();
         public GridContainerBandGroup Backpack { get; set; } = new();
         public GridContainerBandGroup Other { get; set; } = new();
+
+        /// <summary>Vertical gap (px) inserted between bands in the grid band layout.</summary>
+        public int BandPadding { get; set; } = DefaultBandPadding;
 
         /// <summary>Returns the band group for the given type.</summary>
         public GridContainerBandGroup GetGroup(GridContainerBandGroupType type) => type switch

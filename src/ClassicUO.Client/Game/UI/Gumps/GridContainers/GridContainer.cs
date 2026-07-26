@@ -22,8 +22,6 @@ public partial class GridContainer : ResizableGump
     {
         #region CONSTANTS
         public const int X_SPACING = 1, Y_SPACING = 1;
-        /// <summary>Vertical gap (px) inserted between bands in the grid band layout.</summary>
-        public const int BAND_SPACING = 15;
         private const int TOP_BAR_HEIGHT = 20;
         private const int LABEL_HEIGHT = 20;
         #endregion

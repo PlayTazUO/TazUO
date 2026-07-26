@@ -74,6 +74,21 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
             GridContainerBandsConfig config = GridContainerBandsConfig.Current;
 
+            root.Widgets.Add(new LabeledIntegerInput(
+                TazLang.Get("gridbands_padding", "Band padding (px)"),
+                config.BandPadding,
+                value =>
+                {
+                    config.BandPadding = value;
+                    SaveAndRefresh();
+                })
+            {
+                MinValue = 0,
+                MaxValue = 200,
+                InputBoxWidth = 60,
+                Tooltip = TazLang.Get("gridbands_padding_tooltip", "Vertical gap in pixels inserted between bands.")
+            });
+
             var tabs = new MyraTabControl();
             tabs.AddTab(TazLang.Get("gridbands_tab_corpses", "Corpses"), () => BuildGroupEditor(config.Corpses),
                 TazLang.Get("gridbands_tab_corpses_tooltip", "Bands applied to corpses"));
