@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using ClassicUO.Game;
 
@@ -299,4 +300,8 @@ public sealed partial class Profile
 
         // Clamp used by the gump-scale SQL settings above (see their OnSet).
         private static double ClampGumpScale(double value) => System.Math.Clamp(value, 0.5d, 3.0d);
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_loaded", "")]
+        public partial string LastLoaded { get; set; }
 }

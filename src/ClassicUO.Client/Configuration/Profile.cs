@@ -1032,6 +1032,8 @@ namespace ClassicUO.Configuration
             }).Wait(10000);
 
             MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
+
+            LastLoaded = DateTime.Now.ToUniversalTime().ToString();
         }
 
         private void HandleMigration()
