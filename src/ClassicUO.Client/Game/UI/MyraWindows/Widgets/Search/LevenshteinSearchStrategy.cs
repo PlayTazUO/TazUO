@@ -1,17 +1,28 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using ClassicUO.Utility;
 using Myra.Utility.Search;
 
 namespace ClassicUO.Game.UI.MyraWindows.Widgets.Search;
 
-public class LevenshteinSearchStrategy : ISearchStrategy
+public partial class LevenshteinSearchStrategy : ISearchStrategy
 {
+    private static readonly Regex _wordBoundaryRegex = WordBoundaryRegex();
+
     public Func<int, int> GetMaxDistanceForQueryLength { get; set; } = AutoFuzziness;
     public int MaxDistance { get; set; } = 4;
     public bool PerTokenBest { get; set; }
     public bool CaseSensitive { get; set; }
+
+    /// <summary>
+    /// Splits a candidate into the tokens compared individually when <see cref="PerTokenBest"/>
+    /// is set. Defaults to word-boundary splitting so punctuation doesn't get glued onto
+    /// adjacent words the way a plain whitespace split would.
+    /// </summary>
+    public Func<string, IEnumerable<string>> Tokenizer { get; set; } = WordBoundaryTokenizer;
 
     public SearchMatch Match(string candidate, string query)
     {
@@ -22,7 +33,7 @@ public class LevenshteinSearchStrategy : ISearchStrategy
             return MatchSingle(candidate, query);
 
         SearchMatch best = SearchMatch.None;
-        foreach (string token in candidate.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+        foreach (string token in Tokenizer(candidate))
         {
             SearchMatch match = MatchSingle(token, query);
             if (match.IsMatch && (!best.IsMatch || match.Score > best.Score))
@@ -30,6 +41,12 @@ public class LevenshteinSearchStrategy : ISearchStrategy
         }
 
         return best;
+    }
+
+    public static IEnumerable<string> WordBoundaryTokenizer(string s)
+    {
+        foreach (Match m in _wordBoundaryRegex.Matches(s))
+            yield return m.Value;
     }
 
     private SearchMatch MatchSingle(string candidate, string query)
@@ -61,4 +78,7 @@ public class LevenshteinSearchStrategy : ISearchStrategy
         <= 5 => 2,
         _ => 3
     };
+
+    [GeneratedRegex(@"\b\w+\b", RegexOptions.Compiled)]
+    private static partial Regex WordBoundaryRegex();
 }

@@ -124,5 +124,29 @@ namespace ClassicUO.UnitTests.Game.UI.Search
             strategy.Match("elephants", "elephant").IsMatch.Should().BeTrue();
             strategy.Match("elephant", "elephent").IsMatch.Should().BeTrue();
         }
+
+        [Fact]
+        public void Match_PerTokenBest_Default_Tokenizer_Splits_On_Word_Boundaries()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 0, PerTokenBest = true };
+
+            SearchMatch match = strategy.Match("All-things,here", "things");
+
+            match.IsMatch.Should().BeTrue();
+            match.Score.Should().Be(1d);
+        }
+
+        [Fact]
+        public void Match_PerTokenBest_Custom_Tokenizer_Is_Used()
+        {
+            var strategy = new LevenshteinSearchStrategy
+            {
+                MaxDistance = 0,
+                PerTokenBest = true,
+                Tokenizer = candidate => candidate.Split(',')
+            };
+
+            strategy.Match("longsword,shortsword", "shortsword").IsMatch.Should().BeTrue();
+        }
     }
 }

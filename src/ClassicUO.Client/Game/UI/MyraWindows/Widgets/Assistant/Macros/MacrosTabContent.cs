@@ -341,7 +341,7 @@ public static class MacrosTabContent
 
             MacroObject capturedAction = action;
 
-            var typeCombo = new LevenshteinComboBox
+            var typeCombo = new ContainsLevenshteinComboBox
             {
                 Width = 160,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -362,7 +362,7 @@ public static class MacrosTabContent
                 onTypeReplace(newAction);
                 MarkDirty();
 
-                // LevenshteinComboBox hides its popup before raising SelectedItemChanged,
+                // ContainsLevenshteinComboBox hides its popup before raising SelectedItemChanged,
                 // so a synchronous rebuild here is safe (unlike the old obsolete ComboBox).
                 BuildActionsPanel();
             };
@@ -397,7 +397,7 @@ public static class MacrosTabContent
                 int curSubIdx = Array.IndexOf(subValues, capturedAction.SubCode);
                 if (curSubIdx < 0) curSubIdx = 0;
 
-                var subCombo = new LevenshteinComboBox
+                var subCombo = new ContainsLevenshteinComboBox
                 {
                     Width = 160,
                     VerticalAlignment = VerticalAlignment.Center,
