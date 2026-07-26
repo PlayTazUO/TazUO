@@ -14,6 +14,7 @@ All notable changes to TazUO will be recorded here.
 * Migrate tooltip override saves to its own json file - [P.R 798](https://github.com/PlayTazUO/TazUO/pull/798) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Restore default cooldown duration and hue - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
 * Recover from a corrupt SQLite database instead of crashing at login; the bad file is quarantined and an empty database is recreated - [P.R 800](https://github.com/PlayTazUO/TazUO/pull/800) ([bittiez](https://github.com/bittiez))
 * Fixed Myra windows not closing with right click - ([bittiez](https://github.com/bittiez))
 * Fixed menu color that failed to get the new myrs colors - ([bittiez](https://github.com/bittiez))
