@@ -46,6 +46,17 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             UIManager.Add(new GridContainerBandsMenu(world));
         }
 
+        public override void Update()
+        {
+            // A band rename updates the config in memory on each keystroke but only persists on the
+            // name box losing focus. Closing the window without blurring would otherwise drop the edit,
+            // so flush the config once when a close/dispose has been requested.
+            if (_disposeRequested && !IsDisposed)
+                GridContainerBandsConfig.Current.Save();
+
+            base.Update();
+        }
+
         /// <summary>Persists the band config and refreshes every open grid container.</summary>
         internal static void SaveAndRefresh()
         {
@@ -148,7 +159,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             });
             row.Widgets.Add(colorButton);
 
-            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_layers", "Layers"), () => GridContainerBandLayerPicker.Show(_world, index))
+            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_layers", "Layers"), () => GridContainerBandLayerPicker.Show(index))
             {
                 Tooltip = TazLang.Get("gridbands_layers_tooltip", "Choose which item layers belong to this band")
             });
@@ -203,6 +214,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
     /// <summary>Popup with a checkbox per item layer for editing a band's layer filter.</summary>
     internal class GridContainerBandLayerPicker : MyraControl
     {
+        // Note: no World dependency is needed here (unlike the graphics editor, which targets items).
         // Curated list of layers a container item can meaningfully carry.
         private static readonly Layer[] _layers =
         {
@@ -214,14 +226,14 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
         private readonly int _bandIndex;
 
-        private GridContainerBandLayerPicker(World world, int bandIndex) : base(TazLang.Get("gridbands_layers_title", "Band Layers"))
+        private GridContainerBandLayerPicker(int bandIndex) : base(TazLang.Get("gridbands_layers_title", "Band Layers"))
         {
             _bandIndex = bandIndex;
             Build();
             CenterInViewPort();
         }
 
-        public static void Show(World world, int bandIndex)
+        public static void Show(int bandIndex)
         {
             foreach (IGui gump in UIManager.Gumps)
             {
@@ -232,7 +244,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                 }
             }
 
-            UIManager.Add(new GridContainerBandLayerPicker(world, bandIndex));
+            UIManager.Add(new GridContainerBandLayerPicker(bandIndex));
         }
 
         private void Build()
@@ -347,6 +359,9 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
             input.LostFocus = () =>
             {
+                if (IsDisposed)
+                    return;
+
                 band.Graphics = ParseGraphics(input.Text);
                 GridContainerBandsMenu.SaveAndRefresh();
             };
@@ -360,7 +375,8 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
                 _world?.TargetManager.SetTargeting(o =>
                 {
-                    if (o is not GameObject go || go.Graphic == 0)
+                    // The window may have been closed while the target cursor was up.
+                    if (IsDisposed || o is not GameObject go || go.Graphic == 0)
                         return;
 
                     ushort graphic = go.Graphic;

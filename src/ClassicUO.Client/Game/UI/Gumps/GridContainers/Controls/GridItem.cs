@@ -328,7 +328,10 @@ public class GridItem : Control
         else
         {
             Rectangle containerBounds = _world.ContainerManager.Get(_container.Graphic).Bounds;
-            _gridContainer.SlotManager.AddItemSlot(Client.Game.UO.GameCursor.ItemHold.Serial, _slot);
+            // Band layout computes slot positions itself, so don't persist a manual slot position
+            // (it would be ignored while bands are active and resurface once they're disabled).
+            if (!_gridContainer.SlotManager.BandsActive())
+                _gridContainer.SlotManager.AddItemSlot(Client.Game.UO.GameCursor.ItemHold.Serial, _slot);
             (int X, int Y) pos = GetBoxPosition(_slot, Client.Game.UO.GameCursor.ItemHold.Graphic, containerBounds.Width, containerBounds.Height);
             GameActions.DropItem(Client.Game.UO.GameCursor.ItemHold.Serial, pos.X, pos.Y, 0, _container.Serial);
         }
@@ -355,7 +358,9 @@ public class GridItem : Control
 
     private void HandleLockSlotClick()
     {
-        if (_item != null)
+        // Slot locking is meaningless under band layout (positions are computed from the bands),
+        // and would otherwise write a lock/position that silently disappears on the next refresh.
+        if (_item != null && !_gridContainer.SlotManager.BandsActive())
             _gridContainer.SlotManager.SetLockedSlot(_slot, !ItemGridLocked, _gridContainer.GridContainerEntry.GetSlot(_item.Serial));
 
         Mouse.CancelDoubleClick = true;

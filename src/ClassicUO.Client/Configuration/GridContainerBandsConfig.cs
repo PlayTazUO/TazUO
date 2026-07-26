@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
@@ -50,9 +49,6 @@ namespace ClassicUO.Configuration
             LoadForProfile(ProfileManager.ProfilePath);
             return _current;
         }
-
-        /// <summary>Forces a reload from disk on the next <see cref="Current"/> access (used on profile switch).</summary>
-        public static void Reset() => _current = null;
 
         public void Save()
         {
@@ -127,23 +123,12 @@ namespace ClassicUO.Configuration
     [JsonSerializable(typeof(GridContainerBandsConfig), GenerationMode = JsonSourceGenerationMode.Metadata)]
     sealed partial class GridContainerBandsJsonContext : JsonSerializerContext
     {
-        sealed class SnakeCaseNamingPolicy : JsonNamingPolicy
-        {
-            public static SnakeCaseNamingPolicy Instance { get; } = new SnakeCaseNamingPolicy();
-
-            public override string ConvertName(string name) =>
-                string.Concat(name.Select((x, i) => i > 0 && char.IsUpper(x) ? "_" + x.ToString() : x.ToString())).ToLower();
-        }
-
         private static Lazy<JsonSerializerOptions> _jsonOptions { get; } = new Lazy<JsonSerializerOptions>(() =>
-        {
-            var options = new JsonSerializerOptions
+            new JsonSerializerOptions
             {
                 WriteIndented = true,
-                PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance
-            };
-            return options;
-        });
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            });
 
         public static GridContainerBandsJsonContext DefaultToUse { get; } = new GridContainerBandsJsonContext(_jsonOptions.Value);
     }

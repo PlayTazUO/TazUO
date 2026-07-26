@@ -24,6 +24,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         private HashSet<uint> _itemLocks = new HashSet<uint>();
         private World _world;
         private GridContainer _gridContainer;
+        private bool _bandsActive;
 
         public Dictionary<int, GridItem> GridSlots => _gridSlots;
         public List<Item> ContainerContents => _containerContents ??= new List<Item>();
@@ -125,9 +126,11 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 slot.Value.SetGridItem(null);
             }
 
-            bool bandsActive = BandsActive();
+            // Cache the band-layout state for this rebuild; SetGridPositions (and the click handlers
+            // in GridItem) read it instead of re-scanning the band config on every layout pass.
+            _bandsActive = BandsActive();
 
-            if (bandsActive)
+            if (_bandsActive)
             {
                 // Band layout ignores saved slot positions and locks: items are grouped by band
                 // (first matching band wins) and laid out in band order, then any unmatched items.
@@ -148,7 +151,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 // In band mode only slots holding an item are shown (empty cells and inter-band
                 // spacing are handled by the positioning pass). Otherwise fall back to the standard
                 // rule, hiding everything by default in "hide" search mode.
-                slot.Value.IsVisible = bandsActive
+                slot.Value.IsVisible = _bandsActive
                     ? slot.Value.SlotItem != null
                     : (!_gridContainer.IsListView || slot.Value.SlotItem != null) && !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
 
@@ -236,7 +239,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         /// Whether band layout is currently active: enabled in the profile, the container is in grid
         /// (not list) view, and at least one enabled band is configured.
         /// </summary>
-        private bool BandsActive()
+        public bool BandsActive()
         {
             if (ProfileManager.CurrentProfile is not { EnableGridContainerBands: true } || _gridContainer.IsListView)
                 return false;
@@ -386,7 +389,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 return;
             }
 
-            if (BandsActive())
+            if (_bandsActive)
             {
                 SetBandGridPositions();
                 return;
