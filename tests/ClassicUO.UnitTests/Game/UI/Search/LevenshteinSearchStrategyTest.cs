@@ -1,0 +1,128 @@
+using ClassicUO.Game.UI.MyraWindows.Widgets.Search;
+using FluentAssertions;
+using Myra.Utility.Search;
+using Xunit;
+
+namespace ClassicUO.UnitTests.Game.UI.Search
+{
+    public class LevenshteinSearchStrategyTest
+    {
+        [Fact]
+        public void Match_Empty_Query_Always_Matches()
+        {
+            var strategy = new LevenshteinSearchStrategy();
+
+            strategy.Match("anything", "").IsMatch.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Match_Within_MaxDistance_Matches()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 1 };
+
+            SearchMatch match = strategy.Match("kitten", "kitten");
+            match.IsMatch.Should().BeTrue();
+            match.Score.Should().Be(1d);
+        }
+
+        [Fact]
+        public void Match_Beyond_MaxDistance_Returns_None()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 1 };
+
+            strategy.Match("kitten", "sitting").IsMatch.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Match_Is_Case_Insensitive_By_Default()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 0 };
+
+            strategy.Match("Hello", "hello").IsMatch.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Match_Case_Sensitive_Rejects_Different_Casing()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 0, CaseSensitive = true };
+
+            strategy.Match("Hello", "hello").IsMatch.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Match_PerTokenBest_Uses_Best_Scoring_Token()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 0, PerTokenBest = true };
+
+            SearchMatch match = strategy.Match("a longsword of vanquishing", "longsword");
+
+            match.IsMatch.Should().BeTrue();
+            match.Score.Should().Be(1d);
+        }
+
+        [Fact]
+        public void Match_Without_PerTokenBest_Requires_Whole_String_Within_Distance()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 100, PerTokenBest = false };
+
+            // "longsword" is close to one token inside the phrase, but comparing it against
+            // the WHOLE phrase (no PerTokenBest) is a huge length mismatch. AUTO fuzziness
+            // caps the effective distance well below what that would need, so this correctly
+            // finds no match instead of degrading into a near-arbitrary match.
+            SearchMatch match = strategy.Match("a longsword of vanquishing", "longsword");
+
+            match.IsMatch.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Match_Without_PerTokenBest_Scores_Similar_Length_Strings()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 100 };
+
+            SearchMatch match = strategy.Match("longswords", "longsword");
+
+            match.IsMatch.Should().BeTrue();
+            match.Score.Should().BeLessThan(1d);
+        }
+
+        [Fact]
+        public void Match_Short_Query_Does_Not_Match_Unrelated_Short_Word()
+        {
+            // Regression: "ad" and "Say" are genuinely only 2 edits apart, so a flat
+            // MaxDistance=2 (the default) let a 2-letter query match almost any similarly
+            // short, unrelated word. AUTO fuzziness caps queries this short to 0 edits.
+            var strategy = new LevenshteinSearchStrategy();
+
+            strategy.Match("Say", "ad").IsMatch.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Match_Short_Query_Still_Matches_Itself_Exactly()
+        {
+            var strategy = new LevenshteinSearchStrategy();
+
+            strategy.Match("ad", "ad").IsMatch.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Match_Medium_Query_Allows_One_Edit_But_Not_Three()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 5 };
+
+            strategy.Match("catss", "cats").IsMatch.Should().BeTrue();
+            strategy.Match("dogs", "cats").IsMatch.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Match_MaxDistance_Still_Caps_Long_Queries_Below_Auto_Ceiling()
+        {
+            var strategy = new LevenshteinSearchStrategy { MaxDistance = 1 };
+
+            // "elephant"/"elephants" and "elephant"/"elephent" are each 1 edit apart, at a
+            // length where AUTO fuzziness would allow 2 - the explicit MaxDistance=1 should
+            // still be the binding, lower cap.
+            strategy.Match("elephants", "elephant").IsMatch.Should().BeTrue();
+            strategy.Match("elephant", "elephent").IsMatch.Should().BeTrue();
+        }
+    }
+}

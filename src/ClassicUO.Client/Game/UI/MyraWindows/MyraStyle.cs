@@ -190,6 +190,17 @@ public static class MyraStyle
         return button;
     }
 
+    /// <summary>
+    /// The combo box skin only gives ListBoxStyle a background, not a border (unlike the
+    /// menu skin), so a SearchableComboBox's popup - which reads like a menu - looks
+    /// unstyled next to one. Give it the same border as VerticalMenuStyle.
+    /// </summary>
+    public static void ApplySearchComboBoxPopupBorder<T>(SearchableComboBox<T> combo)
+    {
+        combo.PopupBorder = new SolidBrush(TazUO_Orange);
+        combo.PopupBorderThickness = new Thickness(1);
+    }
+
     public static Button ApplySkillButtonStyle(Button button, Lock skillLock)
     {
         var img = new Image()

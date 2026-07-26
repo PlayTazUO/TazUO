@@ -107,6 +107,7 @@ namespace ClassicUO
             Task<bool> skipServerSelectTask = Client.Settings.GetAsync(SettingsScope.Global, Constants.SqlSettings.SKIP_SERVER_SELECTION, false);
 
             TazLang.Load(Settings.GlobalSettings.UILanguage);
+            Game.UI.MyraWindows.Widgets.Search.SearchableComboBoxLocalization.Install();
 
             string clientPath = Settings.GlobalSettings.UltimaOnlineDirectory;
             Log.Trace($"Ultima Online installation folder: {clientPath}");

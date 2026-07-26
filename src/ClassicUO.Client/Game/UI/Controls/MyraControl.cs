@@ -442,13 +442,14 @@ public class MyraControl : IGui
 
         if (_desktop.ContextMenu is { Visible: true } contextMenu)
         {
-            var realBounds = new Rectangle(
-                contextMenu.Left,
-                contextMenu.Top,
-                contextMenu.Bounds.Width,
-                contextMenu.Bounds.Height
-            );
-            if (realBounds.Contains(x + ParentX, y + ParentY))
+            // Rebuilding the menu's screen rect by hand from Left/Top/Bounds here previously
+            // could disagree with Myra's own hit-test (e.g. Margin/alignment aren't accounted
+            // for the same way), which very occasionally made a genuine click inside the menu
+            // (an open SearchableComboBox dropdown, in particular) miss this check, lose
+            // MouseOverControl to whatever's behind it, and get force-closed via OnFocusLost.
+            // ContainsGlobalPoint is the exact method Myra uses internally to decide
+            // IsTouchInside, so deferring to it keeps this in sync by construction.
+            if (contextMenu.ContainsGlobalPoint(new Point(x + ParentX, y + ParentY)))
                 return true;
         }
 
