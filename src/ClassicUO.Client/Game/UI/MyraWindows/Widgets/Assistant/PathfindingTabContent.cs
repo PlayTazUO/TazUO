@@ -31,6 +31,17 @@ public static class PathfindingTabContent
 
         root.Widgets.Add(maxNodesWidget);
 
+        HorizontalStackPanel multiBufferSliderWidget = LabeledHorizontalSlider.SliderWithLabel(
+            "Pathfinding house buffer",
+            out LabeledHorizontalSlider multiBufferSlider,
+            v => { ProfileManager.CurrentProfile?.PathfindingMultiBuffer = (int)v; },
+            min: 0,
+            max: 50,
+            value: ProfileManager.CurrentProfile.PathfindingMultiBuffer);
+        multiBufferSlider.Tooltip = "Extra pathfinding cost for tiles next to a house/multi wall, keeping paths a tile away from houses when possible. 0 disables it; higher values avoid houses more strongly.";
+
+        root.Widgets.Add(multiBufferSliderWidget);
+
         HorizontalStackPanel wmMaxNodesWidget = MyraInputBox.NumberWithLabel(
             "World map pathfinding max nodes",
             value: ProfileManager.CurrentProfile.WorldMapPathfindingMaxNodes,

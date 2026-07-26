@@ -34,6 +34,12 @@ public sealed partial class Profile
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
         public partial int PathfindingMaxNodes { get; set; }
 
+        // Extra A* cost applied to tiles bordering a house/multi wall, giving paths a soft 1-tile
+        // standoff from houses. 0 disables the buffer.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MULTI_BUFFER, 4)]
+        public partial int PathfindingMultiBuffer { get; set; }
+
         // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.WORLDMAP_PATH_MAX_NODES, 1000000)]
