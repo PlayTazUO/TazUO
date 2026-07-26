@@ -30,6 +30,12 @@ public class ContainsThenLevenshteinSearchStrategy : CompositeSearchStrategy
         set => _levenshtein.MaxDistance = value;
     }
 
+    public float MinScore
+    {
+        get => _levenshtein.MinScore;
+        set => _levenshtein.MinScore = value;
+    }
+
     public ContainsThenLevenshteinSearchStrategy()
         : this(new SubstringSearchStrategy(), new LevenshteinSearchStrategy { PerTokenBest = true })
     {

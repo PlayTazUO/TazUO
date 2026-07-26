@@ -343,12 +343,21 @@ public static class MacrosTabContent
 
             var typeCombo = new ContainsLevenshteinComboBox
             {
-                Width = 160,
                 VerticalAlignment = VerticalAlignment.Center,
+                TooltipSelector = s => s
             };
+
             MyraStyle.ApplySearchComboBoxPopupBorder(typeCombo);
+
+            int maxTypeStringLen = 0;
             foreach (string typeName in _sortedMacroTypeNames)
+            {
                 typeCombo.Items.Add(typeName);
+                maxTypeStringLen = Math.Max(maxTypeStringLen, typeName.Length);
+            }
+
+            // Guesstimate width based on the longest string + some margin. May need adjustment based on configured font size/weight.
+            typeCombo.Width = maxTypeStringLen * 8 + 10;
 
             int displayIdx = _macroTypeToDisplayIndex.GetValueOrDefault(capturedAction.Code, 0);
             typeCombo.SelectedIndex = displayIdx;

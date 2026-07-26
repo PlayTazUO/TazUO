@@ -14,6 +14,7 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
 
     public Func<int, int> GetMaxDistanceForQueryLength { get; set; } = AutoFuzziness;
     public int MaxDistance { get; set; } = 4;
+    public float MinScore { get; set; } = 0.6f;
     public bool PerTokenBest { get; set; }
     public bool CaseSensitive { get; set; }
 
@@ -69,7 +70,7 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
         double score = denom == 0 ? 1d : 1d - (double)dist / denom;
         score = Math.Clamp(score, 0d, 1d);
 
-        return SearchMatch.Exact(score);
+        return score >= MinScore ? SearchMatch.Exact(score) : SearchMatch.None;
     }
 
     private static int AutoFuzziness(int queryLength) => queryLength switch

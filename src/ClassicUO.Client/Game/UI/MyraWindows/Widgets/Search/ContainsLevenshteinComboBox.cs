@@ -8,17 +8,8 @@ public class ContainsLevenshteinComboBox<T> : ScoredSearchComboBox<T>
 {
     private readonly ContainsThenLevenshteinSearchStrategy _strategy;
 
-    public int MaxDistance
-    {
-        get => _strategy.MaxDistance;
-        set => _strategy.MaxDistance = value;
-    }
-
-    public bool CaseSensitive
-    {
-        get => _strategy.CaseSensitive;
-        set => _strategy.CaseSensitive = value;
-    }
+    /// <summary>Deliberately shadows the base's interface-typed property with the concrete strategy, so its knobs (MaxDistance, MinScore, CaseSensitive, ...) are reachable without a cast.</summary>
+    public new ContainsThenLevenshteinSearchStrategy Strategy => _strategy;
 
     public ContainsLevenshteinComboBox(string styleName = Stylesheet.DefaultStyleName) : this(new ContainsThenLevenshteinSearchStrategy(), styleName)
     {

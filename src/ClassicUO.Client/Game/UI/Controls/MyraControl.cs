@@ -105,9 +105,21 @@ public class MyraControl : IGui
     private void DesktopOnWidgetGotKeyboardFocus(object sender, GenericEventArgs<Widget> e)
     {
         if (e.Data.AcceptsKeyboardFocus && e.Data is Myra.Graphics2D.UI.TextBox)
+        {
             SetKeyboardFocus();
-        else
-            UIManager.KeyboardFocusControl = null;
+            return;
+        }
+
+        // Handing focus back to the game would drag OnFocusLost() along, which tears down any
+        // open Myra context menu. That's wrong while one is up: its own widgets take keyboard
+        // focus as they're clicked (a dropdown's panel, list and rows all accept it), so this
+        // would kill the menu on the press and the row's click - which only fires on the
+        // matching touch-up - would never be delivered. Keep the focus here until it closes;
+        // Myra polls the keyboard itself, so the menu's Up/Down/Enter/Escape keep working.
+        if (_desktop.ContextMenu != null)
+            return;
+
+        UIManager.KeyboardFocusControl = null;
     }
 
     #endregion
@@ -360,6 +372,15 @@ public class MyraControl : IGui
     public virtual void OnFocusLost()
     {
         IsFocused = false;
+
+        // A click that landed inside an open context menu (a searchable combo box dropdown, say)
+        // is not this window losing focus - it's the menu being used. Tearing it down here would
+        // detach it mid-press, so the row's click never completes. Leave both the menu and the
+        // Myra keyboard focus (the dropdown's search box) alone in that case.
+        if (_desktop.ContextMenu is { Visible: true } contextMenu &&
+            contextMenu.ContainsGlobalPoint(new Point(Mouse.Position.X + ParentX, Mouse.Position.Y + ParentY)))
+            return;
+
         _desktop.FocusedKeyboardWidget = null;
         _desktop.HideContextMenu();
     }
