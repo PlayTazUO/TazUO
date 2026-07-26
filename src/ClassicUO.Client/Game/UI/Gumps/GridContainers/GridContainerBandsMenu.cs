@@ -16,14 +16,14 @@ using Myra.Graphics2D.UI;
 namespace ClassicUO.Game.UI.Gumps.GridContainers
 {
     /// <summary>
-    /// Myra-based editor for grid-container bands. Lists every band with per-row enable, rename,
-    /// background-color, layer/graphic filter, reorder and delete actions, plus a toolbar to add a band.
-    /// Bands are stored per-profile in <see cref="GridContainerBandsConfig"/>.
+    /// Myra-based editor for grid-container bands. Presents one tab per band group (corpses, backpack,
+    /// other); each tab has an "enabled by default" toggle and a list of bands with per-row enable,
+    /// rename, background-color, layer/graphic filter, reorder and delete actions. Bands are stored
+    /// per-profile in <see cref="GridContainerBandsConfig"/>.
     /// </summary>
     internal class GridContainerBandsMenu : MyraControl
     {
         private readonly World _world;
-        private readonly VerticalStackPanel _listPanel = new() { Spacing = MyraStyle.STANDARD_SPACING };
 
         public GridContainerBandsMenu(World world) : base(TazLang.Get("gridbands_title", "Grid Container Bands"))
         {
@@ -69,66 +69,73 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
             root.Widgets.Add(new MyraLabel(
-                TazLang.Get("gridbands_desc", "Bands group items in a grid container into sections by item layer and/or graphic. The first matching band wins. Unmatched items are shown last."),
-                MyraLabel.TextStyle.P) { Width = 460 });
+                TazLang.Get("gridbands_desc", "Bands group items in a grid container into sections by item layer and/or graphic. The first matching band wins; unmatched items are shown last. Each tab is a separate configuration applied to that kind of container."),
+                MyraLabel.TextStyle.P) { Width = 480 });
 
-            root.Widgets.Add(BuildToolbar());
+            GridContainerBandsConfig config = GridContainerBandsConfig.Current;
 
-            RebuildList();
-            root.Widgets.Add(new ScrollViewer { MaxHeight = 400, Content = _listPanel });
+            var tabs = new MyraTabControl();
+            tabs.AddTab(TazLang.Get("gridbands_tab_corpses", "Corpses"), () => BuildGroupEditor(config.Corpses),
+                TazLang.Get("gridbands_tab_corpses_tooltip", "Bands applied to corpses"));
+            tabs.AddTab(TazLang.Get("gridbands_tab_backpack", "Backpack"), () => BuildGroupEditor(config.Backpack),
+                TazLang.Get("gridbands_tab_backpack_tooltip", "Bands applied to your backpack"));
+            tabs.AddTab(TazLang.Get("gridbands_tab_other", "Other"), () => BuildGroupEditor(config.Other),
+                TazLang.Get("gridbands_tab_other_tooltip", "Bands applied to all other containers"));
+            tabs.SelectFirst();
+
+            root.Widgets.Add(tabs);
 
             SetRootContent(root);
         }
 
-        private Widget BuildToolbar()
+        /// <summary>Builds the editor panel for a single band group (used as a tab's content).</summary>
+        private Widget BuildGroupEditor(GridContainerBandGroup group)
         {
-            var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            var panel = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
+            var listPanel = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
 
-            toolbar.Widgets.Add(MyraCheckButton.CreateWithCallback(
-                ProfileManager.CurrentProfile?.EnableGridContainerBands ?? false,
-                isChecked =>
+            void Rebuild()
+            {
+                listPanel.Widgets.Clear();
+
+                if (group.Bands.Count == 0)
                 {
-                    if (ProfileManager.CurrentProfile != null)
-                        ProfileManager.CurrentProfile.EnableGridContainerBands = isChecked;
+                    listPanel.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_empty", "No bands configured yet."), MyraLabel.TextStyle.P));
+                }
+                else
+                {
+                    for (int i = 0; i < group.Bands.Count; i++)
+                        listPanel.Widgets.Add(BuildRow(group, i, Rebuild));
+                }
 
-                    GridContainer.UpdateAllGridContainers();
-                },
-                text: TazLang.Get("gridbands_enable", "Enable grid container bands"),
-                tooltip: TazLang.Get("gridbands_enable_tooltip", "Group items in grid containers into bands by layer and/or graphic.")));
-
-            toolbar.Widgets.Add(new MyraButton(TazLang.Get("gridbands_add", "Add Band"), () =>
-            {
-                List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
-                bands.Add(new GridContainerBand { Name = TazLang.Get("gridbands_defaultname", "Band") + " " + (bands.Count + 1) });
-                GridContainerBandsConfig.Current.Save();
-                RebuildList();
-            }));
-
-            return toolbar;
-        }
-
-        private void RebuildList()
-        {
-            _listPanel.Widgets.Clear();
-
-            int count = GridContainerBandsConfig.Current.Bands.Count;
-            if (count == 0)
-            {
-                _listPanel.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_empty", "No bands configured yet."), MyraLabel.TextStyle.P));
                 ForceSizeUpdate();
-                return;
             }
 
-            for (int i = 0; i < count; i++)
-                _listPanel.Widgets.Add(BuildRow(i));
+            panel.Widgets.Add(MyraCheckButton.CreateWithCallback(group.Enabled, isChecked =>
+            {
+                group.Enabled = isChecked;
+                SaveAndRefresh();
+            }, text: TazLang.Get("gridbands_group_enable", "Enabled by default"),
+               tooltip: TazLang.Get("gridbands_group_enable_tooltip", "Use these bands for this kind of container (individual containers can still opt out)")));
 
-            ForceSizeUpdate();
+            var toolbar = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+            toolbar.Widgets.Add(new MyraButton(TazLang.Get("gridbands_add", "Add Band"), () =>
+            {
+                group.Bands.Add(new GridContainerBand { Name = TazLang.Get("gridbands_defaultname", "Band") + " " + (group.Bands.Count + 1) });
+                GridContainerBandsConfig.Current.Save();
+                Rebuild();
+            }));
+            panel.Widgets.Add(toolbar);
+
+            Rebuild();
+            panel.Widgets.Add(new ScrollViewer { MaxHeight = 360, Content = listPanel });
+
+            return panel;
         }
 
-        private Widget BuildRow(int index)
+        private Widget BuildRow(GridContainerBandGroup group, int index, Action rebuild)
         {
-            List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
-            GridContainerBand band = bands[index];
+            GridContainerBand band = group.Bands[index];
 
             var row = new HorizontalStackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
 
@@ -159,46 +166,45 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             });
             row.Widgets.Add(colorButton);
 
-            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_layers", "Layers"), () => GridContainerBandLayerPicker.Show(index))
+            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_layers", "Layers"), () => GridContainerBandLayerPicker.Show(band))
             {
                 Tooltip = TazLang.Get("gridbands_layers_tooltip", "Choose which item layers belong to this band")
             });
 
-            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_graphics", "Graphics"), () => GridContainerBandGraphicsEditor.Show(_world, index))
+            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_graphics", "Graphics"), () => GridContainerBandGraphicsEditor.Show(_world, band))
             {
                 Tooltip = TazLang.Get("gridbands_graphics_tooltip", "Choose which item graphics belong to this band")
             });
 
-            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_up", "Up"), () => Move(index, true))
+            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_up", "Up"), () => Move(group, index, true, rebuild))
             {
                 Tooltip = TazLang.Get("gridbands_up_tooltip", "Move band up")
             });
 
-            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_down", "Down"), () => Move(index, false))
+            row.Widgets.Add(new MyraButton(TazLang.Get("gridbands_down", "Down"), () => Move(group, index, false, rebuild))
             {
                 Tooltip = TazLang.Get("gridbands_down_tooltip", "Move band down")
             });
 
             row.Widgets.Add(MyraStyle.ApplyButtonDangerStyle(new MyraButton("X", () =>
             {
-                bands.RemoveAt(index);
+                group.Bands.RemoveAt(index);
                 SaveAndRefresh();
-                RebuildList();
+                rebuild();
             }) { Tooltip = TazLang.Get("gridbands_delete_tooltip", "Delete this band") }));
 
             return row;
         }
 
-        private void Move(int index, bool up)
+        private void Move(GridContainerBandGroup group, int index, bool up, Action rebuild)
         {
-            List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
             int target = up ? index - 1 : index + 1;
-            if (target < 0 || target >= bands.Count)
+            if (target < 0 || target >= group.Bands.Count)
                 return;
 
-            (bands[index], bands[target]) = (bands[target], bands[index]);
+            (group.Bands[index], group.Bands[target]) = (group.Bands[target], group.Bands[index]);
             SaveAndRefresh();
-            RebuildList();
+            rebuild();
         }
 
         private static void ApplyColorButtonStyle(MyraButton button, Color color)
@@ -224,16 +230,16 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             Layer.Robe, Layer.Skirt, Layer.Legs
         };
 
-        private readonly int _bandIndex;
+        private readonly GridContainerBand _band;
 
-        private GridContainerBandLayerPicker(int bandIndex) : base(TazLang.Get("gridbands_layers_title", "Band Layers"))
+        private GridContainerBandLayerPicker(GridContainerBand band) : base(TazLang.Get("gridbands_layers_title", "Band Layers"))
         {
-            _bandIndex = bandIndex;
+            _band = band;
             Build();
             CenterInViewPort();
         }
 
-        public static void Show(int bandIndex)
+        public static void Show(GridContainerBand band)
         {
             foreach (IGui gump in UIManager.Gumps)
             {
@@ -244,19 +250,16 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                 }
             }
 
-            UIManager.Add(new GridContainerBandLayerPicker(bandIndex));
+            UIManager.Add(new GridContainerBandLayerPicker(band));
         }
 
         private void Build()
         {
-            List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
-            if (_bandIndex < 0 || _bandIndex >= bands.Count)
+            if (_band == null)
             {
                 Dispose();
                 return;
             }
-
-            GridContainerBand band = bands[_bandIndex];
 
             var root = new VerticalStackPanel { Spacing = 2 };
             root.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_layers_desc", "Items on any checked layer belong to this band."), MyraLabel.TextStyle.P) { Width = 320 });
@@ -270,18 +273,18 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             {
                 Layer layer = _layers[i];
                 var lyr = (byte)layer;
-                bool isSet = band.Layers.Contains(lyr);
+                bool isSet = _band.Layers.Contains(lyr);
 
                 MyraCheckButton cb = MyraCheckButton.CreateWithCallback(isSet, isChecked =>
                 {
                     if (isChecked)
                     {
-                        if (!band.Layers.Contains(lyr))
-                            band.Layers.Add(lyr);
+                        if (!_band.Layers.Contains(lyr))
+                            _band.Layers.Add(lyr);
                     }
                     else
                     {
-                        band.Layers.Remove(lyr);
+                        _band.Layers.Remove(lyr);
                     }
 
                     GridContainerBandsMenu.SaveAndRefresh();
@@ -296,7 +299,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
 
             root.Widgets.Add(new MyraButton(TazLang.Get("gridbands_clear", "Clear All"), () =>
             {
-                band.Layers.Clear();
+                _band.Layers.Clear();
                 GridContainerBandsMenu.SaveAndRefresh();
                 // Rebuild to reflect cleared checkboxes.
                 Defer(Build);
@@ -310,17 +313,17 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
     internal class GridContainerBandGraphicsEditor : MyraControl
     {
         private readonly World _world;
-        private readonly int _bandIndex;
+        private readonly GridContainerBand _band;
 
-        private GridContainerBandGraphicsEditor(World world, int bandIndex) : base(TazLang.Get("gridbands_graphics_title", "Band Graphics"))
+        private GridContainerBandGraphicsEditor(World world, GridContainerBand band) : base(TazLang.Get("gridbands_graphics_title", "Band Graphics"))
         {
             _world = world;
-            _bandIndex = bandIndex;
+            _band = band;
             Build();
             CenterInViewPort();
         }
 
-        public static void Show(World world, int bandIndex)
+        public static void Show(World world, GridContainerBand band)
         {
             foreach (IGui gump in UIManager.Gumps)
             {
@@ -331,26 +334,23 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                 }
             }
 
-            UIManager.Add(new GridContainerBandGraphicsEditor(world, bandIndex));
+            UIManager.Add(new GridContainerBandGraphicsEditor(world, band));
         }
 
         private void Build()
         {
-            List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
-            if (_bandIndex < 0 || _bandIndex >= bands.Count)
+            if (_band == null)
             {
                 Dispose();
                 return;
             }
-
-            GridContainerBand band = bands[_bandIndex];
 
             var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
             root.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_graphics_desc", "One graphic per line. Accepts hex (0x1F03) or decimal. Add ';hue' to match a specific hue (e.g. 0x1F03;2); without a hue it matches any hue."), MyraLabel.TextStyle.P) { Width = 320 });
 
             var input = new MyraInputBox
             {
-                Text = string.Join("\n", band.Graphics.Select(FormatGraphic)),
+                Text = string.Join("\n", _band.Graphics.Select(FormatGraphic)),
                 Width = 200,
                 MinHeight = 260,
                 Multiline = true,
@@ -362,7 +362,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                 if (IsDisposed)
                     return;
 
-                band.Graphics = ParseGraphics(input.Text);
+                _band.Graphics = ParseGraphics(input.Text);
                 GridContainerBandsMenu.SaveAndRefresh();
             };
 
@@ -371,7 +371,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             root.Widgets.Add(new MyraButton(TazLang.Get("gridbands_target", "Target Item"), () =>
             {
                 // Commit any typed edits first so the targeted graphic is appended, not lost.
-                band.Graphics = ParseGraphics(input.Text);
+                _band.Graphics = ParseGraphics(input.Text);
 
                 _world?.TargetManager.SetTargeting(o =>
                 {
@@ -384,9 +384,9 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                     // different color don't match; hue 0 (no hue) is treated as "any".
                     int hue = go.Hue == 0 ? -1 : go.Hue;
 
-                    if (!band.Graphics.Any(g => g.Graphic == graphic && g.Hue == hue))
+                    if (!_band.Graphics.Any(g => g.Graphic == graphic && g.Hue == hue))
                     {
-                        band.Graphics.Add(new GridContainerBandGraphic { Graphic = graphic, Hue = hue });
+                        _band.Graphics.Add(new GridContainerBandGraphic { Graphic = graphic, Hue = hue });
                         GridContainerBandsMenu.SaveAndRefresh();
                     }
 

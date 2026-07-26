@@ -241,19 +241,19 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         /// </summary>
         public bool BandsActive()
         {
-            if (ProfileManager.CurrentProfile is not { EnableGridContainerBands: true } || _gridContainer.IsListView)
+            if (_gridContainer.IsListView)
                 return false;
 
-            // Per-container override: bands can be turned off for this container even when enabled globally.
+            // Per-container override: bands can be turned off for this container even when enabled.
             if (_gridContainer.BandsDisabledForContainer)
                 return false;
 
-            foreach (GridContainerBand band in GridContainerBandsConfig.Current.Bands)
-                if (band.Enabled)
-                    return true;
-
-            return false;
+            return ActiveGroup.HasActiveBands();
         }
+
+        /// <summary>The band group that applies to this container (corpse / backpack / other).</summary>
+        private GridContainerBandGroup ActiveGroup =>
+            GridContainerBandsConfig.Current.GetGroupForContainer(_gridContainer.IsCorpse, _gridContainer.IsPlayerBackpack);
 
         /// <summary>
         /// Groups items into bands (first matching enabled band wins) and assigns them to grid slots in
@@ -262,7 +262,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         /// </summary>
         private void AssignBands(List<Item> filteredItems)
         {
-            List<GridContainerBand> bands = GridContainerBandsConfig.Current.Bands;
+            List<GridContainerBand> bands = ActiveGroup.Bands;
 
             var bandItems = new List<Item>[bands.Count];
             var unmatched = new List<Item>();

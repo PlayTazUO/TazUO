@@ -8,17 +8,50 @@ using ClassicUO.Utility;
 
 namespace ClassicUO.Configuration
 {
+    /// <summary>The kind of grid container a band group applies to.</summary>
+    public enum GridContainerBandGroupType
+    {
+        Corpses,
+        Backpack,
+        Other
+    }
+
     /// <summary>
     /// JSON-backed store for the grid-container "band" layout rules. Persisted to
     /// <c>grid_container_bands.json</c> in the current profile's save location. Bands group items in a
     /// grid container into visually separated sections (by item layer and/or graphic) with an optional
     /// custom background color.
+    /// <br/>
+    /// There are three independent band groups — one for corpses, one for the player's backpack, and one
+    /// for every other container — each with its own default enabled flag and its own list of bands.
     /// </summary>
     public sealed class GridContainerBandsConfig
     {
         public const string FileName = "grid_container_bands.json";
 
-        public List<GridContainerBand> Bands { get; set; } = new();
+        public GridContainerBandGroup Corpses { get; set; } = new();
+        public GridContainerBandGroup Backpack { get; set; } = new();
+        public GridContainerBandGroup Other { get; set; } = new();
+
+        /// <summary>Returns the band group for the given type.</summary>
+        public GridContainerBandGroup GetGroup(GridContainerBandGroupType type) => type switch
+        {
+            GridContainerBandGroupType.Corpses => Corpses,
+            GridContainerBandGroupType.Backpack => Backpack,
+            _ => Other
+        };
+
+        /// <summary>
+        /// Returns the band group that applies to a container: corpses use the corpse group, the player's
+        /// backpack uses the backpack group, and everything else uses the "other" group.
+        /// </summary>
+        public GridContainerBandGroup GetGroupForContainer(bool isCorpse, bool isBackpack)
+        {
+            if (isCorpse)
+                return Corpses;
+
+            return isBackpack ? Backpack : Other;
+        }
 
         private static GridContainerBandsConfig _current;
 
@@ -57,6 +90,28 @@ namespace ClassicUO.Configuration
                 return;
 
             ConfigurationResolver.Save(this, file, GridContainerBandsJsonContext.DefaultToUse.GridContainerBandsConfig);
+        }
+    }
+
+    /// <summary>A named group of bands (with its own default enabled flag) applied to one kind of container.</summary>
+    public sealed class GridContainerBandGroup
+    {
+        /// <summary>Whether band layout is enabled by default for containers of this group's type.</summary>
+        public bool Enabled { get; set; } = false;
+
+        public List<GridContainerBand> Bands { get; set; } = new();
+
+        /// <summary>True if this group is enabled and has at least one enabled band.</summary>
+        public bool HasActiveBands()
+        {
+            if (!Enabled)
+                return false;
+
+            foreach (GridContainerBand band in Bands)
+                if (band.Enabled)
+                    return true;
+
+            return false;
         }
     }
 

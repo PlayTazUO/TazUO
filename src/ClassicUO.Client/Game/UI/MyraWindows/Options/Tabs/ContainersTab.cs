@@ -254,19 +254,6 @@ public static class ContainersTab
 
         return OptionsUi.VisualContainer(
             new VisualContainerProps { LabelText = TazLang.Get("gridbands_section", "Grid Container Bands") },
-            Option.Checkbox(
-                TazLang.Get("gridbands_enable", "Enable grid container bands"),
-                new Accessor<bool>(
-                    () => profile.EnableGridContainerBands,
-                    b =>
-                    {
-                        profile.EnableGridContainerBands = b;
-                        GridContainer.UpdateAllGridContainers();
-                    }
-                ),
-                TazLang.Get("gridbands_enable_tooltip", "Group items in grid containers into bands by layer and/or graphic."),
-                search: new SearchMetadata(TazLang.Get("gridbands_enable", "Enable grid container bands"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("gridbands_kw", "bands")])
-            ),
             Option.Button(
                 TazLang.Get("gridbands_configure", "Configure bands"),
                 () => GridContainerBandsMenu.Open(World.Instance),
