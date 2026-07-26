@@ -162,10 +162,10 @@ public static class MyraStyle
         MenuStyle menuStyle = Stylesheet.Current.VerticalMenuStyle;
         menuStyle.Padding = new Thickness(0);
         menuStyle.Margin = new Thickness(0);
-        menuStyle.Background = new SolidBrush("#242941");
-        menuStyle.Border = new SolidBrush(TazUO_Orange);
-        menuStyle.SelectionBackground = new SolidBrush(new Color(0.506f, 0.471f, 0.451f, 0.9f));
-        menuStyle.SelectionHoverBackground = new SolidBrush(new Color(0.306f, 0.271f, 0.251f, 0.9f));
+        menuStyle.Background = new SolidBrush(TazUO_Orange);
+        menuStyle.Border = new SolidBrush(new Color(11, 11, 11, 0.9f));
+        menuStyle.SelectionBackground = new SolidBrush(new Color(0.306f, 0.271f, 0.251f, 0.9f));
+        menuStyle.SelectionHoverBackground = new SolidBrush(new Color(0.506f, 0.471f, 0.451f, 0.9f));
         menuStyle.LabelStyle.Font = _uiFont;
         menuStyle.LabelStyle.Margin = new Thickness(2);
     }
