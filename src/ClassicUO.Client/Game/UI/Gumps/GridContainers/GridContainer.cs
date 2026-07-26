@@ -85,6 +85,7 @@ public partial class GridContainer : ResizableGump
         private bool _quickLootThisContainer;
         public bool? UseOldContainerStyle;
         private bool _autoSortContainer;
+        private bool _bandsDisabledForContainer;
         private GridSortMode _sortMode = GridSortMode.GraphicAndHue;
 
         private readonly bool _skipSave;
@@ -130,6 +131,10 @@ public partial class GridContainer : ResizableGump
         public readonly bool IsPlayerBackpack;
         public bool StackNonStackableItems;
         public bool AutoSortContainer => _autoSortContainer;
+
+        /// <summary>Per-container override that disables band layout for this container even when bands are enabled globally.</summary>
+        public bool BandsDisabledForContainer => _bandsDisabledForContainer;
+
         public GridSortMode SortMode => _sortMode;
         public readonly GridSlotManager SlotManager;
         public bool IsCorpse => _isCorpse;
@@ -252,6 +257,7 @@ public partial class GridContainer : ResizableGump
             _gridContainerEntry = GridContainerSaveData.Instance.GetContainer(local);
 
             _autoSortContainer = _gridContainerEntry.AutoSort;
+            _bandsDisabledForContainer = _gridContainerEntry.BandsDisabled;
             StackNonStackableItems = _gridContainerEntry.VisuallyStackNonStackables;
             _sortMode = (GridSortMode)_gridContainerEntry.SortMode;
 
@@ -669,6 +675,15 @@ public partial class GridContainer : ResizableGump
             {
                 GridContainerBandsMenu.Open(World);
             }));
+
+            control.Add(new ContextMenuItemEntry(TazLang.Get("gridcontainer_disablebands", "Disable Bands for This Container"), () =>
+            {
+                _bandsDisabledForContainer = !_bandsDisabledForContainer;
+                _gridContainerEntry.BandsDisabled = _bandsDisabledForContainer;
+                _gridContainerEntry.UpdateSaveDataEntry(this);
+                _openRegularGump.ContextMenu = GenContextMenu();
+                RequestUpdateContents();
+            }, true, _bandsDisabledForContainer));
 
             if (Container != World.Player.Backpack)
             {

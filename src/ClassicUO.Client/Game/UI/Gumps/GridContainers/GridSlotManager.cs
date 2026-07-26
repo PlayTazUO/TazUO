@@ -244,6 +244,10 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
             if (ProfileManager.CurrentProfile is not { EnableGridContainerBands: true } || _gridContainer.IsListView)
                 return false;
 
+            // Per-container override: bands can be turned off for this container even when enabled globally.
+            if (_gridContainer.BandsDisabledForContainer)
+                return false;
+
             foreach (GridContainerBand band in GridContainerBandsConfig.Current.Bands)
                 if (band.Enabled)
                     return true;
