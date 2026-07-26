@@ -9,7 +9,7 @@ public static class ModernUIConstants
     /// Standard Modern UI Panel. Used for a general gump background.
     /// Recommended to use with the NineSliceGump class.
     /// </summary>
-    public static Texture2D ModernUIPanel { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOGumpBg.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIPanel { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOGumpBg.png", out Texture2D texture); return texture; } }
 
     /// <summary>
     /// Border size of the modern ui panel, used for the NineSliceGump class.
@@ -21,22 +21,22 @@ public static class ModernUIConstants
     /// See ModernUIButtonDown for "clicked" texture.
     /// Recommended to use with the NineSliceGump class.
     /// </summary>
-    public static Texture2D ModernUIButtonUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonUp.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUIButtonDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDown.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUIButtonDangerUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerUp.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUIButtonDangerDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerDown.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUICheckBoxChecked { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxChecked.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUICheckBoxUnChecked { get { PNGLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxUnChecked.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonUp { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonUp.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDown { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDown.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDangerUp { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerUp.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIButtonDangerDown { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUIButtonDangerDown.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUICheckBoxChecked { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxChecked.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUICheckBoxUnChecked { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("TUOUICheckBoxUnChecked.png", out Texture2D texture); return texture; } }
 
-    public static Texture2D ModernUISkillUp { get { PNGLoader.Instance.TryGetEmbeddedTexture("upicon.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUISkillDown { get { PNGLoader.Instance.TryGetEmbeddedTexture("downicon.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUISkillLock { get { PNGLoader.Instance.TryGetEmbeddedTexture("lockicon.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUISkillUp { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("upicon.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUISkillDown { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("downicon.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUISkillLock { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("lockicon.png", out Texture2D texture); return texture; } }
 
     public const int ModernUIButton_BorderSize = 4;
 
-    public static Texture2D ModernUIVerticalScrollbar { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll-vertical.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUIVerticalScrollbarKnob { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll-knob-vertical.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIVerticalScrollbar { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("scroll-vertical.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIVerticalScrollbarKnob { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("scroll-knob-vertical.png", out Texture2D texture); return texture; } }
 
-    public static Texture2D ModernUIHorizontalScrollbar { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll-horizontal.png", out Texture2D texture); return texture; } }
-    public static Texture2D ModernUIHorizontalScrollbarKnob { get { PNGLoader.Instance.TryGetEmbeddedTexture("scroll-knob-horizontal.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIHorizontalScrollbar { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("scroll-horizontal.png", out Texture2D texture); return texture; } }
+    public static Texture2D ModernUIHorizontalScrollbarKnob { get { ExternalImageLoader.Instance.TryGetEmbeddedTexture("scroll-knob-horizontal.png", out Texture2D texture); return texture; } }
 }
