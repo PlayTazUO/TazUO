@@ -62,7 +62,8 @@ namespace ClassicUO.Game.Managers
             byte font,
             TextType textType,
             bool unicode = false,
-            string lang = null
+            string lang = null,
+            bool skipEventTrigger = false
         )
         {
             if (string.IsNullOrEmpty(text))
@@ -78,18 +79,19 @@ namespace ClassicUO.Game.Managers
                     return;
             }
 
-            EventSink.InvokeRawMessageReceived(parent, new MessageEventArgs
-                (
-                    parent,
-                    text,
-                    name,
-                    hue,
-                    type,
-                    font,
-                    textType,
-                    unicode,
-                    lang
-                ));
+            if(!skipEventTrigger)
+                EventSink.InvokeRawMessageReceived(parent, new MessageEventArgs
+                    (
+                        parent,
+                        text,
+                        name,
+                        hue,
+                        type,
+                        font,
+                        textType,
+                        unicode,
+                        lang
+                    ));
 
             if (currentProfile != null && currentProfile.OverrideAllFonts)
             {
@@ -280,19 +282,20 @@ namespace ClassicUO.Game.Managers
                     }
             }
 
-            EventSink.InvokeMessageReceived(parent, new MessageEventArgs
-                (
-                    parent,
-                    text,
-                    name,
-                    hue,
-                    type,
-                    font,
-                    textType,
-                    unicode,
-                    lang
-                )
-            );
+            if(!skipEventTrigger)
+                EventSink.InvokeMessageReceived(parent, new MessageEventArgs
+                    (
+                        parent,
+                        text,
+                        name,
+                        hue,
+                        type,
+                        font,
+                        textType,
+                        unicode,
+                        lang
+                    )
+                );
         }
 
         public void OnLocalizedMessage(Entity entity, MessageEventArgs args) => LocalizedMessageReceived.Raise(args, entity);
