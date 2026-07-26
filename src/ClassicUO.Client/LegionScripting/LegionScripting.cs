@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -254,7 +254,7 @@ namespace ClassicUO.LegionScripting
         {
             try
             {
-                using var archive = ZipFile.OpenRead(zipPath);
+                using ZipArchive archive = ZipFile.OpenRead(zipPath);
 
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
@@ -285,7 +285,7 @@ namespace ClassicUO.LegionScripting
                     loadedScripts.Add(syntheticKey);
                 }
 
-                ClassicUO.Assets.PNGLoader.Instance.RegisterZipPNGs(archive);
+                ClassicUO.Assets.ExternalImageLoader.Instance.RegisterZipPNGs(archive);
             }
             catch (Exception ex)
             {
