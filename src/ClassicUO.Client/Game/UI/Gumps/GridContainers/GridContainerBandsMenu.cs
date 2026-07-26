@@ -334,11 +334,11 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             GridContainerBand band = bands[_bandIndex];
 
             var root = new VerticalStackPanel { Spacing = MyraStyle.STANDARD_SPACING };
-            root.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_graphics_desc", "One graphic per line. Accepts hex (0x1F03) or decimal. Items with these graphics belong to this band."), MyraLabel.TextStyle.P) { Width = 320 });
+            root.Widgets.Add(new MyraLabel(TazLang.Get("gridbands_graphics_desc", "One graphic per line. Accepts hex (0x1F03) or decimal. Add ';hue' to match a specific hue (e.g. 0x1F03;2); without a hue it matches any hue."), MyraLabel.TextStyle.P) { Width = 320 });
 
             var input = new MyraInputBox
             {
-                Text = string.Join("\n", band.Graphics.Select(g => "0x" + g.ToString("X4"))),
+                Text = string.Join("\n", band.Graphics.Select(FormatGraphic)),
                 Width = 200,
                 MinHeight = 260,
                 Multiline = true,
@@ -364,9 +364,13 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
                         return;
 
                     ushort graphic = go.Graphic;
-                    if (!band.Graphics.Contains(graphic))
+                    // Capture the targeted item's hue so identically-graphic'd items of a
+                    // different color don't match; hue 0 (no hue) is treated as "any".
+                    int hue = go.Hue == 0 ? -1 : go.Hue;
+
+                    if (!band.Graphics.Any(g => g.Graphic == graphic && g.Hue == hue))
                     {
-                        band.Graphics.Add(graphic);
+                        band.Graphics.Add(new GridContainerBandGraphic { Graphic = graphic, Hue = hue });
                         GridContainerBandsMenu.SaveAndRefresh();
                     }
 
@@ -381,37 +385,52 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers
             SetRootContent(root);
         }
 
-        private static List<ushort> ParseGraphics(string text)
+        private static string FormatGraphic(GridContainerBandGraphic g) =>
+            g.Hue >= 0 ? $"0x{g.Graphic:X4};{g.Hue}" : $"0x{g.Graphic:X4}";
+
+        private static List<GridContainerBandGraphic> ParseGraphics(string text)
         {
-            var result = new List<ushort>();
+            var result = new List<GridContainerBandGraphic>();
             if (string.IsNullOrEmpty(text))
                 return result;
 
-            var seen = new HashSet<ushort>();
+            var seen = new HashSet<(ushort, int)>();
 
-            foreach (string raw in text.Split(new[] { ',', '\n', '\r', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries))
+            // Lines are graphic[;hue]; only newlines separate entries so a hue can follow the ';'.
+            foreach (string raw in text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
             {
-                string token = raw.Trim();
-                if (token.Length == 0)
+                string line = raw.Trim();
+                if (line.Length == 0)
                     continue;
 
-                bool parsed;
-                ushort value;
+                string[] parts = line.Split(';');
 
-                if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                if (!TryParseNumber(parts[0], out int graphicValue) || graphicValue < 0 || graphicValue > ushort.MaxValue)
+                    continue;
+
+                int hue = -1;
+                if (parts.Length > 1 && parts[1].Trim().Length > 0)
                 {
-                    parsed = ushort.TryParse(token.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
-                }
-                else
-                {
-                    parsed = ushort.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+                    if (!TryParseNumber(parts[1], out hue) || hue < 0 || hue > ushort.MaxValue)
+                        hue = -1;
                 }
 
-                if (parsed && seen.Add(value))
-                    result.Add(value);
+                var graphic = (ushort)graphicValue;
+                if (seen.Add((graphic, hue)))
+                    result.Add(new GridContainerBandGraphic { Graphic = graphic, Hue = hue });
             }
 
             return result;
+        }
+
+        private static bool TryParseNumber(string token, out int value)
+        {
+            token = token.Trim();
+
+            if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                return int.TryParse(token.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
+
+            return int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
         }
     }
 }

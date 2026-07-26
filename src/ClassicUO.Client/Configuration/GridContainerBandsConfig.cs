@@ -83,15 +83,15 @@ namespace ClassicUO.Configuration
         /// <summary>Item layers (see <see cref="ClassicUO.Game.Data.Layer"/>) included in this band.</summary>
         public List<byte> Layers { get; set; } = new();
 
-        /// <summary>Item graphics included in this band.</summary>
-        public List<ushort> Graphics { get; set; } = new();
+        /// <summary>Item graphic (with optional hue) filters included in this band.</summary>
+        public List<GridContainerBandGraphic> Graphics { get; set; } = new();
 
         public Color GetBackgroundColor() => BackgroundColor.FromHtmlHex();
 
         public void SetBackgroundColor(Color color) => BackgroundColor = color.ToHtmlHex();
 
-        /// <summary>Returns true if an item with the given graphic/layer belongs to this band.</summary>
-        public bool Matches(ushort graphic, byte layer)
+        /// <summary>Returns true if an item with the given graphic/hue/layer belongs to this band.</summary>
+        public bool Matches(ushort graphic, ushort hue, byte layer)
         {
             bool hasGraphics = Graphics is { Count: > 0 };
             bool hasLayers = Layers is { Count: > 0 };
@@ -99,14 +99,29 @@ namespace ClassicUO.Configuration
             if (!hasGraphics && !hasLayers)
                 return false;
 
-            if (hasGraphics && Graphics.Contains(graphic))
-                return true;
+            if (hasGraphics)
+            {
+                foreach (GridContainerBandGraphic g in Graphics)
+                {
+                    if (g.Graphic == graphic && (g.Hue < 0 || g.Hue == hue))
+                        return true;
+                }
+            }
 
             if (hasLayers && Layers.Contains(layer))
                 return true;
 
             return false;
         }
+    }
+
+    /// <summary>A graphic filter entry for a band, with an optional hue (<see cref="Hue"/> = -1 matches any hue).</summary>
+    public sealed class GridContainerBandGraphic
+    {
+        public ushort Graphic { get; set; }
+
+        /// <summary>Hue to match, or -1 to match any hue.</summary>
+        public int Hue { get; set; } = -1;
     }
 
     [JsonSerializable(typeof(GridContainerBandsConfig), GenerationMode = JsonSourceGenerationMode.Metadata)]

@@ -270,7 +270,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                     if (!band.Enabled)
                         continue;
 
-                    if (band.Matches(item.Graphic, item.ItemData.Layer))
+                    if (band.Matches(item.Graphic, item.Hue, item.ItemData.Layer))
                     {
                         matched = b;
                         break;
