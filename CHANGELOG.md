@@ -11,6 +11,7 @@ All notable changes to TazUO will be recorded here.
 * Replaced the old Myra window style with a new themed one. Thank you NewYears! - [P.R 774](https://github.com/PlayTazUO/TazUO/pull/774) ([bittiez](https://github.com/bittiez))
 
 ### Misc
+* Added a new PrivateSay macro option(Only you can see it) - [P.R 803](https://github.com/PlayTazUO/TazUO/pull/803) ([bittiez](https://github.com/bittiez))
 * Pathfinding now re-plans when a house is loaded mid-walk and keeps a soft 1-tile buffer around houses so paths route around them better - [P.R 799](https://github.com/PlayTazUO/TazUO/pull/799) ([bittiez](https://github.com/bittiez))
 * Migrate tooltip override saves to its own json file - [P.R 798](https://github.com/PlayTazUO/TazUO/pull/798) ([bittiez](https://github.com/bittiez))
 
