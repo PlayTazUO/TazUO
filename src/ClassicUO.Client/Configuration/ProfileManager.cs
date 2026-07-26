@@ -92,6 +92,12 @@ namespace ClassicUO.Configuration
                 ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
             }
 
+            // Load (or migrate from the legacy parallel-list profile storage) the tooltip overrides.
+            if (TooltipOverridesConfig.LoadForProfile(ProfilePath, CurrentProfile))
+            {
+                ConfigurationResolver.Save(CurrentProfile, Path.Combine(ProfilePath, "profile.json"), ProfileJsonContext.DefaultToUse.Profile);
+            }
+
             ValidateFields(CurrentProfile);
 
             CurrentProfile.AfterLoad();

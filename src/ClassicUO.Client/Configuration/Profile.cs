@@ -715,14 +715,28 @@ namespace ClassicUO.Configuration
         public int AdvancedSkillsGumpHeight { get; set => SetProperty(ref field, value); } = 510;
 
         #region ToolTip Overrides
+        // The ToolTipOverride_* parallel lists below are the legacy tooltip-override storage. They have been
+        // superseded by tooltip_overrides.json (see TooltipOverridesConfig) and are retained only so existing
+        // profiles can be migrated on load. Do not use them in new code. The defaults are kept so a fresh
+        // profile still migrates the standard resist/damage overrides into the new file.
+        private const string TooltipOverrideMigratedMessage = "Migrated to tooltip_overrides.json (TooltipOverridesConfig); retained only for one-time migration of existing profiles.";
+
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<string> ToolTipOverride_SearchText { get; set => SetProperty(ref field, value); } = new List<string>() { "Physical Res", "Fire Resist", "Cold Resist", "Poison Resist", "Energy Resist", "Weapon Damage" };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<string> ToolTipOverride_NewFormat { get; set => SetProperty(ref field, value); } = new List<string>() { "/c[#8c733e]Physical Resist {1}%", "/c[red]Fire Resist {1}%", "/c[teal]Cold Resist {1}%", "/c[green]Poison Resist {1}%", "/c[purple]Energy Resist {1}%", "{0} /c[orange]{1}{4} /cd- /c[red]{2}{5}" };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MinVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MinVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MaxVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MaxVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<byte> ToolTipOverride_Layer { get; set => SetProperty(ref field, value); } = new List<byte>() { (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any };
         /// <summary>Optional per-override border hue drawn around the tooltip when the rule matches; -1 means no override.</summary>
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_BorderHue { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
         /// <summary>When enabled, tooltip overrides are not applied to mobile tooltips.</summary>
         public bool ToolTipOverride_IgnoreMobiles { get; set => SetProperty(ref field, value); } = true;
