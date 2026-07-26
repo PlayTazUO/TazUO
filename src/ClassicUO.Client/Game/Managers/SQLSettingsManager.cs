@@ -1,11 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ClassicUO.Configuration;
 using ClassicUO.Utility.Logging;
 using Microsoft.Data.Sqlite;
+using Microsoft.Xna.Framework;
 
 namespace ClassicUO.Game.Managers
 {
@@ -13,6 +17,9 @@ namespace ClassicUO.Game.Managers
     {
         private const string DB_FILE = "settings.db";
         private const int MAX_BACKUPS = 3;
+
+        // Matches the output of Point.ToString(), e.g. "{X:5 Y:10}"
+        private static readonly Regex PointRegex = new(@"X:\s*(?<X>-?\d+)\s+Y:\s*(?<Y>-?\d+)", RegexOptions.Compiled);
 
         private readonly SemaphoreSlim _dbLock = new(1, 1);
         private readonly string _dataDir;
@@ -163,6 +170,20 @@ namespace ClassicUO.Game.Managers
 
                 if (type == typeof(double))
                     return (T)(object)double.Parse(value);
+
+                if (type == typeof(Point))
+                {
+                    // Point.ToString() produces a string in the form "{X:5 Y:10}"
+                    Match match = PointRegex.Match(value);
+                    if (match.Success)
+                    {
+                        return (T)(object)new Point(
+                            int.Parse(match.Groups["X"].Value),
+                            int.Parse(match.Groups["Y"].Value));
+                    }
+
+                    return defaultValue;
+                }
 
                 return defaultValue;
             }
@@ -379,6 +400,71 @@ namespace ClassicUO.Game.Managers
         {
             string stringValue = value?.ToString() ?? string.Empty;
             await SetAsync(scope, name, stringValue);
+        }
+
+        /// <summary>
+        /// Synchronously retrieves a list setting from the database, deserializing it from JSON.
+        /// </summary>
+        /// <typeparam name="T">The element type of the list</typeparam>
+        /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
+        /// <param name="name">The name of the setting</param>
+        /// <param name="jsonTypeInfo">The source-generated JSON type info for the list (e.g. MyContext.Default.ListMyType)</param>
+        /// <param name="defaultValue">The default value to return if the setting doesn't exist or deserialization fails</param>
+        /// <returns>The deserialized list or the default value if not found or deserialization fails</returns>
+        public List<T> GetList<T>(SettingsScope scope, string name, JsonTypeInfo<List<T>> jsonTypeInfo, List<T> defaultValue = null)
+            => GetListAsync(scope, name, jsonTypeInfo, defaultValue).ConfigureAwait(false).GetAwaiter().GetResult();
+
+        /// <summary>
+        /// Asynchronously retrieves a list setting from the database, deserializing it from JSON.
+        /// </summary>
+        /// <typeparam name="T">The element type of the list</typeparam>
+        /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
+        /// <param name="name">The name of the setting</param>
+        /// <param name="jsonTypeInfo">The source-generated JSON type info for the list (e.g. MyContext.Default.ListMyType)</param>
+        /// <param name="defaultValue">The default value to return if the setting doesn't exist or deserialization fails</param>
+        /// <returns>A task that represents the asynchronous operation, containing the deserialized list or the default value if not found or deserialization fails</returns>
+        public async Task<List<T>> GetListAsync<T>(SettingsScope scope, string name, JsonTypeInfo<List<T>> jsonTypeInfo, List<T> defaultValue = null)
+        {
+            string value = await GetAsync(scope, name, null, (Action<string>)null);
+
+            if (string.IsNullOrEmpty(value))
+                return defaultValue;
+
+            try
+            {
+                return JsonSerializer.Deserialize(value, jsonTypeInfo) ?? defaultValue;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($@"Error deserializing list setting '{name}': {ex.Message}");
+                return defaultValue;
+            }
+        }
+
+        /// <summary>
+        /// Synchronously stores a list setting in the database, serializing it to JSON.
+        /// </summary>
+        /// <typeparam name="T">The element type of the list</typeparam>
+        /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
+        /// <param name="name">The name of the setting</param>
+        /// <param name="value">The list to store</param>
+        /// <param name="jsonTypeInfo">The source-generated JSON type info for the list (e.g. MyContext.Default.ListMyType)</param>
+        public void SetList<T>(SettingsScope scope, string name, List<T> value, JsonTypeInfo<List<T>> jsonTypeInfo)
+            => SetListAsync(scope, name, value, jsonTypeInfo).ConfigureAwait(false).GetAwaiter().GetResult();
+
+        /// <summary>
+        /// Asynchronously stores a list setting in the database, serializing it to JSON.
+        /// </summary>
+        /// <typeparam name="T">The element type of the list</typeparam>
+        /// <param name="scope">The settings scope (Char, Account, Server, or Global)</param>
+        /// <param name="name">The name of the setting</param>
+        /// <param name="value">The list to store</param>
+        /// <param name="jsonTypeInfo">The source-generated JSON type info for the list (e.g. MyContext.Default.ListMyType)</param>
+        /// <returns>A task that represents the asynchronous operation</returns>
+        public async Task SetListAsync<T>(SettingsScope scope, string name, List<T> value, JsonTypeInfo<List<T>> jsonTypeInfo)
+        {
+            string json = value == null ? string.Empty : JsonSerializer.Serialize(value, jsonTypeInfo);
+            await SetAsync(scope, name, json);
         }
 
         /// <summary>

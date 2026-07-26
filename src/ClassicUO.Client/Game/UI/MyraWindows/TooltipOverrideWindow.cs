@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -109,7 +108,7 @@ public sealed class TooltipOverrideWindow : MyraControl
     {
         _rowsPanel.Widgets.Clear();
 
-        int count = ProfileManager.CurrentProfile?.ToolTipOverride_SearchText.Count ?? 0;
+        int count = ProfileManager.CurrentProfile == null ? 0 : TooltipOverridesConfig.Current.Overrides.Count;
 
         if (count == 0)
         {
@@ -302,7 +301,7 @@ public sealed class TooltipOverrideWindow : MyraControl
         if (ProfileManager.CurrentProfile == null)
             return;
 
-        ToolTipOverrideData.Get(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count);
+        ToolTipOverrideData.Get(TooltipOverridesConfig.Current.Overrides.Count);
         BuildRows();
     }
 
@@ -326,17 +325,10 @@ public sealed class TooltipOverrideWindow : MyraControl
 
     private static void ClearAll()
     {
-        Profile? profile = ProfileManager.CurrentProfile;
-        if (profile == null)
+        if (ProfileManager.CurrentProfile == null)
             return;
 
-        profile.ToolTipOverride_SearchText = new List<string>();
-        profile.ToolTipOverride_NewFormat = new List<string>();
-        profile.ToolTipOverride_MinVal1 = new List<int>();
-        profile.ToolTipOverride_MinVal2 = new List<int>();
-        profile.ToolTipOverride_MaxVal1 = new List<int>();
-        profile.ToolTipOverride_MaxVal2 = new List<int>();
-        profile.ToolTipOverride_Layer = new List<byte>();
+        TooltipOverridesConfig.Current.Clear();
     }
 
     private void ShowSaved()

@@ -34,7 +34,7 @@ public class LegionTexturePic : Control
 
     private void TryApplyNaturalSize()
     {
-        if (PNGLoader.Instance.TryGetNamedZipTexture(_textureName, out Texture2D tex) && tex != null && !tex.IsDisposed)
+        if (ExternalImageLoader.Instance.TryGetNamedZipTexture(_textureName, out Texture2D tex) && tex != null && !tex.IsDisposed)
         {
             if (Width <= 0)  Width  = tex.Width;
             if (Height <= 0) Height = tex.Height;
@@ -45,7 +45,7 @@ public class LegionTexturePic : Control
     {
         if (IsDisposed) return false;
 
-        if (!PNGLoader.Instance.TryGetNamedZipTexture(_textureName, out Texture2D tex) || tex == null || tex.IsDisposed)
+        if (!ExternalImageLoader.Instance.TryGetNamedZipTexture(_textureName, out Texture2D tex) || tex == null || tex.IsDisposed)
             return false;
 
         Vector3 hueVector = ShaderHueTranslator.GetHueVector(0, false, Alpha, true);

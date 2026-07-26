@@ -95,6 +95,10 @@ namespace ClassicUO.Configuration
             // Load the grid-container band layout rules for this profile.
             GridContainerBandsConfig.LoadForProfile(ProfilePath);
 
+            // Load the tooltip overrides for this profile (migration from the legacy profile lists is
+            // handled in Profile.HandleMigration).
+            TooltipOverridesConfig.Load(ProfilePath);
+
             ValidateFields(CurrentProfile);
 
             CurrentProfile.AfterLoad();

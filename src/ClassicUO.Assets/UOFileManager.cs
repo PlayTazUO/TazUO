@@ -168,7 +168,7 @@ namespace ClassicUO.Assets
             TileArt.Load();
             StringDictionary.Load();
 
-            PNGLoader.Instance.Load(BasePath);
+            ExternalImageLoader.Instance.Load(BasePath);
             //TrueTypeLoader.Instance.Load();
 
             ReadArtDefFile();

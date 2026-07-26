@@ -30,9 +30,17 @@ namespace ClassicUO.UnitTests.Game.Managers
         private const string OVERRIDE_FORMAT = "FIRERES={1}";
         private const string RAW_TOOLTIP = "Some Sword\nFire Resist 15";
 
-        public ToolTipOverrideTest() => SetCurrentProfile(CreateProfileWithFireResistOverride());
+        public ToolTipOverrideTest()
+        {
+            SetCurrentProfile(CreateProfileWithNoOverrides());
+            SetTooltipOverrides(new ToolTipOverrideData(0, "Fire Resist", OVERRIDE_FORMAT, -1, 100, -1, 100, (byte)TooltipLayers.Any));
+        }
 
-        public void Dispose() => SetCurrentProfile(null);
+        public void Dispose()
+        {
+            SetCurrentProfile(null);
+            SetTooltipOverrides();
+        }
 
         #region "Not item" branch (raw OPL text / vendor search)
 
@@ -113,6 +121,7 @@ namespace ClassicUO.UnitTests.Game.Managers
         public void ResolveTooltipText_NoOverrideConfigured_KeepsPropertyText()
         {
             SetCurrentProfile(CreateProfileWithNoOverrides());
+            SetTooltipOverrides();
             var world = new World();
 
             string result = ToolTipOverrideData.ResolveTooltipText(world, ITEM_SERIAL, RAW_TOOLTIP);
@@ -140,21 +149,6 @@ namespace ClassicUO.UnitTests.Game.Managers
 
         #region Helpers
 
-        private static Profile CreateProfileWithFireResistOverride()
-        {
-            Profile profile = CreateProfileWithNoOverrides();
-
-            profile.ToolTipOverride_SearchText = new List<string> { "Fire Resist" };
-            profile.ToolTipOverride_NewFormat = new List<string> { OVERRIDE_FORMAT };
-            profile.ToolTipOverride_MinVal1 = new List<int> { -1 };
-            profile.ToolTipOverride_MinVal2 = new List<int> { -1 };
-            profile.ToolTipOverride_MaxVal1 = new List<int> { 100 };
-            profile.ToolTipOverride_MaxVal2 = new List<int> { 100 };
-            profile.ToolTipOverride_Layer = new List<byte> { (byte)TooltipLayers.Any };
-
-            return profile;
-        }
-
         private static Profile CreateProfileWithNoOverrides()
         {
             return new Profile
@@ -162,13 +156,6 @@ namespace ClassicUO.UnitTests.Game.Managers
                 // Skip grid-highlight matching so the test doesn't depend on the highlight config/db.
                 GridHighlightProperties = false,
                 GridHighlightShowRuleName = false,
-                ToolTipOverride_SearchText = new List<string>(),
-                ToolTipOverride_NewFormat = new List<string>(),
-                ToolTipOverride_MinVal1 = new List<int>(),
-                ToolTipOverride_MinVal2 = new List<int>(),
-                ToolTipOverride_MaxVal1 = new List<int>(),
-                ToolTipOverride_MaxVal2 = new List<int>(),
-                ToolTipOverride_Layer = new List<byte>(),
             };
         }
 
@@ -179,6 +166,22 @@ namespace ClassicUO.UnitTests.Game.Managers
                 BindingFlags.Public | BindingFlags.Static);
 
             prop.SetValue(null, profile);
+        }
+
+        /// <summary>
+        /// Replaces the cached <see cref="TooltipOverridesConfig"/> with one holding exactly the given
+        /// overrides. Tooltip overrides now live in tooltip_overrides.json (via TooltipOverridesConfig)
+        /// rather than the profile, so tests seed the config directly instead of the profile's lists.
+        /// </summary>
+        private static void SetTooltipOverrides(params ToolTipOverrideData[] overrides)
+        {
+            var config = new TooltipOverridesConfig { Overrides = new List<ToolTipOverrideData>(overrides) };
+
+            FieldInfo field = typeof(TooltipOverridesConfig).GetField(
+                "_current",
+                BindingFlags.NonPublic | BindingFlags.Static);
+
+            field.SetValue(null, config);
         }
 
         #endregion

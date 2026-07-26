@@ -56,6 +56,16 @@ namespace ClassicUO.Game
         private static int _endPointZ;
         private static readonly List<PathObject> _reusableList = new();
 
+        // Extra A* cost applied to tiles adjacent to an impassable multi (house wall), giving
+        // paths a soft 1-tile standoff from houses. 0 disables it. Cached per-search from the
+        // profile so it can't change mid-search.
+        private int _multiBufferPenalty;
+
+        // Per-search memoization of "does this tile hold a blocking multi component?" so the
+        // buffer check doesn't re-walk a tile's object list once per neighbouring node. Cleared
+        // by CleanupPathfinding at the start of every search.
+        private static readonly Dictionary<(int x, int y), bool> _blockingMultiCache = new();
+
         public Point StartPoint => _startPoint;
         public Point EndPoint => _endPoint;
         public int PathSize => _path.Count;
@@ -742,6 +752,63 @@ namespace ClassicUO.Game
             //return (Math.Abs(_endPoint.X - point.X) + Math.Abs(_endPoint.Y - point.Y)) * cost;
             Math.Max(Math.Abs(_endPoint.X - point.X), Math.Abs(_endPoint.Y - point.Y));
 
+        /// <summary>
+        /// True when the tile holds a multi component that blocks movement (a house wall or
+        /// other impassable piece). Floors/roofs are walkable surfaces and don't count, and
+        /// house-preview pieces are ignored. Memoized per search via <see cref="_blockingMultiCache"/>.
+        /// </summary>
+        private bool TileHasBlockingMulti(int x, int y)
+        {
+            (int x, int y) key = (x, y);
+
+            if (_blockingMultiCache.TryGetValue(key, out bool cached))
+            {
+                return cached;
+            }
+
+            bool result = false;
+            GameObject tile = _world.Map.GetTile(x, y, false);
+
+            if (tile != null)
+            {
+                GameObject obj = tile;
+
+                while (obj.TPrevious != null)
+                {
+                    obj = obj.TPrevious;
+                }
+
+                for (; obj != null; obj = obj.TNext)
+                {
+                    if (obj is Multi m && !m.IsHousePreview && (m.ItemData.IsImpassable || m.ItemData.IsWall))
+                    {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+
+            _blockingMultiCache[key] = result;
+            return result;
+        }
+
+        /// <summary>
+        /// True when any of the eight tiles surrounding (x, y) holds a blocking multi, i.e. the
+        /// tile sits within a 1-tile buffer around a house. Used to add a soft avoidance cost.
+        /// </summary>
+        private bool IsWithinMultiBuffer(int x, int y)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                if (TileHasBlockingMulti(x + _offsetX[i], y + _offsetY[i]))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static int GetTurnPenalty(PathNode parent, int direction) =>
             // The turn penalty prevents unnecessary zig-zagging that takes extra
             // time (turning pauses movement briefly) and makes the movement look
@@ -770,6 +837,14 @@ namespace ClassicUO.Game
             // concern here to warrent the 8x cost.
             int turnPenalty = GetTurnPenalty(parent, direction);
             int newDistFromStart = parent.DistFromStartCost + cost + Math.Abs(z - parent.Z) + turnPenalty;
+
+            // Soft 1-tile buffer around houses: nudge the search away from tiles that border an
+            // impassable multi so paths don't scrape along house walls. It's a cost, not a block,
+            // so tight town streets and destinations right next to a house stay reachable.
+            if (_multiBufferPenalty > 0 && IsWithinMultiBuffer(x, y))
+            {
+                newDistFromStart += _multiBufferPenalty;
+            }
 
             var updatedNode = PathNode.Get();
 
@@ -1053,6 +1128,7 @@ namespace ClassicUO.Game
         public List<(int X, int Y, int Z)> GetPathTo(int x, int y, int z, int distance)
         {
             _zLevelDiff = ProfileManager.CurrentProfile.PathfindingZLevelDiff;
+            _multiBufferPenalty = ProfileManager.CurrentProfile.PathfindingMultiBuffer;
 
             CleanupPathfinding();
             _pointIndex = 0;
@@ -1088,6 +1164,7 @@ namespace ClassicUO.Game
             }
 
             _zLevelDiff = ProfileManager.CurrentProfile.PathfindingZLevelDiff;
+            _multiBufferPenalty = ProfileManager.CurrentProfile.PathfindingMultiBuffer;
 
             EventSink.InvokeOnPathFinding(null, new Vector4(x, y, z, distance));
 
@@ -1114,6 +1191,29 @@ namespace ClassicUO.Game
             }
 
             return _path.Count != 0;
+        }
+
+        /// <summary>
+        /// Recomputes the active auto-walk path from the player's current position to the
+        /// same target that <see cref="WalkTo"/> was last called with. Intended to be called
+        /// when world geometry changes underneath a walk in progress — most notably when a
+        /// house/multi is loaded via packet and its (previously absent) components now block
+        /// tiles the current path runs through. Re-running the A* search from where the player
+        /// stands lets it route around the newly-appeared blocker.
+        ///
+        /// No-op unless a local A* auto-walk is currently in progress. Computed paths
+        /// (WorldMap navigation via <see cref="StartComputedPath"/>) are skipped — they have
+        /// their own dynamic-block replanning via <see cref="OnComputedPathStepFailed"/>.
+        /// </summary>
+        public void RecalculatePath()
+        {
+            if (!AutoWalking || _computedPathActive || _world.Player == null || _world.Player.IsParalyzed)
+            {
+                return;
+            }
+
+            // Re-run from the player's present position to the previously requested target.
+            WalkTo(_endPoint.X, _endPoint.Y, _endPointZ, _pathfindDistance);
         }
 
         public void ProcessAutoWalk()
@@ -1199,6 +1299,7 @@ namespace ClassicUO.Game
 
             _path.Clear();
             _goalNode = null;
+            _blockingMultiCache.Clear();
         }
 
         private enum PATH_STEP_STATE
