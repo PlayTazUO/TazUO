@@ -88,7 +88,7 @@ public class DiscordGump : Gump
     {
         AcceptMouseInput = true;
 
-        PNGLoader.Instance.TryGetEmbeddedTexture("Discord-Symbol-Blurple-SM.png", out var discordTexture);
+        ExternalImageLoader.Instance.TryGetEmbeddedTexture("Discord-Symbol-Blurple-SM.png", out var discordTexture);
         _discordLogo = new(LEFT_WIDTH / 2 - 66, HEIGHT / 2 - 50, discordTexture);
         Add(_discordLogo);
 

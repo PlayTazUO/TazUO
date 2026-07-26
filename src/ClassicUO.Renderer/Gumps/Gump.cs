@@ -24,7 +24,7 @@ namespace ClassicUO.Renderer.Gumps
 
             if (spriteInfo.Texture == null)
             {
-                var gumpInfo = PNGLoader.Instance.LoadGumpTexture(idx);
+                var gumpInfo = ExternalImageLoader.Instance.LoadGumpTexture(idx);
                 bool loadedFromPNG = gumpInfo.Pixels != null && !gumpInfo.Pixels.IsEmpty;
 
                 if (gumpInfo.Pixels == null || gumpInfo.Pixels.IsEmpty)
@@ -45,7 +45,7 @@ namespace ClassicUO.Renderer.Gumps
                     // Clear the pixel cache from PNG Loader since it's now in the atlas
                     if (loadedFromPNG)
                     {
-                        PNGLoader.Instance.ClearGumpPixelCache(idx);
+                        ExternalImageLoader.Instance.ClearGumpPixelCache(idx);
                     }
                 }
             }
