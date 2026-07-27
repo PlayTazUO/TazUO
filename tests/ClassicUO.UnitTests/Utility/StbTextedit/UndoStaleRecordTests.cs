@@ -6,8 +6,7 @@ namespace ClassicUO.UnitTests.Utility.StbTextedit
 {
     public class UndoStaleRecordTests
     {
-        // Minimal handler backed by a plain string. It mimics a text box that can
-        // have its text replaced from outside the undo system.
+        // Minimal string-backed handler whose text can be replaced outside the undo system.
         private sealed class TestHandler : ITextEditHandler
         {
             public string Text { get; set; } = string.Empty;
@@ -28,22 +27,17 @@ namespace ClassicUO.UnitTests.Utility.StbTextedit
             var handler = new TestHandler();
             var edit = new TextEdit(handler) { SingleLine = true };
 
-            // Type some text through the edit so undo records are created.
+            // Type text so undo records are created.
             foreach (char c in "hello world")
             {
                 edit.InputChar(c);
             }
 
-            // Replace the buffer with a much shorter string, bypassing the undo
-            // system. The stored undo records now reference positions past the end
-            // of the current text - the exact condition that used to crash.
+            // Replace the buffer with a shorter string, leaving undo records pointing past the end.
             handler.Text = "hi";
 
-            // Should not throw IndexOutOfRangeException.
-            edit.Key(ControlKeys.Undo);
-
-            // History is discarded, so a second undo is also safe and a no-op.
-            edit.Key(ControlKeys.Undo);
+            edit.Key(ControlKeys.Undo); // Must not throw IndexOutOfRangeException.
+            edit.Key(ControlKeys.Undo); // History discarded, so this is a safe no-op.
 
             handler.Text.Should().Be("hi");
         }
@@ -59,12 +53,9 @@ namespace ClassicUO.UnitTests.Utility.StbTextedit
                 edit.InputChar(c);
             }
 
-            // Create a redo record by undoing once while the buffer is still valid.
-            edit.Key(ControlKeys.Undo);
+            edit.Key(ControlKeys.Undo); // Create a redo record while the buffer is still valid.
 
-            // Now corrupt the buffer and attempt a redo.
-            handler.Text = "hi";
-
+            handler.Text = "hi"; // Corrupt the buffer, then attempt a redo.
             edit.Key(ControlKeys.Redo);
 
             handler.Text.Should().Be("hi");
@@ -83,9 +74,8 @@ namespace ClassicUO.UnitTests.Utility.StbTextedit
 
             handler.Text.Should().Be("abc");
 
-            edit.Key(ControlKeys.Undo);
+            edit.Key(ControlKeys.Undo); // Undoes the most recent single-character insert.
 
-            // The most recent single-character insert should have been undone.
             handler.Text.Should().Be("ab");
         }
     }
