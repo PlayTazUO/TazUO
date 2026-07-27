@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `7/26/26`.*
+*This was generated on `7/27/26`.*
 
 ## Properties
 ### `Events`
@@ -527,6 +527,29 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `entry` | `ushort` | ❌ No | Entries start at 0, the top entry will be 0, then 1, 2, etc. (Usually) |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### ContextMenu
+`(serial, entry, timeout)`
+ Send a context menu(right click menu) response by matching the entry text.
+ This opens the menu, finds the entry whose text matches, and responds with the correct index.
+ The match is case-insensitive and matches the first entry that contains the given text.
+ Example:
+ ```py
+ API.ContextMenu(API.Player, "Open Paperdoll")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No |  |
+| `entry` | `string` | ❌ No | The text of the menu entry to select |
+| `timeout` | `double` | ✅ Yes | Seconds to wait for the menu to appear |
+
+**Return Type:** `bool`
 
 ---
 

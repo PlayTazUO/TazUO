@@ -1366,7 +1366,20 @@ def ContextMenu(serial: "int", entry: "int") -> None:
      ```py
      API.ContextMenu(API.Player, 1)
      ```
-    
+
+    """
+    pass
+
+def ContextMenu(serial: "int", entry: "str", timeout: "float" = 5) -> "bool":
+    """
+     Send a context menu(right click menu) response by matching the entry text.
+     This opens the menu, finds the entry whose text matches, and responds with the correct index.
+     The match is case-insensitive and matches the first entry that contains the given text.
+     Example:
+     ```py
+     API.ContextMenu(API.Player, "Open Paperdoll")
+     ```
+
     """
     pass
 

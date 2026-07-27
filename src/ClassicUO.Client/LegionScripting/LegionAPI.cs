@@ -816,6 +816,62 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Send a context menu(right click menu) response by matching the entry text.
+        /// This opens the menu, finds the entry whose text matches, and responds with the correct index.
+        /// The match is case-insensitive and matches the first entry that contains the given text.
+        /// Example:
+        /// ```py
+        /// API.ContextMenu(API.Player, "Open Paperdoll")
+        /// ```
+        /// </summary>
+        /// <param name="serial"></param>
+        /// <param name="entry">The text of the menu entry to select</param>
+        /// <param name="timeout">Seconds to wait for the menu to appear</param>
+        /// <returns>True if a matching entry was found and a response was sent</returns>
+        public bool ContextMenu(uint serial, string entry, double timeout = 5)
+        {
+            if (string.IsNullOrEmpty(entry))
+                return false;
+
+            OnMain(() => AsyncNetClient.Socket.Send_RequestPopupMenu(serial));
+
+            DateTime expire = DateTime.UtcNow.AddSeconds(timeout);
+
+            while (DateTime.UtcNow < expire)
+            {
+                // null = menu not ready yet (keep waiting), true = matched & sent, false = menu open but no match
+                bool? result = OnMain<bool?>(() =>
+                {
+                    PopupMenuGump gump = UIManager.PopupMenu;
+
+                    if (gump == null || gump.IsDisposed || gump.Data == null || gump.Data.Serial != serial)
+                        return null;
+
+                    foreach (PopupMenuItem item in gump.Data.Items)
+                    {
+                        string text = Client.Game.UO.FileManager.Clilocs.GetString(item.Cliloc);
+
+                        if (!string.IsNullOrEmpty(text) && text.IndexOf(entry, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            AsyncNetClient.Socket.Send_PopupMenuSelection(serial, item.Index);
+                            gump.Dispose();
+                            return true;
+                        }
+                    }
+
+                    // Menu is open for this serial but no matching entry exists; stop waiting.
+                    gump.Dispose();
+                    return false;
+                });
+
+                if (result.HasValue)
+                    return result.Value;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Send a response to the currently open menu (uses the latest MenuGump).
         /// Useful when menu IDs change every time (e.g., Tracking skill).
         /// Returns true if a menu was found and a response was sent.
