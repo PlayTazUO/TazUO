@@ -5,6 +5,7 @@ All notable changes to TazUO will be recorded here.
 ## In Development
 
 ### Legion
+* `SetTooltip(text)` and `SetEntityTooltip(serial)` now enable mouse input automatically so hover tooltips work without extra setup, and added a dedicated `SetAcceptMouseInput(enabled)` method to the base UI control - [P.R 811](https://github.com/PlayTazUO/TazUO/pull/811) ([bittiez](https://github.com/bittiez))
 * Added `SetTooltip(text)`, `SetEntityTooltip(serial)` and `ClearTooltip()` to the base UI control so scripts can attach plain-text or entity-property tooltips to any control - [P.R 810](https://github.com/PlayTazUO/TazUO/pull/810) ([bittiez](https://github.com/bittiez))
 * Added `API.ListRunningScripts()` and `API.IsScriptRunning(path)`, and switched `API.PlayScript`, `API.StopScript` and `API.ToggleScript` to match scripts by their path relative to the LegionScripts folder so scripts sharing a file name are no longer ambiguous - [P.R 809](https://github.com/PlayTazUO/TazUO/pull/809) ([bittiez](https://github.com/bittiez))
 * Added a string-based `API.ContextMenu(serial, entry)` overload that selects a context menu entry by its text - [P.R 808](https://github.com/PlayTazUO/TazUO/pull/808) ([bittiez](https://github.com/bittiez))
