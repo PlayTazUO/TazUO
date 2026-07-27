@@ -431,7 +431,7 @@ class ApiUiBaseControl:
         """
         pass
 
-    def SetItemTooltip(self, serial: "int") -> "ApiUiBaseControl":
+    def SetEntityTooltip(self, serial: "int") -> "ApiUiBaseControl":
         """
          Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
          Used in python API

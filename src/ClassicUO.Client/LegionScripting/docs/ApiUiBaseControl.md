@@ -239,7 +239,7 @@ description: ApiUiBaseControl class documentation
 
 ---
 
-### SetItemTooltip
+### SetEntityTooltip
 `(serial)`
  Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
  Used in python API

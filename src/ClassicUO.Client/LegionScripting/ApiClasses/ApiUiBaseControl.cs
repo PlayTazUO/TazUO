@@ -172,7 +172,7 @@ public class ApiUiBaseControl(Control control)
     /// Used in python API
     /// </summary>
     /// <param name="serial">The serial of the item/entity whose tooltip should be shown.</param>
-    public ApiUiBaseControl SetItemTooltip(uint serial) => SetPropFluent(() => control?.SetTooltip(serial));
+    public ApiUiBaseControl SetEntityTooltip(uint serial) => SetPropFluent(() => control?.SetTooltip(serial));
 
     /// <summary>
     /// Clears the tooltip from this control.
