@@ -3452,6 +3452,40 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### ListRunningScripts
+
+ Get a list of the file names of all currently running legion scripts.
+ Example:
+ ```py
+ for name in API.ListRunningScripts():
+     API.SysMsg(name)
+ ```
+
+
+**Return Type:** `IList<string>`
+
+---
+
+### IsScriptRunning
+`(scriptName)`
+ Check if a legion script is currently running.
+ Example:
+ ```py
+ if not API.IsScriptRunning("MyScript.py"):
+     API.PlayScript("MyScript.py")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+
+**Return Type:** `bool`
+
+---
+
 ### AddMapMarker
 `(name, x, y, map, color)`
  Add a marker to the current World Map (If one is open)

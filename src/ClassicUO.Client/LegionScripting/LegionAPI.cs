@@ -4129,6 +4129,51 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Get a list of the file names of all currently running legion scripts.
+        /// Example:
+        /// ```py
+        /// for name in API.ListRunningScripts():
+        ///     API.SysMsg(name)
+        /// ```
+        /// </summary>
+        /// <returns>The file names (including extension) of the running scripts.</returns>
+        public IList<string> ListRunningScripts() => OnMain
+        (() =>
+            {
+                List<string> running = new List<string>();
+
+                foreach (ScriptFile script in LegionScripting.RunningScripts)
+                    running.Add(script.FileName);
+
+                return running;
+            }
+        );
+
+        /// <summary>
+        /// Check if a legion script is currently running.
+        /// Example:
+        /// ```py
+        /// if not API.IsScriptRunning("MyScript.py"):
+        ///     API.PlayScript("MyScript.py")
+        /// ```
+        /// </summary>
+        /// <param name="scriptName">This is the file name including extension.</param>
+        /// <returns>True if the script is currently running.</returns>
+        public bool IsScriptRunning(string scriptName) => OnMain
+        (() =>
+            {
+                if (string.IsNullOrEmpty(scriptName))
+                    return false;
+
+                foreach (ScriptFile script in LegionScripting.RunningScripts)
+                    if (script.FileName == scriptName)
+                        return true;
+
+                return false;
+            }
+        );
+
+        /// <summary>
         /// Add a marker to the current World Map (If one is open)
         /// Example:
         /// ```py
