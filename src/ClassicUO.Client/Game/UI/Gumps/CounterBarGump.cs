@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using ClassicUO.Configuration;
@@ -370,28 +371,37 @@ namespace ClassicUO.Game.UI.Gumps
         /// <summary>Rebuilds a <see cref="CounterBarSlot"/> from a saved counter cell, migrating the legacy standalone "spellid" attribute.</summary>
         private static CounterBarSlot RestoreSlot(XmlElement controlXml)
         {
-            if (controlXml.HasAttribute("slottype"))
+            // A partially-written profile (e.g. a crash mid-save) can leave malformed or missing
+            // per-type attributes; degrade gracefully to an empty slot instead of aborting the whole restore.
+            try
             {
-                var type = (CounterBarSlotType)int.Parse(controlXml.GetAttribute("slottype"));
-
-                switch (type)
+                if (controlXml.HasAttribute("slottype"))
                 {
-                    case CounterBarSlotType.Spell:
-                        return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
-                    case CounterBarSlotType.Macro:
-                        return new CounterBarSlot { Type = CounterBarSlotType.Macro, MacroName = controlXml.GetAttribute("macroname") };
-                    case CounterBarSlotType.Script:
-                        return new CounterBarSlot { Type = CounterBarSlotType.Script, ScriptId = controlXml.GetAttribute("scriptid") };
-                    case CounterBarSlotType.Skill:
-                        return CounterBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
-                    case CounterBarSlotType.Ability:
-                        return CounterBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
-                }
-            }
+                    var type = (CounterBarSlotType)int.Parse(controlXml.GetAttribute("slottype"));
 
-            // Legacy: pre-parity saves stored a spell as a standalone "spellid" attribute alongside the gump graphic.
-            if (controlXml.HasAttribute("spellid"))
-                return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+                    switch (type)
+                    {
+                        case CounterBarSlotType.Spell:
+                            return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+                        case CounterBarSlotType.Macro:
+                            return new CounterBarSlot { Type = CounterBarSlotType.Macro, MacroName = controlXml.GetAttribute("macroname") };
+                        case CounterBarSlotType.Script:
+                            return new CounterBarSlot { Type = CounterBarSlotType.Script, ScriptId = controlXml.GetAttribute("scriptid") };
+                        case CounterBarSlotType.Skill:
+                            return CounterBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
+                        case CounterBarSlotType.Ability:
+                            return CounterBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
+                    }
+                }
+
+                // Legacy: pre-parity saves stored a spell as a standalone "spellid" attribute alongside the gump graphic.
+                if (controlXml.HasAttribute("spellid"))
+                    return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+            }
+            catch (FormatException e)
+            {
+                Log.Error($"Malformed CounterBarSlot data during restore; defaulting to empty. {e}");
+            }
 
             return CounterBarSlot.Empty();
         }
