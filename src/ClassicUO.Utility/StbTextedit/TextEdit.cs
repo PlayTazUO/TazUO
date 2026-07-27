@@ -844,6 +844,14 @@ namespace StbTextEditSharp
             u = s.undo_rec[s.undo_point - 1];
             int rpos = s.redo_point - 1;
 
+            // Discard stale/inconsistent history instead of indexing past the end of the text.
+            if (rpos < 0 || u.where < 0 || u.where > Length || u.where + u.delete_length > Length)
+            {
+                s.Reset();
+
+                return;
+            }
+
             s.undo_rec[rpos].char_storage = -1;
 
             s.undo_rec[rpos].insert_length = u.delete_length;
@@ -910,6 +918,14 @@ namespace StbTextEditSharp
 
             int upos = s.undo_point;
             r = s.undo_rec[s.redo_point];
+
+            // Discard stale/inconsistent history instead of indexing past the end of the text.
+            if (upos >= s.undo_rec.Length || r.where < 0 || r.where > Length || r.where + r.delete_length > Length)
+            {
+                s.Reset();
+
+                return;
+            }
 
             s.undo_rec[upos].delete_length = r.insert_length;
 

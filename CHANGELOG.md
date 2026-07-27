@@ -23,6 +23,7 @@ All notable changes to TazUO will be recorded here.
 * Fixed Myra windows not closing with right click - ([bittiez](https://github.com/bittiez))
 * Fixed menu color that failed to get the new myrs colors - ([bittiez](https://github.com/bittiez))
 * Fixed potential crashes with FSS text generation - ([bittiez](https://github.com/bittiez))
+* Fixed an IndexOutOfRangeException crash when pressing Undo/Redo in a text box whose contents had been changed outside the undo system (e.g. set directly, refreshed by the server, or truncated by a max length); stale undo/redo history is now discarded instead of indexing past the end of the text - [P.R 805](https://github.com/PlayTazUO/TazUO/pull/805) ([bittiez](https://github.com/bittiez))
 
 ## V5.12.0
 
