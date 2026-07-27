@@ -2,7 +2,7 @@
 All notable changes to TazUO will be recorded here.
 
 ---
-## In Development
+## V5.17.7
 
 ### Legion
 * `SetTooltip(text)` and `SetEntityTooltip(serial)` now enable mouse input automatically so hover tooltips work without extra setup, and added a dedicated `SetAcceptMouseInput(enabled)` method to the base UI control - [P.R 811](https://github.com/PlayTazUO/TazUO/pull/811) ([bittiez](https://github.com/bittiez))
