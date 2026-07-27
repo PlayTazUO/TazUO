@@ -816,6 +816,62 @@ namespace ClassicUO.LegionScripting
         );
 
         /// <summary>
+        /// Send a context menu(right click menu) response by matching the entry text.
+        /// This opens the menu, finds the entry whose text matches, and responds with the correct index.
+        /// The match is case-insensitive and matches the first entry that contains the given text.
+        /// Example:
+        /// ```py
+        /// API.ContextMenu(API.Player, "Open Paperdoll")
+        /// ```
+        /// </summary>
+        /// <param name="serial"></param>
+        /// <param name="entry">The text of the menu entry to select</param>
+        /// <param name="timeout">Seconds to wait for the menu to appear</param>
+        /// <returns>True if a matching entry was found and a response was sent</returns>
+        public bool ContextMenu(uint serial, string entry, double timeout = 5)
+        {
+            if (string.IsNullOrEmpty(entry))
+                return false;
+
+            OnMain(() => AsyncNetClient.Socket.Send_RequestPopupMenu(serial));
+
+            DateTime expire = DateTime.UtcNow.AddSeconds(timeout);
+
+            while (DateTime.UtcNow < expire)
+            {
+                // null = menu not ready yet (keep waiting), true = matched & sent, false = menu open but no match
+                bool? result = OnMain<bool?>(() =>
+                {
+                    PopupMenuGump gump = UIManager.PopupMenu;
+
+                    if (gump == null || gump.IsDisposed || gump.Data == null || gump.Data.Serial != serial)
+                        return null;
+
+                    foreach (PopupMenuItem item in gump.Data.Items)
+                    {
+                        string text = Client.Game.UO.FileManager.Clilocs.GetString(item.Cliloc);
+
+                        if (!string.IsNullOrEmpty(text) && text.IndexOf(entry, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            AsyncNetClient.Socket.Send_PopupMenuSelection(serial, item.Index);
+                            gump.Dispose();
+                            return true;
+                        }
+                    }
+
+                    // Menu is open for this serial but no matching entry exists; stop waiting.
+                    gump.Dispose();
+                    return false;
+                });
+
+                if (result.HasValue)
+                    return result.Value;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Send a response to the currently open menu (uses the latest MenuGump).
         /// Useful when menu IDs change every time (e.g., Tracking skill).
         /// Returns true if a menu was found and a response was sent.
@@ -4004,20 +4060,20 @@ namespace ClassicUO.LegionScripting
         /// Toggle another script on or off.
         /// Example:
         /// ```py
-        /// API.ToggleScript("MyScript.py")
+        /// API.ToggleScript("mygroup/MyScript.py")
         /// ```
         /// </summary>
-        /// <param name="scriptName">Full name including extension. Can be .py or .lscript.</param>
+        /// <param name="scriptPath">The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name.</param>
         /// <exception cref="Exception"></exception>
-        public void ToggleScript(string scriptName) => OnMain
+        public void ToggleScript(string scriptPath) => OnMain
         (() =>
             {
-                if (string.IsNullOrEmpty(scriptName))
-                    throw new Exception("[ToggleScript] Script name can't be empty.");
+                if (string.IsNullOrEmpty(scriptPath))
+                    throw new Exception("[ToggleScript] Script path can't be empty.");
 
                 foreach (ScriptFile script in LegionScripting.LoadedScripts)
                 {
-                    if (script.FileName == scriptName)
+                    if (script.RelativePath == scriptPath)
                     {
                         if (script.IsPlaying)
                             LegionScripting.StopScript(script);
@@ -4032,17 +4088,24 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Play a legion script.
+        /// Example:
+        /// ```py
+        /// API.PlayScript("mygroup/MyScript.py")
+        /// ```
         /// </summary>
-        /// <param name="scriptName">This is the file name including extension.</param>
-        public void PlayScript(string scriptName) => OnMain
+        /// <param name="scriptPath">The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name.</param>
+        public void PlayScript(string scriptPath) => OnMain
         (() =>
             {
-                if (string.IsNullOrEmpty(scriptName))
-                    GameActions.Print(World, "[PlayScript] Script name can't be empty.");
+                if (string.IsNullOrEmpty(scriptPath))
+                {
+                    GameActions.Print(World, "[PlayScript] Script path can't be empty.");
+                    return;
+                }
 
                 foreach (ScriptFile script in LegionScripting.LoadedScripts)
                 {
-                    if (script.FileName == scriptName)
+                    if (script.RelativePath == scriptPath)
                     {
                         LegionScripting.PlayScript(script);
                         return;
@@ -4053,22 +4116,76 @@ namespace ClassicUO.LegionScripting
 
         /// <summary>
         /// Stop a legion script.
+        /// Example:
+        /// ```py
+        /// API.StopScript("mygroup/MyScript.py")
+        /// ```
         /// </summary>
-        /// <param name="scriptName">This is the file name including extension.</param>
-        public void StopScript(string scriptName) => OnMain
+        /// <param name="scriptPath">The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name.</param>
+        public void StopScript(string scriptPath) => OnMain
         (() =>
             {
-                if (string.IsNullOrEmpty(scriptName))
-                    GameActions.Print(World, "[StopScript] Script name can't be empty.");
-
-                foreach (ScriptFile script in LegionScripting.LoadedScripts)
+                if (string.IsNullOrEmpty(scriptPath))
                 {
-                    if (script.FileName == scriptName)
+                    GameActions.Print(World, "[StopScript] Script path can't be empty.");
+                    return;
+                }
+
+                foreach (ScriptFile script in LegionScripting.RunningScripts)
+                {
+                    if (script.RelativePath == scriptPath)
                     {
                         LegionScripting.StopScript(script);
                         return;
                     }
                 }
+            }
+        );
+
+        /// <summary>
+        /// Get the paths of all currently running legion scripts.
+        /// The paths are relative to the LegionScripts folder and can be passed
+        /// straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
+        /// Example:
+        /// ```py
+        /// for path in API.ListRunningScripts():
+        ///     API.SysMsg(path)
+        /// ```
+        /// </summary>
+        /// <returns>The relative paths of the running scripts.</returns>
+        public IList<string> ListRunningScripts() => OnMain
+        (() =>
+            {
+                List<string> running = new List<string>();
+
+                foreach (ScriptFile script in LegionScripting.RunningScripts)
+                    running.Add(script.RelativePath);
+
+                return running;
+            }
+        );
+
+        /// <summary>
+        /// Check if a legion script is currently running.
+        /// Example:
+        /// ```py
+        /// if not API.IsScriptRunning("mygroup/MyScript.py"):
+        ///     API.PlayScript("mygroup/MyScript.py")
+        /// ```
+        /// </summary>
+        /// <param name="scriptPath">The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name.</param>
+        /// <returns>True if the script is currently running.</returns>
+        public bool IsScriptRunning(string scriptPath) => OnMain
+        (() =>
+            {
+                if (string.IsNullOrEmpty(scriptPath))
+                    return false;
+
+                foreach (ScriptFile script in LegionScripting.RunningScripts)
+                    if (script.RelativePath == scriptPath)
+                        return true;
+
+                return false;
             }
         );
 

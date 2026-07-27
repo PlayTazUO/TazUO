@@ -2,6 +2,37 @@
 All notable changes to TazUO will be recorded here.
 
 ---
+## V5.17.7
+
+### Legion
+* `SetTooltip(text)` and `SetEntityTooltip(serial)` now enable mouse input automatically so hover tooltips work without extra setup, and added a dedicated `SetAcceptMouseInput(enabled)` method to the base UI control - [P.R 811](https://github.com/PlayTazUO/TazUO/pull/811) ([bittiez](https://github.com/bittiez))
+* Added `SetTooltip(text)`, `SetEntityTooltip(serial)` and `ClearTooltip()` to the base UI control so scripts can attach plain-text or entity-property tooltips to any control - [P.R 810](https://github.com/PlayTazUO/TazUO/pull/810) ([bittiez](https://github.com/bittiez))
+* Added `API.ListRunningScripts()` and `API.IsScriptRunning(path)`, and switched `API.PlayScript`, `API.StopScript` and `API.ToggleScript` to match scripts by their path relative to the LegionScripts folder so scripts sharing a file name are no longer ambiguous - [P.R 809](https://github.com/PlayTazUO/TazUO/pull/809) ([bittiez](https://github.com/bittiez))
+* Added a string-based `API.ContextMenu(serial, entry)` overload that selects a context menu entry by its text - [P.R 808](https://github.com/PlayTazUO/TazUO/pull/808) ([bittiez](https://github.com/bittiez))
+
+### Features
+* Added journal triggers for macros - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
+* Added .bmp support to external images loader - [P.R 796](https://github.com/PlayTazUO/TazUO/pull/796) ([credzba](https://github.com/credzba))
+* Added a grid container band system that groups items into configurable, color-coded sections (by item layer and/or graphic), with separate configurations for corpses, backpack, and other containers and a per-container opt-out - [P.R 795](https://github.com/PlayTazUO/TazUO/pull/795) ([bittiez](https://github.com/bittiez))
+* Added a new reusable hotkey setting window, all hotkey assignment goes through this window now - [P.R 793](https://github.com/PlayTazUO/TazUO/pull/793) ([bittiez](https://github.com/bittiez))
+* Replaced the old Myra window style with a new themed one. Thank you NewYears! - [P.R 774](https://github.com/PlayTazUO/TazUO/pull/774) ([bittiez](https://github.com/bittiez))
+
+### Misc
+* Changed grid highlight import/export to use the clipboard instead of the file browser - [P.R 806](https://github.com/PlayTazUO/TazUO/pull/806) ([bittiez](https://github.com/bittiez))
+* Added a new PrivateSay macro option(Only you can see it) - [P.R 803](https://github.com/PlayTazUO/TazUO/pull/803) ([bittiez](https://github.com/bittiez))
+* Pathfinding now re-plans when a house is loaded mid-walk and keeps a soft 1-tile buffer around houses so paths route around them better - [P.R 799](https://github.com/PlayTazUO/TazUO/pull/799) ([bittiez](https://github.com/bittiez))
+* Migrate tooltip override saves to its own json file - [P.R 798](https://github.com/PlayTazUO/TazUO/pull/798) ([bittiez](https://github.com/bittiez))
+
+### Fixes
+* Prevent a Myra render NullReferenceException from crashing the client when a widget is detached from the desktop mid-render - [P.R 807](https://github.com/PlayTazUO/TazUO/pull/807) ([bittiez](https://github.com/bittiez))
+* Load SQL profile settings before saved gumps are restored at login, so gumps use the correct setting values - [P.R 804](https://github.com/PlayTazUO/TazUO/pull/804) ([bittiez](https://github.com/bittiez))
+* Restore default cooldown duration and hue - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
+* Recover from a corrupt SQLite database instead of crashing at login; the bad file is quarantined and an empty database is recreated - [P.R 800](https://github.com/PlayTazUO/TazUO/pull/800) ([bittiez](https://github.com/bittiez))
+* Fixed Myra windows not closing with right click - ([bittiez](https://github.com/bittiez))
+* Fixed menu color that failed to get the new myrs colors - ([bittiez](https://github.com/bittiez))
+* Fixed potential crashes with FSS text generation - ([bittiez](https://github.com/bittiez))
+* Fixed an IndexOutOfRangeException crash when pressing Undo/Redo in a text box whose contents had been changed outside the undo system (e.g. set directly, refreshed by the server, or truncated by a max length); stale undo/redo history is now discarded instead of indexing past the end of the text - [P.R 805](https://github.com/PlayTazUO/TazUO/pull/805) ([bittiez](https://github.com/bittiez))
+
 ## V5.12.0
 
 ### Features

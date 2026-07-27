@@ -39,11 +39,17 @@ public static class HotkeysTabContent
         public bool CheckConflicts = true;
     }
 
-    private static HotkeyCapture _capture;
+    private static HotkeyCaptureWindow? _captureWindow;
 
-    /// <summary>Stop any in-progress capture; called from AssistantWindow.Dispose so static input
-    /// subscriptions don't outlive the window.</summary>
-    public static void Cleanup() => _capture?.Stop();
+    /// <summary>Close any open capture window; called from AssistantWindow.Dispose so a capture
+    /// session doesn't outlive the window that spawned it.</summary>
+    public static void Cleanup()
+    {
+        if (_captureWindow is { IsDisposed: false })
+            _captureWindow.Dispose();
+
+        _captureWindow = null;
+    }
 
     public static Widget Build()
     {
@@ -51,15 +57,6 @@ public static class HotkeysTabContent
         root.Widgets.Add(new MyraLabel("Hotkeys", MyraLabel.TextStyle.H2));
 
         var listPanel = new VerticalStackPanel { Spacing = 1 };
-
-        _capture = new HotkeyCapture();
-        object? capturingSource = null;
-
-        void StopCapture()
-        {
-            _capture.Stop();
-            capturingSource = null;
-        }
 
         void BuildList()
         {
@@ -92,7 +89,6 @@ public static class HotkeysTabContent
             foreach ((HotkeyRow r, HotkeyBinding binding) in snapshots)
             {
                 HotkeyRow localRow = r;
-                bool isCapturing = capturingSource != null && ReferenceEquals(r.Source, capturingSource);
 
                 List<string> conflicts = (binding.IsEmpty || !r.CheckConflicts)
                     ? new List<string>()
@@ -104,32 +100,26 @@ public static class HotkeysTabContent
                 grid.AddWidget(new MyraLabel(r.Category ?? string.Empty, MyraLabel.TextStyle.P), row, 0);
                 grid.AddWidget(new MyraLabel(r.Name, MyraLabel.TextStyle.P), row, 1);
 
-                string bindingText = isCapturing
-                    ? "Listening… press key / modifier / mouse / wheel / controller (Esc to cancel)"
-                    : binding.Describe();
-                grid.AddWidget(new MyraLabel(bindingText, MyraLabel.TextStyle.P), row, 2);
+                grid.AddWidget(new MyraLabel(binding.Describe(), MyraLabel.TextStyle.P), row, 2);
 
                 var conflictLabel = new MyraLabel(conflicts.Count > 0 ? "Yes" : string.Empty, MyraLabel.TextStyle.P);
                 if (conflicts.Count > 0)
                     conflictLabel.Tooltip = "Conflicts with: " + string.Join(", ", conflicts);
                 grid.AddWidget(conflictLabel, row, 3);
 
-                if (isCapturing)
-                    grid.AddWidget(new MyraButton("Cancel", () => { StopCapture(); BuildList(); }), row, 4);
-                else
-                    grid.AddWidget(new MyraButton("Set", () => StartCapture(localRow)), row, 4);
+                grid.AddWidget(new MyraButton("Set", () => StartCapture(localRow)), row, 4);
 
                 MyraButton menuButton = null!;
                 menuButton = new MyraButton("...", () =>
                 {
                     var items = new List<(string Label, Action Action)>
                     {
-                        ("Clear", () => { StopCapture(); localRow.ClearBinding(); BuildList(); })
+                        ("Clear", () => { localRow.ClearBinding(); BuildList(); })
                     };
                     if (localRow.ResetBinding != null)
                     {
                         Action reset = localRow.ResetBinding;
-                        items.Add(("Reset", () => { StopCapture(); reset(); BuildList(); }));
+                        items.Add(("Reset", () => { reset(); BuildList(); }));
                     }
                     ShowRowMenu(menuButton, items.ToArray());
                 });
@@ -156,21 +146,22 @@ public static class HotkeysTabContent
 
         void StartCapture(HotkeyRow row)
         {
-            capturingSource = row.Source;
-            BuildList();
+            // Every hotkey edit funnels through the one shared capture window.
+            if (_captureWindow is { IsDisposed: false })
+            {
+                _captureWindow.BringOnTop();
+                return;
+            }
 
-            _capture.Start(
-                binding =>
+            _captureWindow = new HotkeyCaptureWindow(
+                prompt: row.Name,
+                existing: row.GetBinding(),
+                onSaved: binding =>
                 {
                     row.Apply(binding);
-                    capturingSource = null;
                     BuildList();
                 },
-                () =>
-                {
-                    capturingSource = null;
-                    BuildList();
-                });
+                capturesMouseEvents: true);
         }
 
         BuildList();
@@ -178,7 +169,6 @@ public static class HotkeysTabContent
         var topBar = new HorizontalStackPanel { Spacing = 4 };
         topBar.Widgets.Add(new MyraButton("Reset all", () =>
         {
-            StopCapture();
             foreach (HotKeyEntry e in HotKeys.AllRegistered())
                 e.ResetToDefault();
             BuildList();

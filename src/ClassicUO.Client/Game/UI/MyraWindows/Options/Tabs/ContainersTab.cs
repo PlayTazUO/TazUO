@@ -5,6 +5,7 @@ using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
+using ClassicUO.Game.UI.Gumps.GridContainers;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
 using ClassicUO.Utility;
@@ -242,7 +243,22 @@ public static class ContainersTab
                 new Accessor<bool>(() => profile.DisableTargetingGridContainers),
                 search: new SearchMetadata(TazLang.Get("mog_tazuo_griddisabletargeting"), Keywords: [TazLang.Get("mog_kw_targeting"), TazLang.Get("mog_kw_disable")])
             ),
+            GetGridContainerBandsSection(),
             GetGridContainerStylingSection()
+        );
+    }
+
+    private static OptionFragment GetGridContainerBandsSection()
+    {
+        Profile profile = ProfileManager.CurrentProfile;
+
+        return OptionsUi.VisualContainer(
+            new VisualContainerProps { LabelText = TazLang.Get("gridbands_section", "Grid Container Bands") },
+            Option.Button(
+                TazLang.Get("gridbands_configure", "Configure bands"),
+                () => GridContainerBandsMenu.Open(World.Instance),
+                search: new SearchMetadata(TazLang.Get("gridbands_configure", "Configure bands"), Keywords: [TazLang.Get("mog_kw_grid"), TazLang.Get("gridbands_kw", "bands")])
+            )
         );
     }
 

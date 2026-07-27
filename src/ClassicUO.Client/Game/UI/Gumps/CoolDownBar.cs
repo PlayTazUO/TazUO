@@ -116,7 +116,10 @@ namespace ClassicUO.Game.UI.Gumps
                 return false;
 
             if (DateTime.Now >= expire)
+            {
                 Dispose();
+                return false;
+            }
 
             TimeSpan remaing = expire - DateTime.Now;
 

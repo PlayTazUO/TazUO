@@ -97,6 +97,7 @@ namespace ClassicUO.Configuration
     }
 
     [JsonSerializable(typeof(GridHighlightsConfig), GenerationMode = JsonSourceGenerationMode.Metadata)]
+    [JsonSerializable(typeof(List<GridHighlightSetupEntry>), GenerationMode = JsonSourceGenerationMode.Metadata)]
     sealed partial class GridHighlightsJsonContext : JsonSerializerContext
     {
         sealed class SnakeCaseNamingPolicy : JsonNamingPolicy

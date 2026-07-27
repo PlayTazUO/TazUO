@@ -411,6 +411,12 @@ namespace ClassicUO.Game.GameObjects
             if (World.HouseManager.EntityIntoHouse(Serial, World.Player)) GameScene.Instance?.UpdateMaxDrawZ(true);
 
             World.BoatMovingManager.ClearSteps(Serial);
+
+            // A multi (house/boat) just had its components placed on the map. If the player is
+            // auto-walking a path that was computed before this geometry existed, that path may
+            // now cut through the new blocker — re-pathfind from the current position so the
+            // walk routes around it.
+            World.Player?.Pathfinder?.RecalculatePath();
         }
 
         public override void CheckGraphicChange(byte animIndex = 0)

@@ -1,8 +1,7 @@
 #nullable enable
-using System;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Managers;
-using ClassicUO.Input;
+using ClassicUO.Game.Managers.Hotkeys;
 using Myra.Graphics2D.UI;
 using SDL3;
 
@@ -10,67 +9,56 @@ namespace ClassicUO.Game.UI.MyraWindows.Widgets.Assistant;
 
 public static class SpellBarTabContent
 {
+    private static HotkeyCaptureWindow? _captureWindow;
+
+    /// <summary>Close any open capture window; called from AssistantWindow.Dispose so a capture
+    /// session doesn't outlive the window that spawned it.</summary>
+    public static void Cleanup()
+    {
+        if (_captureWindow is { IsDisposed: false })
+            _captureWindow.Dispose();
+
+        _captureWindow = null;
+    }
+
     public static Widget Build()
     {
         Profile profile = ProfileManager.CurrentProfile;
 
-        // Shared key-capture state (via closures)
-        int listeningSlot = -1;
-        SDL.SDL_Keycode capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-        SDL.SDL_Keymod capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-        Action? currentUnsubscribe = null;
-
         // Per-slot retained widgets
         var keyLabels = new MyraLabel[10];
-        var normalPanels = new HorizontalStackPanel[10];
-        var editPanels = new HorizontalStackPanel[10];
 
         string GetKeyDisplay(int slot) =>
             SpellBarManager.GetKetNames(slot) is { Length: > 0 } s ? s : TazLang.Get("spellbar_none");
 
-        void StopListening()
+        void ApplyCapturedHotkey(int slot, HotkeyBinding binding)
         {
-            currentUnsubscribe?.Invoke();
-            currentUnsubscribe = null;
-            int prev = listeningSlot;
-            listeningSlot = -1;
-            capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-            capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-            if (prev >= 0 && prev < 10)
-            {
-                keyLabels[prev].Text = GetKeyDisplay(prev);
-                normalPanels[prev].Visible = true;
-                editPanels[prev].Visible = false;
-            }
-        }
+            // The spell bar dispatches on either a key+modifier combo or a controller combo; mouse and
+            // wheel bindings are not supported, so the window is opened with mouse capture disabled.
+            if (binding.HasController)
+                SpellBarManager.SetButtons(slot, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, binding.ControllerButtons);
+            else if (binding.HasKey)
+                SpellBarManager.SetButtons(slot, binding.Mod, binding.Key, []);
+            else
+                SpellBarManager.SetButtons(slot, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, []);
 
-        void ApplyCapturedHotkey()
-        {
-            if (listeningSlot < 0) return;
-            SpellBarManager.SetButtons(listeningSlot, capturedMod, capturedKey, []);
+            keyLabels[slot].Text = GetKeyDisplay(slot);
             Game.UI.Gumps.SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
-            StopListening();
         }
 
         void StartListening(int slot)
         {
-            StopListening();
-            listeningSlot = slot;
-            capturedKey = SDL.SDL_Keycode.SDLK_UNKNOWN;
-            capturedMod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-            keyLabels[slot].Text = TazLang.Get("spellbar_pressakey");
-            normalPanels[slot].Visible = false;
-            editPanels[slot].Visible = true;
-
-            void Handler(string hotkey)
+            if (_captureWindow is { IsDisposed: false })
             {
-                (capturedKey, capturedMod) = ParseHotKeyString(hotkey);
-                keyLabels[slot].Text = KeysTranslator.TryGetKey(capturedKey, capturedMod);
+                _captureWindow.BringOnTop();
+                return;
             }
 
-            Keyboard.KeyDownEvent += Handler;
-            currentUnsubscribe = () => Keyboard.KeyDownEvent -= Handler;
+            _captureWindow = new HotkeyCaptureWindow(
+                prompt: TazLang.Get("spellbar_slot", new[] { slot.ToString() }),
+                existing: SpellBarManager.GetSlotBinding(slot),
+                onSaved: binding => ApplyCapturedHotkey(slot, binding),
+                capturesMouseEvents: false);
         }
 
         // === Left column: options, row management, presets, wiki ===
@@ -199,22 +187,14 @@ public static class SpellBarTabContent
 
             keyLabels[slot] = new MyraLabel(GetKeyDisplay(slot), MyraLabel.TextStyle.P);
 
-            normalPanels[slot] = new HorizontalStackPanel { Spacing = 4 };
-            normalPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_set"), () => StartListening(slot)));
-            normalPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_clear"), () =>
+            var actionsContainer = new HorizontalStackPanel { Spacing = 4 };
+            actionsContainer.Widgets.Add(new MyraButton(TazLang.Get("spellbar_set"), () => StartListening(slot)));
+            actionsContainer.Widgets.Add(new MyraButton(TazLang.Get("spellbar_clear"), () =>
             {
                 SpellBarManager.SetButtons(slot, SDL.SDL_Keymod.SDL_KMOD_NONE, SDL.SDL_Keycode.SDLK_UNKNOWN, []);
                 keyLabels[slot].Text = GetKeyDisplay(slot);
                 Game.UI.Gumps.SpellBar.SpellBar.Instance?.SetupHotkeyLabels();
             }));
-
-            editPanels[slot] = new HorizontalStackPanel { Spacing = 4, Visible = false };
-            editPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_apply"), () => ApplyCapturedHotkey()));
-            editPanels[slot].Widgets.Add(new MyraButton(TazLang.Get("spellbar_cancel"), () => StopListening()));
-
-            var actionsContainer = new VerticalStackPanel();
-            actionsContainer.Widgets.Add(normalPanels[slot]);
-            actionsContainer.Widgets.Add(editPanels[slot]);
 
             hotkeyGrid.AddWidget(new MyraLabel(TazLang.Get("spellbar_slot", new[] { slot.ToString() }), MyraLabel.TextStyle.P), slot, 0);
             hotkeyGrid.AddWidget(keyLabels[slot], slot, 2);
@@ -229,30 +209,5 @@ public static class SpellBarTabContent
         root.Widgets.Add(rightCol);
 
         return root;
-    }
-
-    private static (SDL.SDL_Keycode key, SDL.SDL_Keymod mod) ParseHotKeyString(string hotkey)
-    {
-        SDL.SDL_Keycode key = SDL.SDL_Keycode.SDLK_UNKNOWN;
-        SDL.SDL_Keymod mod = SDL.SDL_Keymod.SDL_KMOD_NONE;
-
-        if (string.IsNullOrEmpty(hotkey))
-            return (key, mod);
-
-        foreach (string part in hotkey.Split('+'))
-        {
-            switch (part.ToUpperInvariant())
-            {
-                case "CTRL":  mod |= SDL.SDL_Keymod.SDL_KMOD_CTRL;  break;
-                case "SHIFT": mod |= SDL.SDL_Keymod.SDL_KMOD_SHIFT; break;
-                case "ALT":   mod |= SDL.SDL_Keymod.SDL_KMOD_ALT;   break;
-                default:
-                    if (Enum.TryParse<SDL.SDL_Keycode>(part, true, out SDL.SDL_Keycode parsed))
-                        key = parsed;
-                    break;
-            }
-        }
-
-        return (key, mod);
     }
 }

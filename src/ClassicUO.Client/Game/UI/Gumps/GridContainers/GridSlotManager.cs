@@ -8,6 +8,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps.GridHighLight;
 using ClassicUO.Utility;
+using Microsoft.Xna.Framework;
 using static ClassicUO.Game.UI.Gumps.GridContainer;
 
 namespace ClassicUO.Game.UI.Gumps.GridContainers;
@@ -23,6 +24,7 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
         private HashSet<uint> _itemLocks = new HashSet<uint>();
         private World _world;
         private GridContainer _gridContainer;
+        private bool _bandsActive;
 
         public Dictionary<int, GridItem> GridSlots => _gridSlots;
         public List<Item> ContainerContents => _containerContents ??= new List<Item>();
@@ -124,6 +126,57 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 slot.Value.SetGridItem(null);
             }
 
+            // Cache the band-layout state for this rebuild; SetGridPositions (and the click handlers
+            // in GridItem) read it instead of re-scanning the band config on every layout pass.
+            _bandsActive = BandsActive();
+
+            if (_bandsActive)
+            {
+                // Band layout ignores saved slot positions and locks: items are grouped by band
+                // (first matching band wins) and laid out in band order, then any unmatched items.
+                AssignBands(filteredItems);
+            }
+            else
+            {
+                PlaceItemsDefault(filteredItems, overrideSort);
+            }
+
+            // Rebuild the GridItems lookup dictionary for quick serial-to-GridItem access
+            GridItems.Clear();
+
+            bool searchTextEmpty = string.IsNullOrEmpty(searchText);
+            // Handle search visibility and highlighting
+            foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
+            {
+                // In band mode only slots holding an item are shown (empty cells and inter-band
+                // spacing are handled by the positioning pass). Otherwise fall back to the standard
+                // rule, hiding everything by default in "hide" search mode.
+                slot.Value.IsVisible = _bandsActive
+                    ? slot.Value.SlotItem != null
+                    : (!_gridContainer.IsListView || slot.Value.SlotItem != null) && !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
+
+                if (slot.Value.SlotItem != null)
+                {
+                    // Keep serial lookup populated for OPL/list-name refreshes.
+                    GridItems[slot.Value.SlotItem.Serial] = slot.Value;
+                    if (!searchTextEmpty && SearchItemNameAndProps(searchText, slot.Value.SlotItem))
+                    {
+                        // In "highlight" mode (1), highlight matching items. In "hide" mode (0), show them
+                        slot.Value.Highlight = ProfileManager.CurrentProfile.GridContainerSearchMode == 1;
+                        slot.Value.IsVisible = true;
+                    }
+                }
+            }
+
+            // Position all visible slots on screen based on grid layout
+            SetGridPositions();
+        }
+
+        /// <summary>
+        /// Default (non-band) item placement: honors saved slot positions/locks and fills the rest.
+        /// </summary>
+        private void PlaceItemsDefault(List<Item> filteredItems, bool overrideSort = false)
+        {
             // Serials of everything we're allowed to display, for O(1) membership checks.
             var filteredSerials = new HashSet<uint>(filteredItems.Count);
             foreach (Item i in filteredItems)
@@ -180,31 +233,102 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 AddItemSlot(i, nextFreeSlot);
                 placed.Add(i.Serial);
             }
+        }
 
-            // Rebuild the GridItems lookup dictionary for quick serial-to-GridItem access
-            GridItems.Clear();
+        /// <summary>
+        /// Whether band layout is currently active: enabled in the profile, the container is in grid
+        /// (not list) view, and at least one enabled band is configured.
+        /// </summary>
+        public bool BandsActive()
+        {
+            if (_gridContainer.IsListView)
+                return false;
 
-            bool searchTextEmpty = string.IsNullOrEmpty(searchText);
-            // Third pass: Handle search visibility and highlighting
-            foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
+            // Per-container override: bands can be turned off for this container even when enabled.
+            if (_gridContainer.BandsDisabledForContainer)
+                return false;
+
+            return ActiveGroup.HasActiveBands();
+        }
+
+        /// <summary>The band group that applies to this container (corpse / backpack / other).</summary>
+        private GridContainerBandGroup ActiveGroup =>
+            GridContainerBandsConfig.Current.GetGroupForContainer(_gridContainer.IsCorpse, _gridContainer.IsPlayerBackpack);
+
+        /// <summary>
+        /// Groups items into bands (first matching enabled band wins) and assigns them to grid slots in
+        /// band order, followed by any unmatched items. Each band's slots take the band's background
+        /// color and a shared band-group index used by the positioning pass to insert spacing.
+        /// </summary>
+        private void AssignBands(List<Item> filteredItems)
+        {
+            List<GridContainerBand> bands = ActiveGroup.Bands;
+
+            var bandItems = new List<Item>[bands.Count];
+            var unmatched = new List<Item>();
+
+            // Bucket items, preserving the incoming (already-sorted) order within each band.
+            foreach (Item item in filteredItems)
             {
-                // In "hide" search mode, hide all slots by default (they'll be shown if they match)
-                slot.Value.IsVisible = (!_gridContainer.IsListView || slot.Value.SlotItem != null) && !(!searchTextEmpty && ProfileManager.CurrentProfile.GridContainerSearchMode == 0);
-                if (slot.Value.SlotItem != null)
+                int matched = -1;
+                for (int b = 0; b < bands.Count; b++)
                 {
-                    // Keep serial lookup populated for OPL/list-name refreshes.
-                    GridItems[slot.Value.SlotItem.Serial] = slot.Value;
-                    if (!searchTextEmpty && SearchItemNameAndProps(searchText, slot.Value.SlotItem))
+                    GridContainerBand band = bands[b];
+                    if (band is not { Enabled: true })
+                        continue;
+
+                    if (band.Matches(item.Graphic, item.Hue, item.ItemData.Layer))
                     {
-                        // In "highlight" mode (1), highlight matching items. In "hide" mode (0), show them
-                        slot.Value.Highlight = ProfileManager.CurrentProfile.GridContainerSearchMode == 1;
-                        slot.Value.IsVisible = true;
+                        matched = b;
+                        break;
                     }
                 }
+
+                if (matched >= 0)
+                    (bandItems[matched] ??= new List<Item>()).Add(item);
+                else
+                    unmatched.Add(item);
             }
 
-            // Position all visible slots on screen based on grid layout
-            SetGridPositions();
+            int slotIndex = 0;
+            int groupIndex = 0;
+
+            for (int b = 0; b < bands.Count; b++)
+            {
+                List<Item> items = bandItems[b];
+                if (items == null || items.Count == 0)
+                    continue;
+
+                GridContainerBand band = bands[b];
+                Color? color = band.UseBackgroundColor ? band.GetBackgroundColor() : null;
+
+                if (!PlaceBandItems(items, groupIndex, color, ref slotIndex))
+                    return;
+
+                groupIndex++;
+            }
+
+            // Unmatched items are shown last as their own uncolored group.
+            if (unmatched.Count > 0)
+                PlaceBandItems(unmatched, groupIndex, null, ref slotIndex);
+        }
+
+        /// <summary>Assigns a band group's items to consecutive grid slots. Returns false when slots run out.</summary>
+        private bool PlaceBandItems(List<Item> items, int groupIndex, Color? color, ref int slotIndex)
+        {
+            foreach (Item item in items)
+            {
+                if (slotIndex >= _gridSlots.Count)
+                    return false;
+
+                GridItem slot = _gridSlots[slotIndex];
+                slot.SetGridItem(item);
+                slot.BandGroup = groupIndex;
+                slot.SetBandColor(color);
+                slotIndex++;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -269,6 +393,12 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 return;
             }
 
+            if (_bandsActive)
+            {
+                SetBandGridPositions();
+                return;
+            }
+
             int x = X_SPACING, y = 0;
             foreach (KeyValuePair<int, GridItem> slot in _gridSlots)
             {
@@ -285,6 +415,60 @@ namespace ClassicUO.Game.UI.Gumps.GridContainers;
                 slot.Value.Y = y;
                 slot.Value.Resize();
                 x += GridItemSize + X_SPACING;
+            }
+        }
+
+        /// <summary>
+        /// Positions visible item slots grouped by band. Each band lays its items out in grid rows;
+        /// when a new band starts the layout drops to a fresh row and adds <see cref="BAND_SPACING"/>
+        /// of vertical space, leaving the remainder of the previous band's last row empty.
+        /// </summary>
+        private void SetBandGridPositions()
+        {
+            int usableWidth = Math.Max(0, _area.Width - GridScrollArea.SCROLLBAR_WIDTH);
+            int columns = Math.Max(1, (usableWidth - X_SPACING) / (GridItemSize + X_SPACING));
+            int bandPadding = Math.Max(0, GridContainerBandsConfig.Current.BandPadding);
+
+            int x = X_SPACING, y = 0, col = 0;
+            int prevGroup = int.MinValue;
+
+            foreach (KeyValuePair<int, GridItem> kv in _gridSlots)
+            {
+                GridItem slot = kv.Value;
+                if (!slot.IsVisible || slot.SlotItem == null)
+                    continue;
+
+                int group = slot.BandGroup;
+
+                if (prevGroup == int.MinValue)
+                {
+                    // First item.
+                    x = X_SPACING;
+                    y = 0;
+                    col = 0;
+                }
+                else if (group != prevGroup)
+                {
+                    // New band: drop to a fresh row and add the band gap.
+                    y += GridItemSize + Y_SPACING + bandPadding;
+                    x = X_SPACING;
+                    col = 0;
+                }
+                else if (col >= columns)
+                {
+                    // Wrap within the current band.
+                    y += GridItemSize + Y_SPACING;
+                    x = X_SPACING;
+                    col = 0;
+                }
+
+                slot.X = x;
+                slot.Y = y;
+                slot.Resize();
+
+                x += GridItemSize + X_SPACING;
+                col++;
+                prevGroup = group;
             }
         }
 

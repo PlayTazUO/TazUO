@@ -423,11 +423,35 @@ class ApiUiBaseControl:
         """
         pass
 
+    def SetTooltip(self, text: "str") -> "ApiUiBaseControl":
+        """
+         Sets a plain text tooltip that is shown when hovering this control.
+         Used in python API
+
+        """
+        pass
+
+    def SetEntityTooltip(self, serial: "int") -> "ApiUiBaseControl":
+        """
+         Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+         Used in python API
+
+        """
+        pass
+
+    def ClearTooltip(self) -> "ApiUiBaseControl":
+        """
+         Clears the tooltip from this control.
+         Used in python API
+
+        """
+        pass
+
     def Clear(self) -> "ApiUiBaseControl":
         """
          Clears all child controls from this control.
          Used in python API
-        
+
         """
         pass
 
@@ -1365,6 +1389,19 @@ def ContextMenu(serial: "int", entry: "int") -> None:
      Example:
      ```py
      API.ContextMenu(API.Player, 1)
+     ```
+    
+    """
+    pass
+
+def ContextMenu(serial: "int", entry: "str", timeout: "float" = 5) -> "bool":
+    """
+     Send a context menu(right click menu) response by matching the entry text.
+     This opens the menu, finds the entry whose text matches, and responds with the correct index.
+     The match is case-insensitive and matches the first entry that contains the given text.
+     Example:
+     ```py
+     API.ContextMenu(API.Player, "Open Paperdoll")
      ```
     
     """
@@ -3061,27 +3098,61 @@ def DisplayRange(distance: "int", hue: "int" = 22) -> None:
     """
     pass
 
-def ToggleScript(scriptName: "str") -> None:
+def ToggleScript(scriptPath: "str") -> None:
     """
      Toggle another script on or off.
      Example:
      ```py
-     API.ToggleScript("MyScript.py")
+     API.ToggleScript("mygroup/MyScript.py")
      ```
     
     """
     pass
 
-def PlayScript(scriptName: "str") -> None:
+def PlayScript(scriptPath: "str") -> None:
     """
      Play a legion script.
+     Example:
+     ```py
+     API.PlayScript("mygroup/MyScript.py")
+     ```
     
     """
     pass
 
-def StopScript(scriptName: "str") -> None:
+def StopScript(scriptPath: "str") -> None:
     """
      Stop a legion script.
+     Example:
+     ```py
+     API.StopScript("mygroup/MyScript.py")
+     ```
+    
+    """
+    pass
+
+def ListRunningScripts() -> "list[str]":
+    """
+     Get the paths of all currently running legion scripts.
+     The paths are relative to the LegionScripts folder and can be passed
+     straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
+     Example:
+     ```py
+     for path in API.ListRunningScripts():
+         API.SysMsg(path)
+     ```
+    
+    """
+    pass
+
+def IsScriptRunning(scriptPath: "str") -> "bool":
+    """
+     Check if a legion script is currently running.
+     Example:
+     ```py
+     if not API.IsScriptRunning("mygroup/MyScript.py"):
+         API.PlayScript("mygroup/MyScript.py")
+     ```
     
     """
     pass
