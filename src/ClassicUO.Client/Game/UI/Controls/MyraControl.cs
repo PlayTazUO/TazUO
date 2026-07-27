@@ -6,6 +6,7 @@ using ClassicUO.Game.UI.Controls.ResizableComponents;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
+using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Myra.Events;
 using Myra.Graphics2D;
@@ -121,6 +122,7 @@ public class MyraControl : IGui
     #region Fields
     protected Rectangle _bounds = new();
     protected bool _disposeRequested = false;
+    private bool _renderErrorLogged = false;
     protected readonly Queue<Action> _deferredActions = new();
     #endregion
 
@@ -287,14 +289,26 @@ public class MyraControl : IGui
         // the click is passed through to Myra on the same frame, and hover frames keep Myra's mouse
         // baseline fresh so the down-edge is detected. Only one window is ever MouseOverControl
         // (front-most hit), so this does not cause click-through to overlapped windows.
-        if (IsTopMost || ReferenceEquals(UIManager.MouseOverControl, this))
+        try
         {
-            _desktop.Render();
+            if (IsTopMost || ReferenceEquals(UIManager.MouseOverControl, this))
+            {
+                _desktop.Render();
+            }
+            else
+            {
+                _desktop.UpdateLayout();
+                _desktop.RenderVisual();
+            }
         }
-        else
+        catch (Exception ex)
         {
-            _desktop.UpdateLayout();
-            _desktop.RenderVisual();
+            // A Myra render fault (e.g. a widget detached from the desktop mid-pass) must not crash the client; log once per control to avoid frame-rate flooding.
+            if (!_renderErrorLogged)
+            {
+                _renderErrorLogged = true;
+                Log.Error($"Exception while rendering Myra window '{_rootWindow?.Title}': {ex}");
+            }
         }
 
         DrawDebug(batcher, x, y);
