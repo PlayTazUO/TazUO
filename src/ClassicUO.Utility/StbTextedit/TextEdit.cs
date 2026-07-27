@@ -844,6 +844,20 @@ namespace StbTextEditSharp
             u = s.undo_rec[s.undo_point - 1];
             int rpos = s.redo_point - 1;
 
+            // The undo record stores positions into the text buffer at the time
+            // the edit was made. If the text was replaced or trimmed outside of
+            // the undo system (e.g. the Text property was set directly, or a max
+            // length truncated an insert) the record can point past the end of
+            // the current text, and applying it would throw. Likewise rpos would
+            // be negative if there is no room left for a redo record. In either
+            // case the history is inconsistent, so discard it instead of crashing.
+            if (rpos < 0 || u.where < 0 || u.where > Length || u.where + u.delete_length > Length)
+            {
+                s.Reset();
+
+                return;
+            }
+
             s.undo_rec[rpos].char_storage = -1;
 
             s.undo_rec[rpos].insert_length = u.delete_length;
@@ -910,6 +924,16 @@ namespace StbTextEditSharp
 
             int upos = s.undo_point;
             r = s.undo_rec[s.redo_point];
+
+            // Guard against a redo record whose stored positions no longer match
+            // the current text buffer (see the matching check in Undo). Applying
+            // a stale record would index outside the text, so drop the history.
+            if (upos >= s.undo_rec.Length || r.where < 0 || r.where > Length || r.where + r.delete_length > Length)
+            {
+                s.Reset();
+
+                return;
+            }
 
             s.undo_rec[upos].delete_length = r.insert_length;
 

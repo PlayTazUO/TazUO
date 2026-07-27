@@ -19,6 +19,17 @@ namespace StbTextEditSharp
             redo_char_point = 999;
         }
 
+        // Clears all undo/redo history. Used when the recorded history can no
+        // longer be trusted (for example, the text buffer was replaced outside
+        // of the undo system) and applying it would index outside the text.
+        public void Reset()
+        {
+            undo_point = 0;
+            undo_char_point = 0;
+            redo_point = 99;
+            redo_char_point = 999;
+        }
+
         public void DiscardUndo()
         {
             if (undo_point > 0)
