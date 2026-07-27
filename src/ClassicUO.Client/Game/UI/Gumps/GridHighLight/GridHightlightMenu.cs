@@ -174,7 +174,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
                 string json = JsonSerializer.Serialize(data, GridHighlightsJsonContext.DefaultToUse.ListGridHighlightSetupEntry);
                 Clipboard.SetClipboardText(json);
-                GameActions.Print(world, TazLang.Get("gridhighlight_export_success"));
+                GameActions.Print(world, TazLang.Get("gridhighlight_export_clipboard_success"));
             }
             catch (Exception ex)
             {
@@ -190,7 +190,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 string json = Clipboard.GetClipboardText();
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    GameActions.Print(world, TazLang.Get("gridhighlight_import_empty"), Constants.HUE_ERROR);
+                    GameActions.Print(world, TazLang.Get("gridhighlight_import_clipboard_empty"), Constants.HUE_ERROR);
                     return;
                 }
 
@@ -210,7 +210,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                         }
                     }
 
-                    GameActions.Print(world, TazLang.Get("gridhighlight_import_success"));
+                    GameActions.Print(world, TazLang.Get("gridhighlight_import_clipboard_success"));
                 }
             }
             catch (Exception ex)
