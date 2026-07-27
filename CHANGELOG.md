@@ -18,6 +18,7 @@ All notable changes to TazUO will be recorded here.
 * Migrate tooltip override saves to its own json file - [P.R 798](https://github.com/PlayTazUO/TazUO/pull/798) ([bittiez](https://github.com/bittiez))
 
 ### Fixes
+* Prevent a Myra render NullReferenceException from crashing the client when a widget is detached from the desktop mid-render - [P.R 807](https://github.com/PlayTazUO/TazUO/pull/807) ([bittiez](https://github.com/bittiez))
 * Load SQL profile settings before saved gumps are restored at login, so gumps use the correct setting values - [P.R 804](https://github.com/PlayTazUO/TazUO/pull/804) ([bittiez](https://github.com/bittiez))
 * Restore default cooldown duration and hue - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
 * Recover from a corrupt SQLite database instead of crashing at login; the bad file is quarantined and an empty database is recreated - [P.R 800](https://github.com/PlayTazUO/TazUO/pull/800) ([bittiez](https://github.com/bittiez))

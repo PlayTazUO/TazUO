@@ -303,12 +303,7 @@ public class MyraControl : IGui
         }
         catch (Exception ex)
         {
-            // Myra's render traversal walks a cached ChildrenCopy snapshot. If a widget is
-            // detached from the desktop mid-pass (e.g. a child removed while rebuilding the
-            // tree), its Desktop becomes null and Widget.Render throws a NullReferenceException
-            // while it is still referenced by that stale snapshot. A rendering fault must never
-            // take down the entire client, so swallow it here and keep the game running.
-            // Log only once per control to avoid flooding the log at frame rate.
+            // A Myra render fault (e.g. a widget detached from the desktop mid-pass) must not crash the client; log once per control to avoid frame-rate flooding.
             if (!_renderErrorLogged)
             {
                 _renderErrorLogged = true;
