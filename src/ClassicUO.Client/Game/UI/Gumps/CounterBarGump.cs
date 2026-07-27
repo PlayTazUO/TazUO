@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -10,14 +11,17 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
+using ClassicUO.Game.Managers.Hotkeys;
 using ClassicUO.LegionScripting;
 using ClassicUO.Game.UI.Gumps.SpellBar;
+using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SDL3;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -236,6 +240,9 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
+            // Drop hotkeys bound to cells that no longer exist after a shrink.
+            CounterBarHotkeysManager.PruneFrom(_rows * _columns);
+
             SetInScreen();
         }
 
@@ -248,12 +255,24 @@ namespace ClassicUO.Game.UI.Gumps
                 return null;
             }
 
-            if (items.Length > index)
+            if (index >= 0 && items.Length > index)
             {
                 return items[index];
             }
 
             return null;
+        }
+
+        /// <summary>Position of <paramref name="item"/> among the counter cells, matching the order used by save/restore and hotkey ids. -1 when not found.</summary>
+        public int IndexOf(CounterItem item)
+        {
+            CounterItem[] items = GetControls<CounterItem>();
+
+            for (int i = 0; i < items.Length; i++)
+                if (items[i] == item)
+                    return i;
+
+            return -1;
         }
 
         public override void OnMouseUp(int x, int y, MouseButtonType button)
@@ -277,12 +296,14 @@ namespace ClassicUO.Game.UI.Gumps
             writer.WriteAttributeString("columns", _columns.ToString());
             writer.WriteAttributeString("rectsize", _rectSize.ToString());
 
-            IEnumerable<CounterItem> controls = FindControls<CounterItem>();
+            CounterItem[] controls = GetControls<CounterItem>();
 
             writer.WriteStartElement("controls");
 
-            foreach (CounterItem control in controls)
+            for (int index = 0; index < controls.Length; index++)
             {
+                CounterItem control = controls[index];
+
                 writer.WriteStartElement("control");
                 writer.WriteAttributeString("graphic", control.Graphic.ToString());
                 writer.WriteAttributeString("hue", control.Hue.ToString());
@@ -312,10 +333,29 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
+                WriteHotkey(writer, CounterBarHotkeysManager.GetBinding(index));
+
                 writer.WriteEndElement();
             }
 
             writer.WriteEndElement();
+        }
+
+        /// <summary>Serializes a cell's hotkey binding as attributes, writing nothing when the binding is empty.</summary>
+        private static void WriteHotkey(XmlTextWriter writer, HotkeyBinding binding)
+        {
+            if (binding == null || binding.IsEmpty)
+                return;
+
+            writer.WriteAttributeString("hkkey", ((int)binding.Key).ToString());
+            writer.WriteAttributeString("hkctrl", binding.Ctrl.ToString());
+            writer.WriteAttributeString("hkshift", binding.Shift.ToString());
+            writer.WriteAttributeString("hkalt", binding.Alt.ToString());
+            writer.WriteAttributeString("hkmouse", ((int)binding.MouseButton).ToString());
+            writer.WriteAttributeString("hkwheel", binding.WheelScroll.ToString());
+            writer.WriteAttributeString("hkwheelup", binding.WheelUp.ToString());
+            if (binding.ControllerButtons is { Length: > 0 } buttons)
+                writer.WriteAttributeString("hkcontroller", string.Join(",", buttons.Select(b => ((int)b).ToString())));
         }
 
         public override void Restore(XmlElement xml)
@@ -354,6 +394,11 @@ namespace ClassicUO.Game.UI.Gumps
                                 ushort.Parse(controlXml.GetAttribute("hue"))
                             );
                         }
+
+                        // Re-register the saved hotkey with the central system (XML is the source of truth).
+                        HotkeyBinding hotkey = RestoreHotkey(controlXml);
+                        if (hotkey != null && !hotkey.IsEmpty)
+                            CounterBarHotkeysManager.SetBinding(index, hotkey);
 
                         index++;
                     }
@@ -406,6 +451,41 @@ namespace ClassicUO.Game.UI.Gumps
             return CounterBarSlot.Empty();
         }
 
+        /// <summary>Rebuilds a cell's <see cref="HotkeyBinding"/> from its saved attributes; tolerant of missing/partial data.</summary>
+        private static HotkeyBinding RestoreHotkey(XmlElement controlXml)
+        {
+            var binding = new HotkeyBinding
+            {
+                Key = (SDL.SDL_Keycode)ParseIntAttr(controlXml, "hkkey", (int)SDL.SDL_Keycode.SDLK_UNKNOWN),
+                Ctrl = ParseBoolAttr(controlXml, "hkctrl"),
+                Shift = ParseBoolAttr(controlXml, "hkshift"),
+                Alt = ParseBoolAttr(controlXml, "hkalt"),
+                MouseButton = (MouseButtonType)ParseIntAttr(controlXml, "hkmouse", (int)MouseButtonType.None),
+                WheelScroll = ParseBoolAttr(controlXml, "hkwheel"),
+                WheelUp = ParseBoolAttr(controlXml, "hkwheelup")
+            };
+
+            string controllers = controlXml.GetAttribute("hkcontroller");
+            if (!string.IsNullOrEmpty(controllers))
+            {
+                var buttons = new List<SDL.SDL_GamepadButton>();
+                foreach (string part in controllers.Split(','))
+                    if (int.TryParse(part, out int b))
+                        buttons.Add((SDL.SDL_GamepadButton)b);
+
+                if (buttons.Count > 0)
+                    binding.ControllerButtons = buttons.ToArray();
+            }
+
+            return binding;
+        }
+
+        private static int ParseIntAttr(XmlElement xml, string attr, int fallback)
+            => xml.HasAttribute(attr) && int.TryParse(xml.GetAttribute(attr), out int v) ? v : fallback;
+
+        private static bool ParseBoolAttr(XmlElement xml, string attr)
+            => xml.HasAttribute(attr) && bool.TryParse(xml.GetAttribute(attr), out bool v) && v;
+
         protected override void OnLockedChanged()
         {
             base.OnLockedChanged();
@@ -416,6 +496,9 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (CurrentCounterBarGump == this)
             {
+                // Drop this bar's cell hotkeys from the central registry so they don't linger or fire
+                // after the gump is gone (e.g. across a profile switch).
+                CounterBarHotkeysManager.PruneFrom(0);
                 CurrentCounterBarGump = null;
             }
             base.Dispose();
@@ -474,6 +557,8 @@ namespace ClassicUO.Game.UI.Gumps
                 var skillMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setskill"));
                 GenSkillList(skillMenu);
                 ContextMenu.Add(skillMenu);
+
+                ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("counterbar_sethotkey"), SetHotkey));
             }
 
             public ushort Graphic { get; private set; }
@@ -593,6 +678,21 @@ namespace ClassicUO.Game.UI.Gumps
             //     base.OnMouseExit(x, y);
             //     ClearTooltip();
             // }
+
+            /// <summary>Opens the shared hotkey capture window to bind (or clear) a hotkey that triggers this cell.</summary>
+            private void SetHotkey()
+            {
+                int index = _gump.IndexOf(this);
+                if (index < 0)
+                    return;
+
+                // The universal capture window adds itself to the UI and commits on Save; the binding is
+                // registered with the central hotkey system and persisted with the cell on the next gump save.
+                _ = new HotkeyCaptureWindow(
+                    prompt: TazLang.Get("counterbar_slot", new[] { (index + 1).ToString() }),
+                    existing: CounterBarHotkeysManager.GetBinding(index),
+                    onSaved: binding => CounterBarHotkeysManager.SetBinding(index, binding));
+            }
 
             private void QuickSetSpell() =>
                 UIManager.Add
