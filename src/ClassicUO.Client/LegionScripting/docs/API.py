@@ -423,11 +423,35 @@ class ApiUiBaseControl:
         """
         pass
 
+    def SetTooltip(self, text: "str") -> "ApiUiBaseControl":
+        """
+         Sets a plain text tooltip that is shown when hovering this control.
+         Used in python API
+
+        """
+        pass
+
+    def SetEntityTooltip(self, serial: "int") -> "ApiUiBaseControl":
+        """
+         Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+         Used in python API
+
+        """
+        pass
+
+    def ClearTooltip(self) -> "ApiUiBaseControl":
+        """
+         Clears the tooltip from this control.
+         Used in python API
+
+        """
+        pass
+
     def Clear(self) -> "ApiUiBaseControl":
         """
          Clears all child controls from this control.
          Used in python API
-        
+
         """
         pass
 

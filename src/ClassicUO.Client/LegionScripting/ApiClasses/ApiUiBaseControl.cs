@@ -161,6 +161,26 @@ public class ApiUiBaseControl(Control control)
     public ApiUiBaseControl SetAlpha(float alpha) => SetPropFluent(() => control.Alpha = alpha);
 
     /// <summary>
+    /// Sets a plain text tooltip that is shown when hovering this control.
+    /// Used in python API
+    /// </summary>
+    /// <param name="text">The tooltip text to display. Pass an empty string to clear the tooltip.</param>
+    public ApiUiBaseControl SetTooltip(string text) => SetPropFluent(() => control?.SetTooltip(text));
+
+    /// <summary>
+    /// Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+    /// Used in python API
+    /// </summary>
+    /// <param name="serial">The serial of the item/entity whose tooltip should be shown.</param>
+    public ApiUiBaseControl SetEntityTooltip(uint serial) => SetPropFluent(() => control?.SetTooltip(serial));
+
+    /// <summary>
+    /// Clears the tooltip from this control.
+    /// Used in python API
+    /// </summary>
+    public ApiUiBaseControl ClearTooltip() => SetPropFluent(() => control?.ClearTooltip());
+
+    /// <summary>
     /// Clears all child controls from this control.
     /// Used in python API
     /// </summary>
