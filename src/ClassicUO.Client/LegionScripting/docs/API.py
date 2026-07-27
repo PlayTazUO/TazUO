@@ -426,16 +426,27 @@ class ApiUiBaseControl:
     def SetTooltip(self, text: "str") -> "ApiUiBaseControl":
         """
          Sets a plain text tooltip that is shown when hovering this control.
+         Automatically enables mouse input so the tooltip can be triggered by hovering.
          Used in python API
-
+        
         """
         pass
 
     def SetEntityTooltip(self, serial: "int") -> "ApiUiBaseControl":
         """
          Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+         Automatically enables mouse input so the tooltip can be triggered by hovering.
          Used in python API
+        
+        """
+        pass
 
+    def SetAcceptMouseInput(self, enabled: "bool") -> "ApiUiBaseControl":
+        """
+         Sets whether this control accepts mouse input. Mouse input must be enabled for
+         hover-based features such as tooltips to work.
+         Used in python API
+        
         """
         pass
 
@@ -443,7 +454,7 @@ class ApiUiBaseControl:
         """
          Clears the tooltip from this control.
          Used in python API
-
+        
         """
         pass
 
@@ -451,7 +462,7 @@ class ApiUiBaseControl:
         """
          Clears all child controls from this control.
          Used in python API
-
+        
         """
         pass
 

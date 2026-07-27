@@ -226,6 +226,7 @@ description: ApiUiBaseControl class documentation
 ### SetTooltip
 `(text)`
  Sets a plain text tooltip that is shown when hovering this control.
+ Automatically enables mouse input so the tooltip can be triggered by hovering.
  Used in python API
 
 
@@ -242,6 +243,7 @@ description: ApiUiBaseControl class documentation
 ### SetEntityTooltip
 `(serial)`
  Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+ Automatically enables mouse input so the tooltip can be triggered by hovering.
  Used in python API
 
 
@@ -250,6 +252,23 @@ description: ApiUiBaseControl class documentation
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | `serial` | `uint` | ❌ No | The serial of the item/entity whose tooltip should be shown. |
+
+**Return Type:** `ApiUiBaseControl`
+
+---
+
+### SetAcceptMouseInput
+`(enabled)`
+ Sets whether this control accepts mouse input. Mouse input must be enabled for
+ hover-based features such as tooltips to work.
+ Used in python API
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `enabled` | `bool` | ❌ No | True to accept mouse input, false to ignore it. |
 
 **Return Type:** `ApiUiBaseControl`
 

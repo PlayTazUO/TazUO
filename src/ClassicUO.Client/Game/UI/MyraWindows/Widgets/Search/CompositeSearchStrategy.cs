@@ -25,6 +25,10 @@ public class CompositeSearchStrategy : ISearchStrategy
 
     public bool IsQueryValid(string query) => _strategies.Any(s => s.IsQueryValid(query));
 
+    // Deep: the inner strategies are mutable too, so a shallow copy would still let one composite
+    // retune another's.
+    public ISearchStrategy Clone() => new CompositeSearchStrategy(_strategies.Select(s => s.Clone()).ToArray());
+
     public SearchMatch Match(string candidate, string query)
     {
         foreach (ISearchStrategy strategy in _strategies)

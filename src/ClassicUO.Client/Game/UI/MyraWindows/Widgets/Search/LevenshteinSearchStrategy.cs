@@ -44,6 +44,9 @@ public partial class LevenshteinSearchStrategy : ISearchStrategy
         return best;
     }
 
+    // Shallow is enough - every field is a value or an immutable delegate.
+    public ISearchStrategy Clone() => (ISearchStrategy)MemberwiseClone();
+
     public static IEnumerable<string> WordBoundaryTokenizer(string s)
     {
         foreach (Match m in _wordBoundaryRegex.Matches(s))
