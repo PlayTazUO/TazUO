@@ -3404,11 +3404,11 @@ You can now type `-updateapi` in game to download the latest API.py file.
 ---
 
 ### ToggleScript
-`(scriptName)`
+`(scriptPath)`
  Toggle another script on or off.
  Example:
  ```py
- API.ToggleScript("MyScript.py")
+ API.ToggleScript("mygroup/MyScript.py")
  ```
 
 
@@ -3416,37 +3416,45 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | Full name including extension. Can be .py or .lscript. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### PlayScript
-`(scriptName)`
+`(scriptPath)`
  Play a legion script.
+ Example:
+ ```py
+ API.PlayScript("mygroup/MyScript.py")
+ ```
 
 
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### StopScript
-`(scriptName)`
+`(scriptPath)`
  Stop a legion script.
+ Example:
+ ```py
+ API.StopScript("mygroup/MyScript.py")
+ ```
 
 
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3454,11 +3462,13 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### ListRunningScripts
 
- Get a list of the file names of all currently running legion scripts.
+ Get the paths of all currently running legion scripts.
+ The paths are relative to the LegionScripts folder and can be passed
+ straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
  Example:
  ```py
- for name in API.ListRunningScripts():
-     API.SysMsg(name)
+ for path in API.ListRunningScripts():
+     API.SysMsg(path)
  ```
 
 
@@ -3467,12 +3477,12 @@ You can now type `-updateapi` in game to download the latest API.py file.
 ---
 
 ### IsScriptRunning
-`(scriptName)`
+`(scriptPath)`
  Check if a legion script is currently running.
  Example:
  ```py
- if not API.IsScriptRunning("MyScript.py"):
-     API.PlayScript("MyScript.py")
+ if not API.IsScriptRunning("mygroup/MyScript.py"):
+     API.PlayScript("mygroup/MyScript.py")
  ```
 
 
@@ -3480,7 +3490,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `bool`
 

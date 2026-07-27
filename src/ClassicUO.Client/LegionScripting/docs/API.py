@@ -3074,50 +3074,60 @@ def DisplayRange(distance: "int", hue: "int" = 22) -> None:
     """
     pass
 
-def ToggleScript(scriptName: "str") -> None:
+def ToggleScript(scriptPath: "str") -> None:
     """
      Toggle another script on or off.
      Example:
      ```py
-     API.ToggleScript("MyScript.py")
+     API.ToggleScript("mygroup/MyScript.py")
      ```
     
     """
     pass
 
-def PlayScript(scriptName: "str") -> None:
+def PlayScript(scriptPath: "str") -> None:
     """
      Play a legion script.
+     Example:
+     ```py
+     API.PlayScript("mygroup/MyScript.py")
+     ```
     
     """
     pass
 
-def StopScript(scriptName: "str") -> None:
+def StopScript(scriptPath: "str") -> None:
     """
      Stop a legion script.
+     Example:
+     ```py
+     API.StopScript("mygroup/MyScript.py")
+     ```
     
     """
     pass
 
 def ListRunningScripts() -> "list[str]":
     """
-     Get a list of the file names of all currently running legion scripts.
+     Get the paths of all currently running legion scripts.
+     The paths are relative to the LegionScripts folder and can be passed
+     straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
      Example:
      ```py
-     for name in API.ListRunningScripts():
-         API.SysMsg(name)
+     for path in API.ListRunningScripts():
+         API.SysMsg(path)
      ```
     
     """
     pass
 
-def IsScriptRunning(scriptName: "str") -> "bool":
+def IsScriptRunning(scriptPath: "str") -> "bool":
     """
      Check if a legion script is currently running.
      Example:
      ```py
-     if not API.IsScriptRunning("MyScript.py"):
-         API.PlayScript("MyScript.py")
+     if not API.IsScriptRunning("mygroup/MyScript.py"):
+         API.PlayScript("mygroup/MyScript.py")
      ```
     
     """
@@ -3283,4 +3293,161 @@ def GetViewportBounds() -> "Any":
     
     """
     pass
+
+class EventSinkApiDeclaration:
+    ""
+
+    def OnItemCreated(self, callback: "Any") -> None:
+        """
+         Invoked when an item is added to the client.
+         The event's argument is the ApiItem.
+        
+        """
+        pass
+
+    def OnItemUpdated(self, callback: "Any") -> None:
+        """
+         Invoked when an item is already in the client but has been updated.
+         The event's argument is the ApiItem.
+        
+        """
+        pass
+
+    def OnCorpseCreated(self, callback: "Any") -> None:
+        """
+         Invoked when a corpse is added to the client. The event's 'sender' is the corpse Item
+        
+        """
+        pass
+
+    def OnConnected(self, callback: "Any") -> None:
+        """
+         Invoked when the player is connected to a server
+        
+        """
+        pass
+
+    def OnDisconnected(self, callback: "Any") -> None:
+        """
+         Invoked when the player is disconnected from the server
+        
+        """
+        pass
+
+    def MessageReceived(self, callback: "Any") -> None:
+        """
+         Invoked when any message is received from the server after client processing
+        
+        """
+        pass
+
+    def RawMessageReceived(self, callback: "Any") -> None:
+        """
+         Invoked when any message is received from the server *before* client processing
+        
+        """
+        pass
+
+    def ClilocMessageReceived(self, callback: "Any") -> None:
+        """
+         Invoked when a cliloc message is received from the server
+        
+        """
+        pass
+
+    def JournalEntryAdded(self, callback: "Any") -> None:
+        """
+          Invoked when a message is added to the journal
+        
+        """
+        pass
+
+    def SoundPlayed(self, callback: "Any") -> None:
+        """
+         Invoked when the server requests that a sound be played
+        
+        """
+        pass
+
+    def OPLOnReceive(self, callback: "Any") -> None:
+        """
+         Invoked when an object's property list data (Tooltip text for items) is received
+        
+        """
+        pass
+
+    def OnBuffAdded(self, callback: "Any") -> None:
+        """
+         Invoked when a buff is "added" to a player.
+         The event's argument is the ApiBuff.
+        
+        """
+        pass
+
+    def OnBuffRemoved(self, callback: "Any") -> None:
+        """
+         Invoked when a buff is "removed" to a player (Called before removal)
+         The event's argument is the ApiBuff.
+        
+        """
+        pass
+
+    def OnPositionChanged(self, callback: "Any") -> None:
+        """
+         Invoked when the player's position is changed
+        
+        """
+        pass
+
+    def OnEntityDamage(self, callback: "Any") -> None:
+        """
+         Invoked when any entity in the game receives damage, not necessarily the player.
+        
+        """
+        pass
+
+    def OnOpenContainer(self, callback: "Any") -> None:
+        """
+         Invoked when a container is opened.
+         The event's 'sender' is the Item, the event's argument is the item's serial
+        
+        """
+        pass
+
+    def OnPlayerDeath(self, callback: "Any") -> None:
+        """
+         Invoked when the player receives a death packet from the server
+        
+        """
+        pass
+
+    def OnPathFinding(self, callback: "Any") -> None:
+        """
+          Invoked when the player or server tells the client to path find
+          Vector is X, Y, Z, and Distance
+        
+        """
+        pass
+
+    def OnSetWeather(self, callback: "Any") -> None:
+        """
+         Invoked when the server asks the client to generate some weather
+        
+        """
+        pass
+
+    def OnPlayerHitsChanged(self, callback: "Any") -> None:
+        """
+         Invoked after the player's hit points have changed.
+        
+        """
+        pass
+
+    def ApiMobileCreated(self, callback: "Any") -> None:
+        """
+         Invoked when a mobile is created.
+         The event's sender is null and the argument is an ApiMobile.
+        
+        """
+        pass
 
