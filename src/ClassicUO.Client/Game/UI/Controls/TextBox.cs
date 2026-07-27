@@ -111,38 +111,55 @@ namespace ClassicUO.Game.UI.Controls
         /// <param name="text"></param>
         /// <param name="width">Leave null to make width fit the text.</param>
         /// <param name="applyTextFormatting">True will add a stroke, and convert html colors if those are true. Set to false to keep text as is.</param>
-        private void CreateRichTextLayout(string text)
+        private void CreateRichTextLayout(string text, int retries = 0)
         {
-            text ??= string.Empty;  //Prevent null ref error while still updating everything else
-            text = StringHelper.RemoveUnpairedSurrogates(text); //Lone surrogates crash FontStashSharp's text measuring
-            _dirty = false;         //Reset these because we're creating a new text object
-            WantUpdateSize = false; //Not resetting them causes this to happen twice from the constructor setting _font and what not.
-
-            if (Options == null)
+            if (retries > 2)
+                text = string.Empty; //We've tried without commands, something is majorly wrong with this text.
+            
+            if (retries > 3)
             {
-                Log.Error("Options was null when creating rich text layout(TextBox.cs)"); //Avoid a bad textbox object by using default options
-                Options = RTLOptions.Default();
+                Dispose();
+                return;
             }
 
-            if (Options.ConvertHtmlColors)
-                text = ConvertHTMLColorsToFSS(text);
+            try {
+                text ??= string.Empty;  //Prevent null ref error while still updating everything else
+                text = StringHelper.RemoveUnpairedSurrogates(text); //Lone surrogates crash FontStashSharp's text measuring
+                _dirty = false;         //Reset these because we're creating a new text object
+                WantUpdateSize = false; //Not resetting them causes this to happen twice from the constructor setting _font and what not.
 
-            if (Options.StrokeEffect && !text.StartsWith("/es"))
-                text = $"/es[{getStrokeSize}]" + text;
-
-            if (_rtl == null || _rtl.Text != text || _rtl.Width != Options.Width)
-                _rtl = new RichTextLayout
+                if (Options == null)
                 {
-                    Font = TrueTypeLoader.Instance.GetFont(_font, _size),
-                    Text = text,
-                    IgnoreColorCommand = Options.IgnoreColorCommands,
-                    SupportsCommands = Options.SupportsCommands,
-                    CalculateGlyphs = Options.CalculateGlyphs,
-                    Width = Options.Width
-                };
+                    Log.Error("Options was null when creating rich text layout(TextBox.cs)"); //Avoid a bad textbox object by using default options
+                    Options = RTLOptions.Default();
+                }
 
-            base.Width = Options.Width ?? _rtl.Size.X;
-            base.Height = Height;
+                if (Options.ConvertHtmlColors)
+                    text = ConvertHTMLColorsToFSS(text);
+
+                if (Options.StrokeEffect && !text.StartsWith("/es"))
+                    text = $"/es[{getStrokeSize}]" + text;
+
+                if (_rtl == null || _rtl.Text != text || _rtl.Width != Options.Width)
+                    _rtl = new RichTextLayout
+                    {
+                        Font = TrueTypeLoader.Instance.GetFont(_font, _size),
+                        Text = text,
+                        IgnoreColorCommand = Options.IgnoreColorCommands,
+                        SupportsCommands = Options.SupportsCommands,
+                        CalculateGlyphs = Options.CalculateGlyphs,
+                        Width = Options.Width
+                    };
+
+                base.Width = Options.Width ?? _rtl.Size.X;
+                base.Height = Height;
+            } catch
+            {
+                Options.SupportsCommands = false;
+                Options.CalculateGlyphs = false;
+                retries++;
+                CreateRichTextLayout(text, retries);
+            }
         }
 
         public static Color ConvertHueToColor(int hue)

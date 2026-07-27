@@ -19,6 +19,15 @@ namespace StbTextEditSharp
             redo_char_point = 999;
         }
 
+        // Clears all undo/redo history when it can no longer be trusted.
+        public void Reset()
+        {
+            undo_point = 0;
+            undo_char_point = 0;
+            redo_point = 99;
+            redo_char_point = 999;
+        }
+
         public void DiscardUndo()
         {
             if (undo_point > 0)

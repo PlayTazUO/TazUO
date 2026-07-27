@@ -41,11 +41,11 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading;
 using ClassicUO.IO.Persistency;
-using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using FontStashSharp;
 using FontStashSharp.RichText;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace ClassicUO.Assets;
 
@@ -111,17 +111,49 @@ public class TrueTypeLoader
         // encountered (e.g. a user-typed InfoBar label). Resolving here reuses the normal font
         // lookup, which safely falls back to an embedded font when the requested one is unavailable.
         RichTextDefaults.FontResolver ??= ResolveRichTextFont;
-        RichTextDefaults.ImageResolver ??= ImageResolver;
     }
 
-    private IRenderable ImageResolver(string arg) => DummyRenderable.Instance;
-
-    private class DummyRenderable : IRenderable
+    private ArtLoader _artLoader;
+    private GraphicsDevice _graphicsDevice;
+    public void SetImageResolver(ArtLoader artLoader, GraphicsDevice graphicsDevice)
     {
-        public static readonly DummyRenderable Instance = new DummyRenderable();
+        _artLoader = artLoader;
+        _graphicsDevice = graphicsDevice;
+        RichTextDefaults.ImageResolver ??= ImageResolver;
 
-            public Point Size => Point.Zero;
-            public void Draw(FSRenderContext context, Vector2 position, Color color) {}
+    }
+
+    private Dictionary<int, Texture2D> _imageCache;
+    private IRenderable ImageResolver(string arg)
+    {
+        if (!Utility.StringHelper.TryParseInt(arg, out int g) || _artLoader == null || _graphicsDevice == null)
+            return FSSRenderableTexture.Empty;
+        
+        _imageCache ??= new();
+
+        if(_imageCache.TryGetValue(g, out Texture2D tex))
+            return new TextureFragment(tex);
+
+        ArtInfo info = _artLoader.GetArt((uint)g + 0x4000);
+
+        if (info.Pixels.IsEmpty)
+            return FSSRenderableTexture.Empty;
+        
+        tex = new Texture2D(_graphicsDevice, info.Width, info.Height);
+        tex.SetData(info.Pixels.ToArray());
+
+        _imageCache[g] = tex;
+
+        Log.Debug($"Texture set: {info.Width}x{info.Height}");
+
+        return new TextureFragment(tex);
+    }
+
+    private class FSSRenderableTexture : IRenderable
+    {
+        public static readonly FSSRenderableTexture Empty = new FSSRenderableTexture();
+        public Point Size => Point.Zero;
+        public void Draw(FSRenderContext context, Vector2 position, Color color){}
     }
 
     /// <summary>

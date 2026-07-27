@@ -136,6 +136,22 @@ public static class MacrosTabContent
             editorPanel.Widgets.Add(hotkeyRow);
             editorPanel.Widgets.Add(new MyraSpacer(10, 2));
 
+            // Journal triggers row
+            var journalRow = new HorizontalStackPanel { Spacing = 2 };
+            journalRow.Widgets.Add(new MyraLabel(TazLang.Get("macrostab_journaltriggers"), MyraLabel.TextStyle.P)
+            {
+                Tooltip = TazLang.Get("macrostab_journaltriggers_tooltip")
+            });
+            var journalBox = new MyraInputBox { Text = macro.JournalTriggers ?? "", Width = 260, Tooltip = TazLang.Get("macrostab_journaltriggers_tooltip") };
+            journalBox.TextChangedByUser += (_, _) =>
+            {
+                macro.JournalTriggers = journalBox.Text ?? "";
+                MarkDirty();
+            };
+            journalRow.Widgets.Add(journalBox);
+            editorPanel.Widgets.Add(journalRow);
+            editorPanel.Widgets.Add(new MyraSpacer(10, 2));
+
             // Create Macro Button / Button Editor
             var macroButtonRow = new HorizontalStackPanel { Spacing = 2 };
             macroButtonRow.Widgets.Add(new MyraButton(TazLang.Get("macrostab_createbutton"), () =>

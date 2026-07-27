@@ -108,5 +108,10 @@ internal static class CustomHouse
             Client.Game.GetScene<GameScene>()?.UpdateMaxDrawZ(true);
 
         world.BoatMovingManager.ClearSteps(serial);
+
+        // Custom house geometry just arrived/changed via packet. If the player is auto-walking a
+        // path computed before these components existed, re-pathfind from the current position so
+        // the walk can route around the newly-blocked tiles.
+        world.Player?.Pathfinder?.RecalculatePath();
     }
 }

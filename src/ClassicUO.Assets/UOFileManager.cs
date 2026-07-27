@@ -4,6 +4,7 @@ using ClassicUO.IO;
 using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using ClassicUO.Utility.Platforms;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -135,7 +136,7 @@ namespace ClassicUO.Assets
             return uoFilePath;
         }
 
-        public void Load(bool useVerdata, string lang, string mapsLayouts = "")
+        public void Load(bool useVerdata, string lang, GraphicsDevice graphicsDevice, string mapsLayouts = "")
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -167,7 +168,7 @@ namespace ClassicUO.Assets
             TileArt.Load();
             StringDictionary.Load();
 
-            PNGLoader.Instance.Load(BasePath);
+            ExternalImageLoader.Instance.Load(BasePath);
             //TrueTypeLoader.Instance.Load();
 
             ReadArtDefFile();
@@ -358,6 +359,7 @@ namespace ClassicUO.Assets
             }
 
             Task.WaitAll(asyncedLoading);
+            TrueTypeLoader.Instance.SetImageResolver(Arts, graphicsDevice);
 
             stopwatch.Stop();
             Log.Trace($"Files loaded in: {stopwatch.ElapsedMilliseconds} ms!");

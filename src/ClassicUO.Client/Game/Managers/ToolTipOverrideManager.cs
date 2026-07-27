@@ -39,7 +39,13 @@ namespace ClassicUO.Game.Managers
             BorderHue = borderHue;
         }
 
-        public int Index { get; }
+        /// <summary>
+        /// Position of this override within <see cref="TooltipOverridesConfig.Overrides"/>. This is a
+        /// runtime index derived from list position, not part of the persisted file.
+        /// </summary>
+        [JsonIgnore]
+        public int Index { get; set; }
+
         public string SearchText { get; set; }
         public string FormattedText { get; set; }
         public int Min1 { get; set; }
@@ -61,126 +67,42 @@ namespace ClassicUO.Game.Managers
         /// <summary>Pixel width of the custom border drawn when <see cref="HasBorderHue"/> is set.</summary>
         public const int BorderWidth = 5;
 
+        [JsonIgnore]
         public bool IsNew { get; set; } = false;
 
         public static ToolTipOverrideData Get(int index)
         {
-            bool isNew = false;
-            if (ProfileManager.CurrentProfile != null)
+            if (ProfileManager.CurrentProfile == null)
+                return null;
+
+            List<ToolTipOverrideData> overrides = TooltipOverridesConfig.Current.Overrides;
+
+            if (index >= 0 && index < overrides.Count)
+                return overrides[index];
+
+            // Requesting an out-of-range index creates a new default override, persists it and returns it.
+            var data = new ToolTipOverrideData(index, "Weapon Damage", "DMG /c[orange]{1} /cd- /c[red]{2}", -1, 99, -1, 99, (byte)TooltipLayers.Any)
             {
-                string searchText = "Weapon Damage", formattedText = "DMG /c[orange]{1} /cd- /c[red]{2}";
-                int min1 = -1, max1 = 99, min2 = -1, max2 = 99;
-                byte layer = (byte)TooltipLayers.Any;
-                int borderHue = -1;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count > index)
-                    searchText = ProfileManager.CurrentProfile.ToolTipOverride_SearchText[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_NewFormat.Count > index)
-                    formattedText = ProfileManager.CurrentProfile.ToolTipOverride_NewFormat[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_MinVal1.Count > index)
-                    min1 = ProfileManager.CurrentProfile.ToolTipOverride_MinVal1[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_MinVal2.Count > index)
-                    min2 = ProfileManager.CurrentProfile.ToolTipOverride_MinVal2[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_MaxVal1.Count > index)
-                    max1 = ProfileManager.CurrentProfile.ToolTipOverride_MaxVal1[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_MaxVal2.Count > index)
-                    max2 = ProfileManager.CurrentProfile.ToolTipOverride_MaxVal2[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_Layer.Count > index)
-                    layer = ProfileManager.CurrentProfile.ToolTipOverride_Layer[index];
-                else isNew = true;
-
-                if (ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Count > index)
-                    borderHue = ProfileManager.CurrentProfile.ToolTipOverride_BorderHue[index];
-                else isNew = true;
-
-                var data = new ToolTipOverrideData(index, searchText, formattedText, min1, max1, min2, max2, layer, borderHue);
-
-                if (isNew)
-                {
-                    data.IsNew = true;
-                    data.Save();
-                }
-                return data;
-            }
-            return null;
+                IsNew = true
+            };
+            data.Save();
+            return data;
         }
 
         public void Save()
         {
-            if (ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_SearchText[Index] = SearchText;
-            else ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Add(SearchText);
+            if (ProfileManager.CurrentProfile == null)
+                return;
 
-            if (ProfileManager.CurrentProfile.ToolTipOverride_NewFormat.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_NewFormat[Index] = FormattedText;
-            else ProfileManager.CurrentProfile.ToolTipOverride_NewFormat.Add(FormattedText);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_MinVal1.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_MinVal1[Index] = Min1;
-            else ProfileManager.CurrentProfile.ToolTipOverride_MinVal1.Add(Min1);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_MinVal2.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_MinVal2[Index] = Min2;
-            else ProfileManager.CurrentProfile.ToolTipOverride_MinVal2.Add(Min2);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_MaxVal1.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_MaxVal1[Index] = Max1;
-            else ProfileManager.CurrentProfile.ToolTipOverride_MaxVal1.Add(Max1);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_MaxVal2.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_MaxVal2[Index] = Max2;
-            else ProfileManager.CurrentProfile.ToolTipOverride_MaxVal2.Add(Max2);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_Layer.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_Layer[Index] = (byte)ItemLayer;
-            else ProfileManager.CurrentProfile.ToolTipOverride_Layer.Add((byte)ItemLayer);
-
-            if (ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Count > Index)
-                ProfileManager.CurrentProfile.ToolTipOverride_BorderHue[Index] = BorderHue;
-            else ProfileManager.CurrentProfile.ToolTipOverride_BorderHue.Add(BorderHue);
+            TooltipOverridesConfig.Current.Upsert(this);
         }
 
         public void Delete()
         {
-            if (Index < 0) return;
+            if (Index < 0 || ProfileManager.CurrentProfile == null)
+                return;
 
-            Profile profile = ProfileManager.CurrentProfile;
-
-            if (Index < profile.ToolTipOverride_SearchText.Count)
-                profile.ToolTipOverride_SearchText.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_NewFormat.Count)
-                profile.ToolTipOverride_NewFormat.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_MinVal1.Count)
-                profile.ToolTipOverride_MinVal1.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_MinVal2.Count)
-                profile.ToolTipOverride_MinVal2.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_MaxVal1.Count)
-                profile.ToolTipOverride_MaxVal1.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_MaxVal2.Count)
-                profile.ToolTipOverride_MaxVal2.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_Layer.Count)
-                profile.ToolTipOverride_Layer.RemoveAt(Index);
-
-            if (Index < profile.ToolTipOverride_BorderHue.Count)
-                profile.ToolTipOverride_BorderHue.RemoveAt(Index);
+            TooltipOverridesConfig.Current.RemoveAt(Index);
         }
 
         public static ToolTipOverrideData[] GetAllToolTipOverrides()
@@ -188,14 +110,7 @@ namespace ClassicUO.Game.Managers
             if (ProfileManager.CurrentProfile == null)
                 return null;
 
-            var result = new ToolTipOverrideData[ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count];
-
-            for (int i = 0; i < ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count; i++)
-            {
-                result[i] = Get(i);
-            }
-
-            return result;
+            return TooltipOverridesConfig.Current.Overrides.ToArray();
         }
 
         public static void ExportOverrideSettings(World world)
@@ -210,7 +125,7 @@ namespace ClassicUO.Game.Managers
                     return;
                 }
 
-                string result = JsonSerializer.Serialize(allData);
+                string result = JsonSerializer.Serialize(allData, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
                 string path = Path.Combine(p, "tooltip_overrides.json");
                 if (FileSystemHelper.WriteAllTextSafe(path, result))
                     GameActions.Print(World.Instance, $"The override file has been saved to [{path}]");
@@ -232,10 +147,10 @@ namespace ClassicUO.Game.Managers
                                                                     {
                                                                         string result = File.ReadAllText(p);
 
-                                                                        ToolTipOverrideData[] imported = JsonSerializer.Deserialize<ToolTipOverrideData[]>(result);
+                                                                        ToolTipOverrideData[] imported = JsonSerializer.Deserialize(result, ToolTipOverrideContext.Default.ToolTipOverrideDataArray);
 
                                                                         foreach (ToolTipOverrideData importedData in imported)
-                                                                            new ToolTipOverrideData(ProfileManager.CurrentProfile.ToolTipOverride_SearchText.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BorderHue).Save();
+                                                                            new ToolTipOverrideData(TooltipOverridesConfig.Current.Overrides.Count, importedData.SearchText, importedData.FormattedText, importedData.Min1, importedData.Max1, importedData.Min2, importedData.Max2, (byte)importedData.ItemLayer, importedData.BorderHue).Save();
 
                                                                         GameActions.Print(World.Instance, $"Imported {imported.Length} tooltip overrides!");
                                                                     }

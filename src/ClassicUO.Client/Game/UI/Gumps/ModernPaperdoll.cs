@@ -1,4 +1,4 @@
-﻿using ClassicUO.Assets;
+using ClassicUO.Assets;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
@@ -30,7 +30,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (MordernPaperdollGump == null)
             {
-                PNGLoader.Instance.TryGetEmbeddedTexture("modern-paperdollgump.png", out MordernPaperdollGump);
+                ExternalImageLoader.Instance.TryGetEmbeddedTexture("modern-paperdollgump.png", out MordernPaperdollGump);
             }
         }
         #endregion

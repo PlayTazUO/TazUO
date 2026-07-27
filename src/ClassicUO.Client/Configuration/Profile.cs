@@ -715,14 +715,28 @@ namespace ClassicUO.Configuration
         public int AdvancedSkillsGumpHeight { get; set => SetProperty(ref field, value); } = 510;
 
         #region ToolTip Overrides
+        // The ToolTipOverride_* parallel lists below are the legacy tooltip-override storage. They have been
+        // superseded by tooltip_overrides.json (see TooltipOverridesConfig) and are retained only so existing
+        // profiles can be migrated on load. Do not use them in new code. The defaults are kept so a fresh
+        // profile still migrates the standard resist/damage overrides into the new file.
+        private const string TooltipOverrideMigratedMessage = "Migrated to tooltip_overrides.json (TooltipOverridesConfig); retained only for one-time migration of existing profiles.";
+
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<string> ToolTipOverride_SearchText { get; set => SetProperty(ref field, value); } = new List<string>() { "Physical Res", "Fire Resist", "Cold Resist", "Poison Resist", "Energy Resist", "Weapon Damage" };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<string> ToolTipOverride_NewFormat { get; set => SetProperty(ref field, value); } = new List<string>() { "/c[#8c733e]Physical Resist {1}%", "/c[red]Fire Resist {1}%", "/c[teal]Cold Resist {1}%", "/c[green]Poison Resist {1}%", "/c[purple]Energy Resist {1}%", "{0} /c[orange]{1}{4} /cd- /c[red]{2}{5}" };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MinVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MinVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MaxVal1 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_MaxVal2 { get; set => SetProperty(ref field, value); } = new List<int>() { 100, 100, 100, 100, 100, 100 };
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<byte> ToolTipOverride_Layer { get; set => SetProperty(ref field, value); } = new List<byte>() { (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any, (byte)TooltipLayers.Any };
         /// <summary>Optional per-override border hue drawn around the tooltip when the rule matches; -1 means no override.</summary>
+        [Obsolete(TooltipOverrideMigratedMessage)]
         public List<int> ToolTipOverride_BorderHue { get; set => SetProperty(ref field, value); } = new List<int>() { -1, -1, -1, -1, -1, -1 };
         /// <summary>When enabled, tooltip overrides are not applied to mobile tooltips.</summary>
         public bool ToolTipOverride_IgnoreMobiles { get; set => SetProperty(ref field, value); } = true;
@@ -740,25 +754,47 @@ namespace ClassicUO.Configuration
         public bool EnableSpellIndicators { get; set => SetProperty(ref field, value); } = true;
 
         public bool EnableAutoLoot { get; set => SetProperty(ref field, value); } = false;
-        public bool AutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete]
+        [JsonPropertyName("auto_loot_human_corpses")]
+        public bool OldAutoLootHumanCorpses { get; set => SetProperty(ref field, value); } = false;
 
         // Auto skinning: double click a knife/dagger whose graphic is in this list to skin a targeted corpse.
         // Graphic IDs are separated by ';' and may be hex (0x..) or decimal.
-        public bool EnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
-        public bool AutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
-        public string AutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+        [Obsolete]
+        [JsonPropertyName("enable_auto_skinning")]
+        public bool OldEnableAutoSkinning { get; set => SetProperty(ref field, value); } = false;
 
-        public bool ItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete]
+        [JsonPropertyName("auto_skinning_human_corpses")]
+        public bool OldAutoSkinningHumanCorpses { get; set => SetProperty(ref field, value); } = false;
+
+        [Obsolete]
+        [JsonPropertyName("auto_skinning_knife_graphics")]
+        public string OldAutoSkinningKnifeGraphics { get; set => SetProperty(ref field, value); } = "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6";
+
+        [Obsolete]
+        [JsonPropertyName("item_database_enabled")]
+        public bool OldItemDatabaseEnabled { get; set => SetProperty(ref field, value); } = true;
 
         public static uint GumpsVersion { get; private set; }
 
         [JsonConverter(typeof(Point2Converter))]
         public Point InfoBarSize { get; set => SetProperty(ref field, value); } = new Point(400, 20);
-        public bool InfoBarLocked { get; set => SetProperty(ref field, value); } = false;
-        public string InfoBarFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
-        public int InfoBarFontSize { get; set => SetProperty(ref field, value); } = 18;
+        [Obsolete]
+        [JsonPropertyName("info_bar_locked")]
+        public bool OldInfoBarLocked { get; set => SetProperty(ref field, value); } = false;
 
-        public int LastJournalTab { get; set => SetProperty(ref field, value); } = 0;
+        [Obsolete]
+        [JsonPropertyName("info_bar_font")]
+        public string OldInfoBarFont { get; set => SetProperty(ref field, value); } = "Roboto-Regular";
+
+        [Obsolete]
+        [JsonPropertyName("info_bar_font_size")]
+        public int OldInfoBarFontSize { get; set => SetProperty(ref field, value); } = 18;
+
+        [Obsolete]
+        [JsonPropertyName("last_journal_tab")]
+        public int OldLastJournalTab { get; set => SetProperty(ref field, value); } = 0;
         public Dictionary<string, MessageType[]> JournalTabs { get; set => SetProperty(ref field, value); } = new Dictionary<string, MessageType[]>()
         {
             { "All", new MessageType[] {
@@ -790,21 +826,36 @@ namespace ClassicUO.Configuration
             }
         };
 
-        public bool UseLastMovedCooldownPosition { get; set => SetProperty(ref field, value); } = true;
-        public bool CloseHealthBarIfAnchored { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete]
+        [JsonPropertyName("use_last_moved_cooldown_position")]
+        public bool OldUseLastMovedCooldownPosition { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("close_health_bar_if_anchored")]
+        public bool OldCloseHealthBarIfAnchored { get; set => SetProperty(ref field, value); } = false;
 
         [JsonConverter(typeof(Point2Converter))]
         public Point SkillProgressBarPosition { get; set => SetProperty(ref field, value); } = Point.Zero;
 
-        public bool ForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete]
+        [JsonPropertyName("force_resync_on_hang")]
+        public bool OldForceResyncOnHang { get; set => SetProperty(ref field, value); } = false;
 
-        public bool UseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete]
+        [JsonPropertyName("use_one_h_p_bar_for_last_attack")]
+        public bool OldUseOneHPBarForLastAttack { get; set => SetProperty(ref field, value); } = true;
 
-        public bool DisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete]
+        [JsonPropertyName("disable_mouse_interaction_overhead_text")]
+        public bool OldDisableMouseInteractionOverheadText { get; set => SetProperty(ref field, value); } = false;
 
-        public bool HiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
+        [Obsolete]
+        [JsonPropertyName("hidden_layers_enabled")]
+        public bool OldHiddenLayersEnabled { get; set => SetProperty(ref field, value); } = false;
         public List<int> HiddenLayers { get; set => SetProperty(ref field, value); } = new List<int>();
-        public bool HideLayersForSelf { get; set => SetProperty(ref field, value); } = true;
+        [Obsolete]
+        [JsonPropertyName("hide_layers_for_self")]
+        public bool OldHideLayersForSelf { get; set => SetProperty(ref field, value); } = true;
 
         public List<string> AutoOpenXmlGumps { get; set => SetProperty(ref field, value); } = new List<string>();
 
@@ -830,12 +881,21 @@ namespace ClassicUO.Configuration
         [JsonConverter(typeof(Point2Converter))]
         public Point PlayerOffset { get; set => SetProperty(ref field, value); } = new Point(0, 0);
 
-        public float CameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
+        [Obsolete]
+        [JsonPropertyName("camera_smoothing_factor")]
+        public float OldCameraSmoothingFactor { get; set => SetProperty(ref field, value); } = 0f;
 
-        public double PaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
+        [Obsolete]
+        [JsonPropertyName("paperdoll_scale")]
+        public double OldPaperdollScale { get; set => SetProperty(ref field, value); } = 1f;
 
-        public bool BuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
-        public bool DisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
+        [Obsolete]
+        [JsonPropertyName("buy_agent_sub_containers")]
+        public bool OldBuyAgentSubContainers { get; set => SetProperty(ref field, value); } = true;
+
+        [Obsolete]
+        [JsonPropertyName("disable_targeting_grid_containers")]
+        public bool OldDisableTargetingGridContainers { get; set => SetProperty(ref field, value); }
         [Obsolete]
         [JsonPropertyName("controller_enabled")]
         public bool OldControllerEnabled { get; set => SetProperty(ref field, value); } = true;
@@ -1004,20 +1064,31 @@ namespace ClassicUO.Configuration
             Task<Dictionary<string, string>> serverTask = Client.Settings.GetAllAsync(SettingsScope.Server);
             Task<Dictionary<string, string>> charTask = Client.Settings.GetAllAsync(SettingsScope.Char);
 
-            Task.WhenAll(globalTask, accountTask, serverTask, charTask).ContinueWith(_ =>
+            // Wait for the database reads to finish, then apply the settings inline. AfterLoad already
+            // runs on the main thread (the FNA game loop's Update dispatches network packets, one of
+            // which -> World.CreatePlayer -> ProfileManager.Load -> here), so we can apply directly.
+            // This must complete synchronously before AfterLoad returns because saved gumps are read
+            // later during login (see LoginComplete/ReadGumps) and they need the SQL settings to
+            // already be in place. Previously the apply was queued via MainThreadQueue.EnqueueAction,
+            // so it ran on a later frame - after the gumps had already been created with stale/default
+            // setting values.
+            if (Task.WhenAll(globalTask, accountTask, serverTask, charTask).Wait(10000))
             {
-                MainThreadQueue.EnqueueAction(() =>
-                {
-                    LoadGeneratedGlobalSqlSettings(globalTask.Result);
-                    LoadGeneratedAccountSqlSettings(accountTask.Result);
-                    LoadGeneratedServerSqlSettings(serverTask.Result);
-                    LoadGeneratedCharSqlSettings(charTask.Result);
+                LoadGeneratedGlobalSqlSettings(globalTask.Result);
+                LoadGeneratedAccountSqlSettings(accountTask.Result);
+                LoadGeneratedServerSqlSettings(serverTask.Result);
+                LoadGeneratedCharSqlSettings(charTask.Result);
 
-                    HandleMigration();
-                });
-            }).Wait(10000);
+                HandleMigration();
+            }
+            else
+            {
+                Log.Error("SQL settings failed to load within the timeout; using defaults.");
+            }
 
             MyraStyle.SetDefault(); //Also loaded here in case profile settings affect styling
+
+            LastLoaded = DateTime.Now.ToUniversalTime().ToString();
         }
 
         private void HandleMigration()
@@ -1103,7 +1174,85 @@ namespace ClassicUO.Configuration
 
                 ProfileMigrationVersion++;
             }
+
+            if (ProfileMigrationVersion < 4) //3
+            {
+                MigrateToolTipOverrides();
+
+                ProfileMigrationVersion++;
+            }
+
+            if (ProfileMigrationVersion < 5) //4
+            {
+                DisableTargetingGridContainers = OldDisableTargetingGridContainers;
+                BuyAgentSubContainers = OldBuyAgentSubContainers;
+                PaperdollScale = OldPaperdollScale;
+                CameraSmoothingFactor = OldCameraSmoothingFactor;
+                HideLayersForSelf = OldHideLayersForSelf;
+                HiddenLayersEnabled = OldHiddenLayersEnabled;
+                DisableMouseInteractionOverheadText = OldDisableMouseInteractionOverheadText;
+                UseOneHPBarForLastAttack = OldUseOneHPBarForLastAttack;
+                ForceResyncOnHang = OldForceResyncOnHang;
+                CloseHealthBarIfAnchored = OldCloseHealthBarIfAnchored;
+                UseLastMovedCooldownPosition = OldUseLastMovedCooldownPosition;
+                LastJournalTab = OldLastJournalTab;
+                InfoBarLocked = OldInfoBarLocked;
+                InfoBarFont = OldInfoBarFont;
+                InfoBarFontSize = OldInfoBarFontSize;
+                ItemDatabaseEnabled = OldItemDatabaseEnabled;
+                AutoSkinningKnifeGraphics = OldAutoSkinningKnifeGraphics;
+                AutoSkinningHumanCorpses = OldAutoSkinningHumanCorpses;
+                EnableAutoSkinning = OldEnableAutoSkinning;
+                AutoLootHumanCorpses = OldAutoLootHumanCorpses;
+
+                ProfileMigrationVersion++;
+            }
         }
+
+        /// <summary>
+        /// Moves the legacy parallel <c>ToolTipOverride_*</c> lists into the dedicated
+        /// tooltip_overrides.json (see <see cref="TooltipOverridesConfig"/>) and clears them. The config
+        /// list is rebuilt (not appended) so re-running the migration - e.g. if the profile isn't saved
+        /// before the next launch - stays idempotent.
+        /// </summary>
+#pragma warning disable CS0618 // Reading the obsolete legacy lists is the whole point of migration.
+        private void MigrateToolTipOverrides()
+        {
+            int count = ToolTipOverride_SearchText.Count;
+            if (count == 0)
+                return;
+
+            var overrides = new List<ToolTipOverrideData>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                overrides.Add(new ToolTipOverrideData(
+                    i,
+                    ToolTipOverride_SearchText[i],
+                    ToolTipOverride_NewFormat.ElementAtOrDefault(i) ?? string.Empty,
+                    i < ToolTipOverride_MinVal1.Count ? ToolTipOverride_MinVal1[i] : -1,
+                    i < ToolTipOverride_MaxVal1.Count ? ToolTipOverride_MaxVal1[i] : 100,
+                    i < ToolTipOverride_MinVal2.Count ? ToolTipOverride_MinVal2[i] : -1,
+                    i < ToolTipOverride_MaxVal2.Count ? ToolTipOverride_MaxVal2[i] : 100,
+                    i < ToolTipOverride_Layer.Count ? ToolTipOverride_Layer[i] : (byte)TooltipLayers.Any,
+                    i < ToolTipOverride_BorderHue.Count ? ToolTipOverride_BorderHue[i] : -1));
+            }
+
+            TooltipOverridesConfig config = TooltipOverridesConfig.Current;
+            config.Overrides = overrides;
+            config.Save();
+
+            // Clear the legacy lists so tooltip overrides live only in tooltip_overrides.json going forward.
+            ToolTipOverride_SearchText.Clear();
+            ToolTipOverride_NewFormat.Clear();
+            ToolTipOverride_MinVal1.Clear();
+            ToolTipOverride_MinVal2.Clear();
+            ToolTipOverride_MaxVal1.Clear();
+            ToolTipOverride_MaxVal2.Clear();
+            ToolTipOverride_Layer.Clear();
+            ToolTipOverride_BorderHue.Clear();
+        }
+#pragma warning restore CS0618
 
         internal void Save(World world, string path, bool saveGumps = true)
         {

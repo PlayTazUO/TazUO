@@ -161,6 +161,50 @@ public class ApiUiBaseControl(Control control)
     public ApiUiBaseControl SetAlpha(float alpha) => SetPropFluent(() => control.Alpha = alpha);
 
     /// <summary>
+    /// Sets a plain text tooltip that is shown when hovering this control.
+    /// Automatically enables mouse input so the tooltip can be triggered by hovering.
+    /// Used in python API
+    /// </summary>
+    /// <param name="text">The tooltip text to display. Pass an empty string to clear the tooltip.</param>
+    public ApiUiBaseControl SetTooltip(string text) => SetPropFluent(() =>
+    {
+        if (control == null) return;
+        control.AcceptMouseInput = true;
+        control.SetTooltip(text);
+    });
+
+    /// <summary>
+    /// Sets the tooltip of this control to display the properties of an item/entity, as if hovering that item.
+    /// Automatically enables mouse input so the tooltip can be triggered by hovering.
+    /// Used in python API
+    /// </summary>
+    /// <param name="serial">The serial of the item/entity whose tooltip should be shown.</param>
+    public ApiUiBaseControl SetEntityTooltip(uint serial) => SetPropFluent(() =>
+    {
+        if (control == null) return;
+        control.AcceptMouseInput = true;
+        control.SetTooltip(serial);
+    });
+
+    /// <summary>
+    /// Sets whether this control accepts mouse input. Mouse input must be enabled for
+    /// hover-based features such as tooltips to work.
+    /// Used in python API
+    /// </summary>
+    /// <param name="enabled">True to accept mouse input, false to ignore it.</param>
+    public ApiUiBaseControl SetAcceptMouseInput(bool enabled) => SetPropFluent(() =>
+    {
+        if (control != null)
+            control.AcceptMouseInput = enabled;
+    });
+
+    /// <summary>
+    /// Clears the tooltip from this control.
+    /// Used in python API
+    /// </summary>
+    public ApiUiBaseControl ClearTooltip() => SetPropFluent(() => control?.ClearTooltip());
+
+    /// <summary>
     /// Clears all child controls from this control.
     /// Used in python API
     /// </summary>

@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `7/25/26`.*
+*This was generated on `7/27/26`.*
 
 ## Properties
 ### `Events`
@@ -527,6 +527,29 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | `entry` | `ushort` | ❌ No | Entries start at 0, the top entry will be 0, then 1, 2, etc. (Usually) |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### ContextMenu
+`(serial, entry, timeout)`
+ Send a context menu(right click menu) response by matching the entry text.
+ This opens the menu, finds the entry whose text matches, and responds with the correct index.
+ The match is case-insensitive and matches the first entry that contains the given text.
+ Example:
+ ```py
+ API.ContextMenu(API.Player, "Open Paperdoll")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `serial` | `uint` | ❌ No |  |
+| `entry` | `string` | ❌ No | The text of the menu entry to select |
+| `timeout` | `double` | ✅ Yes | Seconds to wait for the menu to appear |
+
+**Return Type:** `bool`
 
 ---
 
@@ -3381,11 +3404,11 @@ You can now type `-updateapi` in game to download the latest API.py file.
 ---
 
 ### ToggleScript
-`(scriptName)`
+`(scriptPath)`
  Toggle another script on or off.
  Example:
  ```py
- API.ToggleScript("MyScript.py")
+ API.ToggleScript("mygroup/MyScript.py")
  ```
 
 
@@ -3393,39 +3416,83 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | Full name including extension. Can be .py or .lscript. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### PlayScript
-`(scriptName)`
+`(scriptPath)`
  Play a legion script.
+ Example:
+ ```py
+ API.PlayScript("mygroup/MyScript.py")
+ ```
 
 
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
 ---
 
 ### StopScript
-`(scriptName)`
+`(scriptPath)`
  Stop a legion script.
+ Example:
+ ```py
+ API.StopScript("mygroup/MyScript.py")
+ ```
 
 
 **Parameters:**
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptName` | `string` | ❌ No | This is the file name including extension. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
+
+---
+
+### ListRunningScripts
+
+ Get the paths of all currently running legion scripts.
+ The paths are relative to the LegionScripts folder and can be passed
+ straight back to PlayScript, StopScript, ToggleScript or IsScriptRunning.
+ Example:
+ ```py
+ for path in API.ListRunningScripts():
+     API.SysMsg(path)
+ ```
+
+
+**Return Type:** `IList<string>`
+
+---
+
+### IsScriptRunning
+`(scriptPath)`
+ Check if a legion script is currently running.
+ Example:
+ ```py
+ if not API.IsScriptRunning("mygroup/MyScript.py"):
+     API.PlayScript("mygroup/MyScript.py")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
+
+**Return Type:** `bool`
 
 ---
 

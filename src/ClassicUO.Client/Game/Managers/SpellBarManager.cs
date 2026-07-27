@@ -157,6 +157,29 @@ public class SpellBarManager
         spellBarSettings.ControllerButtons[slot] = controllerButtons.Select(x => (int)x).ToArray();
     }
 
+    /// <summary>Builds a <see cref="HotkeyBinding"/> describing the current binding for a slot,
+    /// so the shared hotkey capture window can be seeded with it.</summary>
+    public static HotkeyBinding GetSlotBinding(int slot)
+    {
+        if (spellBarSettings == null || slot < 0 || slot >= spellBarSettings.HotKeys.Length)
+            return new HotkeyBinding();
+
+        var key = (SDL.SDL_Keycode)spellBarSettings.HotKeys[slot];
+        var mod = (SDL.SDL_Keymod)spellBarSettings.KeyMod[slot];
+
+        SDL.SDL_GamepadButton[] controllers = null;
+        if (spellBarSettings.ControllerButtons != null
+            && slot < spellBarSettings.ControllerButtons.Length
+            && spellBarSettings.ControllerButtons[slot] is { Length: > 0 } cb)
+            controllers = cb.Select(x => (SDL.SDL_GamepadButton)x).ToArray();
+
+        HotkeyBinding binding = key != SDL.SDL_Keycode.SDLK_UNKNOWN
+            ? new HotkeyBinding(key, mod)
+            : new HotkeyBinding();
+        binding.ControllerButtons = controllers;
+        return binding;
+    }
+
     public static bool IsEnabled()
     {
         if(spellBarSettings != null)

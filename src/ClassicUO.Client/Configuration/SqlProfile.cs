@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json.Serialization;
 using ClassicUO.Game;
 
@@ -33,6 +34,12 @@ public sealed partial class Profile
         [JsonIgnore]
         [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MAX_NODES, 150000)]
         public partial int PathfindingMaxNodes { get; set; }
+
+        // Extra A* cost applied to tiles bordering a house/multi wall, giving paths a soft 1-tile
+        // standoff from houses. 0 disables the buffer.
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, Constants.SqlSettings.PATHFINDING_MULTI_BUFFER, 4)]
+        public partial int PathfindingMultiBuffer { get; set; }
 
         // Maximum number of A* nodes the world map (long-distance) pathfinder will expand before giving up.
         [JsonIgnore]
@@ -293,4 +300,88 @@ public sealed partial class Profile
 
         // Clamp used by the gump-scale SQL settings above (see their OnSet).
         private static double ClampGumpScale(double value) => System.Math.Clamp(value, 0.5d, 3.0d);
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_loaded", "")]
+        public partial string LastLoaded { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "disable_targeting_grid_containers", false)]
+        public partial bool DisableTargetingGridContainers { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "buy_agent_sub_containers", true)]
+        public partial bool BuyAgentSubContainers { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "paperdoll_scale", 1d)]
+        public partial double PaperdollScale { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "camera_smoothing_factor", 0f)]
+        public partial float CameraSmoothingFactor { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "hide_layers_for_self", true)]
+        public partial bool HideLayersForSelf { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "hidden_layers_enabled", false)]
+        public partial bool HiddenLayersEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "disable_mouse_interaction_overhead_text", false)]
+        public partial bool DisableMouseInteractionOverheadText { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "use_one_h_p_bar_for_last_attack", true)]
+        public partial bool UseOneHPBarForLastAttack { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Server, "force_resync_on_hang", false)]
+        public partial bool ForceResyncOnHang { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "close_health_bar_if_anchored", false)]
+        public partial bool CloseHealthBarIfAnchored { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "use_last_moved_cooldown_position", true)]
+        public partial bool UseLastMovedCooldownPosition { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "last_journal_tab", 0)]
+        public partial int LastJournalTab { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Char, "info_bar_locked", false)]
+        public partial bool InfoBarLocked { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "info_bar_font", "Roboto-Regular")]
+        public partial string InfoBarFont { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "info_bar_font_size", 18)]
+        public partial int InfoBarFontSize { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "item_database_enabled", true)]
+        public partial bool ItemDatabaseEnabled { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "auto_skinning_knife_graphics", "0x2D2C;0x0F52;0x0EC4;0x0EC3;0x13F6;0x13B6")]
+        public partial string AutoSkinningKnifeGraphics { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "auto_skinning_human_corpses", false)]
+        public partial bool AutoSkinningHumanCorpses { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "enable_auto_skinning", false)]
+        public partial bool EnableAutoSkinning { get; set; }
+
+        [JsonIgnore]
+        [SqlSetting(SettingsScope.Global, "auto_loot_human_corpses", false)]
+        public partial bool AutoLootHumanCorpses { get; set; }
 }

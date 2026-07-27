@@ -3,10 +3,10 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.MyraWindows;
 using ClassicUO.Game.UI.MyraWindows.Widgets;
+using ClassicUO.Utility;
 using ClassicUO.Utility.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text.Json;
 using Microsoft.Xna.Framework;
 using Myra.Graphics2D.Brushes;
@@ -168,44 +168,33 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
 
         private static void ExportGridHighlightSettings(World world)
         {
-            List<GridHighlightSetupEntry> data = GridHighlightsConfig.Current.Highlights;
-
-            RunFileDialog(world, true, TazLang.Get("gridhighlight_export_dialog"), file =>
+            try
             {
-                try
-                {
-                    if (Directory.Exists(file))
-                    {
-                        // If the path is a directory, append default filename
-                        file = Path.Combine(file, "highlights.json");
-                    }
-                    else if (!Path.HasExtension(file))
-                    {
-                        // If it's not a directory and has no extension, assume they meant a file name
-                        file += ".json";
-                    }
+                List<GridHighlightSetupEntry> data = GridHighlightsConfig.Current.Highlights;
 
-                    string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(file, json);
-                    GameActions.Print(world, TazLang.Get("gridhighlight_export_success", [file]));
-                }
-                catch (Exception ex)
-                {
-                    GameActions.Print(world, TazLang.Get("gridhighlight_export_error"), Constants.HUE_ERROR);
-                    Log.Error(ex.ToString());
-                }
-            });
+                string json = JsonSerializer.Serialize(data, GridHighlightsJsonContext.DefaultToUse.ListGridHighlightSetupEntry);
+                Clipboard.SetClipboardText(json);
+                GameActions.Print(world, TazLang.Get("gridhighlight_export_clipboard_success"));
+            }
+            catch (Exception ex)
+            {
+                GameActions.Print(world, TazLang.Get("gridhighlight_export_error"), Constants.HUE_ERROR);
+                Log.Error(ex.ToString());
+            }
         }
 
-        private static void ImportGridHighlightSettings(World world) => RunFileDialog(world, false, TazLang.Get("gridhighlight_import_dialog"), file =>
+        private static void ImportGridHighlightSettings(World world)
         {
             try
             {
-                if (!File.Exists(file))
+                string json = Clipboard.GetClipboardText();
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    GameActions.Print(world, TazLang.Get("gridhighlight_import_clipboard_empty"), Constants.HUE_ERROR);
                     return;
+                }
 
-                string json = File.ReadAllText(file);
-                List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize<List<GridHighlightSetupEntry>>(json);
+                List<GridHighlightSetupEntry> imported = JsonSerializer.Deserialize(json, GridHighlightsJsonContext.DefaultToUse.ListGridHighlightSetupEntry);
                 if (imported != null)
                 {
                     GridHighlightsConfig.Current.Highlights.AddRange(imported);
@@ -221,7 +210,7 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                         }
                     }
 
-                    GameActions.Print(world, TazLang.Get("gridhighlight_import_success", [file]));
+                    GameActions.Print(world, TazLang.Get("gridhighlight_import_clipboard_success"));
                 }
             }
             catch (Exception ex)
@@ -229,8 +218,6 @@ namespace ClassicUO.Game.UI.Gumps.GridHighLight
                 GameActions.Print(world, TazLang.Get("gridhighlight_import_error"), Constants.HUE_ERROR);
                 Log.Error(ex.ToString());
             }
-        });
-
-        private static void RunFileDialog(World world, bool save, string title, Action<string> onResult) => FileSelector.ShowFileBrowser(world, save ? FileSelectorType.Directory : FileSelectorType.File, null, save ? null : ["*.json"], onResult, title);
+        }
     }
 }
