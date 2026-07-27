@@ -286,26 +286,26 @@ namespace ClassicUO.Game.UI.Gumps
                 writer.WriteAttributeString("graphic", control.Graphic.ToString());
                 writer.WriteAttributeString("hue", control.Hue.ToString());
 
-                SpellBarSlot slot = control.Slot;
+                CounterBarSlot slot = control.Slot;
                 if (slot != null && !slot.IsEmpty)
                 {
                     writer.WriteAttributeString("slottype", ((int)slot.Type).ToString());
 
                     switch (slot.Type)
                     {
-                        case SpellBarSlotType.Spell:
+                        case CounterBarSlotType.Spell:
                             writer.WriteAttributeString("spellid", slot.SpellId.ToString());
                             break;
-                        case SpellBarSlotType.Macro:
+                        case CounterBarSlotType.Macro:
                             writer.WriteAttributeString("macroname", slot.MacroName ?? string.Empty);
                             break;
-                        case SpellBarSlotType.Script:
+                        case CounterBarSlotType.Script:
                             writer.WriteAttributeString("scriptid", slot.ScriptId ?? string.Empty);
                             break;
-                        case SpellBarSlotType.Skill:
+                        case CounterBarSlotType.Skill:
                             writer.WriteAttributeString("skillindex", slot.SkillIndex.ToString());
                             break;
-                        case SpellBarSlotType.Ability:
+                        case CounterBarSlotType.Ability:
                             writer.WriteAttributeString("abilityprimary", slot.AbilityPrimary.ToString());
                             break;
                     }
@@ -338,7 +338,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (index < items.Length)
                     {
-                        SpellBarSlot slot = RestoreSlot(controlXml);
+                        CounterBarSlot slot = RestoreSlot(controlXml);
 
                         if (slot != null && !slot.IsEmpty)
                         {
@@ -367,33 +367,33 @@ namespace ClassicUO.Game.UI.Gumps
             IsLocked = ProfileManager.CurrentProfile.CounterGumpLocked;
         }
 
-        /// <summary>Rebuilds a <see cref="SpellBarSlot"/> from a saved counter cell, migrating the legacy standalone "spellid" attribute.</summary>
-        private static SpellBarSlot RestoreSlot(XmlElement controlXml)
+        /// <summary>Rebuilds a <see cref="CounterBarSlot"/> from a saved counter cell, migrating the legacy standalone "spellid" attribute.</summary>
+        private static CounterBarSlot RestoreSlot(XmlElement controlXml)
         {
             if (controlXml.HasAttribute("slottype"))
             {
-                var type = (SpellBarSlotType)int.Parse(controlXml.GetAttribute("slottype"));
+                var type = (CounterBarSlotType)int.Parse(controlXml.GetAttribute("slottype"));
 
                 switch (type)
                 {
-                    case SpellBarSlotType.Spell:
-                        return SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
-                    case SpellBarSlotType.Macro:
-                        return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = controlXml.GetAttribute("macroname") };
-                    case SpellBarSlotType.Script:
-                        return new SpellBarSlot { Type = SpellBarSlotType.Script, ScriptId = controlXml.GetAttribute("scriptid") };
-                    case SpellBarSlotType.Skill:
-                        return SpellBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
-                    case SpellBarSlotType.Ability:
-                        return SpellBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
+                    case CounterBarSlotType.Spell:
+                        return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+                    case CounterBarSlotType.Macro:
+                        return new CounterBarSlot { Type = CounterBarSlotType.Macro, MacroName = controlXml.GetAttribute("macroname") };
+                    case CounterBarSlotType.Script:
+                        return new CounterBarSlot { Type = CounterBarSlotType.Script, ScriptId = controlXml.GetAttribute("scriptid") };
+                    case CounterBarSlotType.Skill:
+                        return CounterBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
+                    case CounterBarSlotType.Ability:
+                        return CounterBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
                 }
             }
 
             // Legacy: pre-parity saves stored a spell as a standalone "spellid" attribute alongside the gump graphic.
             if (controlXml.HasAttribute("spellid"))
-                return SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+                return CounterBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
 
-            return SpellBarSlot.Empty();
+            return CounterBarSlot.Empty();
         }
 
         protected override void OnLockedChanged()
@@ -422,7 +422,7 @@ namespace ClassicUO.Game.UI.Gumps
             private bool _highlight;
             private readonly CounterBarGump _gump;
 
-            private SpellBarSlot _slot = SpellBarSlot.Empty();
+            private CounterBarSlot _slot = CounterBarSlot.Empty();
             private ContextMenuItemEntry _macroMenu;
             private ContextMenuItemEntry _scriptMenu;
 
@@ -453,8 +453,8 @@ namespace ClassicUO.Game.UI.Gumps
                 ContextMenu.Add(_macroMenu);
 
                 var abilityMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setability"));
-                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_primary"), () => SetSlot(SpellBarSlot.FromAbility(true))));
-                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_secondary"), () => SetSlot(SpellBarSlot.FromAbility(false))));
+                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_primary"), () => SetSlot(CounterBarSlot.FromAbility(true))));
+                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_secondary"), () => SetSlot(CounterBarSlot.FromAbility(false))));
                 ContextMenu.Add(abilityMenu);
 
                 _scriptMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setscript"));
@@ -471,7 +471,7 @@ namespace ClassicUO.Game.UI.Gumps
             public ushort Hue { get; private set; }
 
             /// <summary>The spell/macro/ability/script/skill action assigned to this cell, or an empty slot for a plain item counter.</summary>
-            public SpellBarSlot Slot => _slot;
+            public CounterBarSlot Slot => _slot;
 
             /// <summary>True when this cell holds a spell bar action instead of an item to count.</summary>
             public bool HasAction => _slot != null && !_slot.IsEmpty;
@@ -490,9 +490,9 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             /// <summary>Assigns a spell bar action to this cell (or clears it when the slot is empty) and refreshes its icon/label/tooltip.</summary>
-            public void SetSlot(SpellBarSlot slot)
+            public void SetSlot(CounterBarSlot slot)
             {
-                _slot = slot ?? SpellBarSlot.Empty();
+                _slot = slot ?? CounterBarSlot.Empty();
 
                 // An action slot replaces any item-counting graphic on this cell.
                 _amount = 0;
@@ -522,7 +522,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     // Scripts and skills (and graphic-less macros) fall back to a short text label.
                     _image.ChangeGraphic(0, 0, true);
-                    _image.SetAmount(SpellBarSlot.AbbreviateName(_slot.SlotLabel));
+                    _image.SetAmount(StringHelper.AbbreviateToInitials(_slot.SlotLabel));
                 }
 
                 if (_slot.TryGetTooltip(_gump.World, out string tip) && !string.IsNullOrEmpty(tip))
@@ -538,7 +538,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _amount = 0;
                 Graphic = 0;
                 Hue = 0;
-                _slot = SpellBarSlot.Empty();
+                _slot = CounterBarSlot.Empty();
                 ClearTooltip();
             }
 
@@ -591,7 +591,7 @@ namespace ClassicUO.Game.UI.Gumps
                     (World.Instance,
                         ScreenCoordinateX - 20, ScreenCoordinateY - 90, (s) =>
                         {
-                            SetSlot(SpellBarSlot.FromSpell(s));
+                            SetSlot(CounterBarSlot.FromSpell(s));
                         }, true
                     )
                 );
@@ -604,7 +604,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     var entry = new ContextMenuItemEntry(label);
                     foreach (SpellDefinition spell in spells)
-                        entry.Add(new ContextMenuItemEntry(spell.Name, () => SetSlot(SpellBarSlot.FromSpell(spell))));
+                        entry.Add(new ContextMenuItemEntry(spell.Name, () => SetSlot(CounterBarSlot.FromSpell(spell))));
                     list.Add(entry);
                 }
 
@@ -628,7 +628,7 @@ namespace ClassicUO.Game.UI.Gumps
                 parent.Items.Clear();
 
                 foreach (Macro macro in _gump.World.Macros.GetAllMacros())
-                    parent.Add(new ContextMenuItemEntry(macro.Name, () => SetSlot(SpellBarSlot.FromMacro(macro))));
+                    parent.Add(new ContextMenuItemEntry(macro.Name, () => SetSlot(CounterBarSlot.FromMacro(macro))));
             }
 
             private void GenScriptList(ContextMenuItemEntry parent)
@@ -642,7 +642,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     ScriptFile script = s;
                     // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups stay distinguishable.
-                    parent.Add(new ContextMenuItemEntry(script.RelativePath, () => SetSlot(SpellBarSlot.FromScript(script))));
+                    parent.Add(new ContextMenuItemEntry(script.RelativePath, () => SetSlot(CounterBarSlot.FromScript(script))));
                 }
             }
 
@@ -660,7 +660,7 @@ namespace ClassicUO.Game.UI.Gumps
                         continue;
 
                     int index = skill.Index;
-                    parent.Add(new ContextMenuItemEntry(skill.Name, () => SetSlot(SpellBarSlot.FromSkill(index))));
+                    parent.Add(new ContextMenuItemEntry(skill.Name, () => SetSlot(CounterBarSlot.FromSkill(index))));
                 }
             }
 
@@ -684,7 +684,7 @@ namespace ClassicUO.Game.UI.Gumps
                     if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                     {
                         // Dropping an item onto the cell turns it back into a plain item counter.
-                        _slot = SpellBarSlot.Empty();
+                        _slot = CounterBarSlot.Empty();
                         ClearTooltip();
 
                         SetGraphic(
