@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ClassicUO.Assets;
 using ClassicUO.LegionScripting;
 using ClassicUO.Configuration;
@@ -342,15 +341,11 @@ public class SpellBar : Gump
             if (macroLabel == null)
                 return;
 
-            string name =
-                slot != null && slot.Type == SpellBarSlotType.Macro ? slot.MacroName :
-                slot != null && slot.Type == SpellBarSlotType.Script ? slot.ScriptDisplayName :
-                slot != null && slot.Type == SpellBarSlotType.Skill ? slot.SkillDisplayName :
-                null;
+            string name = slot?.SlotLabel;
 
             if (!string.IsNullOrEmpty(name))
             {
-                macroLabel.SetText(AbbreviateMacroName(name));
+                macroLabel.SetText(SpellBarSlot.AbbreviateName(name));
                 macroLabel.Y = (Height - macroLabel.Height) >> 1;
                 macroLabel.IsVisible = true;
             }
@@ -359,25 +354,6 @@ public class SpellBar : Gump
                 macroLabel.SetText(string.Empty);
                 macroLabel.IsVisible = false;
             }
-        }
-
-        /// <summary>Builds a short label from a macro name using its capital letters (e.g. "Last Object Macro" -> "LOM").</summary>
-        private static string AbbreviateMacroName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-                return string.Empty;
-
-            var sb = new StringBuilder();
-            foreach (char c in name)
-                if (char.IsUpper(c))
-                    sb.Append(c);
-
-            // Fall back to the first letter of each word when the name has no capitals.
-            if (sb.Length == 0)
-                foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
-                    sb.Append(char.ToUpperInvariant(part[0]));
-
-            return sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
         }
 
         private void SetHotkeyText(int slotIndex)

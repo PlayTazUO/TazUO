@@ -51,5 +51,43 @@ namespace ClassicUO.UnitTests.Game.Managers
             slot.Type.Should().Be(SpellBarSlotType.Skill);
             slot.SkillIndex.Should().Be(21);
         }
+
+        [Fact]
+        public void AbbreviateName_Capitals_UsesCapitalLetters()
+        {
+            SpellBarSlot.AbbreviateName("Last Object Macro").Should().Be("LOM");
+        }
+
+        [Fact]
+        public void AbbreviateName_NoCapitals_UsesWordInitials()
+        {
+            SpellBarSlot.AbbreviateName("loot all corpses").Should().Be("LAC");
+        }
+
+        [Fact]
+        public void AbbreviateName_NullOrEmpty_ReturnsEmpty()
+        {
+            SpellBarSlot.AbbreviateName(null).Should().BeEmpty();
+            SpellBarSlot.AbbreviateName(string.Empty).Should().BeEmpty();
+        }
+
+        [Fact]
+        public void SlotLabel_Macro_ReturnsMacroName()
+        {
+            var slot = new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = "MyMacro" };
+            slot.SlotLabel.Should().Be("MyMacro");
+        }
+
+        [Fact]
+        public void SlotLabel_Spell_ReturnsNull()
+        {
+            new SpellBarSlot { Type = SpellBarSlotType.Spell, SpellId = 1 }.SlotLabel.Should().BeNull();
+        }
+
+        [Fact]
+        public void SlotLabel_Empty_ReturnsNull()
+        {
+            SpellBarSlot.Empty().SlotLabel.Should().BeNull();
+        }
     }
 }

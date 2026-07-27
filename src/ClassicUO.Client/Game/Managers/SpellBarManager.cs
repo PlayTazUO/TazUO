@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ClassicUO.Assets;
@@ -392,6 +393,35 @@ public class SpellBarSlot
 
             return string.Empty;
         }
+    }
+
+    /// <summary>The short in-slot label text for icon-less slots (macro/script/skill), or null for other types.</summary>
+    [JsonIgnore]
+    public string SlotLabel => Type switch
+    {
+        SpellBarSlotType.Macro => MacroName,
+        SpellBarSlotType.Script => ScriptDisplayName,
+        SpellBarSlotType.Skill => SkillDisplayName,
+        _ => null
+    };
+
+    /// <summary>Builds a short label from a name using its capital letters (e.g. "Last Object Macro" -> "LOM").</summary>
+    public static string AbbreviateName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        foreach (char c in name)
+            if (char.IsUpper(c))
+                sb.Append(c);
+
+        // Fall back to the first letter of each word when the name has no capitals.
+        if (sb.Length == 0)
+            foreach (string part in name.Split(new[] { ' ', '_', '-' }, StringSplitOptions.RemoveEmptyEntries))
+                sb.Append(char.ToUpperInvariant(part[0]));
+
+        return sb.Length > 0 ? sb.ToString() : name.ToUpperInvariant();
     }
 
     /// <summary>Toggle decision for a script slot: play when not already running.</summary>

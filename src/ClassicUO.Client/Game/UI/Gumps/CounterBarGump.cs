@@ -9,6 +9,7 @@ using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Game.Managers;
+using ClassicUO.LegionScripting;
 using ClassicUO.Game.UI.Gumps.SpellBar;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
@@ -284,8 +285,32 @@ namespace ClassicUO.Game.UI.Gumps
                 writer.WriteStartElement("control");
                 writer.WriteAttributeString("graphic", control.Graphic.ToString());
                 writer.WriteAttributeString("hue", control.Hue.ToString());
-                if (control.SpellID != default)
-                    writer.WriteAttributeString("spellid", control.SpellID.ToString());
+
+                SpellBarSlot slot = control.Slot;
+                if (slot != null && !slot.IsEmpty)
+                {
+                    writer.WriteAttributeString("slottype", ((int)slot.Type).ToString());
+
+                    switch (slot.Type)
+                    {
+                        case SpellBarSlotType.Spell:
+                            writer.WriteAttributeString("spellid", slot.SpellId.ToString());
+                            break;
+                        case SpellBarSlotType.Macro:
+                            writer.WriteAttributeString("macroname", slot.MacroName ?? string.Empty);
+                            break;
+                        case SpellBarSlotType.Script:
+                            writer.WriteAttributeString("scriptid", slot.ScriptId ?? string.Empty);
+                            break;
+                        case SpellBarSlotType.Skill:
+                            writer.WriteAttributeString("skillindex", slot.SkillIndex.ToString());
+                            break;
+                        case SpellBarSlotType.Ability:
+                            writer.WriteAttributeString("abilityprimary", slot.AbilityPrimary.ToString());
+                            break;
+                    }
+                }
+
                 writer.WriteEndElement();
             }
 
@@ -313,18 +338,22 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     if (index < items.Length)
                     {
-                        bool isGump = false;
-                        if (controlXml.HasAttribute("spellid"))
+                        SpellBarSlot slot = RestoreSlot(controlXml);
+
+                        if (slot != null && !slot.IsEmpty)
                         {
-                            items[index].SpellID = int.Parse(controlXml.GetAttribute("spellid"));
-                            isGump = true;
+                            // Spell/macro/ability/script/skill action; resolves its own icon/label.
+                            items[index]?.SetSlot(slot);
+                        }
+                        else
+                        {
+                            // Plain item counter.
+                            items[index]?.SetGraphic(
+                                ushort.Parse(controlXml.GetAttribute("graphic")),
+                                ushort.Parse(controlXml.GetAttribute("hue"))
+                            );
                         }
 
-                        items[index]?.SetGraphic(
-                            ushort.Parse(controlXml.GetAttribute("graphic")),
-                            ushort.Parse(controlXml.GetAttribute("hue")),
-                            isGump
-                        );
                         index++;
                     }
                     else
@@ -336,6 +365,35 @@ namespace ClassicUO.Game.UI.Gumps
 
             IsEnabled = IsVisible = ProfileManager.CurrentProfile.CounterBarEnabled;
             IsLocked = ProfileManager.CurrentProfile.CounterGumpLocked;
+        }
+
+        /// <summary>Rebuilds a <see cref="SpellBarSlot"/> from a saved counter cell, migrating the legacy standalone "spellid" attribute.</summary>
+        private static SpellBarSlot RestoreSlot(XmlElement controlXml)
+        {
+            if (controlXml.HasAttribute("slottype"))
+            {
+                var type = (SpellBarSlotType)int.Parse(controlXml.GetAttribute("slottype"));
+
+                switch (type)
+                {
+                    case SpellBarSlotType.Spell:
+                        return SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+                    case SpellBarSlotType.Macro:
+                        return new SpellBarSlot { Type = SpellBarSlotType.Macro, MacroName = controlXml.GetAttribute("macroname") };
+                    case SpellBarSlotType.Script:
+                        return new SpellBarSlot { Type = SpellBarSlotType.Script, ScriptId = controlXml.GetAttribute("scriptid") };
+                    case SpellBarSlotType.Skill:
+                        return SpellBarSlot.FromSkill(int.Parse(controlXml.GetAttribute("skillindex")));
+                    case SpellBarSlotType.Ability:
+                        return SpellBarSlot.FromAbility(bool.Parse(controlXml.GetAttribute("abilityprimary")));
+                }
+            }
+
+            // Legacy: pre-parity saves stored a spell as a standalone "spellid" attribute alongside the gump graphic.
+            if (controlXml.HasAttribute("spellid"))
+                return SpellBarSlot.FromSpell(SpellDefinition.FullIndexGetSpell(int.Parse(controlXml.GetAttribute("spellid"))));
+
+            return SpellBarSlot.Empty();
         }
 
         protected override void OnLockedChanged()
@@ -359,9 +417,14 @@ namespace ClassicUO.Game.UI.Gumps
             private readonly ImageWithText _image;
             private uint _time;
             private const uint HIGHLIGHT_DURATION = 1000;
+            private const ushort SCRIPT_RUNNING_HUE = 0x0044; // green tint while a script slot runs
             private uint _endHighlight;
             private bool _highlight;
             private readonly CounterBarGump _gump;
+
+            private SpellBarSlot _slot = SpellBarSlot.Empty();
+            private ContextMenuItemEntry _macroMenu;
+            private ContextMenuItemEntry _scriptMenu;
 
             public CounterItem(CounterBarGump gump, int x, int y, int w, int h)
             {
@@ -382,15 +445,36 @@ namespace ClassicUO.Game.UI.Gumps
                 ContextMenu = new ContextMenuControl(_gump);
                 ContextMenu.Add(ResGumps.UseObject, Use);
                 ContextMenu.Add(ResGumps.Remove, RemoveItem);
-                ContextMenu.Add("Set spell", GenSpellList());
-                ContextMenu.Add("Quick set spell", QuickSetSpell);
+                ContextMenu.Add(TazLang.Get("spellbar_setspell"), GenSpellList());
+                ContextMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_quicksetspell"), QuickSetSpell));
+
+                _macroMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setmacro"));
+                GenMacroList(_macroMenu);
+                ContextMenu.Add(_macroMenu);
+
+                var abilityMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setability"));
+                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_primary"), () => SetSlot(SpellBarSlot.FromAbility(true))));
+                abilityMenu.Add(new ContextMenuItemEntry(TazLang.Get("spellbar_ability_secondary"), () => SetSlot(SpellBarSlot.FromAbility(false))));
+                ContextMenu.Add(abilityMenu);
+
+                _scriptMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setscript"));
+                GenScriptList(_scriptMenu);
+                ContextMenu.Add(_scriptMenu);
+
+                var skillMenu = new ContextMenuItemEntry(TazLang.Get("spellbar_setskill"));
+                GenSkillList(skillMenu);
+                ContextMenu.Add(skillMenu);
             }
 
             public ushort Graphic { get; private set; }
 
             public ushort Hue { get; private set; }
 
-            public int SpellID { get; set; }
+            /// <summary>The spell/macro/ability/script/skill action assigned to this cell, or an empty slot for a plain item counter.</summary>
+            public SpellBarSlot Slot => _slot;
+
+            /// <summary>True when this cell holds a spell bar action instead of an item to count.</summary>
+            public bool HasAction => _slot != null && !_slot.IsEmpty;
 
             public void SetGraphic(ushort graphic, ushort hue, bool isGumpIcon = false)
             {
@@ -405,30 +489,69 @@ namespace ClassicUO.Game.UI.Gumps
                 Hue = hue;
             }
 
+            /// <summary>Assigns a spell bar action to this cell (or clears it when the slot is empty) and refreshes its icon/label/tooltip.</summary>
+            public void SetSlot(SpellBarSlot slot)
+            {
+                _slot = slot ?? SpellBarSlot.Empty();
+
+                // An action slot replaces any item-counting graphic on this cell.
+                _amount = 0;
+                Graphic = 0;
+                Hue = 0;
+
+                RefreshSlotVisual();
+            }
+
+            /// <summary>Resolves the icon/label/tooltip for the currently assigned action slot.</summary>
+            private void RefreshSlotVisual()
+            {
+                if (!HasAction)
+                {
+                    _image.ChangeGraphic(0, 0);
+                    ClearTooltip();
+                    return;
+                }
+
+                ushort graphic = _slot.GetIconGraphic(_gump.World);
+                if (graphic != 0)
+                {
+                    // Spells, macros and abilities resolve to a gump icon.
+                    _image.ChangeGraphic(graphic, 0, true);
+                }
+                else
+                {
+                    // Scripts and skills (and graphic-less macros) fall back to a short text label.
+                    _image.ChangeGraphic(0, 0, true);
+                    _image.SetAmount(SpellBarSlot.AbbreviateName(_slot.SlotLabel));
+                }
+
+                if (_slot.TryGetTooltip(_gump.World, out string tip) && !string.IsNullOrEmpty(tip))
+                    SetTooltip(tip);
+                else
+                    ClearTooltip();
+            }
+
             public void RemoveItem()
             {
                 _image?.ChangeGraphic(0, 0);
+                _image?.SetAmount(string.Empty); // clear any lingering script/skill text label
                 _amount = 0;
                 Graphic = 0;
-                SpellID = default;
+                Hue = 0;
+                _slot = SpellBarSlot.Empty();
+                ClearTooltip();
             }
 
             public void Use()
             {
+                if (HasAction)
+                {
+                    _slot.Activate(_gump.World);
+                    return;
+                }
+
                 if (Graphic == 0)
                 {
-                    return;
-                }
-
-                if (SpellID != default)
-                {
-                    GameActions.CastSpell(SpellID);
-                    return;
-                }
-
-                if (SpellID != default)
-                {
-                    GameActions.CastSpell(SpellID);
                     return;
                 }
 
@@ -468,8 +591,7 @@ namespace ClassicUO.Game.UI.Gumps
                     (World.Instance,
                         ScreenCoordinateX - 20, ScreenCoordinateY - 90, (s) =>
                         {
-                            SetGraphic((ushort)(s.GumpIconSmallID), 0, true);
-                            SpellID = s.ID;
+                            SetSlot(SpellBarSlot.FromSpell(s));
                         }, true
                     )
                 );
@@ -478,88 +600,79 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 var list = new List<ContextMenuItemEntry>();
 
-                var entry = new ContextMenuItemEntry("Magery");
-                foreach (SpellDefinition spell in SpellsMagery.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
+                void AddSchool(string label, System.Collections.Generic.IEnumerable<SpellDefinition> spells)
+                {
+                    var entry = new ContextMenuItemEntry(label);
+                    foreach (SpellDefinition spell in spells)
+                        entry.Add(new ContextMenuItemEntry(spell.Name, () => SetSlot(SpellBarSlot.FromSpell(spell))));
+                    list.Add(entry);
+                }
 
+                AddSchool(TazLang.Get("spellschool_magery"), SpellsMagery.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_necromancy"), SpellsNecromancy.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_chivalry"), SpellsChivalry.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_bushido"), SpellsBushido.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_ninjitsu"), SpellsNinjitsu.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_spellweaving"), SpellsSpellweaving.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_mysticism"), SpellsMysticism.GetAllSpells.Values);
+                AddSchool(TazLang.Get("spellschool_mastery"), SpellsMastery.GetAllSpells.Values);
 
-                entry = new ContextMenuItemEntry("Necromancy");
-                foreach (SpellDefinition spell in SpellsNecromancy.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Chivalry");
-                foreach (SpellDefinition spell in SpellsChivalry.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Bushido");
-                foreach (SpellDefinition spell in SpellsBushido.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Ninjitsu");
-                foreach (SpellDefinition spell in SpellsNinjitsu.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Spellweaving");
-                foreach (SpellDefinition spell in SpellsSpellweaving.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Mysticism");
-                foreach (SpellDefinition spell in SpellsMysticism.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
-
-
-                entry = new ContextMenuItemEntry("Mastery");
-                foreach (SpellDefinition spell in SpellsMastery.GetAllSpells.Values)
-                    entry.Add(new ContextMenuItemEntry(spell.Name, () =>
-                    {
-                        SetGraphic((ushort)(spell.GumpIconSmallID), 0, true);
-                        SpellID = spell.ID;
-                    }));
-                list.Add(entry);
                 return list;
             }
+
+            private void GenMacroList(ContextMenuItemEntry parent)
+            {
+                if (parent == null)
+                    return;
+
+                parent.Items.Clear();
+
+                foreach (Macro macro in _gump.World.Macros.GetAllMacros())
+                    parent.Add(new ContextMenuItemEntry(macro.Name, () => SetSlot(SpellBarSlot.FromMacro(macro))));
+            }
+
+            private void GenScriptList(ContextMenuItemEntry parent)
+            {
+                if (parent == null)
+                    return;
+
+                parent.Items.Clear();
+
+                foreach (ScriptFile s in ClassicUO.LegionScripting.LegionScripting.LoadedScripts)
+                {
+                    ScriptFile script = s;
+                    // RelativePath (e.g. "group/loot.py") so same-named scripts in different groups stay distinguishable.
+                    parent.Add(new ContextMenuItemEntry(script.RelativePath, () => SetSlot(SpellBarSlot.FromScript(script))));
+                }
+            }
+
+            private void GenSkillList(ContextMenuItemEntry parent)
+            {
+                if (parent == null)
+                    return;
+
+                parent.Items.Clear();
+
+                // Only skills that have a usable action can be invoked.
+                foreach (var skill in Client.Game.UO.FileManager.Skills.SortedSkills)
+                {
+                    if (!skill.HasAction)
+                        continue;
+
+                    int index = skill.Index;
+                    parent.Add(new ContextMenuItemEntry(skill.Name, () => SetSlot(SpellBarSlot.FromSkill(index))));
+                }
+            }
+
             public override void OnMouseUp(int x, int y, MouseButtonType button)
             {
+                if (button == MouseButtonType.Right)
+                {
+                    // Refresh the dynamic lists so newly added macros/scripts appear.
+                    GenMacroList(_macroMenu);
+                    GenScriptList(_scriptMenu);
+                }
+
                 if (button == MouseButtonType.Left)
                 {
                     if (Keyboard.Alt && Keyboard.Ctrl)
@@ -570,6 +683,10 @@ namespace ClassicUO.Game.UI.Gumps
                         }
                     if (Client.Game.UO.GameCursor.ItemHold.Enabled)
                     {
+                        // Dropping an item onto the cell turns it back into a plain item counter.
+                        _slot = SpellBarSlot.Empty();
+                        ClearTooltip();
+
                         SetGraphic(
                             Client.Game.UO.GameCursor.ItemHold.Graphic,
                             Client.Game.UO.GameCursor.ItemHold.Hue
@@ -589,7 +706,7 @@ namespace ClassicUO.Game.UI.Gumps
                         return;
                     }
                 }
-                else if (button == MouseButtonType.Right && Keyboard.Alt && Graphic != 0)
+                else if (button == MouseButtonType.Right && Keyboard.Alt && (Graphic != 0 || HasAction))
                 {
                     RemoveItem();
 
@@ -619,10 +736,10 @@ namespace ClassicUO.Game.UI.Gumps
                 if (Parent != null && Parent.IsEnabled && _time < Time.Ticks)
                 {
                     _time = Time.Ticks + 100;
-                    if (SpellID != default)
+                    if (HasAction)
                     {
-                        if (Tooltip == null)
-                            SetTooltip(SpellDefinition.FullIndexGetSpell(SpellID).Name);
+                        // Ability slots follow the equipped weapon, so keep the icon/label/tooltip current.
+                        RefreshSlotVisual();
                         return;
                     }
 
@@ -702,6 +819,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             public override bool Draw(UltimaBatcher2D batcher, int x, int y)
             {
+                // Tint the cell green while a script slot is running, matching the spell bar.
+                if (_slot != null && _slot.IsScriptRunning)
+                {
+                    Vector3 runningHue = ShaderHueTranslator.GetHueVector(SCRIPT_RUNNING_HUE, false, 0.5f);
+                    batcher.Draw(SolidColorTextureCache.GetTexture(Color.Green), new Rectangle(x, y, Width, Height), runningHue);
+                }
+
                 base.Draw(batcher, x, y);
 
                 Texture2D color = SolidColorTextureCache.GetTexture(
@@ -784,6 +908,11 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         Width = Parent.Width;
                         Height = Parent.Height;
+
+                        // Keep the label anchored to the bottom of the cell (used for amounts and for
+                        // icon-less action labels such as scripts/skills).
+                        if (_label != null)
+                            _label.Y = Height - 15;
                     }
                 }
 
