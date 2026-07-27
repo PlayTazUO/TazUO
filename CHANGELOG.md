@@ -4,6 +4,9 @@ All notable changes to TazUO will be recorded here.
 ---
 ## In Development
 
+### Legion
+* Added a string-based `API.ContextMenu(serial, entry)` overload that selects a context menu entry by its text - [P.R 808](https://github.com/PlayTazUO/TazUO/pull/808) ([bittiez](https://github.com/bittiez))
+
 ### Features
 * Added journal triggers for macros - [P.R 802](https://github.com/PlayTazUO/TazUO/pull/802) ([bittiez](https://github.com/bittiez))
 * Added .bmp support to external images loader - [P.R 796](https://github.com/PlayTazUO/TazUO/pull/796) ([credzba](https://github.com/credzba))
