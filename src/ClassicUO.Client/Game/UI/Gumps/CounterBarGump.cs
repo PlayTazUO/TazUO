@@ -994,14 +994,6 @@ namespace ClassicUO.Game.UI.Gumps
                     batcher.Draw(SolidColorTextureCache.GetTexture(Color.Green), new Rectangle(x, y, Width, Height), runningHue);
                 }
 
-                // Brief warn-colored flash when this cell's hotkey fires, fading out over its duration.
-                if (Time.Ticks < _hotkeyFlashEnd)
-                {
-                    Vector3 flashHue = ShaderHueTranslator.GetHueVector(0);
-                    flashHue.Z = (float)(_hotkeyFlashEnd - Time.Ticks) / HOTKEY_FLASH_DURATION;
-                    batcher.Draw(SolidColorTextureCache.GetTexture(Constants.Warn), new Rectangle(x, y, Width, Height), flashHue);
-                }
-
                 base.Draw(batcher, x, y);
 
                 Texture2D color = SolidColorTextureCache.GetTexture(
@@ -1025,6 +1017,14 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     hueVector.Z = ((float)_endHighlight - (float)Time.Ticks) / (float)HIGHLIGHT_DURATION;
                     batcher.Draw(SolidColorTextureCache.GetTexture(Color.Yellow), new Rectangle(x, y, Width, Height), hueVector);
+                }
+
+                // Brief warn-colored flash when this cell's hotkey fires, fading out over its duration.
+                if (Time.Ticks < _hotkeyFlashEnd)
+                {
+                    Vector3 flashHue = ShaderHueTranslator.GetHueVector(0);
+                    flashHue.Z = (float)(_hotkeyFlashEnd - Time.Ticks) / HOTKEY_FLASH_DURATION;
+                    batcher.Draw(SolidColorTextureCache.GetTexture(Constants.Warn), new Rectangle(x, y, Width, Height), flashHue);
                 }
 
                 hueVector.Z = 1;

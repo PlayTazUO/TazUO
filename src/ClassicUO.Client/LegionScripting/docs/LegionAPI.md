@@ -21,7 +21,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 [Additional notes](../notes/)  
 
-*This was generated on `7/27/26`.*
+*This was generated on `7/28/26`.*
 
 ## Properties
 ### `Events`
@@ -199,7 +199,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  Use this when you need to wait for players to click buttons.
  Example:
  ```py
- while True:
+ while not API.StopRequested:
    API.ProcessCallbacks()
    API.Pause(0.1)
  ```
@@ -223,7 +223,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  def on_shift_a():
      API.SysMsg("SHIFT+A pressed!")
  API.OnHotKey("SHIFT+A", on_shift_a)
- while True:
+ while not API.StopRequested:
    API.ProcessCallbacks()
    API.Pause(0.1)
  ```
@@ -240,7 +240,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
 | `key` | `string` | ❌ No | Key combination to listen for, e.g. "CTRL+SHIFT+F1". |
-| `callback` | `object` | ✅ Yes | Python function to invoke when the hotkey is pressed.<br>         If `null` , the hotkey will be unregistered. |
+| `callback` | `object` | ✅ Yes | Python function to invoke when the hotkey is pressed.<br>         If None, the hotkey will be unregistered. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -787,7 +787,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### GetHeldItem
 
- Retrieves data of the currently held item on the game cursor.
+ Retrieves serial of the currently held item on the game cursor.
 
 
 **Return Type:** `uint`
@@ -1880,7 +1880,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ### RequestAnyTarget
 `(timeout)`
- Prompts the player to target any object in the game world, including an `Item` , `Mobile` , `Land` tile, `Static` , or `Multi` .
+ Prompts the player to target any object in the game world, including an Item, Mobile, Land tile, Static, or Multi.
  Waits for the player to select a target within a given timeout period.
 
 
@@ -1888,7 +1888,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `timeout` | `double` | ✅ Yes | The maximum time, in seconds, to wait for a valid target selection.<br>         If the timeout expires without a selection, the method returns `null` . |
+| `timeout` | `double` | ✅ Yes | The maximum time, in seconds, to wait for a valid target selection.<br>         If the timeout expires without a selection, the method returns null. |
 
 **Return Type:** `ApiGameObject`
 
@@ -2655,7 +2655,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
  def on_stop():
    API.SysMsg("Cleaning up before stopping...")
  API.OnStop(on_stop)
- while True:
+ while not API.StopRequested:
    API.ProcessCallbacks()
    API.Pause(0.1)
  ```
@@ -3470,7 +3470,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by ListRunningScripts" to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3489,7 +3489,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by ListRunningScripts to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3508,7 +3508,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by ListRunningScripts to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `void` *(Does not return anything)*
 
@@ -3544,7 +3544,7 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by <see cref="ListRunningScripts"/> to avoid ambiguity between scripts that share a file name. |
+| `scriptPath` | `string` | ❌ No | The script's path relative to the LegionScripts folder (e.g. "mygroup/MyScript.py"). Use a path returned by ListRunningScripts to avoid ambiguity between scripts that share a file name. |
 
 **Return Type:** `bool`
 
