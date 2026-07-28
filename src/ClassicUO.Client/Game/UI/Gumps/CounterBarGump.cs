@@ -1107,19 +1107,20 @@ namespace ClassicUO.Game.UI.Gumps
 
                         Vector3 hueVector = ShaderHueTranslator.GetHueVector(_hue, _partial, 1f, _isGumpGraphic);
 
+                        // Scale the icon to fill the cell while preserving its aspect ratio, then center it.
+                        // This scales small icons up and large icons down so they always match the slot size.
                         var originalSize = new Point(Width, Height);
                         var point = new Point();
 
-                        if (rect.Width < Width)
+                        if (rect.Width > 0 && rect.Height > 0)
                         {
-                            originalSize.X = rect.Width;
-                            point.X = (Width >> 1) - (originalSize.X >> 1);
-                        }
+                            float scale = Math.Min((float)Width / rect.Width, (float)Height / rect.Height);
 
-                        if (rect.Height < Height)
-                        {
-                            originalSize.Y = rect.Height;
-                            point.Y = (Height >> 1) - (originalSize.Y >> 1);
+                            originalSize.X = Math.Max(1, (int)(rect.Width * scale));
+                            originalSize.Y = Math.Max(1, (int)(rect.Height * scale));
+
+                            point.X = (Width - originalSize.X) >> 1;
+                            point.Y = (Height - originalSize.Y) >> 1;
                         }
 
                         if (_isGumpGraphic)
