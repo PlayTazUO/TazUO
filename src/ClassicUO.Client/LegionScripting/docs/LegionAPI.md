@@ -1001,6 +1001,60 @@ You can now type `-updateapi` in game to download the latest API.py file.
 
 ---
 
+### ActiveSpells
+
+ Get a list of spell ids for spells that are currently toggled on/active.
+ These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+ reports as active, the same ones the spell bar highlights.
+ Example:
+ ```py
+ for spellId in API.ActiveSpells():
+     API.SysMsg("Active spell id: " + str(spellId))
+ ```
+
+
+**Return Type:** `int[]`
+
+---
+
+### ActiveSpellNames
+
+ Get a list of names for spells that are currently toggled on/active.
+ These are toggle spells/moves (for example Ninjitsu or Bushido moves) that the server
+ reports as active, the same ones the spell bar highlights.
+ Example:
+ ```py
+ for name in API.ActiveSpellNames():
+     API.SysMsg("Active spell: " + name)
+ ```
+
+
+**Return Type:** `string[]`
+
+---
+
+### IsSpellActive
+`(spell)`
+ Check if a toggle spell/move is currently active.
+ You can pass a spell name (for example "Confidence") or a spell id.
+ These are toggle spells/moves that the server reports as active, the same ones the spell bar highlights.
+ Example:
+ ```py
+ if API.IsSpellActive("Confidence"):
+     API.SysMsg("Confidence is active!")
+ ```
+
+
+**Parameters:**
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `spell` | `object` | ❌ No | The spell name or spell id to check. |
+
+**Return Type:** `bool`
+
+---
+
 ### SysMsg
 `(message, hue)`
  Show a system message(Left side of screen).
