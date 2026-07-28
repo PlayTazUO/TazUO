@@ -10,7 +10,9 @@ All notable changes to TazUO will be recorded here.
 ### Features
 * Counter bar cells can now hold any spell bar action (spell, macro, weapon ability, script, or skill) in addition to item counters, with per-cell hotkeys (via the shared hotkey window), optional keybind labels, active-ability highlighting, and a hotkey-press flash - [P.R 812](https://github.com/PlayTazUO/TazUO/pull/812) ([bittiez](https://github.com/bittiez))
 
----
+### Fixes
+* Hotkey input window doesn't loose keys when releasing them ([bittiez](https://github.com/bittiez))
+
 ## V5.17.7
 
 ### Legion
