@@ -243,6 +243,9 @@ namespace ClassicUO.Game.UI.Gumps
             // Drop hotkeys bound to cells that no longer exist after a shrink.
             CounterBarHotkeysManager.PruneFrom(_rows * _columns);
 
+            // Re-center keybind labels for the new cell size.
+            RefreshHotkeyLabels();
+
             SetInScreen();
         }
 
@@ -732,6 +735,8 @@ namespace ClassicUO.Game.UI.Gumps
                 if (ProfileManager.CurrentProfile.CounterBarShowHotkeys && binding is { IsEmpty: false })
                 {
                     _hotkeyLabel.Text = binding.Describe();
+                    _hotkeyLabel.X = Math.Max(0, (Width - _hotkeyLabel.Width) / 2);
+                    _hotkeyLabel.Y = 1;
                     _hotkeyLabel.IsVisible = true;
                 }
                 else
@@ -1080,10 +1085,13 @@ namespace ClassicUO.Game.UI.Gumps
                         Width = Parent.Width;
                         Height = Parent.Height;
 
-                        // Keep the label anchored to the bottom of the cell (used for amounts and for
-                        // icon-less action labels such as scripts/skills).
+                        // Center the label horizontally and anchor it to the bottom of the cell (used for
+                        // amounts and for icon-less action labels such as scripts/skills).
                         if (_label != null)
+                        {
+                            _label.X = Math.Max(0, (Width - _label.Width) / 2);
                             _label.Y = Height - 15;
+                        }
                     }
                 }
 
